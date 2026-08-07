@@ -96,7 +96,10 @@ service cloud.firestore {
     match /boards/{boardId} {
       // Possession of the boardId (via a share code) is the read credential;
       // requiring auth (anonymous is fine) keeps App Check / abuse tooling possible.
-      allow get, list: if authed();
+      allow get: if authed();
+      // Listing is owner-only and provably self-scoped — otherwise any signed-in
+      // user could enumerate every board in the database.
+      allow list: if authed() && resource.data.ownerUid == request.auth.uid;
 
       allow create: if nonAnon()
                     && request.resource.data.ownerUid == request.auth.uid

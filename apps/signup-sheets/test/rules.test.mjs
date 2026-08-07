@@ -64,6 +64,9 @@ await env.withSecurityRulesDisabled(async (ctx) => {
 });
 
 /* ---------- reads ---------- */
+await T('boards collection cannot be enumerated', assertFails(anonA.collection('boards').get()));
+await T('owner lists only their own boards', assertSucceeds(owner.collection('boards').where('ownerUid', '==', 'owner1').get()));
+await T('cannot query another owner\'s boards', assertFails(owner2.collection('boards').where('ownerUid', '==', 'owner1').get()));
 await T('unauthed cannot read a board', assertFails(nobody.doc('boards/B1').get()));
 await T('anon (link-holder) can read a board', assertSucceeds(anonA.doc('boards/B1').get()));
 await T('anon can resolve a share code', assertSucceeds(anonA.doc('codes/ABCDEF').get()));

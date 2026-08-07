@@ -2,8 +2,13 @@
   "name": "signup-sheets",
   "private": true,
   "description": "Engine 1 — shared-link coordination. Skin A: signup sheets.",
+  "type": "module",
   "scripts": {
-    "test:rules": "firebase emulators:exec --only firestore --project demo-signup \"node test/rules.test.mjs\""
+    "test:helpers": "node test/helpers.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-signup \"node test/rules.test.mjs\"",
+    "test:data": "firebase emulators:exec --only firestore,auth --project demo-signup \"node test/data.test.mjs\"",
+    "test": "npm run test:helpers && npm run test:rules && npm run test:data",
+    "dev": "firebase emulators:start --project demo-signup"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",

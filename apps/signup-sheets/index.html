@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signup Sheets — claim a spot in seconds</title>
+<meta name="description" content="Potlucks, volunteer shifts, meal trains, snack rotations. Make a sheet, share a link, people claim spots — no accounts, no ads, ever.">
+<meta property="og:title" content="Signup Sheets">
+<meta property="og:description" content="Claim a spot in seconds. No account needed.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+  }
+}
+</script>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#2563eb; --accent-ink:#ffffff; --pos:#047857; --neg:#b91c1c;
+  --chip:#eef2f6; --chip-ink:#2c3a49; --focus:#93c5fd; --mine:#dbeafe;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#3b82f6; --accent-ink:#ffffff; --pos:#34d399; --neg:#f87171;
+    --chip:#242e38; --chip-ink:#cdd6de; --focus:#1d4ed8; --mine:#1e3a5f;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:680px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0; letter-spacing:-.01em}
+header.app h1 a{color:inherit; text-decoration:none}
+header.app .spacer{flex:1}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+.hero{text-align:center; padding:30px 8px 10px}
+.hero h2{font-size:1.5rem; margin:0 0 6px; letter-spacing:-.02em}
+.hero p{color:var(--muted); margin:0 0 18px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],input[type=email],input[type=date],input[type=number],textarea,select{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:110px; resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+.btn.small{padding:7px 10px; font-size:.85rem}
+.btn.danger{color:var(--neg)}
+.btn[disabled]{opacity:.5; cursor:default}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:999px;
+  background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); font-size:.87rem; max-width:100%;
+}
+.chip.mine{background:var(--mine); border-color:var(--accent)}
+.chip button{border:0; background:none; color:inherit; cursor:pointer; padding:0 2px; font-size:.9rem}
+.slot{border-bottom:1px solid var(--line); padding:12px 0}
+.slot:last-child{border-bottom:0}
+.slot .top{display:flex; align-items:baseline; gap:8px}
+.slot .label{flex:1; min-width:0; overflow-wrap:anywhere; font-weight:600}
+.slot .count{color:var(--muted); font-size:.82rem; white-space:nowrap}
+.slot .count.full{color:var(--pos); font-weight:600}
+.slot .chips{margin-top:6px}
+.badge{display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:999px; background:var(--chip); color:var(--muted)}
+.badge.pending{color:var(--neg)}
+.banner{background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:.88rem; color:var(--muted); margin-bottom:12px}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:flex-start; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.warn{color:var(--neg); font-size:.85rem; margin-top:6px}
+.fillbar{height:6px; border-radius:3px; background:var(--chip); overflow:hidden; margin:8px 0 2px}
+.fillbar>div{height:100%; background:var(--accent); border-radius:3px; transition:width .3s}
+details.manage{margin-bottom:12px}
+details.manage>summary{
+  cursor:pointer; background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:12px 14px; font-weight:600; list-style:none;
+}
+details.manage>summary::-webkit-details-marker{display:none}
+details.manage>summary::after{content:'▸'; float:right; color:var(--muted)}
+details.manage[open]>summary{border-radius:14px 14px 0 0}
+details.manage[open]>summary::after{content:'▾'}
+details.manage>.inner{border:1px solid var(--line); border-top:0; border-radius:0 0 14px 14px; background:var(--card); padding:14px}
+.seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:10px}
+.seg button{flex:1; padding:9px 4px; border:0; background:var(--card); color:var(--muted); font-size:.85rem; cursor:pointer}
+.seg button.active{background:var(--accent); color:var(--accent-ink); font-weight:600}
+.wkdays{display:flex; gap:4px; flex-wrap:wrap}
+.wkdays label{
+  flex:1; text-align:center; font-size:.8rem; padding:8px 2px; border:1px solid var(--line);
+  border-radius:8px; cursor:pointer; color:var(--muted); min-width:38px;
+}
+.wkdays input{display:none}
+.wkdays label:has(input:checked){background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+dialog{border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); padding:18px; max-width:min(92vw,420px); width:100%}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px; font-size:1.05rem}
+#qrBox{display:flex; justify-content:center; padding:10px; background:#fff; border-radius:10px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+.printonly{display:none}
+@media print{
+  header.app,details.manage,.btn,.noprint,#toast,footer.colophon{display:none !important}
+  body{background:#fff; color:#000}
+  section.card{border:0; padding:4px 0; margin:0}
+  .printonly{display:block}
+  .slot{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1><a href="#/" id="brandLink">Signup Sheets</a></h1>
+    <span class="spacer"></span>
+    <button class="btn small" id="authBtn" type="button">Sign in</button>
+  </header>
+  <main id="view" aria-live="polite"></main>
+  <footer class="colophon">
+    Nothing to install, no accounts for participants, no ads.<br>
+    <span id="orgLine">A free tool by SWS Strategic Media.</span>
+  </footer>
+</div>
+
+<dialog id="authDlg">
+  <h3>Sign in to run sheets</h3>
+  <p class="hint" style="margin:0 0 12px">Only organizers sign in. People claiming spots never need an account.</p>
+  <button class="btn primary" id="googleBtn" type="button" style="width:100%">Continue with Google</button>
+  <p class="sub" style="text-align:center; margin:10px 0">or</p>
+  <label class="f"><span>Email me a sign-in link</span>
+    <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email"></label>
+  <div class="row">
+    <button class="btn" id="authCancel" type="button">Cancel</button>
+    <button class="btn" id="emailBtn" type="button">Send link</button>
+  </div>
+  <p class="hint hidden" id="emailSent">Link sent — check your inbox on this device.</p>
+</dialog>
+
+<dialog id="nameDlg">
+  <h3 id="nameDlgTitle">Claim this spot</h3>
+  <p class="sub" id="nameDlgSlot" style="margin:0 0 10px"></p>
+  <label class="f"><span>Your name (that's all we need)</span>
+    <input type="text" id="nameInput" autocomplete="name" maxlength="60"></label>
+  <div class="row">
+    <button class="btn" id="nameCancel" type="button">Cancel</button>
+    <button class="btn primary" id="nameOk" type="button">Claim it</button>
+  </div>
+</dialog>
+
+<dialog id="slotDlg">
+  <h3>Edit slot</h3>
+  <label class="f"><span>Label</span><input type="text" id="slotLabel" maxlength="120"></label>
+  <label class="f"><span>How many people needed</span><input type="number" id="slotCap" min="1" max="999"></label>
+  <div class="row">
+    <button class="btn danger" id="slotDelete" type="button">Delete</button>
+    <button class="btn" id="slotCancel" type="button">Cancel</button>
+    <button class="btn primary" id="slotSave" type="button">Save</button>
+  </div>
+</dialog>
+
+<dialog id="qrDlg">
+  <h3>Scan to open this sheet</h3>
+  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300"></canvas></div>
+  <p class="hint">Anyone with the link can claim a spot — no app, no account.</p>
+  <div class="row" style="margin-top:10px">
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor-qrcode.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
