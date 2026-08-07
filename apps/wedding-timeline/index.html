@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wedding Day Timeline — so nobody asks "when is hair again?"</title>
+<meta name="description" content="Build the day-of wedding timeline and print an elegant page for the wedding party. Free, no account, stays on your device.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#7c3aed; --accent-ink:#ffffff; --chip:#eef2f6; --focus:#c4b5fd; --neg:#b91c1c;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#a78bfa; --accent-ink:#1a1030; --chip:#242e38; --focus:#6d28d9; --neg:#f87171;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:640px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text]{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+.btn.small{padding:7px 10px; font-size:.85rem}
+.btn.danger{color:var(--neg)}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.time{font-weight:700; font-variant-numeric:tabular-nums; flex:0 0 76px}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.warn{color:var(--neg); font-size:.85rem}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+
+/* ---------- printed timeline ---------- */
+#sheet{display:none}
+@media print{
+  body{background:#fff; padding:0}
+  .screenonly, header.app, footer.colophon, #toast{display:none !important}
+  #sheet{display:block; color:#1a1a1a; font-family:Georgia, 'Times New Roman', serif; padding:10mm 8mm 0}
+  #sheet .head{text-align:center; margin-bottom:16pt}
+  #sheet .head h1{margin:0; font-size:24pt; font-weight:400; font-style:italic; letter-spacing:.01em}
+  #sheet .head .date{color:#666; font-size:11pt; margin-top:4pt; letter-spacing:.14em; text-transform:uppercase}
+  #sheet .head .rule{width:60pt; border-bottom:1pt solid #999; margin:10pt auto 0}
+  #sheet .ev{display:flex; gap:14pt; padding:7pt 0; break-inside:avoid; border-bottom:.5pt solid #e5e5e5}
+  #sheet .ev:last-child{border-bottom:0}
+  #sheet .ev .t{flex:0 0 70pt; text-align:right; font-size:12pt; font-variant-numeric:tabular-nums}
+  #sheet .ev .w{flex:1; font-size:12pt}
+  #sheet .ev .who{color:#666; font-size:9.5pt; font-style:italic; margin-top:1pt}
+  #sheet .foot{text-align:center; color:#999; font-size:9pt; font-style:italic; margin-top:16pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Wedding Day Timeline</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <div class="screenonly">
+    <section class="card">
+      <div class="row">
+        <label class="f" style="flex:1.6"><span>The headline</span>
+          <input type="text" id="titleInput" maxlength="80" placeholder="Jessie & Sam"></label>
+        <label class="f"><span>The date</span>
+          <input type="text" id="dateInput" maxlength="40" placeholder="June 14, 2027"></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Add a moment</h2>
+      <div class="row">
+        <label class="f" style="flex:0 0 110px"><span>Time</span>
+          <input type="text" id="evTime" maxlength="10" placeholder="2:30 pm"></label>
+        <label class="f" style="flex:1.5"><span>What</span>
+          <input type="text" id="evWhat" maxlength="120" placeholder="First look photos"></label>
+      </div>
+      <label class="f"><span>Who / where (optional)</span>
+        <input type="text" id="evWho" maxlength="80" placeholder="Couple + photographer · rose garden"></label>
+      <button class="btn primary" id="addEv" type="button" style="width:100%">Add to the day</button>
+      <p class="warn hidden" id="timeWarn">That time didn’t parse — try “2:30 pm” or “14:30”.</p>
+    </section>
+
+    <section class="card">
+      <h2>The day</h2>
+      <ul class="plain" id="evList"></ul>
+      <p class="hint" id="emptyHint">Hair, photos, ceremony, toasts, last dance — every moment lands in time order automatically.</p>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <button class="btn primary" id="printBtn" type="button">Print for the wedding party</button>
+        <button class="btn" id="shareBtn" type="button">Copy link</button>
+      </div>
+      <p class="hint">Print a stack — one for the planner, the DJ, the photographer, and the person keeping grandpa on schedule.</p>
+    </section>
+  </div>
+
+  <div id="sheet"></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">Your day, on your device — no account, no ads.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
