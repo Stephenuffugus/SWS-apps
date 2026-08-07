@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bracket Maker — game night, settled properly</title>
+<meta name="description" content="Single-elimination brackets for game nights, office pools, and cook-offs. Tap winners, share the link, print it. No accounts, no ads.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#b45309; --accent-ink:#ffffff; --chip:#eef2f6; --focus:#fcd34d; --win:#047857;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#f59e0b; --accent-ink:#241a03; --chip:#242e38; --focus:#b45309; --win:#34d399;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:900px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+input[type=text],textarea{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:120px; resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700}
+#champ{
+  text-align:center; font-size:1.35rem; font-weight:800; margin:6px 0 10px; min-height:1.8rem;
+  color:var(--win); overflow-wrap:anywhere;
+}
+.bracket{display:flex; gap:18px; overflow-x:auto; padding:4px 2px 12px; -webkit-overflow-scrolling:touch}
+.round{display:flex; flex-direction:column; justify-content:space-around; gap:10px; min-width:160px}
+.roundhead{font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); text-align:center}
+.match{border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--bg)}
+.match button{
+  display:block; width:100%; text-align:left; padding:9px 11px; border:0; background:none;
+  color:var(--ink); font-size:.9rem; cursor:pointer; overflow-wrap:anywhere;
+}
+.match button + button{border-top:1px solid var(--line)}
+.match button.winner{background:var(--accent); color:var(--accent-ink); font-weight:700}
+.match button.tbd{color:var(--muted); font-style:italic; cursor:default}
+.match button.bye{color:var(--muted); cursor:default}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+@media print{
+  header.app, footer.colophon, #toast, .noprint{display:none !important}
+  body{background:#fff; color:#000}
+  section.card{border:0; padding:4px 0}
+  .bracket{overflow:visible}
+  .match button.winner{background:#eee; color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Bracket Maker</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <section class="card noprint">
+    <input type="text" id="titleInput" maxlength="60" placeholder="Name it — “Chili Cook-off 2026”">
+    <h2 style="margin-top:12px">Who's in? (order = seeding, top seed first)</h2>
+    <textarea id="entrants" placeholder="Aunt Rosa's Red
+Dad's 'Famous' Five-Alarm
+Office Microwave Special
+The Vegan Dark Horse"></textarea>
+    <p class="hint">2 to 32 entrants. Odd numbers get byes, seeded properly — the top two can only meet in the final.</p>
+  </section>
+
+  <section class="card">
+    <div id="champ" aria-live="polite"></div>
+    <div class="bracket" id="bracket"></div>
+    <p class="hint noprint">Tap a name to advance them. Tap the other name to change your mind — later rounds adjust honestly.</p>
+  </section>
+
+  <section class="card noprint">
+    <div class="row">
+      <button class="btn" id="shareBtn" type="button">Copy link (live bracket)</button>
+      <button class="btn" id="printBtn" type="button">Print</button>
+      <button class="btn" id="resetBtn" type="button">Clear results</button>
+    </div>
+    <p class="hint">The whole bracket lives in the link — send it to the group chat and update it as games finish.</p>
+  </section>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">On your device, in the link, nowhere else — no accounts, no ads.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
