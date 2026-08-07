@@ -9,6 +9,11 @@ import { firebaseConfig } from './firebase-config.js';
 
 D.initFirebase(firebaseConfig);
 
+const CONFIG = {
+  // Stripe payment link for the tip jar — button stays hidden while empty.
+  tipUrl: '',
+};
+
 /* ---------- tiny DOM kit (same discipline as bill-splitter) ---------- */
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {
@@ -632,6 +637,11 @@ function refreshAuthBtn() {
 
 async function init() {
   wire();
+  if (CONFIG.tipUrl) {
+    const t = $('tipLink');
+    t.href = CONFIG.tipUrl;
+    t.classList.remove('hidden');
+  }
   try {
     await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:'));
   } catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
