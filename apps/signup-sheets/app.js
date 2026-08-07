@@ -10,8 +10,8 @@ import { firebaseConfig } from './firebase-config.js';
 D.initFirebase(firebaseConfig);
 
 const CONFIG = {
-  // Stripe payment link for the tip jar — button stays hidden while empty.
-  tipUrl: '',
+  // Stripe payment link for the tip jar.
+  tipUrl: 'https://buy.stripe.com/bJe6oIb5T1yTcPXdGp7EQ01',
 };
 
 /* ---------- tiny DOM kit (same discipline as bill-splitter) ---------- */
