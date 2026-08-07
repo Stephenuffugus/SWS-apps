@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caregiver Log — a shared family notebook</title>
+<meta name="description" content="A calm, private place for a family to keep track of appointments, medications, and notes while caring for someone. No accounts for family members, no ads.">
+<meta name="theme-color" content="#f7f7f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141517" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+  }
+}
+</script>
+<style>
+:root{
+  --bg:#f7f7f6; --card:#ffffff; --ink:#26292e; --muted:#6b7075; --line:#e5e5e2;
+  --accent:#57606d; --accent-ink:#ffffff; --pos:#3e6b52; --neg:#8c4a42;
+  --chip:#efefec; --chip-ink:#3a3f45; --focus:#a8b2c0; --mine:#e7eaee;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#141517; --card:#1d1f22; --ink:#e4e4e1; --muted:#93979c; --line:#2e3033;
+    --accent:#8b95a3; --accent-ink:#16181a; --pos:#7fae93; --neg:#c08b84;
+    --chip:#26282c; --chip-ink:#c9ccce; --focus:#57606d; --mine:#2b2f35;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5; padding-bottom:40px;
+}
+.wrap{max-width:680px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.12rem; margin:0; letter-spacing:-.01em; font-weight:600}
+header.app h1 a{color:inherit; text-decoration:none}
+header.app .spacer{flex:1}
+a.tipbtn{
+  text-decoration:none; font-size:.85rem; color:var(--accent);
+  border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card);
+}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px}
+section.card h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:0 0 10px; font-weight:600}
+.hero{text-align:center; padding:32px 8px 12px}
+.hero h2{font-size:1.4rem; margin:0 0 8px; letter-spacing:-.01em; font-weight:600}
+.hero p{color:var(--muted); margin:0 0 18px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],input[type=email],input[type=date],input[type=number],textarea,select{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:9px; font-family:inherit;
+}
+textarea{min-height:90px; resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.93rem; border-radius:9px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+.btn.small{padding:7px 10px; font-size:.84rem}
+.btn.danger{color:var(--neg)}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:999px;
+  background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); font-size:.86rem; max-width:100%;
+}
+.chip.mine{background:var(--mine); border-color:var(--accent)}
+.chip button{border:0; background:none; color:inherit; cursor:pointer; padding:0 2px; font-size:.9rem}
+.slot{border-bottom:1px solid var(--line); padding:11px 0}
+.slot:last-child{border-bottom:0}
+.slot .top{display:flex; align-items:baseline; gap:8px}
+.slot .label{flex:1; min-width:0; overflow-wrap:anywhere; font-weight:600; font-size:.95rem}
+.slot .count{color:var(--muted); font-size:.8rem; white-space:nowrap}
+.badge{display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:999px; background:var(--chip); color:var(--muted)}
+.badge.pending{color:var(--neg)}
+.badge.t-appointment{background:#e8ecf3; color:#3d5271}
+.badge.t-medication{background:#eee9f3; color:#5b4a70}
+.badge.t-question{background:#f3efe6; color:#6d5c38}
+@media (prefers-color-scheme: dark){
+  .badge.t-appointment{background:#242b36; color:#9fb4d4}
+  .badge.t-medication{background:#2b2433; color:#b3a0cc}
+  .badge.t-question{background:#332d20; color:#cdb886}
+}
+.banner{background:var(--chip); border:1px solid var(--line); border-radius:9px; padding:9px 12px; font-size:.87rem; color:var(--muted); margin-bottom:12px}
+.disclaimer{font-size:.8rem; color:var(--muted); margin:8px 0 0; font-style:italic}
+.entry{border-bottom:1px solid var(--line); padding:10px 0}
+.entry:last-child{border-bottom:0}
+.entry .meta{display:flex; gap:8px; align-items:center; margin-bottom:2px; flex-wrap:wrap}
+.entry .who{font-weight:600; font-size:.88rem}
+.entry .when{color:var(--muted); font-size:.78rem}
+.entry .body{overflow-wrap:anywhere}
+.dayhead{font-size:.8rem; font-weight:600; color:var(--muted); margin:14px 0 2px; text-transform:uppercase; letter-spacing:.05em}
+.dayhead:first-child{margin-top:0}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:flex-start; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.warn{color:var(--neg); font-size:.85rem; margin-top:6px}
+.sharecode{font-size:1.5rem; font-weight:600; letter-spacing:.28em; text-align:center; margin:2px 0 10px; padding-left:.28em}
+.seg{display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; margin-bottom:10px; flex-wrap:wrap}
+.seg button{flex:1; padding:9px 4px; border:0; background:var(--card); color:var(--muted); font-size:.84rem; cursor:pointer; min-width:80px}
+.seg button.active{background:var(--accent); color:var(--accent-ink); font-weight:600}
+details.manage{margin-bottom:12px}
+details.manage>summary{
+  cursor:pointer; background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px; font-weight:600; list-style:none; font-size:.95rem;
+}
+details.manage>summary::-webkit-details-marker{display:none}
+details.manage>summary::after{content:'▸'; float:right; color:var(--muted)}
+details.manage[open]>summary{border-radius:12px 12px 0 0}
+details.manage[open]>summary::after{content:'▾'}
+details.manage>.inner{border:1px solid var(--line); border-top:0; border-radius:0 0 12px 12px; background:var(--card); padding:14px}
+dialog{border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); padding:18px; max-width:min(92vw,420px); width:100%}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px; font-size:1.02rem}
+#qrBox{display:flex; justify-content:center; padding:10px; background:#fff; border-radius:9px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.86rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.77rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+.printonly{display:none}
+@media print{
+  header.app,details.manage,.btn,.noprint,#toast,footer.colophon,.screenonly{display:none !important}
+  body{background:#fff; color:#000}
+  section.card{border:0; padding:4px 0; margin:0}
+  .printonly{display:block}
+  .entry{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1><a href="#/" id="brandLink">Caregiver Log</a></h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+    <button class="btn small" id="authBtn" type="button">Sign in</button>
+  </header>
+  <main id="view" aria-live="polite"></main>
+  <footer class="colophon">
+    A shared family notebook — private by design. No ads, ever.<br>
+    <span id="orgLine">A free tool by Sky Wolf Studios.</span>
+  </footer>
+</div>
+
+<dialog id="authDlg">
+  <h3>Sign in to start a log</h3>
+  <p class="hint" style="margin:0 0 12px">Only the person who starts the log signs in. Family members you invite just use the link.</p>
+  <button class="btn primary" id="googleBtn" type="button" style="width:100%">Continue with Google</button>
+  <p class="sub" style="text-align:center; margin:10px 0">or</p>
+  <label class="f"><span>Email me a sign-in link</span>
+    <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email"></label>
+  <div class="row">
+    <button class="btn" id="authCancel" type="button">Cancel</button>
+    <button class="btn" id="emailBtn" type="button">Send link</button>
+  </div>
+  <p class="hint hidden" id="emailSent">Link sent — <strong>check your spam folder</strong> if it's not in your inbox within a minute (search for "sws-apps"). Open the link on this device.</p>
+</dialog>
+
+<dialog id="nameDlg">
+  <h3 id="nameDlgTitle">I'll take this day</h3>
+  <p class="sub" id="nameDlgSlot" style="margin:0 0 10px"></p>
+  <label class="f"><span>Your first name</span>
+    <input type="text" id="nameInput" autocomplete="name" maxlength="60"></label>
+  <label class="f"><span>Anything to add? (optional)</span>
+    <input type="text" id="noteInput" maxlength="120" placeholder="e.g. mornings only · after 3pm"></label>
+  <div class="row">
+    <button class="btn" id="nameCancel" type="button">Cancel</button>
+    <button class="btn primary" id="nameOk" type="button">I'll be there</button>
+  </div>
+</dialog>
+
+<dialog id="createDlg">
+  <h3>Start a care log</h3>
+  <label class="f"><span>Who is it for? (a first name is plenty)</span>
+    <input type="text" id="createTitle" maxlength="100" placeholder="Mom, Grandpa Joe…"></label>
+  <label class="f"><span>Anything the family should know (optional)</span>
+    <input type="text" id="createDesc" maxlength="1000" placeholder="Care team contact, pharmacy, door code…"></label>
+  <div class="row">
+    <button class="btn" id="createCancel" type="button">Cancel</button>
+    <button class="btn primary" id="createOk" type="button">Start the log</button>
+  </div>
+</dialog>
+
+<dialog id="slotDlg">
+  <h3>Edit coverage day</h3>
+  <label class="f"><span>Label</span><input type="text" id="slotLabel" maxlength="120"></label>
+  <label class="f"><span>People needed</span><input type="number" id="slotCap" min="1" max="999"></label>
+  <div class="row">
+    <button class="btn danger" id="slotDelete" type="button">Delete</button>
+    <button class="btn" id="slotCancel" type="button">Cancel</button>
+    <button class="btn primary" id="slotSave" type="button">Save</button>
+  </div>
+</dialog>
+
+<dialog id="qrDlg">
+  <h3>Invite a family member</h3>
+  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300"></canvas></div>
+  <p class="hint">Share this deliberately, one person at a time — everyone with the link can read and write the log.</p>
+  <div class="row" style="margin-top:10px">
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor-qrcode.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
