@@ -11,8 +11,8 @@ rules_version = '2';
 //   * Anonymous writes are the attack surface. Participants can do exactly four
 //     things, all shape-checked and batch-coupled to counters that make the
 //     caps hard limits, not UI suggestions:
-//       1. create an entry            (+1 board.entryCount, cap 500)
-//       2. edit/delete their own entry (delete: -1 board.entryCount)
+//       1. create an entry            (+1 board.entryCount, cap 500 ever-created)
+//       2. edit/delete their own entry (deletes never free counter quota)
 //       3. claim a slot               (claims/{their-uid} + slot.claimedCount+1, cap = capacity)
 //       4. release their claim        (delete claims/{their-uid} + slot.claimedCount-1)
 //   * Locking a board (settings.locked) freezes all participant writes at the
