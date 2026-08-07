@@ -12,6 +12,7 @@ with a tip jar — the brand promise across every app here:
 - [`01-shared-link-coordination.md`](01-shared-link-coordination.md) — Engine 1: signup sheets, team parent, caregiver log
 - [`02-local-data-to-pdf.md`](02-local-data-to-pdf.md) — Engine 2: seating chart, home inventory, print-and-play
 - [`04-bill-splitter.md`](04-bill-splitter.md) — standalone bill splitter
+- [`05-marketing-kit.md`](05-marketing-kit.md) — positioning, per-app search terms + blurbs, seasonal calendar, launch checklist
 - Engine 3 (multiplayer games) lives with the game designer in the Lucid Winds repo.
 
 ## Apps

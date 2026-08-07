@@ -1,5 +1,5 @@
 /* Grocery List service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'grocery-v3';
+const VERSION = 'grocery-v4';
 const ASSETS = ['./', './index.html', './app.js', './data.js', './helpers.js',
   './firebase-config.js', './vendor-qrcode.js', './manifest.webmanifest',
   './icon.svg', './apple-touch-icon.png',

@@ -1,5 +1,5 @@
 /* Team Parent service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'team-v3';
+const VERSION = 'team-v4';
 const ASSETS = [
   './',
   './index.html',
