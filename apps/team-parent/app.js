@@ -93,7 +93,19 @@ window.addEventListener('hashchange', render);
 const isOwner = () => !!(user && live.board && live.board.ownerUid === user.uid);
 
 /* ---------- home ---------- */
+// Participants see an invitation instead of the standard colophon — every
+// shared board doubles as the product's own ad. Owners and home keep the default.
+function setGrowthFooter(participant) {
+  const o = document.getElementById('orgLine');
+  if (!o) return;
+  if (!o.dataset.home) o.dataset.home = o.innerHTML;
+  o.innerHTML = participant
+    ? 'Made with <a href="./" style="color:inherit">Team Parent</a> — free, no ads. <a href="./" style="color:inherit">Start yours</a>'
+    : o.dataset.home;
+}
+
 async function renderHome() {
+  setGrowthFooter(false);
   live.stop();
   applyTheme(null);
   const v = $('view');
@@ -223,6 +235,7 @@ function drawBoard() {
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
+  setGrowthFooter(!own);
   const locked = !!b.settings?.locked;
   applyTheme(b.settings?.theme);
   const v = $('view');

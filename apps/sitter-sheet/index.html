@@ -108,6 +108,11 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
 
     <section class="card">
       <button class="btn primary" id="printBtn" type="button" style="width:100%">Print / Save as PDF</button>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="shareBtn" type="button">Copy link</button>
+        <button class="btn" id="qrBtn" type="button">Show QR</button>
+      </div>
+      <p class="hint">Or hand it straight to their phone — the whole sheet travels inside the link. Nothing is uploaded anywhere.</p>
       <p class="hint">Prints one clean page. Stick it on the fridge — sitters actually read these.</p>
     </section>
   </div>
@@ -117,8 +122,14 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">Stays on your device — family details are nobody's business.<br>A free tool by Sky Wolf Studios.</footer>
+<footer class="colophon">Stays on your device — family details are nobody's business.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Sitter%20Sheet" style="color:inherit">Feedback</a></footer>
 
+<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
+  <h3 style="margin:0 0 10px;color:#111">Scan with the sitter’s phone</h3>
+  <canvas id="qrCanvas" width="300" height="300"></canvas>
+  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+</dialog>
+<script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

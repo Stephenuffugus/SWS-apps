@@ -70,7 +70,19 @@ function baseUrl() {
 }
 
 /* ---------- home ---------- */
+// Participants see an invitation instead of the standard colophon — every
+// shared board doubles as the product's own ad. Owners and home keep the default.
+function setGrowthFooter(participant) {
+  const o = document.getElementById('orgLine');
+  if (!o) return;
+  if (!o.dataset.home) o.dataset.home = o.innerHTML;
+  o.innerHTML = participant
+    ? 'Made with <a href="./" style="color:inherit">Grocery List</a> — free, no ads. <a href="./" style="color:inherit">Start yours</a>'
+    : o.dataset.home;
+}
+
 async function renderHome() {
+  setGrowthFooter(false);
   live.stop();
   const v = $('view');
   v.replaceChildren();
@@ -166,6 +178,7 @@ function drawBoard() {
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
+  setGrowthFooter(!own);
   const v = $('view');
   v.replaceChildren();
 

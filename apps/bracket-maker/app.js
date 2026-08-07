@@ -137,3 +137,30 @@ function init() {
   }
 }
 init();
+
+/* ---------- QR share (scan instead of typing a link) ---------- */
+function showQr(url) {
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(url); qr.make();
+    const canvas = $('qrCanvas'), size = 300, count = qr.getModuleCount();
+    const cell = Math.floor(size / (count + 8));
+    const off = Math.floor((size - cell * count) / 2);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)
+      if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
+  } catch (e) { toast('Could not draw the QR'); return; }
+  const d = $('qrDlg');
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+}
+$('qrClose').addEventListener('click', () => {
+  const d = $('qrDlg');
+  try { d.close(); } catch (e) { d.removeAttribute('open'); }
+});
+$('qrBtn').addEventListener('click', () => {
+  if (state.names.length < 2) { toast('Add the entrants first'); return; }
+  save();
+  showQr(location.href);
+});

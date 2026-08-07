@@ -108,6 +108,7 @@ The Vegan Dark Horse"></textarea>
   <section class="card noprint">
     <div class="row">
       <button class="btn" id="shareBtn" type="button">Copy link (live bracket)</button>
+      <button class="btn" id="qrBtn" type="button">Show QR</button>
       <button class="btn" id="printBtn" type="button">Print</button>
       <button class="btn" id="resetBtn" type="button">Clear results</button>
     </div>
@@ -116,8 +117,14 @@ The Vegan Dark Horse"></textarea>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">On your device, in the link, nowhere else — no accounts, no ads.<br>A free tool by Sky Wolf Studios.</footer>
+<footer class="colophon">On your device, in the link, nowhere else — no accounts, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Bracket%20Maker" style="color:inherit">Feedback</a></footer>
 
+<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
+  <h3 style="margin:0 0 10px;color:#111">Scan to open the bracket</h3>
+  <canvas id="qrCanvas" width="300" height="300"></canvas>
+  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+</dialog>
+<script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

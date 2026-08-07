@@ -128,6 +128,7 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
       <div class="row">
         <button class="btn primary" id="printBtn" type="button">Print for the wedding party</button>
         <button class="btn" id="shareBtn" type="button">Copy link</button>
+        <button class="btn" id="qrBtn" type="button">Show QR</button>
       </div>
       <p class="hint">Print a stack — one for the planner, the DJ, the photographer, and the person keeping grandpa on schedule.</p>
     </section>
@@ -137,8 +138,14 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">Your day, on your device — no account, no ads.<br>A free tool by Sky Wolf Studios.</footer>
+<footer class="colophon">Your day, on your device — no account, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Wedding%20Day%20Timeline" style="color:inherit">Feedback</a></footer>
 
+<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
+  <h3 style="margin:0 0 10px;color:#111">Scan to open the timeline</h3>
+  <canvas id="qrCanvas" width="300" height="300"></canvas>
+  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+</dialog>
+<script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

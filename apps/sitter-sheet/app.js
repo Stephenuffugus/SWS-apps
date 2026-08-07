@@ -28,6 +28,11 @@ function toast(msg, ms) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
 }
 
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
+  catch (e) { toast('Could not copy'); }
+}
+
 /* Field schema per mode. Each: [key, label, multiline, placeholder] grouped in sections. */
 export const SCHEMAS = {
   baby: {
@@ -153,6 +158,32 @@ function wire() {
   });
 }
 
+/* Share: the whole sheet travels inside the URL — nothing uploaded anywhere. */
+function encodeSheet() {
+  const filled = {};
+  for (const [k, v] of Object.entries(data)) if ((v || '').trim()) filled[k] = v;
+  const json = JSON.stringify({ m: mode, d: filled });
+  return btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function decodeSheet(hash) {
+  try {
+    let s = String(hash || '').replace(/^#/, '').replace(/-/g, '+').replace(/_/g, '/');
+    if (!s) return null;
+    while (s.length % 4) s += '=';
+    const obj = JSON.parse(decodeURIComponent(escape(atob(s))));
+    if (!obj || (obj.m !== 'baby' && obj.m !== 'pet') || typeof obj.d !== 'object' || !obj.d) return null;
+    const keys = new Set(SCHEMAS[obj.m].sections.flatMap(([, fields]) => fields.map(([key]) => key)));
+    const d = {};
+    for (const [k, v] of Object.entries(obj.d))
+      if (keys.has(k) && typeof v === 'string' && v.trim()) d[k] = v.slice(0, 2000);
+    return Object.keys(d).length ? { mode: obj.m, data: d } : null;
+  } catch (e) { return null; }
+}
+const hasContent = () => Object.values(data).some(v => (v || '').trim());
+const sheetShareUrl = () => (location.origin === 'null' || location.protocol === 'file:'
+  ? location.href.split('#')[0] : location.origin + location.pathname) + '#' + encodeSheet();
+
 function init() {
   wire();
   if (CONFIG.tipUrl) {
@@ -161,9 +192,51 @@ function init() {
     t.classList.remove('hidden');
   }
   load();
+  const shared = decodeSheet(location.hash);
+  if (shared) {
+    mode = shared.mode;
+    load();
+    // never silently destroy the user's own sheet to honor a tapped link
+    if (!hasContent() || confirm('Open the shared sheet? Your saved one will be replaced.')) {
+      data = shared.data;
+      save();
+      toast('Sheet loaded from the link');
+    }
+    history.replaceState(null, '', location.pathname);
+  }
   renderForm();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 }
 init();
+
+/* ---------- QR share (scan instead of typing a link) ---------- */
+function showQr(url) {
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(url); qr.make();
+    const canvas = $('qrCanvas'), size = 300, count = qr.getModuleCount();
+    const cell = Math.floor(size / (count + 8));
+    const off = Math.floor((size - cell * count) / 2);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)
+      if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
+  } catch (e) { toast('Could not draw the QR'); return; }
+  const d = $('qrDlg');
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+}
+$('qrClose').addEventListener('click', () => {
+  const d = $('qrDlg');
+  try { d.close(); } catch (e) { d.removeAttribute('open'); }
+});
+$('shareBtn').addEventListener('click', () => {
+  if (!hasContent()) { toast('Fill in at least one field first'); return; }
+  copyText(sheetShareUrl(), 'Link copied \u2014 the whole sheet is inside it');
+});
+$('qrBtn').addEventListener('click', () => {
+  if (!hasContent()) { toast('Fill in at least one field first'); return; }
+  showQr(sheetShareUrl());
+});

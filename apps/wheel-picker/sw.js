@@ -1,6 +1,6 @@
 /* Wheel Picker service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'wheel-v2';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest"];
+const VERSION = 'wheel-v3';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

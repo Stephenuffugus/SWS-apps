@@ -28,6 +28,11 @@ function toast(msg, ms) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
 }
 
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
+  catch (e) { toast('Could not copy'); }
+}
+
 const KEY = 'pill-schedule';
 const TIME_ORDER = ['Morning', 'Noon', 'Evening', 'Bedtime'];
 let data = { who: '', meds: [] }; // meds: {id, name, dose, times[], notes}
@@ -120,6 +125,32 @@ function wire() {
   });
 }
 
+/* Share: the whole schedule travels inside the URL — nothing uploaded anywhere. */
+function encodeCard() {
+  const json = JSON.stringify({ w: data.who || '', m: data.meds.map(m => [m.name, m.dose, m.times, m.notes]) });
+  return btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function decodeCard(hash) {
+  try {
+    let s = String(hash || '').replace(/^#/, '').replace(/-/g, '+').replace(/_/g, '/');
+    if (!s) return null;
+    while (s.length % 4) s += '=';
+    const obj = JSON.parse(decodeURIComponent(escape(atob(s))));
+    if (!obj || !Array.isArray(obj.m)) return null;
+    const meds = obj.m.filter(x => Array.isArray(x)).slice(0, 30).map(([name, dose, times, notes]) => ({
+      id: newId(),
+      name: String(name || '').slice(0, 60),
+      dose: String(dose || '').slice(0, 40),
+      times: (Array.isArray(times) ? times : []).filter(t => TIME_ORDER.includes(t)),
+      notes: String(notes || '').slice(0, 120),
+    })).filter(m => m.name && m.times.length);
+    return meds.length ? { who: String(obj.w || '').slice(0, 40), meds } : null;
+  } catch (e) { return null; }
+}
+const cardShareUrl = () => (location.origin === 'null' || location.protocol === 'file:'
+  ? location.href.split('#')[0] : location.origin + location.pathname) + '#' + encodeCard();
+
 function init() {
   wire();
   if (CONFIG.tipUrl) {
@@ -128,6 +159,17 @@ function init() {
     t.classList.remove('hidden');
   }
   load();
+  const shared = decodeCard(location.hash);
+  if (shared) {
+    // never silently destroy the user's own schedule to honor a tapped link
+    if (data.meds.length === 0 || confirm('Open the shared schedule' + (shared.who ? ' for ' + shared.who : '')
+        + '? Your current one (' + data.meds.length + ' medications) will be replaced.')) {
+      data = shared;
+      save();
+      toast('Schedule loaded from the link');
+    }
+    history.replaceState(null, '', location.pathname);
+  }
   $('whoInput').value = data.who || '';
   renderList();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
@@ -135,3 +177,33 @@ function init() {
   }
 }
 init();
+
+/* ---------- QR share (scan instead of typing a link) ---------- */
+function showQr(url) {
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(url); qr.make();
+    const canvas = $('qrCanvas'), size = 300, count = qr.getModuleCount();
+    const cell = Math.floor(size / (count + 8));
+    const off = Math.floor((size - cell * count) / 2);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)
+      if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
+  } catch (e) { toast('Could not draw the QR'); return; }
+  const d = $('qrDlg');
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+}
+$('qrClose').addEventListener('click', () => {
+  const d = $('qrDlg');
+  try { d.close(); } catch (e) { d.removeAttribute('open'); }
+});
+$('shareBtn').addEventListener('click', () => {
+  if (data.meds.length === 0) { toast('Add the medications first'); return; }
+  copyText(cardShareUrl(), 'Link copied \u2014 the whole schedule is inside it');
+});
+$('qrBtn').addEventListener('click', () => {
+  if (data.meds.length === 0) { toast('Add the medications first'); return; }
+  showQr(cardShareUrl());
+});
