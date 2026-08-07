@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wheel Picker — spin to choose, no ads spinning back</title>
+<meta name="description" content="A fair spinning wheel for picking names, chores, or winners. No ads, no accounts — and your list lives in the link, so it's saved forever.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#be185d; --accent-ink:#ffffff; --chip:#eef2f6; --focus:#f9a8d4;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#f472b6; --accent-ink:#3b0820; --chip:#242e38; --focus:#be185d;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:640px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+.wheelwrap{position:relative; max-width:380px; margin:0 auto}
+#wheel{display:block; width:100%; height:auto}
+.pointer{
+  position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+  width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent;
+  border-top:22px solid var(--ink); filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); z-index:2;
+}
+#winner{
+  text-align:center; font-size:1.5rem; font-weight:800; min-height:2.2rem; margin:12px 0 4px;
+  overflow-wrap:anywhere;
+}
+textarea{
+  width:100%; min-height:130px; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit; resize:vertical;
+}
+textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px; margin-top:10px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700}
+.btn.big{font-size:1.1rem; padding:14px}
+.btn[disabled]{opacity:.5; cursor:default}
+label.chk{display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); margin-top:10px; cursor:pointer}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Wheel Picker</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <section class="card">
+    <div class="wheelwrap">
+      <div class="pointer" aria-hidden="true"></div>
+      <canvas id="wheel" width="760" height="760" aria-label="Spinning wheel of names"></canvas>
+    </div>
+    <div id="winner" aria-live="assertive"></div>
+    <button class="btn primary big" id="spinBtn" type="button" style="width:100%">SPIN</button>
+  </section>
+
+  <section class="card">
+    <h2>Who's on the wheel</h2>
+    <textarea id="names" placeholder="One per line:
+Aaliyah
+Marcus
+Jade
+Tommy"></textarea>
+    <label class="chk"><input type="checkbox" id="removeMode" style="width:auto">
+      Remove the winner after each spin (great for classrooms & raffles)</label>
+    <div class="row">
+      <button class="btn" id="shareBtn" type="button">Copy link to this wheel</button>
+      <button class="btn" id="resetBtn" type="button">Restore removed names</button>
+    </div>
+    <p class="hint">The whole wheel lives inside the link — bookmark your class list, share the chore wheel, and it's there forever. No account. No ads. Ever.</p>
+  </section>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">Fair spins, on your device. Nobody's watching.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
