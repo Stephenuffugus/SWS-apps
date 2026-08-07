@@ -5,8 +5,8 @@
 import { initializeApp } from 'firebase/app';
 import {
   getAuth, connectAuthEmulator, onAuthStateChanged, signInAnonymously,
-  GoogleAuthProvider, signInWithPopup, sendSignInLinkToEmail,
-  isSignInWithEmailLink, signInWithEmailLink, signOut,
+  GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+  sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signOut,
 } from 'firebase/auth';
 import {
   initializeFirestore, persistentLocalCache, connectFirestoreEmulator,
@@ -48,9 +48,22 @@ export async function ensureSignedIn() {
 }
 
 export async function signInGoogle() {
-  const cred = await signInWithPopup(auth, new GoogleAuthProvider());
-  return cred.user;
+  try {
+    const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+    return cred.user;
+  } catch (e) {
+    const code = (e && e.code) || '';
+    // Popup blocked or closed (embedded browsers, strict blockers):
+    // fall back to a full-page redirect — the page comes back signed in.
+    if (code.includes('popup') || code.includes('cancelled')) {
+      await signInWithRedirect(auth, new GoogleAuthProvider());
+      return null; // navigating away
+    }
+    throw e;
+  }
 }
+
+export const completeRedirect = () => getRedirectResult(auth);
 
 const EMAIL_KEY = 'ss-signin-email';
 export async function startEmailLink(email, url) {
@@ -153,6 +166,9 @@ export const setLocked = (boardId, settings, locked) =>
 export const setApproval = (boardId, settings, approvalRequired) =>
   updateDoc(doc(db, 'boards', boardId), { settings: { ...settings, approvalRequired } });
 
+export const setTheme = (boardId, settings, theme) =>
+  updateDoc(doc(db, 'boards', boardId), { settings: { ...settings, theme } });
+
 export async function rotateCode(boardId, oldCode) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = genCode();
@@ -202,16 +218,27 @@ export const deleteSlot = (boardId, slotId) =>
   deleteDoc(doc(db, 'boards', boardId, 'slots', slotId));
 
 /* Claim = claims/{myUid} + counter, one batch. Rules verify the coupling,
-   capacity, and that this uid didn't already hold a claim on the slot. */
-export async function claimSlot(boardId, slotId, name) {
+   capacity, and that this uid didn't already hold a claim on the slot.
+   Returns 'note-dropped' if the claim landed but the note was rejected
+   (published rules older than the note feature). */
+export async function claimSlot(boardId, slotId, name, note) {
   const uid = (await ensureSignedIn()).uid;
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'boards', boardId, 'slots', slotId, 'claims', uid), {
-    name: name.slice(0, 60),
-    createdAt: serverTimestamp(),
-  });
-  batch.update(doc(db, 'boards', boardId, 'slots', slotId), { claimedCount: increment(1) });
-  await batch.commit();
+  const commit = (withNote) => {
+    const data = { name: name.slice(0, 60), createdAt: serverTimestamp() };
+    if (withNote) data.note = note.trim().slice(0, 120);
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'boards', boardId, 'slots', slotId, 'claims', uid), data);
+    batch.update(doc(db, 'boards', boardId, 'slots', slotId), { claimedCount: increment(1) });
+    return batch.commit();
+  };
+  const hasNote = !!(note && note.trim());
+  if (!hasNote) { await commit(false); return 'ok'; }
+  try { await commit(true); return 'ok'; }
+  catch (e) {
+    if (!String((e && e.code) || '').includes('permission-denied')) throw e;
+    await commit(false); // if this also fails (slot full/locked), it throws to the caller
+    return 'note-dropped';
+  }
 }
 
 export async function releaseClaim(boardId, slotId) {

@@ -53,9 +53,15 @@ service cloud.firestore {
     }
 
     function validSettings(s) {
-      return s.keys().hasOnly(['approvalRequired', 'locked'])
+      return s.keys().hasOnly(['approvalRequired', 'locked', 'theme'])
           && s.approvalRequired is bool
-          && s.locked is bool;
+          && s.locked is bool
+          && (!('theme' in s) || s.theme in ['blue', 'green', 'plum', 'slate', 'amber']);
+    }
+
+    // Claims may carry a short optional note ("gluten-free", "arriving late").
+    function validClaimNote(d) {
+      return !('note' in d) || (d.note is string && d.note.size() <= 120);
     }
 
     function validBoardShape(d) {
@@ -198,23 +204,25 @@ service cloud.firestore {
           allow create: if authed()
                         && claimUid == request.auth.uid
                         && boardUnlocked(boardId)
-                        && request.resource.data.keys().hasOnly(['name', 'createdAt'])
+                        && request.resource.data.keys().hasOnly(['name', 'createdAt', 'note'])
                         && request.resource.data.name is string
                         && request.resource.data.name.size() >= 1
                         && request.resource.data.name.size() <= 60
+                        && validClaimNote(request.resource.data)
                         && request.resource.data.createdAt == request.time
                         // must be batch-coupled to the slot counter (capacity check lives there)
                         && getAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount
                            == get(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount + 1;
 
-          // Fix a typo'd name on your own claim.
+          // Fix a typo'd name or note on your own claim.
           allow update: if authed()
                         && claimUid == request.auth.uid
                         && boardUnlocked(boardId)
-                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'note'])
                         && request.resource.data.name is string
                         && request.resource.data.name.size() >= 1
-                        && request.resource.data.name.size() <= 60;
+                        && request.resource.data.name.size() <= 60
+                        && validClaimNote(request.resource.data);
 
           // Release your own claim (batch-coupled to counter), or owner removes anyone.
           allow delete: if (

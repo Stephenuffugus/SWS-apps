@@ -134,6 +134,26 @@ await T('participant cannot delete someone else\'s claim', assertFails((() => {
   return b.commit();
 })()));
 await T('counter drain without owning a claim rejected', assertFails(anonC.doc('boards/B1/slots/S1').update({ claimedCount: 1 })));
+await T('claim with a short note allowed', assertSucceeds((() => {
+  const b = anonC.batch();
+  b.set(anonC.doc('boards/B1/slots/S2/claims/anonC'), { name: 'Cai', note: 'gluten-free', createdAt: ST() });
+  b.update(anonC.doc('boards/B1/slots/S2'), { claimedCount: 1 });
+  return b.commit();
+})()));
+await T('claim with a 121-char note rejected', assertFails((() => {
+  const b = anonB.batch();
+  b.set(anonB.doc('boards/B1/slots/S2/claims/anonB'), { name: 'Sam', note: 'x'.repeat(121), createdAt: ST() });
+  b.update(anonB.doc('boards/B1/slots/S2'), { claimedCount: 2 });
+  return b.commit();
+})()));
+await T('claim with unknown extra field rejected', assertFails((() => {
+  const b = anonB.batch();
+  b.set(anonB.doc('boards/B1/slots/S2/claims/anonB'), { name: 'Sam', spy: 'x', createdAt: ST() });
+  b.update(anonB.doc('boards/B1/slots/S2'), { claimedCount: 2 });
+  return b.commit();
+})()));
+await T('owner sets a valid theme', assertSucceeds(owner.doc('boards/B1').update({ settings: { approvalRequired: false, locked: false, theme: 'plum' } })));
+await T('unknown theme rejected', assertFails(owner.doc('boards/B1').update({ settings: { approvalRequired: false, locked: false, theme: 'neon' } })));
 await T('anonA fixes the name on their own claim', assertSucceeds(anonA.doc('boards/B1/slots/S1/claims/anonA').update({ name: 'Patricia' })));
 await T('anonB cannot rename anonA\'s claim', assertFails(anonB.doc('boards/B1/slots/S1/claims/anonA').update({ name: 'goblin' })));
 await T('anonA releases their own claim', assertSucceeds((() => {

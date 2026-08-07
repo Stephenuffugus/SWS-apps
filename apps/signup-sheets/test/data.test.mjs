@@ -66,12 +66,14 @@ await T('myBoards lists the owner\'s board', async () => {
 
 await signOut(auth);
 
-await T('anon participant claims the single-capacity slot', async () => {
+await T('anon participant claims the single-capacity slot (with a note)', async () => {
   await D.ensureSignedIn();
-  await D.claimSlot(boardId, slots[0].id, 'Pat');
+  const r = await D.claimSlot(boardId, slots[0].id, 'Pat', 'nut allergy');
+  assert.equal(r, 'ok');
   const claims = await once((cb, err) => D.watchClaims(boardId, slots[0].id, cb, err));
   assert.equal(claims.length, 1);
   assert.equal(claims[0].name, 'Pat');
+  assert.equal(claims[0].note, 'nut allergy');
 });
 
 await T('the same participant cannot double-claim the slot', async () => {

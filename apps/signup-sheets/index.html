@@ -115,6 +115,10 @@ details.manage>.inner{border:1px solid var(--line); border-top:0; border-radius:
 }
 .wkdays input{display:none}
 .wkdays label:has(input:checked){background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.sharecode{font-size:1.7rem; font-weight:700; letter-spacing:.3em; text-align:center; margin:2px 0 10px; padding-left:.3em}
+.themedots{display:flex; gap:10px; margin:4px 0 10px}
+.themedots button{width:34px; height:34px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0}
+.themedots button.sel{border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink)}
 dialog{border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); padding:18px; max-width:min(92vw,420px); width:100%}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h3{margin:0 0 12px; font-size:1.05rem}
@@ -171,9 +175,23 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
   <p class="sub" id="nameDlgSlot" style="margin:0 0 10px"></p>
   <label class="f"><span>Your name (that's all we need)</span>
     <input type="text" id="nameInput" autocomplete="name" maxlength="60"></label>
+  <label class="f"><span>Anything to add? (optional)</span>
+    <input type="text" id="noteInput" maxlength="120" placeholder="e.g. gluten-free · arriving late"></label>
   <div class="row">
     <button class="btn" id="nameCancel" type="button">Cancel</button>
     <button class="btn primary" id="nameOk" type="button">Claim it</button>
+  </div>
+</dialog>
+
+<dialog id="createDlg">
+  <h3>New signup sheet</h3>
+  <label class="f"><span>What's it for?</span>
+    <input type="text" id="createTitle" maxlength="100" placeholder="Fall potluck, snack rotation…"></label>
+  <label class="f"><span>Details (optional)</span>
+    <input type="text" id="createDesc" maxlength="1000" placeholder="When, where, drop-off info…"></label>
+  <div class="row">
+    <button class="btn" id="createCancel" type="button">Cancel</button>
+    <button class="btn primary" id="createOk" type="button">Create</button>
   </div>
 </dialog>
 

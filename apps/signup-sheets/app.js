@@ -87,6 +87,7 @@ const isOwner = () => !!(user && live.board && live.board.ownerUid === user.uid)
 /* ---------- home ---------- */
 async function renderHome() {
   live.stop();
+  applyTheme(null);
   const v = $('view');
   v.replaceChildren();
 
@@ -138,16 +139,12 @@ async function renderHome() {
   }
 }
 
-async function startCreate() {
+function startCreate() {
   if (!user || D.isAnon(user)) { showDlg($('authDlg')); return; }
-  const title = prompt('What’s this sheet for? (you can edit everything after)', '');
-  if (title === null) return;
-  const t = title.trim() || 'Signup sheet';
-  try {
-    const { code } = await D.createBoard({ title: t });
-    location.hash = '#/b/' + code;
-    toast('Sheet created — add slots, then share the link');
-  } catch (e) { toast(friendly(e), 5000); }
+  $('createTitle').value = '';
+  $('createDesc').value = '';
+  showDlg($('createDlg'));
+  $('createTitle').focus();
 }
 
 /* ---------- board ---------- */
@@ -201,12 +198,20 @@ function syncClaimWatchers() {
   }
 }
 
+const THEMES = { blue: '#2563eb', green: '#0f766e', plum: '#7c3aed', slate: '#475569', amber: '#b45309' };
+function applyTheme(themeKey) {
+  const c = THEMES[themeKey];
+  if (c) document.documentElement.style.setProperty('--accent', c);
+  else document.documentElement.style.removeProperty('--accent');
+}
+
 function drawBoard() {
   if (route().view !== 'board' || !live.board) return;
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
   const locked = !!b.settings?.locked;
+  applyTheme(b.settings?.theme);
   const v = $('view');
   v.replaceChildren();
 
@@ -223,6 +228,19 @@ function drawBoard() {
       el('div', { class: 'sub', text: stats.taken + ' of ' + stats.total + ' spots filled' }));
   }
   v.append(head);
+
+  // Owners get sharing front and center — it's the whole point of the product.
+  if (own) {
+    const url = shareUrl(live.code, baseUrl());
+    v.append(el('section', { class: 'card noprint' },
+      el('h2', {}, 'Share this sheet'),
+      el('div', { class: 'sharecode', text: live.code }),
+      el('div', { class: 'row' },
+        el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied — send it anywhere') }, 'Copy link'),
+        el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
+      el('p', { class: 'hint', text: 'Send the link any way you like. The big code is for telling someone out loud — they type it on the app’s front page.' })));
+  }
+
   if (locked) v.append(el('div', { class: 'banner', text: own
     ? 'This sheet is locked — participants can look but not sign up. Unlock it in Manage.'
     : 'This sheet is locked by the organizer — read-only for now.' }));
@@ -273,7 +291,8 @@ function renderSlot(s, own, locked) {
   const chips = el('div', { class: 'chips' });
   for (const c of claims) {
     const isMine = user && c.uid === user.uid;
-    const chip = el('span', { class: 'chip' + (isMine ? ' mine' : '') }, c.name + (isMine ? ' (you)' : ''));
+    const chip = el('span', { class: 'chip' + (isMine ? ' mine' : '') },
+      c.name + (isMine ? ' (you)' : '') + (c.note ? ' · ' + c.note : ''));
     if ((isMine && !locked) || own) chip.append(el('button', {
       type: 'button', 'aria-label': 'Remove ' + c.name + ' from this spot', class: 'noprint',
       onclick: async () => {
@@ -301,6 +320,7 @@ function openClaim(slot) {
   claimTarget = slot;
   $('nameDlgSlot').textContent = slot.label;
   $('nameInput').value = myName();
+  $('noteInput').value = '';
   showDlg($('nameDlg'));
   $('nameInput').focus();
 }
@@ -423,6 +443,20 @@ function renderManage(b) {
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Settings'));
   const s = b.settings || {};
   inner.append(
+    el('label', { class: 'f' }, el('span', {}, 'Color')),
+    el('div', { class: 'themedots' },
+      ...Object.entries(THEMES).map(([key, color]) =>
+        el('button', {
+          type: 'button', 'aria-label': key + ' theme',
+          class: (s.theme || 'blue') === key ? 'sel' : '',
+          style: 'background:' + color,
+          onclick: () => D.setTheme(live.boardId, s, key)
+            .then(() => toast('Color updated'))
+            .catch(e => toast(String((e && e.code) || '').includes('permission-denied')
+              ? 'Colors need the updated rules — re-publish them from the latest version.'
+              : friendly(e), 5000)),
+        }))));
+  inner.append(
     el('label', { class: 'f', style: 'display:flex;align-items:center;gap:8px' },
       el('input', { type: 'checkbox', style: 'width:auto', ...(s.approvalRequired ? { checked: '' } : {}),
         onchange: (ev) => D.setApproval(live.boardId, s, ev.target.checked)
@@ -510,7 +544,11 @@ function wire() {
     } else showDlg($('authDlg'));
   });
   $('googleBtn').addEventListener('click', async () => {
-    try { await D.signInGoogle(); closeDlg($('authDlg')); toast('Signed in'); }
+    try {
+      const u = await D.signInGoogle();
+      if (u === null) return; // redirect flow — page is navigating away
+      closeDlg($('authDlg')); toast('Signed in');
+    }
     catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized-domain')
@@ -536,8 +574,12 @@ function wire() {
     if (!name) { toast('Just your first name is fine'); return; }
     saveName(name);
     closeDlg($('nameDlg'));
-    try { await D.claimSlot(live.boardId, claimTarget.id, name); toast('You’re in — ' + claimTarget.label); }
-    catch (e) { toast(friendly(e), 4500); }
+    try {
+      const r = await D.claimSlot(live.boardId, claimTarget.id, name, $('noteInput').value);
+      toast(r === 'note-dropped'
+        ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
+        : 'You’re in — ' + claimTarget.label, r === 'note-dropped' ? 6000 : 2400);
+    } catch (e) { toast(friendly(e), 4500); }
   });
   $('nameCancel').addEventListener('click', () => closeDlg($('nameDlg')));
   $('nameInput').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('nameOk').click(); });
@@ -558,6 +600,19 @@ function wire() {
   });
   $('slotCancel').addEventListener('click', () => closeDlg($('slotDlg')));
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
+
+  $('createOk').addEventListener('click', async () => {
+    const title = $('createTitle').value.trim();
+    if (!title) { toast('Give it a name — you can change it later'); return; }
+    closeDlg($('createDlg'));
+    try {
+      const { code } = await D.createBoard({ title, description: $('createDesc').value.trim() });
+      location.hash = '#/b/' + code;
+      toast('Sheet created — add spots, then share the link');
+    } catch (e) { toast(friendly(e), 5000); }
+  });
+  $('createCancel').addEventListener('click', () => closeDlg($('createDlg')));
+  $('createTitle').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('createOk').click(); });
 
   window.addEventListener('online', drawBoard);
   window.addEventListener('offline', drawBoard);
@@ -580,6 +635,8 @@ async function init() {
   try {
     await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:'));
   } catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
+  try { await D.completeRedirect(); }
+  catch (e) { toast('Google sign-in didn’t complete (' + ((e && e.code) || '?') + ')', 6000); }
   D.onAuth((u) => { user = u; refreshAuthBtn(); render(); });
   render();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !firebaseConfig.projectId.startsWith('demo-')) {
