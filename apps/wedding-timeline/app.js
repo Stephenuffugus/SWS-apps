@@ -82,6 +82,8 @@ function renderSheet() {
 }
 
 function wire() {
+  // Ctrl/Cmd+P must print the current timeline, not a blank/stale sheet
+  window.addEventListener('beforeprint', renderSheet);
   $('titleInput').addEventListener('input', (ev) => { state.title = ev.target.value.slice(0, 80); save(); });
   $('dateInput').addEventListener('input', (ev) => { state.date = ev.target.value.slice(0, 40); save(); });
   const add = () => {
@@ -120,13 +122,21 @@ function init() {
     t.href = CONFIG.tipUrl;
     t.classList.remove('hidden');
   }
+  load();
   const shared = decodeTimeline(location.hash);
-  if (shared) {
-    state = shared;
-    save();
+  if (shared && shared.events.length) {
+    // never silently destroy the user's own timeline to honor a tapped link
+    const hasOwn = state.events.length > 0;
+    if (!hasOwn || confirm('Open the shared timeline “' + (shared.title || 'Untitled') + '”? Your current timeline ('
+        + state.events.length + ' moments) will be replaced.')) {
+      state = shared;
+      save();
+      toast('Timeline loaded from the link');
+    }
     history.replaceState(null, '', location.pathname);
-    toast('Timeline loaded from the link');
-  } else load();
+  } else if (shared) {
+    history.replaceState(null, '', location.pathname);
+  }
   $('titleInput').value = state.title;
   $('dateInput').value = state.date;
   renderList();

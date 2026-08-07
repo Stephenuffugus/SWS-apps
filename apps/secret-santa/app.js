@@ -35,8 +35,8 @@ async function copyText(text, okMsg) {
 }
 
 let names = [];
-let exclusions = [];   // [i, j] pairs
-let pendingPick = null;
+let exclusions = [];   // pairs of NAMES — editing the list must never remap couples
+let pendingPick = null; // a name, while picking the second half of a pair
 
 function baseUrl() {
   return location.origin === 'null' || location.protocol === 'file:'
@@ -44,30 +44,32 @@ function baseUrl() {
     : location.origin + location.pathname;
 }
 
+const samePair = (p, a, b) => (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a);
+
 function renderExclusions() {
   const picker = $('exclPicker');
   picker.replaceChildren();
-  names.forEach((name, i) => {
+  for (const name of names) {
     picker.append(el('button', {
-      class: 'chip' + (pendingPick === i ? ' sel' : ''), type: 'button',
+      class: 'chip' + (pendingPick === name ? ' sel' : ''), type: 'button',
       onclick: () => {
-        if (pendingPick === null) { pendingPick = i; }
-        else if (pendingPick === i) { pendingPick = null; }
+        if (pendingPick === null) pendingPick = name;
+        else if (pendingPick === name) pendingPick = null;
         else {
-          const a = Math.min(pendingPick, i), b = Math.max(pendingPick, i);
-          if (!exclusions.some(([x, y]) => x === a && y === b)) exclusions.push([a, b]);
+          if (!exclusions.some(p => samePair(p, pendingPick, name)))
+            exclusions.push([pendingPick, name]);
           pendingPick = null;
         }
         renderExclusions();
       },
     }, name));
-  });
+  }
   const list = $('exclList');
   list.replaceChildren();
   exclusions.forEach(([a, b], idx) => {
-    if (!names[a] || !names[b]) return;
+    if (!names.includes(a) || !names.includes(b)) return;
     list.append(el('li', {},
-      el('span', { class: 'grow', text: names[a] + ' ⛔ ' + names[b] }),
+      el('span', { class: 'grow', text: a + ' ⛔ ' + b }),
       el('button', { class: 'btn small', type: 'button', 'aria-label': 'Remove pair',
         onclick: () => { exclusions.splice(idx, 1); renderExclusions(); } }, '✕')));
   });
@@ -75,7 +77,10 @@ function renderExclusions() {
 
 function draw() {
   names = parseNames($('names').value);
-  const valid = exclusions.filter(([a, b]) => a < names.length && b < names.length);
+  // resolve name pairs to CURRENT indices at draw time
+  const valid = exclusions
+    .map(([a, b]) => [names.indexOf(a), names.indexOf(b)])
+    .filter(([a, b]) => a >= 0 && b >= 0);
   $('drawWarn').classList.add('hidden');
   if (names.length < 3) {
     $('drawWarn').textContent = 'You need at least three people for a proper Secret Santa.';
@@ -135,7 +140,7 @@ function init() {
   }
   $('names').addEventListener('input', () => {
     names = parseNames($('names').value);
-    exclusions = exclusions.filter(([a, b]) => a < names.length && b < names.length);
+    exclusions = exclusions.filter(([a, b]) => names.includes(a) && names.includes(b));
     pendingPick = null;
     $('results').classList.add('hidden');
     renderExclusions();

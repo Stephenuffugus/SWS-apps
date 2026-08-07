@@ -90,13 +90,17 @@ function renderSheet() {
 }
 
 function wire() {
+  // Ctrl/Cmd+P must print the CURRENT card — stale medication info is dangerous
+  window.addEventListener('beforeprint', renderSheet);
   $('whoInput').addEventListener('input', (ev) => { data.who = ev.target.value.slice(0, 40); save(); });
   $('addMed').addEventListener('click', () => {
     const name = $('medName').value.trim();
     if (!name) { toast('What’s the medication called?'); return; }
     const times = [...$('medTimes').querySelectorAll('input:checked')].map(c => c.value);
     if (times.length === 0) { toast('Pick at least one time of day'); return; }
-    if (data.meds.length >= 30) { toast('That’s the one-page limit — split into two schedules'); return; }
+    // the printed card gets one ROW per med×time — cap rows, not meds
+    const rows = data.meds.reduce((a, m) => a + m.times.length, 0);
+    if (rows + times.length > 30) { toast('That’s the one-page limit (30 rows) — split into two schedules'); return; }
     data.meds.push({
       id: newId(),
       name: name.slice(0, 60),

@@ -71,19 +71,24 @@ function pos(ev) {
   return { x: ev.clientX - r.left, y: ev.clientY - r.top };
 }
 
+let activePointer = null; // one pen at a time — a resting palm must not zigzag the stroke
 pad.addEventListener('pointerdown', (ev) => {
   ev.preventDefault();
+  if (activePointer !== null) return; // second touch while drawing: ignored
+  activePointer = ev.pointerId;
   pad.setPointerCapture(ev.pointerId);
   current = { color, size, points: [pos(ev)] };
   redraw();
 });
 pad.addEventListener('pointermove', (ev) => {
-  if (!current) return;
+  if (!current || ev.pointerId !== activePointer) return;
   const events = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
   for (const e of events) current.points.push(pos(e));
   redraw();
 });
 const endStroke = (ev) => {
+  if (ev.pointerId !== activePointer) return;
+  activePointer = null;
   if (!current) return;
   strokes.push(current);
   current = null;

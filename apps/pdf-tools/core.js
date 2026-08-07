@@ -2,22 +2,33 @@
 // Documents never leave the device; this module never touches the network.
 
 /* order: [{ doc: index into loadedDocs, page: 0-based page index, rotate: extra degrees 0/90/180/270 }]
-   loadedDocs: array of PDFDocument. Returns merged bytes. */
+   loadedDocs: array of PDFDocument. Returns merged bytes.
+   Pages are copied in ONE copyPages call per source document — per-page calls
+   each create a fresh copier and re-embed shared fonts/images, bloating a
+   100-page letterhead PDF by ~100×. */
 export async function buildOutput(PDFLib, loadedDocs, order) {
   const { PDFDocument, degrees } = PDFLib;
   const out = await PDFDocument.create();
-  // group copies by source doc for efficiency, but preserve final order
-  for (const item of order) {
-    const src = loadedDocs[item.doc];
-    if (!src || item.page < 0 || item.page >= src.getPageCount()) continue;
-    const [page] = await out.copyPages(src, [item.page]);
-    if (item.rotate % 360 !== 0) {
+  const valid = order.filter(it =>
+    loadedDocs[it.doc] && it.page >= 0 && it.page < loadedDocs[it.doc].getPageCount());
+  if (valid.length === 0) throw new Error('no pages selected');
+  const byDoc = new Map();
+  valid.forEach((it, i) => {
+    if (!byDoc.has(it.doc)) byDoc.set(it.doc, []);
+    byDoc.get(it.doc).push({ i, page: it.page, rotate: it.rotate });
+  });
+  const placed = new Array(valid.length);
+  for (const [docIdx, entries] of byDoc) {
+    const pages = await out.copyPages(loadedDocs[docIdx], entries.map(e => e.page));
+    entries.forEach((e, j) => { placed[e.i] = { page: pages[j], rotate: e.rotate }; });
+  }
+  for (const { page, rotate } of placed) {
+    if (rotate % 360 !== 0) {
       const current = page.getRotation().angle || 0;
-      page.setRotation(degrees(((current + item.rotate) % 360 + 360) % 360));
+      page.setRotation(degrees(((current + rotate) % 360 + 360) % 360));
     }
     out.addPage(page);
   }
-  if (out.getPageCount() === 0) throw new Error('no pages selected');
   return out.save();
 }
 

@@ -91,8 +91,13 @@ function wire() {
   $('fileInput').addEventListener('change', async (ev) => {
     const files = [...(ev.target.files || [])];
     ev.target.value = '';
+    const memBytes = () => pages.reduce((a, p) => a + p.dataUrl.length * 0.75, 0);
     for (const f of files) {
       if (pages.length >= 100) { toast('100-page limit — make this PDF and start another'); break; }
+      if (memBytes() > 150 * 1024 * 1024) {
+        toast('That’s a lot of pages for one go — make this PDF now and start a second one.', 6000);
+        break;
+      }
       try { pages.push({ dataUrl: await compressImage(f) }); }
       catch (e) {
         // no canvas support — raw file fallback

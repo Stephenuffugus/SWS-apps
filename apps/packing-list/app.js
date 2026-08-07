@@ -122,14 +122,22 @@ function init() {
     t.href = CONFIG.tipUrl;
     t.classList.remove('hidden');
   }
+  load();
   const shared = decodeList(location.hash);
-  if (shared) {
-    name = shared.name;
-    items = shared.items;
-    save();
+  if (shared && shared.items.length) {
+    // never silently destroy the user's own list to honor a tapped link
+    const hasOwn = items.length > 0;
+    if (!hasOwn || confirm('Open the shared list “' + shared.name + '”? Your current list ('
+        + items.length + ' items) will be replaced.')) {
+      name = shared.name;
+      items = shared.items;
+      save();
+      toast('List loaded from the link');
+    }
     history.replaceState(null, '', location.pathname);
-    toast('List loaded from the link');
-  } else load();
+  } else if (shared) {
+    history.replaceState(null, '', location.pathname); // empty share: ignore
+  }
   $('tripName').value = name;
   renderPresets();
   renderList();

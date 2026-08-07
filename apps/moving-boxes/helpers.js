@@ -50,3 +50,17 @@ export function decodeBox(hash) {
   } catch (e) { return null; }
 }
 export const isBoxHash = (hash) => /^#b\./.test(String(hash || ''));
+
+/* Label QRs must stay scannable at 30mm — cap the payload, truncating the
+   item list with an honest "+N more" marker rather than failing silently. */
+export function encodeBoxForLabel(box, maxChars = 900) {
+  let items = [...box.items];
+  let removed = 0;
+  for (;;) {
+    const withMarker = removed ? items.concat(['…plus ' + removed + ' more (see packing list)']) : items;
+    const enc = encodeBox({ n: box.n, room: box.room, items: withMarker });
+    if (enc.length <= maxChars || items.length === 0) return enc;
+    items.pop();
+    removed++;
+  }
+}

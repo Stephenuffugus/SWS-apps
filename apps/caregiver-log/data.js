@@ -65,7 +65,7 @@ export async function signInGoogle() {
 
 export const completeRedirect = () => getRedirectResult(auth);
 
-const EMAIL_KEY = 'ss-signin-email';
+const EMAIL_KEY = 'cl-signin-email'; // per-app: shared origin must not collide
 export async function startEmailLink(email, url) {
   await sendSignInLinkToEmail(auth, email, { url, handleCodeInApp: true });
   try { localStorage.setItem(EMAIL_KEY, email); } catch (e) {}

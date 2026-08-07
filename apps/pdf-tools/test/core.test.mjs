@@ -51,6 +51,33 @@ await t('out-of-range pages are skipped; empty selection throws', async () => {
   assert.equal(merged.getPageCount(), 1);
   await assert.rejects(() => buildOutput(PDFLib, [docA], []), /no pages/);
 });
+await t('duplicating the same page in the order works', async () => {
+  const bytes = await buildOutput(PDFLib, [docA], [
+    { doc: 0, page: 0, rotate: 0 }, { doc: 0, page: 0, rotate: 0 },
+  ]);
+  const merged = await PDFLib.PDFDocument.load(bytes);
+  assert.equal(merged.getPageCount(), 2);
+});
+await t('shared resources are not re-embedded per page (size stays sane)', async () => {
+  // a doc whose pages share one embedded font: merged size should be far below
+  // per-page-copy bloat (each page re-embedding the font)
+  const doc = await PDFLib.PDFDocument.create();
+  const font = await doc.embedFont(PDFLib.StandardFonts.TimesRoman);
+  const filler = 'lorem '.repeat(200);
+  for (let i = 0; i < 10; i++) {
+    const p = doc.addPage([612, 792]);
+    p.drawText(filler + i, { x: 20, y: 700, size: 8, font, maxWidth: 570, lineHeight: 10 });
+  }
+  const src = await PDFLib.PDFDocument.load(await doc.save());
+  const mergedBytes = await buildOutput(PDFLib, [src],
+    Array.from({ length: 10 }, (_, page) => ({ doc: 0, page, rotate: 0 })));
+  const singles = [];
+  for (let page = 0; page < 10; page++)
+    singles.push(await buildOutput(PDFLib, [src], [{ doc: 0, page, rotate: 0 }]));
+  const singlesTotal = singles.reduce((a, b) => a + b.length, 0);
+  assert.ok(mergedBytes.length < singlesTotal * 0.6,
+    `merged ${mergedBytes.length} vs naive ${singlesTotal}`);
+});
 await t('splitAll makes one single-page PDF per page', async () => {
   const outs = await splitAll(PDFLib, docA);
   assert.equal(outs.length, 3);

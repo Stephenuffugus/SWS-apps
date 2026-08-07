@@ -102,8 +102,12 @@ function wire() {
     try {
       const outs = await splitAll(window.PDFLib, docs[0].pdf);
       const base = docs[0].name.replace(/\.pdf$/i, '');
-      outs.forEach((bytes, i) => download(bytes, base + '-page-' + (i + 1) + '.pdf'));
-      toast(outs.length + ' files saved');
+      toast('If the browser asks about multiple downloads, allow it', 4000);
+      for (let i = 0; i < outs.length; i++) {
+        download(outs[i], base + '-page-' + (i + 1) + '.pdf');
+        await new Promise(r => setTimeout(r, 350));
+      }
+      toast(outs.length + ' download(s) started');
     } catch (e) { toast('Failed: ' + (e.message || 'unknown error'), 5000); }
     btn.disabled = false; btn.textContent = 'Split into one file per page';
   });

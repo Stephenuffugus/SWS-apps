@@ -45,6 +45,7 @@ function friendly(e) {
 
 let user = null;
 let itemDraft = '';
+let addFocused = false; // survive live-snapshot redraws mid-typing
 const live = {
   boardId: null, code: null, board: null, entries: [],
   unsubs: [],
@@ -176,7 +177,14 @@ function drawBoard() {
     type: 'text', maxlength: '120', placeholder: 'Add something… “milk”, “the good coffee”',
     value: itemDraft,
     oninput: (ev) => { itemDraft = ev.target.value; },
+    onfocus: () => { addFocused = true; },
+    onblur: () => { addFocused = false; },
     onkeydown: (ev) => { if (ev.key === 'Enter') addBtn.click(); },
+  });
+  // a family member checking something off must not close YOUR keyboard
+  if (addFocused) requestAnimationFrame(() => {
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
   });
   const addBtn = el('button', { class: 'btn primary', type: 'button', style: 'flex:0 0 auto',
     onclick: async () => {

@@ -28,16 +28,19 @@ function toast(msg, ms) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
 }
 
-let items = []; // {file, thumbUrl, w, h, outBlob, outW, outH}
+let items = []; // {file, thumbUrl, w, h, outBlob, outExt, outW, outH}
 
+/* Full-resolution bitmaps are NOT retained (50 photos ≈ gigabytes of RAM on
+   mobile). We keep only the File and a small thumb; compression re-decodes. */
 async function readImage(file) {
   const bmp = await createImageBitmap(file);
-  // small thumbnail for the list
   const t = document.createElement('canvas');
   const td = scaleDims(bmp.width, bmp.height, 120);
   t.width = td.w; t.height = td.h;
   t.getContext('2d').drawImage(bmp, 0, 0, td.w, td.h);
-  return { file, thumbUrl: t.toDataURL('image/jpeg', 0.7), w: bmp.width, h: bmp.height, bmp, outBlob: null };
+  const meta = { file, thumbUrl: t.toDataURL('image/jpeg', 0.7), w: bmp.width, h: bmp.height, outBlob: null, outExt: null };
+  bmp.close && bmp.close();
+  return meta;
 }
 
 function canvasToBlob(canvas, type, quality) {
@@ -45,18 +48,22 @@ function canvasToBlob(canvas, type, quality) {
 }
 
 async function compressOne(item, maxSide, format, quality) {
+  const bmp = await createImageBitmap(item.file);
   const { w, h } = scaleDims(item.w, item.h, maxSide);
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
   if (format === 'jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); } // no black transparency
-  ctx.drawImage(item.bmp, 0, 0, w, h);
+  ctx.drawImage(bmp, 0, 0, w, h);
+  bmp.close && bmp.close();
   const type = 'image/' + format;
   let blob = await canvasToBlob(canvas, type, format === 'png' ? undefined : quality);
   if (!blob || (blob.type !== type && format === 'webp')) {
     blob = await canvasToBlob(canvas, 'image/jpeg', quality); // Safari-old fallback
   }
   item.outBlob = blob;
+  // the extension must reflect what was ACTUALLY encoded, not the current dropdown
+  item.outExt = blob ? (blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg') : null;
   item.outW = w; item.outH = h;
 }
 
@@ -66,9 +73,14 @@ function download(blob, filename) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
 
-function currentExt() {
-  const f = $('format').value;
-  return f === 'jpeg' ? 'jpg' : f;
+async function downloadStaggered(list) {
+  // browsers gate multi-download; fire sequentially so the permission prompt
+  // can catch up, and tell the user what to click
+  if (list.length > 1) toast('If the browser asks about multiple downloads, allow it', 4000);
+  for (const [blob, name] of list) {
+    download(blob, name);
+    await new Promise(r => setTimeout(r, 350));
+  }
 }
 
 function render() {
@@ -92,7 +104,7 @@ function render() {
             ? el('span', { class: 'savings', text: savingsPct(before, after) + '% smaller' }) : null)),
       item.outBlob
         ? el('button', { class: 'btn small', type: 'button',
-            onclick: () => download(item.outBlob, outName(item.file.name, currentExt())) }, 'Save')
+            onclick: () => download(item.outBlob, outName(item.file.name, item.outExt || 'jpg')) }, 'Save')
         : null));
   }
 }
@@ -128,11 +140,11 @@ function wire() {
       (savingsPct(total, out) ? ' (' + savingsPct(total, out) + '% smaller)' : ''), 4500);
     btn.disabled = false; btn.textContent = 'Compress';
   });
-  $('allBtn').addEventListener('click', () => {
+  $('allBtn').addEventListener('click', async () => {
     const ready = items.filter(i => i.outBlob);
     if (ready.length === 0) { toast('Press Compress first'); return; }
-    ready.forEach(i => download(i.outBlob, outName(i.file.name, currentExt())));
-    toast(ready.length + ' file(s) saved');
+    await downloadStaggered(ready.map(i => [i.outBlob, outName(i.file.name, i.outExt || 'jpg')]));
+    toast(ready.length + ' download(s) started');
   });
 }
 

@@ -10,7 +10,10 @@ export function buildPayload(type, f) {
   if (type === 'url') {
     let u = String(f.url || '').trim();
     if (!u) return '';
-    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)) u = 'https://' + u;
+    // Only recognized link schemes pass through untouched. Everything else —
+    // including "example.com:8080/menu" (a colon is NOT a scheme here) and
+    // javascript:/data: payloads (neutralized) — gets https:// prepended.
+    if (!/^(https?|mailto|tel|sms|ftp|geo):/i.test(u)) u = 'https://' + u;
     return u;
   }
   if (type === 'wifi') {

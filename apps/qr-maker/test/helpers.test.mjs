@@ -12,11 +12,16 @@ function ok(name, fn) {
   catch (e) { console.error('FAIL:', name, '\n ', e.message); process.exitCode = 1; }
 }
 
-ok('url payload adds https:// only when schemeless', () => {
+ok('url payload adds https:// unless a known link scheme is present', () => {
   assert.equal(buildPayload('url', { url: 'skywolf.example' }), 'https://skywolf.example');
   assert.equal(buildPayload('url', { url: 'https://a.b/c?d=e' }), 'https://a.b/c?d=e');
   assert.equal(buildPayload('url', { url: 'mailto:x@y.z' }), 'mailto:x@y.z');
   assert.equal(buildPayload('url', { url: '  ' }), '');
+  // a host:port is NOT a scheme — this used to produce a broken QR
+  assert.equal(buildPayload('url', { url: 'example.com:8080/menu' }), 'https://example.com:8080/menu');
+  assert.equal(buildPayload('url', { url: 'localhost:3000' }), 'https://localhost:3000');
+  // hostile schemes are neutralized rather than encoded verbatim
+  assert.equal(buildPayload('url', { url: 'javascript:alert(1)' }), 'https://javascript:alert(1)');
 });
 ok('wifi payload escapes special chars', () => {
   assert.equal(escapeWifi('my;net:wo,rk"\\'), 'my\\;net\\:wo\\,rk\\"\\\\');

@@ -144,6 +144,8 @@ function renderSheet() {
 function wire() {
   $('modeBaby').addEventListener('click', () => { mode = 'baby'; load(); renderForm(); });
   $('modePet').addEventListener('click', () => { mode = 'pet'; load(); renderForm(); });
+  // Ctrl/Cmd+P must print the CURRENT sheet, not a blank or stale one
+  window.addEventListener('beforeprint', renderSheet);
   $('printBtn').addEventListener('click', () => {
     if (!Object.values(data).some(v => (v || '').trim())) { toast('Fill in at least one field first'); return; }
     renderSheet();

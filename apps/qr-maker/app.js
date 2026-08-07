@@ -124,7 +124,13 @@ function update() {
     drawQrToCanvas(qr, canvas, 300);
     $('emptyHint').classList.add('hidden');
   } catch (e) {
+    // never leave a stale code on screen that doesn't match the inputs
     currentQr = null;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 300; canvas.height = 300;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 300, 300);
+    $('emptyHint').classList.remove('hidden');
     toast('That’s too much data for one QR code — shorten it a little.', 4000);
   }
 }

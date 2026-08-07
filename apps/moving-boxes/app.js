@@ -1,7 +1,7 @@
 // Moving Boxes — numbered boxes, searchable contents, printable QR labels.
 // Scanning a label opens this app with the box encoded in the URL hash.
 import {
-  newId, nextBoxNumber, parseItems, searchBoxes, encodeBox, decodeBox, isBoxHash,
+  newId, nextBoxNumber, parseItems, searchBoxes, decodeBox, isBoxHash, encodeBoxForLabel,
 } from './helpers.js';
 
 const CONFIG = { tipUrl: '' };
@@ -33,6 +33,7 @@ function toast(msg, ms) {
 
 const KEY = 'moving-boxes';
 let boxes = [];
+let editingBoxId = null;   // ✎ edits in place — the box is never deleted first
 let saveWarned = 0;
 
 function load() {
@@ -79,13 +80,13 @@ function renderBoxes() {
         el('div', { class: 'sub', text: b.items.join(', ') || 'empty?' })),
       el('button', { class: 'btn small screenonly', type: 'button', 'aria-label': 'Edit box',
         onclick: () => {
+          editingBoxId = b.id;
           $('boxNum').value = String(b.n);
           $('boxRoom').value = b.room;
           $('boxItems').value = b.items.join('\n');
-          boxes = boxes.filter(x => x.id !== b.id);
-          save(); renderBoxes();
+          $('addBox').textContent = 'Update box #' + b.n + ' 📦';
           $('boxItems').focus();
-          toast('Box #' + b.n + ' reopened — edit and seal it again');
+          toast('Editing box #' + b.n + ' — it stays sealed until you update it');
         } }, '✎'),
       el('button', { class: 'btn small danger screenonly', type: 'button', 'aria-label': 'Delete box',
         onclick: () => {
@@ -115,7 +116,7 @@ function renderSearch() {
 
 function qrDataUrl(text) {
   try {
-    const qr = qrcode(0, 'M');
+    const qr = qrcode(0, 'L'); // L keeps big labels scannable at 30mm
     qr.addData(text);
     qr.make();
     const count = qr.getModuleCount();
@@ -136,16 +137,17 @@ function renderLabels() {
   const wrap = $('labels');
   wrap.replaceChildren();
   for (const b of [...boxes].sort((x, y) => x.n - y.n)) {
-    const url = baseUrl() + '#' + encodeBox(b);
-    const img = el('img', { alt: 'QR for box ' + b.n });
+    const url = baseUrl() + '#' + encodeBoxForLabel(b);
     const data = qrDataUrl(url);
-    if (data) img.src = data;
+    const qrNode = data
+      ? el('img', { alt: 'QR for box ' + b.n, src: data })
+      : el('div', { class: 'li', text: '(QR too large — trim the item list)' });
     wrap.append(el('div', { class: 'label' },
       el('div', { class: 'lt' },
         el('div', { class: 'ln', text: '#' + b.n }),
         el('div', { class: 'lr', text: b.room || '' }),
         el('div', { class: 'li', text: b.items.slice(0, 4).join(' · ') + (b.items.length > 4 ? ' …' : '') })),
-      img));
+      qrNode));
   }
 }
 
@@ -161,19 +163,33 @@ function showScanned(box) {
 }
 
 function wire() {
+  // Ctrl/Cmd+P must print current labels, not blank/stale ones
+  window.addEventListener('beforeprint', renderLabels);
   $('addBox').addEventListener('click', () => {
     const items = parseItems($('boxItems').value);
     if (items.length === 0) { toast('List what’s inside first'); return; }
     const n = parseInt($('boxNum').value, 10);
-    boxes.push({
-      id: newId(),
-      n: (Number.isInteger(n) && n > 0) ? n : nextBoxNumber(boxes),
-      room: $('boxRoom').value.trim().slice(0, 40),
-      items,
-    });
+    if (editingBoxId) {
+      const b = boxes.find(x => x.id === editingBoxId);
+      if (b) {
+        b.n = (Number.isInteger(n) && n > 0) ? n : b.n;
+        b.room = $('boxRoom').value.trim().slice(0, 40);
+        b.items = items;
+      }
+      editingBoxId = null;
+      $('addBox').textContent = 'Seal the box 📦';
+      toast('Updated ✓');
+    } else {
+      boxes.push({
+        id: newId(),
+        n: (Number.isInteger(n) && n > 0) ? n : nextBoxNumber(boxes),
+        room: $('boxRoom').value.trim().slice(0, 40),
+        items,
+      });
+      toast('Sealed 📦 — next box');
+    }
     $('boxNum').value = ''; $('boxItems').value = '';
     save(); renderBoxes(); renderRoomList();
-    toast('Sealed 📦 — next box');
     $('boxItems').focus();
   });
   $('searchInput').addEventListener('input', renderSearch);

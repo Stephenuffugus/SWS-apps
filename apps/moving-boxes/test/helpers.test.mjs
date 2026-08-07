@@ -1,7 +1,7 @@
 // Run: node test/helpers.test.mjs
 import assert from 'node:assert/strict';
 import {
-  nextBoxNumber, parseItems, searchBoxes, encodeBox, decodeBox, isBoxHash,
+  nextBoxNumber, parseItems, searchBoxes, encodeBox, decodeBox, isBoxHash, encodeBoxForLabel,
 } from '../helpers.js';
 
 let passed = 0;
@@ -42,6 +42,18 @@ ok('box round-trips through the label QR payload', () => {
   assert.equal(d.room, 'Kitchen');
   assert.deepEqual(d.items, ['Can opener', 'Pots', 'The good knife']);
   assert.equal(decodeBox('#b.!!!'), null);
+});
+
+ok('label payload caps size with an honest truncation marker', () => {
+  const monster = { n: 3, room: 'Garage', items: Array.from({ length: 100 }, (_, i) => 'Item ' + i + ' with a long descriptive name attached') };
+  const enc = encodeBoxForLabel(monster);
+  assert.ok(enc.length <= 900, 'capped at ' + enc.length);
+  const d = decodeBox('#' + enc);
+  assert.equal(d.n, 3);
+  assert.ok(d.items[d.items.length - 1].includes('more'), 'truncation marker present');
+  // small boxes are untouched
+  const small = encodeBoxForLabel({ n: 1, room: 'Kitchen', items: ['Pots'] });
+  assert.deepEqual(decodeBox('#' + small).items, ['Pots']);
 });
 
 console.log(`\n${passed} moving-boxes helper tests passed${process.exitCode ? ' (with failures)' : ''}`);

@@ -119,10 +119,18 @@ function renderStatus() {
   $('sleepBtn').classList.toggle('active', !!sleeping);
 }
 
+/* Today's window uses real calendar midnights — a fixed +24h drops the last
+   hour of fall-back DST days (an 11:15pm feed would vanish from the summary). */
+function todayWindow() {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const end = new Date(start); end.setDate(end.getDate() + 1);
+  return { start: start.getTime(), end: end.getTime() };
+}
+
 function renderSummary() {
   const now = new Date();
-  const start = new Date(now); start.setHours(0, 0, 0, 0);
-  const s = daySummary(data.events, start.getTime(), start.getTime() + 86400000, now.getTime());
+  const { start: ws, end: we } = todayWindow();
+  const s = daySummary(data.events, ws, we, now.getTime());
   const box = $('summary');
   box.replaceChildren(
     el('div', {}, '🍼 Feeds: ', el('b', {}, String(s.feeds))),
@@ -184,8 +192,8 @@ function wire() {
   });
   $('copyBtn').addEventListener('click', () => {
     const now = new Date();
-    const start = new Date(now); start.setHours(0, 0, 0, 0);
-    const s = daySummary(data.events, start.getTime(), start.getTime() + 86400000, now.getTime());
+    const { start: ws, end: we } = todayWindow();
+    const s = daySummary(data.events, ws, we, now.getTime());
     copyText(summaryText(data.name, s, now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })),
       'Summary copied — hand off the shift');
   });
