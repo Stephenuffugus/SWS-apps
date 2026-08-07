@@ -1,7 +1,8 @@
 # SWS-apps
 
-App portfolio of **SWS Strategic Media LLC**. Free, ad-free utilities with a
-tip jar — the brand promise across every app here:
+The app portfolio of **Sky Wolf Studios** (SWS Strategic Media LLC).
+Games live in the **SWS Arcade**; these are the apps. Free, ad-free utilities
+with a tip jar — the brand promise across every app here:
 
 > Nothing leaves your device. No account. No ads. No subscription.
 
