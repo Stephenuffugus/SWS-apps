@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Baby Log — one thumb, 3am, done</title>
+<meta name="description" content="Track feeds, sleep, and diapers with giant one-thumb buttons. Your baby's data stays on your device — no account, no cloud, no ads.">
+<meta name="theme-color" content="#f7f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131217" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f7f6f9; --card:#ffffff; --ink:#241f2e; --muted:#6d6580; --line:#e7e3ee;
+  --accent:#7c3aed; --accent-ink:#ffffff; --chip:#f0ecf6; --focus:#c4b5fd;
+  --feed:#0f766e; --sleep:#1d4ed8; --diaper:#b45309; --neg:#b91c1c;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#131217; --card:#1d1b23; --ink:#e9e6ef; --muted:#9a92aa; --line:#2e2a38;
+    --accent:#a78bfa; --accent-ink:#1a1030; --chip:#272430; --focus:#6d28d9;
+    --feed:#2dd4bf; --sleep:#60a5fa; --diaper:#f59e0b; --neg:#f87171;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:560px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+.status{font-size:1.02rem; line-height:1.6}
+.status b{font-variant-numeric:tabular-nums}
+.status .sleeping{color:var(--sleep); font-weight:700}
+.bigbtns{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px}
+.bigbtns button{
+  padding:18px 6px; font-size:.95rem; border-radius:14px; border:1px solid var(--line);
+  background:var(--card); color:var(--ink); cursor:pointer; font-weight:600; font-family:inherit;
+}
+.bigbtns button .em{display:block; font-size:1.5rem; margin-bottom:2px}
+.bigbtns button.feed{border-color:var(--feed)}
+.bigbtns button.sleep{border-color:var(--sleep)}
+.bigbtns button.diaper{border-color:var(--diaper)}
+.bigbtns button.active{background:var(--sleep); color:#fff}
+input[type=text]{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.small{padding:6px 9px; font-size:.82rem}
+.btn.danger{color:var(--neg)}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); font-size:.92rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0}
+.when{color:var(--muted); font-size:.8rem; font-variant-numeric:tabular-nums; flex:0 0 70px}
+.dayhead{font-size:.78rem; font-weight:700; color:var(--muted); margin:12px 0 2px; text-transform:uppercase; letter-spacing:.05em}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Baby Log</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <section class="card">
+    <input type="text" id="nameInput" maxlength="40" placeholder="Baby's name (optional)">
+    <div class="status" id="status" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card">
+    <h2>Feed</h2>
+    <div class="bigbtns">
+      <button type="button" class="feed" data-kind="feed" data-detail="left"><span class="em">🤱</span>Left</button>
+      <button type="button" class="feed" data-kind="feed" data-detail="right"><span class="em">🤱</span>Right</button>
+      <button type="button" class="feed" data-kind="feed" data-detail="bottle"><span class="em">🍼</span>Bottle</button>
+    </div>
+    <h2 style="margin-top:14px">Sleep</h2>
+    <div class="bigbtns" style="grid-template-columns:1fr">
+      <button type="button" class="sleep" id="sleepBtn"><span class="em">😴</span><span id="sleepLabel">Fell asleep</span></button>
+    </div>
+    <h2 style="margin-top:14px">Diaper</h2>
+    <div class="bigbtns">
+      <button type="button" class="diaper" data-kind="diaper" data-detail="wet"><span class="em">💧</span>Wet</button>
+      <button type="button" class="diaper" data-kind="diaper" data-detail="dirty"><span class="em">💩</span>Dirty</button>
+      <button type="button" class="diaper" data-kind="diaper" data-detail="both"><span class="em">🌊</span>Both</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Today</h2>
+    <div class="status" id="summary"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="copyBtn" type="button">Copy today's summary</button>
+    </div>
+    <p class="hint">Paste it to your partner at shift change, or read it to the pediatrician.</p>
+  </section>
+
+  <section class="card">
+    <h2>Timeline</h2>
+    <ul class="plain" id="timeline"></ul>
+    <p class="hint" id="emptyHint">Every tap lands here with its time. Mis-taps can be deleted.</p>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <button class="btn" id="exportBtn" type="button">Export backup</button>
+      <button class="btn" id="importBtn" type="button">Import</button>
+      <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+    </div>
+    <p class="hint">Baby data lives only on this phone — deliberately. Export a backup now and then.</p>
+  </section>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">No cloud. No account. No one mining your baby's data.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
