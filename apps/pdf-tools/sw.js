@@ -1,7 +1,6 @@
 /* PDF Tools service worker — fully offline. Bump VERSION on deploy. */
 const VERSION = 'pdftools-v1';
-const ASSETS = ['./', './index.html', './app.js', './core.js', '', './vendor-pdf-lib.js',
-  './manifest.webmanifest', './icon.svg', './apple-touch-icon.png'];
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./core.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-pdf-lib.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
