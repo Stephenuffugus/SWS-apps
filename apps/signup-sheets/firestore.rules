@@ -1,0 +1,304 @@
+rules_version = '2';
+
+// Engine 1 — shared-link coordination. Security model (see 01-shared-link-coordination.md):
+//
+//   * Owners sign in with a real provider (Google / email link). Participants use
+//     Firebase ANONYMOUS auth — their anon UID plays the claimToken role from the
+//     product doc: it's how "edit/release my own claim" is enforced. Losing it
+//     (cleared storage) just means the owner fixes things, which the doc accepts.
+//   * Share-code lookup lives in a separate `codes` collection holding ONLY a
+//     boardId, so a leaked code exposes nothing but an opaque ID.
+//   * Anonymous writes are the attack surface. Participants can do exactly four
+//     things, all shape-checked and batch-coupled to counters that make the
+//     caps hard limits, not UI suggestions:
+//       1. create an entry            (+1 board.entryCount, cap 500)
+//       2. edit/delete their own entry (delete: -1 board.entryCount)
+//       3. claim a slot               (claims/{their-uid} + slot.claimedCount+1, cap = capacity)
+//       4. release their claim        (delete claims/{their-uid} + slot.claimedCount-1)
+//   * Locking a board (settings.locked) freezes all participant writes at the
+//     rules layer. Rotating the share code = delete old code doc + create new.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    // Owners must sign in with a real provider; anonymous users can never own boards.
+    function nonAnon() {
+      return authed() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function boardPath(boardId) {
+      return /databases/$(database)/documents/boards/$(boardId);
+    }
+
+    function board(boardId) {
+      return get(boardPath(boardId)).data;
+    }
+
+    function boardAfter(boardId) {
+      return getAfter(boardPath(boardId)).data;
+    }
+
+    function isOwner(boardId) {
+      return authed() && board(boardId).ownerUid == request.auth.uid;
+    }
+
+    function boardUnlocked(boardId) {
+      return board(boardId).settings.locked == false;
+    }
+
+    function validSettings(s) {
+      return s.keys().hasOnly(['approvalRequired', 'locked'])
+          && s.approvalRequired is bool
+          && s.locked is bool;
+    }
+
+    function validBoardShape(d) {
+      return d.keys().hasOnly(['ownerUid', 'skin', 'title', 'description', 'shareCode',
+                               'createdAt', 'settings', 'entryCount'])
+          && d.skin in ['signup', 'team', 'care']
+          && d.title is string && d.title.size() >= 1 && d.title.size() <= 100
+          && d.description is string && d.description.size() <= 1000
+          && d.shareCode is string && d.shareCode.matches('^[A-HJ-NP-Z2-9]{6}$')
+          && d.createdAt == request.time
+          && validSettings(d.settings)
+          && d.entryCount == 0;
+    }
+
+    // ---------- share codes: lookup only, no payload ----------
+
+    match /codes/{code} {
+      allow get: if authed();
+      allow list: if false; // codes are resolved one at a time, never enumerated
+
+      // Created in the same batch as the board (or when rotating): the code's
+      // creator must own the board it points to *after* this write commits.
+      allow create: if nonAnon()
+                    && request.resource.data.keys().hasOnly(['boardId'])
+                    && request.resource.data.boardId is string
+                    && code.matches('^[A-HJ-NP-Z2-9]{6}$')
+                    && boardAfter(request.resource.data.boardId).ownerUid == request.auth.uid;
+
+      allow update: if false; // a code never changes what it points to
+
+      // Rotation: the board owner deletes the old code (and creates a new one).
+      allow delete: if nonAnon()
+                    && board(resource.data.boardId).ownerUid == request.auth.uid;
+    }
+
+    // ---------- boards ----------
+
+    match /boards/{boardId} {
+      // Possession of the boardId (via a share code) is the read credential;
+      // requiring auth (anonymous is fine) keeps App Check / abuse tooling possible.
+      allow get, list: if authed();
+
+      allow create: if nonAnon()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && validBoardShape(request.resource.data);
+
+      // Owner may edit everything except identity fields.
+      // Participants may touch exactly one field: entryCount, by exactly 1, and
+      // only in a batch that really creates/deletes an entry (see entries rules).
+      allow update: if (
+                      isOwner(boardId)
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['title', 'description', 'settings', 'shareCode', 'entryCount'])
+                      && request.resource.data.title is string
+                      && request.resource.data.title.size() >= 1
+                      && request.resource.data.title.size() <= 100
+                      && request.resource.data.description is string
+                      && request.resource.data.description.size() <= 1000
+                      && request.resource.data.shareCode.matches('^[A-HJ-NP-Z2-9]{6}$')
+                      && validSettings(request.resource.data.settings)
+                      && request.resource.data.entryCount is int
+                      && request.resource.data.entryCount >= 0
+                    ) || (
+                      // Participants: increment only. Allowing decrements would let a
+                      // hostile client drain the counter and bypass the 500-entry cap.
+                      // The count is "entries ever created"; the owner can reset it.
+                      authed()
+                      && boardUnlocked(boardId)
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['entryCount'])
+                      && request.resource.data.entryCount == resource.data.entryCount + 1
+                    );
+
+      allow delete: if isOwner(boardId);
+
+      // ---------- slots (owner-defined; participants only ever touch claims) ----------
+
+      match /slots/{slotId} {
+        allow get, list: if authed();
+
+        allow create: if isOwner(boardId)
+                      && request.resource.data.keys().hasOnly(['label', 'capacity', 'order', 'claimedCount'])
+                      && request.resource.data.label is string
+                      && request.resource.data.label.size() >= 1
+                      && request.resource.data.label.size() <= 120
+                      && request.resource.data.capacity is int
+                      && request.resource.data.capacity >= 1
+                      && request.resource.data.capacity <= 999
+                      && request.resource.data.order is number
+                      && request.resource.data.claimedCount == 0;
+
+        // Owner edits slot fields freely (validated); participants may only move
+        // claimedCount by exactly 1, batch-coupled to their own claim doc below,
+        // and never above capacity.
+        allow update: if (
+                        isOwner(boardId)
+                        && request.resource.data.keys().hasOnly(['label', 'capacity', 'order', 'claimedCount'])
+                        && request.resource.data.label is string
+                        && request.resource.data.label.size() >= 1
+                        && request.resource.data.label.size() <= 120
+                        && request.resource.data.capacity is int
+                        && request.resource.data.capacity >= 1
+                        && request.resource.data.capacity <= 999
+                        && request.resource.data.claimedCount is int
+                        && request.resource.data.claimedCount >= 0
+                      ) || (
+                        authed()
+                        && boardUnlocked(boardId)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['claimedCount'])
+                        && (
+                          ( // claiming: +1, within capacity, and my claim doc genuinely
+                            // APPEARS in this batch (didn't exist before, exists after) —
+                            // otherwise a claimant could pump the counter to block a slot
+                            request.resource.data.claimedCount == resource.data.claimedCount + 1
+                            && request.resource.data.claimedCount <= resource.data.capacity
+                            && !exists(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)/claims/$(request.auth.uid))
+                            && existsAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)/claims/$(request.auth.uid))
+                          ) || (
+                            // releasing: -1, and my claim doc genuinely DISAPPEARS in this
+                            // batch (existed before, gone after) — otherwise anyone could
+                            // drain the counter and oversubscribe the slot
+                            request.resource.data.claimedCount == resource.data.claimedCount - 1
+                            && request.resource.data.claimedCount >= 0
+                            && exists(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)/claims/$(request.auth.uid))
+                            && !existsAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)/claims/$(request.auth.uid))
+                          )
+                        )
+                      );
+
+        allow delete: if isOwner(boardId);
+
+        // One claim per person per slot: the doc id IS the claimant's uid.
+        match /claims/{claimUid} {
+          allow get, list: if authed();
+
+          allow create: if authed()
+                        && claimUid == request.auth.uid
+                        && boardUnlocked(boardId)
+                        && request.resource.data.keys().hasOnly(['name', 'createdAt'])
+                        && request.resource.data.name is string
+                        && request.resource.data.name.size() >= 1
+                        && request.resource.data.name.size() <= 60
+                        && request.resource.data.createdAt == request.time
+                        // must be batch-coupled to the slot counter (capacity check lives there)
+                        && getAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount
+                           == get(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount + 1;
+
+          // Fix a typo'd name on your own claim.
+          allow update: if authed()
+                        && claimUid == request.auth.uid
+                        && boardUnlocked(boardId)
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+                        && request.resource.data.name is string
+                        && request.resource.data.name.size() >= 1
+                        && request.resource.data.name.size() <= 60;
+
+          // Release your own claim (batch-coupled to counter), or owner removes anyone.
+          allow delete: if (
+                          authed()
+                          && claimUid == request.auth.uid
+                          && getAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount
+                             == get(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount - 1
+                        ) || (
+                          isOwner(boardId)
+                        );
+        }
+      }
+
+      // ---------- entries ----------
+
+      match /entries/{entryId} {
+        // Approved entries are public to link-holders; pending ones only to
+        // their author and the owner. (List queries must filter accordingly.)
+        allow get, list: if authed()
+                         && (
+                           resource == null
+                           || resource.data.status == 'ok'
+                           || resource.data.creatorUid == request.auth.uid
+                           || board(boardId).ownerUid == request.auth.uid
+                         );
+
+        allow create: if authed()
+                      && request.resource.data.keys().hasOnly(
+                           ['authorName', 'body', 'type', 'status', 'creatorUid', 'createdAt'])
+                      && request.resource.data.creatorUid == request.auth.uid
+                      && request.resource.data.authorName is string
+                      && request.resource.data.authorName.size() >= 1
+                      && request.resource.data.authorName.size() <= 60
+                      && request.resource.data.body is string
+                      && request.resource.data.body.size() >= 1
+                      && request.resource.data.body.size() <= 2000
+                      && request.resource.data.type in ['note', 'appointment', 'medication', 'question', 'announcement']
+                      && request.resource.data.createdAt == request.time
+                      // status: owner posts land approved; participants get 'pending'
+                      // when the board requires approval, 'ok' otherwise
+                      && (
+                        (board(boardId).ownerUid == request.auth.uid
+                          && request.resource.data.status == 'ok')
+                        || (board(boardId).ownerUid != request.auth.uid
+                          && boardUnlocked(boardId)
+                          && request.resource.data.status ==
+                             (board(boardId).settings.approvalRequired ? 'pending' : 'ok'))
+                      )
+                      // hard cap: must be batch-coupled to the board counter, max 500
+                      && boardAfter(boardId).entryCount == board(boardId).entryCount + 1
+                      && boardAfter(boardId).entryCount <= 500;
+
+        // Author may edit their own text (not status, not identity); owner moderates status.
+        allow update: if (
+                        authed()
+                        && resource.data.creatorUid == request.auth.uid
+                        && boardUnlocked(boardId)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['authorName', 'body'])
+                        && request.resource.data.authorName is string
+                        && request.resource.data.authorName.size() >= 1
+                        && request.resource.data.authorName.size() <= 60
+                        && request.resource.data.body is string
+                        && request.resource.data.body.size() >= 1
+                        && request.resource.data.body.size() <= 2000
+                      ) || (
+                        isOwner(boardId)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['status'])
+                        && request.resource.data.status in ['ok', 'pending']
+                      );
+
+        // Author deletes their own; owner deletes anything. Deletes do NOT free
+        // entryCount quota (the cap is entries-ever-created; participant-driven
+        // decrements would let the cap be bypassed). The owner can reset the counter.
+        allow delete: if (
+                        authed()
+                        && resource.data.creatorUid == request.auth.uid
+                      ) || (
+                        isOwner(boardId)
+                      );
+      }
+    }
+
+    // default deny for anything not matched above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
