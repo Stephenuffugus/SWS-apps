@@ -80,13 +80,32 @@ let itemFilterRoom = 'all';
 let pageSize = 'letter';
 let captureDraft = { photo: null };
 let saveTimer = null;
+let saveWarned = 0;
+
+function persistSnap(snap) {
+  saveInventory(snap).catch(() => {
+    // QuotaExceededError is realistic for photo-heavy inventories — never silent
+    if (Date.now() - saveWarned > 60000) {
+      saveWarned = Date.now();
+      toast('⚠ Couldn’t save to this device — storage may be full. Export your backup NOW.', 8000);
+    }
+  });
+}
 
 function touch() {
   if (!inv) return;
   inv.updatedAt = Date.now();
+  // Snapshot NOW: navigation may null `inv` before the debounce fires, and
+  // fast-capture is exactly "save & pocket the phone".
+  const snap = JSON.parse(JSON.stringify(inv));
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { saveInventory(JSON.parse(JSON.stringify(inv))).catch(() => {}); }, 400);
+  saveTimer = setTimeout(() => persistSnap(snap), 400);
 }
+window.addEventListener('pagehide', () => {
+  if (!inv) return;
+  clearTimeout(saveTimer);
+  persistSnap(JSON.parse(JSON.stringify(inv)));
+});
 
 function route() {
   const m = location.hash.match(/^#\/i\/([\w-]+)/);
@@ -152,6 +171,8 @@ function importFile(file) {
       const obj = JSON.parse(reader.result);
       if (!obj || typeof obj !== 'object' || !Array.isArray(obj.items)) throw new Error('bad');
       obj.id = obj.id || newId();
+      obj.rooms = Array.isArray(obj.rooms) ? obj.rooms : [];
+      obj.name = typeof obj.name === 'string' ? obj.name : 'Imported inventory';
       inv = obj;
       touch();
       location.hash = '#/i/' + obj.id;
@@ -173,6 +194,11 @@ async function renderEditor(id) {
       return;
     }
     inv = loaded;
+    // never leak state between inventories: a pending photo from house A must
+    // not land in house B, and a stale room filter hides B's items
+    captureDraft = { photo: null };
+    captureRoomId = null;
+    itemFilterRoom = 'all';
   }
   drawEditor();
 }
@@ -390,8 +416,10 @@ function afterExportAsk() {
 
 /* ---------- item dialog ---------- */
 let itemEditing = null;
+let dlgPhotos = { photo: undefined, receipt: undefined }; // staged: applied on Save only
 function openItemDlg(item) {
   itemEditing = item;
+  dlgPhotos = { photo: undefined, receipt: undefined };
   const photo = $('iPhoto');
   if (safeSrc(item.photo)) { photo.src = item.photo; photo.classList.remove('hidden'); }
   else photo.classList.add('hidden');
@@ -402,7 +430,8 @@ function openItemDlg(item) {
   const roomSel = $('iRoom');
   roomSel.replaceChildren(...inv.rooms.map(r => el('option', { value: r.id, text: r.name })));
   if (inv.rooms.some(r => r.id === item.roomId)) roomSel.value = item.roomId;
-  $('iValue').value = item.valueCents ? String(Math.round(item.valueCents / 100)) : '';
+  // full precision — rounding here would corrupt the value on save
+  $('iValue').value = item.valueCents ? String(item.valueCents / 100) : '';
   $('iSerial').value = item.serial || '';
   $('iDate').value = item.purchaseDate || '';
   $('iNotes').value = item.notes || '';
@@ -419,6 +448,8 @@ function wire() {
       item.serial = $('iSerial').value.trim().slice(0, 60);
       item.purchaseDate = $('iDate').value;
       item.notes = $('iNotes').value.trim().slice(0, 300);
+      if (dlgPhotos.photo !== undefined) item.photo = dlgPhotos.photo;
+      if (dlgPhotos.receipt !== undefined) item.receipt = dlgPhotos.receipt;
       touch(); drawEditor();
     }
     closeDlg($('itemDlg'));
@@ -433,19 +464,17 @@ function wire() {
   $('iRephoto').addEventListener('click', async () => {
     const dataUrl = await pickImage();
     if (dataUrl && itemEditing) {
-      itemEditing.photo = dataUrl;
+      dlgPhotos.photo = dataUrl;          // staged — Cancel discards it
       $('iPhoto').src = dataUrl;
       $('iPhoto').classList.remove('hidden');
-      touch();
     }
   });
   $('iReceipt').addEventListener('click', async () => {
     const dataUrl = await pickImage();
     if (dataUrl && itemEditing) {
-      itemEditing.receipt = dataUrl;
+      dlgPhotos.receipt = dataUrl;        // staged — Cancel discards it
       $('iReceiptImg').src = dataUrl;
       $('iReceiptImg').classList.remove('hidden');
-      touch();
     }
   });
 }

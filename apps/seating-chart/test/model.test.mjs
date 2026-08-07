@@ -173,17 +173,53 @@ ok('auto-arrange fuzz: never violates capacity or apart', () => {
 });
 
 /* ---------- helpers ---------- */
-ok('occupancy + unassigned + meals', () => {
+ok('occupancy + unassigned + meals (unseated guests still counted)', () => {
   const p = sampleProject();
   p.assignments = { g1: 'T1', g2: 'T1', g3: 'T2' };
   const occ = occupancy(p);
   assert.equal(occ.T1.length, 2);
   assert.equal(unassignedGuests(p).length, 4);
-  const { totals, total } = mealSummary(p);
-  assert.equal(total, 3);
-  assert.equal(totals.Beef, 1);
+  const { totals, total, perTable } = mealSummary(p);
+  // the kitchen cooks for all 7 attending, not just the 3 seated
+  assert.equal(total, 7);
+  assert.equal(totals.Beef, 3);
   assert.equal(totals.Fish, 1);
-  assert.equal(totals.Veg, 1);
+  assert.equal(totals.Veg, 2);
+  const unseated = perTable.find(x => x.table.label === 'Not yet seated');
+  assert.ok(unseated, 'unseated bucket present');
+  assert.equal(unseated.guests.length, 4);
+});
+ok('mealSummary has no unseated bucket when everyone is placed', () => {
+  const p = sampleProject();
+  for (const g of p.guests) p.assignments[g.id] = 'T1';
+  const { perTable, total } = mealSummary(p);
+  assert.equal(total, 7);
+  assert.ok(!perTable.some(x => x.table.label === 'Not yet seated'));
+});
+ok('placementOk: clearing one violation never licenses creating another', () => {
+  const p = sampleProject();
+  p.tables[2].seats = 1;                       // head table: 1 seat
+  p.assignments = { g7: 'T3', g1: 'GONE' };    // g1 stranded on a deleted table
+  // moving g1 onto the FULL head table would fix "stale" but create "capacity"
+  assert.equal(placementOk(p, 'g1', 'T3'), false);
+  assert.equal(placementOk(p, 'g1', 'T1'), true);
+});
+ok('auto-arrange unions overlapping together-rules (A+B, C+D, then B+C)', () => {
+  seq = 0;
+  const p = newProject('chain');
+  p.guests = parseGuestPaste('A\nB\nC\nD', ids);
+  p.tables = [
+    { id: 'T1', label: 'T1', shape: 'round', seats: 4, x: 0, y: 0 },
+    { id: 'T2', label: 'T2', shape: 'round', seats: 4, x: 0, y: 0 },
+  ];
+  p.rules = [
+    { id: 'r1', type: 'together', guestIds: ['g1', 'g2'] },
+    { id: 'r2', type: 'together', guestIds: ['g3', 'g4'] },
+    { id: 'r3', type: 'together', guestIds: ['g2', 'g3'] },
+  ];
+  const a = autoArrange(p);
+  assert.equal(new Set([a.g1, a.g2, a.g3, a.g4]).size, 1, 'chained group lands on one table');
+  assert.equal(validate({ ...p, assignments: a }).length, 0);
 });
 
 console.log(`\n${passed} model test groups passed${process.exitCode ? ' (with failures)' : ''}`);

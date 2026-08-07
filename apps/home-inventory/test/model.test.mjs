@@ -48,6 +48,12 @@ ok('byValueDesc sorts for adjusters', () => {
   const names = byValueDesc(sample()).map(i => i.name);
   assert.deepEqual(names, ['TV', 'Sofa', 'Mixer', 'Orphan']);
 });
+ok('totals survives a partial object (corrupt import must not brick the home screen)', () => {
+  const t = totals({ items: [{ id: 'x', roomId: 'R', name: 'a', valueCents: 100 }] }); // no rooms key
+  assert.equal(t.count, 1);
+  assert.equal(t.valueCents, 100);
+  assert.equal(t.perRoom[0].room.name, 'Unsorted');
+});
 ok('dataUrlToBytes decodes and rejects junk', () => {
   const b = dataUrlToBytes('data:image/jpeg;base64,AQID');
   assert.deepEqual([...b], [1, 2, 3]);

@@ -33,11 +33,12 @@ export async function makeInventoryPdf(PDFLib, inv, size = 'letter') {
   const soft = rgb(0.45, 0.45, 0.5);
   const margin = 46;
 
-  // ---- cover ----
+  // ---- cover (paginates: a 40-room house must not run off the page) ----
   const t = totals(inv);
   let page = doc.addPage([w, h]);
   let y = h - margin - 30;
   const center = (txt, s, font, color, dy) => {
+    if (y - dy < margin) { page = doc.addPage([w, h]); y = h - margin; }
     page.drawText(safe(txt), { x: (w - font.widthOfTextAtSize(safe(txt), s)) / 2, y, size: s, font, color });
     y -= dy;
   };
@@ -115,12 +116,19 @@ export async function makeAdjusterPdf(PDFLib, inv, size = 'letter') {
 
   let page = doc.addPage([w, h]);
   let y = h - margin;
+  // truncate by MEASURED width, not character count — caps-heavy names are wide
+  const fit = (txt, font, s, maxW) => {
+    let t = safe(txt);
+    if (font.widthOfTextAtSize(t, s) <= maxW) return t;
+    while (t.length > 1 && font.widthOfTextAtSize(t + '…', s) > maxW) t = t.slice(0, -1);
+    return t + '…';
+  };
   const line = (cols, { font = sans, s = 10, color = ink, gap = 15 } = {}) => {
     if (y - gap < margin) { page = doc.addPage([w, h]); y = h - margin; }
     const [name, room, serial, value] = cols;
-    page.drawText(safe(name).slice(0, 52), { x: margin, y: y - s, size: s, font, color });
-    page.drawText(safe(room).slice(0, 20), { x: margin + 250, y: y - s, size: s, font: sans, color: soft });
-    page.drawText(safe(serial).slice(0, 18), { x: margin + 350, y: y - s, size: s, font: sans, color: soft });
+    page.drawText(fit(name, font, s, 240), { x: margin, y: y - s, size: s, font, color });
+    page.drawText(fit(room, sans, s, 90), { x: margin + 250, y: y - s, size: s, font: sans, color: soft });
+    page.drawText(fit(serial, sans, s, 100), { x: margin + 350, y: y - s, size: s, font: sans, color: soft });
     page.drawText(safe(value), { x: w - margin - sans.widthOfTextAtSize(safe(value), s), y: y - s, size: s, font, color });
     y -= gap;
   };

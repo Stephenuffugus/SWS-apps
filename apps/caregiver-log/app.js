@@ -214,7 +214,11 @@ function entryDate(e) {
   catch (err) { return null; }
 }
 function dayKey(d) {
-  return d ? d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Just now';
+  if (!d) return 'Just now';
+  // logs span years — a doctor reading the printout needs the year once it differs
+  const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+  if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString(undefined, opts);
 }
 function timeOf(d) {
   return d ? d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : '';
@@ -351,6 +355,8 @@ function openClaim(slot) {
 
 /* ---------- timeline ---------- */
 let composeType = 'note';
+let composeDraft = '';       // survives the redraws that live snapshots trigger —
+let composeFocused = false;  // a sibling's edit must never erase a half-written note
 function renderTimeline(b, own, locked) {
   const card = el('section', { class: 'card' }, el('h2', {}, 'The log'));
 
@@ -365,7 +371,11 @@ function renderTimeline(b, own, locked) {
         : composeType === 'medication' ? 'Started 5mg lisinopril, mornings. Watch for dizziness.'
         : composeType === 'question' ? 'Ask about the swelling in her ankles at the next visit?'
         : 'She was in good spirits today. Ate a full lunch.',
+      oninput: (ev) => { composeDraft = ev.target.value; },
+      onfocus: () => { composeFocused = true; },
+      onblur: () => { composeFocused = false; },
     });
+    bodyIn.value = composeDraft;
     const addBtn = el('button', { class: 'btn primary', type: 'button',
       onclick: async () => {
         const name = nameIn.value.trim(), body = bodyIn.value.trim();
@@ -373,6 +383,7 @@ function renderTimeline(b, own, locked) {
         saveName(name);
         try {
           const status = await D.addEntry(live.boardId, b, { authorName: name, body, type: composeType });
+          composeDraft = '';
           bodyIn.value = '';
           toast(status === 'pending' ? 'Saved — waiting for approval' : 'Saved to the log');
         } catch (e) { toast(friendly(e), 4500); }
@@ -381,6 +392,10 @@ function renderTimeline(b, own, locked) {
       el('label', { class: 'f' }, el('span', {}, 'Your name'), nameIn),
       bodyIn,
       el('div', { style: 'margin-top:8px' }, addBtn)));
+    if (composeFocused) requestAnimationFrame(() => {
+      bodyIn.focus();
+      bodyIn.setSelectionRange(bodyIn.value.length, bodyIn.value.length);
+    });
   }
 
   if (live.entries.length === 0) {

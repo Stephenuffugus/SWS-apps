@@ -50,13 +50,31 @@ let selected = new Set();      // guest ids picked up for seating
 let guestFilter = '';
 let pageSize = 'letter';
 let saveTimer = null;
+let saveWarned = 0;
+
+function persistSnap(snap) {
+  saveProject(snap).catch(() => {
+    // storage full / private mode — the user must know their work isn't landing
+    if (Date.now() - saveWarned > 60000) {
+      saveWarned = Date.now();
+      toast('⚠ Couldn’t save to this device — storage may be full. Export a backup file now.', 8000);
+    }
+  });
+}
 
 function touch() {
   if (!project) return;
   project.updatedAt = Date.now();
+  // Snapshot NOW: navigation may null `project` before the debounce fires.
+  const snap = JSON.parse(JSON.stringify(project));
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { saveProject(JSON.parse(JSON.stringify(project))).catch(() => {}); }, 400);
+  saveTimer = setTimeout(() => persistSnap(snap), 400);
 }
+window.addEventListener('pagehide', () => {
+  if (!project) return;
+  clearTimeout(saveTimer);
+  persistSnap(JSON.parse(JSON.stringify(project)));
+});
 
 function route() {
   const m = location.hash.match(/^#\/p\/([\w-]+)/);
@@ -121,6 +139,10 @@ function importFile(file) {
       const obj = JSON.parse(reader.result);
       if (!obj || typeof obj !== 'object' || !Array.isArray(obj.guests)) throw new Error('bad');
       obj.id = obj.id || newId();
+      obj.tables = Array.isArray(obj.tables) ? obj.tables : [];
+      obj.rules = Array.isArray(obj.rules) ? obj.rules : [];
+      obj.assignments = (obj.assignments && typeof obj.assignments === 'object') ? obj.assignments : {};
+      obj.name = typeof obj.name === 'string' ? obj.name : 'Imported event';
       project = obj;
       touch();
       location.hash = '#/p/' + obj.id;
@@ -208,8 +230,14 @@ function renderGuestsTab() {
 
   const listCard = el('section', { class: 'card' },
     el('h2', {}, project.guests.length + ' guests · ' + yes + ' expected'));
-  const search = el('input', { type: 'search', placeholder: 'Find a guest…', value: guestFilter,
-    oninput: (ev) => { guestFilter = ev.target.value; drawEditor(); } });
+  const search = el('input', { type: 'search', id: 'guestSearch', placeholder: 'Find a guest…', value: guestFilter,
+    oninput: (ev) => {
+      guestFilter = ev.target.value;
+      drawEditor();
+      // the redraw replaced this input — hand focus back so typing continues
+      const again = $('guestSearch');
+      if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
+    } });
   listCard.append(search);
   const list = el('ul', { class: 'plain' });
   const q = guestFilter.trim().toLowerCase();
@@ -357,6 +385,9 @@ function renderSeatTab() {
     pool.append(el('p', { class: 'hint', text: 'Add guests first — then seating them takes minutes.' }));
   pool.append(el('div', { class: 'row', style: 'margin-top:10px' },
     el('button', { class: 'btn', type: 'button', onclick: () => {
+      // hand-placed seating is hours of work — never replace it silently
+      if (Object.keys(project.assignments).length > 0 &&
+          !confirm('Replace the current seating with a fresh suggestion? Your manual placements will be redone.')) return;
       const a = autoArrange(project);
       project.assignments = a;
       selected = new Set();

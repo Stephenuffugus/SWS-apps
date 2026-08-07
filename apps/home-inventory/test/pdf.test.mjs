@@ -58,5 +58,22 @@ await t('empty inventory still produces a cover page', async () => {
   assert.equal(doc.getPageCount(), 1);
 });
 
+await t('40-room cover paginates instead of drawing off-page', async () => {
+  const big = newInventory('Forty rooms');
+  big.rooms = Array.from({ length: 40 }, (_, i) => ({ id: 'R' + i, name: 'Room ' + (i + 1) }));
+  big.items = big.rooms.map((r, i) => ({ id: 'i' + i, roomId: r.id, name: 'Thing', serial: '',
+    purchaseDate: '', valueCents: 1000, notes: '', photo: null, receipt: null }));
+  // instrument: record every drawText y to prove nothing lands below the margin
+  const ys = [];
+  const orig = PDFLib.PDFPage.prototype.drawText;
+  PDFLib.PDFPage.prototype.drawText = function (text, opts) { ys.push(opts.y); return orig.call(this, text, opts); };
+  let bytes;
+  try { bytes = await makeInventoryPdf(PDFLib, big, 'letter'); }
+  finally { PDFLib.PDFPage.prototype.drawText = orig; }
+  assert.ok(ys.every(y => y >= 0), 'no negative-y draws; min=' + Math.min(...ys));
+  const doc = await PDFLib.PDFDocument.load(bytes);
+  assert.ok(doc.getPageCount() >= 2, 'cover spilled to a second page');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

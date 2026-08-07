@@ -165,13 +165,14 @@ export function validate(project) {
   return violations;
 }
 
-/* Would placing guestId at tableId create any violation? Used by the editor
-   for live feedback and by auto-arrange. */
+/* Would placing guestId at tableId introduce any NEW violation? (Clearing an
+   old violation never licenses creating a different one — comparing counts
+   would let a stale-assignment fix overfill a table.) */
 export function placementOk(project, guestId, tableId) {
+  const key = (v) => v.kind + '|' + (v.tableId || '') + '|' + (v.guestIds || []).slice().sort().join(',');
+  const before = new Set(validate(project).map(key));
   const trial = { ...project, assignments: { ...project.assignments, [guestId]: tableId } };
-  const before = validate(project).length;
-  const after = validate(trial).length;
-  return after <= before;
+  return validate(trial).every(v => before.has(key(v)));
 }
 
 /* ---------- auto-arrange: a SUGGESTION, never the primary mode ---------- */
@@ -211,22 +212,29 @@ export function autoArrange(project) {
     g.ids.push(id);
     g.size++;
   }
+  // merge: when a rule/party spans members of DIFFERENT existing groups,
+  // union them — otherwise "A+B", "C+D", then "B+C" leaves B and C split
+  function mergeInto(target, other) {
+    if (target === other) return;
+    for (const id of other.ids) { groupOf[id] = target; target.ids.push(id); target.size++; }
+    other.ids = []; other.size = 0;
+  }
+  function unionIds(ids) {
+    const existing = [...new Set(ids.map(id => groupOf[id]).filter(Boolean))];
+    if (existing.length === 0) { makeGroup(ids); return; }
+    const target = existing[0];
+    for (const g of existing.slice(1)) mergeInto(target, g);
+    for (const id of ids) addTo(target, id);
+  }
   const partyMap = Object.create(null);
   for (const g of attending) {
     if (g.party) (partyMap[g.party] = partyMap[g.party] || []).push(g.id);
   }
   for (const r of project.rules) {
     if (r.type !== 'together') continue;
-    const existing = r.guestIds.map(id => groupOf[id]).find(Boolean);
-    if (existing) for (const id of r.guestIds) addTo(existing, id);
-    else makeGroup(r.guestIds);
+    unionIds(r.guestIds.filter(id => byId[id]));
   }
-  for (const party of Object.keys(partyMap)) {
-    const ids = partyMap[party];
-    const existing = ids.map(id => groupOf[id]).find(Boolean);
-    if (existing) for (const id of ids) addTo(existing, id);
-    else makeGroup(ids);
-  }
+  for (const party of Object.keys(partyMap)) unionIds(partyMap[party]);
   for (const g of attending) if (!groupOf[g.id]) makeGroup([g.id]);
 
   // apart lookup: guestId -> Set of guests they must avoid
@@ -286,8 +294,7 @@ export function mealSummary(project) {
   let total = 0;
   const perTable = [];
   const occ = occupancy(project);
-  for (const t of project.tables) {
-    const guests = (occ[t.id] || []).filter(g => g.rsvp !== 'no');
+  const countGroup = (table, guests) => {
     const meals = Object.create(null);
     for (const g of guests) {
       const m = g.meal || 'Unspecified';
@@ -295,7 +302,14 @@ export function mealSummary(project) {
       totals[m] = (totals[m] || 0) + 1;
       total++;
     }
-    perTable.push({ table: t, guests, meals });
+    perTable.push({ table, guests, meals });
+  };
+  for (const t of project.tables) {
+    countGroup(t, (occ[t.id] || []).filter(g => g.rsvp !== 'no'));
   }
+  // The kitchen cooks for everyone attending — unseated stragglers included.
+  // Dropping them would make the caterer's sheet quietly undercount meals.
+  const unseated = unassignedGuests(project);
+  if (unseated.length) countGroup({ id: '', label: 'Not yet seated' }, unseated);
   return { perTable, totals, total };
 }

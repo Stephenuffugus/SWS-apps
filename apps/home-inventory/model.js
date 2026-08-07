@@ -45,10 +45,13 @@ export function fmtCents(cents) {
 }
 
 export function roomItems(inv, roomId) {
-  return inv.items.filter(i => i.roomId === roomId);
+  return (inv.items || []).filter(i => i.roomId === roomId);
 }
 
+/* Tolerant of partial objects (hand-edited or old backups) — the home screen
+   iterates every stored inventory and must never die on one bad row. */
 export function totals(inv) {
+  inv = { rooms: [], items: [], ...inv };
   let count = 0, valueCents = 0, photos = 0;
   const perRoom = [];
   for (const r of inv.rooms) {

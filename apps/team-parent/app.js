@@ -275,8 +275,10 @@ function drawBoard() {
     ));
   }
   if (own) {
+    // live snapshots redraw this whole view — the draft must survive redraws
     const input = el('input', { type: 'text', maxlength: '2000', placeholder: 'Practice cancelled — field is flooded…',
-      'aria-label': 'New announcement',
+      'aria-label': 'New announcement', value: announceDraft,
+      oninput: (ev) => { announceDraft = ev.target.value; },
       onkeydown: (ev) => { if (ev.key === 'Enter') postBtn.click(); } });
     const postBtn = el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
       onclick: async () => {
@@ -284,6 +286,7 @@ function drawBoard() {
         if (!body) return;
         try {
           await D.addEntry(live.boardId, b, { authorName: b.title + ' organizer', body, type: 'announcement' });
+          announceDraft = '';
           input.value = '';
         } catch (e) { toast(friendly(e), 4500); }
       } }, 'Post');
@@ -416,6 +419,7 @@ function renderNotes(b, own, locked) {
 
 /* ---------- owner manage panel ---------- */
 let addMode = 'single';
+let announceDraft = '';
 function renderManage(b) {
   const url = shareUrl(live.code, baseUrl());
   const wrap = el('details', { class: 'manage noprint' }, el('summary', {}, 'Manage this team page'));
@@ -485,15 +489,22 @@ function renderManage(b) {
         try { await addSlotsChecked(rows); } catch (e) { toast(friendly(e), 4500); }
       } }, 'Generate events'));
   } else {
-    const ta = el('textarea', { placeholder: 'One per line — add ×N when you need volunteers:\nSnack duty — Sat game x2\nCarpool to regionals x4\nTeam photo day' });
+    const ta = el('textarea', { placeholder: 'One per line — add ×N when you need volunteers:\nSnack duty — Sat game x2\nScorekeeper x1\nCarpool to regionals x4\nTeam photo day' });
     inner.append(ta, el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
-        const rows = parseBulkSlots(ta.value).map(r => ({ ...r, capacity: r.capacity === 1 ? RSVP_CAP : r.capacity }));
+        // parse per-line so an EXPLICIT "x1" stays a 1-person duty slot,
+        // while unmarked lines become open RSVPs
+        const rows = ta.value.split(/\r?\n/).map(line => {
+          const r = parseBulkSlots(line)[0];
+          if (!r) return null;
+          const explicit = /(?:[x×]\s*\d{1,3}|\(\d{1,3}\))\s*$/i.test(line.trim());
+          return { ...r, capacity: explicit ? r.capacity : RSVP_CAP };
+        }).filter(Boolean).slice(0, 100);
         if (rows.length === 0) { toast('Paste one event per line first'); return; }
         try { await addSlotsChecked(rows); ta.value = ''; }
         catch (e) { toast(friendly(e), 4500); }
       } }, 'Add all')));
-    inner.append(el('p', { class: 'hint', text: 'Lines without ×N become open RSVPs; “x2” makes a duty slot needing 2 people.' }));
+    inner.append(el('p', { class: 'hint', text: 'Lines without ×N become open RSVPs; “x2” (or even “x1”) makes a duty slot needing that many people.' }));
   }
 
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Share & print'));

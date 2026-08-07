@@ -34,18 +34,25 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
   const occ = occupancy(project);
   const tables = [...project.tables];
 
+  // shrink-to-fit: long titles/names must never clip the page or bleed columns
+  const fitSize = (font, text, startSize, maxW, minSize = 7) => {
+    let s = startSize;
+    while (s > minSize && font.widthOfTextAtSize(text, s) > maxW) s -= 0.5;
+    return s;
+  };
+
   let page = null, col = 0, y = 0, first = true;
   const newPage = () => {
     page = doc.addPage([w, h]);
     let top = h - margin;
     if (first) {
       const title = safe(project.name);
-      const ts = 28;
+      const ts = fitSize(serifIt, title, 28, w - margin * 2, 14);
       page.drawText(title, { x: (w - serifIt.widthOfTextAtSize(title, ts)) / 2, y: top - ts, size: ts, font: serifIt, color: ink });
       const sub = 'Please find your seat';
       const ss = 12;
       page.drawText(sub, { x: (w - serif.widthOfTextAtSize(sub, ss)) / 2, y: top - ts - 22, size: ss, font: serif, color: soft });
-      top -= ts + 48;
+      top -= 28 + 48;
       first = false;
     }
     col = 0;
@@ -68,12 +75,14 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
     const blockH = 20 + guests.length * 15 + 14;
     ensure(Math.min(blockH, 200));
     const x = margin + col * (colW + colGap);
-    page.drawText(safe(t.label), { x, y: y - 14, size: 14, font: serifBold, color: ink });
+    const tl = safe(t.label);
+    page.drawText(tl, { x, y: y - 14, size: fitSize(serifBold, tl, 14, colW), font: serifBold, color: ink });
     y -= 22;
     for (const g of guests) {
       ensure(15);
       const gx = margin + col * (colW + colGap);
-      page.drawText(safe(g.name), { x: gx + 6, y: y - 11, size: 11.5, font: serif, color: ink });
+      const gn = safe(g.name);
+      page.drawText(gn, { x: gx + 6, y: y - 11, size: fitSize(serif, gn, 11.5, colW - 8), font: serif, color: ink });
       y -= 15;
     }
     y -= 14;
