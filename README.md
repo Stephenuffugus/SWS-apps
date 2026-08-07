@@ -23,7 +23,7 @@ with a tip jar — the brand promise across every app here:
 | Team parent (Engine 1B) | 🔨 built — needs testing + Stripe link | [`apps/team-parent/`](apps/team-parent/) |
 | Caregiver log (Engine 1C) | 🔨 built — needs testing + Stripe link | [`apps/caregiver-log/`](apps/caregiver-log/) |
 | Seating chart (Engine 2A) | 🔨 built — needs testing + Stripe link | [`apps/seating-chart/`](apps/seating-chart/) |
-| Home inventory (Engine 2B) | after 2A | — |
+| Home inventory (Engine 2B) | 🔨 built — needs testing + Stripe link | [`apps/home-inventory/`](apps/home-inventory/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
 
 ## Workflow rule
