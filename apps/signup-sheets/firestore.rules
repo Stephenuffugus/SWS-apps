@@ -67,7 +67,7 @@ service cloud.firestore {
     function validBoardShape(d) {
       return d.keys().hasOnly(['ownerUid', 'skin', 'title', 'description', 'shareCode',
                                'createdAt', 'settings', 'entryCount'])
-          && d.skin in ['signup', 'team', 'care']
+          && d.skin in ['signup', 'team', 'care', 'grocery']
           && d.title is string && d.title.size() >= 1 && d.title.size() <= 100
           && d.description is string && d.description.size() <= 1000
           && d.shareCode is string && d.shareCode.matches('^[A-HJ-NP-Z2-9]{6}$')
@@ -251,7 +251,8 @@ service cloud.firestore {
 
         allow create: if authed()
                       && request.resource.data.keys().hasOnly(
-                           ['authorName', 'body', 'type', 'status', 'creatorUid', 'createdAt'])
+                           ['authorName', 'body', 'type', 'status', 'creatorUid', 'createdAt', 'done'])
+                      && (!('done' in request.resource.data) || request.resource.data.done is bool)
                       && request.resource.data.creatorUid == request.auth.uid
                       && request.resource.data.authorName is string
                       && request.resource.data.authorName.size() >= 1
@@ -275,7 +276,9 @@ service cloud.firestore {
                       && boardAfter(boardId).entryCount == board(boardId).entryCount + 1
                       && boardAfter(boardId).entryCount <= 500;
 
-        // Author may edit their own text (not status, not identity); owner moderates status.
+        // Author may edit their own text (not status, not identity); owner moderates
+        // status; ANY link-holder may flip the shared done-checkbox (grocery lists:
+        // whoever's at the store checks things off, regardless of who added them).
         allow update: if (
                         authed()
                         && resource.data.creatorUid == request.auth.uid
@@ -293,6 +296,12 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys()
                              .hasOnly(['status'])
                         && request.resource.data.status in ['ok', 'pending']
+                      ) || (
+                        authed()
+                        && boardUnlocked(boardId)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['done'])
+                        && request.resource.data.done is bool
                       );
 
         // Author deletes their own; owner deletes anything. Deletes do NOT free

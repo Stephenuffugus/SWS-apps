@@ -195,6 +195,28 @@ await T('author deletes own entry', assertSucceeds(anonA.doc('boards/B1/entries/
 await T('participant cannot delete another\'s entry', assertFails(anonB.doc('boards/B4/entries/own1').delete()));
 await T('owner deletes any entry', assertSucceeds(owner.doc('boards/B4/entries/own1').delete()));
 
+/* ---------- grocery skin: shared done-toggle ---------- */
+await T('grocery board creates', assertSucceeds((() => {
+  const b = owner.batch();
+  b.set(owner.doc('boards/G1'), boardDoc({ skin: 'grocery', shareCode: 'GRCLST' }));
+  b.set(owner.doc('codes/GRCLST'), { boardId: 'G1' });
+  return b.commit();
+})()));
+await T('item created with done:false', assertSucceeds((() => {
+  const b = anonA.batch();
+  b.set(anonA.doc('boards/G1/entries/milk'), entryDoc('anonA', { body: 'Milk', done: false }));
+  b.update(anonA.doc('boards/G1'), { entryCount: 1 });
+  return b.commit();
+})()));
+await T('ANYONE with the link can check off an item they did not add',
+  assertSucceeds(anonB.doc('boards/G1/entries/milk').update({ done: true })));
+await T('done toggle cannot smuggle other field changes', assertFails(
+  anonB.doc('boards/G1/entries/milk').update({ done: false, body: 'vandalized' })));
+await T('done must be a boolean', assertFails(
+  anonB.doc('boards/G1/entries/milk').update({ done: 'yes' })));
+await T('unknown skin still rejected', assertFails(
+  owner.doc('boards/G2').set(boardDoc({ skin: 'todo', shareCode: 'TDLIST' }))));
+
 /* ---------- pending-entry visibility ---------- */
 await T('stranger cannot read someone\'s pending entry', assertFails(anonB.doc('boards/B4/entries/pending1').get()));
 await T('author reads their own pending entry', assertSucceeds(anonA.doc('boards/B4/entries/pending1').get()));
