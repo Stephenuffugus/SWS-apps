@@ -511,13 +511,23 @@ function wire() {
   });
   $('googleBtn').addEventListener('click', async () => {
     try { await D.signInGoogle(); closeDlg($('authDlg')); toast('Signed in'); }
-    catch (e) { toast('Google sign-in didn’t complete — try again or use the email link.', 5000); }
+    catch (e) {
+      const code = (e && e.code) || '';
+      toast(code.includes('unauthorized-domain')
+        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
+        : 'Google sign-in didn’t complete (' + (code || 'unknown') + ') — try again or use the email link.', 7000);
+    }
   });
   $('emailBtn').addEventListener('click', async () => {
     const email = $('emailInput').value.trim();
     if (!email.includes('@')) { toast('Enter your email first'); return; }
     try { await D.startEmailLink(email, baseUrl()); $('emailSent').classList.remove('hidden'); }
-    catch (e) { toast('Couldn’t send the link — check the address and try again.', 5000); }
+    catch (e) {
+      const code = (e && e.code) || '';
+      toast(code.includes('unauthorized')
+        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
+        : 'Couldn’t send the link (' + (code || 'unknown') + ') — check the address and try again.', 7000);
+    }
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
 
