@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moving Boxes — which box has the can opener?</title>
+<meta name="description" content="Number your boxes, list what's inside, print QR labels — scan any box to see its contents. Free, on your device, no account.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#b45309; --accent-ink:#ffffff; --chip:#eef2f6; --focus:#fcd34d; --neg:#b91c1c;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#f59e0b; --accent-ink:#241a03; --chip:#242e38; --focus:#b45309; --neg:#f87171;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:640px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],input[type=search],textarea{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:90px; resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700}
+.btn.small{padding:6px 9px; font-size:.82rem}
+.btn.danger{color:var(--neg)}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.boxnum{
+  flex:0 0 auto; min-width:44px; text-align:center; padding:8px 6px; border-radius:10px;
+  background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:1.05rem;
+}
+.sub{color:var(--muted); font-size:.82rem}
+.hit{background:var(--chip); border-radius:6px; padding:0 4px; font-weight:700}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.revealbox{text-align:center; padding:26px 8px}
+.revealbox .num{font-size:3rem; font-weight:800; color:var(--accent)}
+.revealbox .room{font-size:1.2rem; color:var(--muted); margin-bottom:12px}
+.revealbox ul{list-style:none; margin:0; padding:0; font-size:1.05rem; line-height:1.9}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+
+/* ---------- printed labels ---------- */
+#labels{display:none}
+@media print{
+  body{background:#fff}
+  .screenonly, header.app, footer.colophon, #toast{display:none !important}
+  #labels{display:grid; grid-template-columns:1fr 1fr; gap:6mm; color:#111}
+  .label{
+    border:1.5pt solid #111; border-radius:4mm; padding:5mm; break-inside:avoid;
+    display:flex; gap:5mm; align-items:center;
+  }
+  .label .ln{font-size:26pt; font-weight:800}
+  .label .lr{font-size:11pt; color:#444}
+  .label .li{font-size:8pt; color:#666; margin-top:2pt}
+  .label img{width:30mm; height:30mm}
+  .label .lt{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Moving Boxes</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <!-- scanned-label view -->
+  <div id="reveal" class="hidden">
+    <section class="card revealbox">
+      <div class="num" id="revNum"></div>
+      <div class="room" id="revRoom"></div>
+      <ul id="revItems"></ul>
+    </section>
+  </div>
+
+  <div id="main">
+    <section class="card screenonly">
+      <input type="search" id="searchInput" placeholder="🔍 Which box has the… can opener?">
+      <ul class="plain" id="searchResults"></ul>
+    </section>
+
+    <section class="card screenonly">
+      <h2>Pack a box</h2>
+      <div class="row">
+        <label class="f" style="flex:0 0 90px"><span>Box #</span>
+          <input type="text" id="boxNum" inputmode="numeric"></label>
+        <label class="f"><span>Room it's headed to</span>
+          <input type="text" id="boxRoom" maxlength="40" placeholder="Kitchen" list="roomList">
+          <datalist id="roomList"></datalist></label>
+      </div>
+      <label class="f"><span>What's inside (one per line or comma-separated)</span>
+        <textarea id="boxItems" placeholder="Pots & pans
+The good knife
+Can opener"></textarea></label>
+      <button class="btn primary" id="addBox" type="button" style="width:100%">Seal the box 📦</button>
+    </section>
+
+    <section class="card">
+      <h2 id="boxHead">Boxes</h2>
+      <ul class="plain" id="boxList"></ul>
+      <p class="hint screenonly" id="emptyHint">Pack, seal, label, repeat. Future-you at the new house will be grateful.</p>
+      <div class="row screenonly" style="margin-top:10px">
+        <button class="btn" id="printBtn" type="button">Print QR labels</button>
+        <button class="btn" id="exportBtn" type="button">Export backup</button>
+        <button class="btn" id="importBtn" type="button">Import</button>
+        <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+      </div>
+      <p class="hint screenonly">Tape a label on each box — scanning it with any phone camera shows what's inside, even at the new place with no internet set up.</p>
+    </section>
+  </div>
+
+  <div id="labels"></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">Your household inventory stays in your household — on your device.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script src="vendor-qrcode.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
