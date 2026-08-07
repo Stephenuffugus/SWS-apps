@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seating Chart — nothing leaves your device</title>
+<meta name="description" content="Wedding and event seating with rules that catch mistakes for you — and beautiful print-ready PDFs. Free, no watermark, no account, everything stays on your device.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#7c3aed; --accent-ink:#ffffff; --pos:#047857; --neg:#b91c1c;
+  --chip:#eef2f6; --chip-ink:#2c3a49; --focus:#c4b5fd; --sel:#ede9fe;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#a78bfa; --accent-ink:#1a1030; --pos:#34d399; --neg:#f87171;
+    --chip:#242e38; --chip-ink:#cdd6de; --focus:#6d28d9; --sel:#312a52;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:760px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0; letter-spacing:-.01em}
+header.app h1 a{color:inherit; text-decoration:none}
+header.app .spacer{flex:1}
+a.tipbtn{
+  text-decoration:none; font-size:.85rem; color:var(--accent);
+  border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card);
+}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+.hero{text-align:center; padding:30px 8px 10px}
+.hero h2{font-size:1.5rem; margin:0 0 6px; letter-spacing:-.02em}
+.hero p{color:var(--muted); margin:0 0 18px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],input[type=search],input[type=number],textarea,select{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:110px; resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+.btn.small{padding:7px 10px; font-size:.85rem}
+.btn.danger{color:var(--neg)}
+.btn[disabled]{opacity:.5; cursor:default}
+nav.tabs{display:flex; gap:5px; margin:0 0 12px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+nav.tabs button{
+  flex:1 0 auto; padding:9px 14px; font-size:.9rem; border:1px solid var(--line); background:var(--card);
+  color:var(--muted); border-radius:10px; cursor:pointer; white-space:nowrap;
+}
+nav.tabs button.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px;
+  background:var(--chip); color:var(--chip-ink); border:1px solid var(--line); font-size:.88rem;
+  cursor:pointer; max-width:100%;
+}
+.chip.sel{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.chip .x{opacity:.6; margin-left:2px}
+.partyhead{width:100%; font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:8px 0 2px}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.violations{border:1px solid var(--neg); border-radius:12px; padding:12px 14px; margin-bottom:12px; background:var(--card)}
+.violations h3{margin:0 0 8px; font-size:.9rem; color:var(--neg)}
+.violations div{font-size:.87rem; padding:3px 0}
+.allclear{border:1px solid var(--pos); color:var(--pos); border-radius:12px; padding:10px 14px; margin-bottom:12px; font-size:.9rem; background:var(--card)}
+.tablecard{border:1px solid var(--line); border-radius:12px; padding:11px; margin-bottom:10px; background:var(--bg)}
+.tablecard.droptarget{border-color:var(--accent); box-shadow:0 0 0 2px var(--focus)}
+.tablecard .thead{display:flex; align-items:baseline; gap:8px; margin-bottom:6px}
+.tablecard .tname{font-weight:600; flex:1}
+.tablecard .tcount{font-size:.8rem; color:var(--muted)}
+.tablecard .tcount.over{color:var(--neg); font-weight:700}
+.floor{
+  position:relative; background:var(--bg); border:1px dashed var(--line); border-radius:12px;
+  height:420px; overflow:hidden; touch-action:none; margin-bottom:10px;
+}
+.floor .tbl{
+  position:absolute; display:flex; align-items:center; justify-content:center; text-align:center;
+  background:var(--card); border:2px solid var(--accent); color:var(--ink);
+  font-size:.72rem; font-weight:600; cursor:grab; user-select:none; -webkit-user-select:none;
+  padding:4px; overflow:hidden;
+}
+.floor .tbl.round{border-radius:50%; width:76px; height:76px}
+.floor .tbl.rect{border-radius:10px; width:110px; height:56px}
+.floor .tbl.head{border-radius:10px; width:150px; height:44px}
+.floor .tbl .n{font-size:.65rem; color:var(--muted); display:block}
+dialog{border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); padding:18px; max-width:min(92vw,440px); width:100%}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px; font-size:1.05rem}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+.exportcard{display:flex; gap:12px; align-items:center; border-bottom:1px solid var(--line); padding:12px 0}
+.exportcard:last-child{border-bottom:0}
+.exportcard .grow{flex:1}
+.exportcard .grow b{display:block; margin-bottom:2px}
+.exportcard .grow span{font-size:.83rem; color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1><a href="#/" id="brandLink">Seating Chart</a></h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+  <main id="view" aria-live="polite"></main>
+  <footer class="colophon">
+    Nothing leaves your device. No account, no watermark, no ads — free, even the exports.<br>
+    <span id="orgLine">A free tool by Sky Wolf Studios.</span>
+  </footer>
+</div>
+
+<dialog id="guestDlg">
+  <h3>Edit guest</h3>
+  <label class="f"><span>Name</span><input type="text" id="gName" maxlength="80"></label>
+  <div class="row">
+    <label class="f"><span>Party / group</span><input type="text" id="gParty" maxlength="60" placeholder="Alvarez family"></label>
+    <label class="f"><span>Meal</span><input type="text" id="gMeal" maxlength="40" placeholder="Beef / Fish / Veg"></label>
+  </div>
+  <label class="f"><span>Dietary flags (separate with ;)</span><input type="text" id="gTags" maxlength="200" placeholder="nut allergy; gluten-free"></label>
+  <label class="f"><span>RSVP</span>
+    <select id="gRsvp">
+      <option value="unknown">No reply yet</option>
+      <option value="yes">Coming</option>
+      <option value="no">Declined</option>
+    </select></label>
+  <div class="row">
+    <button class="btn danger" id="gDelete" type="button">Remove</button>
+    <button class="btn" id="gCancel" type="button">Cancel</button>
+    <button class="btn primary" id="gSave" type="button">Save</button>
+  </div>
+</dialog>
+
+<dialog id="tableDlg">
+  <h3>Edit table</h3>
+  <label class="f"><span>Label</span><input type="text" id="tLabel" maxlength="40"></label>
+  <div class="row">
+    <label class="f"><span>Shape</span>
+      <select id="tShape">
+        <option value="round">Round</option>
+        <option value="rect">Rectangle</option>
+        <option value="head">Head table</option>
+      </select></label>
+    <label class="f"><span>Seats</span><input type="number" id="tSeats" min="1" max="30"></label>
+  </div>
+  <div class="row">
+    <button class="btn danger" id="tDelete" type="button">Delete</button>
+    <button class="btn" id="tCancel" type="button">Cancel</button>
+    <button class="btn primary" id="tSave" type="button">Save</button>
+  </div>
+</dialog>
+
+<dialog id="ruleDlg">
+  <h3>Add a rule</h3>
+  <label class="f"><span>Rule</span>
+    <select id="rType">
+      <option value="together">Keep together</option>
+      <option value="apart">Keep apart</option>
+      <option value="mustTable">Must be at a specific table</option>
+    </select></label>
+  <label class="f"><span>Who</span></label>
+  <div class="chips" id="rGuests" style="max-height:180px; overflow-y:auto; margin-bottom:10px"></div>
+  <label class="f hidden" id="rTableWrap"><span>Table</span><select id="rTable"></select></label>
+  <div class="row">
+    <button class="btn" id="rCancel" type="button">Cancel</button>
+    <button class="btn primary" id="rSave" type="button">Add rule</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor-pdf-lib.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
