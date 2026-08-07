@@ -20,7 +20,7 @@ with a tip jar — the brand promise across every app here:
 |---|---|---|
 | Bill splitter | ✅ built — tests passing | [`apps/bill-splitter/`](apps/bill-splitter/) |
 | Signup sheets (Engine 1A) | 🔨 built — needs live Firebase config + real-browser pass | [`apps/signup-sheets/`](apps/signup-sheets/) |
-| Team parent (Engine 1B) | after 1A ships & is used | — |
+| Team parent (Engine 1B) | 🔨 built — needs testing + Stripe link | [`apps/team-parent/`](apps/team-parent/) |
 | Caregiver log (Engine 1C) | after 1B | — |
 | Seating chart (Engine 2A) | queued (target: ready for the January wedding-planning wave) | — |
 | Home inventory (Engine 2B) | after 2A | — |
