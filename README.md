@@ -20,25 +20,25 @@ with a tip jar — the brand promise across every app here:
 |---|---|---|
 | Bill splitter | ✅ built — tests passing | [`apps/bill-splitter/`](apps/bill-splitter/) |
 | Signup sheets (Engine 1A) | ✅ live on Firebase — tip jar wired | [`apps/signup-sheets/`](apps/signup-sheets/) |
-| Team parent (Engine 1B) | 🔨 built — needs testing + Stripe link | [`apps/team-parent/`](apps/team-parent/) |
-| Caregiver log (Engine 1C) | 🔨 built — needs testing + Stripe link | [`apps/caregiver-log/`](apps/caregiver-log/) |
-| Seating chart (Engine 2A) | 🔨 built — needs testing + Stripe link | [`apps/seating-chart/`](apps/seating-chart/) |
-| Home inventory (Engine 2B) | 🔨 built — needs testing + Stripe link | [`apps/home-inventory/`](apps/home-inventory/) |
-| Grocery list (Engine 1D) | 🔨 built — needs rules republish + testing | [`apps/grocery-list/`](apps/grocery-list/) |
-| QR maker | 🔨 built | [`apps/qr-maker/`](apps/qr-maker/) |
-| Signature maker | 🔨 built | [`apps/signature-maker/`](apps/signature-maker/) |
-| Wheel picker | 🔨 built | [`apps/wheel-picker/`](apps/wheel-picker/) |
-| Sitter sheet | 🔨 built | [`apps/sitter-sheet/`](apps/sitter-sheet/) |
-| Pill schedule | 🔨 built | [`apps/pill-schedule/`](apps/pill-schedule/) |
-| Packing list | 🔨 built | [`apps/packing-list/`](apps/packing-list/) |
-| Wedding timeline | 🔨 built | [`apps/wedding-timeline/`](apps/wedding-timeline/) |
-| Bracket maker | 🔨 built | [`apps/bracket-maker/`](apps/bracket-maker/) |
-| Secret Santa | 🔨 built | [`apps/secret-santa/`](apps/secret-santa/) |
-| Scan to PDF | 🔨 built | [`apps/scan-to-pdf/`](apps/scan-to-pdf/) |
-| PDF tools | 🔨 built | [`apps/pdf-tools/`](apps/pdf-tools/) |
-| Image compressor | 🔨 built | [`apps/image-compressor/`](apps/image-compressor/) |
-| Baby log | 🔨 built | [`apps/baby-log/`](apps/baby-log/) |
-| Moving boxes | 🔨 built | [`apps/moving-boxes/`](apps/moving-boxes/) |
+| Team parent (Engine 1B) | 🔨 built — tip jar wired, needs testing | [`apps/team-parent/`](apps/team-parent/) |
+| Caregiver log (Engine 1C) | 🔨 built — tip jar wired, needs testing | [`apps/caregiver-log/`](apps/caregiver-log/) |
+| Seating chart (Engine 2A) | 🔨 built — tip jar wired, needs testing | [`apps/seating-chart/`](apps/seating-chart/) |
+| Home inventory (Engine 2B) | 🔨 built — tip jar wired, needs testing | [`apps/home-inventory/`](apps/home-inventory/) |
+| Grocery list (Engine 1D) | 🔨 built — rules live, tip jar wired, needs testing | [`apps/grocery-list/`](apps/grocery-list/) |
+| QR maker | 🔨 built — tip jar wired | [`apps/qr-maker/`](apps/qr-maker/) |
+| Signature maker | 🔨 built — tip jar wired | [`apps/signature-maker/`](apps/signature-maker/) |
+| Wheel picker | 🔨 built — tip jar wired | [`apps/wheel-picker/`](apps/wheel-picker/) |
+| Sitter sheet | 🔨 built — tip jar wired | [`apps/sitter-sheet/`](apps/sitter-sheet/) |
+| Pill schedule | 🔨 built — tip jar wired | [`apps/pill-schedule/`](apps/pill-schedule/) |
+| Packing list | 🔨 built — tip jar wired | [`apps/packing-list/`](apps/packing-list/) |
+| Wedding timeline | 🔨 built — tip jar wired | [`apps/wedding-timeline/`](apps/wedding-timeline/) |
+| Bracket maker | 🔨 built — tip jar wired | [`apps/bracket-maker/`](apps/bracket-maker/) |
+| Secret Santa | 🔨 built — tip jar wired | [`apps/secret-santa/`](apps/secret-santa/) |
+| Scan to PDF | 🔨 built — tip jar wired | [`apps/scan-to-pdf/`](apps/scan-to-pdf/) |
+| PDF tools | 🔨 built — tip jar wired | [`apps/pdf-tools/`](apps/pdf-tools/) |
+| Image compressor | 🔨 built — tip jar wired | [`apps/image-compressor/`](apps/image-compressor/) |
+| Baby log | 🔨 built — tip jar wired | [`apps/baby-log/`](apps/baby-log/) |
+| Moving boxes | 🔨 built — tip jar wired | [`apps/moving-boxes/`](apps/moving-boxes/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
 
 ## Workflow rule

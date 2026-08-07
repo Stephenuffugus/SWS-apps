@@ -1,5 +1,5 @@
 /* Pill Schedule service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'pill-v1';
+const VERSION = 'pill-v2';
 const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

@@ -4,7 +4,7 @@ import {
   newId, nextBoxNumber, parseItems, searchBoxes, decodeBox, isBoxHash, encodeBoxForLabel,
 } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/7sYaEY5Lz7Xh2bj6dX7EQ0k' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

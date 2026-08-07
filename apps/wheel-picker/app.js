@@ -3,7 +3,7 @@ import {
   parseNames, sliceAtPointer, easeOut, encodeState, decodeState, sliceColor,
 } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/dRmcN67THa5p5nv59T7EQ09' };
 
 const $ = (id) => document.getElementById(id);
 let toastTimer = null;

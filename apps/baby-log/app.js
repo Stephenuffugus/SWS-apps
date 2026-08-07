@@ -4,7 +4,7 @@ import {
   agoText, durText, summaryText,
 } from './model.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/fZu8wQ2zna5p4jr31L7EQ0j' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

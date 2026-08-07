@@ -1,7 +1,7 @@
 // Wedding Day Timeline — time-sorted moments, elegant print, URL sharing.
 import { parseTime, fmtTime, sortEvents, encodeTimeline, decodeTimeline } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/9B6aEYc9X5P95nvaud7EQ0d' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

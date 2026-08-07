@@ -11,7 +11,7 @@ D.initFirebase(firebaseConfig);
 
 const CONFIG = {
   // Stripe payment link for the tip jar — button stays hidden while empty.
-  tipUrl: '',
+  tipUrl: 'https://buy.stripe.com/eVq7sM0rf1yTcPX1XH7EQ03',
 };
 
 const TYPE_LABEL = {

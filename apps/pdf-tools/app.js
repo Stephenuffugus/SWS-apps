@@ -1,7 +1,7 @@
 // PDF Tools — merge, reorder, rotate, delete, split. All in-browser.
 import { buildOutput, splitAll, loadPdf } from './core.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/6oU9AU4HvcdxaHPcCl7EQ0h' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

@@ -1,7 +1,7 @@
 // QR Maker — permanent static codes, generated on-device.
 import { buildPayload, qrToSvg, drawQrToCanvas } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/4gM8wQei5b9t9DLbyh7EQ07' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

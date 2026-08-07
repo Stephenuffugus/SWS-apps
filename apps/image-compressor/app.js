@@ -1,7 +1,7 @@
 // Image Compressor — canvas resize + re-encode, entirely on-device.
 import { fmtBytes, scaleDims, savingsPct, outName } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/14AaEYfm9a5paHP7i17EQ0i' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

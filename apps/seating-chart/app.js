@@ -12,7 +12,7 @@ import { saveProject, getProject, allProjects, deleteProject } from './store.js'
 const CONFIG = {
   // Stripe payment link for the tip jar — button stays hidden while empty.
   // Per the product doc: we only ever ASK after an export succeeds.
-  tipUrl: '',
+  tipUrl: 'https://buy.stripe.com/eVq4gA2zn4L52bj31L7EQ05',
 };
 
 /* ---------- tiny DOM kit ---------- */

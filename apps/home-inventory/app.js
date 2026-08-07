@@ -9,7 +9,7 @@ import { saveInventory, getInventory, allInventories, deleteInventory } from './
 
 const CONFIG = {
   // Stripe payment link for the tip jar — button stays hidden while empty.
-  tipUrl: '',
+  tipUrl: 'https://buy.stripe.com/9B6bJ2b5TfpJg2959T7EQ06',
 };
 
 /* ---------- tiny DOM kit ---------- */

@@ -2,7 +2,7 @@
 import { moveItem } from './helpers.js';
 import { makePdfFromImages } from './pdf.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/4gM28s0rfb9t7vD7i17EQ0g' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

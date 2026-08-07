@@ -12,7 +12,7 @@ D.initFirebase(firebaseConfig);
 
 const CONFIG = {
   // Stripe payment link for the tip jar — button stays hidden while empty.
-  tipUrl: '',
+  tipUrl: 'https://buy.stripe.com/dRm3cw7THb9taHPbyh7EQ02',
 };
 
 // Events with this capacity are open RSVPs ("who's coming?") rather than

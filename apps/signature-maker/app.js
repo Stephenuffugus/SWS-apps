@@ -1,7 +1,7 @@
 // Signature Maker — canvas drawing with smoothed strokes, transparent PNG out.
 import { trimBounds } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/5kQaEY8XL4L5bLT8m57EQ08' };
 
 const $ = (id) => document.getElementById(id);
 let toastTimer = null;

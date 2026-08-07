@@ -1,7 +1,7 @@
 // Sitter Sheet — babysitter/pet-sitter one-pager. localStorage per mode,
 // print-CSS output. All user data rendered via textContent.
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/bJe28s1vj5P98zH7i17EQ0a' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

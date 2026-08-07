@@ -3,7 +3,7 @@ import {
   parseNames, drawNames, encodeReveal, decodeReveal, isRevealHash,
 } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/4gM8wQa1P2CX7vD1XH7EQ0f' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

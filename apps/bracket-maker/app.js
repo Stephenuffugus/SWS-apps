@@ -4,7 +4,7 @@ import {
   champion, encodeBracket, decodeBracket,
 } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/8x200ka1PgtNg2959T7EQ0e' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

@@ -3,7 +3,7 @@ import {
   PRESETS, PRESET_LABELS, mergePreset, addCustom, stats, encodeList, decodeList,
 } from './helpers.js';
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/28E00kb5Tb9t5nvcCl7EQ0c' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

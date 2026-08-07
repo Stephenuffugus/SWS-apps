@@ -1,7 +1,7 @@
 // Pill Schedule — printable weekly medication card. localStorage only.
 // A memory aid, never medical advice. All user data rendered via textContent.
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/3cIfZic9X91ldU131L7EQ0b' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {

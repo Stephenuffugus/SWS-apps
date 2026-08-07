@@ -6,7 +6,7 @@ import { firebaseConfig } from './firebase-config.js';
 
 D.initFirebase(firebaseConfig);
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/28EeVec9X3H1cPXaud7EQ04' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {
