@@ -24,6 +24,21 @@ with a tip jar — the brand promise across every app here:
 | Caregiver log (Engine 1C) | 🔨 built — needs testing + Stripe link | [`apps/caregiver-log/`](apps/caregiver-log/) |
 | Seating chart (Engine 2A) | 🔨 built — needs testing + Stripe link | [`apps/seating-chart/`](apps/seating-chart/) |
 | Home inventory (Engine 2B) | 🔨 built — needs testing + Stripe link | [`apps/home-inventory/`](apps/home-inventory/) |
+| Grocery list (Engine 1D) | 🔨 built — needs rules republish + testing | [`apps/grocery-list/`](apps/grocery-list/) |
+| QR maker | 🔨 built | [`apps/qr-maker/`](apps/qr-maker/) |
+| Signature maker | 🔨 built | [`apps/signature-maker/`](apps/signature-maker/) |
+| Wheel picker | 🔨 built | [`apps/wheel-picker/`](apps/wheel-picker/) |
+| Sitter sheet | 🔨 built | [`apps/sitter-sheet/`](apps/sitter-sheet/) |
+| Pill schedule | 🔨 built | [`apps/pill-schedule/`](apps/pill-schedule/) |
+| Packing list | 🔨 built | [`apps/packing-list/`](apps/packing-list/) |
+| Wedding timeline | 🔨 built | [`apps/wedding-timeline/`](apps/wedding-timeline/) |
+| Bracket maker | 🔨 built | [`apps/bracket-maker/`](apps/bracket-maker/) |
+| Secret Santa | 🔨 built | [`apps/secret-santa/`](apps/secret-santa/) |
+| Scan to PDF | 🔨 built | [`apps/scan-to-pdf/`](apps/scan-to-pdf/) |
+| PDF tools | 🔨 built | [`apps/pdf-tools/`](apps/pdf-tools/) |
+| Image compressor | 🔨 built | [`apps/image-compressor/`](apps/image-compressor/) |
+| Baby log | 🔨 built | [`apps/baby-log/`](apps/baby-log/) |
+| Moving boxes | 🔨 built | [`apps/moving-boxes/`](apps/moving-boxes/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
 
 ## Workflow rule
