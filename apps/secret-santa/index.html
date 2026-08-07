@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Secret Santa — draw names without the group-chat chaos</title>
+<meta name="description" content="Draw Secret Santa names with couple exclusions, then send each person a private reveal link. No accounts, no emails harvested, no ads.">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1c2733; --muted:#5b6b7b; --line:#e3e8ee;
+  --accent:#b91c1c; --accent-ink:#ffffff; --chip:#eef2f6; --focus:#fca5a5; --pine:#166534;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1419; --card:#1a2129; --ink:#e6edf3; --muted:#8b98a5; --line:#2c3641;
+    --accent:#f87171; --accent-ink:#3d0a0a; --chip:#242e38; --focus:#b91c1c; --pine:#4ade80;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:640px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],textarea{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:120px; resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700}
+.btn.small{padding:7px 10px; font-size:.85rem}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px;
+  background:var(--chip); color:var(--ink); border:1px solid var(--line); font-size:.88rem; cursor:pointer;
+}
+.chip.sel{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+ul.plain{list-style:none; margin:0; padding:0}
+ul.plain li{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.93rem}
+ul.plain li:last-child{border-bottom:0}
+ul.plain .grow{flex:1; min-width:0; overflow-wrap:anywhere}
+.sub{color:var(--muted); font-size:.82rem}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+.warn{color:var(--accent); font-size:.85rem; margin-top:6px}
+/* reveal page */
+.revealwrap{text-align:center; padding:36px 10px}
+.revealwrap .who{font-size:1.1rem; color:var(--muted)}
+.revealwrap .event{font-size:.95rem; color:var(--muted); margin-top:4px}
+#revealBtn{
+  margin:26px auto; display:block; font-size:1.2rem; padding:20px 30px;
+  border-radius:16px; border:2px dashed var(--accent); background:var(--card);
+  color:var(--ink); cursor:pointer; font-weight:700;
+}
+.revealName{font-size:2.2rem; font-weight:800; color:var(--pine); margin:20px 0 6px; overflow-wrap:anywhere}
+.revealNote{color:var(--muted); font-size:.9rem}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Secret Santa</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <!-- organizer view -->
+  <div id="organizer">
+    <section class="card">
+      <div class="row">
+        <label class="f" style="flex:1.5"><span>The event</span>
+          <input type="text" id="eventInput" maxlength="60" placeholder="Family Christmas 2026"></label>
+        <label class="f"><span>Budget (optional)</span>
+          <input type="text" id="budgetInput" maxlength="30" placeholder="$25"></label>
+      </div>
+      <h2>Who's in?</h2>
+      <textarea id="names" placeholder="One per line:
+Mom
+Dad
+Jessie
+Stephen"></textarea>
+    </section>
+
+    <section class="card">
+      <h2>Who shouldn't draw each other? (couples, roommates)</h2>
+      <p class="sub" style="margin:0 0 8px">Tap two names to link them as a no-match pair. Tap a pair below to remove it.</p>
+      <div class="chips" id="exclPicker"></div>
+      <ul class="plain" id="exclList"></ul>
+    </section>
+
+    <section class="card">
+      <button class="btn primary" id="drawBtn" type="button" style="width:100%; font-size:1.05rem">🎁 Draw names</button>
+      <p class="warn hidden" id="drawWarn"></p>
+      <div id="results" class="hidden">
+        <h2 style="margin-top:14px">Send each person their private link</h2>
+        <ul class="plain" id="linkList"></ul>
+        <p class="hint">Each link reveals only that person's match — send them one at a time by text.
+        Honesty note: as the organizer, this device did the drawing, so a determined you could peek. Don't. 🎅</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- participant reveal view -->
+  <div id="reveal" class="hidden">
+    <div class="revealwrap">
+      <div class="who" id="revealWho"></div>
+      <div class="event" id="revealEvent"></div>
+      <button id="revealBtn" type="button">🎁 Tap to reveal your person</button>
+      <div class="revealName hidden" id="revealName"></div>
+      <div class="revealNote hidden" id="revealNote">Shhh. Delete this text if you can't keep a secret.</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">Drawn on your device — no emails harvested, no accounts, no ads.<br>A free tool by Sky Wolf Studios.</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
