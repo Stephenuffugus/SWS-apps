@@ -13,6 +13,7 @@ with a tip jar — the brand promise across every app here:
 - [`02-local-data-to-pdf.md`](02-local-data-to-pdf.md) — Engine 2: seating chart, home inventory, print-and-play
 - [`04-bill-splitter.md`](04-bill-splitter.md) — standalone bill splitter
 - [`05-marketing-kit.md`](05-marketing-kit.md) — positioning, per-app search terms + blurbs, seasonal calendar, launch checklist
+- [`06-app-ideas.md`](06-app-ideas.md) — ranked idea backlog (top 12, next build group, bench, rejects) from the overnight brainstorm
 - Engine 3 (multiplayer games) lives with the game designer in the Lucid Winds repo.
 
 ## Apps
