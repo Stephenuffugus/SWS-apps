@@ -1,4 +1,4 @@
-# Palette — a lesson planner for specials teachers
+# Specials Planner — a lesson planner for specials teachers
 
 Set up your schedule once — year dates, teaching days, periods, where lunch falls, your A/B/C rotation — and every week of the school year is generated for you: dates filled in, rotation letters correct, lunch in the right column. Then just type in the boxes.
 

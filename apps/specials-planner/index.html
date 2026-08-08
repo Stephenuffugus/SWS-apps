@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#C65D3B">
-<meta name="description" content="Palette — a free lesson planner for specials teachers. Set up your schedule once, get every week of the year.">
-<title>Free Lesson Planner for Specials Teachers — Palette</title>
-<meta property="og:title" content="Free Lesson Planner for Specials Teachers — Palette">
+<meta name="description" content="Specials Planner — a free lesson planner for specials teachers. Set up your schedule once, get every week of the year.">
+<title>Specials Planner — Free Lesson Planner for Art, Music, PE &amp; Library</title>
+<meta property="og:title" content="Specials Planner — Free Lesson Planner for Art, Music, PE &amp; Library">
 <meta property="og:description" content="Art, music, PE, library: set up your schedule once and every week of the school year is ready to fill in. Free, no account, stays on your device.">
-<meta property="og:image" content="https://sws-apps-9646d.web.app/palette/marketing/stripe-thumbnail.png">
+<meta property="og:image" content="https://sws-apps-9646d.web.app/specials-planner/marketing/stripe-thumbnail.png">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -173,7 +173,7 @@
     <div class="head-row">
       <div class="logo">
         <div class="mark" aria-hidden="true"></div>
-        <div><h1>Palette</h1><div class="tag">for specials teachers</div></div>
+        <div><h1>Specials Planner</h1><div class="tag">art · music · PE · library</div></div>
       </div>
       <span class="saved" id="saved">Saved</span>
     </div>
@@ -201,7 +201,7 @@
 
 <script>
 /* =====================================================================
-   Palette — single-file specials lesson planner.
+   Specials Planner — single-file specials lesson planner.
    Vanilla JS, no build step. State lives in localStorage key "palette2".
    Handoff notes for Claude Code live in HANDOFF.md next to this file.
    ===================================================================== */
@@ -332,7 +332,7 @@ function renderWelcome(){
       <button class="btn" id="w-sample" style="padding:15px">See a sample first</button>
       <button class="btn ghost" id="w-import" style="font-size:13px">Restore from a backup file</button>
     </div></div>
-    <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Palette">Feedback</a></div>`;
+    <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
   document.getElementById('w-fresh').onclick=startFresh;
   document.getElementById('w-sample').onclick=loadSample;
   document.getElementById('w-import').onclick=importBackup;
@@ -409,7 +409,7 @@ function renderWeek(){
       <span class="spacer"></span>
       <button class="btn" id="wk-print">Print</button>
     </div>
-    <div class="print-title">Palette · Week of ${weekLabel(w)}${teacher}</div>
+    <div class="print-title">Specials Planner · Week of ${weekLabel(w)}${teacher}</div>
     <div class="grid-scroll"><table class="week"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
     <div class="footnote no-print">Tap a box to type. While a box is selected, the bar below can copy it across the day or across matching rotation days.</div>`;
 
@@ -561,7 +561,7 @@ function renderSetup(){
     <p class="sub">Erases everything on this device. Download a backup first if you want to keep this year.</p>
     <button class="btn danger" id="d-reset">Erase and start over</button>
   </div>
-  <div class="footnote">Palette is free — no account, no ads.${TIP_URL?` If it saves you time, <a href="${esc(TIP_URL)}" target="_blank" rel="noopener">tips are welcome</a>.`:''}<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Palette">Feedback</a></div>`;
+  <div class="footnote">Specials Planner is free — no account, no ads.${TIP_URL?` If it saves you time, <a href="${esc(TIP_URL)}" target="_blank" rel="noopener">tips are welcome</a>.`:''}<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
 
   document.querySelectorAll('#f-days .dp').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   document.getElementById('f-periods').onchange=e=>{
@@ -603,7 +603,7 @@ function download(name,text,type){
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 function backupJSON(){ return JSON.stringify({app:'palette',version:2,exported:new Date().toISOString(),state:S},null,1); }
-function exportBackup(){ download(`palette-backup-${fmtISO(new Date())}.json`,backupJSON(),'application/json'); }
+function exportBackup(){ download(`specials-planner-backup-${fmtISO(new Date())}.json`,backupJSON(),'application/json'); }
 function importBackup(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
   inp.onchange=()=>{
@@ -620,7 +620,7 @@ function applyImportedText(text){
     const st=migrate(j.state||j);          // tolerate raw-state or wrapped backups
     if(!st) throw 0;
     S=st; markStale(); persist(); return true;
-  }catch(e){ alert("That file doesn't look like a Palette backup."); return false; }
+  }catch(e){ alert("That file doesn't look like a Specials Planner backup."); return false; }
 }
 function csvField(v){ v=String(v??''); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v; }
 function exportCSV(){
@@ -634,7 +634,7 @@ function exportCSV(){
     row.push(S.notes[d.iso]||'');
     lines.push(row.map(csvField).join(','));
   }
-  download(`palette-${c.yearStart.slice(0,4)}.csv`,lines.join('\n'),'text/csv');
+  download(`specials-planner-${c.yearStart.slice(0,4)}.csv`,lines.join('\n'),'text/csv');
 }
 function resetAll(){
   if(!confirm('Erase everything on this device? Download a backup first if you want to keep it.')) return;
@@ -672,7 +672,7 @@ function withDriveToken(fn){
 }
 async function driveSave(){
   try{
-    const meta={name:'Palette planner.json',mimeType:'application/json'};
+    const meta={name:'Specials Planner.json',mimeType:'application/json'};
     const boundary='paletteb'+Date.now();
     const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${backupJSON()}\r\n--${boundary}--`;
     const id=S.config.driveFileId;
@@ -692,11 +692,11 @@ async function driveLoad(){
   try{
     let id=S.config.driveFileId;
     if(!id){
-      const q=encodeURIComponent("name='Palette planner.json' and trashed=false");
+      const q=encodeURIComponent("name='Specials Planner.json' and trashed=false");
       const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=modifiedTime desc&pageSize=1&fields=files(id,name)`,
         {headers:{Authorization:`Bearer ${driveToken}`}});
       const j=await res.json();
-      if(!j.files||!j.files.length){ alert('No Palette file found in your Drive yet — save one first.'); return; }
+      if(!j.files||!j.files.length){ alert('No Specials Planner file found in your Drive yet — save one first.'); return; }
       id=j.files[0].id;
     }
     const res=await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`,{headers:{Authorization:`Bearer ${driveToken}`}});

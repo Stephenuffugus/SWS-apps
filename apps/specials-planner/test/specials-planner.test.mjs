@@ -1,5 +1,5 @@
-/* Palette regression harness.
-   Usage: node palette.test.mjs ./index.html
+/* Specials Planner regression harness.
+   Usage: node test/specials-planner.test.mjs ./index.html
    Runs the real app inside jsdom and asserts core behavior.
    Claude Code: run this after ANY change. All green before you commit. */
 import { readFileSync } from 'node:fs';

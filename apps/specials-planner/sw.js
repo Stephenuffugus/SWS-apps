@@ -1,6 +1,6 @@
-/* Palette service worker — cache-first shell for offline use.
+/* Specials Planner service worker — cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'palette-v1';
+const CACHE = 'specials-planner-v1';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'fonts/fraunces-latin.woff2', 'fonts/spline-sans-latin.woff2'

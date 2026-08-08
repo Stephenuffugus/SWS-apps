@@ -1,6 +1,7 @@
 # HANDOFF.md — Palette (specials lesson planner)
 
-> **Integrated 2026-08-08** into the SWS-apps studio at `apps/palette/` (Firebase Hosting, not lucidwinds GitHub Pages as written below). T1 done: hub card added, studio footer + og tags wired, icons designed, tests moved to `test/`. T4 (Drive CLIENT_ID) and T5 (TIP_URL) still await Stephen's credentials — both features auto-hide until then.
+> **Integrated 2026-08-08** into the SWS-apps studio at `apps/specials-planner/` (Firebase Hosting, not lucidwinds GitHub Pages as written below). T1 done: hub card added, studio footer + og tags wired, icons designed, tests moved to `test/`. T4 (Drive CLIENT_ID) and T5 (TIP_URL) still await Stephen's credentials — both features auto-hide until then.
+> **Renamed 2026-08-08**: the product is now **Specials Planner** (Stephen's call — the name has to say what it is). "Palette" below is the same app. Internal identifiers kept for backup compatibility: localStorage key `palette2`, backup marker `app:'palette'`.
 
 **To the Claude Code instance picking this up:** the app is **built, tested, and working**. Your job is verification, wiring two credentials, and deployment into the Lucid Winds apps collection — **not a rebuild**. If you find yourself restructuring `index.html`, stop and re-read this file.
 
