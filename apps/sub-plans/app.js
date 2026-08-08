@@ -22,7 +22,9 @@ function el(tag, attrs, ...kids) {
 let toastTimer = null;
 function toast(msg, ms) {
   const t = $('toast');
-  t.textContent = msg;
+  // clear first: repeating an identical string fires no live-region announcement
+  t.textContent = '';
+  setTimeout(() => { t.textContent = msg; }, 10);
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
@@ -209,7 +211,7 @@ function init() {
     if (!hasContent() || confirm('Open the shared folder? Your saved one will be replaced.')) {
       data = shared;
       save();
-      toast('Folder loaded from the link');
+      toast('Folder loaded from the link', 4000);
     }
     history.replaceState(null, '', location.pathname);
   }
@@ -235,7 +237,7 @@ function showQr(url) {
       if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
   } catch (e) { toast('Could not draw the QR'); return; }
   const d = $('qrDlg');
-  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); $('qrClose').focus(); }
 }
 $('qrClose').addEventListener('click', () => {
   const d = $('qrDlg');
@@ -248,7 +250,7 @@ $('shareBtn').addEventListener('click', () => {
 $('qrBtn').addEventListener('click', () => {
   if (!hasContent()) { toast('Fill in at least one field first'); return; }
   const url = sheetShareUrl();
-  // QR capacity tops out ~2.3KB at correction M; a full folder can exceed it
-  if (url.length > 2300) { toast('This folder is too big for a QR — use Copy link instead'); return; }
+  // past ~1.2KB the QR modules get too small for phone cameras to scan
+  if (url.length > 1200) { toast('This folder is too big for a QR — use Copy link instead'); return; }
   showQr(url);
 });

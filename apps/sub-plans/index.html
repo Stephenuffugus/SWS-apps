@@ -17,12 +17,14 @@
 <style>
 :root{
   --bg:#f4f7f5; --card:#ffffff; --ink:#1e2b24; --muted:#5c6b62; --line:#dfe7e2;
-  --accent:#2f6b4f; --accent-ink:#ffffff; --chip:#e9f0eb; --focus:#8bc9ab; --neg:#8c4a42;
+  --accent:#2f6b4f; --accent-ink:#ffffff; --chip:#e9f0eb; --focus:#2f6b4f; --neg:#8c4a42;
+  --line-strong:#7f9086;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#121714; --card:#1b211d; --ink:#e2e8e4; --muted:#94a29a; --line:#2b332e;
-    --accent:#7fc8a4; --accent-ink:#0c1f16; --chip:#232b26; --focus:#2f6b4f;
+    --accent:#7fc8a4; --accent-ink:#0c1f16; --chip:#232b26; --focus:#7fc8a4;
+    --line-strong:#6b7a71;
   }
 }
 *{box-sizing:border-box}
@@ -44,7 +46,7 @@ label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
 label.f span{display:block; margin-bottom:4px}
 input[type=text],textarea{
   width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
-  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+  background:var(--bg); border:1px solid var(--line-strong); border-radius:10px; font-family:inherit;
 }
 textarea{min-height:64px; resize:vertical}
 input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
@@ -130,9 +132,9 @@ footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Stays on your device — your class's details are nobody's business.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="privacy.html" style="color:inherit">Privacy &amp; accessibility</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Sub%20Plans" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan to open this folder</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
+<dialog id="qrDlg" aria-labelledby="qrTitle" style="border:none;border-radius:14px;padding:18px;text-align:center">
+  <h3 id="qrTitle" style="margin:0 0 10px;color:#111">Scan to open this folder</h3>
+  <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code that opens this sub folder"></canvas>
   <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
 </dialog>
 <script src="vendor-qrcode.js"></script>

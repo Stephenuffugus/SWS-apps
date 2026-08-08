@@ -37,8 +37,13 @@ check('schema keys are unique', new Set(keys).size === keys.length);
 // --- form renders
 check('form renders all sections', $('form').textContent.includes('Bell schedule') && $('form').textContent.includes('Helpers you can trust'));
 
-// --- guards before any content
+// --- a11y contract on static chrome
+check('QR dialog has an accessible name', $('qrDlg').getAttribute('aria-labelledby') === 'qrTitle' && !!$('qrTitle'));
+check('QR canvas has a text alternative', $('qrCanvas').getAttribute('role') === 'img' && !!$('qrCanvas').getAttribute('aria-label'));
+
+// --- guards before any content (toast text lands async so repeats re-announce)
 $('shareBtn').click();
+await sleep(30);
 check('share guard with empty folder', $('toast').textContent.includes('at least one field'));
 
 // --- typing persists
@@ -99,9 +104,10 @@ check('unknown keys stripped', stripped && stripped.teacher === 'ok' && !('evil'
 const capped = decodeSheet('#' + enc({ v: 1, d: { plan: 'y'.repeat(9000) } }));
 check('decoded fields capped', capped && capped.plan.length === 4000);
 
-// --- QR size guard (folder is now way past QR capacity)
+// --- QR size guard (folder is now way past scannable QR size)
 setField(byPlaceholder('8:00 First bell'), 'z'.repeat(3000));
 $('qrBtn').click();
+await sleep(30);
 check('oversize folder steers QR to Copy link', $('toast').textContent.includes('Copy link'));
 
 console.log(failures ? '\nSMOKE FAILED' : '\nSMOKE PASSED');
