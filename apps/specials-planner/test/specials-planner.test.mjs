@@ -166,6 +166,25 @@ console.log('\n— setup apply reflows the grid —');
   ok(s.config.periods === 7 && s.config.lunchAfter === 3, 'config saved');
 }
 
+console.log('\n— accessibility contract —');
+{
+  const w = boot(clone(baseState));
+  ok(w.document.querySelector('.tab[data-view="week"]').getAttribute('aria-selected') === 'true', 'active tab exposes aria-selected');
+  const box = w.document.querySelector('.box[data-iso="2026-08-24"][data-p="1"]');
+  ok(box.getAttribute('role') === 'textbox' && box.getAttribute('aria-multiline') === 'true', 'grid box announces as a multiline textbox');
+  ok(/Monday/.test(box.getAttribute('aria-label')) && /period 1/i.test(box.getAttribute('aria-label')), 'grid box has a spoken name (day + period)');
+  w.document.querySelector('[data-gear]').click();
+  ok(w.document.getElementById('modal').classList.contains('show'), 'gear opens the day modal');
+  ok(w.document.activeElement && w.document.activeElement.closest('#modal-sheet'), 'focus moves into the modal');
+  w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape' }));
+  ok(!w.document.getElementById('modal').classList.contains('show'), 'Escape closes the modal');
+  w.document.querySelector('.tab[data-view="setup"]').click();
+  const dp = w.document.querySelector('#f-days .dp');
+  const before = dp.getAttribute('aria-pressed');
+  dp.click();
+  ok(dp.getAttribute('aria-pressed') !== before, 'day-picker toggle exposes pressed state');
+}
+
 console.log('\n— reset —');
 {
   const w = boot(clone(baseState));

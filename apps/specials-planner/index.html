@@ -59,7 +59,7 @@
   .logo .mark::before{width:7px;height:7px;background:#FBF6EC;top:6px;left:6px;box-shadow:11px 0 0 rgba(251,246,236,.75), 0 11px 0 rgba(251,246,236,.75), 11px 11px 0 rgba(251,246,236,.55)}
   .logo h1{font-size:21px}
   .logo .tag{font-size:11.5px;color:var(--ink-soft);margin-top:-2px}
-  .saved{margin-left:auto;font-size:12px;color:var(--sage);opacity:0;transition:opacity .3s;font-weight:500}
+  .saved{margin-left:auto;font-size:12px;color:#55704F;opacity:0;transition:opacity .3s;font-weight:500}
   .saved.show{opacity:1}
   .tabs{display:flex;gap:4px;padding-bottom:10px}
   .tab{padding:7px 14px;border-radius:999px;font-weight:500;color:var(--ink-soft);border:1px solid transparent}
@@ -69,8 +69,8 @@
   /* ---------- buttons ---------- */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:11px;border:1px solid var(--line-2);background:#fff;font-weight:500;box-shadow:0 1px 0 rgba(43,38,32,.05);transition:transform .06s}
   .btn:active{transform:scale(.97)}
-  .btn.primary{background:var(--terra);border-color:var(--terra-d);color:#fff}
-  .btn.primary:hover{background:var(--terra-d)}
+  .btn.primary{background:var(--terra-d);border-color:#8F3B22;color:#fff}
+  .btn.primary:hover{background:#8F3B22}
   .btn.ghost{border-color:transparent;background:transparent;box-shadow:none;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px}
   .btn.danger{color:#A33B2A;border-color:#E0BDB2}
   .btn:disabled{opacity:.45;cursor:default}
@@ -97,8 +97,9 @@
   .day-name{font-weight:600;font-size:14px}
   .day-date{font-size:12px;color:var(--ink-soft)}
   .chip{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:7px;font-weight:600;font-size:12.5px;color:#fff;margin-top:5px}
-  .chip.l0{background:var(--terra)} .chip.l1{background:var(--teal)} .chip.l2{background:var(--sage)}
-  .chip.l3{background:var(--plum)} .chip.l4{background:var(--slate)} .chip.l5{background:var(--mustard)}
+  /* chip tones sit darker than the base palette so white 12.5px text clears 4.5:1 (WCAG AA) */
+  .chip.l0{background:#A8482B} .chip.l1{background:#3E6E6B} .chip.l2{background:#55704F}
+  .chip.l3{background:var(--plum)} .chip.l4{background:var(--slate)} .chip.l5{background:#8F6A20}
   .day-gear{float:right;font-size:14px;opacity:.4;padding:2px 4px;border-radius:6px}
   .day-gear:hover{opacity:1;background:var(--paper-2)}
   .sp-banner{display:block;margin-top:5px;font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--block);border-radius:7px;padding:3px 7px;letter-spacing:.03em;text-transform:uppercase}
@@ -131,7 +132,7 @@
   .dp{width:44px;height:38px;border-radius:10px;border:1px solid var(--line-2);background:var(--paper);font-weight:600;font-size:13px;color:var(--ink-soft)}
   .dp.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
   .footnote{text-align:center;font-size:12px;color:var(--ink-soft);padding:18px 12px 6px}
-  .footnote a{color:var(--terra)}
+  .footnote a{color:var(--terra-d)}
   .setup-actions{display:flex;gap:9px;flex-wrap:wrap}
 
   /* ---------- modal ---------- */
@@ -178,8 +179,8 @@
       <span class="saved" id="saved">Saved</span>
     </div>
     <nav class="tabs" role="tablist">
-      <button class="tab" data-view="week" role="tab">This week</button>
-      <button class="tab" data-view="setup" role="tab">Setup</button>
+      <button class="tab" data-view="week" role="tab" aria-selected="false">This week</button>
+      <button class="tab" data-view="setup" role="tab" aria-selected="false">Setup</button>
     </nav>
   </div>
 </header>
@@ -188,7 +189,7 @@
 
 <div id="bar" aria-hidden="true">
   <div class="inner">
-    <span class="hint" id="bar-hint"></span>
+    <span class="hint" id="bar-hint" aria-live="polite"></span>
     <button class="btn" id="bar-day">Fill whole day</button>
     <button class="btn" id="bar-letter">Fill all —-days</button>
     <button class="btn" id="bar-close" aria-label="Close">✕</button>
@@ -318,21 +319,21 @@ function render(){
   const tabs=document.querySelector('.tabs');
   if(!S){ tabs.style.display='none'; renderWelcome(); return; }
   tabs.style.display='flex';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===curView));
+  document.querySelectorAll('.tab').forEach(t=>{const on=t.dataset.view===curView;t.classList.toggle('active',on);t.setAttribute('aria-selected',on);});
   if(curView==='week') renderWeek(); else renderSetup();
 }
 
 /* ------------------ welcome ----------------------------------------- */
 function renderWelcome(){
   view.innerHTML=`<div style="text-align:center;padding:30px 6px 8px">
-    <div style="font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.12">Plan your whole year once.</div>
+    <h2 style="font-size:30px;letter-spacing:-.02em;line-height:1.12">Plan your whole year once.</h2>
     <p style="color:var(--ink-soft);font-size:15px;max-width:440px;margin:12px auto 26px;line-height:1.55">A lesson planner built for specials teachers — art, music, PE, library. Set up your schedule one time and every week of the year is ready to fill in. Free, no account, your plans stay on your device.</p>
     <div style="display:flex;flex-direction:column;gap:11px;max-width:340px;margin:0 auto">
       <button class="btn primary" id="w-fresh" style="padding:15px">Start fresh →</button>
       <button class="btn" id="w-sample" style="padding:15px">See a sample first</button>
       <button class="btn ghost" id="w-import" style="font-size:13px">Restore from a backup file</button>
     </div></div>
-    <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
+    <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="privacy.html">Privacy &amp; accessibility</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
   document.getElementById('w-fresh').onclick=startFresh;
   document.getElementById('w-sample').onclick=loadSample;
   document.getElementById('w-import').onclick=importBackup;
@@ -371,13 +372,13 @@ function renderWeek(){
   const w=YEAR[curWeek], c=S.config, todayISO=fmtISO(new Date());
   const preL=c.lunchAfter, teacher=c.teacher?` · ${esc(c.teacher)}`:'';
 
-  let head=`<tr><th class="day-h">Day</th>`;
+  let head=`<tr><th class="day-h" scope="col">Day</th>`;
   for(let p=1;p<=c.periods;p++){
-    if(p===preL+1) head+=`<th class="lunch-h">🍎</th>`;
-    head+=`<th>Period ${p}</th>`;
+    if(p===preL+1) head+=`<th class="lunch-h" scope="col" aria-label="Lunch">🍎</th>`;
+    head+=`<th scope="col">Period ${p}</th>`;
   }
-  if(preL===c.periods) head+=`<th class="lunch-h">🍎</th>`;
-  head+=`<th class="notes-h">Notes</th></tr>`;
+  if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch">🍎</th>`;
+  head+=`<th class="notes-h" scope="col">Notes</th></tr>`;
 
   let rows='';
   for(const d of w.days){
@@ -386,31 +387,31 @@ function renderWeek(){
     const banner=d.special?`<span class="sp-banner">${esc(d.special)}</span>`:'';
     rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
       <td><div class="day-cell">
-        <button class="day-gear no-print" data-gear="${d.iso}" aria-label="Day settings">⚙</button>
+        <button class="day-gear no-print" data-gear="${d.iso}" aria-label="Day settings for ${DAYNAMES[d.dow]} ${niceDate(d.iso)}">⚙</button>
         <div class="day-name">${DAYNAMES[d.dow]}</div>
         <div class="day-date">${niceDate(d.iso)}</div>
         ${chip}${banner}
       </div></td>`;
     for(let p=1;p<=c.periods;p++){
       if(p===preL+1) rows+=`<td class="lunch"><span>lunch</span></td>`;
-      rows+=`<td><div class="box" contenteditable="true" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}"></div></td>`;
+      rows+=`<td><div class="box" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${DAYNAMES[d.dow]} ${niceDate(d.iso)}, period ${p}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}"></div></td>`;
     }
     if(preL===c.periods) rows+=`<td class="lunch"><span>lunch</span></td>`;
-    rows+=`<td><div class="box" contenteditable="true" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
+    rows+=`<td><div class="box" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notes for ${DAYNAMES[d.dow]} ${niceDate(d.iso)}" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
   }
 
   const opts=YEAR.map((wk,i)=>`<option value="${i}" ${i===curWeek?'selected':''}>Wk ${i+1} · ${weekLabel(wk)}</option>`).join('');
   view.innerHTML=`
     <div class="weeknav no-print">
-      <button class="btn" id="wk-prev" ${curWeek===0?'disabled':''}>‹</button>
-      <button class="btn" id="wk-next" ${curWeek===YEAR.length-1?'disabled':''}>›</button>
+      <button class="btn" id="wk-prev" aria-label="Previous week" ${curWeek===0?'disabled':''}>‹</button>
+      <button class="btn" id="wk-next" aria-label="Next week" ${curWeek===YEAR.length-1?'disabled':''}>›</button>
       <select id="wk-jump" aria-label="Jump to week">${opts}</select>
       <button class="btn" id="wk-today">Today</button>
       <span class="spacer"></span>
       <button class="btn" id="wk-print">Print</button>
     </div>
     <div class="print-title">Specials Planner · Week of ${weekLabel(w)}${teacher}</div>
-    <div class="grid-scroll"><table class="week"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+    <div class="grid-scroll"><table class="week" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
     <div class="footnote no-print">Tap a box to type. While a box is selected, the bar below can copy it across the day or across matching rotation days.</div>`;
 
   // fill saved text via textContent (never innerHTML) — user text stays inert
@@ -487,7 +488,9 @@ function doCopy(mode){
 
 /* ------------------ special-day modal ------------------------------- */
 const modal=document.getElementById('modal'), sheet=document.getElementById('modal-sheet');
+let modalReturn=null;
 function openSpecial(iso){
+  modalReturn=document.activeElement;
   const cur=S.special[iso]||'';
   sheet.innerHTML=`<h3>${DAYNAMES[parseISO(iso).getDay()]}, ${niceDate(iso)}</h3>
     <p class="sub">Mark this a no-class day. It keeps its boxes but skips the rotation letter, so the cycle stays correct after breaks.</p>
@@ -495,7 +498,7 @@ function openSpecial(iso){
       <button class="btn" data-sp="Teacher work day">Teacher work day</button>
       <button class="btn" data-sp="No school">No school</button>
       <button class="btn" data-sp="Field trip">Field trip</button>
-      <input id="sp-custom" placeholder="Or type your own label…" value="${esc(cur&&!['Teacher work day','No school','Field trip'].includes(cur)?cur:'')}">
+      <input id="sp-custom" aria-label="Custom day label" placeholder="Or type your own label…" value="${esc(cur&&!['Teacher work day','No school','Field trip'].includes(cur)?cur:'')}">
       <button class="btn primary" id="sp-save">Save label</button>
       ${cur?'<button class="btn danger" id="sp-clear">Back to a normal day</button>':''}
       <button class="btn ghost" id="sp-cancel">Cancel</button>
@@ -508,37 +511,51 @@ function openSpecial(iso){
   const cl=sheet.querySelector('#sp-clear'); if(cl) cl.onclick=()=>setSpecial(iso,null);
   sheet.querySelector('#sp-cancel').onclick=closeModal;
   modal.classList.add('show');
+  const first=sheet.querySelector('button,input'); if(first) first.focus();
 }
 function setSpecial(iso,label){
   if(label) S.special[iso]=label; else delete S.special[iso];
   markStale(); persist(); closeModal(); render();
 }
-function closeModal(){ modal.classList.remove('show'); }
+function closeModal(){
+  modal.classList.remove('show');
+  if(modalReturn){ if(modalReturn.focus) modalReturn.focus(); modalReturn=null; }
+}
 modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+document.addEventListener('keydown',e=>{
+  if(!modal.classList.contains('show')) return;
+  if(e.key==='Escape'){ closeModal(); return; }
+  if(e.key!=='Tab') return;
+  const f=[...sheet.querySelectorAll('button,input')].filter(x=>!x.disabled);
+  if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){ last.focus(); e.preventDefault(); }
+  else if(!e.shiftKey && document.activeElement===last){ first.focus(); e.preventDefault(); }
+});
 
 /* ------------------ setup ------------------------------------------- */
 function renderSetup(){
   const c=S.config;
-  const dayBtns=[1,2,3,4,5,6,0].map(d=>`<button class="dp ${c.workDays.includes(d)?'on':''}" data-d="${d}">${DAYABBR[d]}</button>`).join('');
+  const dayBtns=[1,2,3,4,5,6,0].map(d=>`<button class="dp ${c.workDays.includes(d)?'on':''}" data-d="${d}" aria-pressed="${c.workDays.includes(d)}" aria-label="${DAYNAMES[d]}">${DAYABBR[d]}</button>`).join('');
   const lunchOpts=Array.from({length:c.periods+1},(_,i)=>`<option value="${i}" ${i===c.lunchAfter?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
   view.innerHTML=`
   <div class="card">
     <h2>Your schedule</h2>
     <p class="sub">Set this once. Every week of the year is generated from it — dates, rotation letters, and lunch all land where they should.</p>
     <div class="frow">
-      <div class="field"><label>First day</label><input type="date" id="f-start" value="${esc(c.yearStart)}"></div>
-      <div class="field"><label>Last day</label><input type="date" id="f-end" value="${esc(c.yearEnd)}"></div>
+      <div class="field"><label for="f-start">First day</label><input type="date" id="f-start" value="${esc(c.yearStart)}"></div>
+      <div class="field"><label for="f-end">Last day</label><input type="date" id="f-end" value="${esc(c.yearEnd)}"></div>
     </div>
     <div class="frow">
-      <div class="field"><label>Days you teach</label><div class="days-pick" id="f-days">${dayBtns}</div></div>
+      <div class="field"><label id="lbl-days">Days you teach</label><div class="days-pick" id="f-days" role="group" aria-labelledby="lbl-days">${dayBtns}</div></div>
     </div>
     <div class="frow">
-      <div class="field"><label>Periods per day</label><input type="number" id="f-periods" min="1" max="10" value="${c.periods}"></div>
-      <div class="field"><label>Lunch falls</label><select id="f-lunch">${lunchOpts}</select></div>
+      <div class="field"><label for="f-periods">Periods per day</label><input type="number" id="f-periods" min="1" max="10" value="${c.periods}"></div>
+      <div class="field"><label for="f-lunch">Lunch falls</label><select id="f-lunch">${lunchOpts}</select></div>
     </div>
     <div class="frow">
-      <div class="field"><label>Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C"></div>
-      <div class="field"><label>Your name <span style="text-transform:none;font-weight:400">(shows on printouts)</span></label><input id="f-teacher" value="${esc(c.teacher)}" placeholder="Ms. Rivera"></div>
+      <div class="field"><label for="f-letters">Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C"></div>
+      <div class="field"><label for="f-teacher">Your name <span style="text-transform:none;font-weight:400">(shows on printouts)</span></label><input id="f-teacher" value="${esc(c.teacher)}" placeholder="Ms. Rivera"></div>
     </div>
     <div class="setup-actions">
       <button class="btn primary" id="f-apply">Apply & build my year</button>
@@ -547,7 +564,7 @@ function renderSetup(){
 
   <div class="card">
     <h2>Your data</h2>
-    <p class="sub">Plans live on this device. Download a backup any time — it restores on any phone or computer.</p>
+    <p class="sub">Plans live on this device. Download a backup any time — it restores on any phone or computer. On a shared or school computer, download a backup before you leave — some school machines erase browser data between sign-ins.</p>
     <div class="setup-actions">
       <button class="btn" id="d-backup">Download backup</button>
       <button class="btn" id="d-import">Restore backup</button>
@@ -561,9 +578,9 @@ function renderSetup(){
     <p class="sub">Erases everything on this device. Download a backup first if you want to keep this year.</p>
     <button class="btn danger" id="d-reset">Erase and start over</button>
   </div>
-  <div class="footnote">Specials Planner is free — no account, no ads.${TIP_URL?` If it saves you time, <a href="${esc(TIP_URL)}" target="_blank" rel="noopener">tips are welcome</a>.`:''}<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
+  <div class="footnote">Specials Planner is free — no account, no ads.${TIP_URL?` If it saves you time, <a href="${esc(TIP_URL)}" target="_blank" rel="noopener">tips are welcome</a>.`:''}<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="privacy.html">Privacy &amp; accessibility</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
 
-  document.querySelectorAll('#f-days .dp').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  document.querySelectorAll('#f-days .dp').forEach(b=>b.onclick=()=>{const on=b.classList.toggle('on');b.setAttribute('aria-pressed',on);});
   document.getElementById('f-periods').onchange=e=>{
     const n=Math.max(1,Math.min(10,+e.target.value||6));
     e.target.value=n;
@@ -709,6 +726,14 @@ async function driveLoad(){
 
 /* ------------------ boot -------------------------------------------- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{curView=t.dataset.view;render();window.scrollTo(0,0);});
+document.querySelector('.tabs').addEventListener('keydown',e=>{
+  if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight') return;
+  const tabs=[...document.querySelectorAll('.tab')];
+  const i=tabs.indexOf(document.activeElement);
+  if(i<0) return;
+  const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];
+  n.focus(); n.click();
+});
 loadState();
 if(S){ buildYearIfStale(); curWeek=weekIndexFor(fmtISO(new Date())); }
 render();
