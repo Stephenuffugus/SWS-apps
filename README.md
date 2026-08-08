@@ -42,6 +42,7 @@ with a tip jar — the brand promise across every app here:
 | Baby log | 🔨 built — tip jar wired | [`apps/baby-log/`](apps/baby-log/) |
 | Moving boxes | 🔨 built — tip jar wired | [`apps/moving-boxes/`](apps/moving-boxes/) |
 | Specials Planner | 🔨 built — 52 tests passing, thumbnail filed, tip jar wired, WCAG AA pass | [`apps/specials-planner/`](apps/specials-planner/) |
+| Sub Plans | 🔨 built — 23 tests passing, tip jar + thumbnail pending | [`apps/sub-plans/`](apps/sub-plans/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
 
 ## Workflow rule
