@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#C65D3B">
+<meta name="description" content="Palette — a free lesson planner for specials teachers. Set up your schedule once, get every week of the year.">
+<title>Free Lesson Planner for Specials Teachers — Palette</title>
+<meta property="og:title" content="Free Lesson Planner for Specials Teachers — Palette">
+<meta property="og:description" content="Art, music, PE, library: set up your schedule once and every week of the school year is ready to fill in. Free, no account, stays on your device.">
+<meta property="og:image" content="https://sws-apps-9646d.web.app/palette/marketing/stripe-thumbnail.png">
+<meta name="twitter:card" content="summary">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  /* Self-hosted variable fonts (latin subset) — no third-party requests, works offline */
+  @font-face{
+    font-family:'Fraunces';font-style:normal;font-weight:500 700;font-display:swap;
+    src:url(fonts/fraunces-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face{
+    font-family:'Spline Sans';font-style:normal;font-weight:400 600;font-display:swap;
+    src:url(fonts/spline-sans-latin.woff2) format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  :root{
+    --paper:#FBF6EC; --paper-2:#F4ECDC; --ink:#2B2620; --ink-soft:#6B6355;
+    --line:#E3D8C4; --line-2:#D6C8AE;
+    --terra:#C65D3B; --terra-d:#A8482B;
+    --sage:#6F8E6A; --teal:#4F8A86; --mustard:#CC9A3F; --plum:#8A5A7A; --slate:#5E748C;
+    --lunch:#EFE6D2; --block:#E9E2D2;
+    --shadow:0 1px 0 rgba(43,38,32,.04), 0 8px 24px -12px rgba(43,38,32,.22);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Spline Sans',system-ui,sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.45;
+    background-image:
+      radial-gradient(circle at 12% -5%, rgba(198,93,59,.06), transparent 40%),
+      radial-gradient(circle at 95% 0%, rgba(79,138,134,.06), transparent 35%);
+    background-attachment:fixed;
+    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  }
+  h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;margin:0;letter-spacing:-.01em}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:14px}
+  input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 14px}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:40;background:rgba(251,246,236,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .head-row{display:flex;align-items:center;gap:12px;padding:12px 0 10px}
+  .logo{display:flex;align-items:center;gap:9px;user-select:none}
+  .logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--terra),var(--mustard));position:relative;flex:none}
+  .logo .mark::before,.logo .mark::after{content:'';position:absolute;border-radius:50%}
+  .logo .mark::before{width:7px;height:7px;background:#FBF6EC;top:6px;left:6px;box-shadow:11px 0 0 rgba(251,246,236,.75), 0 11px 0 rgba(251,246,236,.75), 11px 11px 0 rgba(251,246,236,.55)}
+  .logo h1{font-size:21px}
+  .logo .tag{font-size:11.5px;color:var(--ink-soft);margin-top:-2px}
+  .saved{margin-left:auto;font-size:12px;color:var(--sage);opacity:0;transition:opacity .3s;font-weight:500}
+  .saved.show{opacity:1}
+  .tabs{display:flex;gap:4px;padding-bottom:10px}
+  .tab{padding:7px 14px;border-radius:999px;font-weight:500;color:var(--ink-soft);border:1px solid transparent}
+  .tab.active{background:var(--ink);color:var(--paper)}
+  .tab:not(.active):hover{border-color:var(--line-2)}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:11px;border:1px solid var(--line-2);background:#fff;font-weight:500;box-shadow:0 1px 0 rgba(43,38,32,.05);transition:transform .06s}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--terra);border-color:var(--terra-d);color:#fff}
+  .btn.primary:hover{background:var(--terra-d)}
+  .btn.ghost{border-color:transparent;background:transparent;box-shadow:none;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px}
+  .btn.danger{color:#A33B2A;border-color:#E0BDB2}
+  .btn:disabled{opacity:.45;cursor:default}
+
+  /* ---------- week nav ---------- */
+  .weeknav{display:flex;align-items:center;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+  .weeknav .btn{padding:8px 13px}
+  .weeknav select{padding:9px 10px;border-radius:11px;border:1px solid var(--line-2);background:#fff;max-width:60vw}
+  .weeknav .spacer{flex:1}
+  .wk-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600}
+
+  /* ---------- the grid ---------- */
+  .grid-scroll{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);background:#fff;border:1px solid var(--line)}
+  table.week{border-collapse:collapse;width:100%;min-width:840px;table-layout:fixed}
+  table.week th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;padding:9px 8px;background:var(--paper-2);border-bottom:1.5px solid var(--line-2);border-right:1px solid var(--line);text-align:left}
+  table.week th.day-h{width:118px}
+  table.week th.lunch-h{width:44px;text-align:center;background:var(--lunch)}
+  table.week th.notes-h{width:150px}
+  table.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top;padding:0}
+  table.week tr:last-child td{border-bottom:none}
+  table.week th:last-child,table.week td:last-child{border-right:none}
+
+  .day-cell{padding:9px 8px}
+  .day-name{font-weight:600;font-size:14px}
+  .day-date{font-size:12px;color:var(--ink-soft)}
+  .chip{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:7px;font-weight:600;font-size:12.5px;color:#fff;margin-top:5px}
+  .chip.l0{background:var(--terra)} .chip.l1{background:var(--teal)} .chip.l2{background:var(--sage)}
+  .chip.l3{background:var(--plum)} .chip.l4{background:var(--slate)} .chip.l5{background:var(--mustard)}
+  .day-gear{float:right;font-size:14px;opacity:.4;padding:2px 4px;border-radius:6px}
+  .day-gear:hover{opacity:1;background:var(--paper-2)}
+  .sp-banner{display:block;margin-top:5px;font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--block);border-radius:7px;padding:3px 7px;letter-spacing:.03em;text-transform:uppercase}
+
+  .box{min-height:74px;padding:8px 9px;font-size:13.5px;line-height:1.4;outline:none;white-space:pre-wrap;word-wrap:break-word}
+  .box:empty::before{content:'—';color:var(--line-2)}
+  .box:focus{background:#FFFDF7;box-shadow:inset 0 0 0 2px var(--terra)}
+  td.lunch{background:var(--lunch);text-align:center;vertical-align:middle !important}
+  td.lunch span{writing-mode:vertical-rl;font-size:10.5px;letter-spacing:.22em;color:var(--ink-soft);text-transform:uppercase;font-weight:600}
+  tr.sp-row .box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(43,38,32,.025) 7px,rgba(43,38,32,.025) 14px)}
+  tr.today-row td:first-child{box-shadow:inset 3px 0 0 var(--terra)}
+
+  /* ---------- copy bar ---------- */
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(110%);transition:transform .22s cubic-bezier(.3,.9,.3,1);background:var(--ink);color:var(--paper);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  #bar.show{transform:none}
+  #bar .inner{max-width:1060px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #bar .hint{font-size:12.5px;opacity:.75;margin-right:auto}
+  #bar .btn{background:rgba(251,246,236,.12);border-color:rgba(251,246,236,.25);color:var(--paper);padding:8px 13px;font-size:13px}
+  #bar .btn:hover{background:rgba(251,246,236,.2)}
+
+  /* ---------- setup / welcome ---------- */
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;margin:14px 0}
+  .card h2{font-size:17px;margin-bottom:4px}
+  .card .sub{font-size:13px;color:var(--ink-soft);margin:0 0 14px}
+  .frow{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}
+  .field label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+  .field input,.field select{padding:10px;border-radius:10px;border:1px solid var(--line-2);background:var(--paper)}
+  .days-pick{display:flex;gap:6px;flex-wrap:wrap}
+  .dp{width:44px;height:38px;border-radius:10px;border:1px solid var(--line-2);background:var(--paper);font-weight:600;font-size:13px;color:var(--ink-soft)}
+  .dp.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .footnote{text-align:center;font-size:12px;color:var(--ink-soft);padding:18px 12px 6px}
+  .footnote a{color:var(--terra)}
+  .setup-actions{display:flex;gap:9px;flex-wrap:wrap}
+
+  /* ---------- modal ---------- */
+  #modal{position:fixed;inset:0;z-index:60;background:rgba(43,38,32,.4);display:none;align-items:center;justify-content:center;padding:18px}
+  #modal.show{display:flex}
+  #modal .sheet{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);max-width:380px;width:100%;padding:18px}
+  #modal h3{font-size:17px;margin-bottom:2px}
+  #modal .sub{font-size:13px;color:var(--ink-soft);margin:0 0 13px}
+  #modal .opts{display:flex;flex-direction:column;gap:8px}
+  #modal input{padding:10px;border-radius:10px;border:1px solid var(--line-2);width:100%;background:#fff}
+
+  /* ---------- print ---------- */
+  @media print{
+    @page{size:landscape;margin:9mm}
+    body{background:#fff;padding:0}
+    header,.weeknav,#bar,.footnote,.no-print{display:none !important}
+    .grid-scroll{overflow:visible;box-shadow:none;border:1px solid #999;border-radius:0}
+    table.week{min-width:0}
+    table.week thead{display:table-header-group}
+    table.week tr{break-inside:avoid}
+    .box{min-height:52px;font-size:11px}
+    .box:empty::before{content:''}
+    .day-gear{display:none}
+    .print-title{display:block !important;font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 6px}
+  }
+  .print-title{display:none}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+  @media (max-width:640px){
+    .logo h1{font-size:18px} .logo .tag{display:none}
+    .wk-title{font-size:16px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="head-row">
+      <div class="logo">
+        <div class="mark" aria-hidden="true"></div>
+        <div><h1>Palette</h1><div class="tag">for specials teachers</div></div>
+      </div>
+      <span class="saved" id="saved">Saved</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" data-view="week" role="tab">This week</button>
+      <button class="tab" data-view="setup" role="tab">Setup</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="view" aria-live="polite"></main>
+
+<div id="bar" aria-hidden="true">
+  <div class="inner">
+    <span class="hint" id="bar-hint"></span>
+    <button class="btn" id="bar-day">Fill whole day</button>
+    <button class="btn" id="bar-letter">Fill all —-days</button>
+    <button class="btn" id="bar-close" aria-label="Close">✕</button>
+  </div>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true">
+  <div class="sheet" id="modal-sheet"></div>
+</div>
+
+<script>
+/* =====================================================================
+   Palette — single-file specials lesson planner.
+   Vanilla JS, no build step. State lives in localStorage key "palette2".
+   Handoff notes for Claude Code live in HANDOFF.md next to this file.
+   ===================================================================== */
+
+/* ------------------ config seams (fill these to enable) ------------- */
+const CLIENT_ID = "";   // Google OAuth Web Client ID → enables Drive save/load (scope: drive.file). Empty = feature hidden.
+const TIP_URL   = "";   // Stripe Payment Link URL → shows a quiet tip-jar link in Setup. Empty = hidden.
+
+/* ------------------ storage shim ------------------------------------ */
+const KEY='palette2';
+const store={
+  ok:(()=>{try{localStorage.setItem('__pt','1');localStorage.removeItem('__pt');return true}catch(e){return false}})(),
+  mem:{},
+  get(k){ if(this.ok){try{return localStorage.getItem(k)}catch(e){}} return (k in this.mem)?this.mem[k]:null },
+  set(k,v){ if(this.ok){try{localStorage.setItem(k,v);return}catch(e){}} this.mem[k]=v },
+  del(k){ if(this.ok){try{localStorage.removeItem(k)}catch(e){}} delete this.mem[k] }
+};
+
+/* ------------------ state ------------------------------------------- */
+let S=null;           // null → welcome screen
+let YEAR=[];          // [{monday, days:[{iso,dow,letter,special}]}]
+let curView='week';
+let curWeek=0;
+let saveT=null;
+
+function defaultConfig(){
+  const y=new Date().getFullYear();
+  const aug=new Date(y, 7, 1);              // Aug 1 this year
+  const start=(new Date()>aug)? aug : new Date(y,7,1);
+  return {
+    yearStart:`${start.getFullYear()}-08-24`,
+    yearEnd:`${start.getFullYear()+1}-05-28`,
+    workDays:[1,2,3,4,5],
+    periods:6, lunchAfter:2,
+    letters:['A','B','C'],
+    teacher:'', driveFileId:''
+  };
+}
+function migrate(s){
+  if(!s||typeof s!=='object'||!s.config) return null;
+  s.cells=s.cells||{}; s.notes=s.notes||{}; s.special=s.special||{};
+  const d=defaultConfig(), c=s.config;
+  for(const k in d) if(c[k]===undefined) c[k]=d[k];
+  c.periods=Math.max(1,Math.min(10,+c.periods||6));
+  c.lunchAfter=Math.max(0,Math.min(c.periods,+c.lunchAfter??2));
+  if(!Array.isArray(c.letters)||!c.letters.length) c.letters=['A','B','C'];
+  c.letters=c.letters.map(x=>String(x).trim()).filter(Boolean).slice(0,6);
+  if(!c.letters.length) c.letters=['A'];
+  if(!Array.isArray(c.workDays)||!c.workDays.length) c.workDays=[1,2,3,4,5];
+  return s;
+}
+function loadState(){ try{const r=store.get(KEY); S=r?migrate(JSON.parse(r)):null}catch(e){S=null} }
+function persist(){ store.set(KEY,JSON.stringify(S)); flashSaved(); }
+function queueSave(){ clearTimeout(saveT); saveT=setTimeout(persist,400); }
+function flashSaved(){ const el=document.getElementById('saved'); el.classList.add('show'); clearTimeout(flashSaved.t); flashSaved.t=setTimeout(()=>el.classList.remove('show'),1200); }
+
+/* ------------------ dates ------------------------------------------- */
+const DAYNAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYABBR=['Su','Mo','Tu','We','Th','Fr','Sa'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function parseISO(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return null; const[y,m,d]=s.split('-').map(Number); const dt=new Date(y,m-1,d); return isNaN(dt)?null:dt; }
+function fmtISO(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function niceDate(iso){ const d=parseISO(iso); return `${MONTHS[d.getMonth()]} ${d.getDate()}`; }
+function weekLabel(w){
+  const a=parseISO(w.days[0].iso), b=parseISO(w.days[w.days.length-1].iso);
+  const yr=b.getFullYear();
+  return a.getMonth()===b.getMonth()
+    ? `${MONTHS[a.getMonth()]} ${a.getDate()}–${b.getDate()}, ${yr}`
+    : `${MONTHS[a.getMonth()]} ${a.getDate()} – ${MONTHS[b.getMonth()]} ${b.getDate()}, ${yr}`;
+}
+
+/* ------------------ year builder ------------------------------------ */
+/* Rotation letters cycle continuously over school days across the whole
+   year. Days marked "special" (no school / work day) show a banner and do
+   NOT consume a letter — so the rotation stays true after breaks.        */
+function buildYear(){
+  YEAR=[]; if(!S) return;
+  const c=S.config, start=parseISO(c.yearStart), end=parseISO(c.yearEnd);
+  if(!start||!end||end<start) return;
+  let li=0;
+  let cur=addDays(start,-((start.getDay()+6)%7));   // back to that week's Monday
+  let guard=0;
+  while(cur<=end && guard++<80){
+    const days=[];
+    for(let i=0;i<7;i++){
+      const d=addDays(cur,i), dow=d.getDay();
+      if(!c.workDays.includes(dow)) continue;
+      if(d<start||d>end) continue;
+      const iso=fmtISO(d), sp=S.special[iso]||null;
+      let letter=null;
+      if(!sp){ letter=c.letters[li%c.letters.length]; li++; }
+      days.push({iso,dow,letter,special:sp});
+    }
+    if(days.length) YEAR.push({monday:fmtISO(cur),days});
+    cur=addDays(cur,7);
+  }
+}
+function weekIndexFor(iso){
+  for(let i=0;i<YEAR.length;i++){
+    const w=YEAR[i], last=w.days[w.days.length-1].iso;
+    if(iso<=last) return i;
+  }
+  return YEAR.length?YEAR.length-1:0;
+}
+
+/* ------------------ safe text --------------------------------------- */
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ------------------ render root ------------------------------------- */
+const view=document.getElementById('view');
+function render(){
+  hideBar(); closeModal();
+  const tabs=document.querySelector('.tabs');
+  if(!S){ tabs.style.display='none'; renderWelcome(); return; }
+  tabs.style.display='flex';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===curView));
+  if(curView==='week') renderWeek(); else renderSetup();
+}
+
+/* ------------------ welcome ----------------------------------------- */
+function renderWelcome(){
+  view.innerHTML=`<div style="text-align:center;padding:30px 6px 8px">
+    <div style="font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.12">Plan your whole year once.</div>
+    <p style="color:var(--ink-soft);font-size:15px;max-width:440px;margin:12px auto 26px;line-height:1.55">A lesson planner built for specials teachers — art, music, PE, library. Set up your schedule one time and every week of the year is ready to fill in. Free, no account, your plans stay on your device.</p>
+    <div style="display:flex;flex-direction:column;gap:11px;max-width:340px;margin:0 auto">
+      <button class="btn primary" id="w-fresh" style="padding:15px">Start fresh →</button>
+      <button class="btn" id="w-sample" style="padding:15px">See a sample first</button>
+      <button class="btn ghost" id="w-import" style="font-size:13px">Restore from a backup file</button>
+    </div></div>
+    <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Palette">Feedback</a></div>`;
+  document.getElementById('w-fresh').onclick=startFresh;
+  document.getElementById('w-sample').onclick=loadSample;
+  document.getElementById('w-import').onclick=importBackup;
+}
+function startFresh(){ S={config:defaultConfig(),cells:{},notes:{},special:{}}; buildYear(); persist(); curView='setup'; render(); }
+function loadSample(){
+  S={config:defaultConfig(),cells:{},notes:{},special:{}};
+  buildYear();
+  if(YEAR.length){
+    const w=YEAR[0];
+    const first=w.days[0];
+    S.special[first.iso]='Teacher work day';
+    buildYear();                                   // rebuild so letters shift
+    const wk=YEAR[0];
+    for(const d of wk.days){
+      if(d.special) { S.notes[d.iso]='Set up room · hang welcome board'; continue; }
+      for(let p=1;p<=S.config.periods;p++){
+        if(p===3||p===4){ S.cells[`${d.iso}|${p}`]='No kindergarten yet'; continue; }
+        S.cells[`${d.iso}|${p}`]='Welcome + rules\nName-tag design\nSketchbook covers';
+      }
+      S.notes[d.iso]='Collect supply forms';
+    }
+  }
+  persist(); curWeek=0; curView='week'; render();
+}
+
+/* ------------------ week view --------------------------------------- */
+function renderWeek(){
+  buildYearIfStale();
+  if(!YEAR.length){
+    view.innerHTML=`<div class="card"><h2>No weeks yet</h2><p class="sub">Check your year dates in Setup — the end date has to come after the start date, and at least one weekday has to be selected.</p><button class="btn primary" id="go-setup">Open Setup</button></div>`;
+    document.getElementById('go-setup').onclick=()=>{curView='setup';render();};
+    return;
+  }
+  curWeek=Math.max(0,Math.min(YEAR.length-1,curWeek));
+  const w=YEAR[curWeek], c=S.config, todayISO=fmtISO(new Date());
+  const preL=c.lunchAfter, teacher=c.teacher?` · ${esc(c.teacher)}`:'';
+
+  let head=`<tr><th class="day-h">Day</th>`;
+  for(let p=1;p<=c.periods;p++){
+    if(p===preL+1) head+=`<th class="lunch-h">🍎</th>`;
+    head+=`<th>Period ${p}</th>`;
+  }
+  if(preL===c.periods) head+=`<th class="lunch-h">🍎</th>`;
+  head+=`<th class="notes-h">Notes</th></tr>`;
+
+  let rows='';
+  for(const d of w.days){
+    const li=d.letter?c.letters.indexOf(d.letter):-1;
+    const chip=d.letter?`<span class="chip l${li%6}">${esc(d.letter)}</span>`:'';
+    const banner=d.special?`<span class="sp-banner">${esc(d.special)}</span>`:'';
+    rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
+      <td><div class="day-cell">
+        <button class="day-gear no-print" data-gear="${d.iso}" aria-label="Day settings">⚙</button>
+        <div class="day-name">${DAYNAMES[d.dow]}</div>
+        <div class="day-date">${niceDate(d.iso)}</div>
+        ${chip}${banner}
+      </div></td>`;
+    for(let p=1;p<=c.periods;p++){
+      if(p===preL+1) rows+=`<td class="lunch"><span>lunch</span></td>`;
+      rows+=`<td><div class="box" contenteditable="true" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}"></div></td>`;
+    }
+    if(preL===c.periods) rows+=`<td class="lunch"><span>lunch</span></td>`;
+    rows+=`<td><div class="box" contenteditable="true" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
+  }
+
+  const opts=YEAR.map((wk,i)=>`<option value="${i}" ${i===curWeek?'selected':''}>Wk ${i+1} · ${weekLabel(wk)}</option>`).join('');
+  view.innerHTML=`
+    <div class="weeknav no-print">
+      <button class="btn" id="wk-prev" ${curWeek===0?'disabled':''}>‹</button>
+      <button class="btn" id="wk-next" ${curWeek===YEAR.length-1?'disabled':''}>›</button>
+      <select id="wk-jump" aria-label="Jump to week">${opts}</select>
+      <button class="btn" id="wk-today">Today</button>
+      <span class="spacer"></span>
+      <button class="btn" id="wk-print">Print</button>
+    </div>
+    <div class="print-title">Palette · Week of ${weekLabel(w)}${teacher}</div>
+    <div class="grid-scroll"><table class="week"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+    <div class="footnote no-print">Tap a box to type. While a box is selected, the bar below can copy it across the day or across matching rotation days.</div>`;
+
+  // fill saved text via textContent (never innerHTML) — user text stays inert
+  view.querySelectorAll('.box').forEach(b=>{
+    const k=b.dataset.p==='notes'?null:`${b.dataset.iso}|${b.dataset.p}`;
+    b.textContent = k ? (S.cells[k]||'') : (S.notes[b.dataset.iso]||'');
+    b.addEventListener('input',onBoxInput);
+    b.addEventListener('focus',()=>onBoxFocus(b));
+    b.addEventListener('paste',plainPaste);
+  });
+  view.querySelectorAll('[data-gear]').forEach(g=>g.onclick=()=>openSpecial(g.dataset.gear));
+  document.getElementById('wk-prev').onclick=()=>{curWeek--;render();};
+  document.getElementById('wk-next').onclick=()=>{curWeek++;render();};
+  document.getElementById('wk-jump').onchange=e=>{curWeek=+e.target.value;render();};
+  document.getElementById('wk-today').onclick=()=>{curWeek=weekIndexFor(todayISO);render();};
+  document.getElementById('wk-print').onclick=()=>window.print();
+}
+let yearStale=true;
+function buildYearIfStale(){ if(yearStale){buildYear();yearStale=false;} }
+function markStale(){ yearStale=true; }
+
+function onBoxInput(e){
+  const b=e.target, v=b.textContent;
+  if(b.dataset.p==='notes'){ if(v)S.notes[b.dataset.iso]=v; else delete S.notes[b.dataset.iso]; }
+  else { const k=`${b.dataset.iso}|${b.dataset.p}`; if(v)S.cells[k]=v; else delete S.cells[k]; }
+  queueSave();
+}
+function plainPaste(e){
+  e.preventDefault();
+  const t=(e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText',false,t);
+}
+
+/* ------------------ copy bar ---------------------------------------- */
+const bar=document.getElementById('bar');
+let barCtx=null;
+function onBoxFocus(b){
+  if(b.dataset.p==='notes'){ hideBar(); return; }
+  barCtx={iso:b.dataset.iso,p:+b.dataset.p,letter:b.dataset.letter||''};
+  document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · Period ${barCtx.p}`;
+  const lb=document.getElementById('bar-letter');
+  if(barCtx.letter){ lb.style.display=''; lb.textContent=`Fill all ${barCtx.letter}-days`; }
+  else lb.style.display='none';
+  bar.classList.add('show'); bar.setAttribute('aria-hidden','false');
+}
+function hideBar(){ bar.classList.remove('show'); bar.setAttribute('aria-hidden','true'); barCtx=null; }
+document.getElementById('bar-close').onclick=hideBar;
+document.getElementById('bar-day').onclick=()=>doCopy('day');
+document.getElementById('bar-letter').onclick=()=>doCopy('letter');
+function doCopy(mode){
+  if(!barCtx) return;
+  const src=S.cells[`${barCtx.iso}|${barCtx.p}`]||'';
+  const w=YEAR[curWeek], c=S.config;
+  const targets=[];
+  if(mode==='day'){
+    for(let p=1;p<=c.periods;p++) if(p!==barCtx.p) targets.push([barCtx.iso,p]);
+  } else {
+    for(const d of w.days){
+      if(d.special||d.letter!==barCtx.letter) continue;
+      for(let p=1;p<=c.periods;p++){
+        if(d.iso===barCtx.iso&&p===barCtx.p) continue;
+        targets.push([d.iso,p]);
+      }
+    }
+  }
+  for(const [iso,p] of targets){
+    const k=`${iso}|${p}`;
+    if(src) S.cells[k]=src; else delete S.cells[k];
+    const el=view.querySelector(`.box[data-iso="${iso}"][data-p="${p}"]`);
+    if(el) el.textContent=src;
+  }
+  persist();
+}
+
+/* ------------------ special-day modal ------------------------------- */
+const modal=document.getElementById('modal'), sheet=document.getElementById('modal-sheet');
+function openSpecial(iso){
+  const cur=S.special[iso]||'';
+  sheet.innerHTML=`<h3>${DAYNAMES[parseISO(iso).getDay()]}, ${niceDate(iso)}</h3>
+    <p class="sub">Mark this a no-class day. It keeps its boxes but skips the rotation letter, so the cycle stays correct after breaks.</p>
+    <div class="opts">
+      <button class="btn" data-sp="Teacher work day">Teacher work day</button>
+      <button class="btn" data-sp="No school">No school</button>
+      <button class="btn" data-sp="Field trip">Field trip</button>
+      <input id="sp-custom" placeholder="Or type your own label…" value="${esc(cur&&!['Teacher work day','No school','Field trip'].includes(cur)?cur:'')}">
+      <button class="btn primary" id="sp-save">Save label</button>
+      ${cur?'<button class="btn danger" id="sp-clear">Back to a normal day</button>':''}
+      <button class="btn ghost" id="sp-cancel">Cancel</button>
+    </div>`;
+  sheet.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>setSpecial(iso,b.dataset.sp));
+  sheet.querySelector('#sp-save').onclick=()=>{
+    const v=sheet.querySelector('#sp-custom').value.trim();
+    if(v) setSpecial(iso,v);
+  };
+  const cl=sheet.querySelector('#sp-clear'); if(cl) cl.onclick=()=>setSpecial(iso,null);
+  sheet.querySelector('#sp-cancel').onclick=closeModal;
+  modal.classList.add('show');
+}
+function setSpecial(iso,label){
+  if(label) S.special[iso]=label; else delete S.special[iso];
+  markStale(); persist(); closeModal(); render();
+}
+function closeModal(){ modal.classList.remove('show'); }
+modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+
+/* ------------------ setup ------------------------------------------- */
+function renderSetup(){
+  const c=S.config;
+  const dayBtns=[1,2,3,4,5,6,0].map(d=>`<button class="dp ${c.workDays.includes(d)?'on':''}" data-d="${d}">${DAYABBR[d]}</button>`).join('');
+  const lunchOpts=Array.from({length:c.periods+1},(_,i)=>`<option value="${i}" ${i===c.lunchAfter?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
+  view.innerHTML=`
+  <div class="card">
+    <h2>Your schedule</h2>
+    <p class="sub">Set this once. Every week of the year is generated from it — dates, rotation letters, and lunch all land where they should.</p>
+    <div class="frow">
+      <div class="field"><label>First day</label><input type="date" id="f-start" value="${esc(c.yearStart)}"></div>
+      <div class="field"><label>Last day</label><input type="date" id="f-end" value="${esc(c.yearEnd)}"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Days you teach</label><div class="days-pick" id="f-days">${dayBtns}</div></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Periods per day</label><input type="number" id="f-periods" min="1" max="10" value="${c.periods}"></div>
+      <div class="field"><label>Lunch falls</label><select id="f-lunch">${lunchOpts}</select></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C"></div>
+      <div class="field"><label>Your name <span style="text-transform:none;font-weight:400">(shows on printouts)</span></label><input id="f-teacher" value="${esc(c.teacher)}" placeholder="Ms. Rivera"></div>
+    </div>
+    <div class="setup-actions">
+      <button class="btn primary" id="f-apply">Apply & build my year</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your data</h2>
+    <p class="sub">Plans live on this device. Download a backup any time — it restores on any phone or computer.</p>
+    <div class="setup-actions">
+      <button class="btn" id="d-backup">Download backup</button>
+      <button class="btn" id="d-import">Restore backup</button>
+      <button class="btn" id="d-csv">Export CSV for Sheets</button>
+      <span id="drive-slot"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Start over</h2>
+    <p class="sub">Erases everything on this device. Download a backup first if you want to keep this year.</p>
+    <button class="btn danger" id="d-reset">Erase and start over</button>
+  </div>
+  <div class="footnote">Palette is free — no account, no ads.${TIP_URL?` If it saves you time, <a href="${esc(TIP_URL)}" target="_blank" rel="noopener">tips are welcome</a>.`:''}<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Palette">Feedback</a></div>`;
+
+  document.querySelectorAll('#f-days .dp').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  document.getElementById('f-periods').onchange=e=>{
+    const n=Math.max(1,Math.min(10,+e.target.value||6));
+    e.target.value=n;
+    const l=document.getElementById('f-lunch'), cur=Math.min(+l.value,n);
+    l.innerHTML=Array.from({length:n+1},(_,i)=>`<option value="${i}" ${i===cur?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
+  };
+  document.getElementById('f-apply').onclick=applySetup;
+  document.getElementById('d-backup').onclick=exportBackup;
+  document.getElementById('d-import').onclick=importBackup;
+  document.getElementById('d-csv').onclick=exportCSV;
+  document.getElementById('d-reset').onclick=resetAll;
+  mountDrive();
+}
+function applySetup(){
+  const c=S.config;
+  const st=document.getElementById('f-start').value, en=document.getElementById('f-end').value;
+  if(!parseISO(st)||!parseISO(en)||en<st){ alert('Check your dates — the last day has to come after the first day.'); return; }
+  c.yearStart=st; c.yearEnd=en;
+  c.workDays=[...document.querySelectorAll('#f-days .dp.on')].map(b=>+b.dataset.d);
+  if(!c.workDays.length){ alert('Pick at least one teaching day.'); return; }
+  c.periods=Math.max(1,Math.min(10,+document.getElementById('f-periods').value||6));
+  c.lunchAfter=Math.max(0,Math.min(c.periods,+document.getElementById('f-lunch').value));
+  const letters=document.getElementById('f-letters').value.split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
+  c.letters=letters.length?letters:['A'];
+  c.teacher=document.getElementById('f-teacher').value.trim();
+  markStale(); persist();
+  buildYearIfStale();
+  curWeek=weekIndexFor(fmtISO(new Date()));
+  curView='week'; render();
+}
+
+/* ------------------ backup / csv / reset ---------------------------- */
+function download(name,text,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type}));
+  a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function backupJSON(){ return JSON.stringify({app:'palette',version:2,exported:new Date().toISOString(),state:S},null,1); }
+function exportBackup(){ download(`palette-backup-${fmtISO(new Date())}.json`,backupJSON(),'application/json'); }
+function importBackup(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const f=inp.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ if(applyImportedText(r.result)) { curView='week'; curWeek=weekIndexFor(fmtISO(new Date())); render(); } };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function applyImportedText(text){
+  try{
+    const j=JSON.parse(text);
+    const st=migrate(j.state||j);          // tolerate raw-state or wrapped backups
+    if(!st) throw 0;
+    S=st; markStale(); persist(); return true;
+  }catch(e){ alert("That file doesn't look like a Palette backup."); return false; }
+}
+function csvField(v){ v=String(v??''); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v; }
+function exportCSV(){
+  buildYearIfStale();
+  const c=S.config;
+  const head=['Date','Weekday','Rotation',...Array.from({length:c.periods},(_,i)=>`Period ${i+1}`),'Notes'];
+  const lines=[head.join(',')];
+  for(const w of YEAR) for(const d of w.days){
+    const row=[d.iso,DAYNAMES[d.dow],d.special?d.special:(d.letter||'')];
+    for(let p=1;p<=c.periods;p++) row.push(S.cells[`${d.iso}|${p}`]||'');
+    row.push(S.notes[d.iso]||'');
+    lines.push(row.map(csvField).join(','));
+  }
+  download(`palette-${c.yearStart.slice(0,4)}.csv`,lines.join('\n'),'text/csv');
+}
+function resetAll(){
+  if(!confirm('Erase everything on this device? Download a backup first if you want to keep it.')) return;
+  S=null; store.del(KEY); curWeek=0; render();
+}
+
+/* ------------------ GOOGLE DRIVE (optional) --------------------------
+   Enabled only when CLIENT_ID is set. Uses Google Identity Services token
+   flow + Drive REST with the drive.file scope (app-created files only —
+   the non-sensitive scope, no restricted-scope review needed).           */
+let driveToken=null, gisReady=false, tokenClient=null;
+function mountDrive(){
+  const slot=document.getElementById('drive-slot');
+  if(!slot||!CLIENT_ID) return;
+  slot.innerHTML=`<button class="btn" id="d-drive-save">Save to Google Drive</button>
+                  <button class="btn" id="d-drive-load">Load from Drive</button>`;
+  document.getElementById('d-drive-save').onclick=()=>withDriveToken(driveSave);
+  document.getElementById('d-drive-load').onclick=()=>withDriveToken(driveLoad);
+  if(!gisReady && !document.getElementById('gsi')){
+    const s=document.createElement('script');
+    s.id='gsi'; s.src='https://accounts.google.com/gsi/client'; s.async=true;
+    s.onload=()=>{ gisReady=true; };
+    document.head.appendChild(s);
+  }
+}
+function withDriveToken(fn){
+  if(driveToken){ fn(); return; }
+  if(!window.google?.accounts?.oauth2){ alert('Google sign-in is still loading — try again in a second.'); return; }
+  tokenClient=tokenClient||google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,
+    scope:'https://www.googleapis.com/auth/drive.file',
+    callback:(resp)=>{ if(resp.access_token){ driveToken=resp.access_token; fn(); } }
+  });
+  tokenClient.requestAccessToken();
+}
+async function driveSave(){
+  try{
+    const meta={name:'Palette planner.json',mimeType:'application/json'};
+    const boundary='paletteb'+Date.now();
+    const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${backupJSON()}\r\n--${boundary}--`;
+    const id=S.config.driveFileId;
+    const url=id
+      ? `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    const res=await fetch(url,{method:id?'PATCH':'POST',
+      headers:{Authorization:`Bearer ${driveToken}`,'Content-Type':`multipart/related; boundary=${boundary}`},body});
+    if(res.status===401){ driveToken=null; alert('Google session expired — tap Save again to sign back in.'); return; }
+    if(!res.ok) throw new Error(res.status);
+    const j=await res.json();
+    if(j.id&&j.id!==S.config.driveFileId){ S.config.driveFileId=j.id; persist(); }
+    alert('Saved to your Google Drive.');
+  }catch(e){ alert('Drive save didn\'t go through — check your connection and try again.'); }
+}
+async function driveLoad(){
+  try{
+    let id=S.config.driveFileId;
+    if(!id){
+      const q=encodeURIComponent("name='Palette planner.json' and trashed=false");
+      const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=modifiedTime desc&pageSize=1&fields=files(id,name)`,
+        {headers:{Authorization:`Bearer ${driveToken}`}});
+      const j=await res.json();
+      if(!j.files||!j.files.length){ alert('No Palette file found in your Drive yet — save one first.'); return; }
+      id=j.files[0].id;
+    }
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`,{headers:{Authorization:`Bearer ${driveToken}`}});
+    if(res.status===401){ driveToken=null; alert('Google session expired — tap Load again to sign back in.'); return; }
+    if(!res.ok) throw new Error(res.status);
+    const text=await res.text();
+    if(applyImportedText(text)){ S.config.driveFileId=id; persist(); curView='week'; render(); }
+  }catch(e){ alert('Couldn\'t load from Drive — check your connection and try again.'); }
+}
+
+/* ------------------ boot -------------------------------------------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{curView=t.dataset.view;render();window.scrollTo(0,0);});
+loadState();
+if(S){ buildYearIfStale(); curWeek=weekIndexFor(fmtISO(new Date())); }
+render();
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

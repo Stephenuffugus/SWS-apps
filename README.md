@@ -40,6 +40,7 @@ with a tip jar — the brand promise across every app here:
 | Image compressor | 🔨 built — tip jar wired | [`apps/image-compressor/`](apps/image-compressor/) |
 | Baby log | 🔨 built — tip jar wired | [`apps/baby-log/`](apps/baby-log/) |
 | Moving boxes | 🔨 built — tip jar wired | [`apps/moving-boxes/`](apps/moving-boxes/) |
+| Palette (lesson planner) | 🔨 built — 40 tests passing, tip jar + Drive await credentials | [`apps/palette/`](apps/palette/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
 
 ## Workflow rule
