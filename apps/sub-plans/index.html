@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sub Plans — Free Substitute Binder &amp; Emergency Sub Plans Builder</title>
+<meta name="description" content="Build your substitute folder once, print it in minutes when you're sick: schedule, routines, helpers, emergencies. Free, no account, nothing about your class leaves your device.">
+<meta property="og:title" content="Sub Plans — Free Substitute Binder &amp; Emergency Sub Plans Builder">
+<meta property="og:description" content="Build your substitute folder once, print it in minutes when you're sick: schedule, routines, helpers, emergencies. Free, no account, nothing about your class leaves your device.">
+<meta property="og:image" content="https://sws-apps-9646d.web.app/sub-plans/marketing/stripe-thumbnail.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#f4f7f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121714" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#f4f7f5; --card:#ffffff; --ink:#1e2b24; --muted:#5c6b62; --line:#dfe7e2;
+  --accent:#2f6b4f; --accent-ink:#ffffff; --chip:#e9f0eb; --focus:#8bc9ab; --neg:#8c4a42;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121714; --card:#1b211d; --ink:#e2e8e4; --muted:#94a29a; --line:#2b332e;
+    --accent:#7fc8a4; --accent-ink:#0c1f16; --chip:#232b26; --focus:#2f6b4f;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.45; padding-bottom:40px;
+}
+.wrap{max-width:680px; margin:0 auto; padding:0 14px}
+header.app{display:flex; align-items:center; gap:10px; padding:14px 0 10px}
+header.app img{width:34px; height:34px; border-radius:8px}
+header.app h1{font-size:1.15rem; margin:0}
+header.app .spacer{flex:1}
+a.tipbtn{text-decoration:none; font-size:.85rem; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:6px 12px; background:var(--card)}
+section.card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+section.card h2{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:14px 0 10px}
+section.card h2:first-child{margin-top:0}
+label.f{display:block; font-size:.85rem; color:var(--muted); margin-bottom:10px}
+label.f span{display:block; margin-bottom:4px}
+input[type=text],textarea{
+  width:100%; padding:11px 12px; font-size:1rem; color:var(--ink);
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+}
+textarea{min-height:64px; resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.row{display:flex; gap:8px}
+.row>*{flex:1; min-width:0}
+button{font-family:inherit}
+.btn{padding:11px 14px; font-size:.95rem; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700}
+.hint{font-size:.8rem; color:var(--muted); margin-top:8px}
+#toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:24px;
+  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:.87rem;
+  opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center; z-index:50;
+}
+#toast.show{opacity:1}
+footer.colophon{color:var(--muted); font-size:.78rem; text-align:center; padding:20px 0 8px}
+.hidden{display:none !important}
+
+/* ---------- the printed folder ---------- */
+#sheet{display:none}
+@media print{
+  body{background:#fff; padding:0}
+  .screenonly, header.app, footer.colophon, #toast{display:none !important}
+  #sheet{display:block; color:#111; font-size:11pt; padding:0 4mm}
+  #sheet .shead{text-align:center; border-bottom:2.5pt solid #111; padding-bottom:8pt; margin-bottom:10pt}
+  #sheet .shead h1{margin:0; font-size:20pt; letter-spacing:-.01em}
+  #sheet .shead .sub{color:#555; font-size:10.5pt; margin-top:2pt}
+  #sheet .shead .warm{color:#555; font-size:9.5pt; margin-top:4pt; font-style:italic}
+  #sheet .sec{margin:0 0 4pt; break-inside:avoid-page}
+  #sheet .sec>h2{
+    font-size:12pt; margin:10pt 0 4pt; padding-bottom:2pt;
+    border-bottom:1.25pt solid #111; letter-spacing:-.01em;
+  }
+  #sheet .block{margin-bottom:8pt; break-inside:avoid}
+  #sheet .block h3{
+    font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666; margin:0 0 2pt;
+  }
+  #sheet .block .v{white-space:pre-wrap; overflow-wrap:anywhere}
+  #sheet .em{
+    border:1.5pt solid #b91c1c; border-radius:6pt; padding:7pt 9pt; margin:8pt 0 4pt;
+    break-inside:avoid;
+  }
+  #sheet .em h2{font-size:10pt; text-transform:uppercase; letter-spacing:.06em; color:#b91c1c; margin:0 0 4pt}
+  #sheet .noteback{
+    border:1pt solid #999; border-radius:6pt; padding:8pt 10pt; margin-top:8pt;
+    min-height:130pt; break-inside:avoid;
+  }
+  #sheet .noteback h3{font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666; margin:0 0 4pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <img src="icon.svg" alt="">
+    <h1>Sub Plans</h1>
+    <span class="spacer"></span>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+  </header>
+
+  <div class="screenonly">
+    <section class="card">
+      <p class="hint" style="margin:0">Fill this out once, before you need it. When you're sick at 5:30am, update <b>Today</b> and hit print — or copy the link and text the whole folder to the office. Empty sections stay off the printed page, and everything saves to this device automatically.</p>
+    </section>
+
+    <section class="card" id="form" aria-label="Sub folder details"></section>
+
+    <section class="card">
+      <button class="btn primary" id="printBtn" type="button" style="width:100%">Print / Save as PDF</button>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="shareBtn" type="button">Copy link</button>
+        <button class="btn" id="qrBtn" type="button">Show QR</button>
+      </div>
+      <p class="hint">The link carries the whole folder inside it — nothing is uploaded anywhere. Only send it to someone you'd hand the folder to.</p>
+      <p class="hint">On a school computer? Copy the link to yourself before you log out — some school machines erase browser data between sign-ins.</p>
+    </section>
+  </div>
+
+  <!-- print-only rendering -->
+  <div id="sheet"></div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<footer class="colophon">Stays on your device — your class's details are nobody's business.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="privacy.html" style="color:inherit">Privacy &amp; accessibility</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Sub%20Plans" style="color:inherit">Feedback</a></footer>
+
+<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
+  <h3 style="margin:0 0 10px;color:#111">Scan to open this folder</h3>
+  <canvas id="qrCanvas" width="300" height="300"></canvas>
+  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+</dialog>
+<script src="vendor-qrcode.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
