@@ -28,7 +28,7 @@ Push to a GitHub repo → Settings → Pages → Deploy from branch → `main` /
 
 ```bash
 npm install
-npm test          # 47-assertion jsdom regression harness
+npm test          # 52-assertion jsdom regression harness
 ```
 
 ## Configure (optional)

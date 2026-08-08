@@ -169,15 +169,36 @@ console.log('\n— setup apply reflows the grid —');
 console.log('\n— accessibility contract —');
 {
   const w = boot(clone(baseState));
-  ok(w.document.querySelector('.tab[data-view="week"]').getAttribute('aria-selected') === 'true', 'active tab exposes aria-selected');
+  ok(w.document.querySelector('.tab[data-view="week"]').getAttribute('aria-current') === 'page', 'active view button exposes aria-current');
+  ok(!w.document.getElementById('view').hasAttribute('aria-live'), 'main view is not a live region (announcements go to #live)');
   const box = w.document.querySelector('.box[data-iso="2026-08-24"][data-p="1"]');
   ok(box.getAttribute('role') === 'textbox' && box.getAttribute('aria-multiline') === 'true', 'grid box announces as a multiline textbox');
   ok(/Monday/.test(box.getAttribute('aria-label')) && /period 1/i.test(box.getAttribute('aria-label')), 'grid box has a spoken name (day + period)');
-  w.document.querySelector('[data-gear]').click();
+
+  w.document.getElementById('wk-next').click();
+  await sleep(80);
+  ok(/Week 2/.test(w.document.getElementById('live').textContent), 'week change is announced politely');
+  w.document.getElementById('wk-prev').click();
+  await sleep(80);
+
+  const gear = w.document.querySelector('[data-gear]');
+  const iso = gear.dataset.gear;
+  gear.click();
   ok(w.document.getElementById('modal').classList.contains('show'), 'gear opens the day modal');
+  ok(w.document.getElementById('modal').getAttribute('aria-labelledby') === 'modal-title' && !!w.document.getElementById('modal-title'), 'modal has an accessible name');
   ok(w.document.activeElement && w.document.activeElement.closest('#modal-sheet'), 'focus moves into the modal');
   w.document.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape' }));
   ok(!w.document.getElementById('modal').classList.contains('show'), 'Escape closes the modal');
+
+  w.document.querySelector(`[data-gear="${iso}"]`).click();
+  w.document.querySelector('#modal-sheet [data-sp]').click();
+  ok(w.document.activeElement === w.document.querySelector(`[data-gear="${iso}"]`), 'saving a special day returns focus to its gear');
+
+  const box2 = w.document.querySelector('.box[data-p="1"]');
+  box2.dispatchEvent(new w.Event('focus'));
+  box2.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
+  ok(w.document.activeElement === w.document.getElementById('bar-day'), 'Ctrl+Enter jumps focus to the copy buttons');
+
   w.document.querySelector('.tab[data-view="setup"]').click();
   const dp = w.document.querySelector('#f-days .dp');
   const before = dp.getAttribute('aria-pressed');
