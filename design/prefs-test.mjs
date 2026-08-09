@@ -138,6 +138,20 @@ for (const slug of slugs) {
       fail(slug, `settings button is ${box ? `${Math.round(box.width)}x${Math.round(box.height)}` : 'unmeasurable'}, under the 32px floor`);
     }
 
+    /* It has to sit on the title's line. Landing anywhere inside the header is
+       not good enough — appended to the wrong container it ends up stranded on
+       its own row under the app name, which looks like a mistake because it is
+       one. Vertical overlap with the <h1> is the check. */
+    const inRow = await page.evaluate(() => {
+      const b = document.getElementById('swsPrefsBtn')?.getBoundingClientRect();
+      const h = document.querySelector('header h1, header .logo, header .brandrow')?.getBoundingClientRect();
+      if (!b || !h) return null;
+      return Math.min(b.bottom, h.bottom) - Math.max(b.top, h.top);
+    });
+    if (inRow !== null && inRow <= 0) {
+      fail(slug, 'settings button is on its own line instead of beside the app title');
+    }
+
     const base = await measure(page);
 
     /* 2. The panel opens as a modal and takes focus. */

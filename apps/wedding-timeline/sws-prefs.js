@@ -356,12 +356,19 @@
     var appHeader = document.querySelector('header.app');
     if (appHeader) return { parent: appHeader, before: null };
 
-    // Apps with their own header shape — land in the top row beside the title.
-    var row = document.querySelector('header .head-row, header .brandrow, header .wrap');
-    if (row) return { parent: row, before: null };
-
-    var anyHeader = document.querySelector('header');
-    if (anyHeader) return { parent: anyHeader, before: null };
+    /* Apps with their own header shape — land in the TITLE ROW, beside the
+       name, not merely somewhere inside the header.
+     *
+     * Tried one at a time rather than as one comma-separated selector:
+     * querySelector returns the first match in DOCUMENT order, not in the
+     * order the selectors are written, so a single list picked the outer
+     * `header .wrap` over the inner `.head-row` and left the button stranded
+     * on a line of its own under the title. */
+    var SPOTS = ['header .head-row', 'header .brandrow', 'header .titlerow', 'header .wrap', 'header'];
+    for (var i = 0; i < SPOTS.length; i++) {
+      var spot = document.querySelector(SPOTS[i]);
+      if (spot) return { parent: spot, before: null };
+    }
 
     // No header to attach to. Better to have no button than to invent chrome
     // in the middle of someone's layout.
