@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The privacy promise, made machine-checkable rather than merely written:
+     connect-src 'none' means this page cannot open a network connection to
+     anywhere, for anything, even if a future edit tried to. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; img-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'none'">
 <title>Scan to PDF Free — No Watermark, No Upload</title>
 <meta name="description" content="Photograph pages and get one clean PDF. Everything happens on your device — your documents never touch a server. Free, no watermark.">
 <meta property="og:title" content="Scan to PDF Free — No Watermark, No Upload">
@@ -1252,11 +1256,152 @@ body{
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 .btn[disabled]{opacity:.5; cursor:default}
 
-.pages{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px}
-.pagecard{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--bg)}
-.pagecard img{display:block; width:100%; height:150px; object-fit:cover}
-.pagecard .bar{display:flex; justify-content:space-between; padding:4px}
-.pagecard .num{font-size:.75rem; color:var(--muted); align-self:center; padding-left:4px}
+/* ── the add row ───────────────────────────────────────────────────────── */
+/* Two doors, because `capture` on one input tells a phone to skip the photo
+   picker entirely — and most people photographed the thing before they found
+   this app. */
+.addrow{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap:var(--s3)}
+
+/* ── the page list ─────────────────────────────────────────────────────── */
+.pagesbar{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s4)}
+/* The count sits in a row with Clear everything, so it is no longer a direct
+   child of the card and has to restate the studio's micro-label itself. */
+.pagesbar h2{
+  margin:0; flex:1 1 auto;
+  font-family:var(--font-text);
+  font-size:var(--t-micro); font-weight:650; letter-spacing:0.075em;
+  text-transform:uppercase; color:var(--ink-2);
+}
+#restoreBar{margin-bottom:var(--s4)}
+#restoreBar p{margin:0 0 var(--s3); font-size:var(--t-sm); line-height:var(--lh-body)}
+
+.pages{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap:var(--s3);
+}
+.pages:empty{display:none}
+.pagecard{
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr);
+  gap:var(--s3);
+  align-items:start;
+  padding:var(--s3);
+  border:1px solid var(--line);
+  border-radius:var(--r-ctl);
+  background:var(--surface);
+}
+.pageside{min-width:0}
+
+/* A letterboxed contain box, never a crop. `object-fit:cover` at 150px hid
+   31–60% of every portrait page, signature blocks included, and there was
+   nowhere to go and look. */
+.shot{
+  position:relative;
+  display:block;
+  width:5.5rem;
+  aspect-ratio:3 / 4;
+  padding:0;
+  overflow:hidden;
+  border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  background:var(--surface-2);
+  cursor:zoom-in;
+}
+.shot img{
+  position:absolute; top:50%; left:50%;
+  max-width:100%; max-height:100%;
+  width:auto; height:auto;
+  transform:translate(-50%, -50%) rotate(var(--rot, 0deg));
+}
+/* A quarter-turned image is bounded by the box's OTHER axis. The box is a
+   fixed 3:4, so its height is exactly 133.333% of its width and its width is
+   exactly 75% of its height — no measuring, no reflow, no re-encode. */
+.shot img.swap{max-width:133.3333%; max-height:75%}
+
+.pagemeta{display:flex; flex-wrap:wrap; gap:0 var(--s3); align-items:baseline; margin:0 0 var(--s2)}
+.pagemeta .num{font-size:var(--t-sm); font-weight:700; color:var(--ink-2)}
+.pagemeta .sub{font-size:var(--t-sm); color:var(--ink-2)}
+
+/* The page controls get their own floor. `.btn.small` is pinned at 36px, and
+   a 37×36 delete button two pixels from rotate is exactly what a tremor
+   cannot survive — so these size on --tap and grow with the comfort panel
+   instead of ignoring it. `auto-fit` re-flows to a second row rather than
+   overflowing when --tap reaches 66px at Largest. */
+.acts{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(min(100%, var(--tap)), 1fr));
+  gap:var(--s1);
+}
+.acts .btn{
+  min-height:var(--tap);
+  min-width:0;
+  width:100%;
+  padding:0 var(--s1);
+  font-size:var(--t-base);
+}
+
+/* ── naming chips ──────────────────────────────────────────────────────── */
+.namechips .chip{
+  min-height:var(--tap);
+  padding-inline:var(--s4);
+  font-size:var(--t-sm);
+  cursor:pointer;
+}
+.namechips .chip[aria-pressed="true"]{
+  color:var(--accent-ink);
+  background:var(--accent-fill);
+  border-color:var(--accent-fill);
+}
+
+/* ── the full-size view ────────────────────────────────────────────────── */
+#viewer{
+  width:min(100%, 32rem);
+  max-width:100%;
+  max-height:92dvh;
+  overflow:auto;
+  padding:var(--s4);
+  color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-2);
+}
+#viewer::backdrop{background:var(--veil)}
+#viewer .shot{width:100%; cursor:default}
+.viewhead{display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s3)}
+.viewhead h2{margin:0; flex:1 1 auto; font-size:var(--t-lg); line-height:var(--lh-snug)}
+.viewacts{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap:var(--s2);
+  margin-top:var(--s3);
+}
+#viewMeta{margin-top:var(--s3)}
+
+/* ── print ─────────────────────────────────────────────────────────────────
+   Ctrl+P in an app called Scan to PDF is something people will try instead of
+   finding the export button, and it used to produce a sheet of cropped
+   thumbnails with ← ⟳ → ✕ printed on them. Now it prints the pages: one
+   capture per sheet, uncropped, with its number. */
+@media print{
+  #pagesCard{border:none; padding:0; margin:0; box-shadow:none; break-inside:auto; page-break-inside:auto}
+  #pagesCard > .pagesbar,#restoreBar,#persistNote,#viewer{display:none !important}
+  .pages{display:block}
+  .pagecard{
+    display:block;
+    padding:0; margin:0; border:none; background:none;
+    break-inside:avoid; page-break-inside:avoid;
+    break-after:page; page-break-after:always;
+  }
+  .pagecard:last-child{break-after:auto; page-break-after:auto}
+  .shot{
+    width:100%; max-width:6.2in;
+    border:none; border-radius:0; background:none;
+  }
+  .pagemeta{margin:0 0 6pt}
+  .pagemeta .num,.pagemeta .sub{color:#000}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
@@ -1272,38 +1417,133 @@ body{
 
   <main id="main">
 
-  <div class="hero">
+  <div class="hero noprint">
     <h2>Your documents never leave your device</h2>
     <p>Photograph the pages, get one clean PDF. No upload to a stranger's server,
       no watermark, no "3 free scans" ransom. <strong>Free means free.</strong></p>
   </div>
 
-  <section class="card">
-    <button class="btn primary big" id="addBtn" type="button">📷 Add a page</button>
-    <input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden" multiple>
-    <p class="hint">Tip: fill the frame with the page, shadow-free. You can add from the camera or your photo library, reorder, and rotate below.</p>
+  <section class="card noprint">
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>Switch the phone to airplane mode and scan anyway — it works.</b>
+        The only thing this page ever asks the network for is its own code, and
+        it caches that, so nothing you photograph is uploaded, to us or to anyone.
+        Your phone decodes, resizes and assembles the PDF itself, with a copy of
+        pdf-lib that ships inside the app. No account, no ads, no analytics, no
+        telemetry, no third-party scripts, nothing used to train anything.
+        Redrawing each photo also drops its camera metadata, so the finished PDF
+        carries <b>no EXIF and no GPS location</b>. Captured pages are kept in
+        <b>this browser's own storage on this device</b> so a phone call or a
+        reload can't lose them — nowhere else — and “Clear everything” really
+        deletes them.</span>
+    </p>
+    <p class="footnote">Microsoft Lens stopped scanning on 9 March 2026 and points
+      you at an account and a cloud instead. This does the same job in a browser
+      tab. CamScanner Premium is $4.99 a week; this is $0, with nothing to cancel
+      and no purchase surface anywhere in the app.</p>
   </section>
 
-  <section class="card">
-    <h2 id="pageHead">Pages</h2>
-    <div class="pages" id="pages"></div>
-    <p class="hint" id="emptyHint">Pages appear here — tax forms, receipts, kids' art, the lease you should really have a copy of.</p>
-  </section>
-
-  <section class="card">
-    <div class="row">
-      <select id="pageSize" aria-label="Page size" style="flex:0 0 130px">
-        <option value="letter">US Letter</option>
-        <option value="a4">A4</option>
-      </select>
-      <button class="btn primary" id="makeBtn" type="button">Make the PDF</button>
+  <section class="card noprint">
+    <div class="addrow">
+      <button class="btn primary big" id="camBtn" type="button"><span aria-hidden="true">📷</span> Take a photo</button>
+      <button class="btn big" id="libBtn" type="button"><span aria-hidden="true">🖼</span> Choose from photos</button>
     </div>
+    <input type="file" id="camInput" accept="image/*" capture="environment" class="hidden" multiple>
+    <input type="file" id="libInput" accept="image/*" class="hidden" multiple>
+    <input type="file" id="retakeInput" accept="image/*" class="hidden">
+    <p class="hint">Fill the frame with the page, shadow-free. <b>Up to 100 pages</b> in
+      one PDF, and up to 150 MB of photos in one sitting — you'll be told the moment
+      either one stops you, not afterwards. Every photo is resized to <b>2600px on the
+      long edge</b> (about 230 dpi on Letter) so the file stays emailable. Nothing
+      else is counted, capped, watermarked or held back for a paid tier.</p>
+    <p class="hint hidden" id="addStatus"></p>
+  </section>
+
+  <section class="card" id="pagesCard">
+    <div class="pagesbar noprint">
+      <h2 id="pageHead" aria-live="polite">Pages</h2>
+      <button class="btn danger hidden" id="clearBtn" type="button">Clear everything</button>
+    </div>
+    <div class="well noprint hidden" id="restoreBar">
+      <p id="restoreMsg"></p>
+      <div class="cluster">
+        <button class="btn" id="restoreKeep" type="button">Keep them</button>
+        <button class="btn danger" id="restoreClear" type="button">Clear them</button>
+      </div>
+    </div>
+    <p class="warn hidden noprint" id="persistNote"></p>
+    <div class="pages" id="pages"></div>
+    <p class="hint noprint" id="emptyHint">Pages appear here — tax forms, receipts,
+      kids' art, the lease you should really have a copy of. Tap any page to see it
+      full size and check it, turn it, retake just that one, or delete it.</p>
+  </section>
+
+  <section class="card noprint">
+    <h2>Make the PDF</h2>
+    <label class="f"><span>File name</span>
+      <input type="text" id="fileName" maxlength="60" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="2026-08-09-scan"></label>
+    <p class="hint" id="chipHint">Or name it in one tap:</p>
+    <div class="chips namechips" id="labelChips" role="group" aria-labelledby="chipHint">
+      <button class="chip" type="button" data-label="receipt" aria-pressed="false">Receipt</button>
+      <button class="chip" type="button" data-label="id" aria-pressed="false">ID</button>
+      <button class="chip" type="button" data-label="form" aria-pressed="false">Form</button>
+      <button class="chip" type="button" data-label="medical" aria-pressed="false">Medical</button>
+      <button class="chip" type="button" data-label="insurance" aria-pressed="false">Insurance</button>
+      <button class="chip" type="button" data-label="lease" aria-pressed="false">Lease</button>
+      <button class="chip" type="button" data-label="tax" aria-pressed="false">Tax</button>
+    </div>
+
+    <div class="frow" style="margin-top:var(--s4)">
+      <label class="f"><span>Page size</span>
+        <select id="pageSize">
+          <option value="letter">US Letter</option>
+          <option value="a4">A4</option>
+          <option value="fit">Fit to image</option>
+        </select></label>
+      <label class="f"><span>Quality</span>
+        <select id="quality">
+          <option value="standard">Standard — about 230 dpi</option>
+          <option value="small">Smaller — about 150 dpi</option>
+          <option value="tiny">Smallest — about 100 dpi</option>
+        </select></label>
+    </div>
+
+    <button class="btn primary big block" id="makeBtn" type="button">Make the PDF</button>
+    <p class="hint" id="sizeEst">Add a page and the finished file size appears here, before you download it.</p>
+    <p class="hint">Printing this page (Ctrl+P) puts the captures on paper, one per
+      sheet, without any of the buttons. “Make the PDF” is what gives you a file.</p>
+  </section>
+
+  <section class="card noprint">
+    <h2>What this can't do</h2>
+    <ul class="plain">
+      <li>No automatic edge detection or perspective correction. Fill the frame squarely and the result is square; there is no cropping tool.</li>
+      <li>No OCR. The text in the PDF is a picture of text, so it won't be searchable or selectable.</li>
+      <li>No cloud archive, no sync between devices, no account to recover. Pages live in this browser until you export or clear them — treat it as a pipe, not a filing cabinet.</li>
+    </ul>
   </section>
   </main>
 </div>
 
+<dialog id="viewer" class="noprint" aria-labelledby="viewerTitle">
+  <div class="viewhead">
+    <h2 id="viewerTitle">Page</h2>
+    <button class="btn" id="viewClose" type="button">Close</button>
+  </div>
+  <div class="shot"><img id="viewImg" alt=""></div>
+  <div class="viewacts">
+    <button class="btn" id="viewRotL" type="button"><span aria-hidden="true">↺</span> Rotate left</button>
+    <button class="btn" id="viewRotR" type="button"><span aria-hidden="true">↻</span> Rotate right</button>
+    <button class="btn" id="viewRetake" type="button"><span aria-hidden="true">📷</span> Retake this page</button>
+    <button class="btn danger" id="viewDelete" type="button"><span aria-hidden="true">✕</span> Delete this page</button>
+  </div>
+  <p class="hint" id="viewMeta"></p>
+</dialog>
+
+<p id="live" class="sr-only" role="status" aria-live="polite"></p>
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">Scanning happens in your browser. We never see a single page.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Scan%20to%20PDF" style="color:inherit">Feedback</a></footer>
+<footer class="colophon">Scanning happens in your browser. We never see a single page, because there is nowhere for one to go.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Scan%20to%20PDF" style="color:inherit">Feedback</a></footer>
 
 <script src="vendor-pdf-lib.js"></script>
 <script type="module" src="app.js"></script>

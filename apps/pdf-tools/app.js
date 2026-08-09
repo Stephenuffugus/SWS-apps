@@ -137,7 +137,7 @@ function renderFiles() {
         el('div', { class: 'sub', text: d.pages + (d.pages === 1 ? ' page' : ' pages') +
           ' · ' + formatBytes(d.size) + ' · ' + used + ' in the list' })),
       el('button', {
-        class: 'btn small danger', type: 'button', 'data-act': 'delfile',
+        class: 'btn danger', type: 'button', 'data-act': 'delfile',
         'aria-label': 'Remove the file ' + d.name + ' and its ' + used + ' page' + (used === 1 ? '' : 's') + ' from the list',
         onclick: () => removeFile(d.id),
       }, 'Remove file')));
@@ -174,7 +174,7 @@ function renderIssues() {
     el('ul', { class: 'warnlist' }, issues.map(i =>
       el('li', {}, el('b', { text: i.name }), ' — ' + i.reason))),
     el('button', {
-      class: 'btn small', type: 'button',
+      class: 'btn', type: 'button',
       onclick: () => { issues = []; renderIssues(); $('addBtn').focus(); },
     }, 'Dismiss')));
 }
@@ -307,21 +307,27 @@ function renderSplit() {
   const out = $('splitPreview');
   out.replaceChildren();
   const bar = $('splitMeta');
+  const btn = $('splitBtn');
 
   if (!order.length) {
     out.append(el('p', { class: 'hint', text: 'Add a PDF and the file names will be listed here before anything is written.' }));
     bar.textContent = '';
-    $('splitBtn').disabled = true;
+    btn.textContent = 'Split';
+    btn.setAttribute('aria-label', 'Split — add a PDF first');
+    btn.disabled = true;
     return;
   }
   const plan = currentSplit();
   if (plan.error) {
     out.append(el('p', { class: 'warn', text: plan.error }));
-    bar.textContent = 'Split: check the settings';
-    $('splitBtn').disabled = true;
+    bar.textContent = '— settings need a fix';
+    btn.textContent = 'Split';
+    btn.setAttribute('aria-label', 'Split — ' + plan.error);
+    btn.title = plan.error;
+    btn.disabled = true;
     return;
   }
-  $('splitBtn').disabled = false;
+  btn.disabled = false;
   const names = plan.names;
   const zip = $('splitDelivery').value === 'zip' && names.length > 1;
   const shown = names.slice(0, 4).join(', ') + (names.length > 4 ? ', … ' + names[names.length - 1] : '');
@@ -335,8 +341,12 @@ function renderSplit() {
     out.append(el('p', { class: 'warn', text: names.length + ' separate downloads, about ' +
       Math.ceil(names.length * 0.25) + ' seconds of saving. Your browser will ask permission for multiple downloads, and they land in your Downloads folder one at a time.' }));
   }
-  bar.textContent = 'Split: ' + names.length + (names.length === 1 ? ' file' : ' files') +
-    (zip ? ' in one .zip' : ' saved separately');
+  bar.textContent = '— ' + names.length + (zip ? ' files in one .zip' : ' separate downloads');
+  btn.textContent = 'Split (' + names.length + ')';
+  const spoken = 'Split into ' + names.length + (names.length === 1 ? ' file' : ' files') +
+    (zip ? ', delivered as one zip file called ' + zipName() : ', saved as separate downloads') + '.';
+  btn.setAttribute('aria-label', spoken);
+  btn.title = spoken;
 }
 
 /* ── The sticky bar ────────────────────────────────────────────────────── */
@@ -350,8 +360,10 @@ function renderBar() {
     : 'Nothing assembled.';
   if (!on) return;
   const est = estimateBytes();
-  $('barMeta').textContent = order.length + (order.length === 1 ? ' page' : ' pages') +
-    ' · ' + outName() + ' · about ' + formatBytes(est);
+  const bm = $('barMeta');
+  bm.textContent = shortMiddle(outName(), 22) + ' · ' + order.length +
+    (order.length === 1 ? ' page' : ' pages') + ' · about ' + formatBytes(est);
+  bm.title = outName();
   $('sizeNote').textContent = est > 20 * 1000 * 1000
     ? 'About ' + formatBytes(est) + '. Big enough that some upload forms will refuse it — many cap somewhere between 5 MB and 25 MB.'
     : 'About ' + formatBytes(est) + ' — the exact size is shown once it is written.';
@@ -520,8 +532,8 @@ async function runSplit() {
       say(failMessage(e), { assertive: true, ms: 8000 });
     }
   }
-  btn.textContent = 'Split';
   setBusy(false);
+  renderSplit();
   if (document.activeElement === document.body) btn.focus();
 }
 

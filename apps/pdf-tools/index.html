@@ -1364,8 +1364,11 @@ body{
 }
 .barinfo b{color:var(--ink); font-weight:650}
 .baractions{display:flex; flex-wrap:wrap; gap:var(--s2)}
-.baractions .btn{flex:1 1 auto}
-.baractions #topBtn{flex:0 0 auto}
+.baractions .btn{flex:1 1 auto; padding:0 var(--s4)}
+.baractions #topBtn{flex:0 0 auto; font-size:var(--t-base)}
+/* These three carry words and one of them is destructive; .btn.small hard-codes
+   36px, which is below the --tap floor at every text size. */
+#fileList .btn,#loadReport .btn,#progressBox .btn{min-height:var(--tap); font-size:var(--t-sm)}
 #progressBox{
   display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
   font-size:var(--t-sm); color:var(--ink);
@@ -1477,7 +1480,7 @@ body{
       is shown here, before you press anything.</p>
 
     <details id="splitBox">
-      <summary>Split into several files instead</summary>
+      <summary>Split into several files instead <span class="sub" id="splitMeta"></span></summary>
       <div id="splitFields">
         <label class="f" for="splitMode"><span>How to split</span>
           <select id="splitMode"></select>
@@ -1499,15 +1502,15 @@ body{
   </main>
 
   <div class="actionbar hidden" id="actionbar">
-    <p class="barinfo"><span id="barMeta"></span><span id="splitMeta"></span></p>
+    <p class="barinfo"><span id="barMeta"></span></p>
     <div class="baractions">
       <button class="btn primary" id="mergeBtn" type="button">Save as one PDF</button>
-      <button class="btn" id="splitBtn" type="button" aria-describedby="splitMeta">Split</button>
-      <button class="btn ghost" id="topBtn" type="button">Top</button>
+      <button class="btn" id="splitBtn" type="button">Split</button>
+      <button class="btn ghost icon" id="topBtn" type="button" aria-label="Back to the top of the page" title="Back to top">↑</button>
     </div>
     <div id="progressBox" class="hidden">
       <span id="progressText" role="status" aria-live="polite"></span>
-      <button class="btn small danger" id="cancelBtn" type="button">Cancel</button>
+      <button class="btn danger" id="cancelBtn" type="button">Cancel</button>
     </div>
   </div>
 </div>

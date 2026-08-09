@@ -227,13 +227,18 @@ await t('zipStore produces an archive the system unzip agrees with', async () =>
     assert.equal(d.getPageCount(), 1);
   }
 });
-await t('zipStore handles a non-ASCII filename', async () => {
+/* Info-ZIP's `unzip` ignores the UTF-8 flag and writes the name as cp437, so
+   the non-ASCII case is checked with Python's zipfile, which honours bit 11 —
+   a genuinely independent reader, not our own decoder. */
+await t('zipStore flags UTF-8 names so a compliant reader gets them back', () => {
   const bytes = new TextEncoder().encode('%PDF-1.4 not really');
   const zip = zipStore([{ name: '確定申告書-p1.pdf', bytes }]);
   const dir = mkdtempSync(join(tmpdir(), 'sws-zip-u-'));
   writeFileSync(join(dir, 'u.zip'), zip);
-  execFileSync('unzip', ['-qq', '-o', 'u.zip', '-d', 'x'], { cwd: dir });
-  assert.deepEqual(readdirSync(join(dir, 'x')), ['確定申告書-p1.pdf']);
+  const names = execFileSync('python3',
+    ['-c', 'import zipfile,sys;print("\\n".join(zipfile.ZipFile(sys.argv[1]).namelist()))',
+      join(dir, 'u.zip')], { encoding: 'utf8' }).trim();
+  assert.equal(names, '確定申告書-p1.pdf');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
