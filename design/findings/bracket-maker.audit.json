@@ -1,0 +1,271 @@
+{
+  "slug": "bracket-maker",
+  "purpose": "A single-page single-elimination tournament bracket builder: you type a name for the event and a newline-separated list of 2–32 entrants, the app renders a properly seeded bracket with byes, you tap a name in each match to advance them (tapping the other name rewrites history and invalidates downstream picks), and the entire bracket — names, results, title — is base64-encoded into the URL hash so it can be copied, QR-shared, re-opened, or printed with no account and no server.",
+  "structure": "Flat, single-column, three-card page inside one `div.wrap` (max-width 900px, index.html:88). Order: (1) `header.app` — decorative `img` icon + `h1` \"Bracket Maker\" + `span.spacer` + `a#tipLink.tipbtn.hidden` unhidden by JS (index.html:89–94, app.js:126–130). (2) `section.card.noprint` INPUT card — a bare `input#titleInput` with placeholder only, then `h2` \"Who's in?\" with an inline margin style, then `textarea#entrants`, then `p.hint` (index.html:96–104). Note the h2 sits BELOW the input it does not describe. (3) `section.card` OUTPUT card (the only card that prints) — `div#champ[aria-live=polite]`, then `div#bracket` (the JS render target, `display:flex; overflow-x:auto`), then `p.hint.noprint` (index.html:106–110). (4) `section.card.noprint` ACTION card — `div.row` holding four visually identical `button.btn` (shareBtn, qrBtn, printBtn, resetBtn) plus a `p.hint` (index.html:112–120). Outside `.wrap`: `div#toast[role=status]` fixed-position (123), `footer.colophon` with two inline-styled links (124), and `dialog#qrDlg` with all styling inline, containing `h3`, `canvas#qrCanvas` (300×300), and `button#qrClose.btn` (126–130). No `<main>`, no skip link, no landmarks beyond header/footer, no `<label>` anywhere in the document. Flow: type names → bracket appears live on every keystroke → tap winners → champion line fills in → Copy link / QR / Print.",
+  "cssClasses": [
+    ":root tokens — --bg --card --ink --muted --line --accent --accent-ink --chip --focus --win (index.html:18-21), redefined for dark at :22-27",
+    ".wrap — page container, max-width 900px, padding 0 14px (34)",
+    "header.app — flex app bar, gap 10px (35)",
+    "header.app img — 34x34 app icon, radius 8px (36)",
+    "header.app h1 — 1.15rem app title (37)",
+    "header.app .spacer — flex:1 pusher between title and tip link (38)",
+    "a.tipbtn — pill tip-jar link, .85rem, accent text on card (39); JS toggles .hidden",
+    "section.card — white panel, 1px line border, radius 14, padding 14 (40)",
+    "section.card h2 — .8rem uppercase muted eyebrow label (41)",
+    "input[type=text],textarea — full-width field, 11/12 padding, 1rem, bg-colored fill (42-45)",
+    "textarea — min-height 120px, resize vertical (46)",
+    "input/textarea/button/a:focus-visible — 2px solid var(--focus), offset 1px (47)",
+    "button — font-family:inherit only (50)",
+    ".row — flex, gap 8px, NO flex-wrap (48)",
+    ".row>* — flex:1; min-width:0 — equal columns that never wrap (49)",
+    ".btn — generic action button, 11/14 padding, .95rem, card bg (51)",
+    ".btn.primary — accent-filled bold variant, DEFINED BUT NEVER USED anywhere (52)",
+    "#champ — centered 1.35rem/800 champion line, color var(--win), min-height 1.8rem, aria-live host (53-56)",
+    ".bracket — horizontal flex scroller for round columns, gap 18px, overflow-x:auto (57)",
+    ".round — one round column, flex column, justify-content:space-around, min-width 160px (58)",
+    ".roundhead — .75rem uppercase muted round label (Final/Semifinals/Round N) (59)",
+    ".match — one pairing box, 1px border, radius 10, OVERFLOW:HIDDEN, bg var(--bg) (60)",
+    ".match button — a contender slot; block, 100% width, left-aligned, .9rem, 9/11 padding, borderless (61-64)",
+    ".match button + button — 1px top divider between the two sides (65)",
+    ".match button.winner — advanced contender: accent background, accent-ink, bold (66)",
+    ".match button.tbd — undecided slot: muted, italic, cursor:default, rendered disabled (67)",
+    ".match button.bye — bye slot: muted, cursor:default, rendered disabled (68)",
+    ".hint — .8rem muted helper paragraph, margin-top 8 (69)",
+    "#toast — fixed centered pill notification, opacity-0 by default, z-index 50 (70-74)",
+    "#toast.show — opacity:1, JS-toggled class (75)",
+    "footer.colophon — .78rem muted centered credit line (76)",
+    ".hidden — display:none !important, JS-toggled on #tipLink (77)",
+    ".noprint — print-only hide hook, applied to cards 1 and 3 and the bracket hint (79)",
+    "@media print — hides header.app, footer.colophon, #toast, .noprint; body #fff/#000; section.card border 0; .bracket overflow visible; .match button.winner #eee/#000 (78-84)",
+    "#titleInput — event name field, styled only via the generic input rule (97)",
+    "#entrants — entrant list textarea (99)",
+    "#bracket — JS render target, styled as .bracket (108)",
+    "#shareBtn — copy-link action (114)",
+    "#qrBtn — open QR dialog (115)",
+    "#printBtn — window.print() (116)",
+    "#resetBtn — DESTRUCTIVE clear-results, styled identically to its three neighbours (117)",
+    "#tipLink — tip jar anchor, href injected by JS (93)",
+    "#qrDlg — QR modal, ALL styling inline: border:none;border-radius:14px;padding:18px;text-align:center (126)",
+    "#qrDlg h3 — dialog title, hardcoded inline color:#111 (127)",
+    "#qrCanvas — 300x300 QR canvas, no CSS rule at all (128)",
+    "#qrClose — dialog dismiss, .btn (129)",
+    "footer links — inline style=\"color:inherit\" on both the studio link and the feedback mailto (124)"
+  ],
+  "dynamicMarkup": "All bracket DOM is generated in `renderBracket()` (app.js:57–95) through the tiny `el()` helper (app.js:10–24), and the container is wiped with `box.replaceChildren()` (app.js:59) on EVERY keystroke in the entrants textarea and EVERY winner tap. Nothing is diffed or reused.\n\nInjected tree, per round r: `div.round` (app.js:67) whose first child is `div.roundhead` carrying \"Final\" / \"Semifinals\" / \"Quarterfinals\" / \"Round N\" from ROUND_NAMES (app.js:55, 68). Inside it, per match: `div.match` (app.js:89) containing exactly two `<button type=\"button\">` children produced by `side()` (app.js:74–88).\n\nButton class values applied at runtime, and they are the entire contract:\n- `class=\"winner\"` when `winnerOf()` returns that entrant (app.js:81) — otherwise `class=\"\"` (an empty class attribute is set, not omitted).\n- `class=\"tbd\"` + `disabled=\"\"` with text \"winner of earlier game\" for an undecided upstream slot (app.js:77–78).\n- `class=\"bye\"` + `disabled=\"\"` with text \"bye\" for a round-0 empty slot (app.js:77–78).\nReal contenders get an inline `onclick` closure that calls `setPick` → `save()` → `renderBracket()` (app.js:82–86). Button label text is `state.names[idx]` inserted as a text node (app.js:87) — no wrapper span, so any restyle that wants an avatar, seed number, or score cell must change app.js, not just CSS.\n\nRound-0 matches where both sides are null are skipped entirely (app.js:72), so a `.round` column can contain fewer `.match` boxes than the mathematical match count — CSS must not assume a fixed child count per column.\n\nOther runtime mutations: `#champ.textContent = '🏆 ' + name` or `''` (app.js:61, 94) — text only, no element, so the trophy cannot be styled separately. `#toast.textContent` set and `.show` added/removed on a 2400ms timer (app.js:26–32). `#tipLink` gets `href` set and `.hidden` removed (app.js:127–129). `#titleInput.value` and `#entrants.value` are rehydrated on load (app.js:132–133). `#qrCanvas` is painted imperatively with a hardcoded `size = 300` and `cell = floor(300/(count+8))` (app.js:146–153). `#qrDlg` is opened with `showModal()` with an `setAttribute('open','')` fallback (app.js:156).",
+  "comfortDefects": [
+    {
+      "issue": "The app's primary tap target is too small in both dimensions: `.match button` is .9rem (14.4px) with 9px vertical padding, computing to ~38.9px tall — below the 44px thumb minimum, and this is the control the entire app exists to let you tap, repeatedly, on a phone, often standing up at a party.",
+      "where": "index.html:61-64 (.match button)",
+      "fix": "min-height:var(--tap); font-size:var(--t-base); padding:var(--s3) var(--s4). Do not rely on inherited line-height for height."
+    },
+    {
+      "issue": "All instructional body copy is 12.8px. `.hint` is not a caption — it carries the app's three most important sentences (seeding rules, how to change a pick, how sharing works). 12.8px muted text is the single cheapest-feeling thing on the page.",
+      "where": "index.html:69 (.hint), used at :103, :109, :119",
+      "fix": "Raise to var(--t-sm) (15px) minimum; studio.css:399-405 already defines .hint at that scale."
+    },
+    {
+      "issue": "No max-width on paragraphs. At the 900px wrap the `.hint` at 12.8px runs ~136 characters per line — nearly double the comfortable 72ch band.",
+      "where": "index.html:34 (.wrap 900px) with :69 (.hint, no max-width)",
+      "fix": "Adopt studio.css:78 `p{max-width:var(--measure)}` (64ch)."
+    },
+    {
+      "issue": "`.row` has no flex-wrap and holds four buttons. On a 360px phone each button gets ~70px of width, so 'Copy link (live bracket)' and 'Clear results' each stack into 3–4 lines and the action card becomes a wall of tall skinny columns.",
+      "where": "index.html:48-49 (.row, .row>*) with :113-118",
+      "fix": "Use studio.css:131-132 `.row{flex-wrap:wrap}` + `flex:1 1 12rem`, and shorten the share label to 'Copy link'."
+    },
+    {
+      "issue": "The bracket's own structure is nearly invisible. `.match` background is var(--bg) on a var(--card) parent — 1.07:1 in light, 1.14:1 in dark — and its border is 1.23:1 (light) / 1.32:1 (dark). The box that tells you which two names are playing each other is the lowest-contrast object on the page.",
+      "where": "index.html:40 (section.card bg) vs :60 (.match bg + border)",
+      "fix": "Give .match a real surface (--surface-2) and a --line-2 border at >=3:1; the pairing is meaningful information, not decoration."
+    },
+    {
+      "issue": "Zero visual hierarchy in the action row: Copy link, QR, Print and Clear results are four byte-identical `.btn`. `.btn.primary` is defined in the stylesheet and applied to nothing in the entire app.",
+      "where": "index.html:51-52 (.btn/.btn.primary), :114-117",
+      "fix": "shareBtn -> .btn.primary, printBtn -> .btn, qrBtn -> .btn.ghost, resetBtn -> .btn.danger (studio.css:339-354)."
+    },
+    {
+      "issue": "Round labels are 12px uppercase with .06em tracking in muted grey — 'QUARTERFINALS' at that size is a smear, and it is the only wayfinding the bracket has.",
+      "where": "index.html:59 (.roundhead)",
+      "fix": "var(--t-xs) at weight 650 in --ink-2, or promote to a real heading with a rule beneath it."
+    },
+    {
+      "issue": "Card headings are 12.8px uppercase muted, so the only h2 on the page reads as a footnote rather than a section title. Cards 2 and 3 have no heading at all, so there is no hierarchy to anchor to.",
+      "where": "index.html:41 (section.card h2), :98",
+      "fix": "Give every card an h2 at var(--t-lg) in --ink; keep uppercase micro-labels for eyebrows only."
+    },
+    {
+      "issue": "body line-height is 1.45, exactly at the floor, and it is inherited by the .match buttons where wrapped 40-character names collide.",
+      "where": "index.html:32 (body)",
+      "fix": "--lh-body:1.55 for prose; --lh-snug for controls."
+    },
+    {
+      "issue": "The entrants textarea spans the full 872px of the wrap for content that is at most 40 characters per line, leaving ~800px of dead space on every row and making the list feel unedited and sprawling.",
+      "where": "index.html:42-46 + :99 (#entrants)",
+      "fix": "Cap the field at ~32ch–40ch (max-width:var(--measure)) and give it a monospaced or tabular feel so one entrant reads as one row."
+    },
+    {
+      "issue": "No connector lines between rounds, and vertical alignment is approximated by `justify-content:space-around` on independently-stretched columns. Nothing visually links the two matches that feed a later match, which is the one thing a bracket diagram is supposed to communicate.",
+      "where": "index.html:57-58 (.bracket, .round)",
+      "fix": "Either draw connectors (pseudo-element elbows on .match) or align feeding pairs exactly with a grid; do not leave the relationship to eyeballing."
+    },
+    {
+      "issue": "`viewport-fit=cover` is set but no safe-area insets are used anywhere, so in landscape on a notched phone the wrap's 14px padding puts entrant names under the notch, and the toast at bottom:24px sits in the home-indicator gesture strip.",
+      "where": "index.html:5 (viewport), :34 (.wrap), :70-74 (#toast)",
+      "fix": "padding-inline:max(var(--s4), env(safe-area-inset-left)); toast bottom:calc(var(--s6) + env(safe-area-inset-bottom)) — studio.css:117, :488."
+    },
+    {
+      "issue": "The QR canvas is a hard 300x300 inside a dialog with 18px padding and no max-width rule, so on a 320px viewport the modal exceeds the screen and the code is clipped or forces horizontal scroll inside the dialog.",
+      "where": "index.html:126-128 (#qrDlg, #qrCanvas)",
+      "fix": "Size the dialog to min(92vw, 22rem) and render the QR to a canvas whose CSS size is an integer multiple of its module count."
+    },
+    {
+      "issue": "The tip-jar link computes to roughly 34px tall (13.6px text + 6px padding), below the 44px minimum, and it sits in the top-right corner where thumbs are least accurate.",
+      "where": "index.html:39 (a.tipbtn)",
+      "fix": "min-height:var(--tap); display:inline-flex; align-items:center."
+    },
+    {
+      "issue": "Footer copy is 12.48px muted and centered, with two inline links inside it at roughly 18px of hit height — the smallest text and smallest targets in the app.",
+      "where": "index.html:76 (footer.colophon), :124",
+      "fix": "var(--t-xs) minimum, --ink-2 colour, and pad the links to at least 24px of hit area."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "There is no empty state. On first load `renderBracket()` returns immediately when names.length < 2 (app.js:63) leaving `#bracket` completely empty — so the output card renders as a blank box under a hint reading 'Tap a name to advance them', instructing the user to tap names that do not exist.",
+      "where": "app.js:57-63; index.html:106-110",
+      "fix": "Render a studio `.empty` block (studio.css:434-450) with a glyph, 'Your bracket appears here', and a one-line 'Paste names above — one per line' prompt. Swap the hint text based on state."
+    },
+    {
+      "issue": "The event title is captured, persisted to localStorage, and encoded into the shared URL — but it is never rendered anywhere. Not on screen, not in document.title, not in print. You name your tournament and the name silently vanishes.",
+      "where": "index.html:97 (#titleInput); app.js:98, :132; helpers.js:95, :113 (encoded as `t`)",
+      "fix": "Render state.title as an h2 above #champ (and as the printed sheet's headline, and into document.title). This is a functional gap, not just a styling one."
+    },
+    {
+      "issue": "Silent data loss on entrant entry. parseEntrants caps at 32 names and truncates each to 40 characters with no feedback; the textarea keeps showing what the user typed, so the bracket quietly disagrees with the visible list until a reload discards the extras.",
+      "where": "helpers.js:26-27; app.js:99-106, :133",
+      "fix": "Show a live count ('28 of 32 entrants') and a .warn when the cap or the 40-char limit bites."
+    },
+    {
+      "issue": "The worst destructive path has no guard at all: any edit to the entrants textarea that changes the parsed list resets `picks:{}` — every recorded result, gone, with no confirm, no toast, and no undo. Fixing one typo after the semifinals wipes the tournament.",
+      "where": "app.js:100-104",
+      "fix": "Preserve picks when names are only renamed/reordered, or gate the wipe behind a confirm plus an undo toast holding the previous state."
+    },
+    {
+      "issue": "'Clear results' is styled identically to Copy link, QR and Print, sits fourth in a row of four equal buttons, and its only protection is a native confirm(). Once confirmed there is no undo.",
+      "where": "index.html:117 (#resetBtn); app.js:116-121",
+      "fix": "Use .btn.danger, separate it from the constructive actions, and replace confirm() with an inline confirm plus an 'Undo' toast action."
+    },
+    {
+      "issue": "Nothing tells the user their work is saved. State is written to localStorage and the URL hash on every keystroke, entirely silently, while the copy hint claims 'the whole bracket lives in the link' — a claim the UI never demonstrates.",
+      "where": "app.js:41-45; index.html:119",
+      "fix": "A quiet 'Saved to this device — and to the link' status line, or a subtle saved indicator near the header."
+    },
+    {
+      "issue": "`.bracket` scrolls horizontally with no affordance: no edge fade, no scrollbar styling, no 'swipe for later rounds' cue. With 8+ entrants on a phone, the semifinal and final are offscreen and nothing indicates they exist.",
+      "where": "index.html:57 (.bracket overflow-x:auto)",
+      "fix": "Right-edge gradient mask when scrollable (studio.css:461 tablewrap pattern), plus scroll-snap on .round."
+    },
+    {
+      "issue": "The QR dialog offers only an image. There is no visible URL, no copy button inside the dialog, and no fallback for someone who cannot scan — and the dialog is the only place the shareable link is ever surfaced.",
+      "where": "index.html:126-129; app.js:142-157",
+      "fix": "Show the URL as selectable text under the canvas with a 'Copy link' button in the dialog."
+    },
+    {
+      "issue": "No `<main>`, no skip link, and no in-page anchors. Keyboard users tab through the header and the entire entrants form before reaching the bracket, on every single interaction.",
+      "where": "index.html:87-121 (body has no main landmark)",
+      "fix": "Wrap the cards in <main id=\"main\">, add studio.css's .skip link (studio.css:543-552)."
+    },
+    {
+      "issue": "Sharing is clipboard-only. On mobile — the app's stated context, 'send it to the group chat' — the native share sheet is the expected gesture and is absent.",
+      "where": "app.js:107-111 (#shareBtn)",
+      "fix": "Use navigator.share when available, falling back to clipboard."
+    },
+    {
+      "issue": "The 2400ms toast is the only feedback channel for every outcome — copied, could-not-copy, nothing-to-clear, add-entrants-first. Errors and successes look identical and disappear before a distracted user reads them.",
+      "where": "app.js:26-36, :108, :113, :117, :154",
+      "fix": "Distinguish error toasts (--neg) from success, and hold error toasts longer or make them dismissible."
+    },
+    {
+      "issue": "Print is offered as a button but the user gets no preview of what will print, and three of the four things on screen (header, entrants list, actions) disappear from the sheet — including the app name, so the printout is anonymous.",
+      "where": "index.html:116 (#printBtn), :79 (print hides header.app)",
+      "fix": "Add a `.printonly` header block containing the bracket title and date so the sheet identifies itself."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "The focus ring is effectively invisible in light mode. --focus is #fcd34d, which computes to 1.35:1 against the page background (#f6f7f9) and 1.44:1 against a card (#ffffff) — WCAG 2.2 SC 1.4.11 requires 3:1. Keyboard users cannot see where they are anywhere except on a winner button (3.48:1).",
+      "where": "index.html:20 (--focus:#fcd34d), :47 (focus-visible rule)",
+      "fix": "Use a --focus at >=3:1 against both --canvas and --surface, plus studio.css's two-part ring (outline + 4px halo, studio.css:521-526)."
+    },
+    {
+      "issue": "`.match` sets overflow:hidden, so the 2px outline with outline-offset:1px on its child buttons is clipped along every internal edge. On the primary control of the app, the focus indicator is partially cut off today and will be almost entirely swallowed once studio.css's `box-shadow:0 0 0 4px var(--focus-halo)` halo lands.",
+      "where": "index.html:60 (.match overflow:hidden) with :47",
+      "fix": "Drop overflow:hidden and round the child buttons individually (first/last-child radii), or move the focus ring inside via inset box-shadow."
+    },
+    {
+      "issue": "Who won is conveyed to assistive tech by nothing at all. The advanced contender gets only `class=\"winner\"` (background colour + bold); there is no aria-pressed, no aria-label, no visually-hidden 'advanced' text. A screen-reader user tapping through the bracket cannot determine the state of a single match.",
+      "where": "app.js:80-87 (class only); index.html:66 (.match button.winner)",
+      "fix": "Render the pair as aria-pressed toggle buttons (or radios in a role=radiogroup per match) and append an sr-only ' — advanced' to the winner."
+    },
+    {
+      "issue": "Focus is destroyed on every pick. `box.replaceChildren()` tears down the whole bracket and rebuilds it, so after each click focus falls back to <body>. A keyboard user must re-tab from the top of the document for every single match — through the header, the title field and the textarea.",
+      "where": "app.js:59 with :84-85 (setPick -> renderBracket)",
+      "fix": "Record the picked button's round/match/side and restore focus to the equivalent node after re-render, or update only the affected .match in place."
+    },
+    {
+      "issue": "#titleInput has no label — only a placeholder, which disappears on input and is not a substitute for an accessible name.",
+      "where": "index.html:97",
+      "fix": "<label class=\"f\" for=\"titleInput\"><span>Bracket name</span>…</label> (studio.css:288-295)."
+    },
+    {
+      "issue": "#entrants has no programmatic label either. The h2 'Who's in? (order = seeding, top seed first)' sits above it as unassociated text, and the p.hint carrying the 2–32 rule is not referenced by aria-describedby.",
+      "where": "index.html:98-103",
+      "fix": "label[for=entrants] plus aria-describedby pointing at the hint paragraph."
+    },
+    {
+      "issue": "TBD and bye slots are rendered as `disabled` buttons. Disabled controls are skipped by keyboard navigation and de-emphasised or omitted by several screen-reader element lists, so 'bye' and 'winner of earlier game' — the information that explains the bracket's shape — is exactly what non-visual users lose.",
+      "where": "app.js:77-78",
+      "fix": "Render them as non-interactive elements (span/div with the same class) rather than disabled buttons, so the text stays in the reading order."
+    },
+    {
+      "issue": "The bracket has no semantics. #bracket is an unnamed div, .round is a div, .roundhead is a div rather than a heading, and .match is a div with no role or accessible name. A screen reader announces an undifferentiated stream of buttons with no indication of which two form a match or which round is being read.",
+      "where": "index.html:59-60, :108; app.js:67-89",
+      "fix": "aria-label on #bracket, role=group + aria-label='Semifinals, match 2' on each .match, and make .roundhead a real heading or the group's label."
+    },
+    {
+      "issue": "The QR dialog has no accessible name and the canvas has no text alternative. `<dialog id=\"qrDlg\">` carries no aria-labelledby, and `<canvas id=\"qrCanvas\">` has no fallback content, no role=img and no aria-label — so the dialog announces as an empty modal.",
+      "where": "index.html:126-128",
+      "fix": "aria-labelledby pointing at the h3, and give the canvas role=\"img\" with an aria-label containing the URL (better still, render the URL as real text)."
+    },
+    {
+      "issue": "In dark mode the focus ring on a winner button computes to 2.34:1 (--focus #b45309 against --accent #f59e0b) — below the 3:1 minimum, on the control users tab to most often.",
+      "where": "index.html:25 (dark --focus/--accent), :66",
+      "fix": "Give focused winner buttons a contrasting ring colour, or use the outline+halo pair so one of the two rings always contrasts."
+    },
+    {
+      "issue": "Footer links are ~12.5px inline text with roughly 18px of hit height, below WCAG 2.2 SC 2.5.8's 24x24 minimum, and they carry `style=\"color:inherit\"` which renders them as muted grey with no colour distinction from the surrounding sentence.",
+      "where": "index.html:124",
+      "fix": "Pad the links to 24px minimum and drop the inline color:inherit so link colour is distinguishable."
+    },
+    {
+      "issue": "No `color-scheme` is declared, so in dark mode the native <dialog> still paints on the UA's light canvas while its .btn child uses the dark palette (dark button on a white sheet) and the h3 is pinned to inline #111. Native form chrome, scrollbars and the modal backdrop all stay in light mode.",
+      "where": "index.html:17-27 (no color-scheme), :126-129 (dialog with inline styles)",
+      "fix": "Add `:root{color-scheme:light dark}` and give #qrDlg real background/colour tokens plus a styled ::backdrop."
+    }
+  ],
+  "printSupport": "Print is a first-class use case here — the README ends with \"Print view for the wall\", there is a dedicated Print button (index.html:116), and the whole point of a bracket is a sheet taped to the fridge or the break-room door. There IS an `@media print` block (index.html:78-84) and it does the basic hiding correctly: header, footer, toast and the two `.noprint` cards drop out, card chrome flattens, and `.bracket` gets `overflow:visible`.\n\nWhat is broken:\n\n1. CATASTROPHIC — the print block never redefines the palette tokens, it only sets `body{background:#fff;color:#000}` (line 80). `.match button{color:var(--ink)}` (line 63) is untouched, so if the device is in dark mode when the user prints, --ink is still #e6edf3 and every entrant name prints at 1.18:1 on white paper — invisible. `.match button.winner` IS overridden to #000 (line 83), so the perverse result is a sheet where ONLY the winners are legible and every eliminated name is blank. `#champ` prints at var(--win) #34d399 (1.92:1) and `.roundhead` at var(--muted) #8b98a5 (2.94:1). Whether prefers-color-scheme resolves to dark during printing varies by browser and version, which makes this a latent bug that fires on some users' machines and not others. The fix is exactly what design/studio.css:565-575 already does: redefine --ink/--muted/--line/--card/--bg to print values inside `@media print`, so the dark block cannot leak.\n\n2. The winner highlight relies on a background colour (`.match button.winner{background:#eee}`, line 83) with no `print-color-adjust:exact`. Browsers strip background graphics by default, so on most real printouts the wash disappears and the only surviving winner cue is `font-weight:700` inherited from line 66 — bold-vs-regular is a very weak signal on a printed bracket. Winners should be marked structurally (a rule, a checkmark glyph, a border-left) not by a background fill.\n\n3. The printed sheet has no title. `header.app` is hidden (line 79) so the app name is gone, and `state.title` is never rendered anywhere in the document (see navigation defects), so the paper carries no event name, no date, and no attribution. A stack of printed brackets is indistinguishable.\n\n4. No pagination control. `.bracket` stays `display:flex` in print (line 82 only changes overflow). Five rounds at `min-width:160px` + 18px gaps is 872px — wider than a portrait Letter/A4 text column (~624px at 96dpi) — so large brackets are clipped or shrunk at the right edge with no warning. There is no `@page` rule, no margins, no `size: landscape` hint, and no scale-to-fit.\n\n5. No break protection. A 32-entrant round 0 stacks 16 `.match` boxes ~78px tall into a ~1400px column; with no `break-inside:avoid` on `.match` or `.round`, matches split across the page boundary mid-pairing. `.round{justify-content:space-around}` also distributes whitespace against the on-screen column height, which is meaningless once the content paginates.\n\n6. `.match` borders print at var(--line) #e3e8ee — a 1.23:1 hairline that many printers will render as nothing, erasing the pairing boxes on paper.\n\n7. No `.printonly` hook exists in the stylesheet, so there is currently no mechanism to add print-only content (title block, date line, \"results as of\" stamp). studio.css:598 provides it.",
+  "riskyToRestyle": [
+    "`.match{overflow:hidden}` (index.html:60) will clip design/studio.css's focus treatment. studio.css:521-526 uses `outline:2px + outline-offset:2px + box-shadow:0 0 0 4px var(--focus-halo)` — the halo is a box-shadow, which overflow:hidden on the parent swallows entirely. Remove overflow:hidden and round the first/last child buttons individually before adopting the shared focus ring, or the app's main control ends up with a worse indicator than it has today.",
+    "The runtime class contract is unenforced and untested: app.js applies exactly `round`, `roundhead`, `match`, `winner`, `tbd`, `bye` (app.js:67-89), plus `show` on #toast (app.js:29) and `hidden` on #tipLink (app.js:129). Renaming any of these in CSS produces a silently unstyled bracket — nothing fails, nothing warns. Note that non-winner buttons get `class=\"\"` (empty attribute), not no attribute, so `.match button:not([class])` selectors will not match.",
+    "GOOD NEWS, use it: test/helpers.test.mjs asserts only on the pure logic in helpers.js — seeding, byes, pick invalidation, hash round-trip, and a 60-tournament fuzz. There is not a single DOM, class-name or markup assertion in the suite. Markup can be restructured freely as long as helpers.js is untouched; run `node test/helpers.test.mjs` after any change that touches app.js.",
+    "sw.js precaches a hardcoded ASSETS array (sw.js:3) that contains NO stylesheet, because all CSS is currently inline in index.html. If the overhaul extracts styles to a shared file (e.g. ../design/studio.css or a per-app app.css), it MUST be added to ASSETS and `VERSION` bumped from 'bracket-v4' (sw.js:2) — otherwise returning PWA users get a cache-first unstyled page offline. The fetch handler is cache-first (sw.js:19), so a stale HTML/CSS pairing can persist for a full session.",
+    "The QR renderer does exact integer pixel math against a hardcoded 300: `cell = Math.floor(300/(count+8))`, `off = Math.floor((300 - cell*count)/2)` (app.js:146-148) writing into a canvas whose 300x300 is set via HTML attributes (index.html:128). studio.css:82 declares `img,svg,canvas,video{max-width:100%}` — that will scale the canvas by a non-integer factor on narrow screens and blur the module edges, which degrades scan reliability. Long brackets make this worse: a 32-name bracket produces a long base64 hash, pushing the QR to a high version where cell can floor to 1-2px. If you constrain the canvas, also raise the backing resolution and keep the CSS size an integer multiple of (count+8).",
+    "Inline styles will beat the new stylesheet without !important, and they are in the worst places: the dialog's entire appearance (index.html:126 border/radius/padding/text-align), the dialog heading pinned to `color:#111` (127) — which becomes invisible if the new skin gives the dialog a dark surface — the two footer links at `color:inherit` (124), and `<h2 style=\"margin-top:12px\">` (98). All four must be moved into CSS as part of the restyle, not after it.",
+    "The bracket's width math is currently exact and coincidental: `.round{min-width:160px}` x 5 rounds + 4 x 18px gaps = 872px, which is precisely the inner width of the 900px `.wrap` minus its 14px padding. A 32-entrant bracket fits desktop today by luck. design/skins.mjs:132 sets `wrap:'64rem'` (1024px) for this app and studio.css uses a 4px spacing scale — any change to --s or to .round's min-width re-triggers horizontal scrolling at a different entrant count. Re-derive this deliberately rather than inheriting it.",
+    "Vertical alignment between rounds is produced by `justify-content:space-around` on independently stretched flex columns (index.html:58), not by any real geometry. Changing `.match` height — which the 44px tap-target fix necessarily does — shifts every later round's position relative to its feeders. If the redesign adds connector elbows between rounds, they need exact per-match positioning (grid rows or absolute offsets keyed to match index), and CSS alone cannot derive it from the current markup because round-0 empty matches are skipped entirely (app.js:72), so column child counts are not uniform.",
+    "design/studio.css:284 sets `input:disabled,select:disabled,textarea:disabled,button:disabled{opacity:.5}`. The bye/TBD slots are rendered as real `disabled` buttons (app.js:77), so adopting the shared sheet drops them from today's 5.11:1 to roughly 2.02:1 in light and 2.48:1 in dark — a regression introduced by the overhaul itself. Either exempt `.match button:disabled` from the opacity rule or stop using disabled buttons for non-interactive slots.",
+    "design/studio.css:333 sets `.btn{white-space:nowrap}` and studio.css:132 sets `.row > *{flex:1 1 12rem}`. 'Copy link (live bracket)' (index.html:114) at 15px will not fit a 12rem basis and, being nowrap, will overflow its button box instead of wrapping. Shorten the action labels as part of the migration.",
+    "A palette change has to propagate to five files or the app ships mismatched chrome: index.html:12-13 (two meta theme-color values, light and dark), manifest.webmanifest:8-9 (background_color #f6f7f9 / theme_color #b45309), icon.svg:2 and :10 (#b45309 appears twice), apple-touch-icon.png, and marketing/stripe-thumbnail.png + thumb-256.png. design/skins.mjs:130-135 assigns this app hue 104 with r:8, which is a substantial move away from the current #b45309 orange.",
+    "Delivery constraints: firebase.json currently defines a CSP only for /sub-plans and /specials-planner, both `style-src 'self' 'unsafe-inline'`. If bracket-maker gets a CSP in the same pass, an inline <style> block still needs 'unsafe-inline' and an external stylesheet needs 'self'. Separately, app.js calls history.replaceState on every keystroke (app.js:43, :98-104) — it is already try/caught because Safari rate-limits it, so do not add any new input-driven save/render path on top of it."
+  ]
+}

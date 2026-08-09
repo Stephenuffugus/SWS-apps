@@ -1,0 +1,275 @@
+{
+  "slug": "image-compressor",
+  "purpose": "A single-screen, offline-first PWA that resizes and re-encodes images entirely on-device via canvas: pick files → set max dimension / format / quality → press Compress → save each result or download all, with per-file and total before/after savings shown; nothing is ever uploaded and nothing is persisted.",
+  "structure": "Flat, short, single-column page — no routes, no modals, no tabs, no sticky anything. `body` > `div.wrap` (max-width 640px, 14px side padding, index.html:34) containing exactly four blocks, then two elements OUTSIDE `.wrap`. (1) `header.app` (index.html:81-86): flex row of decorative `img` icon (34px), `h1` \"Image Compressor\", `span.spacer` flex:1, and `a#tipLink.tipbtn.hidden` revealed by JS. (2) `div.hero` (88-92): `h2` headline + `p` privacy pitch. (3) `section.card` #1, the settings card (94-116): `button#addBtn.btn.primary.big` \"Choose images\", a `display:none` `input#fileInput[type=file][multiple]`, a `div.row` with inline `style=\"margin-top:12px\"` holding two wrapping `label.f` each containing a `select` (`#maxSide` 5 options, `#format` 3 options), a third full-width `label.f` wrapping `input#quality[type=range]` with a live `b#qLabel`, and a `p.hint`. This card has NO `h2`. (4) `section.card` #2, the results card (118-126): `h2#listHead` (\"Images\" → \"N image(s)\"), empty `ul.plain#list` filled at runtime, `p.hint#emptyHint` (the empty state), and a `div.row` with inline `style=\"margin-top:10px\"` holding `button#runBtn.btn.primary` \"Compress\" and `button#allBtn.btn` \"Download all\". Then, outside `.wrap`: `div#toast[role=status][aria-live=polite]` (position:fixed, bottom:24px, index.html:129) and `footer.colophon` (130) with two `color:inherit` inline-styled links. There is no `<main>` landmark, no skip link, no `<nav>`. Main flow: Choose images (opens native picker) → thumbnails and sizes render immediately → adjust three settings → Compress (synchronous main-thread loop over every item) → rows gain a `.btn.small` \"Save\" and a green `.savings` badge → Save individually or Download all (staggered 350ms).",
+  "cssClasses": [
+    ":root — light palette tokens, index.html:19-21 (--bg --card --ink --muted --line --accent --accent-ink --chip --focus --pos)",
+    ":root under prefers-color-scheme:dark — dark token overrides, index.html:22-27",
+    "body — bg/ink, system font stack, line-height 1.45, padding-bottom 40px (32)",
+    ".wrap — page container, max-width 640px, 14px side padding (34)",
+    "header.app — flex app bar, gap 10px, padding 14px 0 10px (35)",
+    "header.app img — 34px app icon, radius 8 (36)",
+    "header.app h1 — app title, 1.15rem (37)",
+    ".spacer — flex:1 push, only inside header.app (38)",
+    "a.tipbtn — pill tip-jar link, .85rem accent text on card (39)",
+    ".hero — centered intro block, padding 14px 8px 2px (40)",
+    ".hero h2 — headline 1.3rem, letter-spacing -.02em (41)",
+    ".hero p — muted subcopy .92rem (42)",
+    "section.card — white panel, 1px line border, radius 14, padding 14, margin-bottom 12 (43)",
+    "section.card h2 — .8rem uppercase muted section label (44)",
+    "label.f — block form field wrapper, .85rem muted, margin-bottom 10 (45)",
+    "label.f span — field caption, block, margin-bottom 4 (46)",
+    "select — full-width control, 1rem, padding 10/12, radius 10 (47-50)",
+    "input[type=range] — same box rule then padding:0, height 34, accent-color (47-51)",
+    "button — font-family inherit only; no size/line-height reset (52)",
+    ".btn — base button, padding 11/14, .95rem, radius 10, card bg (53)",
+    ".btn.primary — accent fill, accent-ink text, weight 700 (54)",
+    ".btn.big — padding 16, 1.02rem, width 100% (55)",
+    ".btn.small — padding 6/9, .82rem; used only by the runtime Save button (56)",
+    ".btn[disabled] — opacity .5, cursor default (57)",
+    ":focus-visible — 2px outline var(--focus), offset 1px; select/button/a ONLY (58)",
+    ".row — flex row, gap 8, no wrap (59)",
+    ".row>* — flex:1, min-width:0 equal columns (60)",
+    "ul.plain — unstyled list reset (61)",
+    "ul.plain li — flex row, gap 10, padding 9px 0, .9rem, bottom hairline (62)",
+    "ul.plain li:last-child — removes trailing hairline (63)",
+    "ul.plain .grow — flex:1, min-width:0, overflow-wrap:anywhere (64)",
+    ".thumb — 52px square preview, radius 8, object-fit cover, chip bg (65)",
+    ".sub — muted .82rem metadata line inside .grow (66)",
+    ".savings — green var(--pos) bold percentage badge (67)",
+    ".hint — muted .8rem helper/empty-state text, margin-top 8 (68)",
+    "#toast — fixed bottom-center pill, ink bg, opacity 0, z-index 50 (69-73)",
+    "#toast.show — opacity 1; the only visibility trigger (74)",
+    "footer.colophon — muted .78rem centered, padding 20px 0 8px, NO side padding (75)",
+    ".hidden — display:none !important; load-bearing in three places (76)",
+    "#tipLink — JS sets href and removes .hidden (app.js:154-156)",
+    "#addBtn — JS click proxy to the file input (app.js:114)",
+    "#fileInput — JS-only; change handler reads files then clears value (app.js:115-124)",
+    "#maxSide — JS reads .value as int; option values 3000/1920/1280/800/0 are data (app.js:129)",
+    "#format — JS reads .value: jpeg|webp|png (app.js:130)",
+    "#quality — JS reads .value/100; input event updates label (app.js:113,131)",
+    "#qLabel — JS overwrites textContent with 'NN%' (app.js:113)",
+    "#listHead — JS overwrites textContent every render (app.js:90)",
+    "#list — JS calls replaceChildren() every render (app.js:88)",
+    "#emptyHint — JS toggles .hidden on it every render (app.js:89)",
+    "#runBtn — JS disables and swaps textContent via ev.target (app.js:125-142)",
+    "#allBtn — JS batch-download handler (app.js:143-148)"
+  ],
+  "dynamicMarkup": "All runtime markup comes from `render()` (app.js:86-110) via the tiny `el()` helper (app.js:7-21), which sets classes wholesale with `n.className = v` — so a class string in JS is the complete class list for that node.\n\nPer render, `#list` is fully cleared with `list.replaceChildren()` (app.js:88) and rebuilt. Any static markup an engineer places inside `<ul id=\"list\">` (a template, a header row, a decorative element) is destroyed on the first render, which runs at init (app.js:158) before the user does anything.\n\nRow tree, one `<li>` per item (app.js:96-108), with NO class on the `li` itself — it is styled purely by the descendant selector `ul.plain li` (index.html:62):\n  li\n   ├─ img.thumb          alt=\"\" ; src set only if thumbUrl starts with \"data:image/\" (app.js:94-95). If the guard fails the img renders srcless as a 52px .chip-colored box.\n   ├─ div.grow\n   │   ├─ div            (no class) filename, textContent\n   │   └─ div.sub        \"W×H · 1.2 MB\" text node, then conditionally:\n   │        ├─ span      (NO class) \"  →  W×H · 412 KB  \" — arrow segment, only after compression\n   │        └─ span.savings  \"62% smaller\" — only when savingsPct > 0\n   └─ button.btn.small   \"Save\" — only when item.outBlob exists; type=button; click handler closes over the item\n\nOther runtime DOM mutation:\n- `#toast` textContent replaced and `.show` added/removed on a timer (app.js:23-29). Text is never cleared, so stale toast copy stays in the DOM at opacity 0.\n- `#listHead` textContent overwritten with `N + ' image(s)'` or `'Images'` (app.js:90) — wipes any child element added to that heading.\n- `#emptyHint` `.hidden` toggled (app.js:89).\n- `#tipLink` href set and `.hidden` removed (app.js:154-156).\n- `#qLabel` textContent set to `value + '%'` (app.js:113).\n- `#runBtn` mutated through `ev.target`: `disabled = true` and `textContent = 'Working…'`, restored to `'Compress'` (app.js:127-128, 141).\n- `download()` appends a bare `<a>` (no class) with a blob: href to `document.body`, clicks it, removes it after 500ms (app.js:70-74).\n\nClass names the restyle must preserve verbatim or update in app.js: `thumb`, `grow`, `sub`, `savings`, `btn small`, `show`, `hidden`.",
+  "comfortDefects": [
+    {
+      "issue": "Every piece of body copy is below the 15px floor. The results list is .9rem/14.4px and it is the densest content on the page.",
+      "where": "index.html:62 (ul.plain li)",
+      "fix": "Set the list row to 1rem/16px minimum and let the shared type scale own it; stop expressing body sizes as sub-1rem rem fractions."
+    },
+    {
+      "issue": "The entire result payload — original dimensions, original size, new dimensions, new size, savings — is rendered at .82rem/13.1px muted, the second-smallest size on the page. This is the app's actual output and it is the hardest thing to read.",
+      "where": "index.html:66 (.sub), built at app.js:100-104",
+      "fix": "Promote the after-size and savings to ~15-16px with tabular numerals (the design system has .tnum); demote only the original-size half to secondary."
+    },
+    {
+      "issue": "Hierarchy inversion: the two most instructional strings in the app — the 'settings apply when you press Compress' explainer and the empty-state teaching copy — are rendered at .8rem/12.8px muted, the smallest text on the page.",
+      "where": "index.html:68 (.hint) applied at index.html:115 and index.html:121",
+      "fix": "Give the empty state its own component at 15-16px ink-2; keep .hint small only for genuinely incidental notes."
+    },
+    {
+      "issue": "Per-row 'Save' button computes to roughly 30px tall (13.1px text × ~1.2 UA line-height + 12px padding + 2px border). It is the primary output action of the whole app and it is the smallest tap target on the page.",
+      "where": "index.html:56 (.btn.small), applied at app.js:106",
+      "fix": "Floor all buttons at 44px via min-height on .btn; if a compact variant is needed, shrink padding but keep min-height:44px and add a transparent hit area."
+    },
+    {
+      "issue": "The two main action buttons compute to ~42px tall — just under the 44px threshold.",
+      "where": "index.html:53 (.btn), applied to #runBtn and #allBtn at index.html:123-124",
+      "fix": "min-height:44px on .btn; 48px on touch via a pointer:coarse query."
+    },
+    {
+      "issue": "Selects compute to ~41px tall, under 44px, and the pill tip-jar link to ~34px.",
+      "where": "index.html:47-50 (select), index.html:39 (a.tipbtn)",
+      "fix": "min-height:44px on select and on .tipbtn; the tip link should be a real button-sized target."
+    },
+    {
+      "issue": "The quality slider is the app's most-used control and its drag target is a ~16-20px UA thumb inside a 34px bordered box. Fiddly on touch, and with min=30 max=95 step=1 a keyboard user needs up to 65 arrow presses to cross the range.",
+      "where": "index.html:51 (input[type=range]), index.html:114",
+      "fix": "Raise the track/thumb hit area to 44px, add step=\"5\", and offer preset chips (60/80/90) alongside the slider."
+    },
+    {
+      "issue": "Cards are invisible. The border #e3e8ee sits at 1.23:1 against the white card, and the card itself is 1.07:1 against the page background — there is no perceptible boundary, no elevation, no shadow. Dark mode is the same at 1.32:1.",
+      "where": "index.html:19 (--line, --card, --bg), index.html:43 (section.card)",
+      "fix": "Either raise the border to ~3:1 against the surface or replace the boundary with a real surface/canvas split plus a shadow token from the shared system."
+    },
+    {
+      "issue": "List row separators use the same 1.23:1 hairline, so a 50-row list reads as one undifferentiated block of text with no visible row boundaries.",
+      "where": "index.html:62 (ul.plain li border-bottom)",
+      "fix": "Raise separator contrast, or drop separators and separate rows with vertical rhythm and an alternating/hover surface instead."
+    },
+    {
+      "issue": "The footer sits OUTSIDE .wrap, so it has no max-width and, with padding:20px 0 8px, no horizontal padding at all — its text touches the viewport edges on a phone and stretches full-bleed on desktop.",
+      "where": "index.html:75 (footer.colophon); footer at index.html:130 is outside the .wrap closed at index.html:127",
+      "fix": "Move the footer inside .wrap, or give .colophon the same max-width and side padding."
+    },
+    {
+      "issue": "line-height:1.45 is exactly at the acceptable floor for body text and is not inherited by buttons or selects (button only inherits font-family), so controls fall back to UA 'normal' (~1.2).",
+      "where": "index.html:32 (body), index.html:52 (button), index.html:47-50 (select)",
+      "fix": "Raise body to 1.55, set an explicit line-height on .btn/select, and give small print (.sub, .hint) 1.5+ since short line-height hurts most at small sizes."
+    },
+    {
+      "issue": "Measure runs to roughly 81 characters — the hero paragraph at .92rem/14.7px across a 596px content box exceeds the ~72-character comfort limit.",
+      "where": "index.html:34 (.wrap max-width:640px), index.html:42 (.hero p)",
+      "fix": "Cap prose blocks at 62-68ch independently of the container width; the design system's --wrap:44rem plus a max-width:64ch on p handles this."
+    },
+    {
+      "issue": "On a 320px phone the row's text column gets roughly 180px after the 52px thumb, 10px gap and Save button, so the filename plus the full before/after string wraps to three or four lines of 13px muted text per row — 50 rows of that is a wall.",
+      "where": "index.html:62-66 (ul.plain li, .grow, .sub)",
+      "fix": "Stack the row on narrow screens: thumb + filename on line one, a two-column before/after readout below, action full-width or icon+label at 44px."
+    },
+    {
+      "issue": "overflow-wrap:anywhere shatters filenames at arbitrary characters mid-word, producing ragged unreadable stacks for the long camera/export filenames this app exists to process.",
+      "where": "index.html:64 (ul.plain .grow)",
+      "fix": "Use a middle-truncation with the full name in title/aria, or overflow-wrap:break-word plus text-overflow:ellipsis on a single line."
+    },
+    {
+      "issue": "Two saturated purple primary buttons are on screen simultaneously with nothing distinguishing which is the current step — 'Choose images' (big) and 'Compress' both read as the main action.",
+      "where": "index.html:95 (.btn.primary.big #addBtn) and index.html:123 (.btn.primary #runBtn)",
+      "fix": "Only one accent-filled button at a time: make Compress secondary until items exist, then swap emphasis; the design system's .ghost/.primary pair supports this."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "The Compress and Download all buttons sit at the BOTTOM of the results card, after the list. With the supported 50 images at roughly 70px per row that is ~3500px of scrolling between adding files and reaching the button that acts on them. There is no sticky action bar and no in-page nav.",
+      "where": "index.html:122-125, list at index.html:120",
+      "fix": "Promote the actions into a sticky bottom action bar (the design system has .actionbar) or place them above the list; keep them visible at all scroll positions."
+    },
+    {
+      "issue": "'Download all' is always enabled and always visible, including on first load with zero images. Pressing it teaches only by failure — a transient toast saying 'Press Compress first'.",
+      "where": "index.html:124, handler at app.js:143-145",
+      "fix": "Disable it until at least one item has outBlob, with a title/aria-describedby explaining why; the .btn[disabled] style already exists but is never applied here."
+    },
+    {
+      "issue": "'Compress' is likewise enabled with an empty queue and responds with an error toast instead of being unavailable.",
+      "where": "index.html:123, handler at app.js:125-126",
+      "fix": "Disable until items.length > 0; drive it from render() alongside the empty-state toggle."
+    },
+    {
+      "issue": "There is no way to remove a single image or clear the queue. Adding the wrong file is unrecoverable except by reloading the page, which discards everything. There is also no dedupe, so choosing the same file twice silently produces two rows.",
+      "where": "render() builds rows with only a Save button, app.js:96-108",
+      "fix": "Add a per-row remove control and a 'Clear all', both with undo via a toast action; dedupe on name+size+lastModified when pushing at app.js:120."
+    },
+    {
+      "issue": "Nothing is persisted anywhere — no storage of any kind — and nothing tells the user that. A refresh, an accidental back-navigation, or the PWA being evicted silently destroys the entire queue, and there is no beforeunload guard.",
+      "where": "whole app; items is a plain in-memory array at app.js:31",
+      "fix": "State plainly in the UI that the queue is session-only, and add a beforeunload confirmation once items exist and uncompressed/unsaved work is pending."
+    },
+    {
+      "issue": "Per-item failures are completely silent. The compress loop swallows the error and moves on, so a row that failed simply never grows a Save button — a user with one bad HEIC among twenty gets no explanation and no retry.",
+      "where": "app.js:132-135 (catch with an empty body)",
+      "fix": "Store an error on the item and render a visible per-row failure state with the reason and a retry affordance."
+    },
+    {
+      "issue": "The compression summary — total before, total after, overall savings — exists only inside a toast that disappears after 4.5 seconds and is never written into the page.",
+      "where": "app.js:139-140",
+      "fix": "Render a persistent results summary in the card header or a stat row; keep the toast as reinforcement only."
+    },
+    {
+      "issue": "The 50-image cap is never stated in the UI. Exceeding it breaks out of the ingest loop, so an unknown number of the user's selected files are dropped with a single generic toast and no list of what was skipped.",
+      "where": "app.js:119 (break inside the file loop)",
+      "fix": "State the cap next to the Choose button, and on overflow name how many files were skipped and keep them queued or explicitly listed."
+    },
+    {
+      "issue": "Nothing communicates that this is a two-step flow. A first-time user sees two purple buttons and no ordering; there is no numbered sequence and no progress indication during the compress loop, which is a multi-second main-thread freeze for large batches.",
+      "where": "index.html:95 vs index.html:123; loop at app.js:132-135",
+      "fix": "Number the steps (1 Choose, 2 Settings, 3 Compress) and show real per-item progress ('12 of 50') during the run."
+    },
+    {
+      "issue": "Both footer links are given style=\"color:inherit\", which renders them in muted grey identical to the surrounding sentence — the only route back to the studio hub and the only feedback channel are visually indistinguishable from plain text.",
+      "where": "index.html:130",
+      "fix": "Remove the inline color:inherit and give footer links accent color plus underline; add a real 'back to Sky Wolf Studios' affordance in the header."
+    },
+    {
+      "issue": "An empty state exists and its copy is genuinely instructive, but it is styled as the smallest, faintest text on the page and sits below an empty list rather than occupying it, so it reads as a footnote rather than as guidance.",
+      "where": "index.html:121 (p.hint#emptyHint), toggled at app.js:89",
+      "fix": "Use the design system's .empty block inside the list region: icon, one-line instruction at 16px, and a secondary Choose-images button."
+    },
+    {
+      "issue": "The tip jar is a 34px pill in the header that appears only after JS runs and opens a Stripe checkout in a new tab with no price, no context and no new-window indication.",
+      "where": "index.html:85, CONFIG.tipUrl at app.js:4, revealed at app.js:153-157",
+      "fix": "Give it a label that states what it does, an explicit opens-in-new-tab cue, and move it out of the app bar's tap zone next to the title."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "The focus indicator fails WCAG 1.4.11 (3:1) in BOTH themes. Light: --focus #c4b5fd computes to 1.85:1 against the white card and 1.72:1 against the page background. Dark: --focus #6d28d9 computes to 2.29:1 against the card and 2.61:1 against the background. The ring is effectively invisible exactly where it lands.",
+      "where": "index.html:20 and 25 (--focus tokens), applied at index.html:58",
+      "fix": "Use a focus token at 3:1+ against every surface it can land on — a dark ink ring in light mode, a light ring in dark mode — or a two-tone ring (outline plus contrasting box-shadow halo). The design system's --focus/--focus-halo pair is built for this."
+    },
+    {
+      "issue": "input[type=range] is omitted from the :focus-visible selector list, so the quality slider — a keyboard-operated custom-styled control — falls back to whatever the UA draws, which with accent-color set is often a faint or absent ring.",
+      "where": "index.html:58 (select, button, a only)",
+      "fix": "Include input and textarea in the focus-visible rule, and style the range thumb's focus explicitly with ::-webkit-slider-thumb / ::-moz-range-thumb."
+    },
+    {
+      "issue": "There is no <main> landmark anywhere in the document, and no skip link. Screen-reader users have no way to jump past the header and hero to the controls.",
+      "where": "index.html:79-127 (body contains div.wrap directly)",
+      "fix": "Wrap the hero and both cards in <main id=\"main\">, and add a .skip link (already defined in the shared CSS) as the first focusable element."
+    },
+    {
+      "issue": "Every per-row action button has the identical accessible name 'Save'. With 50 images a screen-reader user tabbing through the list hears 'Save button' fifty times with no way to tell which file each one belongs to.",
+      "where": "app.js:106-107",
+      "fix": "Give the button an aria-label such as `Save ${item.file.name}` (or a visually hidden span carrying the filename)."
+    },
+    {
+      "issue": "The settings card has no heading at all, so the group of file, dimension, format and quality controls is unnamed — it is not announced as a region and does not appear in a heading list.",
+      "where": "index.html:94 (section.card with no h2, unlike index.html:119)",
+      "fix": "Add a section heading (visually hidden if the design calls for it) and point section aria-labelledby at it."
+    },
+    {
+      "issue": "The results heading's text is rewritten on every render ('Images' → '3 image(s)') but is not in a live region, so adding images produces no announcement — the only confirmation a sighted user gets is the list appearing.",
+      "where": "app.js:90 ($('listHead').textContent = ...)",
+      "fix": "Announce the count change through the existing #toast status region, or give the list container aria-live=\"polite\" with a concise summary node."
+    },
+    {
+      "issue": "During compression the button is disabled and its label swapped to 'Working…'. Disabling a focused button drops focus to the body in several browsers, the swapped label on a disabled control is not announced, and the synchronous canvas loop blocks the main thread for seconds with no aria-busy and no progress output.",
+      "where": "app.js:127-128 and 141",
+      "fix": "Keep the button enabled with aria-disabled=\"true\" and ignore clicks, set aria-busy on the list, and push per-item progress into the polite status region."
+    },
+    {
+      "issue": "Emoji sit inside accessible names: the primary button announces as 'framed picture Choose images' and the tip link as 'black heart suit Tip jar'.",
+      "where": "index.html:95 and index.html:85",
+      "fix": "Wrap decorative emoji in <span aria-hidden=\"true\" class=\"glyph\"> so only the text contributes to the name."
+    },
+    {
+      "issue": "The tip link carries target=\"_blank\" with no programmatic or visual warning that it opens a new tab, and it leads to an external payment page.",
+      "where": "index.html:85",
+      "fix": "Append a visually hidden '(opens in a new tab)' to the link text and add an external-link icon marked aria-hidden."
+    },
+    {
+      "issue": "The quality slider announces its raw value ('80') rather than a percentage, because the visible unit lives in a separate <b id=\"qLabel\"> inside the label rather than on the input.",
+      "where": "index.html:113-114",
+      "fix": "Set aria-valuetext to `${value}%` in the same input handler that updates #qLabel (app.js:113)."
+    },
+    {
+      "issue": "Toast text is never cleared — only its opacity is animated to 0 — so stale status messages remain in the accessibility tree and are reachable by a virtual cursor long after they visually disappear.",
+      "where": "index.html:69-74 (#toast opacity transition), app.js:28 (removes .show only)",
+      "fix": "Clear textContent when hiding, or toggle visibility/display so the node leaves the accessibility tree."
+    },
+    {
+      "issue": "Heading semantics and visual weight are inverted: the hero h2 renders at 1.3rem while the card h2 at the same level renders at .8rem uppercase muted, so two very different roles share one heading level and the visual hierarchy contradicts the document outline.",
+      "where": "index.html:41 (.hero h2) vs index.html:44 (section.card h2)",
+      "fix": "Make the hero headline the visual sibling of h1 (or an h2 with display styling), and demote card labels to h3 or to a non-heading .tagline/label class."
+    }
+  ],
+  "printSupport": "There is NO @media print block anywhere — the inline stylesheet runs index.html:17-77 with zero print rules, and no .noprint/.printonly/.screenonly hooks exist in the markup (the generated design/out/image-compressor.css does define .no-print, .noprint, .printonly and .screenonly, so adopting it introduces the vocabulary but nothing here uses it yet).\n\nPrint is NOT a core use case for this app. The artifact it produces is a downloaded image file, not a page — the user's goal is a smaller .jpg on disk, and printing the UI produces nothing they need.\n\nThat said, printing today is actively broken if anyone tries: #toast is position:fixed (index.html:69-70), so if a status message is on screen at print time it is stamped over the output; #addBtn, #runBtn, #allBtn and every per-row Save button print as empty bordered rectangles; the accent-filled primary buttons lose their purple fill entirely without print-color-adjust, printing as unreadable white-on-white in some engines; the dark palette is a media-query override that most engines resolve to light for print but Chrome can carry through, risking a full dark-ink page; the footer is outside .wrap so it prints full-bleed to the paper edge; and the 52px thumbnails are 120px-wide JPEG data URLs (app.js:38-41) that print visibly soft.\n\nThe one legitimate print artifact would be a compression manifest — filename, original dimensions and size, new dimensions and size, savings percent, plus the batch total — as a receipt of what was processed. The current DOM cannot produce it: the results are a flex <ul> with thumbnails and buttons (index.html:120, app.js:96-108), not a table. Minimum viable print support: hide #toast, all buttons, the hero and the file input; force the light palette; and either restructure rows into a print-only table or apply display:table-row semantics under @media print with the .sub metadata expanded inline.",
+  "riskyToRestyle": [
+    "app.js:127 reads the button through `ev.target`, then sets `btn.disabled` and `btn.textContent`. The moment the restyle wraps the Compress label in a <span> or adds an icon element — the standard shape for a component button — ev.target becomes the child: disabled silently no-ops (double-click re-entrancy into the compress loop) and 'Working…' replaces the span's text instead of the button's. Change to ev.currentTarget before touching that markup.",
+    "app.js:90 overwrites `$('listHead').textContent` on every render, and render() runs at init (app.js:158). Any icon, badge or <span> the redesign puts inside <h2 id=\"listHead\"> is destroyed before the user interacts. Same hazard at app.js:113 for #qLabel.",
+    "app.js:88 calls `list.replaceChildren()` on #list every render. Static markup added inside <ul id=\"list\"> — a template, a column header, a decorative element, the empty state if it is moved in there — is wiped. The empty state must stay a sibling (index.html:121) or app.js:89 must be updated with it.",
+    "JS applies these class names literally via el(): `thumb`, `grow`, `sub`, `savings`, `btn small`, plus `show` on the toast and `hidden` on #emptyHint/#tipLink (app.js:28, 89, 94, 98, 100, 104, 106, 156). el() sets className wholesale, so any rename in CSS must be mirrored in JS or those nodes render unstyled. Note `.grow` and `.savings` have NO counterpart in design/out/image-compressor.css and `.thumb` appears only incidentally — the results list is the part of this app the shared system does not yet cover. The <li> itself carries no class at all (app.js:96), so a component system expecting `.item`/`.row` classes on list children will style nothing; the '→' segment span at app.js:102 is likewise classless. Reassurance: test/helpers.test.mjs asserts ONLY on the pure functions in helpers.js (fmtBytes, scaleDims, savingsPct, outName) and touches no DOM, no class names and no markup — the restyle cannot break the test suite, and all DOM coupling lives in app.js.",
+    ".thumb is 52px in CSS (index.html:65) but the thumbnail bitmap is generated at a hardcoded 120px long edge (app.js:38, scaleDims(...,120)). Enlarging the thumb past ~60px drops it below 2x and it visibly softens; past 120px it is upscaled mush. Any size change to .thumb requires changing the 120 in app.js:38 in step.",
+    "#maxSide, #format and #quality are read as `.value` (app.js:129-131) and the <option value> strings are DATA, not labels — 3000/1920/1280/800 feed canvas dimensions and 0 means 'keep dimensions'. Converting these selects into segmented controls, chips or .seg button groups breaks the read path; whatever replaces them must still expose a `.value` (or app.js must be rewritten to read data-attributes).",
+    ".hidden{display:none !important} (index.html:76) is load-bearing in three independent places: it keeps #fileInput out of the tab order (index.html:96), keeps the tip link hidden until CONFIG.tipUrl is confirmed (index.html:85, app.js:156), and drives the empty state (app.js:89). If the new base layer redefines .hidden without !important, a `.tipbtn{display:inline-flex}` rule will win and the tip link appears before its href is set — a link to nowhere.",
+    "sw.js:2-3 pins VERSION 'imgc-v4' and an explicit ASSETS list, and the fetch handler is cache-first with background revalidate (sw.js:14-20). Any new file the overhaul introduces — a font, an external stylesheet — must be added to ASSETS AND the VERSION bumped, or offline users get an unstyled page and returning users see the old CSS for one full load after deploy.",
+    "The design system's generated CSS declares @font-face src:url(fonts/space-grotesk-latin.woff2) (design/out/image-compressor.css:11), and build.mjs writes fonts.json claiming apply.mjs copies each app's font in — but design/apply.mjs (129 lines) contains no font, copy or mkdir logic at all, and apps/image-compressor/ has no fonts/ directory. Applied as-is, the display font 404s and every headline falls back to system sans via font-display:swap. Copy the woff2 into the app AND add it to sw.js ASSETS.",
+    "The palette is duplicated outside CSS in three places that will silently drift: <meta name=\"theme-color\"> #f6f7f9 / #0f1419 (index.html:12-13), manifest.webmanifest background_color #f6f7f9 and theme_color #7c3aed (lines 8-9), and the purple icon.svg / apple-touch-icon.png / marketing thumbnails. The new skin is magenta-violet (--accent #a961b5), so all of these need updating or the PWA splash, status bar and hub card will clash with the app.",
+    "firebase.json currently scopes CSP headers to /sub-plans and /specials-planner only — image-compressor has none. If the overhaul rolls a CSP out portfolio-wide using the sub-plans block as the template (firebase.json:33, `img-src 'self'` with no data:), it will break this app specifically: every thumbnail is a data:image/jpeg URL (app.js:41) and every download is a blob: URL (app.js:71). This app needs `img-src 'self' data: blob:` — and `font-src 'self'` once a woff2 is added.",
+    "Three inline style attributes override any new stylesheet without !important or higher specificity: style=\"margin-top:12px\" (index.html:97), style=\"margin-top:10px\" (index.html:122), and style=\"color:inherit\" on both footer links (index.html:130). Strip them when converting to spacing tokens. Also note .row{display:flex} with .row>*{flex:1} and no wrap (index.html:59-60) forces the two selects to 50/50 at every width — at 320px each is ~139px and the option text truncates mid-word."
+  ]
+}

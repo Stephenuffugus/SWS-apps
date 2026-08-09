@@ -1,0 +1,284 @@
+{
+  "slug": "moving-boxes",
+  "purpose": "Packing inventory: you number a box, type what's in it, and the app stores it in localStorage; later you search \"can opener\" to find which box has it, and print a sheet of QR labels whose payload IS the box contents (base64 in the URL hash), so scanning a taped-on label at the new house opens a read-only \"reveal\" view with no server and no wifi.",
+  "structure": "Single page, no routing except a hash mode. `body > div.wrap` (index.html:800) holds everything except the toast and footer. Inside: `header.app` (801) = 32px icon.svg + h1 \"Moving Boxes\" + `span.spacer` + `a#tipLink.tipbtn.hidden` (un-hidden by app.js:235-239). Then TWO mutually exclusive views, swapped by toggling `.hidden`: (a) `div#reveal.hidden` (809) containing `section.card.revealbox` with `div#revNum.num`, `div#revRoom.room`, `ul#revItems` — shown only when location.hash matches /^#b\\./ (app.js:240-243, 154-163); (b) `div#main` (817), the normal app, containing three stacked `section.card`s: SEARCH card (818-821, `.screenonly`, no h2, just `input#searchInput[type=search]` + `ul.plain#searchResults`); PACK card (823-837, `.screenonly`, h2 \"Pack a box\", a `div.row` with a 90px-pinned `label.f` for `#boxNum` and a flexible `label.f` for `#boxRoom` + `datalist#roomList`, then a full-width `label.f` textarea `#boxItems`, then `button#addBox.btn.primary` forced to width:100% inline); BOXES card (839-850, NOT `.screenonly` so it prints, `h2#boxHead` whose text JS overwrites with the count, `ul.plain#boxList`, `p.hint#emptyHint`, a `div.row.screenonly` of three equal `.btn`s Print/Export/Import plus a `.hidden` file input, and a trailing `p.hint`). Then `div#labels` (853) — `display:none` on screen, `display:grid` 2-up only in print. Outside the wrap: `div#toast[role=status][aria-live=polite]` (856) and `footer.colophon` (857). No `<main>`, no `<nav>`, no skip link, no modals, no sticky bar, no tabs. Main flow: type items → \"Seal the box 📦\" → row appears in Boxes → repeat → scroll to bottom → \"Print QR labels\" → tape labels → later, scan a label (reveal view) or search the app.",
+  "cssClasses": [
+    "`.wrap` — page container, max-width --wrap + safe-area padding (242)",
+    "`.stack` / `.stack-sm` / `.stack-lg` — vertical rhythm gaps; UNUSED here (249-251)",
+    "`.cluster` — wrapping horizontal group; UNUSED here (254)",
+    "`.row` — flex row; children get `flex:1 1 12rem` (258-259)",
+    "`.row.tight` / `.row.nowrap` — gap and wrap modifiers; unused (260-261)",
+    "`header.app` — header bar, min-height 60px, flex (267)",
+    "`header.app img`, `.mark` — 32px square logo slot (274-275)",
+    "`header.app h1` — app title at --t-xl (279)",
+    "`header.app .tagline` — subtitle under h1; UNUSED here (283)",
+    "`header.app .spacer` — flex:1, pushes tip jar right (292)",
+    "`a.tipbtn` — pill tip-jar link, only 36px tall (296)",
+    "`.hero` / `.hero h2` / `.hero p` — intro block; UNUSED here (311-314)",
+    "`footer.colophon` — centered fine print, --ink-3 at 13px (316)",
+    "`footer.colophon a` — footer links, --ink-2 (325)",
+    "`.trust` / `.trust svg` / `.trust b` — privacy stamp; UNUSED here (331-342)",
+    "`section.card`, `.card` — the main surface panel (345)",
+    "`section.card > h2`, `.card > h2` — uppercase 12px micro card label (357)",
+    "`.card > h2 + .sub` — negative margin pull-up; unused (366)",
+    "`.card .sub` — card secondary text; adds 16px bottom margin (368)",
+    "`.well` — inset preview well; UNUSED here (371)",
+    "`label.f`, `.field` — form field wrapper, 16px bottom margin (415)",
+    "`label.f > span` — field label text, 13px/600 --ink-2 (416)",
+    "`label.f .hint` — hint spacing inside a field (423)",
+    "`.frow` — form field row; UNUSED here (425)",
+    "`.btn` — base button, 44px min-height, --t-sm (444)",
+    "`.btn.primary` — accent-filled main action (466)",
+    "`.btn.danger` — destructive outline, --neg text (474)",
+    "`.btn.ghost` / `.btn.plain` — transparent tertiary; unused (477)",
+    "`.btn.small` — 36px compact; used for the row ✎/✕ (483)",
+    "`.btn.big` / `.btn.block` / `.btn.icon` — size/width/icon modifiers; ALL UNUSED (484-489)",
+    "`.seg` / `.seg button` / `.seg .tab` / `.active` — segmented control; UNUSED (492-517)",
+    "`.hint` / `.footnote` / `.small` — 13px secondary copy, capped 64ch (524)",
+    "`.em` / `.muted` — inline emphasis and muted color; unused (531-532)",
+    "`.chip` / `.chip.on` / `.chips` — pill tags; UNUSED here (534-544)",
+    "`.warn` — warning callout band; UNUSED here (546)",
+    "`ul.plain`, `ol.plain` — unstyled list container (560)",
+    "`ul.plain > li` — 44px flex row with bottom divider (561)",
+    "`ul.plain .grow` — flexible text column, overflow-wrap:anywhere (569)",
+    "`.sub` — secondary line, 15px --ink-2 (573)",
+    "`.empty` / `.glyph` / `h3` / `p` — teaching empty state; UNUSED (578-599)",
+    "`.tablewrap` / `table` / `th` / `td` — scrolling table; UNUSED here (605-627)",
+    "`#toast` — fixed bottom toast, visibility-based (629)",
+    "`#toast.show` — visible state, toggled by app.js:29/31 (649)",
+    "`.actionbar` — sticky bottom bar; UNUSED (652)",
+    "`:focus-visible` — 2px --focus outline + 4px halo (669)",
+    "`.sr-only` — visually hidden text; UNUSED (679)",
+    "`.skip` — skip link; styled but NOT PRESENT in markup (687)",
+    "`.hidden` — display:none !important; the app's only show/hide (699)",
+    "`.nowrap` / `.tnum` — whitespace, tabular numerals; unused (700-701)",
+    "`.noprint` / `.no-print` / `.screenonly` — hidden in print (741)",
+    "`.printonly` — print-only reveal; UNUSED (742)",
+    "`.boxnum` — box number chip, --accent fill, hardcoded 10px radius (769)",
+    "`.hit` — search-match highlight; uses legacy `--chip` (774)",
+    "`.revealbox` — scanned-label card, hardcoded 26px/8px padding (776)",
+    "`.revealbox .num` — 3rem box number in --accent (777)",
+    "`.revealbox .room` — 1.2rem room name; uses legacy `--muted` (778)",
+    "`.revealbox ul` — reveal item list, 1.05rem/1.9, list-style:none (779)",
+    "`#labels` — label sheet; display:none on screen, grid in print (782/786)",
+    "`.label` — printed label card, flex, 1.5pt border, 5mm pad (787)",
+    "`.label .lt` / `.ln` / `.lr` / `.li` / `.label img` — label text column, 26pt number, 11pt room, 8pt items, 30mm QR (791-795)"
+  ],
+  "dynamicMarkup": "Everything below is built by `el()` (app.js:10-24) with NO template — class strings are literals in JS.\n\n**renderBoxes (app.js:68-99)** rebuilds `ul#boxList` with `el('li', {}, ...)` — **the `<li>` carries no class at all**; every bit of its row layout comes from the descendant selector `ul.plain > li` (index.html:561). Each li holds: `span.boxnum` (text `#N`), `div.grow` > (bare `div` > `strong` with room-or-\"Unlabeled room\") + `div.sub` (items joined by \", \" or \"empty?\"), then `button.btn.small.screenonly[type=button][aria-label=\"Edit box\"]` with text `✎`, then `button.btn.small.danger.screenonly[type=button][aria-label=\"Delete box\"]` with text `✕`. Same function also: toggles `.hidden` on `#emptyHint` (71), overwrites `#boxHead.textContent` with \"N boxes · M things\" (72-74), and sets `#boxNum.placeholder` (98).\n\n**renderSearch (app.js:101-115)** rebuilds `ul#searchResults` with classless `el('li')` > `span.boxnum` + `div.grow` > (bare `div` > `strong`) + `div.sub` containing either the literal \"Has: \" plus `span.hit` (the matched item names) or the first five items. Capped at 10 with `hits.slice(0,10)`.\n\n**renderRoomList (app.js:61-66)** fills `datalist#roomList` with bare `<option value=room>` — no classes.\n\n**renderLabels (app.js:136-152)** rebuilds `div#labels` with `div.label` > `div.lt` > (`div.ln` = `#N`, `div.lr` = room, `div.li` = first 4 items joined by \" · \" plus \" …\"), followed by either `img[alt=\"QR for box N\"][src=data:image/png]` or, on QR failure, a fallback `div.li` reading \"(QR too large — trim the item list)\". Called on the Print button (198) and on `beforeprint` (167).\n\n**qrDataUrl (app.js:117-134)** builds an off-DOM `<canvas>` sized `(moduleCount + 8) * 4` px, fills `#fff` then `#000` per module (cell=4, quiet=4), returns a PNG data URL. The canvas never enters the DOM.\n\n**showScanned (app.js:154-163)** adds `.hidden` to `#main`, removes it from `#reveal`, sets `#revNum`/`#revRoom` textContent, and fills `ul#revItems` with classless `<li>` per item, or a single `li.sub` reading \"(nothing listed)\".\n\n**toast (app.js:26-32)** sets `#toast.textContent` then adds/removes `.show`.\n\n**export (app.js:201-207)** appends a bare `<a download>` to `document.body` for ~500ms, then removes it.\n\n**init (app.js:235-239)** removes `.hidden` from `#tipLink` and sets its href.\n\n**Buttons whose label JS rewrites wholesale:** `$('addBox').textContent = 'Update box #N 📦'` (87) and `= 'Seal the box 📦'` (180); `$('boxHead').textContent` (72). Any restyle that puts an icon `<span>` or nested label element inside those elements will be erased on first interaction.\n\n**Silent specificity collision:** the injected `div.sub` sits inside `section.card`, so `.card .sub` (index.html:368, specificity 0-2-0) beats `.sub` (573, 0-1-0) and applies `margin:0 0 16px` to every box row and every search result.",
+  "comfortDefects": [
+    {
+      "issue": "The per-app geometry from skins.mjs is dead. The skin block sets `--r:10px` and `--wrap:44rem`, then the base layer re-declares `--r:14px` and `--wrap:42rem` in a later `:root` at equal specificity, so the base wins. This app renders at the generic 14px radius and 42rem width, not its intended crisp-kraft 10px/44rem. Confirmed identical in design/out/moving-boxes.css:16-17 vs 156/172 — a portfolio-wide generator bug, not just this app.",
+      "where": "index.html:34-35 overridden by index.html:174 and index.html:190",
+      "fix": "In design/build.mjs, emit the skin tokens AFTER studio.css's `:root`, or strip `--r`/`--wrap` defaults from studio.css:45,61 and make the skin the only source. Then `.boxnum`'s hardcoded 10px radius (index.html:770) can become `var(--r-sm)`."
+    },
+    {
+      "issue": "Row dividers are invisible. `ul.plain > li` uses `border-bottom:1px solid var(--line)` and --line (#e8dbc7) against --surface (#fffdfb) computes to 1.34:1. In a 40-box list there is no perceivable separation between rows.",
+      "where": "index.html:561 (border-bottom) with --line at index.html:46",
+      "fix": "Use --line-2 (3.32:1) for list dividers, or alternate row backgrounds with --surface-2. Reserve --line for card outlines only."
+    },
+    {
+      "issue": "The search-match highlight does not read as a highlight. `.hit` paints `var(--chip)` → --surface-2 (#fcf3e5) on the card's --surface (#fffdfb): 1.08:1. The single most important pixel in the app — which item matched — is functionally unstyled.",
+      "where": "index.html:774",
+      "fix": "Use --accent-soft with a 1px --accent-line border, or bottom-border underline in --accent. Also add vertical padding: `padding:0 4px` gives the chip zero height presence."
+    },
+    {
+      "issue": "The reveal card has 8px of horizontal padding. `.revealbox{padding:26px 8px}` appears after `.card{padding:var(--s5)}` and after the ≥30rem `padding:var(--s6)` media query, at equal specificity, so it wins on all viewports. Text in the app's proudest screen sits 8px from the card edge.",
+      "where": "index.html:776 overriding index.html:345 and 353",
+      "fix": "Change to `padding:var(--s7) var(--s5)` and let the card's own responsive padding apply, or scope the override to a media query."
+    },
+    {
+      "issue": "Injected `div.sub` picks up a 16px bottom margin from `.card .sub` (0-2-0) instead of the intended flat `.sub` (0-1-0). Every box row and search result is 16px taller than designed and the `.boxnum` chip no longer optically centers against its text.",
+      "where": "index.html:368 vs index.html:573, consumed by app.js:80 and app.js:110",
+      "fix": "Change index.html:368 to `.card > .sub` so it only affects direct children of a card, or give row secondary text a distinct class like `.row-sub`."
+    },
+    {
+      "issue": "The row action buttons are under the system's own 44px target. `.btn.small` is 36px tall and, with `padding:0 var(--s3)` around a single glyph, roughly 34px wide. The `✎` and `✕` are separated by only 12px (the li's `gap:var(--s3)`).",
+      "where": "index.html:483, applied at app.js:81 and app.js:91",
+      "fix": "Use `.btn.icon` (index.html:489, already 44×44 and unused) for these two, and raise the gap between them to var(--s4)."
+    },
+    {
+      "issue": "Tip jar is a 36px tap target in the header, below --tap:44px which the same stylesheet declares as the minimum a thumb wants.",
+      "where": "index.html:296 (min-height:36px)",
+      "fix": "Raise to var(--tap) or keep the 36px visual pill inside a 44px hit area via a transparent ::after inset."
+    },
+    {
+      "issue": "The app's primary status readout is styled as a micro-label. `#boxHead` is an `h2` inside a card, so `section.card > h2` renders \"12 boxes · 87 things\" at --t-micro (12px), uppercase, 0.075em tracking, in --ink-2. The count you most want to glance at is the smallest text on the page.",
+      "where": "index.html:357 applied to index.html:840, text set by app.js:72-74",
+      "fix": "Split the count out of the h2 into a `.tnum` stat line at --t-lg/--ink, and leave the h2 as a static \"BOXES\" label."
+    },
+    {
+      "issue": "Two multi-clause instructional sentences are set at --t-xs (13px), which the base layer reserves for hints and labels. These are the app's only onboarding copy.",
+      "where": "index.html:842 (#emptyHint) and index.html:849 (the tape-a-label explainer)",
+      "fix": "Promote to --t-sm (15px) minimum; move #emptyHint into the unused `.empty` component (index.html:578) where `.empty p` is already --t-sm."
+    },
+    {
+      "issue": "A box row's item list is rendered unbounded: `b.items.join(', ')` with up to 100 items × 60 chars. Inside `.grow{overflow-wrap:anywhere}` a single row can become 15+ wrapped lines, destroying the list's scannability.",
+      "where": "app.js:80",
+      "fix": "Clamp to 2 lines with `-webkit-line-clamp:2; display:-webkit-box; overflow:hidden`, or truncate in JS to the first 6 items plus \"+N more\" (the reveal view already shows the full list)."
+    },
+    {
+      "issue": "No hierarchy in the action row: \"Print QR labels\" (the app's entire payoff and the reason to use it over a notebook), \"Export backup\", and \"Import\" are three identical `.btn`s. On a phone `.row > *{flex:1 1 12rem}` wraps them into three identical full-width stacked bars.",
+      "where": "index.html:843-846",
+      "fix": "Print becomes `.btn.primary`; Export/Import become `.btn.ghost` in a `.cluster`, visually demoted and grouped as backup utilities."
+    },
+    {
+      "issue": "Hardcoded pixel values off the 4px scale scattered through the app layer, which will fight any new spacing rhythm: 8px/6px padding and 10px radius on `.boxnum`, 6px/4px on `.hit`, 26px/8px on `.revealbox`, 12px on `.room`, and an inline 10px margin-top.",
+      "where": "index.html:770, 774, 776, 778, and inline style at index.html:843",
+      "fix": "Replace with --s2/--s3/--s5/--s7 and --r-sm/--r-ctl tokens before the palette swap, so the overhaul only has to change token values."
+    },
+    {
+      "issue": "Printed item text is 8pt in #666 grey. These labels get read at arm's length by someone holding a box, often in bad light in an empty room.",
+      "where": "index.html:793 (.label .li)",
+      "fix": "Raise to 9.5pt in #333 and drop from 4 items to 3 to keep the label height."
+    },
+    {
+      "issue": "`background-attachment:fixed` on a repeating 26px grid forces a full-viewport repaint on every scroll frame; iOS Safari also renders it with visible jitter/banding against the address-bar collapse.",
+      "where": "index.html:758-762",
+      "fix": "Drop `background-attachment:fixed` — a 26px tiled grid looks identical scrolling with the page and costs nothing."
+    },
+    {
+      "issue": "No visual gap between the search input and its results. `ul.plain{margin:0}` means results begin 8px (the li's own padding) below the field, so results read as part of the input rather than as a response to it.",
+      "where": "index.html:560 under index.html:819-820",
+      "fix": "Add margin-top var(--s4) to #searchResults when populated, and a hairline rule above the first result."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "A first-time visitor gets no explanation. The first thing on screen after the header is a bare search box whose placeholder is a joke about a can opener — searching an empty inventory. Nothing states what the app does, that labels are printable, or that the QR carries the contents. The base layer's `.hero` component exists and is unused.",
+      "where": "index.html:817-821 (search card is the first child of #main); `.hero` at index.html:311-314",
+      "fix": "Add a `.hero` above the search card: h2 \"Which box has the can opener?\" plus one sentence on QR labels. On a cold start (boxes.length === 0), hide the search card entirely — it can only disappoint."
+    },
+    {
+      "issue": "The empty state is one 13px grey sentence, not a teaching state. The base layer ships a full `.empty` component (glyph + h3 + p + room for a CTA) that this app never uses.",
+      "where": "index.html:842 (#emptyHint as `p.hint`), toggled at app.js:71; unused `.empty` at index.html:578-599",
+      "fix": "Replace #emptyHint with `.empty` markup: 📦 glyph, h3 \"No boxes yet\", p explaining the flow, and a button that focuses #boxItems."
+    },
+    {
+      "issue": "Print — the whole point of the app — is buried at the bottom of an unbounded list. With 40 boxes the user must scroll past 40 rows to reach the Print button. The base layer's sticky `.actionbar` exists and is unused, and there is no back-to-top affordance on a page that has no other landmarks.",
+      "where": "index.html:843-846 (action row sits after `ul#boxList`); unused `.actionbar` at index.html:652",
+      "fix": "Move Print/Export/Import into an `.actionbar` sticky to the bottom of the Boxes card, or promote Print into the card header row next to #boxHead."
+    },
+    {
+      "issue": "Import destroys the entire inventory with no confirmation and no undo. The handler assigns `boxes = arr...` outright, overwriting every existing box, and it is triggered by a plain `.btn` labelled just \"Import\" sitting 8px from \"Export backup\" in a row of three identical buttons. There is no merge option and no pre-import snapshot.",
+      "where": "app.js:218-226, button at index.html:846",
+      "fix": "When boxes.length > 0, confirm(`Replace all N boxes with this backup?`) before assigning; better, offer merge-by-number. Stash the pre-import array and offer \"Undo import\" in the toast for 10s."
+    },
+    {
+      "issue": "Delete is irreversible and silent. After confirm() the box is filtered out, saved, and re-rendered with no toast at all — the only unannounced mutation in the app (add/update/import/export all toast).",
+      "where": "app.js:91-96 (no toast() call in the onclick)",
+      "fix": "Toast \"Box #N deleted\" with an Undo action that re-inserts the captured object; screen readers currently get nothing at all."
+    },
+    {
+      "issue": "The destructive control sits immediately beside the benign one at the far end of every row, both ~34×36px with a 12px gap. Scrolling a long list on a phone puts a delete button under the thumb on every single row.",
+      "where": "app.js:81 (✎) and app.js:91 (✕), sized by index.html:483",
+      "fix": "Separate them: keep ✎ inline, move ✕ behind a swipe or an overflow menu; at minimum enlarge to 44px and increase the gap between the two."
+    },
+    {
+      "issue": "Edit mode cannot be cancelled. Clicking ✎ sets editingBoxId and rewrites the button to \"Update box #N\", but there is no cancel control and no visual state on the card — the h2 still reads \"Pack a box\". A user who changes their mind and types a different box will silently overwrite the one they were editing.",
+      "where": "app.js:82-90 sets state; app.js:172-181 is the only path that clears editingBoxId",
+      "fix": "When editingBoxId is set, add a \"Cancel\" `.btn.ghost` beside #addBox that resets the fields and the state, and swap the card heading to \"Editing box #N\"."
+    },
+    {
+      "issue": "The scanned-label view is a dead end. showScanned hides #main permanently; there is no link back to the inventory, no way to clear the hash, and the reveal view returns early before load() ever runs. Someone who scans a label and then wants to check another box has to hand-edit the URL.",
+      "where": "app.js:154-163 and the early return at app.js:240-243; markup at index.html:809-815",
+      "fix": "Add a persistent \"← Open my inventory\" link inside #reveal that clears location.hash and re-runs the normal init path."
+    },
+    {
+      "issue": "The user is never told their work is saved. save() writes to localStorage silently and only speaks up on failure. There is no \"saved\" indicator, no timestamp, and no on-screen statement that data lives on this device — the privacy promise is a 13px footer sentence at 3.28:1. The base layer's `.trust` stamp exists and is unused.",
+      "where": "app.js:45-53 (silent success path); index.html:857 (footer-only promise); unused `.trust` at index.html:331",
+      "fix": "Place a `.trust` badge under the header: \"Saved on this device — nothing is uploaded.\" Toast \"Saved\" is already implicit in \"Sealed 📦\"; keep that."
+    },
+    {
+      "issue": "Searching for something you don't have produces silence. renderSearch clears the list and appends nothing when there are zero hits, so a failed search is indistinguishable from a search that hasn't run.",
+      "where": "app.js:101-115 (no zero-length branch)",
+      "fix": "When query is non-empty and hits.length === 0, render an li reading \"No box has \\\"can opener\\\" — did you list it when you packed?\" with a button to focus #boxItems."
+    },
+    {
+      "issue": "Search results are silently truncated at 10. A user searching \"kitchen\" across 40 boxes sees 10 with no indication that 14 more matched.",
+      "where": "app.js:105 (`hits.slice(0, 10)`)",
+      "fix": "Render a trailing li \"Showing 10 of 24 matches — narrow your search\" whenever hits.length > 10."
+    },
+    {
+      "issue": "Search results are inert. You find that box #7 has the can opener, and then there is nothing to click — no jump to that row in the list, no edit, no reveal view. The user must manually scroll the box list to find #7.",
+      "where": "app.js:105-114 (li has no click handler and no controls)",
+      "fix": "Make each result row activate: scroll #boxList to that box and flash-highlight it, or open the reveal view for it."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "The search field has no label of any kind — no `<label>`, no aria-label, no aria-labelledby. Its only name is a placeholder that is also its only instruction, and the placeholder computes to 3.39:1 (--ink-3 #92877a on --field #fffaf4), below 4.5:1. It also vanishes the moment the user types, taking the instruction with it. The card wrapping it has no h2 either, so there is no contextual heading to fall back on.",
+      "where": "index.html:819 (`<input type=\"search\" id=\"searchInput\" placeholder=\"🔍 Which box has the… can opener?\">`), inside the headingless card at index.html:818",
+      "fix": "Add `<h2>Find a box</h2>` to the card and wrap the input in `label.f` with a visible span \"Search your boxes\". Keep the placeholder as an example only, and darken --ink-3 to reach 4.5:1 on --field."
+    },
+    {
+      "issue": "The box-number chip fails contrast. `.boxnum` sets `color:var(--accent-ink)` on `background:var(--accent)` — #fefbf8 on #a87632 = 3.84:1, at 1.05rem (16.8px) bold, which is below the 18.66px bold large-text threshold and so needs 4.5:1. The app layer picked the text-on-canvas accent instead of the solved fill token: --accent-fill (#8e5d11) with the same ink gives 5.47:1.",
+      "where": "index.html:771",
+      "fix": "Change `background:var(--accent)` to `background:var(--accent-fill)`. One-token fix, 3.84 → 5.47:1. Dark mode already passes at 9.08:1."
+    },
+    {
+      "issue": "The footer fails contrast and its links are indistinguishable from the surrounding text. `footer.colophon` uses --ink-3 (#92877a) on --canvas (#fef6ea) = 3.28:1 at 13px. Worse, both links carry inline `style=\"color:inherit\"`, which overrides the `footer.colophon a{color:var(--ink-2)}` rule at index.html:325, so the only thing marking them as links is the default underline.",
+      "where": "index.html:316 (color:--ink-3) and index.html:857 (two `style=\"color:inherit\"` links)",
+      "fix": "Set footer.colophon to --ink-2 (5.95:1 territory) and delete both inline `color:inherit` declarations so the link rule can apply."
+    },
+    {
+      "issue": "No skip link exists in the markup even though the base layer fully styles one, and there is no `<main>` landmark to skip to — `#main` is a plain `<div>` with no role and no tabindex. A keyboard or screen-reader user has no way to bypass the header and no landmark structure to navigate by.",
+      "where": "index.html:800-806 (no `.skip` anchor); index.html:817 (`<div id=\"main\">`); unused `.skip` styles at index.html:687-696",
+      "fix": "Add `<a class=\"skip\" href=\"#main\">Skip to content</a>` as the first child of body, change `<div id=\"main\">` to `<main id=\"main\" tabindex=\"-1\">`, and give `#reveal` `role=\"region\"` with an aria-label."
+    },
+    {
+      "issue": "Every row's action buttons announce identically. The injected edit and delete buttons carry the static labels \"Edit box\" and \"Delete box\" with no box number, so a screen-reader user tabbing a 30-box list hears \"Edit box, Delete box, Edit box, Delete box…\" with nothing to distinguish them. The visible glyphs ✎ and ✕ are overridden by the aria-label, so the number never surfaces.",
+      "where": "app.js:81 and app.js:91 (`'aria-label': 'Edit box'` / `'Delete box'`)",
+      "fix": "Interpolate the number: `'aria-label': 'Edit box #' + b.n` and `'Delete box #' + b.n + ' (' + b.room + ')'`."
+    },
+    {
+      "issue": "Search results are never announced. `#searchResults` has no aria-live, no role=status, and no result count, so typing into the search field updates the DOM in total silence for a screen-reader user — and search is the app's headline feature. The input also has no aria-controls tying it to the list.",
+      "where": "index.html:820 (`<ul class=\"plain\" id=\"searchResults\">`), populated at app.js:101-115",
+      "fix": "Add a visually-hidden `<p id=\"searchStatus\" role=\"status\" aria-live=\"polite\">` that renderSearch fills with \"3 boxes match can opener\" / \"No boxes match\", and set aria-controls=\"searchResults\" on the input."
+    },
+    {
+      "issue": "The scanned-label view has no heading. `#revNum` (the box number) and `#revRoom` are `<div>`s, so the reveal screen offers exactly one heading — the h1 \"Moving Boxes\" — and then an unstructured blob. Someone navigating by headings after scanning a label lands on nothing useful, and the document title is never updated to name the box either.",
+      "where": "index.html:811-812 (`div.num#revNum`, `div.room#revRoom`), populated at app.js:156-157",
+      "fix": "Make #revNum an `<h2>` and #revRoom an `<p>`, give `ul#revItems` an aria-labelledby pointing at #revNum, and set `document.title = 'Box #' + box.n` in showScanned."
+    },
+    {
+      "issue": "Lists lose their semantics in Safari. `ul.plain` and `.revealbox ul` both set `list-style:none`, which makes WebKit strip the list role, so VoiceOver stops announcing \"list, 12 items\" and item positions for the box list, the search results, and the scanned contents — the three places where count matters most.",
+      "where": "index.html:560 (`ul.plain{list-style:none}`) and index.html:779 (`.revealbox ul{list-style:none}`)",
+      "fix": "Add `role=\"list\"` to `ul#boxList`, `ul#searchResults` and `ul#revItems` in the markup (index.html:820, 841, 813)."
+    },
+    {
+      "issue": "The validation error is unfocused and unassociated. Clicking \"Seal the box\" with an empty item list fires a polite toast and nothing else — focus stays on the button, #boxItems gets no aria-invalid and no aria-describedby, and no inline message appears near the field that is actually wrong.",
+      "where": "app.js:170 (`toast('List what’s inside first'); return;`)",
+      "fix": "Set `aria-invalid=\"true\"` on #boxItems, render an inline `.hint` error with an id referenced by aria-describedby, and call `$('boxItems').focus()` before returning."
+    },
+    {
+      "issue": "The inventory count changes with no announcement. `#boxHead` is overwritten with \"12 boxes · 87 things\" on every add, edit, delete and import, but it is a plain h2 with no aria-live, so the one piece of feedback confirming an import restored 40 boxes is inaudible (the import toast covers that case; add/delete counts are not covered).",
+      "where": "app.js:72-74 writing to index.html:840",
+      "fix": "Split the count into its own `<span aria-live=\"polite\">` inside the card so heading text stays stable and only the number is announced."
+    },
+    {
+      "issue": "Icon-button hit area is below the system's own minimum. `.btn.small` gives 36px height and ~34px width for a single-glyph button — under the `--tap:44px` that this very stylesheet defines at index.html:188 as the comfortable minimum, and delete is one of the two.",
+      "where": "index.html:483 applied at app.js:81 and app.js:91",
+      "fix": "Apply the already-defined `.btn.icon` (index.html:489 — 44×44) to both, so the class string becomes `btn small icon screenonly`, or drop `.small` entirely."
+    },
+    {
+      "issue": "The toast's announcement depends on `visibility`, not `display`. `#toast` is `visibility:hidden` by default and made visible by the `.show` class in the same tick that textContent is set. This currently works, but it is a fragile contract: a restyle that switches the hide mechanism to `display:none`, or that moves the text into a child element, silently kills every status announcement in the app — including the storage-full warning.",
+      "where": "index.html:629-649 (`visibility:hidden` / `.show`), driven by app.js:26-32",
+      "fix": "Keep the live region permanently in the a11y tree: render the toast text into a separate always-present `.sr-only` node, and let the visual toast be purely decorative with aria-hidden."
+    }
+  ],
+  "printSupport": "Print is the core use case — the app exists to produce a sheet of QR labels you tape to boxes, and the README leads with it. There are two `@media print` blocks: the shared base one at index.html:725-756 (resets tokens to black-on-white, hides `header.app`/`footer.colophon`/`.tipbtn`/`.actionbar`/`#toast`/`.seg`/`.skip`/`.noprint`/`.no-print`/`.screenonly`, forces `break-inside:avoid` on cards/rows/list items, `a{color:#000}`, `@page{margin:14mm}`), and the app one at index.html:783-796 which flips `#labels` from `display:none` to a 2-column grid with 6mm gap and defines the label card. `renderLabels()` is bound to both the Print button (app.js:196-200) and the `beforeprint` event (app.js:167), so Ctrl/Cmd+P produces current labels rather than stale ones — that part is done well.\n\nWhat is broken or missing:\n\n1. **No on-screen preview.** `#labels{display:none}` (index.html:782) means the user never sees the artifact before the browser print dialog. In an app whose entire output is a printed sheet, the first sight of the layout is the OS preview, and there is no way to check a label without committing to a print.\n\n2. **Label text can overflow its box.** `.label .li` (index.html:793) receives up to 4 items joined with \" · \", each up to 60 chars (helpers.js:15) — potentially 250+ characters at 8pt in a text column of roughly 45mm (91mm column − 10mm padding − 5mm gap − 30mm QR). There is no `overflow:hidden`, no line clamp, and no `word-break`. A box with long item names produces a tall, ragged label; room names can run to 40 chars (index.html:829 maxlength) at 11pt in the same column and will wrap.\n\n3. **No page control on the label sheet.** `#labels` has no `break-before:page`, and the Boxes card is *not* `.screenonly`, so printing emits the box list as a manifest (with `#boxHead` rendered as 12px uppercase micro-type) and then flows labels immediately after it on the same page. Whether the manifest is wanted is undocumented; either way it should start the labels on a fresh sheet.\n\n4. **Hardcoded print colors bypass the print token block.** `.label` uses literal `#111`, `#444`, `#666` (index.html:788-793) rather than the `--ink`/`--ink-2`/`--ink-3` values the base print block sets at index.html:728-733, so retuning print contrast portfolio-wide will not reach the labels.\n\n5. **No `print-color-adjust:exact` anywhere.** Today's labels are near-black so nothing is lost, but the moment the overhaul adds a colored label header or an accent rule, browsers will silently drop it.\n\n6. **QR resampling risk.** The canvas is `(moduleCount + 8) × 4` px (app.js:123-126) and is then scaled to a fixed 30mm (index.html:794). A 900-char payload lands around 105 modules → 420px, downscaled to ~354px at 300dpi; with no `image-rendering` declared, the browser applies smooth interpolation to module edges. It scans today, but it has no margin.\n\n7. **No `@page{size:...}`.** The 2-column math assumes Letter (188mm content) but silently gets 182mm on A4, narrowing each column by 3mm. Fine now, tight if label padding grows.\n\n8. **Printing with zero boxes emits an empty grid.** The Print button guards on `boxes.length === 0` (app.js:197), but the `beforeprint` path (app.js:167) does not, so browser-menu printing an empty app yields a page with the Boxes card and nothing else.",
+  "riskyToRestyle": [
+    "**Box rows and search results have NO class on the `<li>`.** `el('li', {}, ...)` at app.js:76 and app.js:106 relies entirely on the descendant selector `ul.plain > li` (index.html:561) for flex layout, 44px min-height, gap and divider. If the overhaul renames `ul.plain`, scopes rows to a `.list-row`/`.row-item` class, or changes the child combinator, every box row collapses to an unstyled block with the number chip, text and both buttons stacked vertically. This is the single highest-risk coupling in the app.",
+    "**`.card .sub` (index.html:368) already beats `.sub` (index.html:573) on the injected `div.sub`.** Any change to either rule's specificity or margin silently changes row height in `#boxList`, `#searchResults`, and the `li.sub` in the reveal view (app.js:80, 110, 162). Verify row rhythm after touching either.",
+    "**`textContent` assignment wipes button children.** app.js:87 and app.js:180 overwrite `#addBox` entirely (`'Update box #N 📦'` / `'Seal the box 📦'`), and app.js:72 overwrites `#boxHead`. If the restyle wraps button labels in a `<span>`, adds an SVG icon slot, or inserts a `::before` content hook that depends on inner markup, the first click erases it.",
+    "**`.hidden{display:none !important}` is the app's only show/hide primitive**, used for the view swap (app.js:155-156), the empty hint (app.js:71), the tip jar (app.js:238) and the file input (index.html:847). The class name AND the `!important` must survive — `.revealbox`/`#labels` rules would otherwise win over a non-important `display:none`.",
+    "**`#labels` is `display:none` on screen and `display:grid` only inside `@media print`** (index.html:782 vs 786). Giving `#labels` any screen layout — a preview grid, a card wrapper, a `display:flex` reset — will either dump raw QR PNGs into the page or double-render the label sheet. If a preview is added, gate it explicitly rather than relaxing the `display:none`.",
+    "**Print label geometry is exact millimetres and is not responsive.** `grid-template-columns:1fr 1fr` + `gap:6mm` + `.label{padding:5mm; gap:5mm}` + `img{width:30mm;height:30mm}` (index.html:786-794) all budget against `@page{margin:14mm}` (index.html:755). Changing the @page margin, the label padding, or the QR size overflows the text column (currently ~45mm) and can push to 1 label per row. Re-measure on both Letter and A4 after any print-token change.",
+    "**The QR canvas has fixed module math and no `image-rendering`.** app.js:123-126 uses `cell = 4`, `quiet = 4`, size `(count + 8) * 4`. Do not add `border-radius`, `filter`, `opacity`, `mix-blend-mode`, a background, or a non-square aspect-ratio to `.label img` — and do not shrink it below 30mm without also lowering `encodeBoxForLabel`'s 900-char cap (helpers.js:56), which is what keeps module density scannable at that size.",
+    "**`.screenonly` is the print contract and is applied from JS.** app.js:81 and app.js:91 hardcode it in the class strings of the injected edit/delete buttons, alongside markup uses at index.html:818, 823, 842, 843, 849. It is matched in two separate print blocks (index.html:741 and index.html:785). Renaming it to `.no-print` in the base layer would leave the JS-injected buttons printing on every label sheet.",
+    "**The app layer depends on legacy token aliases slated for removal.** `.hit` uses `var(--chip)` (index.html:774) and `.revealbox .room` uses `var(--muted)` (index.html:778); both are declared only in the legacy-alias block at index.html:79-89, which is explicitly documented as transitional. Deleting those aliases makes the search highlight transparent and the reveal room name fall back to inherited ink. Migrate to `--surface-2` and `--ink-2` first.",
+    "**Four inline styles override any class-based rule.** index.html:826 `flex:0 0 90px` pins the Box # field to exactly 90px (which, at `padding:var(--s3)`, leaves 66px of content — growing --s3 or the border breaks it); index.html:836 `width:100%` duplicates the unused `.btn.block`; index.html:843 `margin-top:10px` is off the spacing scale; index.html:857 `color:inherit` defeats the footer link color rule. None of these can be fixed from the stylesheet.",
+    "**`.revealbox` (index.html:776) overrides `.card` padding at equal specificity by source order**, including the ≥30rem responsive bump at index.html:353. If the overhaul moves card padding into a different rule, reorders the app layer, or raises card specificity, the reveal view's padding silently flips from 26px/8px to the card default — a visible change to the app's showcase screen.",
+    "**Tests are logic-only and assert nothing about the DOM.** test/helpers.test.mjs exercises `nextBoxNumber`, `parseItems`, `searchBoxes`, `encodeBox`/`decodeBox` and `encodeBoxForLabel` (including a hard `enc.length <= 900` assertion at line 50) — no class names, no markup, no selectors. So the suite will stay green through a restyle that completely breaks the UI. There is no regression net here; visual and print verification must be manual."
+  ]
+}

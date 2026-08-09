@@ -1,0 +1,284 @@
+{
+  "slug": "caregiver-log",
+  "purpose": "A shared, invite-link family notebook for caring for an aging/ill relative: one person signs in and starts a log, everyone else joins anonymously via a 6-character code or link, and the family co-writes a typed timeline (note/appointment/medication/question) plus a coverage-day schedule (\"who's with Mom Tuesday\"), with a print-only chronological view for doctor visits.",
+  "structure": "Single-page hash-routed SPA (#/ home, #/b/CODE board), everything inside one `div.wrap` (max-width 680px, index.html:46,152). Static shell: `header.app` (icon img, h1 > a#brandLink, span.spacer, a#tipLink.tipbtn.hidden, button#authBtn.btn.small — index.html:153-159), `<main id=\"view\" aria-live=\"polite\">` which is fully wiped and rebuilt by JS on every render (index.html:160, app.js:247), `footer.colophon` containing `#orgLine` (index.html:161-164). Five top-level `<dialog>`s live outside `.wrap`: #authDlg (Google + email-link sign-in), #nameDlg (claim a coverage day), #createDlg (start a log), #slotDlg (edit/delete a coverage day; Delete/Cancel/Save in one non-wrapping .row), #qrDlg (300x300 #qrCanvas inside #qrBox) — index.html:167-224. `#toast` role=status is the last element (index.html:226). HOME view = `div.hero` (h2, p, button.btn.primary \"Start a care log\") + `section.card` \"Were you given a code?\" (.row with code input + Open) + optional `section.card` \"Your logs\" (ul.plain). BOARD view = head `section.card` (inline-flex title h2 with `all:unset` + optional .badge \"you started this\" + p.sub + p.disclaimer), optional `.banner` (locked / offline), coverage `section.card` (\"Who's there, and when\" -> N `div.slot` rows -> `.top` [label/count/edit ✎] + `.chips` of `span.chip[.mine]` + \"I can be there\" button, then owner's `.row.noprint` add-days buttons), timeline `section.card` (\"The log\" -> `.seg` type picker, name input, textarea, \"Add to the log\" primary, then `div.screenonly` of `.dayhead` + `.entry` rows), owner-only `details.manage` disclosure (invite code, copy link, QR, print, settings checkboxes, rotate/delete, rename), an always-present-but-hidden `section.card.printonly` duplicate timeline, and for non-owners a trailing `section.card.noprint` Print card. Main flow: sign in -> create log -> (optionally add the next 7 days) -> copy invite link -> family opens link anonymously, claims days and writes timeline entries -> owner prints the chronological timeline for a doctor visit.",
+  "cssClasses": [
+    "`:root` / `@media (prefers-color-scheme:dark) :root` — index.html:27-38, 13 palette tokens (--bg --card --ink --muted --line --accent --accent-ink --pos --neg --chip --chip-ink --focus --mine); --pos is defined but never used",
+    "`.wrap` — index.html:46, 680px page container, 14px gutters, no safe-area inset",
+    "`header.app` — index.html:47, flex app bar, 14px/10px padding",
+    "`header.app img` — index.html:48, 34px rounded app icon",
+    "`header.app h1` / `h1 a` — index.html:49-50, 1.12rem app title linking to #/",
+    "`header.app .spacer` — index.html:51, flex:1 pusher",
+    "`a.tipbtn` — index.html:52-55, pill tip-jar link, ~34px tall, .85rem",
+    "`section.card` — index.html:56, primary surface: 16px padding, 12px radius, 12px gap",
+    "`section.card h2` — index.html:57, uppercase 12.5px muted card micro-label",
+    "`.hero` — index.html:58, centered home intro, 32px top padding",
+    "`.hero h2` — index.html:59, 1.4rem home headline",
+    "`.hero p` — index.html:60, muted centered intro copy",
+    "`label.f` — index.html:61, field wrapper, 13.6px muted, 10px bottom margin",
+    "`label.f span` — index.html:62, block field label text",
+    "`input[type=text|email|date|number],textarea,select` — index.html:63-66, base field: 11/12px pad, 1rem, background is --bg not --card",
+    "`textarea` — index.html:67, 90px min-height, vertical resize (the composer)",
+    "`:focus-visible` (input/textarea/select/button/a/summary) — index.html:68, 2px --focus outline, 1px offset",
+    "`.row` — index.html:69-70, equal-width flex columns, NO flex-wrap, children flex:1",
+    "`.btn` — index.html:72, default control ~46px tall, .93rem",
+    "`.btn.primary` — index.html:73, accent fill; the only strong-emphasis affordance",
+    "`.btn.small` — index.html:74, ~36px tall .84rem; used for every icon action and the header auth button",
+    "`.btn.danger` — index.html:75, red text only — no border/background differentiation",
+    "`.chips` — index.html:76, wrapping chip container",
+    "`.chip` — index.html:77-80, person pill on a coverage day, .86rem",
+    "`.chip.mine` — index.html:81, your own claim, --mine background + accent border",
+    "`.chip button` — index.html:82, the ✕ remove-claim control, ~18x22px, borderless",
+    "`.slot` — index.html:83-84, one coverage day row, 11px vertical padding, hairline divider",
+    "`.slot .top` — index.html:85, baseline flex of label/count/edit",
+    "`.slot .label` — index.html:86, coverage day name, .95rem 600",
+    "`.slot .count` — index.html:87, 12.8px muted 'Covered' / 'Needs someone' status",
+    "`.badge` — index.html:88, 11.2px pill; 'you started this', entry types, pending",
+    "`.badge.pending` — index.html:89, --neg text for awaiting-approval entries",
+    "`.badge.t-appointment` / `.t-medication` / `.t-question` — index.html:90-92 + dark at 93-97, six hardcoded color literals",
+    "`.banner` — index.html:98, locked/offline notice strip, 13.9px muted",
+    "`.disclaimer` — index.html:99, 12.8px italic muted — the medical/HIPAA disclaimer",
+    "`.entry` — index.html:100-101, one timeline entry, 10px padding, hairline divider",
+    "`.entry .meta` — index.html:102, wrapping flex of who/type/time/pending (JS also injects the action buttons here)",
+    "`.entry .who` — index.html:103, 14.1px author name",
+    "`.entry .when` — index.html:104, 12.5px muted timestamp",
+    "`.entry .body` — index.html:105, the note text, overflow-wrap:anywhere",
+    "`.dayhead` — index.html:106-107, 12.8px uppercase muted date separator (screen + print)",
+    "`ul.plain` / `ul.plain li` / `ul.plain .grow` — index.html:108-111, unstyled list used for 'Your logs' rows",
+    "`.sub` — index.html:112, 13.1px muted secondary line (board description, dialog subtext)",
+    "`.hint` — index.html:113, 12.8px muted — the app's entire instructional/onboarding voice",
+    "`.warn` — index.html:114, 13.6px --neg error text (connection/missing-log failures)",
+    "`.sharecode` — index.html:115, 1.5rem tracked-out 6-char invite code, letter-spacing .28em",
+    "`.seg` — index.html:116, bordered wrapping segmented control for entry type",
+    "`.seg button` / `.seg button.active` — index.html:117-118, ~38px tabs, min-width 80px, active = accent fill",
+    "`details.manage` / `>summary` / `[open]>summary` / `>.inner` — index.html:119-128, owner disclosure with ▸/▾ pseudo-marker and joined-panel radii",
+    "`dialog` / `dialog::backdrop` / `dialog h3` — index.html:129-131, modal shell, max-width min(92vw,420px)",
+    "`#qrBox` / `#qrCanvas` — index.html:132 + 219, forced `background:#fff` behind a 300x300 canvas whose size is also hardcoded in JS",
+    "`#toast` / `#toast.show` — index.html:133-138, fixed bottom pill, 13.8px, bottom:24px, no safe-area",
+    "`footer.colophon` — index.html:139, 12.3px muted centered credits",
+    "`.hidden` — index.html:140, display:none !important (used on #tipLink, #emailSent)",
+    "`.printonly` — index.html:141, display:none on screen; the ONLY thing hiding the duplicate print timeline",
+    "`.screenonly` — index.html:143, no screen rule; hidden in print (wraps the on-screen timeline)",
+    "`.noprint` — index.html:143, no screen rule; hidden in print (10 uses in app.js)",
+    "`@media print` block — index.html:142-148, hides chrome/buttons, flattens cards, reveals .printonly",
+    "Ids referenced by JS: #view #orgLine #brandLink #tipLink #authBtn #toast #authDlg #googleBtn #emailInput #emailBtn #emailSent #authCancel #nameDlg #nameDlgSlot #nameInput #noteInput #nameOk #nameCancel #createDlg #createTitle #createDesc #createOk #createCancel #slotDlg #slotLabel #slotCap #slotSave #slotDelete #slotCancel #qrDlg #qrClose",
+    "`#nameDlgTitle` — index.html:182, id exists but is never read or written by any JS (dead hook)"
+  ],
+  "dynamicMarkup": "Essentially the entire page body is runtime-generated. `#view` is emptied with `v.replaceChildren()` and rebuilt on EVERY route change AND every Firestore snapshot (app.js:110, 247) — board/slots/claims/entries each have live watchers that call `drawBoard()` (app.js:184-215). All nodes are built by the `el()` helper (app.js:23-37) which sets `n.className = v` for the `class` key and `textContent` for `text`. No user data ever goes through innerHTML.\n\nExact class strings emitted by app.js: `hero`, `card`, `card noprint`, `card printonly`, `row`, `row noprint`, `hint`, `warn`, `sub`, `disclaimer`, `banner`, `badge`, `badge pending`, `badge t-` + e.type (app.js:437 — produces `t-appointment`/`t-medication`/`t-question`; type `note` gets no badge at all), `plain`, `grow`, `slot`, `top`, `label`, `count`, `chips`, `chip` and `'chip' + (isMine ? ' mine' : '')` (app.js:308), `entry`, `meta`, `who`, `when`, `body`, `dayhead`, `screenonly`, `seg noprint`, `active` or `''` on seg buttons (app.js:379), `f`, `btn`, `btn primary`, `btn small`, `btn danger`, `btn small noprint`, `btn small danger noprint`, `manage noprint`, `inner`, `sharecode`, `noprint`.\n\nStructural couplings a restyle can break: (1) app.js:453 `row.firstChild.append(actions)` injects the approve/delete `<span style=\"float:right\">` into the entry's FIRST CHILD, assumed to be `div.meta` — reorder or wrap `.entry`'s children and the buttons land somewhere else; the `float:right` is currently inert because `.meta` is `display:flex` (index.html:102) and will suddenly activate if `.meta` stops being flex. (2) app.js:145 `sec.lastChild.remove()` and app.js:155 `sec.lastChild.textContent = …` do positional DOM surgery on the \"Your logs\" card assuming the loading `<p class=hint>` is the last child — inserting any element after it (an `.empty` wrapper, a footer) removes/overwrites the wrong node. (3) app.js:252 the board title is `<h2 style=\"all:unset;font-size:1.25rem;font-weight:600;flex:1;overflow-wrap:anywhere\">` — `all:unset` nulls every stylesheet rule for that heading (including any new `section.card > h2` rule) and makes it `display:inline`. (4) app.js:97-104 `setGrowthFooter()` is the only innerHTML in the app: it caches `#orgLine`'s original markup in `dataset.home` on first call and swaps in a hardcoded string containing `<a href=\"./\" style=\"color:inherit\">` — change the footer markup in index.html and the participant variant still emits the old inline-styled anchors, which will also beat any new `footer.colophon a` rule. (5) 21 inline `style:` attributes in app.js (lines 51,121,126,251,252,254,272,324,407,441,447,492,495,498,499,503,504,509,510,523) hardcode 4/6/8/10/16px margins, `display:flex;gap:8px`, and `width:auto` on the two settings checkboxes — all of it will fight a token-based spacing scale. (6) app.js:408-411 re-focuses the compose textarea via `requestAnimationFrame` + `setSelectionRange` after every redraw — this requires a real `<textarea>`/`<input>`, not a contenteditable. (7) `qrcode()` from vendor-qrcode.js draws into `#qrCanvas` at a hardcoded 300px (app.js:551).",
+  "comfortDefects": [
+    {
+      "issue": "`.hint` is 0.8rem (12.8px) muted and it carries the app's entire instructional voice — the home 'A family member started a log and invited you' (app.js:136), the timeline empty state (app.js:415), the invite-sharing warning (app.js:490), the sign-in explainer (index.html:169) and the 'check your spam folder' recovery text (index.html:178). The most important sentences on every screen are the smallest and faintest.",
+      "where": "index.html:113 (.hint)",
+      "fix": "Raise to var(--t-sm) 0.9375rem minimum with --lh-snug, and promote the two teaching instances (empty timeline, empty coverage) into a real `.empty` block at --t-base."
+    },
+    {
+      "issue": "The medical/HIPAA disclaimer — the single most legally load-bearing sentence in the app, shown on every log and every printout — renders at 0.8rem (12.8px), italic, in muted grey. Italic at 12.8px is the least legible combination available.",
+      "where": "index.html:99 (.disclaimer); rendered at app.js:255 and app.js:474",
+      "fix": "Drop the italic, raise to var(--t-sm), use --ink-2 not --ink-3, and set it as a bordered `.trust`/`.warn`-style block rather than a trailing grey line."
+    },
+    {
+      "issue": "`.badge` is 0.7rem (11.2px) with `color:var(--muted)` on `background:var(--chip)` = 4.34:1 — below 4.5:1 at a size nowhere near the large-text exemption. This is the 'you started this' badge and the 'awaiting approval' badge.",
+      "where": "index.html:88 (.badge)",
+      "fix": "Raise to var(--t-xs) 0.8125rem and switch the text colour to --ink (about 9:1 on --surface-2)."
+    },
+    {
+      "issue": "`.slot .count` — the most scannable datum in the coverage card, 'Covered' vs 'Needs someone' — is 0.8rem (12.8px) muted, i.e. smaller and fainter than the day label beside it. The status a family scans for is styled as an afterthought.",
+      "where": "index.html:87 (.slot .count); rendered app.js:302",
+      "fix": "Make it a real status chip: var(--t-xs), 600 weight, --pos tint for Covered and --warn tint for Needs someone."
+    },
+    {
+      "issue": "Measure runs to roughly 78-82 characters. `.wrap` is 680px with 14px gutters, `section.card` adds 16px padding, leaving ~620px of 16px body text with no `max-width` on any paragraph. Timeline entry bodies, hero copy and the disclaimer all run full width.",
+      "where": "index.html:46 (.wrap) + index.html:56 (section.card); no max-width on p anywhere",
+      "fix": "Apply the studio `p{max-width:var(--measure)}` (64ch) and let `--wrap:46rem` govern the shell."
+    },
+    {
+      "issue": "The remove-person ✕ inside a claim chip is a ~18x22px hit area (padding 0 2px, no min-height, borderless) sitting flush against the person's name. It is destructive — it takes a family member off a coverage day — at less than a quarter of the 44px minimum.",
+      "where": "index.html:82 (.chip button); rendered app.js:310-319",
+      "fix": "Give it `min-width/min-height:var(--tap)` with negative margins so it does not inflate the chip, or move removal into the slot edit dialog."
+    },
+    {
+      "issue": "`.btn.small` computes to ~36px tall and ~33px wide for icon-only labels, and it is used for every consequential icon action: edit-day ✎ (app.js:303), approve ✓ (app.js:443), delete-entry ✕ (app.js:447), 'I can be there' (app.js:325), 'Open' in Your logs (app.js:152) and the header sign-in button (index.html:158).",
+      "where": "index.html:74 (.btn.small)",
+      "fix": "Floor `.btn.small` at 40px and add a `.btn.icon` variant at the full 44px tap square for the glyph-only buttons."
+    },
+    {
+      "issue": "`.seg` type buttons are ~38px tall at 0.84rem (13.4px) muted — the control deciding whether a note is filed as a medication change or an appointment is below tap minimum and reads as disabled text until selected.",
+      "where": "index.html:117 (.seg button)",
+      "fix": "38px -> 44px, font to var(--t-sm), inactive colour to --ink-2 on a --surface-2 track."
+    },
+    {
+      "issue": "The two settings checkboxes ('Require my approval for new entries', 'Lock the log') are default ~13px browser checkboxes on a label row with no min-height (~20px tall), styled 0.85rem muted by `label.f`. Locking the log is a consequential state change on a 13px target.",
+      "where": "app.js:498-509 (inline `display:flex` labels, `width:auto` checkboxes) + index.html:61 (label.f)",
+      "fix": "Adopt studio `input[type=checkbox]{width:1.25rem;height:1.25rem}` plus `label:has(>input[type=checkbox]){min-height:var(--tap)}`, and stop styling setting text as a muted field label."
+    },
+    {
+      "issue": "`.row` has no `flex-wrap` and forces `flex:1` on every child, so long button labels get crushed into equal columns and wrap to two lines: 'Add the next 7 days' + 'Add one day/shift' each get ~50% of a ~318px card interior, and 'Copy invite link' + 'QR code' get equal widths despite wildly different label lengths.",
+      "where": "index.html:69-70 (.row); instances app.js:272-274, 487-489, 510-521",
+      "fix": "Adopt `.row{flex-wrap:wrap}` with `.row > *{flex:1 1 12rem}` so groups stack instead of crushing."
+    },
+    {
+      "issue": "`a.tipbtn` is ~34px tall (6px padding, 0.85rem) and sits in the header beside a 36px auth button — two sub-44px targets in the top-right thumb-stretch zone.",
+      "where": "index.html:52-55 (a.tipbtn)",
+      "fix": "Floor at 36px minimum with the studio pill geometry, or move the tip jar to the footer on narrow viewports."
+    },
+    {
+      "issue": "Vertical rhythm is uniformly cramped and undifferentiated: `section.card` is 16px padding at every viewport width, `.slot` 11px, `.entry` 10px, `ul.plain li` 9px. Seven coverage days and twenty timeline entries read as one continuous grey texture separated by hairlines, with no grouping.",
+      "where": "index.html:56, 83, 100, 109",
+      "fix": "Move to the 4px token scale with a viewport step-up (`padding:var(--s5)`, `var(--s6)` above 30rem) and raise row padding to var(--s3)/var(--s4)."
+    },
+    {
+      "issue": "The owner's manage panel is a wall of eight visually identical grey outline buttons — Add the next 7 days, Add one day/shift, QR code, Print, Rotate invite, Delete log, Save — with only 'Copy invite link' promoted. Nothing signals which are routine, which are rare, and which are irreversible.",
+      "where": "app.js:272-274, 487-493, 510-534",
+      "fix": "Three tiers: `.btn.primary` for the one action per group, default for routine, `.btn.ghost` for rare, and pull `.btn.danger` out of the shared row into its own bordered danger zone."
+    },
+    {
+      "issue": "`.hero` centres multi-line body copy (`text-align:center`) at roughly 80 characters per line — centred text at that measure gives the eye no consistent left edge to return to.",
+      "where": "index.html:58 (.hero) + app.js:112-117",
+      "fix": "Left-align the hero paragraph, cap it at var(--measure), keep only the headline centred (or left-align the whole block per studio `.hero`)."
+    },
+    {
+      "issue": "Status feedback is a 13.8px toast that disappears after 2400ms and is the ONLY confirmation for saving an entry, claiming a day, approving, locking, deleting or rotating. `body` has `padding-bottom:40px` and `#toast` sits at `bottom:24px` with no `env(safe-area-inset-bottom)`, so on a notched phone it can land under the home indicator.",
+      "where": "index.html:133-137 (#toast) + app.js:44 (2400ms default)",
+      "fix": "Use `bottom:calc(var(--s6) + env(safe-area-inset-bottom))`, raise to var(--t-sm), and extend the default dwell to ~4s for save/delete confirmations."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "The most frequent daily action — writing a timeline note — is buried below the entire coverage-day list. `drawBoard` renders head card, banners, the coverage card (up to 100 slots), and only then the timeline card whose composer sits at its top. On a log with a full week of coverage the composer is below the fold on every visit.",
+      "where": "app.js:276-279 (covCard appended before renderTimeline)",
+      "fix": "Put the composer above the coverage card, or add a sticky `.actionbar` with 'Add to the log' that scrolls to and focuses the textarea."
+    },
+    {
+      "issue": "A board page is one unbroken scroll — head card, banners, up to 100 coverage rows, unbounded timeline entries, manage disclosure, trailing print card — with no in-page navigation, no anchors, no section index and no back-to-top. There is no way to get from the bottom of a long timeline back to the coverage list.",
+      "where": "app.js:239-293 (drawBoard append order)",
+      "fix": "Add a sticky section switcher (Coverage / Log) or sticky action bar; at minimum a skip-to-log link and a back-to-top control."
+    },
+    {
+      "issue": "Both empty states are a single 12.8px muted sentence with no heading, no glyph and no call to action. A first-time owner sees 'Add the week below…' in grey small print; a first-time reader sees a paragraph about what the timeline is for — neither points at a button.",
+      "where": "app.js:266-268 (coverage empty) and app.js:415 (timeline empty)",
+      "fix": "Use the studio `.empty` block: glyph, h3, one --t-sm sentence, and an actual primary button ('Add the next 7 days' / 'Write the first note')."
+    },
+    {
+      "issue": "A non-owner opening a log with no coverage days sees 'No coverage days have been added yet.' — a dead end with no next step. They cannot add days and are not told to ask the person who started the log.",
+      "where": "app.js:268",
+      "fix": "Replace with an empty state that names the action: 'Nobody has set up coverage days yet — ask whoever started this log to add the week.'"
+    },
+    {
+      "issue": "The invite code and invite link are invisible on the board until the owner opens a collapsed `<details>` labelled 'Invite family & settings'. Right after creating a log the toast says 'invite family when you are', but the code is behind a disclosure with no cue that it holds the share link.",
+      "where": "app.js:481 (`details.manage` collapsed by default) vs app.js:633 (creation toast)",
+      "fix": "Surface the share code and a Copy invite link button directly on the board head card for the owner (at least while the log has no other participants), keeping only settings behind the disclosure."
+    },
+    {
+      "issue": "There is no undo anywhere. Deleting a timeline entry is immediate and permanent behind a single native `confirm()`; deleting the whole log is permanent and, per data.js:187-194, leaves subcollections orphaned. A caregiver who mis-taps loses a medication note with no recovery path.",
+      "where": "app.js:448-451 (delete entry), app.js:517-521 (delete log)",
+      "fix": "Replace confirm() with an in-app undo toast (soft-delete + 10s 'Undo'), and reserve a typed-confirmation dialog for deleting the whole log."
+    },
+    {
+      "issue": "'Delete log' — which destroys the whole family's record for everyone — sits as an equal-width flex sibling immediately beside 'Rotate invite' in the same `.row`, at identical size and shape, differentiated only by red text (`.btn.danger` changes colour and nothing else).",
+      "where": "app.js:510-521 + index.html:75 (.btn.danger)",
+      "fix": "Move 'Delete log' out of the row into a separate bordered danger section at the bottom of the panel, and give `.btn.danger` a real border/background treatment."
+    },
+    {
+      "issue": "In the slot dialog, 'Delete' is the LEFTMOST of three equal-width buttons, where users expect Cancel. Delete and Cancel are the same size and shape, separated by 8px.",
+      "where": "index.html:210-214 (#slotDlg .row: Delete / Cancel / Save)",
+      "fix": "Reorder to Cancel / Save with Delete pulled out to its own row or aligned far-left with clear separation and destructive styling."
+    },
+    {
+      "issue": "For an owner reviewing pending entries, the approve ✓ and delete ✕ buttons are ~33px-wide icon buttons 4px apart in the same meta row. Approve is instant with no confirmation; delete is permanent. Mis-tap probability is high and the consequences are asymmetric.",
+      "where": "app.js:442-452 (`margin-left:4px`)",
+      "fix": "Widen both to the 44px tap square, increase separation to var(--s3), show text labels on wider viewports, and add undo to the delete."
+    },
+    {
+      "issue": "Nothing tells a user their work is saved beyond a 2.4-second toast. There is no persistent 'saved' indicator, no timestamp, no draft persistence — the composer draft lives only in a module variable (`composeDraft`), so a reload or navigation loses a half-written note. Offline writes are announced only by a banner about reading, not about queued writes.",
+      "where": "app.js:371 (composeDraft), app.js:401 (toast-only confirmation), app.js:261 (offline banner)",
+      "fix": "Persist the draft to localStorage alongside the name key, and show a persistent 'Saved · just now' line under the composer instead of relying on the toast."
+    },
+    {
+      "issue": "Two core interactions use native `prompt()`: 'Add one day/shift' asks for the label via a browser prompt, and the email sign-in link asks the user to retype their email via a prompt. Both are unstyled, unlabelled, unvalidated, suppressible by browsers, and jarring in a PWA.",
+      "where": "app.js:342 (addCustomDay) and app.js:663 (completeEmailLink)",
+      "fix": "Reuse the existing `<dialog>` pattern (there is already #slotDlg with a label field) for both."
+    },
+    {
+      "issue": "The same 'Print the timeline for a doctor visit' action lives in two different places depending on role — inside the collapsed manage disclosure for owners, and in a trailing card at the very bottom of the page for participants. Printing is a headline feature of this app and has no consistent, findable home.",
+      "where": "app.js:492-493 (owner) vs app.js:288-292 (participant)",
+      "fix": "Give print one fixed location for both roles — a header or action-bar control on the board — and remove the duplicate."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "`<main id=\"view\" aria-live=\"polite\">` makes the ENTIRE application view a live region, and `drawBoard()` calls `v.replaceChildren()` on every Firestore snapshot (board, slots, every slot's claims, and entries all have watchers). A screen-reader user has the whole page re-announced every time any relative anywhere edits anything.",
+      "where": "index.html:160 + app.js:247, 184-215",
+      "fix": "Remove `aria-live` from `<main>` and route status text through the existing `#toast` (role=status) plus small, targeted `aria-live` nodes for the 'Opening the log…' / 'Loading…' states."
+    },
+    {
+      "issue": "Keyboard focus is destroyed on every redraw. `v.replaceChildren()` discards the focused element and only the compose textarea is restored (via a `composeFocused` flag and a rAF re-focus). A keyboard user tabbing through coverage days, the seg control or the manage panel is thrown back to the document start whenever a sibling saves a note.",
+      "where": "app.js:247 (replaceChildren) vs app.js:408-411 (textarea-only restore)",
+      "fix": "Capture `document.activeElement`'s stable identity before redraw and restore it afterwards, or move to targeted patching instead of full re-render."
+    },
+    {
+      "issue": "The focus indicator fails the 3:1 non-text contrast minimum in both themes. Light `--focus:#a8b2c0` on the white card is 2.14:1 (2.00:1 on the page background); dark `--focus:#57606d` on `--card:#1d1f22` is 2.59:1. With `outline-offset:1px` the 2px ring also sits directly on the control's own border, so it reads as a slightly thicker edge rather than a focus state.",
+      "where": "index.html:30 and :36 (--focus tokens) + index.html:68 (:focus-visible)",
+      "fix": "Adopt the studio two-part ring: `outline:2px solid var(--focus); outline-offset:2px; box-shadow:0 0 0 4px var(--focus-halo)`, with --focus solved for >=3:1 against both --surface and --canvas."
+    },
+    {
+      "issue": "`.badge` sets `color:var(--muted)` on `background:var(--chip)`, which computes to 4.34:1 in light mode (#6b7075 on #efefec) at 11.2px — below 4.5:1 with no large-text exemption. It carries 'you started this' and 'awaiting approval'.",
+      "where": "index.html:88 (.badge)",
+      "fix": "Use --ink (or an --ink-2 solved against --surface-2) for badge text and raise the size to 0.8125rem."
+    },
+    {
+      "issue": "The approve button for pending entries is icon-only ('✓') with NO `aria-label` — its accessible name is the check-mark character, which assistive tech reads as 'check mark' or nothing. The delete button four pixels away DOES have an aria-label, so the omission is inconsistent as well as broken.",
+      "where": "app.js:442-445",
+      "fix": "Add `'aria-label': 'Approve entry by ' + e.authorName` (ideally with the timestamp)."
+    },
+    {
+      "issue": "The entry-type segmented control is four plain `<button>`s whose only selection signal is the `active` class — no `aria-pressed`, no `role=\"tab\"`/`aria-selected`, no radiogroup. A screen-reader user cannot tell whether they are filing a note as a Medication or an Appointment, and the composer's `aria-label` silently changes underneath them.",
+      "where": "app.js:377-379 (seg buttons) + app.js:382 (dynamic textarea aria-label)",
+      "fix": "Wrap in `role=\"radiogroup\" aria-label=\"Entry type\"` with `role=\"radio\" aria-checked` per button (or `aria-pressed`), and give the textarea a visible `<label>` that stays stable."
+    },
+    {
+      "issue": "Repeated controls have identical, context-free accessible names. Every coverage day renders a button named exactly 'I can be there' and an edit button named exactly 'Edit day'. A user listing buttons in a screen reader gets N indistinguishable entries with no way to know which day each belongs to.",
+      "where": "app.js:303 ('Edit day') and app.js:325 ('I can be there')",
+      "fix": "Append the slot label: `aria-label: 'I can be there — ' + s.label` and `'Edit ' + s.label`."
+    },
+    {
+      "issue": "None of the five `<dialog>` elements has `aria-labelledby` pointing at its `<h3>`, so the modal has no accessible name. Worse, the fallback path in `showDlg` uses `d.setAttribute('open','')`, which produces a NON-modal dialog — no focus trap, no inert background, no backdrop — so keyboard focus tabs straight out into the page behind it.",
+      "where": "index.html:167, 181, 194, 206, 217 + app.js:46-47",
+      "fix": "Add `aria-labelledby` to each dialog (give each h3 an id), and in the fallback path manually trap focus and set `aria-modal=\"true\"`."
+    },
+    {
+      "issue": "`#qrCanvas` is a bare `<canvas>` with no `role=\"img\"` and no accessible name, and the QR dialog contains no text alternative for the invite URL — a screen-reader or low-vision user gets nothing from the 'Invite a family member' dialog. If `qrcode()` throws, the catch is empty (app.js:559) and the dialog opens showing a blank white square with no error message.",
+      "where": "index.html:219 (#qrCanvas) + app.js:546-561",
+      "fix": "Add `role=\"img\"` with an aria-label, render the invite URL as selectable text plus a Copy button inside #qrDlg, and surface a message when QR generation fails."
+    },
+    {
+      "issue": "The email sign-in confirmation is an element that is simply un-hidden — `#emailSent` is a `.hint.hidden` whose class is removed on success. It is not a live region and receives no focus, so a screen-reader user gets no feedback that the link was sent or that they need to check spam.",
+      "where": "index.html:178 (#emailSent) + app.js:585",
+      "fix": "Give #emailSent `role=\"status\"` (or route the message through the toast), and move focus to it after send."
+    },
+    {
+      "issue": "No skip link. Every page load puts a brand link and a sign-in/out button before `<main>`, and `<main>` is rebuilt constantly, so a keyboard user re-traverses the header chrome on each interaction. `.wrap` also has no `env(safe-area-inset-left)` padding, so content sits under the notch in landscape.",
+      "where": "index.html:152-160 (no .skip element) + index.html:46 (.wrap)",
+      "fix": "Add the studio `.skip` link as the first body child targeting `#view`, and use `padding-inline:max(var(--s4), env(safe-area-inset-left))`."
+    },
+    {
+      "issue": "Four `<h2>` headings (Invite family, Print, Settings, Name & details) live inside the collapsed `details.manage`, whose `<summary>` is not a heading — so they vanish from heading navigation while collapsed and appear un-parented when open. Separately, the board title `<h2>` carries `style=\"all:unset\"`, which strips its heading presentation entirely and sets `display:inline`.",
+      "where": "app.js:481-523 (manage h2s) + app.js:252 (all:unset title)",
+      "fix": "Make the summary an `<h2>` wrapping the disclosure trigger and demote the panel headings to `<h3>`; replace `all:unset` with an explicit class so the title can be styled and stays a block-level heading."
+    }
+  ],
+  "printSupport": "Print is a first-class use case here, not an afterthought — README:22-25 states the printed chronological timeline exists for doctor visits, and there are two \"Print the timeline for a doctor visit\" buttons (app.js:291 for participants, app.js:493 for the owner). The architecture is a dual render: the on-screen newest-first timeline is wrapped in `div.screenonly` (app.js:419) and a completely separate oldest-first `section.card.printonly` is always in the DOM (app.js:459-476), so every entry is rendered twice. `@media print` exists at index.html:142-148 and hides `header.app`, `details.manage`, `.btn`, `.noprint`, `#toast`, `footer.colophon`, `.screenonly`; sets `body{background:#fff;color:#000}`; flattens `section.card` to `border:0;padding:4px 0;margin:0`; reveals `.printonly`; and sets `.entry{break-inside:avoid}`.\n\nWhat is broken or missing: (1) THE BIG ONE — the print block sets `body{color:#000}` but never resets the palette tokens, so a user printing while their OS is in dark mode gets `--muted:#93979c` for every `.dayhead`, `.sub`, `.hint`, `.disclaimer`, `.entry .when` and `section.card h2` — pale grey on white paper, effectively invisible. `.badge` also keeps `background:var(--chip)` = #26282c. The studio base fixes this by redefining the tokens inside `@media print` (studio.css:580-585); this app must adopt that. (2) The on-screen timeline card still prints as an empty titled box: its contents are `.seg noprint`, a `.noprint` composer, and the `.screenonly` entry list, so in print it renders as a card containing only the heading \"THE LOG\" and nothing else. (3) No `@page` rule at all — no margins, no page size; the printed page runs edge to edge at browser default. (4) `.dayhead` has no `break-after:avoid`, so a date separator can strand at the bottom of a page away from its entries; `section.card` has no `break-inside`/`page-break-inside` rule either. (5) `section.card h2` prints as 12.5px uppercase in `var(--muted)` grey and `.disclaimer` prints at 12.8px italic grey — the two things a doctor most needs to parse (section labels and the \"not a medical record\" notice) are the faintest ink on the page. (6) The entire coverage-day card prints (only the buttons inside it are `.noprint`), so a doctor-visit printout carries the family rota and claim chips; there is no way to print just the timeline. (7) `renderPrintTimeline` silently filters to `status === 'ok'` (app.js:462), so pending entries are dropped from the printout with no indication anything was withheld. (8) There is no printed date-of-printing, no page numbers, and no repeated patient identity in a running header — the name appears once in the head card and once in the `.printonly` h2. (9) `#qrBox` hardcodes `background:#fff` (index.html:132), which is correct and must be preserved, but there is no print path for the QR or invite link at all.",
+  "riskyToRestyle": [
+    "`.printonly{display:none}` at index.html:141 is the ONLY rule hiding the duplicate print timeline on screen. studio.css only defines `.printonly{display:revert !important}` inside `@media print` — it has no screen-side `display:none`. If the app layer is deleted or trimmed during migration, every single timeline entry renders TWICE on screen (once in `div.screenonly`, once in `section.card.printonly`). Highest-risk item in the file.",
+    "`#qrCanvas` is 300x300 in markup (index.html:219) AND `size = 300` is hardcoded in `showQR()` (app.js:551), which computes `cell = Math.floor(size/(count+8))` and a centring offset without ever reading `canvas.width`. Changing the canvas width/height attributes, or adding a devicePixelRatio scale, silently draws a 300px QR into a differently sized bitmap — clipped or floating in a corner. Change both or neither.",
+    "`#qrBox{background:#fff}` (index.html:132) is load-bearing for scannability, not decoration. Tokenising it to `var(--surface)` puts a dark card behind a black-module QR in dark mode and the code stops scanning.",
+    "`sec.lastChild.remove()` (app.js:145) and `sec.lastChild.textContent = …` (app.js:155) do positional DOM surgery on the 'Your logs' card, assuming the loading `<p class=hint>` is the last child. Inserting any element after it — an `.empty` wrapper, a footer note, a divider — removes or overwrites the wrong node (in the error path it can wipe the `<ul>`).",
+    "`row.firstChild.append(actions)` (app.js:453) injects the approve/delete buttons into the entry's first child, assumed to be `div.meta`. Reordering or wrapping `.entry`'s children moves the buttons somewhere unintended. Compounding this, `actions` uses `style:'float:right'` (app.js:441), which is currently inert because `.meta` is `display:flex` (index.html:102) — change `.meta` to block or grid and the float activates and the buttons jump out of flow.",
+    "`all:unset` inline on the board title `<h2>` (app.js:252) nullifies EVERY stylesheet rule for that element, including any new `section.card > h2` rule, and resets it to `display:inline`. The new heading treatment simply will not apply there until that inline style is replaced with a class.",
+    "`setGrowthFooter()` (app.js:97-104) is the only innerHTML in the app. It caches `#orgLine`'s original markup in `dataset.home` on first call and swaps in a hardcoded string containing `<a href=\"./\" style=\"color:inherit\">`. Restyle the footer markup in index.html and the participant variant still emits the old anchors; the inline `color:inherit` also beats any new `footer.colophon a` rule.",
+    "The class names in app.js are the real contract, and a CSS-only rename silently unstyles them: hero, card, row, hint, warn, sub, disclaimer, banner, badge, badge pending, `badge t-` + type, plain, grow, slot, top, label, count, chips, chip, mine, entry, meta, who, when, body, dayhead, screenonly, printonly, noprint, seg, active, f, btn/primary/small/danger, manage, inner, sharecode. Note `.chip.mine` (app.js:308) has no studio equivalent — studio uses `.chip.on` — so the 'you' highlight is lost unless the `.chip.mine` rule is migrated; the generated palette does define `--mine`, so keep it wired.",
+    "`sw.js` caches `./index.html` and the CSS is inline in it. `VERSION = 'care-v4'` (sw.js:2) must be bumped in the same commit as the restyle or every returning PWA user keeps the OLD stylesheet from cache indefinitely. This applies to all 23 apps in the overhaul.",
+    "`design/apply.mjs` splices the generated base at the TOP of the existing `<style>` and fences the current rules below it. At equal specificity the legacy rules win by source order — `section.card{padding:16px}`, `#toast{…}`, `.chip`, `.seg button`, `.hint{font-size:.8rem}`, `.btn{padding:11px 14px;font-size:.93rem}` and `input{background:var(--bg)}` will all keep overriding the new geometry, producing a half-migrated look that reads as broken. The app layer must be deleted rule by rule, not left in place.",
+    "`.badge.t-appointment` / `.t-medication` / `.t-question` hardcode six colour literals (index.html:90-92) with dark variants inside a bare `prefers-color-scheme` block (index.html:93-97) — the only colour literals outside `:root`. They will not follow the new palette and will not respond to an explicit theme toggle if one is ever added.",
+    "The compose-draft focus hack (app.js:371, 408-411) re-focuses the textarea via `requestAnimationFrame` and calls `setSelectionRange` on every redraw while it is focused. It requires a real `<textarea>`; swapping it for a contenteditable, or adding a wrapper/autofocus element that steals focus, loses half-written notes on every remote snapshot. Also note there are ZERO DOM tests — `apps/signup-sheets/test/care.test.mjs` and `helpers.test.mjs` exercise only data.js and helpers.js and assert nothing about markup or class names, so nothing will catch a restyle regression."
+  ]
+}

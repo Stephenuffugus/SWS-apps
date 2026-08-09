@@ -1,0 +1,140 @@
+{
+  "slug": "seating-chart",
+  "competitors": [
+    {
+      "name": "Google Sheets / Excel + a poster board of Post-it notes",
+      "model": "free (they already have it)",
+      "note": "THE real competitor. r/weddingplanning threads are full of 'I used a spreadsheet, two tabs, one numbers one names' and Post-it/poster-board methods (Post-it and WeddingWire forums both actively promote it). Paperlust flatly says 'Google Sheets is the best free template for most couples: shareable, auto-sorting, accessible from any device.' Strength: zero friction, infinitely flexible, shareable with mom and the coordinator. Weakness: no seat-level model, no capacity math, no conflict checking, no 'who is still unseated' count, and turning it into place cards is a manual mail-merge nightmare. Beat it on the LOGIC, not the drag-and-drop."
+    },
+    {
+      "name": "Canva Seating Chart Maker + templates",
+      "model": "free tier, Canva Pro ~$15/mo",
+      "note": "Owns the pretty-output half of the job and is the top non-Reddit result for 'seating chart template'. But it is a DESIGN tool with no data model: guests are text boxes, so renaming a guest means editing typography, there is no guest list, no capacity, no conflict detection, and moving someone between tables is cut-and-paste. Requires an account. Many couples use Sheets for the logic and Canva for the sign — that seam is our opening."
+    },
+    {
+      "name": "Zola Seating Chart",
+      "model": "free, requires Zola account",
+      "note": "Best-in-class integration: synced to the Zola guest list, group by dietary restriction or custom fields, customize floorplans, download and print. This is the one couples actually recommend. Weaknesses: locked to the Zola ecosystem and RSVP flow, and it has a history of availability anxiety — the r/weddingplanning thread 'Zola seating chart feature gone?' pulled 32 comments from people who could not find the tool when RSVPs started arriving."
+    },
+    {
+      "name": "WeddingWire Seating Chart / Floorplanner",
+      "model": "free, requires account, ad-supported vendor marketplace",
+      "note": "The other big free one. Praised on Reddit: 'you can change the size/shape of tables, move guests around super easily,' supports bar/dance-floor objects. Complaints are specific and recent: after an update 'now you have to drag and drop individual people instead of whole parties (couples and families)'; clicking the seating tool sometimes dumps you back on the guest list; room dimensions cannot be set freely so people went looking for alternatives. Print output was described as worse-looking than AllSeated's."
+    },
+    {
+      "name": "PerfectTablePlan v7 (Windows/Mac desktop)",
+      "model": "one-time $29.95 / £19.95 / €26.95, 5 devices, 14-day money-back",
+      "note": "The functional gold standard and the closest thing to a spec for us: automatic seat assignment plus drag-and-drop, RSVP and meal tracking, table shape/size experimentation, works fully OFFLINE, and prints floor plans, seating charts, place cards, escort cards and stationery. Scales to 4000+ seats. Weaknesses: it is a desktop download in 2026, the UI reads as Windows-era utility software, it is not on a phone, and it costs money for a single-use event. We can match its feature list in a browser for free."
+    },
+    {
+      "name": "Wedding Seating Chart Planner (Puzzle Party, LLC) — iOS",
+      "model": "free download, subscription IAP: $5.99/week, $19.99/month, $69.99/year (tiers span $3.99–$139.99)",
+      "note": "4.5 stars from 374 ratings, so it is the volume leader on iOS — and it charges a WEEKLY subscription for a tool used for one event. Reviews contain the two most useful complaints in this whole research pass (glitchy phantom objects; 'I regret paying for this app'). The pricing alone is a billboard for our free stance."
+    },
+    {
+      "name": "SeatPlan.io / SeatBloom / SeatCanvas / Seatbee / SimplifyTables (the 2025-26 web wave)",
+      "model": "freemium with hard guest caps or an export paywall",
+      "note": "A cluster of small tools that appeared after AllSeated left. SeatPlan.io (verified on-site): full designer with NO signup, but the free tier does not save your work — save + export is a £8 one-time Pro, collaboration £14, Event Manager £20/mo. SeatBloom free to 40 guests then $29 pro; SeatCanvas free to 40 guests then $9.99 one-time; Seatbee Pro $9.99/mo with 'must sit together / keep apart / VIP' AI rules; SimplifyTables free to 30 guests. Two dark patterns to beat: the guest cap and the work-hostage export wall."
+    },
+    {
+      "name": "AllSeated → Prismm (vacated) + the QR-lookup startups",
+      "model": "Prismm = enterprise B2B; QR tools free-trial to ~50 guests then paid",
+      "note": "AllSeated was the free consumer floor-plan tool couples recommended; it pivoted to B2B as Prismm (3D venue visualization, sold via G2/Capterra to venues and corporate events), which competitors describe as 'leaving couples without their floor plan tool.' That vacuum is why a dozen small tools launched. Separately, Please Find Your Seat, DigiSeats, SeatYourself and Seatify sell QR-code guest lookup — a genuine trend, but one that fails exactly when it matters (see complaints)."
+    }
+  ],
+  "complaints": [
+    {
+      "complaint": "\"The biggest issue is how glitchy it is. I've deleted tables and centerpieces at least 20–30 times, and they keep reappearing on their own.\"",
+      "source": "App Store review, Wedding Seating Chart Planner (Puzzle Party) — 4.5★/374 ratings",
+      "weWinIf": "State is deterministic and single-sourced. Delete means deleted, forever, with one real undo. No optimistic-UI resurrection, no stale cached layer re-hydrating over the user's edits. Write the plan to localStorage on every mutation and reload from exactly that on boot — if it survives a hard refresh identically, we have beaten the market leader on its worst axis."
+    },
+    {
+      "complaint": "\"I regret paying for this app because I'm confident there are much better options out there.\" — on an app that charges $5.99/week, $19.99/month or $69.99/year for a tool used for a single evening.",
+      "source": "App Store review + listed IAP tiers, Wedding Seating Chart Planner",
+      "weWinIf": "Free is the headline, not a footnote. First screen says: no account, no subscription, no guest limit, no export fee, nothing leaves this device. The tip jar appears only AFTER a successful PDF export, never before, never as an interstitial."
+    },
+    {
+      "complaint": "\"While this app may look pretty, it is not easy to navigate. There is no view to see all the guests and whether or not they have been seated.\"",
+      "source": "App Store review, Wedding Seating Planner (Lily), 3.0★",
+      "weWinIf": "A permanent unseated tray with a live count ('14 of 137 unseated') that is visible at all times and never scrolls away. This is the single highest-value UI element in the whole app and half the competition omits it."
+    },
+    {
+      "complaint": "\"There's a max of seats and now I can't use it\" — free tiers cap out at 30–50 guests (SimplifyTables 30, SeatBloom 40, SeatCanvas 40, SeatYourself 50), which is below almost every real wedding.",
+      "source": "App Store review (Lily) + pricing pages for SimplifyTables, SeatBloom, SeatCanvas, SeatYourself",
+      "weWinIf": "No cap, ever, and say the number out loud: 'tested to 500 guests.' The cap is discovered mid-work, after the user has typed in 40 names — that betrayal is the emotional peak of the category and we can simply never do it."
+    },
+    {
+      "complaint": "\"I just tried to change someone from one table to another and the app crashes every time I do this.\"",
+      "source": "App Store review, Wedding Seating Planner (Lily)",
+      "weWinIf": "Moving one guest between tables is THE core verb; it must be bulletproof and available three ways — drag, tap-guest-then-tap-table, and keyboard (select + arrow/enter). Drag-only is why these apps die on phones. Ship the tap-tap path first, drag second."
+    },
+    {
+      "complaint": "Free tier gives you the full designer with no signup, then will not let you save or export — 'the free version allows unlimited design work but doesn't save your charts.' Saving and PDF export cost £8.",
+      "source": "seatplan.io pricing (verified directly on site)",
+      "weWinIf": "Autosave from keystroke one, and export is free and unwatermarked. This is a work-hostage pattern and calling it out plainly ('your plan saves itself, and the PDF is free') is a differentiator users will feel within 30 seconds."
+    },
+    {
+      "complaint": "\"I only seem to find ones with terrible reviews, or they're paid apps.\"",
+      "source": "r/weddingplanning, 'Good Seating Chart Apps?'",
+      "weWinIf": "The category's baseline expectation is that everything is either broken or extortionate. A polished, obviously-free, no-signup tool with a visible one-line privacy statement is a positioning win before a single feature ships."
+    },
+    {
+      "complaint": "\"Now you have to drag and drop individual people instead of whole parties (couples and families)\" — a regression that turned one action into four for every household.",
+      "source": "r/weddingplanning discussion of WeddingWire's updated seating tool",
+      "weWinIf": "Households/parties are a first-class object. 'The Kowalskis (4)' drags as one chip, seats as one block, and splits only when explicitly split. Import should auto-group by shared surname + address line, with a one-tap ungroup."
+    },
+    {
+      "complaint": "\"about 30 seconds to search each time I click... definitely wasn't a problem with the old guest list manager\" — after The Knot's redesign, the guest list became slow and lost the path from list to seating.",
+      "source": "r/weddingplanning, The Knot guest list manager discussion",
+      "weWinIf": "Everything is local, so search is instant across 300+ guests with no spinner. Typing a name should highlight that guest's seat on the floor plan in the same frame. Zero-latency search is a thing users notice as quality."
+    },
+    {
+      "complaint": "\"Zola seating chart feature gone?\" — 32 comments from couples who could not find the tool once RSVPs started arriving; separately, AllSeated shut its consumer tool and couples lost the floor plan they had built.",
+      "source": "r/weddingplanning thread (14 votes, 32 comments) + SeatBloom's account of the AllSeated→Prismm pivot",
+      "weWinIf": "Nothing to shut down. The app is a static page that keeps working offline, and there is an explicit 'export my plan as a file' backup that re-imports cleanly. Say in the footer: 'If this site disappears tomorrow, your saved file still opens in any copy of it.'"
+    },
+    {
+      "complaint": "QR-code seating charts fail at the venue: \"your venue does not have the bandwidth for 350 people to all be on the WiFi searching the exact same thing,\" plus older guests who cannot or will not scan.",
+      "source": "Wedding forum/TikTok criticism aggregated across QR seating chart discussions",
+      "weWinIf": "If we offer a QR lookup via the share link, the SAME export always includes a printed alphabetical guest→table sign as the fallback, in the same PDF, by default. We are the only tool positioned to say 'the paper always works' because we are offline-first anyway."
+    },
+    {
+      "complaint": "The 72-hour churn: \"Almost every wedding loses 5–10% of its guest list in the final week,\" \"most last-minute seating changes happen in the 72 hours before the wedding,\" and a top listed mistake is that \"the chart got committed to a permanent surface too early\" (painted wood, etched mirror) or that cancellations got 'fixed' by rearranging whole tables.",
+      "source": "SimplifyTables, 'Last-minute wedding seating changes' guide; SeatPlan.io blog on the same",
+      "weWinIf": "A 'changed since last export' view: after each PDF export we snapshot, and the next export highlights exactly who was added, moved or removed. That turns a full 140-card reprint into 'reprint these 6 place cards.' Nobody in the free tier does this and it is cheap client-side diffing."
+    }
+  ],
+  "tableStakes": [
+    "Paste-to-import a guest list (CSV, tab-separated from Sheets, or one-name-per-line) with automatic household/party grouping — and parties that drag, seat and unseat as a single unit.",
+    "A persistent unseated-guest tray with a live count, plus per-table seats-used-vs-capacity shown on every table (over-capacity flagged, not silently allowed).",
+    "Both interaction models: drag-and-drop on desktop AND tap-guest-then-tap-table on touch, plus keyboard operation. Drag-only is the #1 reason these apps get 1-star mobile reviews.",
+    "Must-sit-together and keep-apart constraints with LIVE violation warnings surfaced in a standing conflict panel — Seatbee and Brunchie both ship this, so its absence now reads as a toy.",
+    "Real undo/redo and autosave that survives a reload, a crash and a closed laptop. Users make and unmake the same seating decision ten times.",
+    "Table shapes and sizes that match reality: rounds of 8/10/12, long banquet and king's tables, a sweetheart table, a head table, plus non-table objects (bar, dance floor, DJ, cake) — and tables labelled by name, not only number.",
+    "Print-ready PDF in three distinct outputs, because they are three different jobs: the floor-plan chart (for the coordinator), the alphabetical guest→table sign (for the entrance), and escort/place cards on standard Avery stock (5302 tent, 5371, 80504).",
+    "Meal/entrée choice, allergy and dietary flags per guest, rolling up to meal counts per table for the caterer, with the meal indicator printable on the place card.",
+    "Instant search that finds a guest by name and highlights exactly where they are seated on the plan.",
+    "Export/backup the entire plan as a file that re-imports, and a read-only share for the coordinator, caterer and venue — three parties who all need the final list and none of whom should need an account."
+  ],
+  "differentiators": [
+    "A standing CONFLICTS panel instead of hidden validation: 'Ruth & Gerald are seated together (keep apart) · Table 6 is 11 of 10 · 14 guests unseated.' Canva and Google Sheets structurally cannot do this, and it is pure client-side logic. Make it the app's signature screen.",
+    "No cap and no export wall, stated as a promise on the first screen: unlimited guests, unlimited tables, unwatermarked PDF, no account. This directly inverts the two dominant dark patterns in the category (40-guest caps and pay-to-save).",
+    "Avery-calibrated place-card and escort-card PDFs (5302 / 5371 / 80504) with a one-page alignment test print and a nudge control in millimetres. DIY print misalignment is a documented, unglamorous pain that no free tool has actually solved, and it is all client-side PDF geometry.",
+    "A free caterer/coordinator handoff sheet: one page, meal counts per table, allergies called out, kids' and vendor meals separated. Competitors treat this as a Pro feature; SeatBloom sells it as a learn-page. It is a template over data we already have.",
+    "'Changed since last export' diffing so the 72-hour churn means reprinting six place cards instead of the whole set — with a 'print only changed cards' PDF. High perceived value, low build cost, and it maps to the exact moment users are most stressed.",
+    "Offline-first PWA as a day-of promise, not a technical footnote: it works in a venue basement with no signal, which is precisely where the QR-lookup startups fail ('your venue does not have the bandwidth for 350 people'). Put 'works with no signal' on the landing page.",
+    "Round-trip with the real competitor rather than fighting it: paste straight out of Google Sheets, and export back to CSV/JSON. Couples already keep the master list in Sheets and will not abandon it — be the layer that makes their spreadsheet printable.",
+    "Privacy as a feature the category has never claimed: keep-apart pairs are the most sensitive data in wedding planning (divorced parents, estranged siblings). Guarantee in-app that constraint reasons never appear on any printed output or share link, and that nothing is uploaded. No cloud competitor can honestly say this."
+  ],
+  "aesthetic": {
+    "categoryConventions": "Two visual camps, and both are traps. (1) The consumer wedding-tech look — Zola, The Knot, Joy, Minted: airy white, very generous whitespace, a high-contrast display serif for headings over a neutral sans body, blush/sage accents, soft rounded photo cards, lots of lifestyle photography. Pretty, but it is design-tool language, not working-tool language, and it usually hides the numbers the user actually needs. (2) The venue/B2B look — Prismm (ex-AllSeated), Social Tables, PerfectTablePlan: grey CAD chrome, dense toolbars, small type, 3D floor plans, Windows-era dialogs. Functionally the gold standard, aesthetically it says 'this is not your wedding, it is our software.' DATED in 2026: script and calligraphy fonts used as interface type rather than decoration; gold-foil gradients, glitter and letterpress textures; blush-pink-everything; beveled 'cardstock' skeuomorphism and drop shadows; stock photography of hands and rings; desktop app chrome. CURRENT: editorial serif display (Fraunces/Playfair energy) paired with a plain grotesk, flat surfaces on one warm off-white ground, hairline rules instead of card shadows, restrained earth-tone accents, and typography that is confident enough to carry the page without ornament. One critical calibration point: Zola's 2026 First Look Report says 53% of weddings now incorporate green, with sage green the dominant color and terracotta and dusty blue immediately behind — so sage and dusty blue are the category CLICHÉ right now, not a signal of taste.",
+    "emotionalContext": "This is the most emotionally loaded artifact in wedding planning — multiple sources call it 'the most emotionally demanding part of wedding planning,' and the named hard cases are divorced parents, new partners, and estranged relatives. There are two distinct sessions and the design must serve both. SESSION ONE: kitchen table, 10pm, laptop, RSVPs half in, a partner or a mother leaning over the shoulder and possibly disagreeing out loud. The user is not exhausted, they are TENSE AND NEGOTIATING. They will make and unmake the same decision ten times and they need permission to experiment. SESSION TWO: the 72 hours before the event, on a phone, standing up, when 5–10% of the yes-RSVPs evaporate and the coordinator wants a corrected list right now. Design consequences: (a) every action reversible and visibly so — a real undo, no destructive confirm dialogs that punish exploring, because exploring IS the task; (b) the app must never editorialize about the emotional content — no cutesy copy, no 'uh oh, family drama!' — it should be calm and almost clerical, so a keep-apart violation is a quiet amber row with neutral wording, never a red alarm; (c) keep-apart pairs are private and must never print or appear in a shared link, and the UI should say so where the user enters them; (d) two people read one screen from across a table, so 16px minimum body, 44px+ targets, high contrast, and absolutely no thin grey-on-grey secondary text; (e) desktop-first canvas for session one, but the phone must be fully capable for session two, which means tap-to-move, not drag-only.",
+    "recommendedFeel": "composed, warm-neutral, editorial, quietly ceremonial, forgiving, unfussy"
+  },
+  "colorRecommendation": {
+    "hueFamily": "Deep aubergine / plum-wine — primary around #4A2545 with a lighter #6B3A5E for interactive states, a muted brass accent near #B08A4E, all on a warm off-white paper ground around #FAF7F3 and graphite #2A2429 for text.",
+    "rationale": "Aubergine reads as evening, reception, celebration and formality without reading as 'bride.' Burgundy and wine ARE inside the 2026 wedding color vocabulary (they appear in every trend roundup), so the app feels native to the occasion — but plum/aubergine specifically is far less used than sage green, dusty blue or blush, so it is ownable rather than invisible. Practically it earns its place: it is dark enough to hold white text at AA/AAA in the toolbars and headers the user stares at for two hours; it is warm enough to escape the Prismm/PerfectTablePlan 'venue software' read; and it leaves a clean semantic runway that a blue or green primary would not — amber for 'keep-apart violated,' desaturated teal for 'table full but valid,' neutral graphite for 'unseated' — none of which collide with plum. Keep the app chrome plum and the printable preview area a neutral paper white, so the chrome never fights the couple's own palette showing in the chart preview. And plum over warm neutral prints and photographs well on cream cardstock, which matters because the real deliverable here is paper.",
+    "avoid": "Sage green and eucalyptus — the single most-used wedding color in 2026 (53% of weddings use green per Zola's report); you would be both invisible and clashing with the user's own palette. Dusty blue — same saturation problem, plus blue is the studio-portfolio default we are explicitly avoiding across 23 apps. Blush and rose pink — dated, gendered, and it frames the app as 'for the bride' rather than for the couple, the coordinator and the caterer who all use the output. Gold-foil gradients, glitter and letterpress textures — instantly reads 2016 Etsy. Pure saturated red for conflict states — an app shouting in red about which relatives cannot sit together is emotionally wrong; use amber with neutral wording. Flat CAD grey with black text — the Prismm / Social Tables / PerfectTablePlan signature, which tells a couple this tool is not for them. And avoid any decorative script typeface as UI type; keep script out entirely, or confine it to the printed place-card templates where it belongs."
+  },
+  "confidence": "MEDIUM-HIGH overall, with an important methodology caveat. The session's WebSearch budget was already exhausted (200/200) before I began, so all discovery ran through DuckDuckGo HTML/Lite result pages plus direct page fetches. reddit.com, old.reddit.com, redlib mirrors, r.jina.ai, justuseapp.com, mojeek and Google Play all returned 403 — so every Reddit quotation here is second-hand via search-result snippets rather than read in-thread. The quotes are consistent across multiple independent snippets and the thread IDs are real (bcz6cn, 1bhp1ki, 1bnpe7f, tbfwde), but treat them as paraphrase-grade, not verbatim-grade. VERIFIED DIRECTLY ON SOURCE PAGES: App Store ratings, prices and review text for both iOS apps (4.5★/374 ratings with $5.99 weekly / $19.99 monthly / $69.99 annual IAP; 3.0★/2 ratings with $24.99 and $7.99 tiers); PerfectTablePlan v7 pricing ($29.95/£19.95/€26.95 one-time, 5 devices, offline, prints place cards/escort cards/stationery); SeatPlan.io's tier structure (free designer with no signup but no save, £8 Pro to save+export, £14 collaborate, £20/mo Event Manager); SimplifyTables' last-minute-changes timeline and the 5–10% final-week attrition figure. NOT VERIFIED DIRECTLY: SeatBloom and SeatCanvas free-tier caps and prices (seatbloom.com returned 403; taken from search snippets and competitor comparison pages, so directionally right but check the numbers before quoting them publicly); current Zola and WeddingWire feature state, since both tools sit behind accounts I cannot create; Google Play ratings and whether those Android apps carry ads; and the 'AllSeated shut down in 2024' claim — the Prismm B2B pivot is corroborated by G2/Capterra/Software Advice listings for Prismm as enterprise event software, but the specific 'left couples stranded' framing comes from competitor marketing (SeatBloom, floors.live) and is self-interested. The '53% of weddings incorporate green' figure is Zola's 2026 First Look Report as quoted in trend roundups, not read at Zola's source. Finally, I found no first-party App Store or Trustpilot review corpus for the newer web tools — they are too small and too new to have accumulated public complaints, so the complaint list skews toward the iOS apps and the incumbents, which is where the real user volume is anyway."
+}

@@ -1,0 +1,284 @@
+{
+  "slug": "pill-schedule",
+  "purpose": "A localStorage-only builder for a printable weekly medication card: you name whose meds it is, add each medication with dose, time-of-day tags (Morning/Noon/Evening/Bedtime) and a note, then print a Mon–Sun check-off grid (one row per med × time) for the fridge or pill-organizer day; the whole schedule can also be handed to another phone by copying a link or scanning a QR, with the data base64-encoded in the URL hash rather than uploaded.",
+  "structure": "Single page, no routing except an optional `#<base64>` import hash. `body > div.wrap` (index.html:796) holds everything except the toast, footer and QR dialog. Inside `.wrap`: (1) `header.app` (797) = 32px `img[src=icon.svg][alt=\"\"]` + `h1` \"Pill Schedule\" + `span.spacer` + `a#tipLink.tipbtn.hidden` (un-hidden by app.js:156-160). (2) `div.screenonly` (804) wrapping FOUR stacked `section.card`s: CARD 1 (805-809) has NO h2 — just `label.f > span \"Whose meds?\"` + `input#whoInput` and `p.disclaimer[style=\"margin:0\"]`; CARD 2 (811-829) h2 \"Add a medication\", a `div.row` holding `label.f[style=\"flex:1.4\"]` for `#medName` and `label.f` for `#medDose`, then a control-less `label.f><span>When</span>` (819), then `div.times#medTimes` with four `<label><input type=checkbox value=…>emoji + word</label>` pills (821-824), then `label.f[style=\"margin-top:10px\"]` for `#medNotes`, then `button#addMed.btn.primary[style=\"width:100%;margin-top:4px\"]`; CARD 3 (831-835) h2 \"The schedule\", empty `ul.plain#medList` filled by JS, and `p.hint#emptyHint` toggled by `.hidden`; CARD 4 (837-845) has NO h2 — `button#printBtn.btn.primary[style=\"width:100%\"]`, a `div.row[style=\"margin-top:8px\"]` of `#shareBtn` and `#qrBtn` (both plain `.btn`), and two `p.hint`s. (3) `div#sheet` (848) — `display:none` on screen (775), `display:block` only in print; JS fills it with the whole printed artifact. Outside `.wrap`: `div#toast[role=status][aria-live=polite]` (851), `footer.colophon` (852) with two inline-styled links, and `dialog#qrDlg` (854) containing an inline-styled `h3`, `canvas#qrCanvas[width=300][height=300]` and `button#qrClose.btn`. There is NO `<main>`, NO `<nav>`, NO skip link, NO fieldset, NO tabs, NO sticky bar, and the only ARIA in the entire file is on `#toast`. Main flow: type a name → type med + dose → tap one or more time pills → \"Add to the schedule\" → row appears in card 3 → repeat → scroll to card 4 → \"Print the weekly card\" (which calls renderSheet() then window.print()). `beforeprint` also re-renders the sheet so Ctrl/Cmd+P is never stale (app.js:99).",
+  "cssClasses": [
+    "`.wrap` — page container, max-width var(--wrap) + safe-area inline padding (237)",
+    "`.stack` / `.stack-sm` / `.stack-lg` / `.cluster` — rhythm and wrapping-group primitives; ALL UNUSED here (244-249)",
+    "`.row` — flex row, children get `flex:1 1 12rem; min-width:0` (253-254)",
+    "`.row.tight` / `.row.nowrap` — gap and wrap modifiers; UNUSED (255-256)",
+    "`header.app` — header bar, flex, min-height 60px (262)",
+    "`header.app img` / `.mark` — 32px square logo slot; `.mark` UNUSED (269-270)",
+    "`header.app h1` — app title at --t-xl 20px (274)",
+    "`header.app .tagline` — subtitle under h1; UNUSED here (278)",
+    "`header.app .spacer` — flex:1, pushes the tip jar right (287)",
+    "`a.tipbtn` — pill tip-jar link, min-height only 36px (291)",
+    "`.hero` / `.hero h2` / `.hero p` — intro block; UNUSED here (306-309)",
+    "`footer.colophon` — centered fine print, --ink-3 at 13px (311)",
+    "`footer.colophon a` — footer links, --ink-2; DEFEATED by inline style=\"color:inherit\" at 852 (320)",
+    "`.trust` / `.trust svg` / `.trust b` — privacy stamp component; UNUSED despite privacy being the app's core claim (326-337)",
+    "`section.card`, `.card` — the main surface panel, 20px pad / 24px ≥480px (340)",
+    "`section.card > h2`, `.card > h2` — uppercase 12px micro card label (352)",
+    "`.card > h2 + .sub` — negative pull-up; UNUSED (361)",
+    "`.card .sub` — card secondary text with 16px bottom margin; UNUSED (363)",
+    "`.well` — inset preview well; UNUSED here (366)",
+    "`label.f`, `.field` — form field wrapper, 16px bottom margin (410)",
+    "`label.f > span`, `.field > label` — field label text, 13px/600 --ink-2 (411); `.hint` inside gets 8px top margin (418)",
+    "`.frow` — form field row; UNUSED here (420)",
+    "`input[type=checkbox]` — 1.25rem accent-colored box; KILLED by `.times input{display:none}` (424)",
+    "`label:has(> input[type=checkbox])` — 44px flex row; specificity (0,1,2) so it WINS over `.times label` on display/gap/min-height/cursor (432)",
+    "`.btn` — base button, 44px min-height, 15px text (439)",
+    "`.btn.primary` — accent-fill main action; used TWICE full-width (461)",
+    "`.btn.danger` — destructive outline in --neg; the row ✕ (469)",
+    "`.btn.ghost` / `.btn.plain` — transparent tertiary; UNUSED (472)",
+    "`.btn.small` — 36px compact; the delete ✕ (478)",
+    "`.btn.big` / `.btn.block` / `.btn.icon` — size/width/icon modifiers; ALL UNUSED (479-484)",
+    "`.seg` / `.seg button` / `.seg .tab` / `.active` — segmented control; UNUSED (487-516)",
+    "`.hint` / `.footnote` / `.small` — 13px secondary copy, lh 1.35, capped 64ch (519)",
+    "`.em` / `.muted` — inline emphasis and muted color; UNUSED in markup (526-527)",
+    "`.chip` / `.chip.on` / `.chips` — pill tags; UNUSED (529-539) — note `.times label` is a hand-rolled duplicate of exactly this",
+    "`.warn` — warning callout band; UNUSED, though the medical disclaimer wants it (541)",
+    "`ul.plain`, `ol.plain` — unstyled list container (555)",
+    "`ul.plain > li` — 44px flex row, 15px text, bottom divider (556)",
+    "`ul.plain .grow` — flexible text column, overflow-wrap:anywhere (564)",
+    "`.sub` — secondary line, 15px --ink-2; used BOTH in the list row and in the printed sheet (568)",
+    "`.empty` / `.empty .glyph` / `.empty h3` / `.empty p` — teaching empty state; UNUSED (573-594)",
+    "`.tablewrap` / `table` / `th` / `td` — scrolling table shell; UNUSED on screen (600-621)",
+    "`#toast` — fixed bottom pill, visibility:hidden when idle (624)",
+    "`#toast.show` — visible state, toggled by app.js:26/28 (644)",
+    "`.actionbar` — sticky bottom bar; UNUSED, though Print is the whole point (647)",
+    "`:focus-visible` — 2px --focus outline + 4px halo; inputs get border-color instead of offset (664-672)",
+    "`.sr-only` — visually hidden text; UNUSED (674)",
+    "`.skip` — skip link; STYLED BUT NOT PRESENT in the markup (682)",
+    "`.hidden` — display:none !important; the app's only show/hide, on #tipLink and #emptyHint (694). `.nowrap`/`.tnum` UNUSED (695-696)",
+    "`.noprint` / `.no-print` / `.screenonly` — hidden in print, only `.screenonly` used (736, 778); `.printonly` UNUSED — #sheet uses its own id rule instead (737)",
+    "`.times` — flex wrap container for the four time pills, gap:6px (764)",
+    "`.times label` — the time pill; only its border/radius/padding/13.6px/--muted survive (display, gap, min-height, cursor are overridden by the base :has rule) (765-768)",
+    "`.times label:has(input:checked)` — selected pill, --accent fill + --accent-ink (769)",
+    "`.times input` — `display:none`; removes the checkbox from tab order AND the a11y tree (770)",
+    "`.disclaimer` — 12.8px italic --muted medical disclaimer (772)",
+    "`#sheet` — the printed artifact container, display:none on screen, display:block + 4mm side padding in print (775, 779)",
+    "`#sheet h1` / `#sheet .sub` — printed title 17pt centered and the 'Week of ___' subline 9pt #555 (780-781)",
+    "`#sheet table` / `th` / `td` / `td.day` — 9.5pt grid, 1pt #999 rules, #f0f0ee 8.5pt uppercase header, seven 8%-wide centered check columns (782-785)",
+    "`#sheet .box` — 10pt × 10pt tick square, 1pt #555, 2pt radius (786)",
+    "`#sheet .med` / `.dose` / `.when` — bold name+dose line, an 8.5pt dose class that is DEAD CSS (JS folds the dose into `.med`, app.js:86), and the 8.5pt time+note line (787-789)",
+    "`#sheet .foot` — 8pt italic #666 printed medical disclaimer (790)"
+  ],
+  "dynamicMarkup": "Two render functions, both `replaceChildren()` + a tiny `el()` helper (app.js:7-21); all user data goes in via textContent, no innerHTML anywhere.\n\nrenderList() (app.js:55-70) fills `ul#medList` with, per med: `<li>` (NO class — relies entirely on `ul.plain > li`) containing `<div class=\"grow\">` → `<div>` with a bare `<strong>` med name plus plain-text `\" — \" + dose`, and `<div class=\"sub\">` with `sortTimes(times).join(' · ')` plus `\"  ·  \" + notes`; then a sibling `<button class=\"btn small danger\" type=\"button\" aria-label=\"Remove <name>\">✕</button>`. It also toggles `.hidden` on `#emptyHint` (app.js:58). Classes emitted: `grow`, `sub`, `btn small danger`, `hidden`.\n\nrenderSheet() (app.js:72-95, called from `#printBtn` at :123 AND from the `beforeprint` listener at :99) rebuilds `div#sheet` from scratch: `<h1>` \"<who>’s Medication Schedule\" (a SECOND h1 in the document), `<div class=\"sub\">` \"Week of ______________ · check each box when taken\", then `<table>` → `<thead><tr><th>Medication & when</th>` plus seven `<th style=\"text-align:center\">` day names — an INLINE STYLE generated at runtime (app.js:80) — then `<tbody>` with ONE `<tr>` per med × per time, each row being a `<td>` holding `<div class=\"med\">name · dose</div>` and `<div class=\"when\">time — notes</div>`, followed by exactly seven `<td class=\"day\"><span class=\"box\"></span></td>` (app.js:88). Finally `<div class=\"foot\">` with the medical disclaimer. Classes emitted: `sub`, `med`, `when`, `day`, `box`, `foot`. `.dose` is styled at index.html:788 but NEVER emitted.\n\nElsewhere: `#toast` gets its textContent replaced then `.show` added and removed on a timer (app.js:22-29); `#tipLink` gets an `href` and loses `.hidden` (app.js:156-160); `canvas#qrCanvas` is painted imperatively against a hardcoded `size = 300` (app.js:186-193); `dialog#qrDlg` opens via `showModal()` with a non-modal `setAttribute('open','')` fallback (app.js:196).\n\nA restyle that renames `grow`, `sub`, `med`, `when`, `day`, `box`, `foot`, `hidden`, `show`, or `btn small danger`, or that expects a wrapper element around the `<li>` contents or around the sheet table, breaks silently — every one of these nodes is hand-built and there is no shared template to update.",
+  "comfortDefects": [
+    {
+      "issue": "The per-app type uplift is DEAD. The skin declares `--t-base:1.060rem; --t-lg:1.126rem; --t-sm:0.994rem` for this app precisely because the output is read by ageing eyes, but the base layer re-declares the same custom properties on the same `:root` selector LATER in the file, so the base wins the cascade and the app renders at the portfolio default. The same collision kills `--r` (10px intended, 14px rendered) and `--wrap` (52rem intended, 42rem rendered).",
+      "where": "index.html:26-34 (skin :root) vs index.html:154-156, 169, 185 (base :root); root cause design/build.mjs:366 concatenates studio.css after the skin block",
+      "fix": "In design/build.mjs emit the skin block AFTER studio.css, or have studio.css declare scale/radius/wrap as fallbacks (`--t-base:var(--skin-t-base, 1rem)`). Verify with getComputedStyle(document.documentElement).getPropertyValue('--t-base') — it must read 1.060rem here. Affects every app whose skin sets scale, r or wrap."
+    },
+    {
+      "issue": "Every field label in the app is 13px. 'Whose meds? (first name is plenty)', 'Medication', 'Dose', 'When' and 'Notes (optional)' all render at --t-xs on a 17px body — the labels are smaller than the values they label, in an app explicitly built for a large-print audience.",
+      "where": "index.html:411-417 (`label.f > span`), applied at 806, 814, 816, 819, 826",
+      "fix": "Raise `label.f > span` to --t-sm minimum; for this skin go to --t-base. Keep weight 600 and stop relying on colour alone for the label/value distinction."
+    },
+    {
+      "issue": "Section headings are 12px uppercase with 0.075em tracking. 'ADD A MEDICATION' and 'THE SCHEDULE' are the only structural signposts on the page and they are the smallest type on it.",
+      "where": "index.html:352-359 (`section.card > h2`), applied at 812, 832",
+      "fix": "Override the micro-label for this app to --t-sm/600 sentence case, or keep uppercase at --t-xs with more weight. 12px uppercase is the wrong call for a medication tool."
+    },
+    {
+      "issue": "The time-of-day pills — the primary selection control in the whole app — are 13.6px, below the 15px body floor, and coloured with the legacy `--muted` alias (which also excludes them from high-contrast mode, see a11y).",
+      "where": "index.html:767 (`.times label{font-size:.85rem; color:var(--muted)}`)",
+      "fix": "Rebuild on `.chip` / `.chips` (index.html:529-539) at --t-sm with --ink text, and let the base gap apply."
+    },
+    {
+      "issue": "The medical disclaimer — the sentence that tells a family this is not medical advice — is 12.8px, italic AND muted. Small + italic + low-contrast is the worst available treatment for the most consequential sentence on the page.",
+      "where": "index.html:772 (`.disclaimer`), markup at 808",
+      "fix": "Use the existing unused `.warn` component (index.html:541): --t-sm, --ink text, warn-soft ground, left rule. Drop the italic."
+    },
+    {
+      "issue": "All instructional copy is 13px at line-height 1.35, under the 1.45 floor for multi-line text. That covers the empty-state teaching line and both hints under the print/share buttons, all of which wrap to two or three lines on a phone.",
+      "where": "index.html:519-525 (`.hint{font-size:var(--t-xs); line-height:var(--lh-snug)}`), markup at 834, 843, 844",
+      "fix": "`.hint{font-size:var(--t-sm); line-height:1.5}` at least in this skin."
+    },
+    {
+      "issue": "The medication list — the actual data — renders at 15px while body copy is 17px. The name is a bare `<strong>` and the dose is plain text appended after an em dash, so the two most safety-relevant values on the page share one size and near-identical weight.",
+      "where": "index.html:556-562 (`ul.plain > li{font-size:var(--t-sm)}`) plus app.js:62",
+      "fix": "Set the list row to --t-base or --t-lg for this app, and give the dose its own class so it can be tabular and distinct rather than a run-on string."
+    },
+    {
+      "issue": "Primary buttons are 15px — SMALLER than the 17px body copy around them. 'Add to the schedule' and 'Print the weekly card' are the two most important targets on the page and they carry the quietest type on it.",
+      "where": "index.html:443 (`.btn{font-size:var(--t-sm)}`), markup at 828, 838",
+      "fix": "`.btn{font-size:var(--t-base)}` and promote the two full-width primaries to `.btn.big` (index.html:479)."
+    },
+    {
+      "issue": "`style=\"flex:1.4\"` inverts the layout it was meant to fix. It resolves to `flex:1.4 1 0%` while its sibling keeps the base `flex:1 1 12rem`, so Dose's 192px basis is reserved first and only the leftover is split by grow factor. On a 320px phone the Medication input computes to ~51px wide against Dose at ~229px; even at the full 672px wrap it is 257px vs 375px. The longer field is narrower than the shorter one at every viewport.",
+      "where": "index.html:814 (inline style) against index.html:254 (`.row > *{flex:1 1 12rem}`)",
+      "fix": "Delete the inline style; give the row explicit basis control, e.g. `.row > *{flex:1 1 9rem}` plus a `.grow-2{flex-grow:1.4; flex-basis:9rem}`. Never mix a 0% basis with a rem basis in one flex row."
+    },
+    {
+      "issue": "The delete control is under the tap minimum in BOTH dimensions: `.btn.small` gives min-height 36px and padding 0 12px around a single ✕ glyph, so roughly 34×36px. It is also the only destructive action on the page and it has no confirm and no undo.",
+      "where": "index.html:478 (`.btn.small`) plus app.js:64",
+      "fix": "Use `.btn.icon` (index.html:484, 44×44) or keep the 36px visual inside a 44px hit area via a transparent `::after` inset, and add dead space between the row text and the button."
+    },
+    {
+      "issue": "The tip-jar link is 36px tall, under the 44px minimum, sitting alone in the header where there is plenty of room to be bigger.",
+      "where": "index.html:291-292 (`a.tipbtn{min-height:36px}`), markup at 801",
+      "fix": "Raise to var(--tap) or inset a 44px hit area."
+    },
+    {
+      "issue": "Footer links have no padding and inherit a 13px/1.35 line box, giving roughly 18px-tall touch targets — three of them on one wrapped line, one of which is a mailto that launches a mail client.",
+      "where": "index.html:852 (`<a href=\"../\">` and `<a href=\"mailto:…\">`) with index.html:311-314",
+      "fix": "`footer.colophon a{display:inline-block; padding:var(--s2) var(--s1); min-height:var(--tap)}`, or lay them out as a `.cluster` of small buttons."
+    },
+    {
+      "issue": "Only 6px separates adjacent 44px-tall time pills — below the 8px minimum spacing that stops a thumb hitting the wrong one. Selecting the wrong time of day on a medication schedule has a real-world consequence, not a cosmetic one.",
+      "where": "index.html:764 (`.times{gap:6px}`)",
+      "fix": "`gap:var(--s2)` minimum, `var(--s3)` preferred — there is room because the pills already wrap to two rows on a phone."
+    },
+    {
+      "issue": "No visual hierarchy among the actions. `#addMed` and `#printBtn` are BOTH `.btn.primary` forced to width:100% by inline styles in adjacent cards with identical fill and weight; directly under Print, `#shareBtn` and `#qrBtn` sit in a `.row` whose `flex:1 1 12rem` stretches them into near-full-width blocks. Four full-width buttons stack down the bottom of the page with no rank between them.",
+      "where": "index.html:828, 838 (inline `width:100%`) and 839-842 (`.row` of two `.btn`s)",
+      "fix": "One primary per screen region. Make Print the only `.btn.primary.big.block`; demote Copy link / Show QR to `.btn.small` inside a `.cluster` so they size to their content instead of stretching."
+    },
+    {
+      "issue": "On the printed artifact — the actual deliverable — the tick boxes are 10pt (~3.5mm), too small to mark reliably with a pen, the disclaimer is 8pt italic grey, and the grid rules are 1pt #999 = 2.85:1 against paper, which fades further on a photocopy or a low inkjet.",
+      "where": "index.html:786 (`#sheet .box`), 790 (`#sheet .foot`), 783 (`#sheet th, #sheet td{border:1pt solid #999}`)",
+      "fix": "Boxes to 14pt with a 0.75pt #333 rule; grid rules to #666 or darker; disclaimer to 9pt roman rather than 8pt italic."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "Nothing on screen tells a first-time user what this app produces. There is no hero, no sub-line under the h1 and no preview — the page opens straight into 'Whose meds? (first name is plenty)'. The `.hero` and `header.app .tagline` components both ship in the base layer and both go unused.",
+      "where": "index.html:797-809 (header + first card); unused components at index.html:278 and 306-309",
+      "fix": "Add a `.hero` with one sentence ('A one-page weekly card with tick boxes, for the fridge') plus a small thumbnail of the printed grid, above the first card."
+    },
+    {
+      "issue": "The printed card — the entire point of the app — is never visible on screen. `#sheet` is display:none outside print, so the only way to see what you are making is to open the browser's print preview.",
+      "where": "index.html:775 (`#sheet{display:none}`), markup at 848",
+      "fix": "Render a scaled live preview of `#sheet` inside a `.well` (index.html:366) in the print card, and keep the `beforeprint` re-render (app.js:99) so paper can never diverge from the preview."
+    },
+    {
+      "issue": "The empty state does not teach. It is a single 13px grey sentence under an invisible empty `<ul>`, so the 'The schedule' card renders as a 12px uppercase heading over one faint line. The base ships a real `.empty` component (glyph + h3 + explanation + room for a CTA) and it is unused.",
+      "where": "index.html:833-834 (`ul.plain#medList` + `p.hint#emptyHint`) vs unused `.empty` at index.html:573-594",
+      "fix": "Replace `#emptyHint` with the `.empty` block: glyph, 'No medications yet', one sentence, and a button that focuses `#medName`. Keep the id so app.js:58's `.hidden` toggle keeps working, or update that line."
+    },
+    {
+      "issue": "The share/print card is fully live with zero data. A first-time user meets three enabled buttons — Print the weekly card, Copy link, Show QR — all of which do nothing but fire a toast saying 'Add the medications first'. Three dead ends is the first impression.",
+      "where": "index.html:837-845 markup; app.js:122, 203, 207 (the toast-and-return guards)",
+      "fix": "Disable the card's buttons while `data.meds.length === 0`, with aria-describedby explaining why — or collapse the card entirely until the first medication exists."
+    },
+    {
+      "issue": "Delete is instant, unconfirmed and unrecoverable. The ✕ removes the medication, writes localStorage and re-renders in one click, with no confirm, no undo, and no toast naming what was removed. On a medication list this is the riskiest interaction in the app.",
+      "where": "app.js:64-68",
+      "fix": "Keep the click instant but add undo: toast 'Removed Lisinopril' with an Undo action for ~8s holding the removed record. That also gives the app the 'your work is safe' signal it currently lacks."
+    },
+    {
+      "issue": "There is no way to edit a medication. A typo in a name, a changed dose or a wrong time of day all require deleting the row and retyping every field including the notes.",
+      "where": "app.js:60-68 (the row renders only a delete button); no edit path exists anywhere in the app",
+      "fix": "Add per-row edit that repopulates the add-form and switches the button to 'Save changes'. Highest-value functional addition — reserve layout room for it in the overhaul."
+    },
+    {
+      "issue": "The user is never told their work is saved. `save()` is silent, there is no saved chip or timestamp, and the only persistence-adjacent copy is a footer privacy claim ('Stays on your device') which reads as a promise about secrecy, not durability. A caregiver has no reason to believe closing the tab is safe.",
+      "where": "app.js:46-48 (silent save), index.html:852 (footer copy)",
+      "fix": "Put the unused `.trust` component (index.html:326) near the list with 'Saved on this device — nothing is uploaded', and flash it briefly on each save."
+    },
+    {
+      "issue": "Importing a shared schedule uses a native `confirm()` with a long sentence, and then strips the hash from the URL WHETHER OR NOT the user accepted. Declining destroys the shared payload — there is no way to change your mind without asking the sender to resend the link.",
+      "where": "app.js:162-172 (`history.replaceState` at :171 sits outside the accept branch)",
+      "fix": "Replace `confirm()` with an in-page choice built from the design system, and only clear the hash after an explicit accept or dismiss."
+    },
+    {
+      "issue": "The 30-row cap is invisible until it blocks you. There is no counter, and the hint that describes the output only says 'One page' — so someone adding a tenth medication taken four times a day gets an abrupt refusal with no warning they were approaching a limit.",
+      "where": "app.js:107-108 (the cap), index.html:844 (the hint that omits it)",
+      "fix": "Show 'x of 30 rows used' beside the schedule heading and warn around 24. Note the '30 rows = one page' premise is itself wrong — see printSupport."
+    },
+    {
+      "issue": "The two hint paragraphs are attached to the wrong controls. The share hint sits above the print hint, and both sit below all three buttons, so the sentence describing the Print button is the furthest thing on the page from it.",
+      "where": "index.html:843-844",
+      "fix": "Move the print description directly under `#printBtn` and the share description directly under the Copy link / Show QR pair."
+    },
+    {
+      "issue": "Two of the four cards have no heading at all — the 'whose meds' card and the print/share card. Because a `<section>` without an accessible name is not exposed as a landmark, and the page has no other structure, there is no scannable outline at all.",
+      "where": "index.html:805-809 and 837-845 (neither has an `h2`)",
+      "fix": "Give both an `h2` ('Who is this for', 'Print and share'), or demote them to `<div class=\"card\">` so they stop being phantom sections."
+    },
+    {
+      "issue": "On a scrolling page whose whole purpose is one button at the bottom, there is no sticky action bar, no anchor and no skip link. The base ships `.actionbar` and `.skip` and both are unused, and there is no `<main>` to skip to.",
+      "where": "unused `.actionbar` at index.html:647, unused `.skip` at index.html:682; no `<main>` anywhere in the markup",
+      "fix": "Wrap the screen UI in `<main id=\"main\">`, add the skip link the base already styles, and put Print in an `.actionbar` that appears once at least one medication exists."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "BLOCKING: the four time-of-day checkboxes are `display:none`, which removes them from the tab order AND from the accessibility tree. A keyboard or screen-reader user cannot select any time of day — and because `#addMed` refuses to add a medication with zero times (app.js:105), the app's core function is entirely unusable without a pointer. Mouse users are unaffected because label activation still forwards the click to a display:none control, which is exactly why this has gone unnoticed.",
+      "where": "index.html:770 (`.times input{display:none}`), markup 820-825, consumed by app.js:104 and app.js:117",
+      "fix": "Swap `display:none` for the `.sr-only` pattern already in the base (index.html:674) so the input stays focusable and announced, then style the pill from `:has(input:focus-visible)` as well as `:has(input:checked)`. Verify by tabbing out of the Dose field: you must land on Morning, Noon, Evening and Bedtime in turn, hear checked/unchecked state, and toggle with Space."
+    },
+    {
+      "issue": "The checkbox group has no programmatic name, and `<label class=\"f\"><span>When</span></label>` is a `<label>` that labels nothing — invalid, non-clickable, and invisible to assistive tech as a group heading. A screen-reader user reaching the checkboxes (once they are reachable at all) hears four isolated options with no idea what question they answer.",
+      "where": "index.html:819 (the control-less label) and 820 (`div.times#medTimes`, no role, no labelling)",
+      "fix": "`<fieldset><legend>When</legend>…</fieldset>` styled to look identical, or `<div class=\"times\" role=\"group\" aria-labelledby=\"whenLbl\">` with a real `<span id=\"whenLbl\">`. Also wrap the emoji in `<span aria-hidden=\"true\">` so the accessible name is 'Morning', not 'sun with face Morning'."
+    },
+    {
+      "issue": "The selected time pill fails text contrast: --accent-ink #f8fcff on --accent #258cbc computes to 3.66:1, below 4.5:1. Every other filled surface in the base correctly uses --accent-fill #00729e, which measures 5.22:1 — this rule simply reached for the wrong token.",
+      "where": "index.html:769 (`.times label:has(input:checked){background:var(--accent); color:var(--accent-ink)}`)",
+      "fix": "`background:var(--accent-fill); border-color:var(--accent-fill)`. Dark mode is already fine (10.3:1) but re-check after the change."
+    },
+    {
+      "issue": "The UNSELECTED time pill's only boundary is `1px solid var(--line)` — #d0e0ea on the card's #fcfeff is 1.34:1, far below the 3:1 WCAG 1.4.11 requires for the boundary of a user-interface component. The pills read as borderless, so the control does not look interactive until one is chosen.",
+      "where": "index.html:766 (`.times label{border:1px solid var(--line)}`)",
+      "fix": "Use --line-2 (~3.2:1 on the card) and add a non-colour selected indicator — a tick glyph or a 2px inset ring — so selection is not conveyed by colour alone."
+    },
+    {
+      "issue": "The QR code has no accessible name and no text alternative. `<canvas>` content is invisible to assistive tech, the `<dialog>` has no `aria-labelledby`, and the URL the QR encodes is never rendered as selectable text anywhere — so a blind user who opens the QR dialog gets an unlabelled graphic and a Close button.",
+      "where": "index.html:854-858 (`dialog#qrDlg`, `canvas#qrCanvas`), app.js:182-197",
+      "fix": "`<canvas role=\"img\" aria-label=\"QR code for this schedule's link\">`, `aria-labelledby` on the dialog pointing at the h3, and render the actual URL beneath the canvas in a read-only input that can be copied."
+    },
+    {
+      "issue": "The QR dialog's heading is hardcoded `color:#111` in an inline style while the `<dialog>` declares no background. Because `:root` sets `color-scheme:light dark` (index.html:25), the UA paints the dialog on the dark system Canvas in dark mode — near-black text on a near-black panel, roughly 1.1:1. The `.btn` inside is themed and the dialog around it is not, so the modal is inconsistent even in light mode.",
+      "where": "index.html:854 (`style=\"border:none;border-radius:14px;padding:18px\"`) and 855 (`style=\"margin:0 0 10px;color:#111\"`)",
+      "fix": "Delete both inline styles and add a real `dialog{background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:var(--r-card)}` rule plus a `::backdrop`."
+    },
+    {
+      "issue": "The footer fails contrast twice over. Its body text is --ink-3 #7c8c96 on --canvas #eff9ff = 3.25:1 at 13px, and the two links carry `style=\"color:inherit\"` which overrides `footer.colophon a{color:var(--ink-2)}`, dragging them to 3.43:1 as well. The privacy promise and the only feedback route are the lowest-contrast text on the page.",
+      "where": "index.html:311-313 (`footer.colophon{color:var(--ink-3)}`), 320 (the rule being defeated), 852 (the two inline `color:inherit` styles)",
+      "fix": "Delete the inline styles and set `footer.colophon{color:var(--ink-2)}` (5.58:1). Reserve --ink-3 for genuinely decorative text, which this is not."
+    },
+    {
+      "issue": "Placeholder text is --ink-3 on --field = 3.35:1, and in this app the placeholders are the ONLY format guidance that exists: 'Mom', 'Lisinopril', '5 mg, 1 tablet', 'with food · not with grapefruit'. Teaching content should never sit below 4.5:1, and it should not live in a placeholder at all since it vanishes on the first keystroke.",
+      "where": "index.html:396 (`::placeholder{color:var(--ink-3)}`), markup at 807, 815, 817, 827",
+      "fix": "Move the examples into persistent `.hint` text under each field and raise `::placeholder` to --ink-2."
+    },
+    {
+      "issue": "No landmarks anywhere. There is no `<main>`, no `<nav>` and no skip link even though the base ships `.skip` styles; two of the four `<section>`s have no heading so they are not exposed as regions either. A screen-reader user has no way to jump past the header or move between the add-form and the schedule.",
+      "where": "index.html:796-849 (zero landmarks besides header/footer); `.skip` styled but unused at index.html:682",
+      "fix": "`<a class=\"skip\" href=\"#main\">Skip to the schedule</a>` as the first body child, wrap `div.screenonly` in `<main id=\"main\">`, and give every card an `h2`."
+    },
+    {
+      "issue": "Validation errors are never associated with the field that caused them. Both failure paths — empty medication name, and no time selected — fire a floating toast at the bottom of the viewport while focus stays put. Nothing sets `aria-invalid`, nothing is referenced by `aria-describedby`, and focus is never moved to the offending control.",
+      "where": "app.js:103 and app.js:105 (both `toast(); return;`); inputs at index.html:815 and 820",
+      "fix": "Render the message inline beneath the field, set `aria-invalid=\"true\"` plus `aria-describedby` on `#medName` and on the time group, and move focus to the first invalid control."
+    },
+    {
+      "issue": "The live-region plumbing is fragile and incomplete. `#toast` is the only announcer and it sits at `visibility:hidden` between messages — a state that removes an element from the accessibility tree, so some screen readers drop the announcement depending on how the text change and the class change interleave. Separately `#medList` has no live region at all: adding a medication just moves focus back to the name field (app.js:119) with no confirmation, and deleting one is completely silent.",
+      "where": "index.html:640 (`visibility:hidden` on `#toast`), app.js:22-29 (text set, then class added), app.js:118-119 and 64-68",
+      "fix": "Keep a permanently-present `.sr-only` live region separate from the visual toast, and give `#medList` `aria-live=\"polite\"` with concise 'Lisinopril added, 2 times a day' / 'Lisinopril removed' announcements."
+    },
+    {
+      "issue": "The `prefers-contrast:more` override cannot reach roughly a third of this app's coloured text. It raises --ink-2 and --ink-3 by declaring them on `body`, but the legacy aliases (`--muted`, `--ink-soft`, `--chip-ink`) are defined on `:root` as `var(--ink-2)` and custom properties substitute at computed-value time — so `--muted` is frozen at the :root value and never sees the body-level override. Every rule using `var(--muted)` is silently excluded from high-contrast mode, including the time pills and the medical disclaimer.",
+      "where": "index.html:710-715 (the `prefers-contrast` block declares on `body`) vs index.html:74-84 (aliases resolved on `:root`); consumers at index.html:767 and 772",
+      "fix": "Either declare the high-contrast overrides on `:root` too, or migrate this app layer off the legacy aliases entirely (`var(--muted)` → `var(--ink-2)`). The migration is the safer fix and it removes the same trap for the other 22 apps."
+    }
+  ],
+  "printSupport": "Print is not a feature here — it IS the product. The app's only output is a sheet of paper, the README calls it \"a printable weekly medication card\", and one of the two primary buttons is Print.\n\nThere are TWO `@media print` blocks and they overlap: the base layer's (index.html:720-749) and the app's own (index.html:776-792), with the app's winning wherever they collide. The base block does the right general things — forces a white ground, 11pt body, kills shadows, sets `@page{margin:14mm}`, applies `break-inside:avoid` to cards/rows/list items and `break-after:avoid` to headings, strips link colour and underlines, and hides `.screenonly` (which wraps the entire screen UI at index.html:804). The app block then reveals `#sheet` and styles it in pt/mm: 17pt centred title, 9pt \"Week of ______________\" subline, a 9.5pt table with 1pt #999 rules, a 44% / 7×8% column split, 10pt tick squares and an 8pt italic disclaimer footer. Crucially `renderSheet()` is bound to `beforeprint` (app.js:99) as well as to the Print button, so Ctrl/Cmd+P can never emit a stale medication list — a deliberate safety decision that must survive the overhaul.\n\nBroken or missing:\n\n(1) THE ONE-PAGE PROMISE IS WRONG. app.js:108 refuses a 31st row with \"That's the one-page limit (30 rows)\", but nothing enforces page geometry. On US Letter with the base's 14mm margins there are ~713pt of usable height; the title block eats ~45pt, the header row ~18pt and the footer ~18pt, leaving ~631pt for rows. Each row is a 9.5pt `.med` line plus an 8.5pt `.when` line, both inheriting `line-height:1.55` from index.html:204 (the print block never resets it), plus 8pt of cell padding — roughly 36pt per row, i.e. about 17 rows per page. Thirty rows is two pages, and a long name plus a note wraps to three lines and makes it worse. Either set an explicit `line-height` on `#sheet` and tighten padding until 30 genuinely fits, or lower the cap and change the message string.\n\n(2) NO SCREEN PREVIEW. `#sheet{display:none}` (index.html:775) means the artifact is invisible until the browser's print dialog opens. For an app whose sole deliverable is this sheet, that is the biggest single gap.\n\n(3) The table header fill `#f0f0ee` (index.html:784) will not print for most users — browsers drop backgrounds unless \"background graphics\" is enabled and there is no `print-color-adjust:exact`. The header row will render as plain text separated only by its 1pt border.\n\n(4) Grid rules are `1pt solid #999` = 2.85:1 on paper (index.html:783). This sheet gets taped to a fridge, photocopied for a sibling and read by someone with ageing eyes; #999 is too light and gets lighter every generation. The `.box` tick squares are 10pt (~3.5mm), small for a daily pen mark.\n\n(5) The printed disclaimer is 8pt italic #666 (index.html:790) — the one clinically meaningful sentence on the page.\n\n(6) `dialog#qrDlg` is hidden by neither print block. If the QR modal is open when the user prints, the modal prints.\n\n(7) Margins are inconsistent: `@page{margin:14mm}` from the base plus `#sheet{padding:0 4mm}` from the app gives 18mm sides against 14mm top and bottom.\n\n(8) No page-number or continuation affordance (\"Page 1 of 2\", or a repeated title), which matters precisely because the sheet does overflow. `thead` repetition works only by UA default; it is not declared.\n\n(9) Nothing prints the date the sheet was generated. \"Week of ______________\" is a hand-filled blank, which is a good decision, but there is no \"printed on\" stamp to tell a family whether the sheet on the fridge is the current one — a safety-relevant omission on a medication schedule.",
+  "riskyToRestyle": [
+    "THE TIME PILLS ARE LOAD-BEARING JS, NOT DECORATION. app.js:104 reads `$('medTimes').querySelectorAll('input:checked')` and maps `c.value`; app.js:117 clears them via `querySelectorAll('input')`. If the overhaul converts the pills to `<button aria-pressed>` or any non-input toggle, adding a medication breaks completely and silently — the guard at app.js:105 will just toast 'Pick at least one time of day' forever. Fix the display:none a11y bug with `.sr-only` on the SAME `<input type=checkbox>` elements; do not change the element type.",
+    "THE CHECKBOX `value` STRINGS ARE A PERSISTED DATA FORMAT. 'Morning' | 'Noon' | 'Evening' | 'Bedtime' are written to localStorage under key `pill-schedule` (app.js:47), base64-encoded into every share URL (app.js:130), sorted against `TIME_ORDER` (app.js:37, 52) and validated on import with `TIME_ORDER.includes(t)` (app.js:145). Changing a label's `value` — even to add an emoji or change case — silently invalidates every schedule already saved on a device and every share link already sent. Change the visible text only; never the `value` attribute.",
+    "CLASS NAMES THE JS EMITS AND THE CSS MATCHES BY HAND: `grow`, `sub`, `btn small danger`, `hidden` from renderList (app.js:61-68) and `sub`, `med`, `when`, `day`, `box`, `foot` from renderSheet (app.js:76-94), plus `show` on `#toast` (app.js:26/28). None come from a template — a rename in the stylesheet leaves the DOM untouched and the styling simply stops applying. Note `#sheet .dose` (index.html:788) is ALREADY dead CSS: app.js:86 folds the dose into `.med`, so that rule has never done anything.",
+    "THE SMOKE TEST ASSERTS ON MARKUP IN SIX PLACES. test/smoke.test.mjs:6 strips the EXACT string `<script type=\"module\" src=\"app.js\"></script>` — reordering attributes or adding `defer` makes the test load app.js twice. :32-34 grabs `#medTimes` inputs by INDEX (`boxes[0]`=Morning, `boxes[3]`=Bedtime), so reordering the four pills breaks it. :37 asserts the literal `'Morning · Bedtime'`, pinning the ` · ` join at app.js:63. :48-50 asserts the `#sheet tbody tr` count and exactly seven `td.day` per row, pinning the sheet's table structure and the `.day` class. :51 asserts the CURLY apostrophe in 'Mom’s Medication Schedule' (app.js:75). :52 asserts the substring 'not a medical record'. Run `node test/smoke.test.mjs` after every structural change.",
+    "THE QR CANVAS HAS TWO INDEPENDENT SIZE SOURCES THAT MUST MOVE TOGETHER. `canvas#qrCanvas[width=300][height=300]` (index.html:856) sets the bitmap while app.js:186 hardcodes `const size = 300` and derives `cell` and `off` from it — change one without the other and the code is drawn into a corner of the bitmap or clipped. Worse, the base's `img,svg,canvas,video{max-width:100%}` (index.html:230) has no `height:auto`, so inside a 300px-wide dialog on a narrow phone the canvas is squeezed horizontally while staying 300px tall: non-uniform scaling that can make the code unscannable. Add `height:auto` and test a real scan at a 320px viewport.",
+    "TEN INLINE `style` ATTRIBUTES WILL OUTRANK THE NEW COMPONENT CSS: index.html:808 (`margin:0`), 814 (`flex:1.4` — already producing an inverted field width), 826 (`margin-top:10px`), 828 (`width:100%; margin-top:4px`), 838 (`width:100%`), 839 (`margin-top:8px`), 852 (two × `color:inherit`, already defeating the footer link colour), 854, 855 (`color:#111`, already broken in dark mode), 857. Plus one generated at runtime: `style=\"text-align:center\"` on the seven day `<th>`s (app.js:80). Strip them into classes BEFORE restyling or the new geometry will appear not to take effect in exactly these ten places.",
+    "THE `:root` TOKEN COLLISION IS A LANDMINE, NOT JUST A BUG. Because design/build.mjs:366 emits studio.css after the skin block, this app currently renders at `--r:14px`, `--wrap:42rem` and the default type scale instead of its intended 10px / 52rem / ×1.06. Fixing the order — which the overhaul should do — changes card radius, widens the container by 10rem and grows all type by 6% SIMULTANEOUSLY, re-flowing every line break on screen and in the measure. Do it as one deliberate, screenshot-verified step, never as a side effect of touching studio.css.",
+    "PRINT PAGINATION IS COMPUTED IN ABSOLUTE UNITS AND IS ALREADY WRONG. `#sheet` uses pt and mm throughout (index.html:779-791) so it does NOT respond to the --s* spacing tokens — but it DOES inherit `line-height:1.55` from the screen `body` rule (index.html:204), which the print block never resets. Row height is therefore ~36pt and only ~17 rows fit a page, against the 30-row 'one page' cap enforced at app.js:108. Any change to --lh-body, to `#sheet` padding, or to the 9.5pt/8.5pt sizes moves rows-per-page again. Whatever changes, re-derive the cap and update the message string.",
+    "THE `beforeprint` HOOK IS A SAFETY FEATURE, NOT A CONVENIENCE. app.js:99 re-renders the sheet on every print including Ctrl/Cmd+P, so the paper can never disagree with the data — the comment at app.js:98 says why. If the overhaul adds an on-screen preview or moves rendering into a shared function, the print path must still call it.",
+    "THE TWO `@media print` BLOCKS OVERLAP AND FIGHT. The base (index.html:720-749) and the app (776-792) both hide `.screenonly`, `header.app`, `footer.colophon` and `#toast`, and both set `body{padding:0}`. Adding an on-screen preview means reworking `#sheet{display:none}` (775) in a way that satisfies both, and `dialog#qrDlg` is hidden by neither. Consolidate to one print block per app during the overhaul.",
+    "THE SERVICE WORKER CACHES THE STYLESHEET. All CSS is inline in index.html by design (design/apply.mjs explains that a shared /studio.css would fall outside the SW scope and break offline), and sw.js:3 caches `./index.html` under `VERSION = 'pill-v5'` (sw.js:2). Existing installs keep serving the OLD design until VERSION is bumped. Bump it in the same commit as the restyle, for every app.",
+    "THE PALETTE IS DUPLICATED IN FOUR PLACES OUTSIDE THE STYLESHEET: `<meta name=\"theme-color\">` light/dark at index.html:12-13 (#eff9ff / #0c161b, mirroring --canvas), manifest.webmanifest `background_color` #eff9ff and `theme_color` #00729e, icon.svg's `<rect fill=\"#00729e\">`, and the pre-rendered marketing/stripe-thumbnail.png and marketing/thumb-256.png. A hue change that misses any of these leaves the installed-PWA splash screen, the browser chrome or the home-screen icon on the old brand."
+  ]
+}

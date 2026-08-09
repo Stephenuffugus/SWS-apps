@@ -1,0 +1,284 @@
+{
+  "slug": "qr-maker",
+  "purpose": "A no-backend generator for permanent (static) QR codes — pick a type (Link/Text/WiFi/Phone/Email), type into the fields, watch a canvas preview redraw on every keystroke, then download PNG (512/1024/2048px) or SVG; nothing is stored, nothing is sent, no persistence at all.",
+  "structure": "Single short page, no scrolling nav, no modals. body > div.wrap containing: (1) header.app — 32px icon.svg with alt=\"\" (index.html:778), h1 \"QR Maker\" (779), span.spacer (780), a#tipLink.tipbtn.hidden un-hidden by JS (781); (2) div.hero — h2 \"QR codes that never expire\" + one marketing p (784-788); (3) section.card #1 — div.seg#typeSeg[role=tablist][aria-label=\"Code type\"] (791, EMPTY in source, filled by JS) then div#fields (792, EMPTY in source, filled by JS). This card has NO h2 and no accessible name; (4) section.card #2 — h2 \"Your code\" (796, rendered by the base as a 12px uppercase micro-label), div#qrWrap > canvas#qrCanvas width=300 height=300 (797), p.hint#emptyHint (798), div.row with inline style=\"margin-top:10px\" holding label.f[style=\"flex:0 0 130px\"] > select#pngSize and label.f > select#ecLevel (799-812), div.row holding button#dlPng.btn.primary and button#dlSvg.btn (813-816), p.promise (817). Outside .wrap: div#toast[role=status][aria-live=polite] (821) and footer.colophon with two links carrying inline style=\"color:inherit\" (822). Scripts: vendor-qrcode.js as a classic script exposing the global qrcode(), then app.js as a module (824-825). There is NO <main>, NO skip link, NO <noscript>. Flow: init() (app.js:164) wires buttons, reveals the tip link, calls renderFields() then update(); every keystroke calls update() (app.js:56) which rebuilds the payload, encodes, and repaints the canvas synchronously — no debounce.",
+  "cssClasses": [
+    ".wrap — max-width var(--wrap)=40rem page gutter (index.html:242)",
+    "header.app — flex app bar, min-height 60px (267)",
+    "header.app img — 32x32 icon, border-radius --r-sm (274)",
+    "header.app h1 — --t-xl/20px app name (279)",
+    "header.app .spacer — flex:1 push (292)",
+    "header.app .tagline — subtitle under h1; SHIPPED BUT UNUSED here (283)",
+    ".mark — alt icon slot; UNUSED (275)",
+    "a.tipbtn — pill tip-jar link, min-height 36px (296)",
+    "#tipLink — the tipbtn instance; JS sets href + drops .hidden (app.js:167-169)",
+    ".hero — intro block, padding --s4/--s5 (311)",
+    ".hero h2 — --t-2xl/24px headline (312)",
+    ".hero p — --ink-2, capped at --measure (313)",
+    "section.card / .card — surface panel, --r-card 8px, --s5/--s6 padding (345)",
+    "section.card > h2 — 12px uppercase micro-label, --ink-2 (357)",
+    ".card .sub — 15px sub-line under a card heading; UNUSED (368)",
+    ".seg — segmented control shell, 4px padding, wraps (492)",
+    ".seg button, .seg .tab — tab, min-height 38px, transparent (502)",
+    ".seg button.active — accent-filled selected tab (517)",
+    "#typeSeg — the .seg instance, role=tablist, JS-populated (index.html:791)",
+    "#fields — unstyled container the field markup is injected into (792)",
+    "label.f — block field wrapper, margin-bottom --s4 (415)",
+    "label.f > span — 13px/600 field label text (416)",
+    ".field / .field > label — alternate field convention; UNUSED (415)",
+    ".hint — 13px/1.35 --ink-2 helper text, margin-top --s2 (524,530)",
+    "#emptyHint — the .hint carrying the only onboarding sentence (798)",
+    ".row — flex row, children flex:1 1 12rem, wraps (258)",
+    ".row.tight / .row.nowrap — gap/wrap modifiers; UNUSED (260-261)",
+    ".frow — 9rem-basis field row; UNUSED (425)",
+    ".cluster — wrapping inline group; UNUSED (254)",
+    ".stack / .stack-sm / .stack-lg — vertical rhythm; UNUSED (249-251)",
+    ".btn — 44px control, --r-ctl, shadow-0 (444)",
+    ".btn.primary — accent fill, --accent-ink (466)",
+    ".btn.danger — negative outline variant; UNUSED (474)",
+    ".btn.ghost / .btn.plain — transparent variants; UNUSED (477)",
+    ".btn.small/.big/.block/.icon — size modifiers; UNUSED (483-489)",
+    "#dlPng — primary download button (index.html:814)",
+    "#dlSvg — secondary download button (815)",
+    "#pngSize — export-resolution select, 512/1024/2048 (801)",
+    "#ecLevel — error-correction select M/Q/H, re-renders preview (807)",
+    "#qrWrap — APP LAYER: white centered well, padding 14px, radius 12px (769)",
+    "#qrCanvas — APP LAYER: max-width 100%, image-rendering pixelated (770)",
+    ".promise — APP LAYER: 0.85rem centered marketing line (772)",
+    "#toast — fixed bottom pill, hidden by opacity+visibility (629)",
+    "#toast.show — visible state toggled by app.js:26/28 (649)",
+    ".hidden — display:none !important; used on #tipLink and #emptyHint (699)",
+    ".sr-only — visually-hidden text; SHIPPED BUT UNUSED (679)",
+    ".skip — skip-to-content link; SHIPPED BUT UNUSED, no target exists (687)",
+    ".empty / .glyph / h3 / p — empty-state component; UNUSED but badly needed (578-599)",
+    ".well — inset preview surface; UNUSED (#qrWrap reinvents it) (371)",
+    ".trust / .trust svg / .trust b — privacy stamp; UNUSED despite the pitch (331)",
+    ".chip / .chip.on / .chips — status pills; UNUSED (534-544)",
+    ".warn — warning callout; UNUSED (546)",
+    "ul.plain / ol.plain / .grow — row list; UNUSED (560-569)",
+    ".tablewrap / table / th / td — scrollable table; UNUSED (605-625)",
+    ".actionbar — sticky bottom bar; UNUSED (652)",
+    "footer.colophon — centered 13px --ink-3 footer (316)",
+    ".sub — 15px secondary line (573)",
+    ".muted / .em / .small / .footnote — inline type utilities; UNUSED (524-532)",
+    ".nowrap / .tnum — utility; UNUSED (700-701)",
+    ".noprint / .no-print / .screenonly / .printonly — print toggles; UNUSED (740-742)"
+  ],
+  "dynamicMarkup": "Two containers are empty in source and entirely JS-built, so a restyle that only reads index.html sees none of this markup.\n\n(A) #typeSeg — renderTypeSeg() (app.js:42-51) calls seg.replaceChildren() then appends 5 buttons: `<button type=\"button\" role=\"tab\" class=\"active\">Link</button>` for the selected one and `<button type=\"button\" role=\"tab\" class=\"\">Text</button>` etc. for the rest. CRITICAL: non-active buttons get class=\"\" — there is NO `.tab` class on any of them. They are styled ONLY by the descendant selector `.seg button` (index.html:502) and the state by `.seg button.active` (517). If the overhaul moves segmented-control styling to `.seg .tab` / `.seg .tab.is-active` and drops the bare-element selector, all five type buttons render as raw unstyled browser buttons. No aria-selected is ever set.\n\n(B) #fields — renderFields() (app.js:60-95) calls box.replaceChildren() then appends, per type:\n - url: `<label class=\"f\"><span>Web address</span><input type=\"url\" placeholder=\"skywolf.example or https://…\" autocomplete=\"off\" value=\"\"></label>`\n - text: `<label class=\"f\"><span>Text</span><textarea placeholder=\"Any text — a message, an address, a serial number…\"></textarea></label>`\n - wifi: `<label class=\"f\"><span>Network name (SSID)</span><input type=\"text\" autocomplete=\"off\"></label>` + `<label class=\"f\"><span>Security</span><select><option value=\"WPA\">…</option><option value=\"WEP\">…</option><option value=\"nopass\">…</option></select></label>` + conditionally `<label class=\"f\"><span>Password</span><input type=\"text\" autocomplete=\"off\"></label>` (type=text, NOT password — the value is on screen and prints) + `<p class=\"hint\">Guests point their camera at the code and join…</p>`\n - tel: `<label class=\"f\"><span>Phone number</span><input type=\"tel\" placeholder=\"+1 555 010 1234\" autocomplete=\"off\"></label>`\n - email: `<label class=\"f\"><span>Email address</span><input type=\"email\" placeholder=\"hello@example.com\" autocomplete=\"off\"></label>`\nCRITICAL: every generated input, textarea and select carries NO class. They are styled purely by the element/attribute selectors at index.html:383-410 (`input[type=text]`, `input[type=url]`, `input[type=tel]`, `input[type=email]`, `select`, `textarea`). A restyle that switches control styling to classes (`.input`, `.select`, `.control`) leaves 100% of this app's form controls unstyled — 16px min font-size gone means iOS zooms on focus, 44px min-height gone means sub-target fields. Keep the element selectors, or teach app.js the new class names.\n\n(C) Class toggles at runtime: `.active` on seg buttons (app.js:47); `.hidden` on #emptyHint (app.js:116, 125, 133) and #tipLink (169); `.show` on #toast (26, 28). Renaming `.hidden`, `.show` or `.active` silently breaks behaviour with no error.\n\n(D) Canvas mutation: update() (app.js:107-136) and drawQrToCanvas() (helpers.js:55-69) write canvas.width / canvas.height as raw attributes — 300x300 on the empty and error paths (app.js:113-114, 130-131), and `cell * (moduleCount + 8)` on the success path (helpers.js:59-61), which is a data-dependent number (e.g. 296, 290, 285) that changes as the user types.\n\n(E) Transient anchor: download() (app.js:138-143) appends a bare `<a href download>` to document.body, clicks it, and removes it 300ms later. A new global `a{}` display/layout rule or a `body > *:last-child` rule can make it flash on screen.\n\n(F) el() helper (app.js:7-21): key `class` sets className, key `text` sets textContent, keys starting `on` become addEventListener. Anything else becomes setAttribute. There is no place to hook a class prefix — restyling means editing these call sites.",
+  "comfortDefects": [
+    {
+      "issue": "The type selector — the app's primary control — has 38px-tall targets, 6px under the system's own --tap:44px, with only a 4px gap between adjacent targets. On a 320px phone the five tabs wrap to two rows of 38px.",
+      "where": "index.html:502-505 (.seg button{min-height:38px}) instanced at index.html:791 / app.js:46",
+      "fix": "min-height:var(--tap) on .seg button, or 40px with --s2 gap. If the row gets too tall on mobile, switch the .seg to a 2-column grid rather than shrinking the target."
+    },
+    {
+      "issue": ".promise hardcodes font-size:.85rem (13.6px) and margin-top:6px, bypassing both the type scale and the 4px spacing scale, and reaches for the legacy --muted alias instead of --ink-2.",
+      "where": "index.html:772",
+      "fix": "font-size:var(--t-xs); margin-top:var(--s2); color:var(--ink-2). Better: promote it to the unused .trust component — this sentence is the app's whole value proposition and it is currently the smallest text on the page."
+    },
+    {
+      "issue": ".promise is text-align:center but inherits p{max-width:var(--measure)} with no margin-inline:auto, so its 64ch box is left-aligned inside the ~592px card and the centred sentence sits ~70px left of the QR code it sits under. Visibly off-axis on any screen wider than ~470px.",
+      "where": "index.html:772 combined with index.html:229",
+      "fix": "add margin-inline:auto (or max-width:none) to .promise. Audit every other centred p in the portfolio for the same base-rule collision."
+    },
+    {
+      "issue": "#qrWrap paints a hardcoded #fff and in dark mode becomes a ~300px pure-white slab at 21:1 against the #10160f page — a glare block for the exact night-time phone use this app invites (\"stick it on the fridge\").",
+      "where": "index.html:769",
+      "fix": "Keep the canvas ground white (scanners need it, and helpers.js paints white into the bitmap anyway) but inset it: give #qrWrap a --surface-2 frame with generous padding and only the canvas itself white, or dim the wrap to ~#e8e8e8 in dark mode. Do NOT tint the canvas."
+    },
+    {
+      "issue": "#qrWrap uses padding:14px and border-radius:12px — neither is on the scale, and 12px contradicts this skin's --r:8px, so the QR well is rounder than every card around it.",
+      "where": "index.html:769",
+      "fix": "padding:var(--s4); border-radius:var(--r-ctl). Then it tracks the skin when --r changes."
+    },
+    {
+      "issue": "The onboarding sentence — the single line telling a first-time user what to do — is 13px --ink-2 helper text tucked under a blank white square.",
+      "where": "index.html:798 (#emptyHint) styled by index.html:524-530",
+      "fix": "Replace with the unused .empty component (index.html:578-599): glyph, --t-lg h3, and 15px body. It is already in the stylesheet and costs nothing."
+    },
+    {
+      "issue": "Multi-line body copy runs at line-height 1.35 (--lh-snug), under the 1.45 comfort floor. The WiFi explainer is ~190 characters at 13px/1.35 — three to four tight lines.",
+      "where": "index.html:524-529 (.hint) applied to the paragraph built at app.js:87",
+      "fix": "Give .hint line-height:var(--lh-body) when it holds a sentence; reserve --lh-snug for single-line labels. Or raise .hint to --t-sm (15px)."
+    },
+    {
+      "issue": "Cold open shows an unlabelled blank white 300x300 rectangle. It reads as a broken image or a stalled loader, not as \"nothing to show yet\".",
+      "where": "app.js:110-118 (empty path fills the canvas white) rendered into index.html:797",
+      "fix": "Hide #qrWrap entirely while currentQr is null and show the .empty block in its place; swap back on first successful encode."
+    },
+    {
+      "issue": "image-rendering:pixelated plus a data-dependent backing store. drawQrToCanvas sizes the bitmap to cell*(modules+8) — e.g. 296px — and on a 320px viewport the CSS box is only ~220px after .wrap(16)+card(20)+qrWrap(14) gutters, a 1.35x non-integer downscale. Nearest-neighbour then renders modules at uneven widths, which is the classic cause of a preview that will not scan.",
+      "where": "index.html:770 with helpers.js:58-61",
+      "fix": "Render the preview at an integer multiple of the module count times devicePixelRatio and set an explicit CSS width that is an integer multiple, or use image-rendering:auto below the 1:1 threshold. This is a scanning-correctness issue, not only comfort."
+    },
+    {
+      "issue": "Field labels and all helper text sit at --t-xs (13px) while body copy scales up to 17px above 30rem — so on desktop the gap between prose and the labels people actually read while typing gets wider, not narrower.",
+      "where": "index.html:218 (body font-size bump) vs index.html:416-422 (label.f > span) and 524 (.hint)",
+      "fix": "Move field labels to --t-sm (15px) and give .hint/.small the same rem-scaling treatment as body, or drop the body bump so the ratio stays constant."
+    },
+    {
+      "issue": "Magic numbers in the markup: style=\"margin-top:10px\" and style=\"flex:0 0 130px\". The second pins the PNG-size field to 130px, which after the select's 32px caret gutter leaves ~85px for \"1024 px\" plus the caret — tight at large text sizes and it cannot respond to a new type scale.",
+      "where": "index.html:799 and index.html:800",
+      "fix": "Delete both. Use .frow (index.html:425) for the two-select row and let flex:1 1 9rem do the work."
+    },
+    {
+      "issue": "The second .row (download buttons) carries no top margin of its own; the only separation from the selects above is label.f's margin-bottom. Delete or restructure a label and the buttons collide with the selects.",
+      "where": "index.html:813",
+      "fix": "Wrap both rows in .stack, or give the button row an explicit margin-top:var(--s5) so its spacing does not depend on a sibling's bottom margin."
+    },
+    {
+      "issue": "#pngSize and #ecLevel are visually identical selects side by side, but changing toughness re-renders the live preview while changing PNG size does nothing visible at all — the user cannot tell which control is live.",
+      "where": "index.html:799-812; #ecLevel is wired at app.js:146, #pngSize is only read at app.js:150",
+      "fix": "Add a .hint under PNG size (\"applies to the downloaded file\") and move it beside the Download PNG button rather than next to the live control."
+    },
+    {
+      "issue": "The two download buttons are equal-width via .row > *{flex:1 1 12rem}, so primary and secondary read as the same weight and only the fill colour distinguishes them — no size, order or grouping hierarchy.",
+      "where": "index.html:258-259 applied at index.html:813-816",
+      "fix": "Use .cluster instead of .row so buttons size to content, and give #dlPng .btn.big. Consider parking both in the unused .actionbar so they stay reachable."
+    },
+    {
+      "issue": "Every keystroke triggers a full QR encode and canvas repaint with no debounce, while body carries a fixed-attachment 26px grid texture — on iOS the combination causes visible repaint jank while typing a long text payload.",
+      "where": "app.js:56 -> app.js:107; index.html:758-762 (background-attachment:fixed)",
+      "fix": "requestAnimationFrame-coalesce or 120ms-debounce update(); consider dropping background-attachment:fixed on touch devices."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "No empty state. Opened cold the page offers a blank white square, an unlabelled tab strip and one 13px line. The .empty component that would teach the flow is in the stylesheet and unused.",
+      "where": "index.html:790-798; unused component at index.html:578-599",
+      "fix": "Show an .empty block inside #qrWrap while currentQr is null: glyph, \"Your code appears here\", \"Pick a type above and start typing.\""
+    },
+    {
+      "issue": "The user never sees what will actually be encoded. buildPayload silently prepends https:// to anything without a recognised scheme — 'www.example.com' becomes 'https://www.example.com', and 'javascript:alert(1)' becomes the nonsense 'https://javascript:alert(1)'. On an app whose entire pitch is \"print this on 500 menus, it works forever\", there is no way to verify the payload before committing it to paper.",
+      "where": "helpers.js:16 (rewrite) with no readout anywhere in index.html or app.js",
+      "fix": "Render the final payload string under the code in a .well with monospace and a Copy button. This is the single highest-value addition to the app."
+    },
+    {
+      "issue": "Download buttons look fully enabled with no code present and only reveal the problem as a toast after the click.",
+      "where": "index.html:814-815; guard at app.js:148 and app.js:155",
+      "fix": "Set the disabled property on both when currentQr is null (the base already styles :disabled at index.html:412). Keep the toast as the fallback."
+    },
+    {
+      "issue": "Nothing tells the user that nothing is saved. There is no localStorage anywhere in the app — a reload or an accidental back-swipe silently destroys a typed WiFi SSID and password with no warning and no restore.",
+      "where": "whole of app.js — the `fields` object at app.js:39 is in-memory only",
+      "fix": "Either persist to localStorage with a visible \"saved on this device only\" note, or state the ephemerality up front (\"Nothing is saved — download before you close this\") near the download buttons. Silence is the worst of the three."
+    },
+    {
+      "issue": "No clear / start-over. Switching type keeps every previous type's values alive in the fields map, so a WiFi password typed ten minutes ago is still live and still encodable, but is invisible until the user navigates back to that tab.",
+      "where": "app.js:39 and app.js:55 (keys are type+'.'+key, never cleared)",
+      "fix": "Add a .btn.ghost \"Clear\" that empties `fields` and re-renders, plus a subtle indicator on tabs that already hold data."
+    },
+    {
+      "issue": "The WiFi password field is removed from the DOM when Security is set to Open, but fields['wifi.pass'] retains the value and it returns on switching back — invisible state the user cannot audit.",
+      "where": "app.js:83-86",
+      "fix": "Either delete the key when auth becomes nopass, or keep the field visible and disabled so the retained value is honest."
+    },
+    {
+      "issue": "No <noscript>. With JS blocked the page renders the hero, an empty tab strip, an empty fields div and a blank canvas — indistinguishable from a broken site.",
+      "where": "index.html:775-819 (no noscript anywhere); both containers empty in source at 791-792",
+      "fix": "Add a <noscript> .warn inside the first card: \"This tool runs entirely in your browser and needs JavaScript on.\""
+    },
+    {
+      "issue": "The input card has no heading at all, so there is no label over the app's primary work area and no anchor for anyone scanning the page by heading.",
+      "where": "index.html:790-793 (section.card with no h2, unlike the second card at 796)",
+      "fix": "Add an h2 (\"What to encode\") — the base renders it as the standard micro-label, matching \"Your code\"."
+    },
+    {
+      "issue": "On a phone the preview and download buttons sit below the fold while the user is typing, and there is no sticky element, scroll cue or in-page anchor. Typing feels like it produces nothing.",
+      "where": "index.html:795-818 — .actionbar (index.html:652) is shipped and unused",
+      "fix": "Put #dlPng/#dlSvg in the .actionbar so they stay pinned, or make #qrWrap position:sticky on narrow viewports."
+    },
+    {
+      "issue": "The error path contradicts itself: an over-long payload clears the canvas and un-hides #emptyHint, so the page says \"Start typing above\" to a user who has just typed too much, while the real explanation is a toast that vanishes in 4 seconds.",
+      "where": "app.js:126-135 (catch block re-shows #emptyHint) vs the text at index.html:798",
+      "fix": "Give the overflow case its own persistent .warn message near the canvas; leave the toast for transient confirmations only."
+    },
+    {
+      "issue": "No print button and no share path. The app's own copy tells people to print the code (index.html:817) and stick it on the fridge (app.js:87), but the only route to paper is download-then-open-elsewhere, and on iOS a downloaded PNG is several taps away.",
+      "where": "index.html:813-816 (only Download PNG / Download SVG)",
+      "fix": "Add a Print button that opens a purpose-built print layout, and use navigator.share/canShare with the PNG file where available."
+    },
+    {
+      "issue": "The only way back to the rest of the studio is a link buried in the footer with its colour overridden to the lowest-contrast token on the page.",
+      "where": "index.html:822",
+      "fix": "Drop the inline color:inherit so the base's footer.colophon a rule (index.html:325) applies, and consider a studio link in the header."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "Broken tablist. #typeSeg declares role=tablist and JS gives all five buttons role=tab, but nothing sets aria-selected, aria-controls, tabindex or arrow-key handling, and #fields is not a tabpanel. A screen reader announces \"tab\" five times and never says which is current; the selected state exists only as the .active class. This is a worse experience than plain buttons.",
+      "where": "index.html:791 (role=tablist) and app.js:46-49 (role:'tab', class:'active', no ARIA state)",
+      "fix": "Cheapest correct fix: drop role=tab/tablist and use aria-pressed={true|false} toggle buttons in a group with aria-label. If the tab pattern is kept, add aria-selected, aria-controls=\"fields\", id/aria-labelledby, role=tabpanel + tabindex=\"0\" on #fields, roving tabindex, and Left/Right/Home/End key handling."
+    },
+    {
+      "issue": "Focus is destroyed on every type switch. Clicking a type button calls renderFields() -> renderTypeSeg() -> seg.replaceChildren(), which removes the very button that has focus; focus falls to document.body. A keyboard user tabbing to \"WiFi\" and pressing Enter is dumped back at the top of the document.",
+      "where": "app.js:48 -> app.js:61 -> app.js:43-44",
+      "fix": "Reuse the existing buttons and only toggle classes/aria-selected, or capture the index before replaceChildren() and re-focus the corresponding new button afterwards."
+    },
+    {
+      "issue": "Focus is destroyed mid-interaction on the WiFi Security select. Its onchange calls renderFields(), which rebuilds the select as a brand-new node — so after choosing \"Open (no password)\" with the keyboard, focus is on body and the control the user was operating no longer exists.",
+      "where": "app.js:74 (onchange -> renderFields()) with app.js:63 (box.replaceChildren())",
+      "fix": "Only add/remove the password label rather than rebuilding #fields, and restore focus to the select if a rebuild is unavoidable."
+    },
+    {
+      "issue": "The canvas carries a static aria-label=\"Generated QR code\" that never changes, and <canvas> has no implicit img role, so many screen readers drop the label entirely. The label says a code was generated even when the canvas is a blank white square.",
+      "where": "index.html:797; the label is never touched anywhere in app.js",
+      "fix": "Add role=\"img\" and update the accessible name from update() to describe the actual payload — e.g. \"QR code for https://example.com\" or \"No code yet\"."
+    },
+    {
+      "issue": "No live region for the result. The code redraws and #emptyHint appears/disappears with pure class toggles, so a non-sighted user gets no signal that a valid code now exists or has just become invalid. #toast is a live region but only fires on the too-much-data error and on downloads.",
+      "where": "app.js:116, 125, 133 (classList toggles on #emptyHint) — no aria-live anywhere except index.html:821",
+      "fix": "Add a visually-hidden aria-live=\"polite\" status element that announces \"Code ready\" / \"Code cleared\", debounced so it does not fire on every keystroke."
+    },
+    {
+      "issue": "Footer body text fails contrast: --ink-3 #818d80 on --canvas #f3faf2 computes to 3.26:1 at 13px, well under 4.5:1. This is the text carrying the privacy promise (\"we never see what you encode\") — the app's core claim rendered in the least readable type on the page. Light mode only; dark mode is 5.06:1.",
+      "where": "index.html:316-317 (footer.colophon{color:var(--ink-3); font-size:var(--t-xs)}), instanced at index.html:822",
+      "fix": "Use --ink-2 (5.58:1) for footer.colophon, or darken --ink-3 in the light skin to roughly #6b7569. This is a base-layer fix that improves all 23 apps."
+    },
+    {
+      "issue": "Both footer links carry inline style=\"color:inherit\", which beats the base's footer.colophon a{color:var(--ink-2)} rule and drags them down to the failing 3.26:1 --ink-3 value, while also removing the colour distinction between link and text (only the underline remains).",
+      "where": "index.html:822 (two occurrences)",
+      "fix": "Delete both inline styles and let index.html:325-326 apply. Inline styles also silently defeat the overhaul's new link styling."
+    },
+    {
+      "issue": "Placeholder text fails contrast: --ink-3 #818d80 on --field #f8fcf8 computes to 3.35:1. These placeholders are not decorative — they carry the format examples ('skywolf.example or https://…', '+1 555 010 1234', 'hello@example.com') that tell the user what shape of input is expected.",
+      "where": "index.html:401 (::placeholder{color:var(--ink-3)}) applied to the inputs generated at app.js:66, 90, 93",
+      "fix": "Use --ink-2 for ::placeholder, or better, move the format examples into visible .hint text under each label so they survive typing."
+    },
+    {
+      "issue": "No <main> landmark and no skip link. The base ships a fully styled .skip component but the markup never uses it and there is no landmark target — landmark navigation offers only banner and contentinfo, with the entire app in an unlabelled region. This is a portfolio-wide gap: no app under apps/ contains <main> or class=\"skip\".",
+      "where": "index.html:775-819 (no main, no skip anchor); unused CSS at index.html:687-696",
+      "fix": "Wrap the two section.card blocks in <main id=\"main\"> and add <a class=\"skip\" href=\"#main\">Skip to the tool</a> as the first child of body."
+    },
+    {
+      "issue": "Both containers whose contents are entirely replaced (#typeSeg and #fields) are plain divs with no aria-live and no focus management, so the wholesale DOM swap on every type change is completely silent to assistive tech.",
+      "where": "index.html:791-792 with app.js:43-44 and app.js:62-63",
+      "fix": "Once the tab/panel relationship is correct, move focus into the panel after a switch (tabindex=\"-1\" on the panel) so the new fields are announced."
+    },
+    {
+      "issue": "The download buttons stay in the accessibility tree as ordinary enabled buttons when there is nothing to download, giving AT no indication that activating them cannot succeed.",
+      "where": "index.html:814-815 with the runtime-only guard at app.js:148 and app.js:155",
+      "fix": "Toggle the disabled property (or aria-disabled plus the existing :disabled styling at index.html:412) from update()."
+    },
+    {
+      "issue": "Focus ring geometry on the segmented control is fragile: :focus-visible draws a 2px outline at 2px offset, and .seg's own padding is exactly 4px, so the ring lands flush against the .seg border. On the active tab the ring colour --focus #3f8439 against the tab fill --accent-fill #367b30 is 1.13:1 — invisible. It only reads because the 2px offset pushes it onto --surface-2 (4.20:1). Any restyle that zeroes the offset, tightens .seg padding, or gives the seg overflow:hidden makes the selected tab's focus state disappear.",
+      "where": "index.html:669-673 (:focus-visible) against index.html:492-496 (.seg padding) and index.html:517-521 (.seg button.active)",
+      "fix": "Give .seg at least --s2 padding, and add an inner white/--surface ring (box-shadow inset) on .active:focus-visible so the indicator is legible on the accent fill regardless of offset."
+    }
+  ],
+  "printSupport": "There is a print block, but it is entirely the shared base layer (index.html:725-754) — this app adds ZERO print CSS of its own and has no Print button.\n\nIs print a core use case? Yes, emphatically, and the app says so itself: index.html:817 \"Print it as big as a billboard\" and app.js:87 \"Stick it on the fridge or frame it for the guest room.\" A QR code's normal destination is paper — a table tent, a flyer, a guest-room WiFi card, a shop window. Right now the only route to paper is Download PNG, open the file elsewhere, print from there.\n\nWhat the base gives you: --canvas/--surface/--field forced to #fff, ink to #000, shadows off, body at 11pt, .wrap unwrapped, @page margin 14mm, and display:none on header.app, footer.colophon, .tipbtn, .actionbar, #toast, .seg, .skip, .noprint/.no-print/.screenonly.\n\nWhat is broken today if a user just hits Cmd+P:\n1. The tab strip vanishes (.seg is hidden at index.html:740) but #fields does not — so the printed page shows input boxes with no indication of what kind of code they describe.\n2. The WiFi password prints in clear text. app.js:85 creates the password input as type=\"text\", and form control values render in print. Print the WiFi page and you hand out the network password in a bordered box next to the code. This is a privacy defect, not just a layout one.\n3. Both download buttons, the PNG-size select and the toughness select all print as dead controls. None carries .noprint.\n4. The hero paragraph and .promise marketing copy print — roughly a third of the page is sales text.\n5. The QR itself prints at ~300 CSS px (≈3.1 inch at 96dpi) from a ~296px backing store, so effective resolution is about 96dpi. That is at the low end of reliable scanning for a small code and visibly soft. image-rendering:pixelated (index.html:770) makes the module edges ragged rather than crisp in pipelines that honour it.\n6. #qrWrap's border and 12px radius print around the code; a quiet zone plus a hairline box is fine, but the rounded corner on a scanning target is noise.\n7. No print-only caption. A printed WiFi code with no visible SSID is useless to anyone whose camera fails; a printed link code with no visible URL is unverifiable.\n\nWhat to add during the overhaul:\n- A Print button next to the downloads.\n- An app-level @media print that hides .hero, the two selects, both download buttons and .promise (add .noprint to them), and drops the #qrWrap border.\n- A .printonly caption block under the code carrying the human-readable payload plus a type-appropriate line (\"Scan to join <SSID>\" / the URL as text), using the .printonly toggle the base already ships at index.html:742.\n- Render the print image from the SVG path (helpers.js:41-53) rather than the canvas, or repaint the canvas at 4x with a print-resolution CSS width — the SVG is resolution-independent and is the right source for paper.\n- Consider a dedicated \"WiFi card\" print layout: SSID, code, and \"Scan to join\" centred on one page. That is a real artifact people want and it is maybe 30 lines of CSS.\n- Never print the password unless the user opts in.",
+  "riskyToRestyle": [
+    "Canvas sizing is JS-owned and data-dependent. drawQrToCanvas (helpers.js:55-61) sets canvas.width/height to cell*(moduleCount+8) — a number that changes as the user types (296, 290, 285…) — and app.js:113-114 / 130-131 reset both to 300 on the empty and error paths. The width=\"300\" height=\"300\" attributes at index.html:797 are only the initial value. NEVER set a fixed pixel width/height on #qrCanvas in CSS: any non-uniform scale distorts the modules and can make the code unscannable. If you must control display size, set width and leave height:auto (as index.html:770 does today).",
+    "image-rendering:pixelated (index.html:770) is scan-critical, not aesthetic. Removing it softens module edges; keeping it while the CSS box is a non-integer fraction of the bitmap produces uneven module widths. Whichever you choose, verify by scanning the preview on a phone at 320px width — this is the one visual property in the app that has a functional failure mode.",
+    "Never theme the QR itself. The exported artifacts hardcode black on white in two places: helpers.js:63-64 (ctx.fillStyle '#fff' then '#000') and helpers.js:51-52 (the SVG <rect fill=\"#ffffff\"> and <path fill=\"#000000\">). #qrWrap's background:#fff (index.html:769) must stay light. Do not apply filter, opacity, mix-blend-mode, background-blend-mode or an accent tint to #qrWrap or #qrCanvas — inverted or low-contrast codes fail on a large share of scanners, and a downloaded file that does not match the on-screen preview is worse still.",
+    "All runtime form controls are class-less and styled only by element/attribute selectors (index.html:383-410). app.js:53-58, 68, 73-77 create bare input/textarea/select nodes. If the overhaul moves to class-based control styling, every field in this app loses its 44px min-height and its 16px min font-size — which means iOS Safari starts zooming the page on focus. Either keep the element selectors in the base, or update the five construction sites in app.js in the same commit.",
+    "Segmented-control buttons carry class=\"active\" or class=\"\" and nothing else (app.js:47). They depend on the bare descendant selectors .seg button and .seg button.active (index.html:502, 517). Introducing .tab / .is-active / .seg__item naming without editing app.js leaves five unstyled native buttons as the app's primary control.",
+    "Class names the JS toggles: .hidden (app.js:116, 125, 133, 169), .show (app.js:26, 28), .active (app.js:47), plus .f and .hint applied at app.js:65, 71, 80, 82, 84, 87, 89, 92. Renaming any of these in CSS breaks behaviour silently — no console error, just a permanently visible hint or an invisible tip jar. .hidden{display:none !important} (index.html:699) must keep its !important, because #tipLink also carries .tipbtn{display:inline-flex}.",
+    "IDs the JS reaches for by getElementById: toast, typeSeg, fields, qrCanvas, emptyHint, ecLevel, pngSize, dlPng, dlSvg, tipLink (app.js:6 and throughout). Adding wrapper elements around them is safe; renaming or removing any is a hard break. #typeSeg additionally must remain the direct ARIA parent of the role=tab buttons — wrapping each button in a div severs the tablist/tab ownership.",
+    "Four inline style attributes beat any new stylesheet rule without !important: index.html:799 (margin-top:10px), 800 (flex:0 0 130px), and two occurrences of color:inherit at 822. The last pair actively overrides the base's own footer link colour and drops it to a failing 3.26:1. Strip all four as the first step of the overhaul.",
+    "The stylesheet is generated and spliced. Everything between the markers at index.html:18 (\"▼▼▼ SWS STUDIO BASE\") and index.html:766 (\"▲▲▲ END SWS STUDIO BASE ▲▲▲\") is written by design/apply.mjs from design/studio.css + design/skins.mjs (this app's skin is at design/skins.mjs:175-179: hue 142, chroma 0.13, r 8, wrap 40rem, texture grid). Hand-edits inside the markers are destroyed on the next build. App-specific rules must stay below index.html:768.",
+    "Palette colours are duplicated in five files outside the stylesheet and will drift: index.html:12-13 (two theme-color metas, #f3faf2 / #10160f), manifest.webmanifest (background_color #f3faf2, theme_color #367b30), icon.svg:2 (rect fill #367b30, baked rx=\"14\" that fights the base's border-radius:var(--r-sm)=4px at the 32px render size in index.html:277), and marketing/stripe-thumbnail.png + marketing/thumb-256.png. A skin change must touch all of them.",
+    "The service worker will serve stale CSS after deploy. sw.js:3 lists a fixed ASSETS array and sw.js:20 is cache-first (`return cached || fetched`), so returning users get the OLD index.html on the first load after a deploy and only pick up the new design on the second. If the overhaul adds an external stylesheet or a new font file, it must be appended to ASSETS AND VERSION bumped from 'qr-v5' (sw.js:2) or those files are never fetched at all offline.",
+    "Tests give you no safety net here. test/helpers.test.mjs asserts only on helpers.js pure functions — payload strings, WiFi escaping, and the SVG output shape (startsWith '<svg', includes 'crispEdges', length > 500, and the exact viewBox=\"0 0 N+8 N+8\" quiet-zone at test/helpers.test.mjs:51). Nothing touches the DOM, class names or the stylesheet, so a restyle cannot break the suite — and equally, the suite cannot catch a restyle regression. Do not 'clean up' the SVG string in helpers.js:50-52 (whitespace, attribute order, adding a theme colour) — those three assertions are the only automated guard in the app."
+  ]
+}

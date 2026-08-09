@@ -1,0 +1,284 @@
+{
+  "slug": "bill-splitter",
+  "purpose": "A single-file offline PWA that splits a restaurant bill (evenly or by item, with tax and tip) or reconciles a multi-person trip's expenses into a minimal set of settle-up transfers, then hands off to Venmo/Cash App/PayPal by deep link — with all state living in the URL hash and IndexedDB, never a server.",
+  "structure": "Everything is in /workspaces/SWS-apps/apps/bill-splitter/index.html (1541 lines: inline <style> at 17-136, markup 138-326, inline classic <script> 329-1539). There are no separate .js files besides vendor-qrcode.js and sw.js. DOM shape: `div.wrap` (max-width 640px, 14px gutters) > `header.app` (`.brandrow` with icon img + `h1#appName` + spacer + `a#tipLink.tipbtn`, then `p.tagline`) > `nav.tabs` (three plain buttons #tabDinner/#tabTrip/#tabSaved) > `section.card#peopleBox` (the shared People editor) > three sibling view divs #viewDinner / #viewTrip / #viewSaved > `footer.colophon`. Outside `.wrap`: fixed `div.sharebar#sharebar` (Copy link / QR code / Copy summary), `dialog#personDlg`, `dialog#qrDlg`, `div#toast[role=status][aria-live=polite]`. #viewDinner = `.hero#dinnerHero` + Bill card (name input, `.seg[role=tablist]` even/items, #evenFields, #itemFields with #itemList + add row, tax/tip row, #paidBy select) + empty `section.card#dinnerResults`. #viewTrip = Trip card (name/currency) + Add-expense card (#expLabel/#expAmt, #expPaidBy, #expSplitChips, #expUneven -> #expWeights, #expForeign -> #expForeignFields, #expAdd/#expCancel, p.warn#expWarn) + Expenses card (#expList + #expEmpty) + empty `section.card#tripResults`. #viewSaved = \"Start something new\" (#newDinner/#newTrip) + #savedList/#savedEmpty + Backup (#exportBtn/#importBtn/#importFile). CRITICAL STRUCTURAL FACT: #peopleBox is physically reparented at runtime by setTab() at index.html:932-935 via `view.insertBefore(pb, view.children[1])`, so it lives as a child of `.wrap` on first paint, then of #viewDinner (between hero and Bill card) or #viewTrip (between Trip card and Add-expense card). Main flow: add people as chips -> enter amounts -> results render live into #dinnerResults/#tripResults -> share by link/QR/summary text.",
+  "cssClasses": [
+    ".wrap — 640px column, 14px gutters (index.html:37)",
+    "header.app — header block, 14px top pad (38)",
+    ".brandrow — flex icon+title+spacer+tip row (39)",
+    ".brandrow img — hardcoded 34x34 icon (40)",
+    ".brandrow h1 — app title, 1.22rem (41)",
+    ".tagline — muted 0.83rem, hardcoded 44px left indent tied to icon width (43)",
+    "a.tipbtn — pill tip-jar link, also hidden in print (44)",
+    "nav.tabs — 3-up flex tab bar, not sticky (48)",
+    "nav.tabs button — flex:1 tab, no horizontal padding (49)",
+    "nav.tabs button.active — accent-filled active tab; state is color-only (53)",
+    "section.card — the universal panel: card bg, 1px line, 14px pad, 12px gap (54)",
+    "section.card h2 — 0.8rem uppercase muted section label; DESCENDANT selector, matters for JS-injected h2s (55)",
+    "label.f — block form label wrapper, 0.85rem muted (56)",
+    "label.f span — the label text line, 4px gap to field (57)",
+    "input[type=text|search|number], select — 1rem field on --bg inside --card (58)",
+    ":focus-visible (input/select/button/a) — 2px --focus outline, offset 1px (62)",
+    ".row — flex group, gap 8, NO wrap (63)",
+    ".row > * — flex:1, min-width:0 (64)",
+    ".btn — default control, 11px/14px pad, 0.95rem (66)",
+    ".btn.primary — accent fill, weight 600 (70)",
+    ".btn.small — 7px/10px pad, 0.85rem; used for every icon action (71)",
+    ".btn.danger — text color only, no border/bg change (72)",
+    ".chips — wrapping chip container, 8px gap (73)",
+    ".chip — pill button, 8px/13px pad, 0.92rem (74)",
+    ".chip .nm — truncating name, max-width 180px (79)",
+    ".chip.ghost — dashed suggestion chip (80)",
+    ".chip.sel — SELECTED chip, accent fill; color-only state (81)",
+    ".seg — segmented control shell (82)",
+    ".seg button — segment, 9px pad, no border (83)",
+    ".seg button.active — accent-filled segment (84)",
+    "ul.plain — unstyled list used for items/expenses/balances/saved (85)",
+    "ul.plain li — flex row, 9px pad, 0.93rem, 1px bottom rule dropped on :last-child (86-87)",
+    "ul.plain .grow — flex:1 content column with overflow-wrap:anywhere (88)",
+    ".sub — INLINE muted metadata span, 0.82rem (89)",
+    ".totline — subtotal row, space-between, muted 0.9rem (90)",
+    ".totline.grand — bold total row with top rule (91)",
+    ".persongrid — auto-fill grid, minmax(150px,1fr) (92)",
+    ".personcard — per-person result tile (93)",
+    ".personcard .nm — truncating name line, no title attr (94)",
+    ".personcard .amt — 1.65rem amount, the only big number in the app (95)",
+    ".paybtns — flex wrap of payment links (96)",
+    ".paybtns a / .paybtns button — 0.78rem accent pills; the Copy-amt button has NO class and depends on this descendant selector (97)",
+    ".bal — bold balance figure (101)",
+    ".bal.pos / .bal.neg — green/red balance (102)",
+    ".sharebar — fixed bottom action bar (103)",
+    ".sharebar .inner — 640px centered flex (107)",
+    ".sharebar button — three equal grey share buttons (108)",
+    ".hint — 0.8rem muted; ALL instructional/teaching copy (109)",
+    ".warn — 0.85rem --neg validation message (110)",
+    "dialog — modal shell, max-width min(92vw,420px), 18px pad (111)",
+    "dialog::backdrop — 45% black scrim (115)",
+    "dialog h3 — 1.05rem modal title (116)",
+    "#qrBox — forced white background, required for QR scannability (117)",
+    "#toast — fixed pill, bottom 86px, opacity transition, z-index 50 (118)",
+    "#toast.show — opacity 1 (123)",
+    ".hero — centered value-prop block, dinner only (124)",
+    ".hero strong — 1.05rem headline inside hero (127)",
+    "footer.colophon — 0.78rem centered muted footer (128)",
+    "footer.colophon a — muted footer links; overridden inline by JS color:inherit (129, 1503)",
+    ".hidden — display:none !important; the app's ONLY visibility mechanism (130)"
+  ],
+  "dynamicMarkup": "All runtime DOM goes through the `el()` helper (index.html:740-754) and `replaceChildren`. Nothing uses innerHTML except applyConfig at :1503, which writes `#orgLine` as two anchors carrying inline `style=\"color:inherit\"`.\n\nrenderPeople (883-899): `#peopleChips` <- per person `<button class=\"chip\" type=\"button\"><span class=\"nm\">{name}</span><span aria-hidden=\"true\">✎</span></button>`. `#peopleSuggest` <- per recent name `<button class=\"chip ghost\" type=\"button\">+ {name}</button>` (bare text node, NO .nm span — asymmetric with the chips above it).\n\nrenderDinner (949-973): `#paidBy` <- `<option value=\"\">— nobody yet —</option>` then one `<option value=\"{id}\">` per person. Also writes .value into #dinnerName, #billAmt, #taxAmt, #tipAmt, #tipMode — the three amount fields guarded by `document.activeElement !== $('...')` (:957-963).\n\nrenderItems (975-1004): `#itemList` <- per item `<li>` containing `<div class=\"grow\">` [ `<div>{label} — {money}<span class=\"sub\"> · split by {n}</span></div>` + `<div class=\"chips\" style=\"margin:4px 0 0\">` holding one `<button class=\"chip\"|\"chip sel\" type=\"button\" style=\"padding:4px 10px;font-size:.8rem\">{name}</button>` per person ] then `<button class=\"btn small danger\" type=\"button\" aria-label=\"Remove item\">✕</button>`. The JS-authored inline padding/font-size on every item chip overrides any class-based sizing.\n\npayButtons (1006-1017): `<div class=\"paybtns\">` <- zero to three `<a href target=\"_blank\" rel=\"noopener\">Venmo|Cash App|PayPal</a>` plus an UNCLASSED `<button type=\"button\">Copy amt</button>` styled solely by the `.paybtns button` descendant selector.\n\nrenderDinnerResults (1019-1047): `#dinnerResults` fully replaced with `<h2>Each person pays</h2>`, then either `<p class=\"hint\">Add people above…</p>` or three `<div class=\"totline\">` rows + `<div class=\"totline grand\">` + `<div class=\"persongrid\">` of `<div class=\"personcard\">` [`<div class=\"nm\">`, `<div class=\"amt\">`, optional `.paybtns`] + a trailing `<p class=\"hint\">` with the tip-jar anchor.\n\nrenderExpenseForm (1062-1102): `#expPaidBy` <- one `<option>` per person and NO placeholder option (an empty combobox when there are zero people). `#expSplitChips` <- `<button class=\"chip\"|\"chip sel\">{name}</button>` per person, or `<span class=\"sub\">Add people first.</span>`. `#expWeights` <- per participant `<label class=\"f\"><span>{name} — shares</span><input type=\"text\" inputmode=\"decimal\"></label>` (no id, no aria-label; relies on the wrapping label) + `<p class=\"hint\">`. Also rewrites #expRateLabel and #expConvHint textContent (:1108-1113).\n\nrenderExpenseList (1196-1223): `#expList` <- per expense `<li>` [ `<div class=\"grow\">` with a title `<div>` and `<div class=\"sub\">{payer} paid · split: {who}</div>` ] + `<button class=\"btn small\" aria-label=\"Edit expense\">✎</button>` + `<button class=\"btn small danger\" aria-label=\"Delete expense\">✕</button>`.\n\nrenderTripResults (1225-1267): `#tripResults` fully replaced with `<h2>Who owes whom</h2>`, `<div class=\"totline grand\" style=\"border:0;margin:0 0 6px;padding:0\">`, `<ul class=\"plain\">` of `<li><span class=\"grow\">{name}</span><span class=\"bal pos|neg\">±{money}</span></li>`, then `<h2 style=\"margin-top:14px\">Settle up — fewest possible payments</h2>` and `<ul class=\"plain\">` of `<li><div class=\"grow\"><div>{from} → {to}</div><div class=\"bal pos\" style=\"font-size:1.1rem\">{money}</div></div>{payButtons}</li>`, else `<p class=\"hint\">All settled…</p>`, plus the tip `<p class=\"hint\">`.\n\nrenderSaved (1271-1300): `#savedList` <- per row `<li>` [ `<div class=\"grow\">` with label div + `<div class=\"sub\">` ] + `<button class=\"btn small\">Open</button>` + `<button class=\"btn small danger\" aria-label=\"Delete saved split\">✕</button>`.\n\nTransient nodes: `<textarea style=\"position:fixed;opacity:0\">` appended to body in the clipboard fallback (:842-849); `<a download>` appended to body for export, removed after 500ms (:1352-1355). #qrCanvas is painted via 2D context (:1334-1340). Class toggling is the entire visibility system: `.active` on #tabDinner/#tabTrip/#tabSaved (:927) and #segEven/#segItems (:953-954); `.hidden` on #viewDinner/#viewTrip/#viewSaved, #peopleBox, #sharebar, #dinnerHero, #evenFields, #itemFields, #expWeights, #expForeignFields, #expCancel, #expWarn, #expEmpty, #savedEmpty, #tipLink.",
+  "comfortDefects": [
+    {
+      "issue": "No type scale at all — sixteen distinct font sizes (.78, .8, .82, .83, .85, .86, .87, .9, .92, .93, .95, 1, 1.05, 1.1, 1.22, 1.65rem), eleven of them crammed into the 12.5px–15.2px band. Nothing reads as a deliberate step; everything reads as slightly-different-small.",
+      "where": "index.html:41-128 (whole style block); worst cluster at :55, :56, :86, :89, :90, :94, :97, :108, :109",
+      "fix": "Collapse to a 5-6 step scale (e.g. 13/15/17/20/26/34px). design/studio.css already ships --t-xs 13px / --t-sm 15px / --t-base 16px — adopt those tokens rather than inventing new ones."
+    },
+    {
+      "issue": "Primary body copy is under 15px. The item list and expense list — the rows users read to check the math — are 0.93rem (14.88px).",
+      "where": "index.html:86 (ul.plain li)",
+      "fix": "Raise to 16px minimum. These rows carry money figures and must not be the smallest readable thing on screen."
+    },
+    {
+      "issue": "Every piece of instructional copy in the app is 0.8rem (12.8px) muted. The hints at :165, :193, :259, :276, :285, :309 are how the app teaches itself and they are the least legible text on the page. At 12.8px inside a 612px content column the measure runs to ~95 characters.",
+      "where": "index.html:109 (.hint), measure set by .wrap at :37",
+      "fix": "Take .hint to 14-15px and cap at max-width:64ch. Instructional copy should be near body size, not caption size."
+    },
+    {
+      "issue": "The payment call-to-action is simultaneously the smallest text and the smallest tap target in the app: 0.78rem (12.48px) with 5px/9px padding gives roughly a 30px-tall control. These are the Venmo / Cash App / PayPal links and the 'Copy amt' fallback — the app's whole reason to exist.",
+      "where": "index.html:97-100 (.paybtns a, .paybtns button)",
+      "fix": "Promote to a real button: min-height 44px, 15px text, visible weight. This is the terminal action of every flow."
+    },
+    {
+      "issue": "Hierarchy inversion: section headings are SMALLER and LOWER-contrast than the body text beneath them. h2 is 0.8rem (12.8px) uppercase in --muted (5.48:1) while ul.plain li body is 0.93rem in --ink (15.14:1). 'Each person pays' and 'Who owes whom' — the two payoff headings — are the visually weakest elements in their own cards.",
+      "where": "index.html:55 (section.card h2)",
+      "fix": "Card headings at 17-18px in --ink, weight 600. If an uppercase eyebrow is wanted, add a separate .eyebrow class rather than demoting every h2."
+    },
+    {
+      "issue": "A single flat line-height:1.45 is set on body and never raised anywhere, so 12.8px hint paragraphs and 12.48px footer text get the same tight leading as 16px copy. Small text needs MORE relative leading, not the same.",
+      "where": "index.html:35 (body line-height:1.45); no override anywhere in :37-135",
+      "fix": "Three tokens applied by role: body 1.55, small/caption 1.5-1.6, headings 1.2-1.3."
+    },
+    {
+      "issue": "Every destructive control in the app is a .btn.small: 7px/10px padding at 0.85rem yields roughly a 30x36px target — the item delete ✕, the expense delete ✕, and the saved-split delete ✕.",
+      "where": "index.html:71 (.btn.small); used at :997, :1213, :1215, :1288, :1292",
+      "fix": "44px min-height AND min-width for icon-only buttons. Note design/studio.css sets .btn.small to min-height:36px, still under target — these need studio's .btn.icon (44px) instead."
+    },
+    {
+      "issue": "Chips are 39px tall (8px/13px pad at 0.92rem), and the item-assignment chips are shrunk to ~28.6px by a JS-authored inline style. Those 28px chips are the core interaction of items mode — tapping who shared each dish.",
+      "where": "index.html:74 (.chip) and index.html:983 (inline 'padding:4px 10px;font-size:.8rem')",
+      "fix": "Give .chip min-height:44px AND delete the inline override at :983 — inline styles beat any new component CSS, so the tap-target fix will silently not apply to the chips that need it most."
+    },
+    {
+      "issue": "Remaining sub-44px targets: .seg button ~39px, .sharebar button ~41px, a.tipbtn ~34px. The share bar sits in the phone thumb zone and still misses the minimum.",
+      "where": "index.html:83 (.seg button), :108 (.sharebar button), :44 (a.tipbtn)",
+      "fix": "44px minimum on all three; 48px for .sharebar button given its position in the bottom thumb arc."
+    },
+    {
+      "issue": "The two checkbox rows ('Uneven shares', 'Different currency') are roughly 20px tall — a default ~13px checkbox next to 13.6px text. Toggling an uneven split on a phone is a pixel-hunt.",
+      "where": "index.html:234-240 (label.f with inline display:flex, input style='width:auto')",
+      "fix": "min-height:44px on the label row, 20-22px checkbox, 15px label text."
+    },
+    {
+      "issue": "Form fields have effectively no visible boundary. Input background is --bg (#f6f7f9) sitting inside a --card (#ffffff) surface — a 1.04:1 difference — and the only edge is a --line border at 1.23:1 (1.32:1 dark). Users cannot see where a field starts.",
+      "where": "index.html:58-61 (input/select) with tokens at :19 and :25",
+      "fix": "Darken the field border to >=3:1 against the card, or give fields a distinctly different fill. Computed: #e3e8ee on #ffffff = 1.23:1; #2c3641 on #1a2129 = 1.32:1."
+    },
+    {
+      "issue": "No primary action exists anywhere in the dinner view — the app's default screen. #personAdd and #itemAdd are plain grey .btn. The share bar is three identical grey buttons whose background is --bg on a --card bar with a 1.23:1 border, so it reads as empty chrome. .btn.primary appears only in trip mode, the Saved view, and the person dialog.",
+      "where": "index.html:162 (#personAdd), :191 (#itemAdd), :108 (.sharebar button), :66 vs :70",
+      "fix": "One primary per screen. Make 'Add' primary in the dinner flow and promote one share action (Copy summary is the most-used) to primary in the bar."
+    },
+    {
+      "issue": "Items mode produces a wall of undifferentiated micro-controls: every item row renders one 28px chip per person, so six people and eight items is 48 near-identical pills with no grouping, no label, and only fill color separating on from off.",
+      "where": "index.html:975-1003 (renderItems), chip row built at :979-988",
+      "fix": "Add a visible 'Shared by' label per row, increase chip size, and give the selected state a non-color signal (checkmark glyph plus aria-pressed)."
+    },
+    {
+      "issue": "The Tip amount input is crushed at narrow widths. The row at :195 puts two label.f side by side; the Tip label nests a .row holding an input plus a fixed 74px select. At a 320px viewport the tip input lands at roughly 62px wide.",
+      "where": "index.html:195-206; select#tipMode inline 'flex:0 0 74px' at :201",
+      "fix": "Stack tax and tip vertically below ~380px, or replace the fixed-width select with a segmented %/$ toggle beneath a full-width amount field."
+    },
+    {
+      "issue": "Truncation destroys information rather than shortening it. .personcard .nm is nowrap+ellipsis and the '(paid)' payer marker is appended INSIDE that same truncated string, so a long name hides who paid. .chip .nm caps at 180px with no title attribute, so a truncated name cannot be read at all.",
+      "where": "index.html:94 (.personcard .nm) with :1038; index.html:79 (.chip .nm) with :888",
+      "fix": "Let the name wrap to two lines, move '(paid)' into its own badge element outside the truncating span, and add title/tooltip to anything that ellipsizes."
+    }
+  ],
+  "navigationDefects": [
+    {
+      "issue": "On load, all three views render stacked and visible. #viewDinner, #viewTrip and #viewSaved carry no `hidden` class in the markup, and setTab() is only reached at the END of an async init() that awaits IndexedDB and possibly a hash decode. A first-time user sees Dinner, Trip and Saved piled on top of each other before it snaps to one.",
+      "where": "index.html:169, :214, :265 (no hidden class) with init() at :1511-1531",
+      "fix": "Add class=\"hidden\" to #viewTrip and #viewSaved in the markup. This gets worse, not better, once the overhaul adds transitions."
+    },
+    {
+      "issue": "Trip mode has no teaching state. Dinner gets .hero#dinnerHero with a value proposition; trip drops the user straight into a currency field and an expense form. The only guidance is a 13px .sub reading 'Add people first.', and the real instruction arrives as an ERROR after pressing the primary button.",
+      "where": "index.html:214-262 (no hero in #viewTrip); :1084-1085; :1120 (warn 'Add the people first, then log who paid.')",
+      "fix": "Give trip its own hero/empty state explaining the model, and disable or de-emphasize #expAdd until at least one person exists, instead of teaching through validation failure."
+    },
+    {
+      "issue": "Nothing ever tells the user their work is saved. persist() runs on a silent 400ms debounce into IndexedDB, and the only mention of saving is a hint buried on the Saved tab that you must already be on to read.",
+      "where": "index.html:798-812 (touch/persist), :276 (#savedEmpty hint)",
+      "fix": "Add a persistent, quiet 'Saved on this device' status tied to persist() completion, near the header or share bar."
+    },
+    {
+      "issue": "persist() rewrites the address bar with a multi-hundred-character `#1.…` hash on every debounce. The user watches their URL turn into gibberish with zero explanation — and that URL is the app's actual save file.",
+      "where": "index.html:810 (history.replaceState)",
+      "fix": "Explain it once in the UI ('your whole split lives in this link'), next to Copy link, rather than only in the toast that fires after clicking it."
+    },
+    {
+      "issue": "There is no undo anywhere, and confirmation is inconsistent: deleting a saved split calls confirm(), but deleting a line item, deleting a trip expense, and removing a person are all immediate and irreversible.",
+      "where": "index.html:996-1002 (item delete), :1214-1221 (expense delete), :1403-1408 (person remove) vs :1294 (confirm() for saved split)",
+      "fix": "Add undo — the toast is already a live region, so 'Expense deleted · Undo' is cheap — and make confirmation consistent across all four destructive paths."
+    },
+    {
+      "issue": "The destructive control in the person dialog is the LEFTMOST button of a three-up equal-width row, immediately adjacent to Cancel and Save, and .btn.danger only changes text color — no border, no background, no size difference. On a 420px dialog these are three ~122px identical grey rectangles.",
+      "where": "index.html:310-314 (#pdRemove, #pdCancelBtn, #pdSave) with .btn.danger at :72",
+      "fix": "Separate Remove from the Cancel/Save pair (own line, or far edge with a gap) and give .btn.danger a real destructive treatment — negative border and tint, not just text color."
+    },
+    {
+      "issue": "In every expense row the Edit ✎ and Delete ✕ buttons are adjacent 30x36px targets separated by an 8px gap, distinguished only by a glyph and a text color. A mis-tap permanently deletes an expense with no confirm and no undo.",
+      "where": "index.html:1213-1221 (#expList row buttons)",
+      "fix": "Enlarge to 44px, widen the gap, move delete behind an overflow or a confirm, and differentiate it visually from edit."
+    },
+    {
+      "issue": "'New dinner' and 'New trip' replace the entire current state with no confirmation and no feedback. The previous split IS recoverable from Saved (a persist() runs when the Saved tab opens), but nothing tells the user that, so the buttons feel like they destroy work.",
+      "where": "index.html:1481-1482 (#newDinner/#newTrip), persist trigger at :1379",
+      "fix": "Toast 'Started a new dinner — your previous split is in Saved', or confirm when the current state is non-empty."
+    },
+    {
+      "issue": "The trip view is very long (four stacked cards, plus a per-person weight list, plus an n-row expense list, plus results) with no way to move around it. nav.tabs is position:static and scrolls away; there are no in-page anchors, no back-to-top, and the only fixed element is the share bar, which does not navigate.",
+      "where": "index.html:48 (nav.tabs), :214-262 (whole #viewTrip)",
+      "fix": "Make the tab bar sticky, and add a 'Jump to balances' affordance in the trip view once expenses exist."
+    },
+    {
+      "issue": "Feedback after the primary trip action is asymmetric: startEditExpense() smooth-scrolls the user UP to the form, but after saving or adding, renderTrip() leaves them parked at the form with the newly-changed balances off-screen below.",
+      "where": "index.html:1193 (scrollIntoView on edit) vs :1466-1478 (#expAdd handler, no scroll, no toast)",
+      "fix": "After a successful add or save, scroll to or briefly highlight #tripResults and toast what changed."
+    },
+    {
+      "issue": "The Saved view offers two competing primary buttons of identical weight side by side, so there is no default action for a first-time visitor who lands there.",
+      "where": "index.html:268-271 (#newDinner and #newTrip both class=\"btn primary\")",
+      "fix": "One primary (whichever matches the current mode) and one secondary."
+    },
+    {
+      "issue": "Print has no entry point. A @media print block exists and the app produces exactly the kind of artifact people hand around a table, but there is no Print button anywhere — only Copy link, QR code and Copy summary.",
+      "where": "index.html:131-135 (print styles exist), :295-301 (.sharebar has no print action)",
+      "fix": "Add a Print / Save-as-PDF action to the share bar or the results card."
+    }
+  ],
+  "a11yDefects": [
+    {
+      "issue": "The focus indicator fails WCAG 1.4.11/2.4.11 in BOTH themes. Light --focus #93c5fd on --card #ffffff is 1.80:1 and on --bg #f6f7f9 is 1.68:1. Dark --focus #1d4ed8 on --card #1a2129 is 2.42:1 and on --bg #0f1419 is 2.76:1. Minimum is 3:1. With outline-offset:1px the ring is always adjacent to the card or page background, so no configuration passes. Keyboard users effectively cannot see focus.",
+      "where": "index.html:62 (:focus-visible rule); --focus tokens at :21 (light) and :27 (dark)",
+      "fix": "Pick a focus color at >=3:1 against BOTH --card and --bg per theme (light #1d4ed8 on white = 6.3:1; dark a light blue such as #93c5fd on #1a2129). A two-tone ring (dark core + light halo) also survives on accent-filled buttons. Highest-priority fix in this audit."
+    },
+    {
+      "issue": "In dark mode, white text on the accent fails 4.5:1. --accent-ink #ffffff on --accent #3b82f6 computes to 3.68:1, and none of the affected text qualifies as large: .btn.primary 15.2px/600, nav.tabs button.active 15.2px/600, .seg button.active 14.4px/600, .chip.sel 14.7px. Every selected and primary control in dark mode fails.",
+      "where": "index.html:26 (dark --accent) affecting :70, :53, :84, :81",
+      "fix": "Darken the dark-mode accent when used as a FILL (#1d4ed8 gives white 7.0:1) while keeping a lighter accent for text-on-surface, or switch accent-ink to a dark ink. Light mode is fine at 5.17:1."
+    },
+    {
+      "issue": "Payment links fail contrast in dark mode at the smallest size in the app: --accent #3b82f6 on --card #1a2129 = 4.41:1, below 4.5:1, rendered at 12.48px.",
+      "where": "index.html:97-100 (.paybtns a, color:var(--accent)) with dark --accent at :26",
+      "fix": "Use a lighter accent for text-on-surface in dark mode (#60a5fa on #1a2129 = 6.3:1) and raise the size to 15px."
+    },
+    {
+      "issue": "Control boundaries fail WCAG 1.4.11 (3:1 for non-text UI components). --line is #e3e8ee on #ffffff = 1.23:1 light and #2c3641 on #1a2129 = 1.32:1 dark. That is the only edge on every input, select, .btn, .chip, .seg, .sharebar button and card — and the input fill (--bg) is itself only 1.04:1 against the card it sits on.",
+      "where": "index.html:19 and :25 (--line); consumed at :46, :50, :54, :58, :66, :76, :82, :86, :98, :104, :108, :112",
+      "fix": "Split into two tokens: a decorative hairline for card edges and dividers, and a control border at >=3:1 against its surface for anything interactive or focusable."
+    },
+    {
+      "issue": "Broken ARIA on the split-method control: the container declares role=\"tablist\" but neither child button carries role=\"tab\", aria-selected or aria-controls. A tablist containing zero tabs is worse than no ARIA — AT announces a tab list and finds nothing in it. Active state is background color alone.",
+      "where": "index.html:178-181 (div.seg[role=tablist], #segEven, #segItems); state toggled at :953-954",
+      "fix": "Either complete the pattern (role=tab, aria-selected, aria-controls to #evenFields/#itemFields, arrow-key handling) or drop role=tablist for a radiogroup or two aria-pressed buttons."
+    },
+    {
+      "issue": "The main view switcher exposes no state. nav.tabs has aria-label=\"Views\" but the three buttons are plain buttons with only an .active class — no role=tab, no aria-selected, no aria-current. A screen-reader user cannot tell which of Dinner/Trip/Saved is showing, and the view swap is never announced.",
+      "where": "index.html:150-154 (#tabDinner/#tabTrip/#tabSaved), setTab() at :924-939",
+      "fix": "Add aria-selected (with role=tab/tabpanel and aria-controls on the view divs) or aria-current=\"page\", plus a non-color indicator such as an underline or weight change."
+    },
+    {
+      "issue": "Toggle chips expose selection by color only, with no programmatic state. Both the item-assignment chips and the expense split chips get class 'chip sel' and nothing else — no aria-pressed, no role, no glyph. Fails 1.4.1 (use of color) and 4.1.2 (name/role/value), and this is the primary interaction of items mode and of the trip split editor.",
+      "where": "index.html:982-988 (renderItems) and :1074-1082 (renderExpenseForm), style at :81",
+      "fix": "Add aria-pressed={on} to each chip plus a non-color selected indicator (leading ✓ or a thicker border)."
+    },
+    {
+      "issue": "Four inputs have no accessible name at all — no <label>, no aria-label, only a placeholder. Two are amount fields whose placeholder is literally '0.00', so a screen reader announces 'zero point zero zero, edit text'. #expAmt is the primary amount field of the entire trip flow.",
+      "where": "index.html:189 (#itemLabel), :190 (#itemAmt), :227 (#expLabel), :228 (#expAmt)",
+      "fix": "Add aria-label or visible labels: 'Item name', 'Item price', 'Expense description', 'Expense amount'. A placeholder is never an accessible name."
+    },
+    {
+      "issue": "A <label> element wraps no control and has no `for`, and the chip group it is meant to describe has no accessible group name. Screen readers get an orphan label followed by an unlabelled bag of buttons.",
+      "where": "index.html:232-233 (label.f 'Split between (tap to toggle)' followed by div.chips#expSplitChips)",
+      "fix": "Use a fieldset/legend, or make the div role=\"group\" with aria-label=\"Split between\" and demote the label to a span/heading."
+    },
+    {
+      "issue": "Form validation is silent for screen readers. #expWarn is a plain <p class=\"warn hidden\"> with no role=alert and no aria-live; readExpenseForm() sets textContent and unhides it, but focus stays on the Add button and the message renders BELOW that button. #expAdd has no aria-describedby. Because it is only class-toggled, repeating the same error produces no new announcement either.",
+      "where": "index.html:254 (p.warn.hidden#expWarn), :1118-1119 (warn helper), :1466-1478 (#expAdd handler)",
+      "fix": "Give #expWarn role=\"alert\", clear its text before re-setting it, add aria-describedby from #expAdd, and move focus to the first offending field."
+    },
+    {
+      "issue": "Both dialogs lack an accessible name (no aria-labelledby pointing at their h3), and the non-showModal fallback opens a NON-modal dialog with no focus trap, no backdrop and no Esc handling — keyboard users can tab straight out behind it. There is also no `close` listener, so dismissing #personDlg with Esc leaves editingPersonId set.",
+      "where": "index.html:303 and :317 (dialog elements), h3 at :304 and :318, fallback at :912-917",
+      "fix": "Give each h3 an id and each dialog aria-labelledby; implement focus capture and restore for the fallback path; add a close listener that resets editingPersonId."
+    },
+    {
+      "issue": "The QR canvas is an unlabelled graphic — no role=\"img\", no aria-label, no text alternative for the URL it encodes. Separately, icon-only buttons are labelled but not disambiguated: every item row has an identical 'Remove item', every expense row an identical 'Edit expense'/'Delete expense', every saved row an identical 'Open'. Browsing by button gives the same name N times with no way to tell rows apart. People chips announce only the name, with no verb indicating they open an editor.",
+      "where": "index.html:319 (#qrCanvas); labels at :997, :1213, :1215, :1290, :1292; chip at :887-889",
+      "fix": "Give the canvas role=\"img\" and an aria-label naming the split, and interpolate row identity into every label: 'Remove Steak', 'Delete expense Gas', 'Open Tahoe weekend', 'Edit Alice'. NOTE: test/smoke.mjs:84 and :91 select on the exact string aria-label=\"Edit expense\" — update the test in the same change."
+    }
+  ],
+  "printSupport": "Yes, a @media print block exists at index.html:131-135 — but it is five lines and does roughly a quarter of the job. It hides .sharebar, nav.tabs, .tipbtn and #toast, forces body white-on-black with padding-bottom:0, and strips section.card borders and padding.\n\nIs print a core use case? Secondary but real. The designed outputs are share link, QR, copy-summary text and JSON export, and there is no Print button anywhere in the UI. But \"Each person pays\" and the settle-up list are exactly the artifact people put on the table, and the print block's existence signals intent. Treat print as supported-but-unfinished, worth completing in this overhaul.\n\nWhat is broken or missing:\n1. THE FORMS PRINT. Nothing hides #peopleBox, the Bill card, the Add-expense card, or the Trip card, so a printed dinner split leads with an empty \"Add a name…\" text box, the even/items segmented control, and empty tax/tip/who-paid fields before the reader reaches results. The valuable content lands on page two. Hidden views are safe (.hidden is display:none !important at :130), but every card in the ACTIVE view prints.\n2. Interactive chrome prints as dead boxes: person chips with their ✎ glyph, per-item assignment chips, the ✎/✕ row buttons, and every .paybtns Venmo/Cash App/PayPal link plus \"Copy amt\". Anchors print without their href, so payment links are meaningless on paper.\n3. .hero prints its marketing line (index.html:124-127, absent from the hide list).\n4. No print-color-adjust and no non-color fallback for state. When the browser drops backgrounds, .chip.sel loses its accent fill entirely — the \"who shared this item\" assignments, the entire point of items mode, become invisible on paper. .bal.pos/.bal.neg survive only because the code prefixes a literal + or − at :1245.\n5. No pagination control: no break-inside:avoid on section.card, .personcard or ul.plain li, so a person tile or settle-up row can split across a page boundary. No break-after:avoid on headings.\n6. .wrap keeps max-width:640px in print (no override in :131-135), so output prints as a narrow centered column on A4/Letter, wasting most of the sheet.\n7. No @page margins.\n8. No document title on the page. The split's name lives only inside an <input value>, and the persistent <h1> always reads \"Bill Splitter\", so a printed sheet has no heading identifying which dinner or trip it is.\n9. The QR dialog cannot be printed — a genuinely useful artifact (a scannable code taped to a fridge) has no print path.\n\nWorth noting: the shared design/studio.css print block is far more complete — it remaps tokens to black/white, sets 11pt body, removes .wrap constraints, applies break-inside:avoid to cards/rows/list items, sets @page margin 14mm, strips link color and underline, and provides .noprint/.printonly/.screenonly utilities. BUT its hide list targets `.actionbar`, and this app's bottom bar is `.sharebar`; it also does not know about `nav.tabs`. Adopting studio.css without remapping those two class names leaves the share bar and the tab bar printing on every page.",
+  "riskyToRestyle": [
+    "PURE-BLOCK MARKERS. test/unit.mjs:7 regex-extracts everything between the literal comments /*__PURE_START__*/ (index.html:346) and /*__PURE_END__*/ (index.html:734) and runs it in a bare vm sandbox whose globals are an explicit whitelist (unit.mjs:12-19 — no document, no window). Moving code across those markers, deleting them, or introducing a DOM reference inside them breaks all 21 unit groups. Baseline confirmed passing today via `node test/unit.mjs`.",
+    "THE SCRIPT MUST STAY A CLASSIC INLINE SCRIPT. test/smoke.mjs reads window.parseAmount (:104), window.decodeShare (:116) and window.buildSummary (:118) as globals, so type=\"module\", `defer`, or an IIFE wrapper breaks it. Separately, smoke.mjs:9 does a LITERAL string replace of '<script src=\"vendor-qrcode.js\"></script>' — changing that tag's exact text (adding defer, reordering attributes, moving it) makes jsdom load the real file and the test goes flaky. smoke.mjs cannot run here as-is; it needs `npm i --no-save jsdom` first.",
+    "TEST-ASSERTED CLASS NAMES. smoke.mjs asserts on .active (:40 tabDinner), .hidden (:42 tipLink, :125 savedEmpty), .paybtns (:61 '#dinnerResults .paybtns button') and .chips (:69). Renaming any of active / hidden / paybtns / chips breaks the suite. .hidden{display:none !important} at index.html:130 is the app's ONLY visibility mechanism — its name, its !important and its display:none semantics must all survive.",
+    "TEST-ASSERTED DOM SHAPE. smoke.mjs counts DIRECT children: $('peopleChips').children.length === 2 (:47, :109), $('itemList').children.length === 2 (:67), $('expWeights').querySelectorAll('input').length === 2 (:96). Adding a per-chip or per-item wrapper breaks these. Worse, :69 does $('itemList').querySelector('.chips button') and expects the FIRST .chips descendant in the item list to be the person-toggle group — introduce any earlier .chips-classed container inside an <li> and the test clicks the wrong control. :84 and :91 select button[aria-label=\"Edit expense\"], making that exact string load-bearing (it conflicts with the a11y fix of interpolating the expense name — change both together).",
+    "RUNTIME REPARENTING OF #peopleBox. setTab() at index.html:932-935 physically moves the People card between views with view.insertBefore(pb, view.children[1]) — an INDEX-BASED insertion. In #viewDinner children[1] is the Bill card (children[0] is .hero); in #viewTrip children[1] is the Add-expense card. Adding anything to the top of either view — a section header, toolbar, breadcrumb, skip target — silently drops the People editor into the wrong slot. #peopleBox also sits as a direct child of .wrap before init() runs, so it must style identically in three parent contexts, and no CSS inside the views may rely on :first-child/:nth-child. smoke.mjs:75 asserts $('viewTrip').contains($('peopleBox')).",
+    "COLLISIONS WITH design/studio.css. The shared sheet already defines .btn, .card, .chip, .chips, .hero, .hidden, .hint, .row, .seg, .warn, .wrap and #toast, with different semantics: (a) studio's selected chip is .chip.on but this app writes .chip.sel at index.html:983 and :1075 — no test covers .sel, so adopting studio.css renders every item-assignment and split toggle as UNSELECTED while the suite still passes green; (b) studio's .row is flex-wrap:wrap with .row>*{flex:1 1 12rem} versus this app's no-wrap flex:1 — at 320px that rewraps the People add-row, the tax/tip row and the 3-button dialog row; (c) studio's .card .sub is a BLOCK subtitle with bottom margin, but this app uses .sub as an INLINE metadata span inside list rows (:994, :1212, :1286); (d) studio's .hero expects .hero h2 + .hero p while #dinnerHero uses <strong> plus a bare text node (:170-173); (e) studio's print block hides .actionbar, not this app's .sharebar, and knows nothing about nav.tabs.",
+    "QR CANVAS PIXEL MATH. #qrCanvas has hardcoded width=\"300\" height=\"300\" (index.html:319) and showQR() independently hardcodes `const size = 300` (:1331) to compute cell = Math.floor(size / (count + 8)) and the centering offset (:1332-1340). The two must change together or the code draws into a corner. Any CSS rendering the canvas at a size other than 300px rescales the bitmap and can make it unscannable, and the canvas has no max-width:100%, so it overflows the dialog (max-width:min(92vw,420px), 18px padding) on narrow phones. #qrBox is force-set to background:#fff at :117 — a scannability requirement, not a style choice; theming it breaks QR reading in dark mode.",
+    "TWO HARDCODED COPIES OF THE SHARE-BAR HEIGHT. body{padding-bottom:calc(76px + env(safe-area-inset-bottom))} at index.html:35 and #toast{bottom:calc(86px + env(safe-area-inset-bottom))} at :119 are both hand-tuned to the current ~61px .sharebar. Enlarging share-bar tap targets — exactly what this overhaul intends — makes both wrong: the last card hides under the bar and the toast overlaps it. .sharebar is also class-toggled off on the Saved tab (:931) while the body padding stays, leaving 76px of dead space. Replace both with one --bar-h token or measure the bar at runtime.",
+    "INLINE STYLE ATTRIBUTES OUTRANK EVERY CLASS. About twenty in the markup: index.html:162 and :191 (flex:0 0 auto), :164, :188 (margin-top:8px), :189 (flex:1.4), :199 (gap:6px), :201 (flex:0 0 74px on #tipMode), :218 (flex:2), :221 and :244 (text-transform:uppercase), :227 (flex:1.5), :230, :234-235, :238-239 (width:auto on the checkboxes), :250, :310, :321. Eight more are generated by JS: :979 (item chip row margin), :983 (padding:4px 10px;font-size:.8rem on EVERY item chip — this alone defeats any new .chip tap-target rule), :1236 (border/margin/padding on the trip total), :1251 (margin-top on an injected h2), :1258 (font-size:1.1rem on the transfer amount), :842 (clipboard textarea), :1503 (color:inherit on both footer anchors). All must move to classes or they silently override the new system.",
+    "WHOLE-SECTION replaceChildren WIPES INJECTED HEADINGS. renderDinnerResults (:1021) and renderTripResults (:1227) replace the ENTIRE contents of section.card#dinnerResults and section.card#tripResults, including the <h2> they then re-create in JS. If the restyle moves a card title into a sibling or wrapper outside the section, JS deletes it on the next render. Same for every other replaceChildren target, which must stay empty containers with stable ids: #peopleChips, #peopleSuggest, #itemList, #expSplitChips, #expWeights, #expList, #savedList, #paidBy, #expPaidBy. Those injected h2s get card-heading styling only via the `section.card h2` DESCENDANT selector at :55 — scoping headings with a child combinator or a class leaves them unstyled.",
+    "FOCUS-DEPENDENT INPUT WRITEBACK. renderDinner() guards its value writes with `document.activeElement !== $('billAmt')` / taxAmt / tipAmt (index.html:957-963) so it does not stomp what the user is typing. Any restyle that wraps these inputs in a custom component, moves focus (a stepper, a formatted-money widget), or re-parents them makes the guard misfire and the field is overwritten mid-keystroke. select#tipMode also relies on a fixed 74px width (:201) and on the UA-default select arrow — if the new system sets appearance:none, all four selects (#tipMode, #paidBy, #expPaidBy, plus dialog fields) need a replacement indicator.",
+    "DEPLOY COUPLING: THE SERVICE WORKER WILL SERVE STALE CSS, AND THE PALETTE LIVES IN FOUR FILES. sw.js:3 is `const VERSION = 'billsplit-v3'` with a cache-first fetch handler (sw.js:27-45), so returning users keep the OLD index.html — and therefore the old stylesheet — until VERSION is bumped (README.md:58 documents this). The brand color is duplicated across index.html:12-13 (meta theme-color #f6f7f9 / #0f1419), manifest.webmanifest (theme_color #2563eb, background_color #f6f7f9) and icon.svg (#2563eb fills). A per-app palette change that misses any of these leaves the browser chrome, the installed-PWA splash, or the app icon mismatched."
+  ]
+}
