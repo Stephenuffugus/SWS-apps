@@ -228,7 +228,7 @@ const live = {
     this.unsubs = []; this.claimUnsubs = new Map();
     this.boardId = null; this.code = null; this.board = null;
     this.slots = []; this.entries = []; this.claims = new Map();
-    shell = null; comp = null; manageSig = null; editing = null; veCache = null;
+    shell = null; comp = null; manageSig = null; editing = null; veCache = null; filterText = '';
     clearInterval(freshTimer); freshTimer = null;
   },
 };
@@ -1023,7 +1023,7 @@ function fillTimeline(u, b, own, locked) {
     : all;
   if (u.filterCount) {
     u.filterCount.textContent = q
-      ? 'Showing ' + entries.length + ' of ' + all.length + (entries.length === 1 ? ' entry' : ' entries')
+      ? 'Showing ' + entries.length + ' of ' + all.length + ' entries'
       : all.length + ' entries in the log';
   }
   u.entriesBox.replaceChildren();
@@ -1048,7 +1048,7 @@ function fillTimeline(u, b, own, locked) {
   }
 
   let lastDay = null;
-  let dividerDone = !seenAt;
+  let dividerDone = !seenAt || !!q;   // "since you last looked" means nothing inside a filter
   for (const e of entries) {
     const d = effDate(e);
     if (!dividerDone && effMs(e) <= seenAt) {
@@ -1060,6 +1060,21 @@ function fillTimeline(u, b, own, locked) {
     if (key !== lastDay) { u.entriesBox.append(el('div', { class: 'dayhead', text: key })); lastDay = key; }
     u.entriesBox.append(renderEntry(e, own, locked));
   }
+}
+
+let filterText = '';
+/* Persistent, like the composer: typing here must survive the redraw a
+   sibling's note triggers. */
+function buildFilter() {
+  const input = el('input', {
+    type: 'search', 'data-fk': 'filter', 'aria-label': 'Find in the log',
+    placeholder: 'donepezil, Rosalie, “fell”…',
+    oninput: (ev) => { filterText = ev.target.value; drawBoard(); },
+  });
+  const count = el('span', { class: 'filtercount', role: 'status' });
+  if (shell) shell.filterCount = count;
+  return el('div', { class: 'filterrow noprint' },
+    el('label', { class: 'f' }, el('span', {}, 'Find in the log'), input), count);
 }
 
 let editing = null;   // { id, text, when } — survives the redraw a snapshot forces
