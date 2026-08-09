@@ -1301,7 +1301,15 @@ section.card h2:first-child{margin-top:0}
 .sharebox .row{margin-top:var(--s3)}
 
 .prevrow{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+/* These two carry sentences rather than verbs, and at Largest text on a 320px
+   phone a nowrap button is 340px wide. Let them wrap and grow instead. */
+.prevrow .btn,.actionbar .btn{
+  white-space:normal; flex-wrap:wrap; text-align:center;
+  height:auto; padding-top:var(--s2); padding-bottom:var(--s2); line-height:1.25;
+}
 .actionbar .pgs{font-weight:600}
+.qrprint{display:flex; align-items:center; gap:var(--s3); min-height:var(--tap); margin-top:var(--s3)}
+.qrprint span{font-size:var(--t-sm); color:var(--ink)}
 
 /* The dialog used to set padding and a #111 heading but no background, so in
    dark mode its only instruction sat at 1.01:1 on the UA Canvas colour. */
@@ -1381,10 +1389,15 @@ section.card h2:first-child{margin-top:0}
   border-bottom:1.25pt solid #111; letter-spacing:-.01em;
   break-after:avoid; page-break-after:avoid;
 }
-.paper .block{margin-bottom:8pt; break-inside:avoid; page-break-inside:avoid}
+/* A field may split across the fold; it may never be separated from its own
+   label. Held whole, a 130-line hour-by-hour plan was pushed off page 1
+   entirely and left 84% of the sheet white. */
+.paper .block{margin-bottom:8pt; break-inside:auto; page-break-inside:auto; orphans:2; widows:2}
+.paper .alert .block,.paper .first .block{break-inside:avoid; page-break-inside:avoid}
 .paper .block h3{
   font-size:9.5pt; font-weight:700; text-transform:uppercase;
   letter-spacing:.08em; color:#333; margin:0 0 2pt;
+  break-after:avoid; page-break-after:avoid;
 }
 .paper .block .v{white-space:pre-wrap; overflow-wrap:anywhere; color:#111}
 /* Passwords get unambiguous glyphs — the sourced complaint is ten minutes lost
@@ -1521,6 +1534,7 @@ section.card h2:first-child{margin-top:0}
             <button class="btn" id="shareBtn" type="button">Copy link</button>
             <button class="btn" id="qrBtn" type="button">Show QR</button>
           </div>
+          <label class="qrprint"><input type="checkbox" id="qrPrint"><span>Print the QR on page&nbsp;1 too, so whoever holds the paper can pull up a copy. It is a big square — watch the page count on the Print button.</span></label>
           <p class="hint">Nothing is uploaded — the folder is packed into the web address itself. On a school computer, copy the link to yourself before you log out: some school machines erase browser data between sign-ins.</p>
         </div>
       </details>

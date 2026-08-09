@@ -138,8 +138,14 @@ const PAGE_PT = 792 - 2 * 39.685;
 
 const KEY = 'subplans';
 const BAND_KEY = 'subplans.band';
+const QRP_KEY = 'subplans.qrpaper';
 let data = {};
 let band = 'elementary';
+/* Off by default: a scannable QR of a whole binder is a 56mm square, and it
+   costs about half a page. Page count is the loudest complaint in this
+   category, so this is the teacher's trade to make, with the cost shown live
+   on the Print button. */
+let qrOnPaper = false;
 let storageBroken = false;
 let capWarned = false;
 
@@ -148,6 +154,8 @@ function load() {
   catch (e) { data = {}; }
   try { band = localStorage.getItem(BAND_KEY) === 'secondary' ? 'secondary' : 'elementary'; }
   catch (e) { band = 'elementary'; }
+  try { qrOnPaper = localStorage.getItem(QRP_KEY) === '1'; }
+  catch (e) { qrOnPaper = false; }
 }
 
 /* The intro card promises that everything saves automatically. On a managed
@@ -334,7 +342,7 @@ function buildQr(url) {
 }
 
 function printQrBlock() {
-  if (qrDirty || !qrUrl) return null;
+  if (!qrOnPaper || qrDirty || !qrUrl) return null;
   const built = buildQr(qrUrl);
   if (!built) return null;
   const mm = Math.min(58, Math.max(28, Math.round((built.count + 8) * 0.4)));
@@ -449,20 +457,40 @@ function feedbackBox() {
   const ticks = el('ul', { class: 'ticks' });
   for (const t of FEEDBACK_TICKS) ticks.append(el('li', {}, el('span', { class: 'box' }), t));
   box.append(ticks);
-  for (let i = 0; i < 4; i++) box.append(el('div', { class: 'rule' }));
+  for (let i = 0; i < 3; i++) box.append(el('div', { class: 'rule' }));
   return box;
 }
 
 const hasContent = () => SCHEMA.sections.some(([, fields]) => fields.some(([key]) => filled(key)));
 
-/* ---------- page count, measured off-screen at the real paper width ---------- */
+/* ---------- page count, measured off-screen at the real paper width ----------
+   Not height / page-height: the blocks that carry break-inside:avoid get moved
+   whole to the next sheet, which is exactly what inflates the count. So walk
+   the unbreakable atoms in order and push them the way the printer will. */
+const ATOMS = '.shead,.alert,.first,.sec>h2,.sec>.block>h3,.noteback>h3,.ticks,.rule,.emptynote';
 function computePages() {
   const m = $('measure');
   if (!m || !hasContent()) return 0;
   renderSheet(m, 0);
-  const h = m.scrollHeight;
-  if (!h) return 0;
-  return Math.max(1, Math.ceil((h * 0.75) / PAGE_PT));
+  const box = m.getBoundingClientRect();
+  if (!m.scrollHeight) return 0;
+  const nodes = [...m.querySelectorAll(ATOMS)]
+    .filter((n) => !n.parentElement.closest('.alert,.first'));
+  let shift = 0, last = 0, flat = 0;
+  for (const n of nodes) {
+    const r = n.getBoundingClientRect();
+    const raw = (r.top - box.top) * 0.75;
+    const h = r.height * 0.75;
+    let top = raw + shift;
+    const pageEnd = (Math.floor(top / PAGE_PT) + 1) * PAGE_PT;
+    if (h <= PAGE_PT && top + h > pageEnd) { shift += pageEnd - top; top = pageEnd; }
+    last = Math.max(last, top + h);
+    flat = Math.max(flat, raw + h);
+  }
+  // whatever sits below the final atom — box padding, borders, the sheet's own
+  // trailing space — still occupies paper
+  last += Math.max(0, box.height * 0.75 - flat);
+  return Math.max(1, Math.ceil(last / PAGE_PT));
 }
 let pageCount = 0;
 function updatePageCount() {
@@ -588,6 +616,19 @@ function wire() {
 
   $('viewToday').addEventListener('click', () => { view = 'today'; applyView(); });
   $('viewAll').addEventListener('click', () => { view = 'all'; applyView(); });
+
+  const qp = $('qrPrint');
+  qp.checked = qrOnPaper;
+  qp.addEventListener('change', async () => {
+    qrOnPaper = qp.checked;
+    try { localStorage.setItem(QRP_KEY, qrOnPaper ? '1' : '0'); } catch (e) {}
+    if (qrDirty) await refreshQr();
+    if (qrOnPaper && !qrUrl && hasContent()) {
+      toast('This folder is too long for a QR anyone could scan, so nothing will be printed — use Copy link instead.', 7000);
+    }
+    updatePageCount();
+    if ($('sheet').classList.contains('preview')) renderSheet($('sheet'), pageCount);
+  });
 
   const pv = $('previewBtn');
   pv.addEventListener('click', async () => {

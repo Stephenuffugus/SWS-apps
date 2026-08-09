@@ -1251,32 +1251,94 @@ body{
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 .boxnum{
-  flex:0 0 auto; min-width:44px; text-align:center; padding:8px 6px; border-radius:10px;
-  background:var(--accent-fill); color:var(--accent-ink); font-weight:800; font-size:1.05rem;
+  flex:0 0 auto; min-width:var(--tap); text-align:center;
+  padding:var(--s2) var(--s2); border-radius:var(--r-sm);
+  background:var(--accent-fill); color:var(--accent-ink); font-weight:800; font-size:var(--t-base);
 }
 
-.hit{background:var(--chip); border-radius:6px; padding:0 4px; font-weight:700}
+.hit{background:var(--chip); border-radius:var(--r-sm); padding:0 var(--s1); font-weight:700}
 
-.revealbox{text-align:center; padding:26px 8px}
-.revealbox .num{font-size:3rem; font-weight:800; color:var(--accent)}
-.revealbox .room{font-size:1.2rem; color:var(--muted); margin-bottom:12px}
-.revealbox ul{list-style:none; margin:0; padding:0; font-size:1.05rem; line-height:1.9}
+/* The ✎ and ✕ on every box row are the two most destructive controls in the
+   app and they sit side by side. The base's .btn.small pins them to 36px,
+   which defeats --tap and, worse, stops them growing when someone turns the
+   text up because of their eyesight or a tremor. DESIGN-SYSTEM.md:284 and
+   :388-390 make that a hard invariant, so this app layer restores it. */
+.btn.small{min-height:var(--tap); min-width:var(--tap); padding:0 var(--s2)}
 
-/* ---------- printed labels ---------- */
+.dupe{color:var(--warn); font-weight:600; font-size:var(--t-sm)}
+
+/* A search result now points at a real row, so the row has to be findable
+   when it gets there. No transition: the highlight must not animate for
+   anyone who asked for less motion, and there is nothing to explain. */
+ul.plain > li.found{
+  background:var(--accent-soft);
+  outline:2px solid var(--accent-fill);
+  outline-offset:-2px;
+  border-radius:var(--r-sm);
+}
+
+/* Search results are buttons now, not inert text. */
+.hitrow{
+  width:100%; justify-content:flex-start; gap:var(--s3);
+  text-align:left; padding:var(--s2); min-height:var(--tap); height:auto;
+}
+.hitrow .grow{display:block; flex:1; min-width:0; overflow-wrap:anywhere}
+.hitroom{display:block}
+.hitsub{display:block; font-weight:400}
+
+/* Editing an existing box has to look different from packing a new one —
+   the mis-tap that used to overwrite a box was invisible until it happened. */
+#packCard.editing{border-color:var(--accent-fill); box-shadow:inset 0 0 0 1px var(--accent-fill)}
+
+.labelopt{margin-top:var(--s3)}
+.importask{margin-top:var(--s4)}
+.importask p{margin:0 0 var(--s3)}
+
+.revealbox{text-align:center; padding:var(--s7) var(--s2)}
+.revealbox .num{font-size:var(--t-3xl); font-weight:800; color:var(--accent-deep)}
+.revealbox .room{font-size:var(--t-lg); color:var(--ink-2); margin-bottom:var(--s2)}
+.revealbox .revcount{font-size:var(--t-sm); color:var(--ink-2); margin:0 0 var(--s4)}
+.revealbox ul{list-style:none; margin:0; padding:0; font-size:var(--t-base); line-height:1.9}
+.revtrust{margin:var(--s5) auto 0; text-align:left}
+.revactions{margin-top:var(--s4); justify-content:center}
+
+/* ---------- print ----------
+   Two documents, never both: a sheet of labels, or the packing list. The
+   labels used to be preceded by however many pages the box list took (19 at
+   200 boxes), because the Boxes card was the only one that printed. */
 #labels{display:none}
+#manifestHead{display:none}
 @media print{
   body{background:#fff}
   .screenonly, header.app, footer.colophon, #toast{display:none !important}
-  #labels{display:grid; grid-template-columns:1fr 1fr; gap:6mm; color:#111}
+
+  /* Labels sheet: labels only. */
+  body.print-labels #boxesCard{display:none !important}
+  body.print-labels #labels{display:grid; grid-template-columns:1fr 1fr; gap:6mm; color:#111}
+
+  /* Packing list: the box list, with a title, a date and room totals. */
+  body:not(.print-labels) #manifestHead{display:block; margin-bottom:6pt}
+  #manifestHead .mtitle{font-size:18pt; margin:0}
+  #manifestHead .mmeta{font-size:10pt; color:#333; margin:2pt 0 0}
+  #manifestHead .mrooms{list-style:none; margin:4pt 0 0; padding:0; font-size:10pt; columns:2}
+  #manifestHead .mrooms li{break-inside:avoid}
+
   .label{
-    border:1.5pt solid #111; border-radius:4mm; padding:5mm; break-inside:avoid;
-    display:flex; gap:5mm; align-items:center;
+    border:1.5pt solid #111; border-radius:4mm; padding:4mm; break-inside:avoid;
+    display:flex; gap:4mm; align-items:center;
   }
-  .label .ln{font-size:26pt; font-weight:800}
+  .label .ln{font-size:26pt; font-weight:800; line-height:1}
   .label .lr{font-size:11pt; color:#444}
+  .label .lc{font-size:7pt; color:#666; margin-top:2pt}
   .label .li{font-size:8pt; color:#666; margin-top:2pt}
-  .label img{width:30mm; height:30mm}
-  .label .lt{flex:1}
+  /* Width and height come from JS, in mm, sized to hold at least 0.5mm per
+     QR module — a character cap could not see the module count. */
+  .label img{display:block}
+  .label .lt{flex:1; min-width:0; overflow:hidden}
+
+  /* Contents off the outside of the box unless explicitly asked for; the room
+     gets the space instead, because that is what the carrier needs to read. */
+  body:not(.label-contents) .label .lr{font-size:16pt; font-weight:700; color:#111}
 }
 </style>
 <script src="sws-prefs.js"></script>
@@ -1298,21 +1360,36 @@ body{
     <section class="card revealbox">
       <div class="num" id="revNum"></div>
       <div class="room" id="revRoom"></div>
+      <p class="revcount" id="revCount"></p>
       <ul id="revItems"></ul>
+      <p class="trust revtrust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span><b>Nothing was looked up.</b> This list came out of the code you just scanned — no app, no account, no signal. It is not saved anywhere until you tap Save below.</span>
+      </p>
+      <div class="row revactions">
+        <button class="btn primary" id="revSave" type="button">Save this box to my own list</button>
+        <a class="btn" id="revOpen" href="./">Open Moving Boxes</a>
+      </div>
     </section>
   </div>
 
-  <div id="main">
+  <div id="app">
     <section class="card screenonly">
-      <input type="search" id="searchInput" placeholder="🔍 Which box has the… can opener?">
-      <ul class="plain" id="searchResults"></ul>
+      <label class="f" for="searchInput"><span>Which box has the… can opener?</span>
+        <input type="search" id="searchInput" autocomplete="off" placeholder="🔍 can opener"></label>
+      <p class="hint" id="searchStatus" role="status" aria-live="polite"></p>
+      <ul class="plain" id="searchResults" aria-label="Matching boxes"></ul>
     </section>
 
-    <section class="card screenonly">
-      <h2>Pack a box</h2>
+    <section class="card screenonly" id="packCard">
+      <h2 id="packHead">Pack a box</h2>
+      <p class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span><b>Your box list never leaves this browser.</b> Numbers, rooms and everything you list inside are saved on this device only — no account, no server, no ads, and nothing is uploaded when you print. The one thing that travels is the QR label: the contents are written <i>inside</i> the code, so whoever scans a box can read them. That is why they stay off the printed label unless you ask for them.</span>
+      </p>
       <div class="row">
         <label class="f" style="flex:0 0 90px"><span>Box #</span>
-          <input type="text" id="boxNum" inputmode="numeric"></label>
+          <input type="text" id="boxNum" inputmode="numeric" maxlength="4" aria-describedby="capHint"></label>
         <label class="f"><span>Room it's headed to</span>
           <input type="text" id="boxRoom" maxlength="40" placeholder="Kitchen" list="roomList">
           <datalist id="roomList"></datalist></label>
@@ -1321,19 +1398,39 @@ body{
         <textarea id="boxItems" placeholder="Pots & pans
 The good knife
 Can opener"></textarea></label>
-      <button class="btn primary" id="addBox" type="button" style="width:100%">Seal the box 📦</button>
+      <div class="row">
+        <button class="btn primary" id="addBox" type="button">Seal the box 📦</button>
+        <button class="btn" id="cancelEdit" type="button" hidden>Cancel edit</button>
+      </div>
+      <p class="hint" id="capHint">Leave the number blank and the next one is used. The limits, up front: 500 boxes in a list, 100 things in a box, 60 characters a thing — and you will be told the moment one of them bites.</p>
     </section>
 
-    <section class="card">
+    <section class="card" id="boxesCard">
+      <div id="manifestHead"></div>
       <h2 id="boxHead">Boxes</h2>
       <ul class="plain" id="boxList"></ul>
       <p class="hint screenonly" id="emptyHint">Pack, seal, label, repeat. Future-you at the new house will be grateful.</p>
       <div class="row screenonly" style="margin-top:10px">
         <button class="btn" id="printBtn" type="button">Print QR labels</button>
-        <button class="btn" id="exportBtn" type="button">Export backup</button>
+        <button class="btn" id="printListBtn" type="button">Print packing list</button>
+      </div>
+      <label class="labelopt screenonly"><input type="checkbox" id="labelContents"> <span>Print the contents on the outside of the label too</span></label>
+      <p class="hint screenonly">Off by default on purpose: movers are unanimous that a box reading <i>passport · jewellery · cash</i> is an invitation. The QR carries the contents either way.</p>
+      <div class="row screenonly" style="margin-top:10px">
+        <button class="btn" id="exportBtn" type="button">Export backup (.json)</button>
+        <button class="btn" id="csvBtn" type="button">Export list (.csv)</button>
         <button class="btn" id="importBtn" type="button">Import</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
       </div>
+      <div class="warn importask hidden screenonly" id="importAsk">
+        <p id="importAskText"></p>
+        <div class="row">
+          <button class="btn primary" id="importMerge" type="button">Merge into my list</button>
+          <button class="btn danger" id="importReplace" type="button">Replace everything</button>
+          <button class="btn ghost" id="importCancel" type="button">Cancel</button>
+        </div>
+      </div>
+      <p class="hint screenonly hidden" id="labelNote"></p>
       <p class="hint screenonly">Tape a label on each box — scanning it with any phone camera shows what's inside, even at the new place with no internet set up.</p>
     </section>
   </div>

@@ -1250,10 +1250,137 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-#qrWrap{display:flex; justify-content:center; padding:14px; background:#fff; border-radius:12px; border:1px solid var(--line)}
+
+/* The preview well. The canvas must stay white — that is what a scanner
+   expects, and the four-module quiet zone is drawn into the bitmap — but the
+   frame around it need not be. It used to be a hardcoded #fff, measured
+   18.5:1 against the dark canvas: a 296×324 glare slab in exactly the dark
+   guest room this app invites you to use it in. Padding and radius were 14px
+   and 12px, off the scale and rounder than every card around them. */
+#qrWrap{
+  display:flex; justify-content:center;
+  padding:var(--s4);
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-ctl);
+}
 #qrCanvas{max-width:100%; height:auto; image-rendering:pixelated}
 
-.promise{font-size:.85rem; color:var(--muted); text-align:center; margin-top:6px}
+/* ── The payload readout ─────────────────────────────────────────────────
+   The product argument, rendered as an object: the exact string a scanner
+   reads, in monospace, with its byte count. No third-party domain can hide in
+   a string you can see, and it is the one component that surfaces every
+   silent rewrite the app made at the moment it made it. */
+#readout{margin-top:var(--s4)}
+#readout h3{
+  font-size:var(--t-micro);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--ink-2);
+  margin:0 0 var(--s2);
+}
+.payload{
+  display:block;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  font-size:max(0.9375rem, var(--t-sm));
+  line-height:var(--lh-body);
+  color:var(--ink);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  margin:0 0 var(--s2);
+}
+#payloadMeta{margin:0 0 var(--s3)}
+.notes{margin:0 0 var(--s3)}
+.notes > li{
+  align-items:flex-start;
+  min-height:0;
+  padding:var(--s1) 0;
+  border-bottom:0;
+  font-size:var(--t-sm);
+  line-height:var(--lh-body);
+  color:var(--ink-2);
+}
+.notes > li .mk{flex:none; font-weight:700}
+.notes > li.lv-warn{color:var(--ink)}
+.notes > li.lv-warn .mk{color:var(--warn)}
+.notes > li.lv-info .mk{color:var(--accent-deep)}
+
+/* 38px never grew with the text-size setting, so the comfort panel solved a
+   reading problem and left the aiming problem exactly where it was. */
+#typeSeg button{min-height:var(--tap)}
+
+#capWarn{margin:var(--s4) 0 0}
+.noscript-warn{display:block; margin-bottom:var(--s4)}
+#trustStamp{margin-top:var(--s5); align-items:flex-start}
+#sizeInfo{margin-bottom:var(--s4)}
+#batchIn,#fields textarea{min-height:calc(var(--tap) * 2.5)}
+
+/* Kept codes. The payload preview is clipped by CSS, never by slice(): the
+   whole string stays in the DOM and in the title, so nothing is lost where
+   the user cannot get it back. */
+#savedList > li{flex-wrap:wrap; padding:var(--s3) 0; align-items:flex-start}
+.sv-main{flex:1 1 16rem; min-width:0}
+.sv-main input{font-weight:600}
+.sv-meta{
+  display:block;
+  margin-top:var(--s1);
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.sv-acts{display:flex; gap:var(--s2); flex-wrap:wrap}
+
+/* ── Print ───────────────────────────────────────────────────────────────
+   Cmd+P used to emit the hero, the whole form (with the Wi-Fi password
+   sitting in a type=text input), both selects, both buttons, no type label,
+   and the code at an effective 96 DPI. This is a real sheet instead: the code
+   drawn from the vector at a stated physical width, the destination in
+   legible text underneath — which is the whole answer to a quishing sticker —
+   and the password only if it was explicitly asked for. */
+.printonly{display:none}
+
+@media print{
+  .noprint{display:none !important}
+
+  /* Two sheets share the document; a body class picks which one prints. */
+  body:not(.printing-batch) #batchSheet{display:none !important}
+  body.printing-batch #printSheet{display:none !important}
+
+  .ps-card{
+    max-width:120mm;
+    margin:0 auto;
+    padding:8mm;
+    border:0.4mm solid #000;
+    border-radius:3mm;
+    text-align:center;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .ps-code{
+    display:block;
+    width:var(--print-mm, 40mm);
+    height:var(--print-mm, 40mm);
+    margin:0 auto 6mm;
+  }
+  .ps-kicker{
+    margin:0 0 2mm;
+    font-size:10pt; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  .ps-title{margin:0 0 2mm; font-size:15pt; font-weight:700; overflow-wrap:anywhere}
+  .ps-sub{margin:0 0 2mm; font-size:10pt; overflow-wrap:anywhere}
+  .ps-pass{margin:2mm 0 0; font-size:11pt; font-family:ui-monospace,Menlo,Consolas,monospace; overflow-wrap:anywhere}
+  .ps-foot{margin:5mm auto 0; max-width:120mm; text-align:center; font-size:8pt}
+
+  #batchSheet{display:block}
+  .bs-grid{display:flex; flex-wrap:wrap; gap:6mm; justify-content:flex-start}
+  .bs-item{
+    width:var(--batch-mm, 45mm);
+    text-align:center;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .bs-item img{display:block; width:var(--batch-mm, 45mm); height:var(--batch-mm, 45mm)}
+  .bs-item .bs-label{margin:1.5mm 0 0; font-size:8pt; overflow-wrap:anywhere}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
@@ -1269,28 +1396,55 @@ body{
 
   <main id="main">
 
-  <div class="hero">
+  <noscript>
+    <div class="warn noscript-warn">
+      <strong>QR Maker needs JavaScript.</strong> The code is drawn here, on your device — that is the
+      whole point, and it is why nothing is ever uploaded to be generated. Allow JavaScript for this
+      page and it will keep working afterwards with the network off.
+    </div>
+  </noscript>
+
+  <div class="hero noprint">
     <h2>QR codes that never expire</h2>
     <p>Made on your device, owned by nobody. No sign-up, no “dynamic code” subscription,
       no company that can kill your menu, flyer, or sign. <strong>A permanent code is the only honest kind.</strong></p>
   </div>
 
-  <section class="card">
-    <div class="seg" id="typeSeg" role="tablist" aria-label="Code type"></div>
+  <section class="card noprint">
+    <h2>What are you encoding?</h2>
+    <div class="seg" id="typeSeg" role="group" aria-label="Code type"></div>
     <div id="fields"></div>
   </section>
 
-  <section class="card">
+  <section class="card noprint">
     <h2>Your code</h2>
-    <div id="qrWrap"><canvas id="qrCanvas" width="300" height="300" aria-label="Generated QR code"></canvas></div>
-    <p class="hint" id="emptyHint">Start typing above — the code updates live.</p>
-    <div class="row" style="margin-top:10px">
-      <label class="f" style="flex:0 0 130px"><span>PNG size</span>
-        <select id="pngSize">
-          <option value="512">512 px</option>
-          <option value="1024" selected>1024 px</option>
-          <option value="2048">2048 px</option>
-        </select></label>
+
+    <div id="qrWrap" class="hidden"><canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code preview"></canvas></div>
+
+    <div class="empty" id="emptyState">
+      <div class="glyph" aria-hidden="true">▦</div>
+      <h3>Nothing to encode yet</h3>
+      <p>Type a web address above and the code appears here as you go. There is no “generate” button,
+        because there is no server to ask.</p>
+    </div>
+
+    <p class="warn hidden" id="capWarn"></p>
+
+    <div class="well hidden" id="readout">
+      <h3>Exactly what this code contains</h3>
+      <code class="payload" id="payloadOut"></code>
+      <p class="sub tnum" id="payloadMeta"></p>
+      <ul class="plain notes hidden" id="notesList"></ul>
+      <div class="row">
+        <button class="btn" id="copyPayload" type="button">Copy this text</button>
+      </div>
+      <p class="hint">No shortener, no redirect, no domain of ours in the middle. What you can read here
+        is the whole of what a scanner reads — which is also why nothing needs to stay switched on.</p>
+    </div>
+
+    <div class="frow" id="outputOpts">
+      <label class="f"><span>Printed size</span>
+        <select id="pngSize"></select></label>
       <label class="f"><span>Toughness (survives smudges)</span>
         <select id="ecLevel">
           <option value="M" selected>Standard</option>
@@ -1298,14 +1452,82 @@ body{
           <option value="H">Maximum</option>
         </select></label>
     </div>
+    <p class="hint tnum" id="sizeInfo"></p>
+
+    <label class="hidden" id="printPassWrap">
+      <input type="checkbox" id="printPassChk">
+      <span>Print the Wi-Fi password as readable text on the card</span>
+    </label>
+
     <div class="row">
-      <button class="btn primary" id="dlPng" type="button">Download PNG</button>
-      <button class="btn" id="dlSvg" type="button">Download SVG</button>
+      <button class="btn primary" id="dlSvg" type="button">Download SVG</button>
+      <button class="btn" id="dlPng" type="button">Download PNG</button>
+      <button class="btn" id="doPrint" type="button">Print a card</button>
+      <button class="btn" id="saveCode" type="button">Keep this code</button>
+      <span data-saved-flag id="savedFlag"></span>
     </div>
-    <p class="promise">Print it as big as a billboard — it will scan in 20 years.</p>
+    <p class="hint">Going to a printer? Send the <strong>SVG</strong>. It is the vector file — no resolution
+      to run out of, and the one a print shop asks for. The PNG is for screens and for whoever will
+      only take a photo of it.</p>
+
+    <div class="trust" id="trustStamp">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      </svg>
+      <span id="trustText"></span>
+    </div>
+  </section>
+
+  <section class="card noprint" id="savedCard">
+    <h2>Kept on this device</h2>
+    <p class="sub" id="savedCount"></p>
+    <ul class="plain" id="savedList"></ul>
+    <div class="empty" id="savedEmpty">
+      <div class="glyph" aria-hidden="true">⌸</div>
+      <h3>Nothing kept yet</h3>
+      <p>“Keep this code” files the exact text, the toughness and the date here, so the same code can be
+        re-exported byte for byte in a year — when the sign is scuffed and nobody remembers what was in it.</p>
+    </div>
+    <div class="row">
+      <button class="btn" id="exportJson" type="button">Export all (JSON)</button>
+      <button class="btn" id="importBtn" type="button">Import a file…</button>
+      <button class="btn danger" id="clearSaved" type="button">Clear all</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+  </section>
+
+  <section class="card noprint" id="batchCard">
+    <h2>Many codes at once</h2>
+    <p class="sub">One entry per line. Thirty Chromebook labels, a row of table numbers, a list of links —
+      each one made here on this device, and each one named after the line that made it.</p>
+    <label class="f"><span id="batchLabel">One web address per line</span>
+      <textarea id="batchIn" rows="5" autocomplete="off"></textarea></label>
+    <p class="hint tnum" id="batchStatus"></p>
+    <ul class="plain notes hidden" id="batchProblems"></ul>
+    <div class="row">
+      <button class="btn" id="batchPrint" type="button" disabled>Print the sheet</button>
+      <button class="btn" id="batchZip" type="button" disabled>Download every SVG (.zip)</button>
+    </div>
   </section>
   </main>
 </div>
+
+<section class="printonly" id="printSheet">
+  <div class="ps-card">
+    <img id="printImg" class="ps-code" alt="">
+    <p class="ps-kicker" id="printKicker"></p>
+    <p class="ps-title" id="printTitle"></p>
+    <p class="ps-sub" id="printSub"></p>
+    <p class="ps-pass hidden" id="printPassLine"></p>
+  </div>
+  <p class="ps-foot" id="printFoot"></p>
+</section>
+
+<section class="printonly" id="batchSheet">
+  <div class="bs-grid" id="batchGrid"></div>
+  <p class="ps-foot" id="batchFoot"></p>
+</section>
 
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Runs entirely in your browser — we never see what you encode.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20QR%20Maker" style="color:inherit">Feedback</a></footer>
