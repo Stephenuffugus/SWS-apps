@@ -38,9 +38,10 @@ export function parseBulkSlots(text) {
   return out;
 }
 
-/* Date-range slots: "every Tue 3–5pm, Sept–Nov" style generation.
-   weekdays: Set/array of 0–6 (Sun=0). Dates are LOCAL. */
-export function dateRangeSlots({ start, end, weekdays, timeText, prefix, capacity }) {
+/* Date-range slots: "every Tue and Thu, Sept–Nov" style generation.
+   weekdays: Set/array of 0–6 (Sun=0). Dates are LOCAL. The date goes into the
+   sort key (`order`), not into the label — see THE DATE MODEL below. */
+export function dateRangeSlots({ start, end, weekdays, time, name, where, wear, capacity }) {
   const out = [];
   const from = new Date(start + 'T00:00:00');
   const to = new Date(end + 'T00:00:00');
@@ -48,13 +49,12 @@ export function dateRangeSlots({ start, end, weekdays, timeText, prefix, capacit
   const days = new Set(weekdays || []);
   if (days.size === 0) return out;
   const cap = Math.min(Math.max(capacity || 1, 1), 999);
-  const fmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+  const label = composeLabel({ name: name || 'Practice', where, wear });
+  const pad = (n) => String(n).padStart(2, '0');
+  for (const d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
     if (!days.has(d.getDay())) continue;
-    let label = fmt.format(d);
-    if (timeText) label += ' · ' + String(timeText).trim().slice(0, 40);
-    if (prefix) label = String(prefix).trim().slice(0, 60) + ' — ' + label;
-    out.push({ label: label.slice(0, 120), capacity: cap });
+    const iso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    out.push({ label, capacity: cap, order: dateKey(iso, time) });
     if (out.length >= 100) break;
   }
   return out;
@@ -191,6 +191,60 @@ export function parseLabel(label) {
     nameBits.push(s);
   }
   return { name: nameBits.join(SEP).trim(), where, wear };
+}
+
+/* ---------- pasted schedules ----------
+   The league emails a text block. Typing fourteen games by hand on a Sunday
+   night is where organizers quit, so pull the date and time out of each pasted
+   line and leave the rest as the event name. */
+const MONTH_RE = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?\b/i;
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+
+/** Returns { date:'YYYY-MM-DD'|'', time:'HH:MM'|'', rest } for one pasted line. */
+export function sniffDateTime(line, now) {
+  let s = String(line || '');
+  const ref = now instanceof Date ? now : new Date();
+  let y = 0, mo = 0, d = 0;
+
+  let m = /\b(\d{4})-(\d{2})-(\d{2})\b/.exec(s);
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); }
+  if (!mo) {
+    m = MONTH_RE.exec(s);
+    if (m) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = m[3] ? +m[3] : 0; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); }
+  }
+  if (!mo) {
+    m = /(?:^|[\s(·—–-])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=$|[\s)·—–,-])/.exec(s);
+    if (m) {
+      mo = +m[1]; d = +m[2];
+      y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : 0;
+      s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length);
+    }
+  }
+  let time = '';
+  const t = /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b|\b([01]?\d|2[0-3]):([0-5]\d)\b/i.exec(s);
+  if (t) {
+    if (t[3]) {
+      let hh = +t[1] % 12;
+      if (t[3].toLowerCase() === 'pm') hh += 12;
+      time = `${String(hh).padStart(2, '0')}:${String(t[2] ? +t[2] : 0).padStart(2, '0')}`;
+    } else {
+      time = `${String(+t[4]).padStart(2, '0')}:${t[5]}`;
+    }
+    s = s.slice(0, t.index) + ' ' + s.slice(t.index + t[0].length);
+  }
+  let date = '';
+  if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+    if (!y) {
+      // A season pasted in August that says "Mar 3" means next March.
+      y = ref.getFullYear();
+      const guess = new Date(y, mo - 1, d);
+      if ((ref - guess) > 150 * 86400000) y += 1;
+      else if ((guess - ref) > 300 * 86400000) y -= 1;
+    }
+    date = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  const rest = s.replace(/\s*[·—–-]\s*[·—–-]\s*/g, ' — ').replace(/^[\s·—–,-]+|[\s·—–,-]+$/g, '').replace(/\s{2,}/g, ' ').trim();
+  return { date, time, rest };
 }
 
 /* ---------- formatting ---------- */

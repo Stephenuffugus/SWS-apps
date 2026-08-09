@@ -6,7 +6,7 @@ import {
   normalizeCode, parseBulkSlots, dateRangeSlots, fillStats, shareUrl,
   dateKey, isDated, keyParts, keyToDate, keyToInputs, formatKey, formatTime,
   composeLabel, parseLabel, sortSlots, isPast, seasonIcs, weekMessage,
-  nudgeMessage, UNDATED_BASE,
+  nudgeMessage, sniffDateTime, UNDATED_BASE,
 } from './helpers.js';
 import * as D from './data.js';
 import { firebaseConfig } from './firebase-config.js';
@@ -125,6 +125,8 @@ async function renderHome() {
   setGrowthFooter(false);
   live.stop();
   applyTheme(null);
+  $('authBtn').classList.remove('hidden');
+  if ($('tipLink') && CONFIG.tipUrl) $('tipLink').classList.remove('hidden');
   const v = $('view');
   v.replaceChildren();
 
@@ -234,11 +236,50 @@ function syncClaimWatchers() {
   }
 }
 
-const THEMES = { blue: '#2563eb', green: '#0f766e', plum: '#7c3aed', slate: '#475569', amber: '#b45309' };
+/* ---------- board colour ----------
+   The old version wrote only `--accent` onto documentElement.style while every
+   visible surface paints from `--accent-fill`, so all five themes rendered the
+   identical blue button. It now emits the whole ramp, in OKLCH so the five
+   read as equally weighted, into a stylesheet rather than an inline style —
+   an inline style on <html> outranks the comfort panel's high-contrast block,
+   a stylesheet does not, and a stylesheet can carry a dark-mode variant.
+   Fills sit at L .42 so ink-on-fill clears the 7:1 this app is read at (sun on
+   a phone in a parked car), not the 4.5:1 floor. */
+const THEMES = {
+  clay:   { name: 'Clay',   h: 38,  C: 0.13, L: 0.62 },
+  amber:  { name: 'Amber',  h: 78,  C: 0.13, L: 0.66 },
+  green:  { name: 'Green',  h: 150, C: 0.11, L: 0.62 },
+  teal:   { name: 'Teal',   h: 205, C: 0.10, L: 0.62 },
+  plum:   { name: 'Plum',   h: 330, C: 0.11, L: 0.60 },
+};
+let themeStyleEl = null;
+function themeVars(t, dark) {
+  const o = (L, C) => `oklch(${L} ${C} ${t.h})`;
+  return dark
+    ? [`--accent:${o(0.76, t.C * 0.85)}`, `--accent-fill:${o(0.84, t.C * 0.7)}`,
+       `--accent-deep:${o(0.84, t.C * 0.7)}`, `--accent-press:${o(0.74, t.C * 0.8)}`,
+       `--accent-soft:${o(0.30, t.C * 0.35)}`, `--accent-ink:${o(0.18, t.C * 0.25)}`,
+       `--mine:${o(0.31, t.C * 0.3)}`].join(';')
+    : [`--accent:${o(0.62, t.C)}`, `--accent-fill:${o(0.42, t.C * 0.95)}`,
+       `--accent-deep:${o(0.42, t.C * 0.95)}`, `--accent-press:${o(0.34, t.C * 0.9)}`,
+       `--accent-soft:${o(0.955, t.C * 0.22)}`, `--accent-ink:${o(0.99, t.C * 0.03)}`,
+       `--mine:${o(0.94, t.C * 0.28)}`].join(';');
+}
 function applyTheme(themeKey) {
-  const c = THEMES[themeKey];
-  if (c) document.documentElement.style.setProperty('--accent', c);
-  else document.documentElement.style.removeProperty('--accent');
+  // A board written before the themes were renamed keeps working: unknown keys
+  // simply fall through to the app's own skin.
+  const t = THEMES[themeKey];
+  if (!themeStyleEl) {
+    themeStyleEl = document.createElement('style');
+    themeStyleEl.id = 'tpTheme';
+    document.head.append(themeStyleEl);
+  }
+  document.documentElement.style.removeProperty('--accent'); // legacy inline write
+  if (!t) { themeStyleEl.textContent = ''; return; }
+  themeStyleEl.textContent =
+    `:root{${themeVars(t, false)}}\n` +
+    `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${themeVars(t, true)}}}\n` +
+    `:root[data-theme="dark"]{${themeVars(t, true)}}\n`;
 }
 
 function baseUrl() {
@@ -475,16 +516,36 @@ function paintBoard() {
   // --- next up: the answer, above the list ---
   v.append(renderNextUp(upcoming, undatedSlots, own, locked));
 
-  // --- schedule ---
+  // --- schedule, in date order ---
   const schedCard = el('section', { class: 'card' }, el('h2', {}, 'Schedule & duties'));
-  const stats = fillStats(live.slots.filter(s => s.capacity < RSVP_CAP));
-  if (stats.total > 0) schedCard.append(el('div', { class: 'sub', style: 'margin-bottom:6px', text: 'Duties filled: ' + stats.taken + ' of ' + stats.total }));
+  // "Duties filled: 1 of 12" is an organizer metric — it is not one of the
+  // three questions a family opens this page with.
+  if (own) {
+    const stats = fillStats(live.slots.filter(s => s.capacity < RSVP_CAP));
+    if (stats.total > 0) schedCard.append(el('div', { class: 'sub', style: 'margin-bottom:6px', text: 'Duties filled: ' + stats.taken + ' of ' + stats.total }));
+  }
   if (live.slots.length === 0) {
     schedCard.append(el('p', { class: 'hint', text: own
       ? 'No events yet — open Manage below to add practices, games, and duty slots.'
       : 'The organizer hasn’t added the schedule yet.' }));
   }
-  for (const s of live.slots) schedCard.append(renderEvent(s, own, locked));
+  let lastDay = '';
+  for (const s of upcoming) {
+    const day = formatKey(s.order).split(' · ')[0];
+    if (day && day !== lastDay) { schedCard.append(el('h3', { class: 'dayhead', text: day })); lastDay = day; }
+    schedCard.append(renderEvent(s, own, locked));
+  }
+  if (undatedSlots.length) {
+    if (upcoming.length) schedCard.append(el('h3', { class: 'dayhead', text: 'No date set' }));
+    for (const s of undatedSlots) schedCard.append(renderEvent(s, own, locked));
+  }
+  if (pastSlots.length) {
+    const inner = el('div', {});
+    for (const s of pastSlots) inner.append(renderEvent(s, own, locked, true));
+    schedCard.append(el('details', { class: 'pastwrap' },
+      el('summary', { class: 'sub' }, 'Earlier this season (' + pastSlots.length + ')'),
+      inner));
+  }
   v.append(schedCard);
 
   // --- notes ---
@@ -495,50 +556,172 @@ function paintBoard() {
 
   if (!own) {
     v.append(el('section', { class: 'card noprint' },
-      el('h2', {}, 'Share'),
-      el('div', { class: 'row' },
-        el('button', { class: 'btn', type: 'button', onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied') }, 'Copy link'),
-        el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'))));
+      el('h2', {}, 'Keep this'),
+      el('div', { class: 'row', style: 'flex-wrap:wrap' },
+        el('button', { class: 'btn', type: 'button', onclick: () => copyText(url, 'Link copied') }, 'Copy link'),
+        el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
+        el('button', { class: 'btn', type: 'button', onclick: () => downloadIcs(b) }, 'Add season to calendar'),
+        el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print')),
+      el('p', { class: 'hint', text: 'The calendar file downloads straight to this device — no calendar permission, no sign-in. The printed sheet carries the QR back to this page.' })));
   }
+
+  focusRestore(keepFocus);
+  scrollRestore(keepY);
 }
 
-function renderEvent(s, own, locked) {
+/* Firestore stamps `createdAt` server-side; it is briefly null on a local
+   write, which is exactly when "Just now" is true. */
+function entryStamp(e) {
+  const raw = e && e.createdAt;
+  const d = raw && typeof raw.toDate === 'function' ? raw.toDate() : (raw instanceof Date ? raw : null);
+  if (!d || isNaN(d.getTime())) return 'just now';
+  const now = new Date();
+  const t = formatTime(d.getHours(), d.getMinutes());
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (d.toDateString() === now.toDateString()) return 'today ' + t;
+  if ((now - d) < 6 * 86400000) return DOW[d.getDay()] + ' ' + t;
+  return `${MON[d.getMonth()]} ${d.getDate()} · ${t}`;
+}
+
+/* ---------- the answer block ----------
+   Four seconds in a supermarket aisle, or a parked car with sun on the screen.
+   Three questions: is it our turn, what time and where, what colour shirt. */
+function renderNextUp(upcoming, undatedSlots, own, locked) {
+  const card = el('section', { class: 'card nextup' });
+  const mineOf = (s) => {
+    const claims = live.claims.get(s.id) || [];
+    return user ? claims.find(c => c.uid === user.uid) : null;
+  };
+  if (upcoming.length === 0) {
+    card.append(el('h2', {}, 'Next up'),
+      el('p', { class: 'nu-none', text: undatedSlots.length
+        ? 'Nothing dated yet — the duties below still need names against them.'
+        : 'Nothing on the calendar yet.' }));
+    return card;
+  }
+  const p0 = keyParts(upcoming[0].order);
+  const dayOf = (s) => { const p = keyParts(s.order); return p ? p.y * 10000 + p.m * 100 + p.d : 0; };
+  const firstDay = dayOf(upcoming[0]);
+  const today = new Date();
+  const isToday = p0.y === today.getFullYear() && p0.m === today.getMonth() + 1 && p0.d === today.getDate();
+  const sameDay = upcoming.filter(s => dayOf(s) === firstDay);
+
+  card.append(el('h2', {}, 'Next up'));
+  card.append(el('p', { class: 'nu-when', text: (isToday ? 'Today — ' : '') + formatKey(upcoming[0].order).split(' · ')[0] }));
+
+  for (const s of sameDay) {
+    const p = keyParts(s.order);
+    const { name, where, wear } = parseLabel(s.label);
+    const isRSVP = (s.capacity || 1) >= RSVP_CAP;
+    const left = Math.max(0, (s.capacity || 1) - (s.claimedCount || 0));
+    const claims = live.claims.get(s.id) || [];
+    const mine = mineOf(s);
+    const row = el('div', { class: 'nu-item' });
+    row.append(el('p', { class: 'nu-what' },
+      p.hasTime ? el('b', { class: 'nu-time', text: formatTime(p.hh, p.mm) }) : null,
+      el('span', { text: name || s.label }),
+      mine ? el('span', { class: 'nu-yours', text: 'YOUR TURN' }) : null));
+    if (where) row.append(el('p', { class: 'nu-line' }, '📍 ',
+      el('a', { href: mapsUrl(where), target: '_blank', rel: 'noopener noreferrer', text: where })));
+    if (wear) row.append(el('p', { class: 'nu-line', text: '👕 Wear ' + wear }));
+    if (!isRSVP) {
+      const who = claims.map(c => c.name).join(', ');
+      row.append(el('p', { class: 'nu-line ' + (left === 0 ? 'nu-ok' : 'nu-need'),
+        text: left === 0 ? 'Covered by ' + who : (who ? who + ' — ' + left + ' more needed' : left + ' still needed') }));
+      if (!mine && left > 0 && !locked) row.append(el('div', { class: 'noprint' },
+        el('button', { class: 'btn primary', type: 'button', onclick: () => openClaim(s, false) }, 'I’ll cover this')));
+    } else if (claims.length) {
+      row.append(el('p', { class: 'nu-line', text: claims.length + ' going' }));
+    }
+    card.append(row);
+  }
+
+  // If this family's own turn is not on that day, say when it is and take
+  // them to it — measured 2.61 viewports down before this existed.
+  const nextMine = [...upcoming, ...undatedSlots].find(s => mineOf(s) && dayOf(s) !== firstDay);
+  if (nextMine) {
+    const { name } = parseLabel(nextMine.label);
+    card.append(el('p', { class: 'nu-line nu-mine noprint' },
+      'Your turn next: ', el('b', { text: (name || nextMine.label) + (isDated(nextMine.order) ? ' · ' + formatKey(nextMine.order) : '') }), ' ',
+      el('button', { class: 'btn small', type: 'button', onclick: () => jumpTo('slot-' + nextMine.id) }, 'Show me')));
+  }
+  return card;
+}
+
+function jumpTo(id) {
+  const n = document.getElementById(id);
+  if (!n) return;
+  n.scrollIntoView({ block: 'center', behavior: document.documentElement.dataset.motion === 'less' ? 'auto' : 'smooth' });
+  n.classList.add('flash');
+  setTimeout(() => n.classList.remove('flash'), 1600);
+  n.setAttribute('tabindex', '-1');
+  try { n.focus({ preventScroll: true }); } catch (e) {}
+}
+
+function renderEvent(s, own, locked, past) {
   const claims = live.claims.get(s.id) || [];
   const mine = user && claims.find(c => c.uid === user.uid);
   const isRSVP = (s.capacity || 1) >= RSVP_CAP;
   const left = Math.max(0, (s.capacity || 1) - (s.claimedCount || 0));
-  const box = el('div', { class: 'slot' });
+  const box = el('div', { class: 'slot' + (past ? ' past' : ''), id: 'slot-' + s.id });
   const countText = isRSVP
     ? (s.claimedCount || 0) + ' going'
     : (left === 0 ? 'Covered' : (s.claimedCount || 0) + ' of ' + s.capacity);
+  const p = keyParts(s.order);
+  const { name, where, wear } = parseLabel(s.label);
+  const labelSpan = el('span', { class: 'label' },
+    p && p.hasTime ? el('b', { class: 'when', text: formatTime(p.hh, p.mm) }) : null,
+    past && p ? el('b', { class: 'when', text: formatKey(s.order).split(' · ')[0] }) : null,
+    el('span', { text: name || s.label }));
   const top = el('div', { class: 'top' },
-    el('span', { class: 'label', text: s.label }),
+    labelSpan,
     el('span', { class: 'count' + (!isRSVP && left === 0 ? ' full' : ''), text: countText }));
-  if (own) top.append(el('button', { class: 'btn small noprint', type: 'button', 'aria-label': 'Edit event', onclick: () => openSlotDlg(s) }, '✎'));
+  if (own) top.append(el('button', { class: 'btn small icon noprint', type: 'button', 'aria-label': 'Edit ' + (name || s.label), onclick: () => openSlotDlg(s) }, '✎'));
   box.append(top);
+  if (where || wear) {
+    const meta = el('div', { class: 'slotmeta' });
+    if (where) meta.append(el('span', {}, '📍 ',
+      el('a', { href: mapsUrl(where), target: '_blank', rel: 'noopener noreferrer', text: where })));
+    if (wear) meta.append(el('span', { text: '👕 ' + wear }));
+    box.append(meta);
+  }
   const chips = el('div', { class: 'chips' });
   for (const c of claims) {
     const isMine = user && c.uid === user.uid;
     const chip = el('span', { class: 'chip' + (isMine ? ' mine' : '') },
-      c.name + (isMine ? ' (you)' : '') + (c.note ? ' · ' + c.note : ''));
+      el('span', { class: 'chiptext' }, c.name, isMine ? el('span', { class: 'noprint', text: ' (you)' }) : null,
+        c.note ? ' · ' + c.note : ''));
     if ((isMine && !locked) || own) chip.append(el('button', {
-      type: 'button', 'aria-label': 'Remove ' + c.name, class: 'noprint',
+      type: 'button', 'aria-label': (isMine ? 'Give up my spot on ' : 'Remove ' + c.name + ' from ') + (name || s.label),
+      class: 'noprint chipx',
       onclick: async () => {
+        // The most destructive tap a parent can make. Snapshot first, then
+        // offer the way back — a confirm here would tax every deliberate tap
+        // and still not catch the accidental one.
+        const snap = { name: c.name, note: c.note || '' };
         try {
           if (isMine) await D.releaseClaim(live.boardId, s.id);
           else await D.ownerRemoveClaim(live.boardId, s.id, c.uid);
-          toast(isMine ? (isRSVP ? 'RSVP withdrawn' : 'Duty released') : 'Removed');
-        } catch (e) { toast(friendly(e), 4500); }
+        } catch (e) { toast(friendly(e), 4500); return; }
+        if (isMine) {
+          undoToast(isRSVP ? 'RSVP withdrawn' : 'Spot given up — ' + (name || s.label), async () => {
+            try { await D.claimSlot(live.boardId, s.id, snap.name, snap.note); toast('Back in — ' + (name || s.label)); }
+            catch (e2) { toast(friendly(e2), 5000); }
+          });
+        } else {
+          toast('Removed ' + snap.name);
+        }
       },
     }, '✕'));
     chips.append(chip);
   }
   if (!isRSVP) for (let i = 0; i < left; i++) chips.append(el('span', { class: 'chip printonly', text: '________________' }));
   if (claims.length || (!isRSVP && left)) box.append(chips);
-  if (!mine && left > 0 && !locked) {
+  if (!mine && left > 0 && !locked && !past) {
     box.append(el('div', { class: 'noprint', style: 'margin-top:8px' },
       el('button', { class: 'btn primary small', type: 'button', onclick: () => openClaim(s, isRSVP) },
-        isRSVP ? "I'm going" : 'I’ll cover this')));
+        isRSVP ? 'I’m going' : 'I’ll cover this')));
   }
   return box;
 }
@@ -547,7 +730,9 @@ let claimTarget = null;
 function openClaim(slot, isRSVP) {
   claimTarget = slot;
   $('nameDlgTitle').textContent = isRSVP ? 'Count us in' : 'Cover this duty';
-  $('nameDlgSlot').textContent = slot.label;
+  const { name } = parseLabel(slot.label);
+  const when = formatKey(slot.order);
+  $('nameDlgSlot').textContent = (name || slot.label) + (when ? ' · ' + when : '');
   $('nameInput').value = myName();
   $('noteInput').value = '';
   showDlg($('nameDlg'));
@@ -560,10 +745,12 @@ function renderNotes(b, own, locked) {
   const list = el('ul', { class: 'plain' });
   for (const e of notes) {
     const mineE = user && e.creatorUid === user.uid;
-    const li = el('li', {},
+    // A note still awaiting approval is not part of the team's paper record.
+    const li = el('li', { class: e.status === 'pending' ? 'noprint' : '' },
       el('div', { class: 'grow' },
         el('div', {}, el('strong', {}, e.authorName), ': ' + e.body,
-          e.status === 'pending' ? el('span', { class: 'badge pending', style: 'margin-left:6px', text: 'awaiting approval' }) : null)));
+          e.status === 'pending' ? el('span', { class: 'badge pending', style: 'margin-left:6px', text: '(awaiting approval)' }) : null),
+        el('div', { class: 'sub', text: entryStamp(e) })));
     if (own && e.status === 'pending') li.append(el('button', {
       class: 'btn small noprint', type: 'button',
       onclick: () => D.updateEntry(live.boardId, e.id, { status: 'ok' }).then(() => toast('Approved')).catch(err => toast(friendly(err))),
@@ -596,116 +783,169 @@ function renderNotes(b, own, locked) {
   return card;
 }
 
-/* ---------- owner manage panel ---------- */
+/* ---------- owner manage panel ----------
+   This panel used to be rebuilt closed, empty and unfocused on every snapshot.
+   It now keeps `open`, every value, and the caret across a redraw. */
 let addMode = 'single';
-let announceDraft = '';
+const WKD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+let wkdaysPicked = new Set();
+
+function capFrom(value) {
+  const cap = parseInt(value, 10);
+  return (isFinite(cap) && cap >= 1) ? Math.min(cap, 998) : RSVP_CAP;
+}
+
 function renderManage(b) {
   const url = shareUrl(live.code, baseUrl());
-  const wrap = el('details', { class: 'manage noprint' }, el('summary', {}, 'Manage this team page'));
+  const wrap = el('details', {
+    class: 'manage noprint', ...(manageOpen ? { open: '' } : {}),
+    ontoggle: (ev) => { manageOpen = ev.target.open; },
+  }, el('summary', {}, 'Manage this team page'));
   const inner = el('div', { class: 'inner' });
   wrap.append(inner);
 
   inner.append(el('h2', {}, 'Add to the schedule'));
+  // Toggle-button group, per the design system: no lying tablist role.
   const seg = el('div', { class: 'seg' },
     ...[['single', 'One event'], ['range', 'Repeating'], ['bulk', 'Paste a list']].map(([k, label]) =>
-      el('button', { type: 'button', class: k === addMode ? 'active' : '', onclick: () => { addMode = k; drawBoard(); } }, label)));
+      el('button', {
+        type: 'button', class: k === addMode ? 'active' : '', 'aria-pressed': String(k === addMode),
+        'data-k': 'seg-' + k,
+        onclick: () => { addMode = k; drawBoard(); },
+      }, label)));
   inner.append(seg);
 
   if (addMode === 'single') {
-    const lab = el('input', { type: 'text', placeholder: 'Game vs Hawks', maxlength: '80' });
-    const date = el('input', { type: 'date' });
-    const time = el('input', { type: 'text', placeholder: '5pm (optional)', maxlength: '20' });
-    const need = el('input', { type: 'number', placeholder: 'spots', min: '1', max: '998', 'aria-label': 'Volunteers needed (blank = open RSVP)' });
+    const lab = tracked('s-name', { type: 'text', placeholder: 'Game vs Hawks', maxlength: '70' });
+    const date = tracked('s-date', { type: 'date' });
+    const time = tracked('s-time', { type: 'time' });
+    const where = tracked('s-where', { type: 'text', placeholder: 'Kestrel Park, Field 4', maxlength: '44' });
+    const wear = tracked('s-wear', { type: 'text', placeholder: 'blue', maxlength: '24' });
+    const need = tracked('s-need', { type: 'number', placeholder: 'spots', min: '1', max: '998' });
     inner.append(
       el('label', { class: 'f' }, el('span', {}, 'Event'), lab),
       el('div', { class: 'row' },
-        el('label', { class: 'f' }, el('span', {}, 'Date (optional)'), date),
-        el('label', { class: 'f' }, el('span', {}, 'Time (optional)'), time),
-        el('label', { class: 'f' }, el('span', {}, 'Needed (blank = RSVP)'), need)),
+        el('label', { class: 'f' }, el('span', {}, 'Date'), date),
+        el('label', { class: 'f' }, el('span', {}, 'Start time'), time)),
+      el('label', { class: 'f' }, el('span', {}, 'Where (tap-to-navigate on every phone)'), where),
+      el('div', { class: 'row' },
+        el('label', { class: 'f' }, el('span', {}, 'Wear'), wear),
+        el('label', { class: 'f' }, el('span', {}, 'Volunteers needed (blank = everyone RSVPs)'), need)),
       el('button', { class: 'btn', type: 'button', onclick: async () => {
         const name = lab.value.trim();
         if (!name) { toast('Give the event a name'); return; }
-        let label = name;
-        if (date.value) {
-          const d = new Date(date.value + 'T00:00:00');
-          label += ' · ' + new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(d);
-        }
-        if (time.value.trim()) label += ' · ' + time.value.trim();
-        const cap = parseInt(need.value, 10);
+        const label = composeLabel({ name, where: where.value, wear: wear.value });
+        const order = dateKey(date.value, time.value);
         try {
-          await addSlotsChecked([{ label, capacity: (isFinite(cap) && cap >= 1) ? Math.min(cap, 998) : RSVP_CAP }]);
-          lab.value = ''; need.value = '';
+          await addSlotsChecked([{ label, capacity: capFrom(need.value), order }]);
+          for (const k of ['s-name', 's-where', 's-need']) manageDraft[k] = '';
+          lab.value = ''; where.value = ''; need.value = '';
+          lab.focus();
         } catch (e) { toast(friendly(e), 4500); }
-      } }, 'Add event'));
+      } }, 'Add event'),
+      el('p', { class: 'hint', text: 'Dated events sort themselves and drive “Next up”, the calendar file and the week text. Undated ones (a season-long duty) sit at the end.' }));
   } else if (addMode === 'range') {
-    const start = el('input', { type: 'date' });
-    const end = el('input', { type: 'date' });
-    const time = el('input', { type: 'text', placeholder: '5–6:30pm (optional)', maxlength: '40' });
-    const prefix = el('input', { type: 'text', placeholder: 'Practice', maxlength: '60' });
-    const need = el('input', { type: 'number', placeholder: 'blank = RSVP', min: '1', max: '998' });
-    const days = el('div', { class: 'wkdays' },
-      ...['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) =>
-        el('label', {}, el('input', { type: 'checkbox', value: String(i) }), d)));
+    const start = tracked('r-start', { type: 'date' });
+    const end = tracked('r-end', { type: 'date' });
+    const time = tracked('r-time', { type: 'time' });
+    const name = tracked('r-name', { type: 'text', placeholder: 'Practice', maxlength: '70' });
+    const where = tracked('r-where', { type: 'text', placeholder: 'Kestrel Park', maxlength: '44' });
+    const need = tracked('r-need', { type: 'number', placeholder: 'blank = RSVP', min: '1', max: '998' });
+    /* The seven weekday checkboxes used to be display:none, which takes them
+       out of the tab order AND the accessibility tree — the app's biggest
+       time-saver was pointer-only, and axe cannot see the defect. They are now
+       clipped, not hidden, so they stay focusable and announce their state. */
+    const days = el('div', { class: 'wkdays', role: 'group', 'aria-labelledby': 'wkdaysLabel' },
+      ...WKD.map((d, i) => {
+        const cb = el('input', {
+          type: 'checkbox', value: String(i), 'data-k': 'wk-' + i,
+          ...(wkdaysPicked.has(i) ? { checked: '' } : {}),
+          onchange: (ev) => { if (ev.target.checked) wkdaysPicked.add(i); else wkdaysPicked.delete(i); genBtn.textContent = genLabel(); },
+        });
+        return el('label', {}, cb, el('span', { text: d }));
+      }));
+    const genLabel = () => {
+      const rows = dateRangeSlots({
+        start: draft('r-start'), end: draft('r-end'), weekdays: [...wkdaysPicked],
+        time: draft('r-time'), name: draft('r-name') || 'Practice', where: draft('r-where'),
+        capacity: capFrom(draft('r-need')),
+      });
+      return rows.length ? 'Add ' + rows.length + ' events' : 'Generate events';
+    };
+    for (const n of [start, end, time, name, where, need]) n.addEventListener('input', () => { genBtn.textContent = genLabel(); });
+    const genBtn = el('button', { class: 'btn', type: 'button', onclick: async () => {
+      const rows = dateRangeSlots({
+        start: start.value, end: end.value, weekdays: [...wkdaysPicked],
+        time: time.value, name: name.value || 'Practice', where: where.value,
+        capacity: capFrom(need.value),
+      });
+      if (rows.length === 0) { toast('Pick a date range and at least one weekday'); return; }
+      // No confirm: the button already says how many, and the add is undoable.
+      try { await addSlotsChecked(rows); } catch (e) { toast(friendly(e), 4500); }
+    } }, genLabel());
     inner.append(
-      el('label', { class: 'f' }, el('span', {}, 'What repeats?'), prefix),
+      el('label', { class: 'f' }, el('span', {}, 'What repeats?'), name),
       el('div', { class: 'row' },
         el('label', { class: 'f' }, el('span', {}, 'From'), start),
         el('label', { class: 'f' }, el('span', {}, 'To'), end)),
-      el('label', { class: 'f' }, el('span', {}, 'On these days'), days),
+      el('div', { class: 'f' }, el('span', { id: 'wkdaysLabel' }, 'On these days'), days),
+      el('label', { class: 'f' }, el('span', {}, 'Where'), where),
       el('div', { class: 'row' },
-        el('label', { class: 'f' }, el('span', {}, 'Time (optional)'), time),
-        el('label', { class: 'f' }, el('span', {}, 'Needed (blank = RSVP)'), need)),
-      el('button', { class: 'btn', type: 'button', onclick: async () => {
-        const weekdays = [...days.querySelectorAll('input:checked')].map(c => parseInt(c.value, 10));
-        const cap = parseInt(need.value, 10);
-        const rows = dateRangeSlots({
-          start: start.value, end: end.value, weekdays,
-          timeText: time.value, prefix: prefix.value || 'Practice',
-          capacity: (isFinite(cap) && cap >= 1) ? Math.min(cap, 998) : RSVP_CAP,
-        });
-        if (rows.length === 0) { toast('Pick a date range and at least one weekday'); return; }
-        if (!confirm('Add ' + rows.length + ' events?')) return;
-        try { await addSlotsChecked(rows); } catch (e) { toast(friendly(e), 4500); }
-      } }, 'Generate events'));
+        el('label', { class: 'f' }, el('span', {}, 'Start time'), time),
+        el('label', { class: 'f' }, el('span', {}, 'Volunteers needed (blank = RSVP)'), need)),
+      genBtn);
   } else {
-    const ta = el('textarea', { placeholder: 'One per line — add ×N when you need volunteers:\nSnack duty — Sat game x2\nScorekeeper x1\nCarpool to regionals x4\nTeam photo day' });
+    const ta = tracked('b-text', { tag: 'textarea', 'aria-label': 'Paste your schedule, one event per line',
+      placeholder: 'One per line. Dates and times are picked up automatically; add ×N when you need volunteers:\nSat 9/12 9:00am Game vs Hawks\n9/12 Snack duty x2\nSep 19 Scorekeeper x1\nTeam photo day' });
     inner.append(ta, el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
         // parse per-line so an EXPLICIT "x1" stays a 1-person duty slot,
         // while unmarked lines become open RSVPs
+        const now = new Date();
         const rows = ta.value.split(/\r?\n/).map(line => {
           const r = parseBulkSlots(line)[0];
           if (!r) return null;
           const explicit = /(?:[x×]\s*\d{1,3}|\(\d{1,3}\))\s*$/i.test(line.trim());
-          return { ...r, capacity: explicit ? r.capacity : RSVP_CAP };
-        }).filter(Boolean).slice(0, 100);
+          const sniff = sniffDateTime(r.label, now);
+          return {
+            label: composeLabel({ name: sniff.rest || r.label }),
+            capacity: explicit ? r.capacity : RSVP_CAP,
+            order: dateKey(sniff.date, sniff.time),
+          };
+        }).filter(r => r && r.label).slice(0, 100);
         if (rows.length === 0) { toast('Paste one event per line first'); return; }
-        try { await addSlotsChecked(rows); ta.value = ''; }
+        try { await addSlotsChecked(rows); manageDraft['b-text'] = ''; ta.value = ''; }
         catch (e) { toast(friendly(e), 4500); }
       } }, 'Add all')));
-    inner.append(el('p', { class: 'hint', text: 'Lines without ×N become open RSVPs; “x2” (or even “x1”) makes a duty slot needing that many people.' }));
+    inner.append(el('p', { class: 'hint', text: '“Sat 9/12 9am Game vs Hawks” becomes a dated 9:00 AM event. Lines without ×N are open RSVPs; “x2” (or even “x1”) makes a duty slot needing that many people.' }));
   }
 
-  inner.append(el('h2', { style: 'margin-top:16px' }, 'Share & print'));
+  inner.append(el('h2', { style: 'margin-top:16px' }, 'Share, text and print'));
   inner.append(el('div', { class: 'row', style: 'flex-wrap:wrap' },
     el('button', { class: 'btn', type: 'button', onclick: () => copyText(url, 'Link copied') }, 'Copy link'),
+    el('button', { class: 'btn', type: 'button', onclick: () => copyText(weekText(b), 'This week copied — paste it into the group chat') }, 'Copy this week'),
+    el('button', { class: 'btn', type: 'button', onclick: () => copyText(nudgeMessage(b.title, live.slots.filter(s => s.capacity < RSVP_CAP), url), 'Open spots copied — paste it into the group chat') }, 'Copy open spots'),
+    el('button', { class: 'btn', type: 'button', onclick: () => downloadIcs(b) }, 'Season .ics'),
     el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
     el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print schedule')));
+  inner.append(el('p', { class: 'hint', text: 'Push notifications land about a third of the time across this whole category, so the text block is the nudge and the link is the truth. The printed sheet carries the code and a QR back to this page.' }));
 
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Settings'));
   const s = b.settings || {};
   inner.append(
-    el('label', { class: 'f' }, el('span', {}, 'Color')),
-    el('div', { class: 'themedots' },
-      ...Object.entries(THEMES).map(([key, color]) =>
-        el('button', {
-          type: 'button', 'aria-label': key + ' theme',
-          class: (s.theme || 'blue') === key ? 'sel' : '',
-          style: 'background:' + color,
+    el('div', { class: 'f' }, el('span', { id: 'themeLabel' }, 'Team color')),
+    el('div', { class: 'themedots', role: 'group', 'aria-labelledby': 'themeLabel' },
+      ...Object.entries(THEMES).map(([key, t]) => {
+        const on = (s.theme || 'clay') === key;
+        return el('button', {
+          type: 'button', 'aria-label': t.name, 'aria-pressed': String(on),
+          class: 'themedot' + (on ? ' sel' : ''),
+          style: '--dot:oklch(' + t.L + ' ' + t.C + ' ' + t.h + ')',
           onclick: () => D.setTheme(live.boardId, s, key)
-            .then(() => toast('Color updated'))
+            .then(() => toast(t.name + ' — the buttons and highlights follow it'))
             .catch(e => toast(friendly(e), 5000)),
-        }))),
+        }, el('span', { class: 'tick', 'aria-hidden': 'true', text: on ? '✓' : '' }));
+      })),
     el('label', { class: 'f', style: 'display:flex;align-items:center;gap:8px' },
       el('input', { type: 'checkbox', style: 'width:auto', ...(s.approvalRequired ? { checked: '' } : {}),
         onchange: (ev) => D.setApproval(live.boardId, s, ev.target.checked)
@@ -751,18 +991,67 @@ async function addSlotsChecked(rows) {
     toast('Pages max out at 100 events — archive last season or split by month.', 5000);
     return;
   }
-  let order = live.slots.reduce((m, s) => Math.max(m, s.order || 0), 0);
-  rows.forEach((r, i) => { r.order = order + i + 1; });
-  await D.addSlots(live.boardId, rows);
-  toast(rows.length === 1 ? 'Added to the schedule' : rows.length + ' events added');
+  // Dated rows carry their date as the order key; undated ones queue after
+  // every real date so the schedule still reads chronologically.
+  const undatedMax = live.slots.reduce((m, s) => (isDated(s.order) ? m : Math.max(m, Number(s.order) || 0)), UNDATED_BASE);
+  let n = 0;
+  for (const r of rows) if (!isDated(r.order)) { n += 1; r.order = undatedMax + n; }
+  const ids = await D.addSlots(live.boardId, rows);
+  const msg = rows.length === 1 ? 'Added to the schedule' : rows.length + ' events added';
+  undoToast(msg, async () => {
+    try { await D.deleteSlots(live.boardId, ids); toast(rows.length === 1 ? 'Event removed again' : 'Those ' + rows.length + ' events were removed again'); }
+    catch (e) { toast(friendly(e), 5000); }
+  });
+}
+
+/* ---------- escape hatches ---------- */
+function weekText(b) {
+  const events = sortSlots(live.slots).map(s => {
+    const claims = live.claims.get(s.id) || [];
+    return {
+      order: s.order, label: s.label,
+      who: (s.capacity || 1) < RSVP_CAP ? claims.map(c => c.name) : [],
+      needed: Math.max(0, Math.min(s.capacity || 1, 998) - (s.claimedCount || 0)),
+    };
+  });
+  return weekMessage({ title: b.title, url: shareUrl(live.code, baseUrl()), events, now: new Date() });
+}
+
+function downloadIcs(b) {
+  const dated = live.slots.filter(s => isDated(s.order));
+  if (dated.length === 0) { toast('Nothing dated yet — add a date to an event and it lands in the calendar file'); return; }
+  const text = seasonIcs({ title: b.title, slots: live.slots, url: shareUrl(live.code, baseUrl()) });
+  const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+  const href = URL.createObjectURL(blob);
+  const a = el('a', { href, download: (b.title || 'season').replace(/[^\w -]+/g, '').trim().slice(0, 40) + '.ics' });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 4000);
+  toast(dated.length + ' events downloaded — open the file to add them to any calendar');
 }
 
 let slotEditing = null;
 function openSlotDlg(s) {
   slotEditing = s;
-  $('slotLabel').value = s.label;
-  $('slotCap').value = String(s.capacity);
+  const { name, where, wear } = parseLabel(s.label);
+  const { date, time } = keyToInputs(s.order);
+  $('slotLabel').value = name || s.label;
+  $('slotDate').value = date;
+  $('slotTime').value = time;
+  $('slotWhere').value = where;
+  $('slotWear').value = wear;
+  const isRSVP = (s.capacity || 1) >= RSVP_CAP;
+  $('slotKind').value = isRSVP ? 'rsvp' : 'duty';
+  $('slotCap').value = isRSVP ? '' : String(s.capacity);
+  syncSlotKind();
   showDlg($('slotDlg'));
+  $('slotLabel').focus();
+}
+/* RSVP_CAP is an implementation constant; it has no business appearing in the
+   UI as "999". The organizer picks between two things they recognise. */
+function syncSlotKind() {
+  const duty = $('slotKind').value === 'duty';
+  $('slotCapWrap').classList.toggle('hidden', !duty);
+  if (duty && !$('slotCap').value) $('slotCap').value = '1';
 }
 
 function showQR() {
@@ -819,29 +1108,58 @@ function wire() {
     if (!name) { toast('Just a family name is fine'); return; }
     saveName(name);
     closeDlg($('nameDlg'));
+    const what = parseLabel(claimTarget.label).name || claimTarget.label;
+    /* Offline, batch.commit() never settles — Firestore writes to its local
+       cache and waits for a connection. The claim IS safe, so say so instead
+       of saying nothing: this user's whole reason for checking is an app that
+       once lost his RSVP. */
+    let settled = false;
+    const queuedNotice = setTimeout(() => {
+      if (settled) return;
+      toast('Saved on this phone — “' + what + '” will sync the moment you have signal.', 6000);
+    }, navigator.onLine ? 4000 : 700);
     try {
       const r = await D.claimSlot(live.boardId, claimTarget.id, name, $('noteInput').value);
+      settled = true; clearTimeout(queuedNotice);
       toast(r === 'note-dropped'
         ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
-        : 'You’re in — ' + claimTarget.label, r === 'note-dropped' ? 6000 : 2400);
-    } catch (e) { toast(friendly(e), 4500); }
+        : 'You’re in — ' + what, r === 'note-dropped' ? 6000 : 3000);
+    } catch (e) { settled = true; clearTimeout(queuedNotice); toast(friendly(e), 4500); }
   });
   $('nameCancel').addEventListener('click', () => closeDlg($('nameDlg')));
   $('nameInput').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('nameOk').click(); });
 
+  $('slotKind').addEventListener('change', syncSlotKind);
   $('slotSave').addEventListener('click', async () => {
-    const label = $('slotLabel').value.trim();
-    const cap = Math.min(Math.max(parseInt($('slotCap').value, 10) || 1, 1), 999);
-    if (!label) { toast('The event needs a name'); return; }
+    const name = $('slotLabel').value.trim();
+    if (!name) { toast('The event needs a name'); return; }
+    const duty = $('slotKind').value === 'duty';
+    const cap = duty ? Math.min(Math.max(parseInt($('slotCap').value, 10) || 1, 1), 998) : RSVP_CAP;
     if (cap < (slotEditing.claimedCount || 0)) { toast('Can’t go below the ' + slotEditing.claimedCount + ' people already in'); return; }
-    try { await D.updateSlot(live.boardId, slotEditing.id, { label: label.slice(0, 120), capacity: cap }); closeDlg($('slotDlg')); }
+    const label = composeLabel({ name, where: $('slotWhere').value, wear: $('slotWear').value });
+    const order = dateKey($('slotDate').value, $('slotTime').value);
+    const fields = { label, capacity: cap };
+    // Rescheduling: the date IS the sort key, so the row moves to where it now
+    // belongs instead of sitting at the bottom of the season forever.
+    if (order) fields.order = order;
+    else if (isDated(slotEditing.order)) fields.order = UNDATED_BASE + (Number(String(slotEditing.id).replace(/\D/g, '').slice(0, 6)) || 1);
+    try { await D.updateSlot(live.boardId, slotEditing.id, fields); closeDlg($('slotDlg')); toast('Saved' + (order ? ' — moved into date order' : '')); }
     catch (e) { toast(friendly(e), 4500); }
   });
   $('slotDelete').addEventListener('click', async () => {
-    const n = slotEditing.claimedCount || 0;
-    if (!confirm(n ? 'Delete this event and its ' + n + ' RSVP(s)?' : 'Delete this event?')) return;
-    try { await D.deleteSlot(live.boardId, slotEditing.id); closeDlg($('slotDlg')); }
-    catch (e) { toast(friendly(e), 4500); }
+    const s = slotEditing;
+    const n = s.claimedCount || 0;
+    // With people already in it, deleting throws away their claims and no undo
+    // of ours can put someone else's claim back — so that one still asks.
+    if (n && !confirm('Delete this event and its ' + n + ' RSVP(s)? Their names cannot be restored.')) return;
+    const snap = { label: s.label, capacity: s.capacity, order: s.order };
+    try { await D.deleteSlot(live.boardId, s.id); closeDlg($('slotDlg')); }
+    catch (e) { toast(friendly(e), 4500); return; }
+    if (n) { toast('Event deleted'); return; }
+    undoToast('Event deleted', async () => {
+      try { await D.addSlots(live.boardId, [snap]); toast('Event restored'); }
+      catch (e) { toast(friendly(e), 5000); }
+    });
   });
   $('slotCancel').addEventListener('click', () => closeDlg($('slotDlg')));
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
@@ -861,6 +1179,18 @@ function wire() {
 
   window.addEventListener('online', drawBoard);
   window.addEventListener('offline', drawBoard);
+
+  /* Paper must not lose what the screen collapsed: open every <details> for
+     the print, and put it back afterwards. */
+  let reopened = [];
+  window.addEventListener('beforeprint', () => {
+    reopened = [...document.querySelectorAll('#view details:not([open])')];
+    for (const d of reopened) d.setAttribute('open', '');
+  });
+  window.addEventListener('afterprint', () => {
+    for (const d of reopened) d.removeAttribute('open');
+    reopened = [];
+  });
 }
 
 function render() {

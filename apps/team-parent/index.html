@@ -1339,7 +1339,11 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
     <button class="btn small" id="authBtn" type="button">Sign in</button>
   </header>
-  <main id="view" aria-live="polite"></main>
+  <!-- #view is rebuilt wholesale on every Firestore snapshot; marking it a
+       live region meant a screen reader re-announced the entire page dozens of
+       times a second on a large board. Status goes through #liveStatus. -->
+  <main id="view"></main>
+  <div id="liveStatus" class="sr-only" role="status" aria-live="polite"></div>
   <footer class="colophon">
     One coach signs in — every family just taps the link. No accounts, no ads.<br>
     <span id="orgLine">A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Team%20Parent" style="color:inherit">Feedback</a></span>

@@ -27,5 +27,9 @@ async function tx(mode, fn) {
 
 export const saveInventory = (v) => tx('readwrite', s => s.put(v));
 export const getInventory = (id) => tx('readonly', s => s.get(id));
+/* Cheap read-back after a write: getKey deserialises nothing, so this costs
+   nothing even against a 146MB record, and it is the difference between
+   "the promise resolved" and "the row is on disk". */
+export const inventoryExists = (id) => tx('readonly', s => s.getKey(id)).then(k => k !== undefined);
 export const allInventories = () => tx('readonly', s => s.getAll());
 export const deleteInventory = (id) => tx('readwrite', s => s.delete(id));
