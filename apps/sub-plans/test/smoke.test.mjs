@@ -58,12 +58,12 @@ check('field capped at 4000 chars', JSON.parse(window.localStorage.getItem('subp
 
 // --- print: filled blocks in, empty blocks out, no emergency box yet
 $('printBtn').click();
-await sleep(20);
+await sleep(120);
 check('print invoked', window.__printed === true);
 check('header carries the teacher name', $('sheet').querySelector('h1').textContent.includes('Ms. Vega'));
 check('plan text on the folder', $('sheet').textContent.includes('volcano video'));
 check('empty blocks omitted', !$('sheet').textContent.includes('Tech'));
-check('no emergency box before it is filled', !$('sheet').querySelector('.em'));
+check('no emergency box before it is filled', !$('sheet').querySelector('.alert'));
 check('leave-me-a-note box always prints', $('sheet').textContent.includes('Leave me a note'));
 
 // --- header composition
@@ -72,20 +72,22 @@ setField(byPlaceholder('12'), '7');
 setField(byPlaceholder('Maple Elementary'), 'Cedar Elementary');
 setField(byPlaceholder('Tuesday, Sep 8'), 'Friday, Sep 11');
 $('printBtn').click();
+await sleep(120);
 const sub = $('sheet').querySelector('.sub').textContent;
 check('header sub joins the basics', sub === '4th grade · Room 7 · Cedar Elementary · Friday, Sep 11');
 
 // --- emergency box
 setField(byPlaceholder('Fire: out our door'), 'Fire: right, then the big oak.');
 $('printBtn').click();
-const em = $('sheet').querySelector('.em');
+await sleep(120);
+const em = $('sheet').querySelector('.alert');
 check('emergency box renders once filled', !!em && em.textContent.includes('In an emergency') && em.textContent.includes('big oak'));
 check('emergency box sits before the day plan', $('sheet').innerHTML.indexOf('In an emergency') < $('sheet').innerHTML.indexOf('volcano'));
 
 // --- XSS inertness
 setField(byPlaceholder('Ava and Marcus'), '<img src=x onerror="window.__pwned=1">');
 $('printBtn').click();
-await sleep(20);
+await sleep(120);
 check('hostile text stays inert', !window.__pwned && !$('sheet').querySelector('img'));
 check('hostile text shown as text', $('sheet').textContent.includes('<img'));
 
@@ -107,7 +109,7 @@ check('decoded fields capped', capped && capped.plan.length === 4000);
 // --- QR size guard (folder is now way past scannable QR size)
 setField(byPlaceholder('8:00 First bell'), 'z'.repeat(3000));
 $('qrBtn').click();
-await sleep(30);
+await sleep(120);
 check('oversize folder steers QR to Copy link', $('toast').textContent.includes('Copy link'));
 
 console.log(failures ? '\nSMOKE FAILED' : '\nSMOKE PASSED');

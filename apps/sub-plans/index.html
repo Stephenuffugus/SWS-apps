@@ -1257,43 +1257,223 @@ body{
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 section.card h2:first-child{margin-top:0}
+.card > .trust{display:flex; margin-bottom:var(--s4)}
 
-/* ---------- the printed folder ---------- */
+/* ---------- the form ----------------------------------------------------- */
+/* Each schema section is a real element, so it can be hidden by the Today view
+   and named for a screen reader. Its heading is the spine of a 23-field form;
+   it used to render smaller and fainter than the field labels under it. */
+.fsec{border-top:1px solid var(--line); margin-top:var(--s6); padding-top:var(--s5)}
+.fsec:first-child{border-top:0; margin-top:0; padding-top:0}
+.fsec > h2{
+  font-family:var(--font-display);
+  font-weight:var(--display-weight);
+  font-size:var(--t-lg);
+  letter-spacing:var(--display-tracking);
+  text-transform:none;
+  color:var(--ink);
+  margin:0 0 var(--s4);
+}
+#form[data-view="today"] .fsec:not([data-today]){display:none}
+
+/* The placeholders are five-line worked examples — the only guidance a
+   first-time user gets. --ink-3 is for hints you can ignore; these are not. */
+#form ::placeholder{color:var(--ink-2); opacity:1}
+
+.count{font-size:var(--t-xs); color:var(--ink-2); margin-top:var(--s1)}
+.count.near{color:var(--neg); font-weight:600}
+
+.bandpick{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s5)}
+.bandlab{font-size:var(--t-xs); font-weight:600; color:var(--ink-2)}
+.bandpick .seg{margin-bottom:0; flex:1 1 13rem}
+
+.viewseg{margin-bottom:var(--s2)}
+#viewNote{margin:0 0 var(--s4)}
+
+.sharebox{border:1px solid var(--line); border-radius:var(--r-ctl); background:var(--surface-2); margin-top:var(--s4)}
+.sharebox > summary{
+  display:flex; align-items:center; gap:var(--s2);
+  min-height:var(--tap); padding:0 var(--s4);
+  font-size:var(--t-sm); font-weight:600; color:var(--ink); cursor:pointer;
+}
+.sharebox > summary::marker{color:var(--ink-2)}
+.sharebox .inner{padding:0 var(--s4) var(--s4)}
+.sharebox .row{margin-top:var(--s3)}
+
+.prevrow{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.actionbar .pgs{font-weight:600}
+
+/* The dialog used to set padding and a #111 heading but no background, so in
+   dark mode its only instruction sat at 1.01:1 on the UA Canvas colour. */
+#qrDlg{
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  background:var(--surface);
+  color:var(--ink);
+  padding:var(--s5);
+  text-align:center;
+  max-width:calc(100vw - 2rem);
+  box-shadow:var(--shadow-2);
+}
+#qrDlg::backdrop{background:rgba(0,0,0,.55)}
+#qrTitle{margin:0 0 var(--s4); font-size:var(--t-lg); color:var(--ink)}
+/* The bitmap is always an exact integer multiple of the CSS size (app.js), so
+   never let anything else scale it — half a module wide is unscannable. */
+#qrCanvas{display:block; margin:0 auto; max-width:none; background:#fff}
+#qrDlg .btn{margin-top:var(--s4)}
+
+/* ---------- the folder as it prints --------------------------------------
+   Deliberately NOT inside @media print. The same rules drive the on-screen
+   "read it as your sub would" preview and the off-screen measurement that puts
+   a page count on the Print button, so the three can never disagree. */
 #sheet{display:none}
+#sheet.preview{
+  display:block;
+  padding:18pt 16pt;
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-1);
+  margin-bottom:var(--s4);
+}
+#measurebox{
+  position:fixed; top:0; left:0; width:1px; height:1px;
+  overflow:hidden; visibility:hidden; pointer-events:none; z-index:-1;
+}
+#measure{width:510pt}   /* Letter less the 14mm @page margin and #sheet padding */
+
+.paper{
+  color:#111; background:#fff;
+  font-size:11pt; line-height:1.45;
+  letter-spacing:normal; word-spacing:normal; font-variant-ligatures:normal;
+}
+.paper table.pw{width:100%; border-collapse:collapse}
+/* The running header repeats on every printed page because a <thead> does.
+   Chrome has no @page margin boxes, so this is the only way page 2 carries a
+   room number — and page 2 is where the phone extensions live. */
+.paper .pw > thead > tr > td,.paper .pw > tbody > tr > td{padding:0; border:0; vertical-align:top}
+.paper .pw > tbody > tr{break-inside:auto; page-break-inside:auto}
+.paper .run{
+  font-size:8.5pt; color:#333; letter-spacing:.02em;
+  padding-bottom:3pt; border-bottom:.75pt solid #999;
+}
+.paper .shead{
+  display:flex; align-items:center; gap:10pt;
+  border-bottom:2.5pt solid #111; padding:8pt 0; margin-bottom:10pt;
+}
+.paper .headtext{flex:1 1 auto; min-width:0; text-align:center}
+.paper .shead h1{
+  margin:0; font-size:20pt; line-height:1.15; letter-spacing:-.01em; color:#111;
+  font-family:"Fraunces",Georgia,"Iowan Old Style",serif; font-weight:600;
+}
+.paper .shead .sub{color:#333; font-size:10.5pt; margin-top:2pt}
+.paper .shead .warm{color:#333; font-size:9.5pt; margin-top:4pt; font-style:italic}
+.paper .qrbox{flex:0 0 auto; text-align:center}
+.paper .qrcap{font-size:7.5pt; color:#333; margin-top:2pt; max-width:58mm}
+
+/* A section may now split across the fold — it may never leave its heading
+   stranded. break-inside:avoid-page on every section wasted up to 84% of a
+   sheet, and page count is the loudest complaint in this category. */
+.paper .sec{margin:0 0 4pt; orphans:3; widows:3}
+.paper .sec > h2{
+  font-family:"Fraunces",Georgia,"Iowan Old Style",serif;
+  font-size:12pt; font-weight:600; color:#111;
+  margin:10pt 0 4pt; padding-bottom:2pt;
+  border-bottom:1.25pt solid #111; letter-spacing:-.01em;
+  break-after:avoid; page-break-after:avoid;
+}
+.paper .block{margin-bottom:8pt; break-inside:avoid; page-break-inside:avoid}
+.paper .block h3{
+  font-size:9.5pt; font-weight:700; text-transform:uppercase;
+  letter-spacing:.08em; color:#333; margin:0 0 2pt;
+}
+.paper .block .v{white-space:pre-wrap; overflow-wrap:anywhere; color:#111}
+/* Passwords get unambiguous glyphs — the sourced complaint is ten minutes lost
+   guessing whether it ended in an exclamation point. */
+.paper .mono{
+  font-family:ui-monospace,"DejaVu Sans Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  font-size:11.5pt; letter-spacing:.03em;
+}
+
+/* The alert block must win on a black-and-white copier, so it wins on size,
+   weight, rule and icon. Colour is not carrying any of the signal. */
+.paper .alert{
+  border:2.5pt solid #111; border-radius:4pt; padding:7pt 9pt; margin:8pt 0 6pt;
+  break-inside:avoid; page-break-inside:avoid;
+}
+.paper .alert > h2{
+  display:flex; align-items:center; gap:5pt;
+  font-size:13pt; font-weight:700; color:#111;
+  text-transform:uppercase; letter-spacing:.05em;
+  margin:0 0 5pt; padding-bottom:4pt; border-bottom:1.5pt solid #111;
+}
+.paper .alerticon{width:13pt; height:13pt; flex:none; color:#111}
+.paper .alert .block{margin-bottom:6pt}
+.paper .alert .block:last-child{margin-bottom:0}
+.paper .alert .block h3{font-size:10pt; color:#111}
+.paper .alert .block .v{font-weight:600}
+
+.paper .first{
+  border:1pt solid #111; border-radius:4pt; padding:6pt 9pt; margin:0 0 8pt;
+  break-inside:avoid; page-break-inside:avoid;
+}
+.paper .first > h2{
+  font-size:11pt; font-weight:700; color:#111;
+  text-transform:uppercase; letter-spacing:.05em; margin:0 0 5pt;
+}
+.paper .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:0 14pt}
+.paper .first .block{margin-bottom:5pt}
+
+.paper .noteback{
+  border:1pt solid #111; border-radius:4pt; padding:8pt 10pt; margin-top:8pt;
+  break-inside:avoid; page-break-inside:avoid;
+}
+.paper .noteback h3{
+  font-size:9.5pt; font-weight:700; text-transform:uppercase;
+  letter-spacing:.08em; color:#111; margin:0 0 5pt;
+}
+.paper .ticks{
+  list-style:none; margin:0 0 7pt; padding:0;
+  display:grid; grid-template-columns:1fr 1fr; gap:3pt 14pt;
+}
+.paper .ticks li{
+  display:flex; align-items:center; gap:5pt;
+  font-size:9.5pt; min-height:0; padding:0; border:0;
+}
+.paper .ticks .box{width:9pt; height:9pt; border:1pt solid #111; border-radius:1pt; flex:none}
+.paper .rule{height:17pt; border-bottom:.75pt solid #999}
+.paper .emptynote{font-size:11pt; color:#111; padding:12pt 0}
+
 @media print{
   body{background:#fff; padding:0}
-  .screenonly, header.app, footer.colophon, #toast{display:none !important}
-  #sheet{display:block; color:#111; font-size:11pt; padding:0 4mm}
-  #sheet .shead{text-align:center; border-bottom:2.5pt solid #111; padding-bottom:8pt; margin-bottom:10pt}
-  #sheet .shead h1{margin:0; font-size:20pt; letter-spacing:-.01em}
-  #sheet .shead .sub{color:#555; font-size:10.5pt; margin-top:2pt}
-  #sheet .shead .warm{color:#555; font-size:9.5pt; margin-top:4pt; font-style:italic}
-  #sheet .sec{margin:0 0 4pt; break-inside:avoid-page}
-  #sheet .sec>h2{
-    font-size:12pt; margin:10pt 0 4pt; padding-bottom:2pt;
-    border-bottom:1.25pt solid #111; letter-spacing:-.01em;
+  .screenonly, header.app, footer.colophon, #toast, #measurebox{display:none !important}
+  /* An open <dialog> lives in the top layer and Chrome prints it ALONE: showing
+     the QR and then hitting print used to output one sheet carrying a QR code
+     and a Close button instead of the folder. */
+  #qrDlg, #qrDlg[open]{display:none !important}
+  #sheet, #sheet.preview{
+    display:block; padding:0 4mm; margin:0;
+    border:0; border-radius:0; box-shadow:none;
   }
-  #sheet .block{margin-bottom:8pt; break-inside:avoid}
-  #sheet .block h3{
-    font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666; margin:0 0 2pt;
+  /* Screen comfort settings are not print settings, and the base layer's reset
+     of them is out-specified by :root[data-text=…]. Match the specificity so
+     it actually fires, and add the one preference the base layer forgot —
+     Easier reading turned a 2-page packet into 3 on somebody else's desk. */
+  :root,:root[data-text],:root[data-density],:root[data-reading]{--ui-scale:1; --density:1}
+  :root[data-reading="easy"]{
+    --lh-body:1.5; --lh-snug:1.4;
+    --font-display:"Fraunces",Georgia,"Iowan Old Style",serif;
+    --display-weight:600; --display-tracking:-0.014em;
   }
-  #sheet .block .v{white-space:pre-wrap; overflow-wrap:anywhere}
-  #sheet .em{
-    border:1.5pt solid #b91c1c; border-radius:6pt; padding:7pt 9pt; margin:8pt 0 4pt;
-    break-inside:avoid;
+  :root[data-reading="easy"] body{
+    letter-spacing:normal; word-spacing:normal; font-variant-ligatures:normal;
   }
-  #sheet .em h2{font-size:10pt; text-transform:uppercase; letter-spacing:.06em; color:#b91c1c; margin:0 0 4pt}
-  #sheet .noteback{
-    border:1pt solid #999; border-radius:6pt; padding:8pt 10pt; margin-top:8pt;
-    min-height:130pt; break-inside:avoid;
-  }
-  #sheet .noteback h3{font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666; margin:0 0 4pt}
 }
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the folder</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1306,34 +1486,62 @@ section.card h2:first-child{margin-top:0}
 
   <div class="screenonly">
     <section class="card">
-      <p class="hint" style="margin:0">Fill this out once, before you need it. When you're sick at 5:30am, update <b>Today</b> and hit print — or copy the link and text the whole folder to the office. Empty sections stay off the printed page, and everything saves to this device automatically.</p>
+      <p class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 4 5.5v6c0 4.6 3.2 8.7 8 10 4.8-1.3 8-5.4 8-10v-6z"/><path d="M9 12.2l2.1 2.1L15.4 10"/></svg>
+        <span><b>Your students' names never leave this device.</b> Allergies, IEP notes, room numbers and the laptop password are stored in this browser only — no account, no upload, no analytics, and nothing to opt out of. The only way any of it travels is a link you copy yourself, and that link carries the folder inside the web address rather than pointing at a server.</span>
+      </p>
+      <p class="hint" style="margin:0">Fill this out once, before you need it. When you're sick at 5:30am, update <b>Today</b> and hit print. Empty sections stay off the printed page, and everything saves to this device automatically.</p>
     </section>
+
+    <div class="seg viewseg" role="group" aria-label="How much of the binder to show">
+      <button class="tab" id="viewToday" type="button" aria-pressed="true">Today</button>
+      <button class="tab" id="viewAll" type="button" aria-pressed="false">The whole binder</button>
+    </div>
+    <p class="hint" id="viewNote"></p>
 
     <section class="card" id="form" aria-label="Sub folder details"></section>
 
     <section class="card">
-      <button class="btn primary" id="printBtn" type="button" style="width:100%">Print / Save as PDF</button>
-      <div class="row" style="margin-top:8px">
-        <button class="btn" id="shareBtn" type="button">Copy link</button>
-        <button class="btn" id="qrBtn" type="button">Show QR</button>
+      <div class="prevrow">
+        <button class="btn" id="previewBtn" type="button" aria-expanded="false" aria-controls="sheet">Read it as your sub would</button>
+        <span data-saved-flag></span>
       </div>
-      <p class="hint">The link carries the whole folder inside it — nothing is uploaded anywhere. Only send it to someone you'd hand the folder to.</p>
-      <p class="hint">On a school computer? Copy the link to yourself before you log out — some school machines erase browser data between sign-ins.</p>
+      <p class="hint">The preview is the real printed folder, in black and white, exactly as it comes off a school copier.</p>
+
+      <details class="sharebox">
+        <summary>Send it to someone instead of printing</summary>
+        <div class="inner">
+          <p class="hint" id="shareWhat" style="margin-top:0"></p>
+          <div class="row">
+            <button class="btn" id="shareBtn" type="button">Copy link</button>
+            <button class="btn" id="qrBtn" type="button">Show QR</button>
+          </div>
+          <p class="hint">Nothing is uploaded — the folder is packed into the web address itself. On a school computer, copy the link to yourself before you log out: some school machines erase browser data between sign-ins.</p>
+        </div>
+      </details>
     </section>
   </div>
 
-  <!-- print-only rendering -->
-  <div id="sheet"></div>
+  <!-- the printed folder; also shown on screen by the preview toggle -->
+  <div id="sheet" class="paper"></div>
+
+  <div class="actionbar">
+    <button class="btn primary" id="printBtn" type="button" style="flex:1 1 auto">
+      <span>Print / Save as PDF</span><span class="pgs" id="pageCount"></span>
+    </button>
+  </div>
   </main>
 </div>
+
+<div id="measurebox" aria-hidden="true"><div id="measure" class="paper"></div></div>
 
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Stays on your device — your class's details are nobody's business.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="privacy.html" style="color:inherit">Privacy &amp; accessibility</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Sub%20Plans" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" aria-labelledby="qrTitle" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 id="qrTitle" style="margin:0 0 10px;color:#111">Scan to open this folder</h3>
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <h3 id="qrTitle">Scan to open this folder</h3>
   <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code that opens this sub folder"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+  <div><button class="btn" id="qrClose" type="button">Close</button></div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>

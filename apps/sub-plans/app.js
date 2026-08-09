@@ -251,7 +251,9 @@ function renderForm() {
     }
     form.append(wrap);
   }
-  requestAnimationFrame(() => form.querySelectorAll('textarea').forEach(autoGrow));
+  const grow = () => form.querySelectorAll('textarea').forEach(autoGrow);
+  if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(grow);
+  else grow();
 }
 
 function bandPicker() {
@@ -314,17 +316,21 @@ function qrSvg(qr, count) {
 
 /* Error correction M survives a photocopy far better than L; drop to L only
    when M would push the code past what fits on paper at a scannable size. */
+let qrBuilt = { url: null, out: null };
 function buildQr(url) {
   if (typeof qrcode !== 'function') return null;
+  if (qrBuilt.url === url) return qrBuilt.out;
+  let out = null;
   for (const ec of ['M', 'L']) {
     try {
       const qr = qrcode(0, ec);
       qr.addData(url); qr.make();
       const count = qr.getModuleCount();
-      if (count <= MAX_QR_MODULES) return { qr, count, ec };
+      if (count <= MAX_QR_MODULES) { out = { qr, count, ec }; break; }
     } catch (e) { /* payload does not fit at this level */ }
   }
-  return null;
+  qrBuilt = { url, out };
+  return out;
 }
 
 function printQrBlock() {
@@ -363,11 +369,12 @@ function renderSheet(target, pages) {
     .map((k) => (k === 'room' && filled(k) ? 'Room ' + data[k].trim() : filled(k)))
     .filter(Boolean);
   const qrb = printQrBlock();
-  body.append(el('div', { class: 'shead' + (qrb ? ' hasqr' : '') },
-    qrb,
-    el('h1', {}, 'Sub Plans' + (filled('teacher') ? ' — ' + data.teacher.trim() : '')),
-    subBits.length ? el('div', { class: 'sub', text: subBits.join(' · ') }) : null,
-    el('div', { class: 'warm', text: 'Thank you for being here today — this folder has everything you need.' })));
+  body.append(el('div', { class: 'shead' },
+    el('div', { class: 'headtext' },
+      el('h1', {}, 'Sub Plans' + (filled('teacher') ? ' — ' + data.teacher.trim() : '')),
+      subBits.length ? el('div', { class: 'sub', text: subBits.join(' · ') }) : null,
+      el('div', { class: 'warm', text: 'Thank you for being here today — this folder has everything you need.' })),
+    qrb));
 
   // emergency box first: the page a sub needs before anything goes wrong
   const em = EMERGENCY_KEYS.filter(filled);
@@ -441,7 +448,8 @@ function feedbackBox() {
     el('h3', {}, 'How did it go? Leave me a note —'));
   const ticks = el('ul', { class: 'ticks' });
   for (const t of FEEDBACK_TICKS) ticks.append(el('li', {}, el('span', { class: 'box' }), t));
-  box.append(ticks, el('div', { class: 'rules' }));
+  box.append(ticks);
+  for (let i = 0; i < 4; i++) box.append(el('div', { class: 'rule' }));
   return box;
 }
 
@@ -695,7 +703,7 @@ function showQr(url) {
   const canvas = $('qrCanvas');
   /* Module size follows the module count, and the bitmap stays an exact
      integer multiple of the CSS size so no module is ever a fraction wide. */
-  const avail = Math.min(420, Math.max(240, (window.innerWidth || 360) - 72));
+  const avail = Math.min(400, Math.max(232, (window.innerWidth || 360) - 96));
   const span = count + 8;
   const cssCell = Math.max(2, Math.min(6, Math.floor(avail / span)));
   const cssSize = span * cssCell;
