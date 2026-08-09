@@ -1259,20 +1259,121 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
 
-.warn{color:var(--accent); font-size:.85rem; margin-top:6px}
-/* reveal page */
-.revealwrap{text-align:center; padding:36px 10px}
-.revealwrap .who{font-size:1.1rem; color:var(--muted)}
-.revealwrap .event{font-size:.95rem; color:var(--muted); margin-top:4px}
+/* ── the two-tap pairing control ──────────────────────────────────────────
+   This is the one thing the app does that a hat cannot, and it was 28px tall
+   with an 8px gap — a mis-tap machine, and a mis-tap silently makes the WRONG
+   no-match pair. The floor is var(--tap), which scales up with text size. */
+#exclPicker{gap:var(--s3)}
+#exclPicker .chip{
+  min-height:var(--tap);
+  padding:0 var(--s4);
+  font-size:var(--t-sm);
+  cursor:pointer;
+}
+.chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
+/* State is never colour alone: the pending pick carries a mark as well. */
+.chip.sel::before{content:"◉"; font-size:var(--t-xs)}
+
+/* Row controls kept 36px even at 150% text, because .btn.small hardcodes it.
+   Turning the text up must never leave a target behind. */
+#exclList .btn.small,#linkList .btn.small{min-height:var(--tap); padding:0 var(--s4)}
+#exclCount{display:block; font-size:var(--t-sm); color:var(--ink-2); margin-top:var(--s2)}
+
+#drawWarn{margin-top:var(--s3)}
+#namesNote,#staleNote{margin-top:var(--s3)}
+.saverow{display:flex; justify-content:flex-end; min-height:1.4em; margin-top:var(--s2)}
+
+/* ── the results list ─────────────────────────────────────────────────── */
+#linkList > li{flex-wrap:wrap; row-gap:var(--s2); padding:var(--s3) 0}
+#linkList .grow{flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--s3)}
+#linkList .who{font-weight:650}
+#linkList .tag{
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-pill);
+  padding:0 var(--s3);
+}
+#linkList .tag-new{color:var(--ink); background:var(--warn-soft); border-color:var(--warn-line)}
+.sentbtn.on{background:var(--pos-soft); border-color:var(--pos-line)}
+#linkList > li.is-sent{background:var(--surface-2)}
+#proof{font-size:var(--t-sm); color:var(--ink-2); margin:0 0 var(--s4)}
+#proof.warn{color:var(--ink)}
+
+/* ── the reveal, which is the only screen most people ever see ─────────── */
+.revealwrap{text-align:center; padding:var(--s7) var(--s4)}
+.revealwrap .who{font-size:var(--t-lg); color:var(--ink-2); overflow-wrap:anywhere}
+.revealwrap .event{font-size:var(--t-sm); color:var(--ink-2); margin-top:var(--s1); overflow-wrap:anywhere}
 #revealBtn{
-  margin:26px auto; display:block; font-size:1.2rem; padding:20px 30px;
-  border-radius:16px; border:2px dashed var(--accent); background:var(--card);
+  margin:var(--s6) auto; display:block; font-size:var(--t-xl);
+  min-height:var(--tap); padding:var(--s5) var(--s6);
+  border-radius:var(--r-card); border:2px dashed var(--accent); background:var(--surface);
   color:var(--ink); cursor:pointer; font-weight:700;
 }
-.revealName{font-size:2.2rem; font-weight:800; color:var(--pine); margin:20px 0 6px; overflow-wrap:anywhere}
-.revealNote{color:var(--muted); font-size:.9rem}
+/* The research asks for 2.5–3rem so it reads at arm's length in one glance. */
+.revealName{
+  font-size:clamp(2.5rem, 12vw, 3rem);
+  line-height:var(--lh-tight);
+  font-weight:800; color:var(--pine);
+  margin:var(--s5) 0 var(--s2);
+  overflow-wrap:anywhere;
+}
+.revealNote{color:var(--ink-2); font-size:var(--t-sm)}
+.revealwrap .trust{margin-top:var(--s7); text-align:left}
+
+/* ── the empty state and the broken-link screen ───────────────────────── */
+.empty h2{
+  font-family:var(--font-display);
+  font-size:var(--t-xl);
+  text-transform:none;
+  letter-spacing:0;
+  color:var(--ink);
+  margin:0 0 var(--s2);
+}
+
+/* ── the QR dialog ─────────────────────────────────────────────────────
+   It used to hardcode #111 on a dialog with no ground of its own: 1.01:1 in
+   dark mode, i.e. an empty band above a black square. */
+#qrDlg{
+  background:var(--surface);
+  color:var(--ink);
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-2);
+  padding:var(--s5);
+  text-align:center;
+  max-width:calc(100vw - var(--s6));
+}
+#qrDlg::backdrop{background:var(--veil)}
+#qrTitle{font-size:var(--t-base); color:var(--ink); margin:0 0 var(--s4)}
+#qrCanvas{display:block; margin:0 auto; max-width:100%; height:auto}
+#qrDlg .btnrow{margin-top:var(--s4)}
+
+/* ── Paper Mode ────────────────────────────────────────────────────────
+   Printing used to leak the roster and print not one assignment. Now the
+   sheet is fold-over slips: the name on the outside, the match inside. */
+#slips,#printHead{display:none}
+@media print{
+  #slips{display:block}
+  #printHead{display:block; font-size:10pt; margin:0 0 8pt}
+  #results{display:block !important}
+  .slip{
+    border:1px solid var(--line-2);
+    padding:10pt 12pt;
+    margin:0 0 8pt;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .slipTop strong{display:block; font-size:16pt}
+  .slipEvent{font-size:9pt; color:var(--ink-2)}
+  .slipFold{
+    margin:12pt 0; text-align:center;
+    font-size:8pt; letter-spacing:0.3em; color:var(--ink-2);
+    border-top:1px dashed var(--line-2); padding-top:2pt;
+  }
+  .slipBottom{text-align:center}
+  .slipBottom strong{display:block; font-size:14pt; margin-top:2pt}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
