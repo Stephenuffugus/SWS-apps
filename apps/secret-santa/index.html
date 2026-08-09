@@ -1280,6 +1280,10 @@ body{
 #exclList .btn.small,#linkList .btn.small{min-height:var(--tap); padding:0 var(--s4)}
 #exclCount{display:block; font-size:var(--t-sm); color:var(--ink-2); margin-top:var(--s2)}
 
+.eventf{flex:1.5}
+#drawBtn{font-size:var(--t-base)}
+#resultsHeading{font-size:var(--t-xl); margin:var(--s4) 0 var(--s3)}
+#linkErr .btn{display:block; margin:0 auto}
 #drawWarn{margin-top:var(--s3)}
 #namesNote,#staleNote{margin-top:var(--s3)}
 .saverow{display:flex; justify-content:flex-end; min-height:1.4em; margin-top:var(--s2)}
@@ -1391,36 +1395,57 @@ body{
 
   <!-- organizer view -->
   <div id="organizer">
-    <section class="card">
+    <p class="trust noprint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>No email addresses. Not yours, not theirs.</b> The names, the no-match rules and the finished draw are saved only in this browser — there is no account, no sign-in and nowhere to send them. Each private link carries one person's name and their match and nothing else, so handing someone their link never shows them anybody else's.</span>
+    </p>
+
+    <section class="card noprint">
       <div class="row">
-        <label class="f" style="flex:1.5"><span>The event</span>
+        <label class="f eventf"><span>The event</span>
           <input type="text" id="eventInput" maxlength="60" placeholder="Family Christmas 2026"></label>
         <label class="f"><span>Budget (optional)</span>
           <input type="text" id="budgetInput" maxlength="30" placeholder="$25"></label>
       </div>
       <h2>Who's in?</h2>
-      <textarea id="names" placeholder="One per line:
-Mom
+      <p class="sub">Three people or more. Kept here until you clear it, so you can close the tab and come back.</p>
+      <label class="f"><span>Everyone's names, one per line</span>
+        <textarea id="names" placeholder="Mom
 Dad
 Jessie
-Stephen"></textarea>
+Stephen"></textarea></label>
+      <p class="warn hidden" id="namesNote"></p>
+      <div class="saverow"><span data-saved-flag></span></div>
     </section>
 
-    <section class="card">
-      <h2>Who shouldn't draw each other? (couples, roommates)</h2>
-      <p class="sub" style="margin:0 0 8px">Tap two names to link them as a no-match pair. Tap a pair below to remove it.</p>
+    <section class="card noprint">
+      <h2>No-match rules</h2>
+      <p class="sub">Tap one name, then tap the person they must not draw — couples, roommates, the two who always swap.</p>
       <div class="chips" id="exclPicker"></div>
+      <div class="empty hidden" id="exclEmpty">
+        <div class="glyph" aria-hidden="true">🎄</div>
+        <p>Add names above and they appear here to pair.</p>
+      </div>
       <ul class="plain" id="exclList"></ul>
+      <span id="exclCount"></span>
     </section>
 
     <section class="card">
-      <button class="btn primary" id="drawBtn" type="button" style="width:100%; font-size:1.05rem">🎁 Draw names</button>
-      <p class="warn hidden" id="drawWarn"></p>
+      <button class="btn primary block noprint" id="drawBtn" type="button">🎁 Draw names</button>
+      <p class="warn hidden noprint" id="drawWarn" role="alert"></p>
       <div id="results" class="hidden">
-        <h2 style="margin-top:14px">Send each person their private link</h2>
-        <ul class="plain" id="linkList"></ul>
-        <p class="hint">Each link reveals only that person's match — send them one at a time by text.
+        <h2 id="resultsHeading" tabindex="-1">Send each person their private link</h2>
+        <p id="proof"></p>
+        <p class="warn hidden noprint" id="staleNote">You have edited the list since this draw. These links are from the earlier draw and still work — re-draw to include everyone, then re-send only the people marked “new link”.</p>
+        <ul class="plain noprint" id="linkList"></ul>
+        <p class="hint noprint">Each link reveals only that person's match — send them one at a time.
         Honesty note: as the organizer, this device did the drawing, so a determined you could peek. Don't. 🎅</p>
+        <div class="cluster noprint">
+          <button class="btn" id="printBtn" type="button">🖨️ Print fold-over slips</button>
+          <button class="btn" id="startOver" type="button">Start a new draw</button>
+        </div>
+        <p id="printHead">Fold each slip along the dotted line: the name stays outside, the match hides inside.</p>
+        <div id="slips"></div>
       </div>
     </section>
   </div>
@@ -1428,12 +1453,32 @@ Stephen"></textarea>
   <!-- participant reveal view -->
   <div id="reveal" class="hidden">
     <div class="revealwrap">
+      <h2 class="sr-only">Your Secret Santa match</h2>
       <div class="who" id="revealWho"></div>
       <div class="event" id="revealEvent"></div>
-      <button id="revealBtn" type="button">🎁 Tap to reveal your person</button>
-      <div class="revealName hidden" id="revealName"></div>
-      <div class="revealNote hidden" id="revealNote">Shhh. Delete this text if you can't keep a secret.</div>
+      <button id="revealBtn" type="button" aria-expanded="false" aria-controls="revealOut">🎁 Tap to reveal your person</button>
+      <div id="revealOut" role="status" aria-live="polite">
+        <div class="revealName hidden" id="revealName"></div>
+        <div class="revealNote hidden" id="revealNote">Shhh. Tap “Hide it again” if somebody leans over.</div>
+      </div>
+      <p class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span><b>Nothing about you was saved.</b> Your name and your match travel inside this link and nowhere else — no account, no email address, nothing uploaded and nothing kept on this page. Close the tab and there is no record of you.</span>
+      </p>
     </div>
+  </div>
+
+  <!-- a link that arrived broken -->
+  <div id="linkErr" class="hidden">
+    <section class="card">
+      <div class="empty">
+        <div class="glyph" aria-hidden="true">🎁</div>
+        <h2>This link is incomplete</h2>
+        <p>There is no match inside it to show you. Chat apps and email clients sometimes cut long links in half.</p>
+        <p>Ask whoever sent it to send their link again — the whole thing, right to the last character. Nothing is lost: their draw is still on their device.</p>
+      </div>
+      <button class="btn" id="linkErrBtn" type="button">I'm running the exchange — set up a draw</button>
+    </section>
   </div>
   </main>
 </div>
@@ -1441,10 +1486,10 @@ Stephen"></textarea>
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Drawn on your device — no emails harvested, no accounts, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Secret%20Santa" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan for your private reveal</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <h3 id="qrTitle">Scan for your private reveal</h3>
+  <canvas id="qrCanvas" width="240" height="240" role="img" aria-label="QR code for a private reveal link"></canvas>
+  <div class="btnrow"><button class="btn" id="qrClose" type="button">Close</button></div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>

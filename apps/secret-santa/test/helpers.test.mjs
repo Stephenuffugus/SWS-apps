@@ -1,7 +1,8 @@
 // Run: node test/helpers.test.mjs
 import assert from 'node:assert/strict';
 import {
-  parseNames, drawNames, validAssignment, encodeReveal, decodeReveal, isRevealHash,
+  parseNames, parseRoster, drawNames, drawPossible, blamePair, validAssignment,
+  encodeReveal, decodeReveal, isRevealHash, ROSTER_MAX,
 } from '../helpers.js';
 
 let passed = 0;
@@ -39,6 +40,57 @@ ok('impossible setups return null instead of looping forever', () => {
   // …but 4 people + one couple works: A→C→B→D→A style cycles exist
   const a = drawNames(['A', 'B', 'C', 'D'], [[0, 1]], rng);
   assert.ok(validAssignment(['A', 'B', 'C', 'D'], [[0, 1]], a));
+});
+ok('parseRoster reports what it threw away instead of doing it silently', () => {
+  const r = parseRoster(['Chris', 'chris', 'CHRIS', 'Sarah', 'B'.repeat(54), 'Dev'].join('\n'));
+  assert.deepEqual(r.names, ['Chris', 'Sarah', 'B'.repeat(40), 'Dev']);
+  assert.deepEqual(r.merged, ['Chris']);
+  assert.deepEqual(r.shortened, ['B'.repeat(40)]);
+  assert.equal(r.skipped, 0);
+
+  const many = parseRoster(Array.from({ length: ROSTER_MAX + 17 }, (_, i) => 'P' + i).join('\n'));
+  assert.equal(many.names.length, ROSTER_MAX);
+  assert.equal(many.skipped, 17);
+});
+ok('a tight-but-solvable draw is solved, not reported impossible', () => {
+  // 4 people, 2 couples: only the two "swap across" derangements work, and a
+  // random shuffle can miss them. Exactness matters — an organizer cannot
+  // check our arithmetic.
+  const names = ['A', 'B', 'C', 'D'];
+  const excl = [[0, 1], [2, 3]];
+  const a = drawNames(names, excl, rng);
+  assert.ok(validAssignment(names, excl, a));
+  // 6 people, everything excluded except a single ring of neighbours: exactly
+  // 2 of the 720 permutations are valid, so shuffling alone will not find it.
+  const six = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const ring = [];
+  for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
+    const neighbours = (j - i === 1) || (i === 0 && j === 5);
+    if (!neighbours) ring.push([i, j]);
+  }
+  const d = drawNames(six, ring, rng);
+  assert.ok(validAssignment(six, ring, d), 'the one surviving cycle must be found');
+});
+ok('drawPossible and blamePair name the rule that broke the draw', () => {
+  assert.equal(drawPossible(3, [[0, 1]]), false);
+  assert.equal(drawPossible(4, [[0, 1]]), true);
+  // Ana(0) ⛔ Marcus(1) is the pair that makes a 3-person draw impossible.
+  assert.deepEqual(blamePair(3, [[0, 1]]), [0, 1]);
+  // Nothing to blame when the draw is fine.
+  assert.equal(blamePair(5, [[0, 1]]), null);
+  // One person excluded from everybody: whichever rule we drop must fix it.
+  const blamed = blamePair(4, [[0, 1], [0, 2], [0, 3]]);
+  assert.ok(blamed && blamed.includes(0), 'blames a rule involving person 0');
+  assert.ok(drawPossible(4, [[0, 1], [0, 2], [0, 3]].filter(
+    (p) => !(p[0] === blamed[0] && p[1] === blamed[1]))), 'dropping it really works');
+});
+ok('an empty or truncated payload is rejected, not ceremonially revealed', () => {
+  const emptyPayload = btoa('{"s":"","g":"","e":"","b":""}');
+  assert.equal(decodeReveal('#r.' + emptyPayload), null);
+  assert.equal(decodeReveal('#r.' + btoa('{"s":"  ","g":"Ana"}')), null);
+  const good = encodeReveal({ santa: 'Ana', gets: 'Marcus', event: 'Office', budget: '$25' });
+  assert.equal(decodeReveal('#r.' + good.slice(0, good.length - 12)), null);
+  assert.ok(decodeReveal('#r.' + good));
 });
 ok('reveal payload round-trips and carries only one match', () => {
   const enc = encodeReveal({ santa: 'Ann', gets: 'Ben 🎁', event: 'Family Xmas', budget: '$25' });
