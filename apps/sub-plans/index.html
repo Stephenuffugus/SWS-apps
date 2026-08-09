@@ -1355,7 +1355,10 @@ section.card h2:first-child{margin-top:0}
   font-size:11pt; line-height:1.45;
   letter-spacing:normal; word-spacing:normal; font-variant-ligatures:normal;
 }
-.paper table.pw{width:100%; border-collapse:collapse}
+/* table-layout:fixed, not auto: auto sizes the single column to its max-content,
+   and one 4,000-character word without spaces then stretches the sheet to
+   86,933px and silently prints nothing. */
+.paper table.pw{width:100%; table-layout:fixed; border-collapse:collapse}
 /* The running header repeats on every printed page because a <thead> does.
    Chrome has no @page margin boxes, so this is the only way page 2 carries a
    room number — and page 2 is where the phone extensions live. */

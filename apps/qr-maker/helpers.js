@@ -229,8 +229,8 @@ export function drawQrToCanvas(qr, canvas, px, fit) {
    about 0.4 mm a module stops scanning reliably on a phone camera. */
 export const SIZES = [
   { id: 'card',   mm: 20,  dpi: 600, label: 'Business card — 2 cm' },
-  { id: 'tent',   mm: 40,  dpi: 600, label: 'Table tent / fridge card — 4 cm' },
-  { id: 'flyer',  mm: 80,  dpi: 400, label: 'Flyer or window sign — 8 cm' },
+  { id: 'tent',   mm: 40,  dpi: 600, label: 'Table tent — 4 cm' },
+  { id: 'flyer',  mm: 80,  dpi: 400, label: 'Flyer or sign — 8 cm' },
   { id: 'poster', mm: 150, dpi: 300, label: 'Poster — 15 cm' },
 ];
 

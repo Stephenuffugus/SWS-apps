@@ -597,14 +597,17 @@ async function refreshQr() {
 
 /* Say what is about to travel BEFORE the button is pressed, not in a toast
    afterwards. These two fields are the FERPA-shaped ones. */
-const SENSITIVE = { needs: 'accommodations and the kids who need something', health: 'health alerts and allergies' };
+const SENSITIVE = { health: 'your health alerts', needs: 'your notes on the kids who need something' };
 function refreshShareNote() {
   const out = $('shareWhat');
   if (!out) return;
   const inside = Object.keys(SENSITIVE).filter(filled).map((k) => SENSITIVE[k]);
+  const list = inside.length > 1
+    ? inside.slice(0, -1).join(', ') + ' and ' + inside[inside.length - 1]
+    : inside[0];
   out.textContent = inside.length
-    ? 'This link will carry ' + inside.join(' and ') + ' inside the web address. Send it only to someone you would hand the paper folder to.'
-    : 'The whole folder travels inside the web address. Nothing is uploaded, but a web address is easy to forward — send it only to someone you would hand the paper folder to.';
+    ? 'This link will carry ' + list + ' inside the web address itself. Send it only to someone you would hand the paper folder to.'
+    : 'The whole folder travels inside the web address itself. Nothing is uploaded, but a web address is easy to forward on — send it only to someone you would hand the paper folder to.';
 }
 
 /* ---------- wiring ---------- */

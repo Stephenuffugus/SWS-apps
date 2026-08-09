@@ -738,6 +738,16 @@ function encodeBatch() {
   return out;
 }
 
+/* Encoding 200 codes is about three seconds of arithmetic on the main thread.
+   Say what is happening and give the toast a frame to paint before starting,
+   rather than freezing under the finger with no explanation. */
+function withBusy(count, verb, fn) {
+  if (count > 25) {
+    toast(verb + ' ' + fmt(count) + ' codes on this device — a few seconds, and nothing is uploaded.', { ms: 4000 });
+    setTimeout(fn, 80);
+  } else fn();
+}
+
 function printBatch() {
   const items = encodeBatch();
   if (!items.length) return;
@@ -922,8 +932,8 @@ function wire() {
     clearTimeout(batchTimer);
     batchTimer = setTimeout(() => { analyzeBatch(); persist(); }, 250);
   });
-  $('batchPrint').addEventListener('click', printBatch);
-  $('batchZip').addEventListener('click', zipBatch);
+  $('batchPrint').addEventListener('click', () => withBusy(batchPlan.ready.length, 'Building', printBatch));
+  $('batchZip').addEventListener('click', () => withBusy(batchPlan.ready.length, 'Building', zipBatch));
 
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-batch'));
 

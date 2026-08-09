@@ -70,10 +70,10 @@ function load() {
     return;
   }
   const notes = [];
-  if (r.skipped) notes.push(r.skipped + (r.skipped === 1 ? ' damaged box was' : ' damaged boxes were') + ' skipped');
-  if (r.repaired) notes.push(r.repaired + (r.repaired === 1 ? ' box was' : ' boxes were') + ' repaired');
-  if (r.overflow) notes.push(r.overflow + ' past the ' + LIMITS.boxes + '-box limit were dropped');
-  if (notes.length) toast('Opened ' + boxes.length + ' boxes — ' + notes.join(', ') + '.', 8000);
+  if (r.skipped) notes.push(plural(r.skipped, 'damaged box', 'damaged boxes') + (r.skipped === 1 ? ' was' : ' were') + ' skipped');
+  if (r.repaired) notes.push(plural(r.repaired, 'box', 'boxes') + (r.repaired === 1 ? ' was' : ' were') + ' repaired');
+  if (r.overflow) notes.push(plural(r.overflow, 'box', 'boxes') + ' past the ' + LIMITS.boxes + '-box limit ' + (r.overflow === 1 ? 'was' : 'were') + ' dropped');
+  if (notes.length) toast('Opened ' + plural(boxes.length, 'box', 'boxes') + ' — ' + notes.join(', ') + '.', 8000);
 }
 
 function save() {
@@ -96,6 +96,8 @@ function saveOpts() {
   try { localStorage.setItem(OPTS_KEY, JSON.stringify(opts)); } catch (e) {}
 }
 
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : (many || one + 's'));
+
 /** A deep-enough copy to restore from. A snapshot cannot forget a side effect
     the way a hand-written inverse can. */
 const snapshot = () => boxes.map(b => ({ ...b, items: [...b.items] }));
@@ -103,7 +105,7 @@ function restore(snap) {
   boxes = snap;
   save();
   renderAll();
-  toast('Put back — ' + boxes.length + (boxes.length === 1 ? ' box' : ' boxes'));
+  toast('Put back — ' + plural(boxes.length, 'box', 'boxes'));
 }
 
 function renderAll() {
@@ -158,7 +160,7 @@ function deleteBox(b) {
   if (editingBoxId === b.id) endEdit(true);
   save();
   renderAll();
-  undoToast('Box #' + b.n + ' deleted' + (b.items.length ? ' with ' + b.items.length + ' things in it' : ''),
+  undoToast('Box #' + b.n + ' deleted' + (b.items.length ? ' with ' + plural(b.items.length, 'thing') + ' in it' : ''),
     () => restore(snap));
 }
 
@@ -168,7 +170,7 @@ function renderBoxes() {
   $('emptyHint').classList.toggle('hidden', boxes.length > 0);
   const things = boxes.reduce((a, b) => a + b.items.length, 0);
   $('boxHead').textContent = boxes.length
-    ? boxes.length + (boxes.length === 1 ? ' box · ' : ' boxes · ') + things + (things === 1 ? ' thing' : ' things')
+    ? plural(boxes.length, 'box', 'boxes') + ' · ' + plural(things, 'thing')
     : 'Boxes';
 
   const dupes = new Set();
@@ -345,7 +347,7 @@ function reportLabels(r) {
       + (r.trimmed.length === 1 ? ' label (#' : ' labels (#') + list
       + (r.trimmed.length > 6 ? ' …' : '') + ') — print the packing list for the full contents');
   }
-  if (r.failed) notes.push(r.failed + ' label(s) could not fit a code at all');
+  if (r.failed) notes.push(plural(r.failed, 'label') + ' could not fit a code at all');
   const note = $('labelNote');
   note.textContent = notes.join('. ');
   note.classList.toggle('hidden', notes.length === 0);
@@ -373,11 +375,11 @@ function renderManifest() {
   const things = boxes.reduce((a, b) => a + b.items.length, 0);
   head.append(
     el('h2', { class: 'mtitle', text: 'Packing list' }),
-    el('p', { class: 'mmeta', text: 'Printed ' + today() + ' · ' + boxes.length
-      + (boxes.length === 1 ? ' box · ' : ' boxes · ') + things + ' things' }),
+    el('p', { class: 'mmeta', text: 'Printed ' + today() + ' · ' + plural(boxes.length, 'box', 'boxes')
+      + ' · ' + plural(things, 'thing') }),
     el('ul', { class: 'mrooms' },
-      [...rooms.keys()].sort().map(k => el('li', { text: k + ' — ' + rooms.get(k).boxes
-        + (rooms.get(k).boxes === 1 ? ' box, ' : ' boxes, ') + rooms.get(k).items + ' things' }))),
+      [...rooms.keys()].sort().map(k => el('li', { text: k + ' — '
+        + plural(rooms.get(k).boxes, 'box', 'boxes') + ', ' + plural(rooms.get(k).items, 'thing') }))),
     el('p', { class: 'mmeta', text: 'Tick each number off as it comes off the van.' }));
 }
 
@@ -448,7 +450,7 @@ function sealBox() {
 
   const caps = [];
   if (parsed.dropped) caps.push(LIMITS.itemsPerBox + ' things kept, ' + parsed.dropped + ' dropped (' + LIMITS.itemsPerBox + ' per box is the limit)');
-  if (parsed.shortened) caps.push(parsed.shortened + (parsed.shortened === 1 ? ' thing was' : ' things were') + ' shortened to ' + LIMITS.itemChars + ' characters');
+  if (parsed.shortened) caps.push(plural(parsed.shortened, 'thing') + (parsed.shortened === 1 ? ' was' : ' were') + ' shortened to ' + LIMITS.itemChars + ' characters');
 
   const snap = snapshot();
   let msg;
@@ -491,7 +493,7 @@ function applyImport(mode) {
   let msg;
   if (mode === 'replace') {
     boxes = inc.boxes;
-    msg = 'Replaced — was ' + snap.length + (snap.length === 1 ? ' box' : ' boxes') + ', now ' + boxes.length;
+    msg = 'Replaced — was ' + plural(snap.length, 'box', 'boxes') + ', now ' + boxes.length;
   } else {
     const r = mergeBoxes(boxes, inc.boxes);
     boxes = r.boxes;
@@ -503,10 +505,10 @@ function applyImport(mode) {
     msg = 'Merged — ' + (bits.length ? bits.join(', ') : 'nothing new') + '. ' + boxes.length + ' boxes now';
   }
   const notes = [];
-  if (inc.skipped) notes.push(inc.skipped + ' unreadable record(s) skipped');
-  if (inc.overflow) notes.push(inc.overflow + ' box(es) past ' + LIMITS.boxes + ' in the file were not read');
-  if (inc.itemsDropped) notes.push(inc.itemsDropped + ' things over the ' + LIMITS.itemsPerBox + '-per-box limit dropped');
-  if (inc.shortened) notes.push(inc.shortened + ' thing(s) shortened to ' + LIMITS.itemChars + ' characters');
+  if (inc.skipped) notes.push(plural(inc.skipped, 'unreadable record') + ' skipped');
+  if (inc.overflow) notes.push(plural(inc.overflow, 'box', 'boxes') + ' past ' + LIMITS.boxes + ' in the file were not read');
+  if (inc.itemsDropped) notes.push(plural(inc.itemsDropped, 'thing') + ' over the ' + LIMITS.itemsPerBox + '-per-box limit dropped');
+  if (inc.shortened) notes.push(plural(inc.shortened, 'thing') + ' shortened to ' + LIMITS.itemChars + ' characters');
   save();
   renderAll();
   undoToast(msg + (notes.length ? '. ' + notes.join('; ') : ''), () => restore(snap));
@@ -515,8 +517,8 @@ function applyImport(mode) {
 function askImport(r, name) {
   pendingImport = r;
   if (boxes.length === 0) { applyImport('merge'); return; }
-  $('importAskText').textContent = name + ' holds ' + r.boxes.length
-    + (r.boxes.length === 1 ? ' box' : ' boxes') + '. You have ' + boxes.length
+  $('importAskText').textContent = name + ' holds ' + plural(r.boxes.length, 'box', 'boxes')
+    + '. You have ' + boxes.length
     + '. Merging keeps both and lets the file update any box with the same number.';
   $('importAsk').classList.remove('hidden');
   $('importMerge').focus();
@@ -602,7 +604,7 @@ function wire() {
         return;
       }
       if (r.boxes.length === 0) {
-        toast('Nothing usable in that file — ' + r.skipped + ' record(s) could not be read.', 7000);
+        toast('Nothing usable in that file — ' + plural(r.skipped, 'record') + ' could not be read.', 7000);
         return;
       }
       askImport(r, f.name);
