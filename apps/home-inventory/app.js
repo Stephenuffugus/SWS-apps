@@ -253,6 +253,18 @@ function restoreFocus(f) {
   }
 }
 
+/* Where you were last time, per inventory. Someone reconstructing a burnt
+   house from memory should not be handed a camera on every single visit. */
+const TABS = ['capture', 'items', 'rooms', 'export'];
+function rememberTab() {
+  try { if (inv) localStorage.setItem('sws.hi.tab.' + inv.id, tab); } catch (e) {}
+}
+function recallTab(id) {
+  let t = null;
+  try { t = localStorage.getItem('sws.hi.tab.' + id); } catch (e) {}
+  return TABS.indexOf(t) >= 0 ? t : 'capture';
+}
+
 function route() {
   const m = location.hash.match(/^#\/i\/([\w-]+)/);
   return m ? { view: 'editor', id: m[1] } : { view: 'home' };
@@ -351,7 +363,7 @@ function homeRow(r) {
   const t = totals(r);
   return el('li', {},
     el('div', { class: 'grow' },
-      el('div', { text: r.name }),
+      el('div', { text: typeof r.name === 'string' && r.name ? r.name : 'Untitled inventory' }),
       el('div', { class: 'sub', text: t.count + ' items · ' + t.photos + ' photographed · ' + fmtCents(t.valueCents) }),
       el('div', { class: 'sub ' + (exportAgeClass(r)), text: lastExportLine(r) })),
     el('button', { class: 'btn small', type: 'button', onclick: () => { location.hash = '#/i/' + r.id; } }, 'Open'),
@@ -511,6 +523,7 @@ async function renderEditor(id) {
     captureRoomId = (inv.draft && inv.draft.roomId) || null;
     itemFilterRoom = 'all';
     itemQuery = ''; onlyNoPhoto = false; onlyBig = false; itemSort = 'recent';
+    tab = recallTab(id);
     if (captureDraft.photo) {
       toast('A photo is waiting to be named on the Capture tab.', { ms: 5000 });
     }
@@ -544,7 +557,7 @@ function drawEditor(focusKey) {
       .map(([k, label]) => el('button', {
         type: 'button', class: k === tab ? 'active' : '', 'aria-current': k === tab ? 'page' : null,
         'data-fk': 'tab-' + k,
-        onclick: () => { tab = k; drawEditor('tab-' + k); },
+        onclick: () => { tab = k; rememberTab(); drawEditor('tab-' + k); },
       }, label))));
 
   if (tab === 'capture') v.append(renderCapture());
@@ -731,7 +744,7 @@ function renderItems() {
   chips.append(el('button', { class: 'chip' + (onlyNoPhoto ? ' sel' : ''), type: 'button', 'aria-pressed': onlyNoPhoto ? 'true' : 'false',
     onclick: () => { onlyNoPhoto = !onlyNoPhoto; drawEditor(); } }, 'Missing a photo'));
   chips.append(el('button', { class: 'chip' + (onlyBig ? ' sel' : ''), type: 'button', 'aria-pressed': onlyBig ? 'true' : 'false',
-    onclick: () => { onlyBig = !onlyBig; drawEditor(); } }, 'Over $500'));
+    onclick: () => { onlyBig = !onlyBig; drawEditor(); } }, '$500 or more'));
   card.append(chips);
 
   const items = visibleItems();
