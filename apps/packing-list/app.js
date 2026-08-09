@@ -347,8 +347,10 @@ function removeItem(item) {
 
 function startEdit(li, item) {
   const c = cur();
-  const input = el('input', { type: 'text', value: item.label, maxlength: String(MAX_LABEL),
-    'aria-label': 'Rename ' + item.label });
+  /* Deliberately no maxlength: the attribute clips a pasted name to 60 without
+     a word, which is the silent cap this whole pass exists to stamp out.
+     cleanLabel does the same job and reports it. */
+  const input = el('input', { type: 'text', value: item.label, 'aria-label': 'Rename ' + item.label });
   const commit = () => {
     const cleaned = cleanLabel(input.value);
     if (!cleaned.label) { renderList(); return; }

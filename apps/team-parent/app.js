@@ -295,17 +295,20 @@ function baseUrl() {
    carry across the things a rebuild would otherwise throw away — the Manage
    accordion's open state, the scroll position, the focused field, its caret,
    and every half-typed value in the panel. */
-let paintQueued = false;
+let paintTimer = null;
+let pendingSince = 0;
 let manageOpen = false;
 const manageDraft = Object.create(null);
 const draft = (k, fallback) => (manageDraft[k] !== undefined ? manageDraft[k] : (fallback || ''));
 
 function drawBoard() {
-  if (paintQueued) return;
-  paintQueued = true;
-  const run = () => { paintQueued = false; paintBoard(); };
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
-  else setTimeout(run, 16);
+  const now = Date.now();
+  if (!pendingSince) pendingSince = now;
+  clearTimeout(paintTimer);
+  // Coalesce a burst of snapshots, but never sit on a change for longer than
+  // a quarter of a second — a slot filling up has to show up promptly.
+  const delay = (now - pendingSince >= 250) ? 0 : 70;
+  paintTimer = setTimeout(() => { paintTimer = null; pendingSince = 0; paintBoard(); }, delay);
 }
 
 function focusSnapshot() {
@@ -445,12 +448,12 @@ function paintBoard() {
       el('div', { class: 'ph-code' }, 'Team code: ', el('b', { text: live.code }))),
     qrc ? el('div', { class: 'ph-qr' }, qrc) : null));
 
-  // --- title ---
+  // --- title. The description moved out of here and below "Next up": a long
+  // Details line used to push the answer two thirds of the way down the fold.
   const head = el('section', { class: 'card' });
   head.append(el('div', { style: 'display:flex;align-items:baseline;gap:8px' },
     el('h2', { style: 'all:unset;font-size:1.3rem;font-weight:700;flex:1;overflow-wrap:anywhere', text: b.title }),
     own ? el('span', { class: 'badge noprint', text: 'you run this' }) : null));
-  if (b.description) head.append(el('p', { class: 'sub desc', style: 'margin:6px 0 0' }, linkify(b.description)));
   head.append(trustBadge());
   v.append(head);
 
@@ -515,6 +518,12 @@ function paintBoard() {
 
   // --- next up: the answer, above the list ---
   v.append(renderNextUp(upcoming, undatedSlots, own, locked));
+
+  if (b.description) {
+    v.append(el('section', { class: 'card' },
+      el('h2', {}, 'Team details'),
+      el('p', { class: 'sub desc', style: 'margin:0' }, linkify(b.description))));
+  }
 
   // --- schedule, in date order ---
   const schedCard = el('section', { class: 'card' }, el('h2', {}, 'Schedule & duties'));
@@ -654,7 +663,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
     const { name } = parseLabel(nextMine.label);
     card.append(el('p', { class: 'nu-line nu-mine noprint' },
       'Your turn next: ', el('b', { text: (name || nextMine.label) + (isDated(nextMine.order) ? ' · ' + formatKey(nextMine.order) : '') }), ' ',
-      el('button', { class: 'btn small', type: 'button', onclick: () => jumpTo('slot-' + nextMine.id) }, 'Show me')));
+      el('button', { class: 'btn', type: 'button', onclick: () => jumpTo('slot-' + nextMine.id) }, 'Show me')));
   }
   return card;
 }
@@ -690,7 +699,7 @@ function renderEvent(s, own, locked, past) {
   if (own) top.append(el('button', { class: 'btn small icon noprint', type: 'button', 'aria-label': 'Edit ' + (name || s.label), onclick: () => openSlotDlg(s) }, '✎'));
   box.append(top);
   if (where || wear) {
-    const meta = el('div', { class: 'slotmeta' });
+    const meta = el('p', { class: 'slotmeta' });
     if (where) meta.append(el('span', {}, '📍 ',
       el('a', { href: mapsUrl(where), target: '_blank', rel: 'noopener noreferrer', text: where })));
     if (wear) meta.append(el('span', { text: '👕 ' + wear }));
@@ -730,7 +739,7 @@ function renderEvent(s, own, locked, past) {
   if (claims.length || (!isRSVP && left)) box.append(chips);
   if (!mine && left > 0 && !locked && !past) {
     box.append(el('div', { class: 'noprint', style: 'margin-top:8px' },
-      el('button', { class: 'btn primary small', type: 'button', onclick: () => openClaim(s, isRSVP) },
+      el('button', { class: 'btn primary', type: 'button', onclick: () => openClaim(s, isRSVP) },
         isRSVP ? 'I’m going' : 'I’ll cover this')));
   }
   return box;

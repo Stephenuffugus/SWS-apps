@@ -1293,8 +1293,11 @@ header.app h1 a{color:inherit; text-decoration:none}
    exists for; it was --ink-2 at .82rem (5.6:1) and is read in direct sun. */
 .slot .count{color:var(--ink); font-size:var(--t-sm); white-space:nowrap}
 .slot .count.full{color:var(--pos); font-weight:600}
-.slot .slotmeta{display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); margin-top:var(--s2); font-size:var(--t-sm); color:var(--ink-2)}
-.slot .slotmeta a{overflow-wrap:anywhere}
+.slot .slotmeta{display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); margin:var(--s2) 0 0; font-size:var(--t-sm); color:var(--ink-2)}
+/* An address inside a line of metadata is an inline link in prose — WCAG 2.2
+   exempts those from target size — but it still gets real vertical room. */
+.slot .slotmeta a{overflow-wrap:anywhere; display:inline-block; padding:var(--s2) 0}
+.nextup .nu-line a{overflow-wrap:anywhere; display:inline-block; padding:var(--s1) 0}
 .slot .chips{margin-top:var(--s2); display:flex; flex-wrap:wrap; gap:var(--s2)}
 .slot.past{opacity:.72}
 .slot.flash{background:var(--accent-soft); border-radius:var(--r-sm)}
