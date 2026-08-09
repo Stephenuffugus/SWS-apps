@@ -1423,17 +1423,22 @@ section.card h2:first-child{margin-top:0}
 .paper .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:0 14pt}
 .paper .first .block{margin-bottom:5pt}
 
+/* The feedback page may run over the fold — held whole it was pushed onto a
+   third sheet of its own, which is the same waste that avoid-page caused on
+   the sections. */
 .paper .noteback{
   border:1pt solid #111; border-radius:4pt; padding:8pt 10pt; margin-top:8pt;
-  break-inside:avoid; page-break-inside:avoid;
+  break-inside:auto; page-break-inside:auto;
 }
 .paper .noteback h3{
   font-size:9.5pt; font-weight:700; text-transform:uppercase;
   letter-spacing:.08em; color:#111; margin:0 0 5pt;
+  break-after:avoid; page-break-after:avoid;
 }
 .paper .ticks{
   list-style:none; margin:0 0 7pt; padding:0;
   display:grid; grid-template-columns:1fr 1fr; gap:3pt 14pt;
+  break-inside:avoid; page-break-inside:avoid;
 }
 .paper .ticks li{
   display:flex; align-items:center; gap:5pt;
@@ -1527,7 +1532,7 @@ section.card h2:first-child{margin-top:0}
 
   <div class="actionbar">
     <button class="btn primary" id="printBtn" type="button" style="flex:1 1 auto">
-      <span>Print / Save as PDF</span><span class="pgs" id="pageCount"></span>
+      <span>Print / Save as PDF</span> <span class="pgs" id="pageCount"></span>
     </button>
   </div>
   </main>

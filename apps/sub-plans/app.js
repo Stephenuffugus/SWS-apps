@@ -703,7 +703,7 @@ function showQr(url) {
   const canvas = $('qrCanvas');
   /* Module size follows the module count, and the bitmap stays an exact
      integer multiple of the CSS size so no module is ever a fraction wide. */
-  const avail = Math.min(400, Math.max(232, (window.innerWidth || 360) - 96));
+  const avail = Math.min(560, Math.max(232, (window.innerWidth || 360) - 96));
   const span = count + 8;
   const cssCell = Math.max(2, Math.min(6, Math.floor(avail / span)));
   const cssSize = span * cssCell;
