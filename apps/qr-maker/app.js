@@ -524,8 +524,9 @@ function saveCurrent() {
 function loadSaved(it) {
   type = TYPES.some((t) => t[0] === it.type) ? it.type : 'text';
   ec = it.ec === 'L' ? 'M' : it.ec;
+  let note = '';
+
   if (it.f) {
-    fields[type + '.url'] = it.f.url || fields[type + '.url'];
     if (type === 'wifi') {
       fields['wifi.ssid'] = it.f.ssid || '';
       fields['wifi.pass'] = it.f.pass || '';
@@ -535,16 +536,30 @@ function loadSaved(it) {
     else if (type === 'tel') fields['tel.tel'] = it.f.tel || '';
     else if (type === 'email') fields['email.email'] = it.f.email || '';
     else fields['text.text'] = it.f.text || it.payload;
-  } else if (type === 'text') {
-    fields['text.text'] = it.payload;
+  } else {
+    /* An entry from someone else's file carries the payload but not the
+       fields that produced it. Put the payload back into the right box rather
+       than opening an empty editor and quietly losing the code. */
+    if (type === 'url') fields['url.url'] = it.payload;
+    else if (type === 'tel') fields['tel.tel'] = it.payload.replace(/^tel:/, '').replace(/;ext=/, ' x');
+    else if (type === 'email') fields['email.email'] = it.payload.replace(/^mailto:/, '');
+    else if (type === 'wifi') {
+      // Un-picking an escaped WIFI: string is guesswork; show it as text
+      // instead of pretending the fields were recovered.
+      type = 'text';
+      fields['text.text'] = it.payload;
+      note = ' This one arrived without its Wi-Fi fields, so it opened as plain text — the code it makes is identical.';
+    } else fields['text.text'] = it.payload;
   }
+
   $('ecLevel').value = ec;
   renderFields();
   refreshTypeSeg();
   syncBatchType();
   runUpdate();
   persist();
-  toast('Opened “' + it.label + '” — same text, same toughness, so an export now is byte-for-byte the one you kept on ' + it.date + '.', { ms: 6000 });
+  toast('Opened “' + it.label + '” — same text, same toughness, so an export now is byte-for-byte the one you kept on ' +
+    it.date + '.' + note, { ms: 6000 });
 }
 
 function qrFor(payload, level) {
@@ -709,7 +724,7 @@ function analyzeBatch() {
 
   const bits = [];
   if (!all.length) {
-    bits.push('Nothing pasted yet. Every line becomes its own code, and every code is named after the line that made it.');
+    bits.push('Nothing pasted yet. Every line becomes its own code, and every code is named after the line that made it');
   } else {
     bits.push(fmt(all.length) + ' line' + (all.length === 1 ? '' : 's') + ' · ' + fmt(ready.length) + ' code' + (ready.length === 1 ? '' : 's') + ' ready');
     if (all.length > MAX_BATCH) {
@@ -943,10 +958,10 @@ function wire() {
 
 function setTrust() {
   $('trustText').textContent =
-    'Every code here is built by this page, on this device. QR Maker makes no network requests at all — ' +
-    'it works with the Wi-Fi off, and no server ever sees your link, your network name or your password. ' +
-    'Codes you keep (a Wi-Fi password among them) are stored in this browser on this device only, and ' +
-    '“Clear all” removes them.';
+    'Every code here is built by this page, on this device. Nothing you type is ever sent anywhere: no ' +
+    'server sees your link, your network name or your password, and the whole app works with the Wi-Fi ' +
+    'off. Codes you keep — a Wi-Fi password among them — are stored in this browser on this device only, ' +
+    'and “Clear all” removes them.';
 }
 
 function init() {

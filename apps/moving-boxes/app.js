@@ -231,7 +231,12 @@ function renderSearch() {
   for (const { box, hitItems } of shown) {
     results.append(el('li', {},
       el('button', { class: 'btn plain hitrow', type: 'button',
-        'aria-label': 'Show box #' + box.n + ' in the list',
+        // The name carries the answer, not just the action — a screen-reader
+        // user is asking "which box has the can opener", and hearing only
+        // "show box 5 in the list" would make them press it to find out.
+        'aria-label': 'Box #' + box.n + ', ' + (box.room || 'Unlabeled')
+          + (hitItems.length ? ', has ' + hitItems.join(', ') : '')
+          + '. Show it in the list below.',
         onclick: () => revealBox(box) },
         el('span', { class: 'boxnum', text: '#' + box.n }),
         el('span', { class: 'grow' },
