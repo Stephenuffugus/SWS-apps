@@ -519,7 +519,7 @@ function startEdit(id) {
   $('addHeading').textContent = 'Edit ' + m.name;
   renderList();
   const card = $('addCard');
-  card.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  if (card.scrollIntoView) card.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
   $('medName').focus();
   $('medName').select();
 }
@@ -571,17 +571,27 @@ function submitMed() {
 }
 const pageWord = () => (pageCount === 1 ? 'prints on 1 page' : 'prints on ' + pageCount + ' pages');
 
-/* ---------- share ---------- */
+/* ---------- share ----------
+   The payload is kept as small as it can honestly be: times ride as a 4-bit
+   mask, empty fields are dropped rather than encoded as "", and empty tails
+   are trimmed. That is not tidiness — every character is more QR modules, and
+   the code stops being scannable long before the link stops working. */
+const TIME_BIT = { Morning: 1, Noon: 2, Evening: 4, Bedtime: 8 };
 function encodeCard() {
-  const json = JSON.stringify({
-    v: 2,
-    w: data.who || '', a: data.allergies || '',
-    pr: data.prescriber || '', prp: data.prescriberPhone || '',
-    ph: data.pharmacy || '', php: data.pharmacyPhone || '',
-    c: data.clock, s: data.size,
-    m: data.meds.map(m => [m.name, m.alias, m.dose, m.times, m.notes, m.prn ? 1 : 0, m.max]),
+  const out = { v: 2 };
+  const put = (k, v) => { if (v) out[k] = v; };
+  put('w', data.who); put('a', data.allergies);
+  put('pr', data.prescriber); put('prp', data.prescriberPhone);
+  put('ph', data.pharmacy); put('php', data.pharmacyPhone);
+  if (TIME_ORDER.some(t => data.clock[t])) out.c = data.clock;
+  if (data.size !== 'lg') out.s = data.size;
+  out.m = data.meds.map(m => {
+    const mask = m.prn ? 0 : m.times.reduce((a, t) => a | TIME_BIT[t], 0);
+    const row = [m.name, mask, m.dose, m.alias, m.notes, m.max];
+    while (row.length > 2 && !row[row.length - 1]) row.pop();
+    return row;
   });
-  return btoa(unescape(encodeURIComponent(json)))
+  return btoa(unescape(encodeURIComponent(JSON.stringify(out))))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decodeCard(hash) {
@@ -591,10 +601,16 @@ function decodeCard(hash) {
     while (s.length % 4) s += '=';
     const obj = JSON.parse(decodeURIComponent(escape(atob(s))));
     if (!obj || !Array.isArray(obj.m)) return null;
-    // v1 links carried [name, dose, times, notes]; v2 adds alias, prn and max
-    const meds = obj.m.filter(Array.isArray).map((a) => (Array.isArray(a[2])
-      ? { name: a[0], dose: a[1], times: a[2], notes: a[3] }
-      : { name: a[0], alias: a[1], dose: a[2], times: a[3], notes: a[4], prn: a[5] === 1 || a[5] === true, max: a[6] }));
+    // v1 links carried [name, dose, times[], notes]; v2 is [name, mask, dose, alias, notes, max]
+    const meds = obj.m.filter(Array.isArray).map((a) => {
+      if (Array.isArray(a[2])) return { name: a[0], dose: a[1], times: a[2], notes: a[3] };
+      const mask = typeof a[1] === 'number' ? a[1] : 0;
+      return {
+        name: a[0], dose: a[2], alias: a[3], notes: a[4], max: a[5],
+        times: TIME_ORDER.filter(t => mask & TIME_BIT[t]),
+        prn: mask === 0,
+      };
+    });
     const raw = {
       who: obj.w, allergies: obj.a,
       prescriber: obj.pr, prescriberPhone: obj.prp,
@@ -644,7 +660,7 @@ function offerShared(shared) {
 
 /* ---------- QR ---------- */
 const MIN_MODULE_PX = 4;   // below this a phone camera cannot resolve the code
-const QR_BOX_PX = 300;
+const qrBoxPx = () => Math.max(200, Math.min(360, Math.round(window.innerWidth * 0.92) - 56));
 function showQr(url) {
   const dlg = $('qrDlg');
   const canvas = $('qrCanvas');
@@ -658,17 +674,20 @@ function showQr(url) {
   } catch (e) { qr = null; }
 
   const quiet = 4;
-  const cssModule = qr ? QR_BOX_PX / (count + quiet * 2) : 0;
+  const box = qrBoxPx();
+  // an integer number of CSS pixels per module — a fractionally scaled canvas
+  // is a blurred code, which is the failure this fix exists to end
+  const cssModule = qr ? Math.floor(box / (count + quiet * 2)) : 0;
   if (!qr || cssModule < MIN_MODULE_PX) {
     canvas.classList.add('hidden');
     note.textContent = 'This schedule is too big for a QR code a phone camera could read '
       + '(' + data.meds.length + ' medications). Use the link below instead — it holds exactly the same card.';
   } else {
-    const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
-    const cell = Math.max(1, Math.round(cssModule * dpr));
+    const dpr = Math.min(3, Math.max(1, Math.round(window.devicePixelRatio || 1)));
+    const cell = cssModule * dpr;
     const px = cell * (count + quiet * 2);
     canvas.width = px; canvas.height = px;
-    canvas.style.width = QR_BOX_PX + 'px';
+    canvas.style.width = (cssModule * (count + quiet * 2)) + 'px';
     canvas.classList.remove('hidden');
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -751,12 +770,15 @@ function wire() {
   });
   let rafId = 0;
   window.addEventListener('resize', () => {
-    cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(fitPreview);
+    if (!window.requestAnimationFrame) { fitPreview(); return; }
+    window.cancelAnimationFrame(rafId);
+    rafId = window.requestAnimationFrame(fitPreview);
   });
-  // the comfort panel changes the column the preview sits in
-  new MutationObserver(() => fitPreview())
-    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-text', 'data-density', 'style'] });
+  // the comfort panel changes the width of the column the preview sits in
+  if (window.MutationObserver) {
+    new window.MutationObserver(() => fitPreview()).observe(document.documentElement,
+      { attributes: true, attributeFilter: ['data-text', 'data-density', 'style'] });
+  }
 }
 
 function init() {

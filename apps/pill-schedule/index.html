@@ -1361,9 +1361,66 @@ ul.plain .grow{overflow-wrap:break-word; hyphens:none}
 }
 #toast .undo:focus-visible{outline:2px solid var(--toast-ink); outline-offset:3px}
 
+/* ---------- extra editor bits ---------- */
+.check{
+  display:flex; align-items:center; gap:var(--s3);
+  min-height:var(--tap);
+  margin-bottom:var(--s4);
+  font-size:var(--t-base);
+  cursor:pointer;
+}
+.whenset.dim > legend,.whenset.dim .times{opacity:.5}
+.clocks > .f{flex:1 1 8rem; margin-bottom:0}
+
+/* The quiet "your work is safe" flag, so saving is not something the app only
+   mentions when it fails. */
+.savedflag{
+  margin-left:var(--s2);
+  font-size:var(--t-xs); font-weight:650;
+  letter-spacing:0; text-transform:none;
+  color:var(--pos);
+  opacity:0;
+  transition:opacity var(--dur-2) var(--ease);
+}
+.savedflag.show{opacity:1}
+
+/* Two rows that look like the same medicine. Never colour alone — the row
+   carries the words too. */
+.flag{
+  display:inline-block;
+  margin-top:var(--s1);
+  padding:0 var(--s2);
+  font-size:var(--t-xs); font-weight:650;
+  color:var(--ink);
+  background:var(--warn-soft);
+  border:1px solid var(--warn-line);
+  border-radius:var(--r-sm);
+}
+ul.plain > li.editing{background:var(--accent-soft)}
+
+details.card > summary{
+  display:flex; align-items:center;
+  min-height:var(--tap);
+  font-size:var(--t-base); font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+}
+details.card[open] > summary{margin-bottom:var(--s4)}
+
+/* An incoming shared link is somebody else's work: it gets an in-page choice
+   rather than a native confirm whose Cancel used to destroy the payload. */
+#sharedOffer{border-left:4px solid var(--accent-fill)}
+#sharedOffer > h2{
+  font-size:var(--t-lg); font-weight:700;
+  text-transform:none; letter-spacing:0;
+  color:var(--ink);
+  margin-bottom:var(--s2);
+}
+#sharedOffer p{margin:0 0 var(--s4)}
+
 /* ---------- QR share dialog ---------- */
 #qrDlg{
-  width:min(92vw, 22rem);
+  width:min(92vw, 24rem);
   padding:var(--s5);
   text-align:center;
   color:var(--ink);
@@ -1374,26 +1431,112 @@ ul.plain .grow{overflow-wrap:break-word; hyphens:none}
 }
 #qrDlg::backdrop{background:var(--veil)}
 #qrDlg h2{font-size:var(--t-lg); color:var(--ink); margin:0 0 var(--s4)}
-#qrCanvas{width:100%; max-width:300px; height:auto; border-radius:var(--r-sm)}
+#qrDlg .f{text-align:left; margin-top:var(--s4)}
+#qrCanvas{max-width:100%; height:auto; border-radius:var(--r-sm)}
+#qrUrl{min-height:4.5rem; font-size:var(--t-sm); word-break:break-all}
 
-/* ---------- printed card ----------
-   The base print sheet already hides the chrome and .screenonly, and already
-   forces a white ground. Only the card's own grid lives here. */
-#sheet{display:none}
+/* ---------- the printed card, and its preview ----------
+   The sheet is drawn at true print width and shown on screen scaled to fit,
+   so the preview and the paper are the same nodes and cannot drift apart. It
+   is deliberately paper-coloured in every theme: it is a picture of paper.
+   Sizes are in pt and do NOT follow --ui-scale — the screen comfort panel
+   belongs to the operator, and the card belongs to whoever reads it at the
+   fridge, who gets their own control (#sizeSeg). */
+.preview{
+  overflow:hidden;
+  padding:var(--s3);
+  background:var(--canvas-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-ctl);
+}
+#sheetScale{transform-origin:top left}
+
+#sheet{
+  width:182mm;                /* A4 content width at the base's 14mm @page */
+  color:#111;
+  background:#fff;
+  font-family:var(--font-text);
+  line-height:1.4;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+  /* 18pt is the APH / ACB / Library of Congress large-print floor. */
+  --pt:18pt; --pt2:14pt; --pth:24pt; --ptl:12pt; --box:16pt; --pad:4pt;
+}
+#sheet[data-size="std"]{--pt:11pt; --pt2:9pt;  --pth:17pt; --ptl:9pt;  --box:12pt; --pad:3pt}
+#sheet[data-size="xl"] {--pt:22pt; --pt2:17pt; --pth:28pt; --ptl:14pt; --box:20pt; --pad:5pt}
+#sheet[data-size="xxl"]{--pt:28pt; --pt2:21pt; --pth:34pt; --ptl:16pt; --box:24pt; --pad:6pt}
+
+#sheet .measure{position:absolute; left:-20000px; top:0; width:182mm; visibility:hidden}
+.sheetpage{background:#fff}
+#sheet .runhead{
+  display:flex; justify-content:space-between; gap:6pt;
+  font-size:var(--ptl); color:#222;
+  border-bottom:1pt solid #555;
+  padding-bottom:2pt; margin-bottom:5pt;
+}
+#sheet h1{margin:0 0 2pt; font-size:var(--pth); line-height:1.15; font-weight:800; text-align:center; color:#111}
+#sheet .sub{margin:0 0 5pt; font-size:var(--pt2); color:#222; text-align:center}
+#sheet .fill{display:inline-block; min-width:40mm; border-bottom:1pt solid #444}
+#sheet .fill.w6{min-width:45mm}
+#sheet .fill.w8{min-width:38mm}
+
+/* Allergies first and impossible to miss — the line an aide or a paramedic
+   looks for. A heavy border and the literal word, never colour. */
+#sheet .alrg{
+  display:flex; align-items:baseline; gap:6pt;
+  border:1.5pt solid #111;
+  padding:var(--pad);
+  margin:0 0 4pt;
+  font-size:var(--pt);
+}
+#sheet .alrg .lab{flex:none; font-weight:800; letter-spacing:.06em}
+#sheet .alrg .val{font-weight:700}
+#sheet .alrg .fill{flex:1; min-width:0}
+#sheet .contacts{display:flex; flex-wrap:wrap; gap:2pt 10pt; margin:0 0 5pt; font-size:var(--pt2)}
+
+#sheet table{width:100%; table-layout:fixed; border-collapse:collapse; margin:0 0 4pt}
+#sheet col.cmed{width:58%}
+#sheet col.cday{width:6%}
+#sheet table.prn col.cmed{width:38%}
+#sheet col.cwhen{width:40%}
+#sheet col.cmax{width:22%}
+#sheet th,#sheet td{border:1pt solid #555; padding:var(--pad); text-align:left; vertical-align:top}
+#sheet th{
+  font-size:var(--ptl); font-weight:800;
+  text-transform:uppercase; letter-spacing:.05em;
+  color:#111; background:#eceae6;
+  border-bottom-width:1.5pt;
+}
+#sheet th.day,#sheet td.day{text-align:center}
+#sheet .box{display:inline-block; width:var(--box); height:var(--box); border:1pt solid #333; border-radius:1pt}
+#sheet .med{font-size:var(--pt); font-weight:700}
+#sheet .when{font-size:var(--pt2); color:#222}
+#sheet .prnhead{
+  margin:4pt 0 3pt; padding-top:3pt;
+  border-top:1.5pt solid #111;
+  font-size:var(--pt2); font-weight:800; letter-spacing:.04em;
+}
+#sheet .foot{margin-top:5pt; font-size:var(--pt2); color:#222; text-align:center}
+
+@media screen{
+  .sheetpage{min-height:247mm; box-shadow:0 1px 5px rgba(0,0,0,.22); margin-bottom:6mm}
+  .sheetpage:last-child{margin-bottom:0}
+}
 @media print{
-  #sheet{display:block; color:#111; padding:0 4mm}
-  #sheet h1{margin:0 0 2pt; font-size:17pt; text-align:center}
-  #sheet .sub{color:#555; font-size:9pt; text-align:center; margin-bottom:10pt}
-  #sheet table{width:100%; border-collapse:collapse; font-size:9.5pt}
-  #sheet th, #sheet td{border:1pt solid #999; padding:4pt 5pt; text-align:left; vertical-align:top}
-  #sheet th{background:#f0f0ee; font-size:8.5pt; text-transform:uppercase; letter-spacing:.05em}
-  #sheet td.day{width:8%; text-align:center}
-  #sheet .box{display:inline-block; width:10pt; height:10pt; border:1pt solid #555; border-radius:2pt}
-  #sheet .med{font-weight:700}
-  #sheet .dose{color:#444; font-size:8.5pt}
-  #sheet .when{font-size:8.5pt; color:#333}
-  #sheet .foot{margin-top:8pt; font-size:8pt; color:#666; font-style:italic; text-align:center}
-  #sheet tr{break-inside:avoid}
+  /* The card, and only the card. The QR dialog used to print instead of it. */
+  #qrDlg{display:none !important}
+  #previewCard{
+    border:0 !important; border-radius:0 !important;
+    padding:0 !important; margin:0 !important;
+    background:none !important; box-shadow:none !important;
+    break-inside:auto !important; page-break-inside:auto !important;
+  }
+  #previewFrame{overflow:visible !important; padding:0 !important; border:0 !important; background:none !important}
+  #sheetScale{transform:none !important; width:auto !important; height:auto !important}
+  #sheet{width:182mm; max-width:100%; margin:0 auto}
+  .sheetpage{break-after:page; page-break-after:always}
+  .sheetpage:last-child{break-after:auto; page-break-after:auto}
+  #sheet tr{break-inside:avoid; page-break-inside:avoid}
 }
 </style>
 <script src="sws-prefs.js"></script>
