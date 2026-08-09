@@ -1256,13 +1256,28 @@ body{
    flat, which wrapped "7:00 AM" onto two lines at Largest. */
 .time{font-weight:700; font-variant-numeric:tabular-nums; flex:0 0 5.5rem}
 
-/* Moment rows carry two controls now (Edit and Remove) and both have to clear
-   the tap floor at every comfort setting, so the row is allowed to wrap
-   rather than squeeze the description to nothing. */
+/* The moment itself is the edit control — a tap anywhere on the words opens
+   the row for editing, which is a far bigger target than a pencil icon and
+   leaves the destructive ✕ as the only other thing to hit. The row wraps
+   rather than squeezing the description to nothing when the comfort settings
+   grow the time column and the tap floor. */
 ul.plain > li{flex-wrap:wrap}
-ul.plain > li .grow{flex:1 1 11rem; min-width:min(11rem, 55%)}
+ul.plain > li .grow{flex:1 1 auto; min-width:min(5.5rem, 40%)}
+.rowedit{
+  display:block; width:100%; text-align:left;
+  min-height:var(--tap);
+  padding:var(--s2);
+  margin-inline:calc(var(--s2) * -1);
+  font:inherit; color:var(--ink);
+  background:none; border:0; border-radius:var(--r-sm);
+  cursor:pointer;
+  transition:background var(--dur-1) var(--ease);
+}
+.rowedit > span{display:block}
+.rowedit .sub{margin-top:2px}
+.rowedit:hover{background:var(--surface-2)}
 .rowacts{display:flex; gap:var(--s2); margin-left:auto; flex:none}
-.rowbtn{min-height:var(--tap); padding:0 var(--s4)}
+.rowbtn{min-height:var(--tap); min-width:var(--tap); padding:0 var(--s3)}
 
 ul.plain > li.editing{display:block; padding:var(--s4) 0}
 .editlabel{font-size:var(--t-sm); color:var(--ink-2); margin:0 0 var(--s3)}
@@ -1336,7 +1351,11 @@ ul.plain > li.editing{display:block; padding:var(--s4) 0}
      whose wedding it is and when the sheet was printed. */
   #sheet table.sheet-t{width:100%; border-collapse:collapse; table-layout:fixed}
   #sheet thead{display:table-header-group}
-  #sheet thead th{padding:0 0 5pt; font-weight:400; text-align:left}
+  #sheet thead th{
+    padding:0 0 5pt; font-weight:400; text-align:left;
+    font-size:12pt; letter-spacing:normal; text-transform:none;
+    color:#1a1a1a; background:none; border-bottom:0;
+  }
   #sheet .run{
     display:flex; flex-wrap:wrap; align-items:baseline; gap:4pt 10pt;
     border-bottom:.5pt solid #999; padding-bottom:3pt;
@@ -1414,6 +1433,7 @@ ul.plain > li.editing{display:block; padding:var(--s4) 0}
     <section class="card">
       <h2>The day</h2>
       <ul class="plain" id="evList"></ul>
+      <p class="hint hidden" id="listHint">Tap any moment to change its time or its wording. Removing one always offers an Undo.</p>
 
       <div class="empty hidden" id="emptyBox">
         <div class="glyph" aria-hidden="true">✽</div>

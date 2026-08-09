@@ -2418,9 +2418,17 @@ async function copyText(text, okMsg){
 function personById(id){ return state.people.find(p => p.id === id); }
 
 function addPerson(name){
-  name = name.trim().slice(0, 60);
-  if (!name) return;
-  if (state.people.length >= 50) { toast('That’s plenty of people for one bill'); return; }
+  const raw = name.trim();
+  if (!raw) return;
+  name = raw.slice(0, LIMITS.personName);
+  /* Caps say their own name, with the real numbers, at the moment they bite. */
+  if (state.people.length >= LIMITS.people) {
+    toast('“' + name + '” was not added: ' + LIMITS.people + ' people is the limit for one split, and you already have ' +
+          state.people.length + '. Remove someone first, or split the group into two bills.', 7000);
+    return;
+  }
+  if (raw.length > LIMITS.personName)
+    toast('Names are kept to ' + LIMITS.personName + ' characters — saved as “' + name + '”.', 6000);
   const known = recentNames.find(r => r.name.toLowerCase() === name.toLowerCase());
   state.people.push({
     id: newId(), name,
@@ -2430,25 +2438,36 @@ function addPerson(name){
   renderPeople(); renderActiveView();
 }
 
+/* Returns '' on success, or the reason it was refused. */
 function removePerson(id){
-  const usedByExpense = state.trip.expenses.some(e =>
-    e.paidBy === id || (e.split || []).some(s => s.pid === id));
-  if (usedByExpense) {
-    toast('This person is on a trip expense — edit or delete those expenses first.');
-    return false;
+  const p = personById(id);
+  if (!p) return 'That person is already gone.';
+  const onExpense = state.trip.expenses.filter(e =>
+    e.paidBy === id || (e.split || []).some(s => s.pid === id)).length;
+  const onPayment = (state.trip.payments || []).filter(x => x.from === id || x.to === id).length;
+  if (onExpense || onPayment) {
+    const bits = [];
+    if (onExpense) bits.push(plural(onExpense, 'trip expense'));
+    if (onPayment) bits.push(plural(onPayment, 'repayment'));
+    return p.name + ' is on ' + bits.join(' and ') + '. Delete or edit those first — otherwise the money would not add up.';
   }
-  state.people = state.people.filter(p => p.id !== id);
+  state.people = state.people.filter(x => x.id !== id);
   for (const it of state.dinner.items) it.by = it.by.filter(x => x !== id);
   if (state.dinner.paidBy === id) state.dinner.paidBy = null;
   touch();
-  return true;
+  return '';
 }
 
 function renderPeople(){
   const box = $('peopleChips');
   box.replaceChildren();
   for (const p of state.people) {
-    box.append(el('button', { class: 'chip', type: 'button', onclick: () => openPersonDlg(p.id) },
+    box.append(el('button', {
+      class: 'chip', type: 'button',
+      'aria-label': 'Edit ' + p.name,
+      'data-fkey': 'person:' + p.id,
+      onclick: () => openPersonDlg(p.id),
+    },
       el('span', { class: 'nm', text: p.name }),
       el('span', { 'aria-hidden': 'true', text: '✎' })));
   }
@@ -2457,9 +2476,16 @@ function renderPeople(){
   const current = new Set(state.people.map(p => p.name.toLowerCase()));
   const picks = recentNames.filter(r => !current.has(r.name.toLowerCase())).slice(0, 6);
   for (const r of picks) {
-    sug.append(el('button', { class: 'chip ghost', type: 'button', onclick: () => addPerson(r.name) },
-      '+ ' + r.name));
+    sug.append(el('button', {
+      class: 'chip ghost', type: 'button',
+      'aria-label': 'Add ' + r.name + ' again',
+      onclick: () => addPerson(r.name),
+    }, '+ ' + r.name));
   }
+  const n = state.people.length;
+  $('peopleCount').textContent = n
+    ? n + ' of ' + LIMITS.people + ' people. Tap a name to edit it or add payment handles (Venmo, Cash App, PayPal).'
+    : 'Tap a name to edit it or add payment handles (Venmo, Cash App, PayPal). Up to ' + LIMITS.people + ' people on one split.';
 }
 
 function openPersonDlg(id){
@@ -2470,6 +2496,8 @@ function openPersonDlg(id){
   $('pdVenmo').value = p.venmo;
   $('pdCash').value = p.cashtag;
   $('pdPaypal').value = p.paypal;
+  $('pdWarn').classList.add('hidden');
+  $('pdWarn').textContent = '';
   showDlg($('personDlg'));
 }
 
@@ -2485,7 +2513,37 @@ function closeDlg(d){
 const TABS = { dinner: 'tabDinner', trip: 'tabTrip', saved: 'tabSaved' };
 let activeTab = 'dinner';
 
+/* "Does this split contain any dinner / trip work?" — the two questions that
+   decide what a split IS. One tap on a tab is not an answer to either. */
+function hasDinnerData(s){
+  const d = s.dinner;
+  return !!(d.billCents || d.taxCents || d.tipValue || d.items.length || d.paidBy);
+}
+function hasTripData(s){
+  return !!(s.trip.expenses.length || (s.trip.payments || []).length);
+}
+function kindLabel(s){
+  const bits = [];
+  if (hasDinnerData(s)) bits.push('Dinner');
+  if (hasTripData(s)) bits.push('Trip');
+  return bits.join(' + ') || (s.mode === 'trip' ? 'Trip' : 'Dinner');
+}
+/* A split claims a mode when work is done in it, never when a tab is looked
+   at. Verified before this: naming a dinner "Sushi with Mara", entering $84
+   and tapping Trip once relabelled it as a trip in Saved for good. */
+function claimMode(mode){
+  const other = mode === 'trip' ? hasDinnerData(state) : hasTripData(state);
+  if (!other && state.mode !== mode) { state.mode = mode; touch(); }
+}
+
 function setTab(tab){
+  /* Reparenting #peopleBox with insertBefore moves the focused subtree, which
+     drops focus to <body>. Remember where the caret was and put it back. */
+  const act = document.activeElement;
+  const fkey = act && act.id ? '#' + act.id : (act && act.dataset && act.dataset.fkey) || null;
+  let selStart = null, selEnd = null;
+  try { if (act && act.selectionStart != null) { selStart = act.selectionStart; selEnd = act.selectionEnd; } } catch (e) {}
+
   activeTab = tab;
   for (const [k, id] of Object.entries(TABS))
     setPressed($(id), k === tab);
@@ -2497,9 +2555,25 @@ function setTab(tab){
   pb.classList.toggle('hidden', tab === 'saved');
   if (tab === 'dinner') $('viewDinner').insertBefore(pb, $('viewDinner').children[1]);
   if (tab === 'trip') $('viewTrip').insertBefore(pb, $('viewTrip').children[1]);
-  if (tab !== 'saved' && tab !== state.mode) { state.mode = tab; touch(); }
+  if (tab !== 'saved' && tab !== state.mode) {
+    const currentHasWork = state.mode === 'trip' ? hasTripData(state) : hasDinnerData(state);
+    if (!currentHasWork) { state.mode = tab; touch(); }
+  }
   renderActiveView();
   if (tab === 'saved') renderSaved();
+  measureShareBar();
+
+  if (fkey) {
+    const back = fkey[0] === '#'
+      ? document.getElementById(fkey.slice(1))
+      : document.querySelector('[data-fkey="' + fkey.replace(/"/g, '\\"') + '"]');
+    if (back && back.isConnected && back.offsetParent !== null) {
+      try {
+        back.focus({ preventScroll: true });
+        if (selStart != null && back.setSelectionRange) back.setSelectionRange(selStart, selEnd);
+      } catch (e) {}
+    }
+  }
 }
 
 function renderActiveView(){
@@ -2514,6 +2588,7 @@ function renderDinner(){
   const d = state.dinner;
   $('dinnerHero').classList.toggle('hidden', state.people.length > 0 || d.billCents > 0 || d.items.length > 0);
   $('dinnerName').value = state.name;
+  if (document.activeElement !== $('dinnerCurrency')) $('dinnerCurrency').value = state.currency;
   // .active carries the look; aria-pressed carries the same fact to a screen
   // reader. This is a toggle-button group, not a tablist — a tablist whose
   // children are not tabs is a critical axe violation and misleads AT.
@@ -2539,52 +2614,104 @@ function renderDinner(){
   renderDinnerResults();
 }
 
+/* A toggle chip: aria-pressed carries the state, a permanent tick slot carries
+   it visually, and --tap carries the size. Before this, VoiceOver read
+   "Aylin, button" whether Aylin was in the split or out of it. */
+function toggleChip(label, on, groupName, onToggle, fkey){
+  return el('button', {
+    class: 'chip' + (on ? ' sel' : ''), type: 'button',
+    'aria-pressed': on ? 'true' : 'false',
+    'aria-label': label + ' — ' + groupName,
+    'data-fkey': fkey || null,
+    onclick: onToggle,
+  },
+    el('span', { class: 'tick', 'aria-hidden': 'true', text: on ? '✓' : '' }),
+    el('span', { class: 'nm', text: label }));
+}
+
 function renderItems(){
   const list = $('itemList');
   list.replaceChildren();
+  const cur = state.currency;
   for (const it of state.dinner.items) {
     const who = el('div', { class: 'chips', style: 'margin:4px 0 0' });
     for (const p of state.people) {
       const on = it.by.includes(p.id);
-      who.append(el('button', {
-        class: 'chip' + (on ? ' sel' : ''), type: 'button', style: 'padding:4px 10px;font-size:.8rem',
-        onclick: () => {
-          it.by = on ? it.by.filter(x => x !== p.id) : it.by.concat(p.id);
-          touch(); renderItems(); renderDinnerResults();
-        },
-      }, p.name));
+      who.append(toggleChip(p.name, on, 'shared this item', () => {
+        it.by = on ? it.by.filter(x => x !== p.id) : it.by.concat(p.id);
+        touch(); renderItems(); renderDinnerResults();
+        const back = document.querySelector('[data-fkey="item:' + it.id + ':' + p.id + '"]');
+        if (back) try { back.focus({ preventScroll: true }); } catch (e) {}
+      }, 'item:' + it.id + ':' + p.id));
     }
     const shared = it.by.length === 0 ? 'everyone' : it.by.length + ' of ' + state.people.length;
     list.append(el('li', {},
       el('div', { class: 'grow' },
-        el('div', {}, (it.label || 'Item') + ' — ' + fmtCents(it.cents, state.currency),
+        el('div', {}, (it.label || 'Item') + ' — ' + fmtCents(quantize(it.cents, cur), cur),
           el('span', { class: 'sub', text: '  · split by ' + shared })),
         who),
       el('button', {
-        class: 'btn small danger', type: 'button', 'aria-label': 'Remove item',
+        class: 'btn small danger', type: 'button',
+        'aria-label': 'Remove ' + (it.label || 'item') + ' ' + fmtCents(quantize(it.cents, cur), cur),
         onclick: () => {
+          const snap = snapshot();
           state.dinner.items = state.dinner.items.filter(x => x.id !== it.id);
           touch(); renderItems(); renderDinnerResults();
+          undoable('Removed ' + (it.label || 'item') + ' ' + fmtCents(quantize(it.cents, cur), cur) + '.', snap);
         },
       }, '✕')));
   }
+  const n = state.dinner.items.length;
+  $('itemCount').textContent = n
+    ? n + ' of ' + LIMITS.items + ' items. Tap names under an item to set who shared it; items with nobody selected are split by everyone.'
+    : 'After adding an item, tap names under it to set who shared it. Items with nobody selected are split by everyone. Up to ' + LIMITS.items + ' items on one bill.';
 }
 
 function payButtons(recipient, centsOwed, note){
   const box = el('div', { class: 'paybtns' });
   if (recipient) {
     for (const t of Pay.targets(recipient, centsOwed, note))
-      box.append(el('a', { href: t.href, target: '_blank', rel: 'noopener' }, t.label));
+      box.append(el('a', {
+        href: t.href, target: '_blank', rel: 'noopener',
+        'aria-label': 'Pay ' + recipient.name + ' ' + fmtCents(centsOwed, state.currency) + ' with ' + t.label,
+      }, t.label));
   }
+  /* Always present: the fallback for Zelle, a bank transfer, or cash. */
   box.append(el('button', {
     type: 'button',
-    onclick: () => copyText((centsOwed / 100).toFixed(2), 'Amount copied'),
-  }, 'Copy amt'));
+    'aria-label': 'Copy the amount ' + fmtCents(centsOwed, state.currency),
+    onclick: () => copyText((centsOwed / 100).toFixed(currencyDigits(state.currency)), 'Amount copied'),
+  }, 'Copy amount'));
   return box;
+}
+
+/* The arithmetic, opened up. Nothing on screen used to prove the five numbers
+   added up to the bill, so people checked with a phone calculator — which is
+   what the one-star reviews of the paid competition tell them to do. */
+function workingBlock(steps, totalCents, cur){
+  const d = el('details', { class: 'working' },
+    el('summary', {}, 'Show the working'));
+  const ul = el('ul', { class: 'steps' });
+  for (const s of steps)
+    ul.append(el('li', {}, el('span', { text: s.what }), el('span', { text: fmtCents(s.cents, cur) })));
+  ul.append(el('li', { class: 'tot' }, el('span', { text: 'Their share' }), el('span', { text: fmtCents(totalCents, cur) })));
+  d.append(ul);
+  return d;
+}
+
+function reconLine(rec, cur, nounCount, noun){
+  const line = el('p', { class: 'recon' + (rec.exact ? '' : ' off') });
+  line.textContent = rec.exact
+    ? plural(nounCount, noun) + ' · ' + fmtCents(rec.total, cur) + ' · adds up to exactly the total, to the ' +
+      (moneyUnit(cur) === 1 ? 'cent' : 'unit') + '.'
+    : plural(nounCount, noun) + ' · the parts add to ' + fmtCents(rec.sum, cur) + ' but the total is ' +
+      fmtCents(rec.total, cur) + ' — please tell us, this should never happen.';
+  return line;
 }
 
 function renderDinnerResults(){
   const box = $('dinnerResults');
+  const cur = state.currency;
   box.replaceChildren(el('h2', { text: 'Each person pays' }));
   const r = dinnerCompute(state);
   if (state.people.length === 0) {
@@ -2592,24 +2719,31 @@ function renderDinnerResults(){
     return;
   }
   box.append(
-    el('div', { class: 'totline' }, el('span', {}, 'Bill'), el('span', {}, fmtCents(r.subtotal, state.currency))),
-    el('div', { class: 'totline' }, el('span', {}, 'Tax'), el('span', {}, fmtCents(r.tax, state.currency))),
-    el('div', { class: 'totline' }, el('span', {}, 'Tip'), el('span', {}, fmtCents(r.tip, state.currency))),
-    el('div', { class: 'totline grand' }, el('span', {}, 'Total'), el('span', {}, fmtCents(r.total, state.currency))),
+    el('div', { class: 'totline' }, el('span', {}, 'Bill'), el('span', {}, fmtCents(r.subtotal, cur))),
+    el('div', { class: 'totline' }, el('span', {}, 'Tax'), el('span', {}, fmtCents(r.tax, cur))),
+    el('div', { class: 'totline' }, el('span', {}, 'Tip'), el('span', {}, fmtCents(r.tip, cur))),
+    el('div', { class: 'totline grand' }, el('span', {}, 'Total'), el('span', {}, fmtCents(r.total, cur))),
   );
   const payer = state.dinner.paidBy ? personById(state.dinner.paidBy) : null;
   const grid = el('div', { class: 'persongrid' });
+  const parts = [];
+  const note = payNote(state);
   for (const p of state.people) {
     const owes = r.shares[p.id];
-    const card = el('div', { class: 'personcard' },
-      el('div', { class: 'nm', text: p.name + (payer && p.id === payer.id ? ' (paid)' : '') }),
-      el('div', { class: 'amt', text: fmtCents(owes, state.currency) }));
+    parts.push(owes);
+    const nm = el('div', { class: 'nm', text: p.name });
+    if (payer && p.id === payer.id) nm.append(el('span', { class: 'paidmark', text: ' — paid the bill' }));
+    const card = el('div', { class: 'personcard' }, nm,
+      el('div', { class: 'amt', text: fmtCents(owes, cur) }));
+    const steps = r.work[p.id] || [];
+    if (steps.length) card.append(workingBlock(steps, owes, cur));
     if (payer && p.id !== payer.id && owes > 0)
-      card.append(payButtons(payer, owes, (state.name || 'Dinner') + ' split'));
+      card.append(payButtons(payer, owes, note));
     grid.append(card);
   }
   box.append(grid);
-  if (CONFIG.tipUrl) box.append(el('p', { class: 'hint' },
+  box.append(reconLine(reconcile(r.total, parts), cur, state.people.length, 'share'));
+  if (CONFIG.tipUrl) box.append(el('p', { class: 'hint noprint' },
     'Found this useful? ', el('a', { href: CONFIG.tipUrl, target: '_blank', rel: 'noopener' }, 'Leave a tip'), ' ♥'));
 }
 
@@ -2619,10 +2753,11 @@ let expDraftSplit = null;   // Set of pids while composing; null = everyone
 let expDraftWeights = {};   // pid -> weight string
 
 function renderTrip(){
-  $('tripName').value = state.name;
-  $('tripCurrency').value = state.currency;
+  if (document.activeElement !== $('tripName')) $('tripName').value = state.name;
+  if (document.activeElement !== $('tripCurrency')) $('tripCurrency').value = state.currency;
   renderExpenseForm();
   renderExpenseList();
+  renderPayments();
   renderTripResults();
 }
 
@@ -2638,15 +2773,14 @@ function renderExpenseForm(){
   chips.replaceChildren();
   for (const p of state.people) {
     const on = !expDraftSplit || expDraftSplit.has(p.id);
-    chips.append(el('button', {
-      class: 'chip' + (on ? ' sel' : ''), type: 'button',
-      onclick: () => {
-        if (!expDraftSplit) expDraftSplit = new Set(state.people.map(x => x.id));
-        if (expDraftSplit.has(p.id)) expDraftSplit.delete(p.id);
-        else expDraftSplit.add(p.id);
-        renderExpenseForm();
-      },
-    }, p.name));
+    chips.append(toggleChip(p.name, on, 'in this expense', () => {
+      if (!expDraftSplit) expDraftSplit = new Set(state.people.map(x => x.id));
+      if (expDraftSplit.has(p.id)) expDraftSplit.delete(p.id);
+      else expDraftSplit.add(p.id);
+      renderExpenseForm();
+      const back = document.querySelector('[data-fkey="split:' + p.id + '"]');
+      if (back) try { back.focus({ preventScroll: true }); } catch (e) {}
+    }, 'split:' + p.id));
   }
   if (state.people.length === 0)
     chips.append(el('span', { class: 'sub', text: 'Add people first.' }));
@@ -2766,33 +2900,75 @@ function renderExpenseList(){
   $('expEmpty').classList.toggle('hidden', state.trip.expenses.length > 0);
   const nameOf = Object.create(null);
   for (const p of state.people) nameOf[p.id] = p.name;
+  const cur = state.currency;
   for (const exp of state.trip.expenses) {
     const split = expenseParticipants(exp, state.people);
     const who = split.length === state.people.length ? 'everyone'
       : split.map(s => nameOf[s.pid]).join(', ');
-    const foreign = exp.currency !== state.currency
+    const foreign = exp.currency !== cur
       ? ' (' + fmtCents(exp.cents, exp.currency) + ' @ ' + exp.rate + ')'
       : '';
+    const title = (exp.label || 'Expense') + ' ' + fmtCents(quantize(exp.baseCents, cur), cur);
     list.append(el('li', {},
       el('div', { class: 'grow' },
-        el('div', {}, (exp.label || 'Expense') + ' — ' + fmtCents(exp.baseCents, state.currency) + foreign),
+        el('div', {}, (exp.label || 'Expense') + ' — ' + fmtCents(quantize(exp.baseCents, cur), cur) + foreign),
         el('div', { class: 'sub', text: (nameOf[exp.paidBy] || '?') + ' paid · split: ' + who })),
-      el('button', { class: 'btn small', type: 'button', 'aria-label': 'Edit expense', onclick: () => startEditExpense(exp) }, '✎'),
+      el('button', { class: 'btn small noprint', type: 'button', 'aria-label': 'Edit ' + title, onclick: () => startEditExpense(exp) }, '✎'),
       el('button', {
-        class: 'btn small danger', type: 'button', 'aria-label': 'Delete expense',
+        class: 'btn small danger noprint', type: 'button', 'aria-label': 'Delete ' + title,
         onclick: () => {
+          const snap = snapshot();
           state.trip.expenses = state.trip.expenses.filter(x => x.id !== exp.id);
           if (editingExpenseId === exp.id) resetExpenseForm();
           touch(); renderTrip();
+          undoable('Deleted ' + title + '.', snap);
+        },
+      }, '✕')));
+  }
+  const n = state.trip.expenses.length;
+  $('expCount').textContent = n ? n + ' of ' + LIMITS.expenses + ' expenses on this trip.' : '';
+  $('expCount').classList.toggle('hidden', !n);
+}
+
+/* ---------- repayments ---------- */
+
+function renderPayments(){
+  const cur = state.currency;
+  const nameOf = Object.create(null);
+  for (const p of state.people) nameOf[p.id] = p.name;
+  for (const id of ['payFrom', 'payTo']) {
+    const sel = $(id);
+    const prev = sel.value;
+    sel.replaceChildren();
+    for (const p of state.people) sel.append(el('option', { value: p.id, text: p.name }));
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+    else if (id === 'payTo' && sel.options.length > 1) sel.selectedIndex = 1;
+  }
+  const list = $('payList');
+  list.replaceChildren();
+  for (const pay of (state.trip.payments || [])) {
+    const title = (nameOf[pay.from] || '?') + ' → ' + (nameOf[pay.to] || '?') + ' ' + fmtCents(quantize(pay.cents, cur), cur);
+    list.append(el('li', {},
+      el('span', { class: 'grow', text: title + ' (already paid)' }),
+      el('button', {
+        class: 'btn small danger noprint', type: 'button', 'aria-label': 'Delete repayment ' + title,
+        onclick: () => {
+          const snap = snapshot();
+          state.trip.payments = state.trip.payments.filter(x => x.id !== pay.id);
+          touch(); renderTrip();
+          undoable('Removed repayment ' + title + '.', snap);
         },
       }, '✕')));
   }
 }
 
+let settleView = 'fewest';   // 'fewest' | 'direct'
+
 function renderTripResults(){
   const box = $('tripResults');
+  const cur = state.currency;
   box.replaceChildren(el('h2', { text: 'Who owes whom' }));
-  if (state.people.length === 0 || state.trip.expenses.length === 0) {
+  if (state.people.length === 0 || (state.trip.expenses.length === 0 && !(state.trip.payments || []).length)) {
     box.append(el('p', { class: 'hint', text: 'Balances and the shortest way to settle up appear here.' }));
     return;
   }
@@ -2801,7 +2977,9 @@ function renderTripResults(){
   for (const p of state.people) nameOf[p.id] = p.name;
 
   box.append(el('div', { class: 'totline grand', style: 'border:0;margin:0 0 6px;padding:0' },
-    el('span', {}, 'Trip total'), el('span', {}, fmtCents(r.total, state.currency))));
+    el('span', {}, 'Trip total'), el('span', {}, fmtCents(r.total, cur))));
+  if (r.repaid > 0) box.append(el('div', { class: 'totline' },
+    el('span', {}, 'Already repaid'), el('span', {}, fmtCents(r.repaid, cur))));
 
   const ul = el('ul', { class: 'plain' });
   for (const p of state.people) {
@@ -2809,27 +2987,62 @@ function renderTripResults(){
     ul.append(el('li', {},
       el('span', { class: 'grow', text: p.name }),
       el('span', { class: 'bal ' + (n >= 0 ? 'pos' : 'neg') },
-        (n >= 0 ? '+' : '−') + fmtCents(Math.abs(n), state.currency))));
+        (n >= 0 ? '+' : '−') + fmtCents(Math.abs(n), cur))));
   }
   box.append(ul);
 
-  const transfers = settleUp(r.net);
+  const fewest = settleUp(r.net);
+  const direct = directDebts(r.pairwise);
+  const transfers = settleView === 'direct' ? direct : fewest;
+
   if (transfers.length) {
-    box.append(el('h2', { text: 'Settle up — fewest possible payments', style: 'margin-top:14px' }));
+    box.append(el('h2', { text: 'Settle up', style: 'margin-top:14px' }));
+    /* Two honest answers, not one asserted as "the" answer. A minimised set
+       routes money through people you never ate with; the direct set is what
+       actually happened. */
+    const seg = el('div', { class: 'seg noprint', role: 'group', 'aria-label': 'How to settle up' });
+    const mk = (key, label, count) => {
+      const b = el('button', { type: 'button', onclick: () => { settleView = key; renderTripResults(); } },
+        label + ' (' + count + ')');
+      setPressed(b, settleView === key);
+      return b;
+    };
+    seg.append(mk('fewest', 'Fewest payments', fewest.length), mk('direct', 'Pay who you owe', direct.length));
+    box.append(seg);
+    box.append(el('p', { class: 'hint', text: settleView === 'direct'
+      ? 'Every debt exactly as it happened, netted only between the same two people.'
+      : 'The smallest number of payments that clears everyone — some of them go to people you did not share an expense with.' }));
+
+    const note = payNote(state);
     const tl = el('ul', { class: 'plain' });
+    let moved = 0;
     for (const t of transfers) {
+      moved += t.cents;
       const to = personById(t.to);
       tl.append(el('li', {},
         el('div', { class: 'grow' },
           el('div', {}, nameOf[t.from] + ' → ' + nameOf[t.to]),
-          el('div', { class: 'bal pos', style: 'font-size:1.1rem', text: fmtCents(t.cents, state.currency) })),
-        payButtons(to, t.cents, (state.name || 'Trip') + ' settle-up')));
+          el('div', { class: 'bal pos', style: 'font-size:1.1rem', text: fmtCents(t.cents, cur) })),
+        payButtons(to, t.cents, note)));
     }
     box.append(tl);
+    /* Prove it: apply these payments to the balances and check every one lands
+       on zero. This is the check the user would otherwise do by hand. */
+    const after = Object.create(null);
+    for (const p of state.people) after[p.id] = r.net[p.id];
+    for (const t of transfers) { after[t.from] += t.cents; after[t.to] -= t.cents; }
+    let clears = true;
+    for (const p of state.people) if (after[p.id] !== 0) clears = false;
+    const line = el('p', { class: 'recon' + (clears ? '' : ' off') });
+    line.textContent = clears
+      ? plural(transfers.length, 'payment') + ' · ' + fmtCents(moved, cur) +
+        ' moved · every balance lands on exactly zero.'
+      : plural(transfers.length, 'payment') + ' · these do not clear every balance — please tell us, this should never happen.';
+    box.append(line);
   } else {
     box.append(el('p', { class: 'hint', text: 'All settled — nobody owes anything. 🎉' }));
   }
-  if (CONFIG.tipUrl) box.append(el('p', { class: 'hint' },
+  if (CONFIG.tipUrl) box.append(el('p', { class: 'hint noprint' },
     'Found this useful? ', el('a', { href: CONFIG.tipUrl, target: '_blank', rel: 'noopener' }, 'Leave a tip'), ' ♥'));
 }
 
@@ -2842,6 +3055,7 @@ async function renderSaved(){
   try { rows = (await DB.all('trips')) || []; } catch (e) { /* no storage */ }
   rows.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   $('savedEmpty').classList.toggle('hidden', rows.length > 0);
+  renderStorageNote();
   for (const row of rows) {
     const clean = sanitizeState(row);
     if (!clean) continue;
@@ -2850,17 +3064,28 @@ async function renderSaved(){
     list.append(el('li', {},
       el('div', { class: 'grow' },
         el('div', { text: label + (clean.id === state.id ? '  (current)' : '') }),
-        el('div', { class: 'sub', text: (clean.mode === 'trip' ? 'Trip' : 'Dinner') + ' · ' + clean.people.length + ' people · ' + when })),
+        el('div', { class: 'sub', text: kindLabel(clean) + ' · ' +
+          plural(clean.people.length, 'person', 'people') + (when ? ' · ' + when : '') })),
       el('button', {
-        class: 'btn small', type: 'button',
+        class: 'btn small', type: 'button', 'aria-label': 'Open ' + label,
         onclick: () => { state = clean; touch(); setTab(state.mode); },
       }, 'Open'),
       el('button', {
-        class: 'btn small danger', type: 'button', 'aria-label': 'Delete saved split',
+        class: 'btn small danger', type: 'button', 'aria-label': 'Delete ' + label,
+        /* Undo, not confirm: a confirm taxes the 99 deliberate taps to catch
+           the one mistake, and gets dismissed on reflex. */
         onclick: async () => {
-          if (!confirm('Delete “' + label + '” from this device?')) return;
+          const backup = JSON.parse(JSON.stringify(row));
           try { await DB.del('trips', clean.id); } catch (e) {}
           renderSaved();
+          if (window.SWS && SWS.undo) {
+            SWS.undo('Deleted “' + label + '” from this device.', async () => {
+              try { await DB.put('trips', backup); } catch (e) {}
+              renderSaved();
+            });
+          } else {
+            toast('Deleted “' + label + '”.');
+          }
         },
       }, '✕')));
   }
@@ -2875,52 +3100,165 @@ async function currentShareURL(){
     : location.origin + location.pathname + '#' + h;
 }
 
+/* Said at the Copy-link moment, because the link IS the split. */
+const LINK_WARNING = 'Anyone with this link sees every name, amount and payment handle — treat it like the bill itself.';
+
 async function shareLink(){
   const url = await currentShareURL();
-  if (url.length > 2500)
-    toast('Big split — link works but is long. Consider Export file instead.');
+  if (url.length > LIMITS.linkChars) {
+    toast('This link is ' + url.length.toLocaleString() + ' characters — past about ' +
+      LIMITS.linkChars.toLocaleString() + ' some chat apps and QR readers cut it off. Export the file instead if it fails. ' +
+      LINK_WARNING, 9000);
+  }
   if (navigator.share) {
     try { await navigator.share({ title: state.name || CONFIG.appName, url }); return; }
     catch (e) { if (e && e.name === 'AbortError') return; }
   }
-  await copyText(url, 'Link copied — the whole split travels inside it');
+  await copyText(url, 'Link copied. ' + LINK_WARNING);
 }
 
 async function showQR(){
   const url = await currentShareURL();
   const canvas = $('qrCanvas');
-  try {
-    const qr = qrcode(0, 'M');
-    qr.addData(url);
-    qr.make();
+  const ctx = canvas.getContext('2d');
+  const box = $('qrBox');
+  $('qrUrl').value = url;
+
+  /* Clear FIRST. The old code painted only inside the try, so an oversized
+     payload left the PREVIOUS split's code on the canvas with "too big"
+     printed underneath it — verified by decoding the pixels back to the
+     earlier URL. Someone scanning that reads the wrong numbers. */
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  let qr = null;
+  for (const ec of ['M', 'L']) {   // drop error correction before giving up
+    try { const q = qrcode(0, ec); q.addData(url); q.make(); qr = q; break; }
+    catch (e) { qr = null; }
+  }
+
+  if (!qr) {
+    box.classList.add('empty');
+    $('qrHint').textContent = 'No QR code: this split needs ' + url.length.toLocaleString() +
+      ' characters and the biggest QR code holds about 2,900. Use Copy link below, or Export file.';
+  } else {
+    box.classList.remove('empty');
     const count = qr.getModuleCount();
-    const quiet = 4;
-    const size = 300;
-    const cell = Math.floor(size / (count + quiet * 2));
-    const off = Math.floor((size - cell * count) / 2);
-    const ctx = canvas.getContext('2d');
+    const total = count + 8;             // 4 modules of quiet zone each side
+    /* Paint a whole number of backing pixels per module and let CSS scale the
+       canvas to fill the 300px box. The old code floored the cell to an
+       integer CSS pixel, so from version 33 on it drew at 1px per module and
+       left 52% of the box as margin. */
+    const cell = Math.max(2, Math.ceil(900 / total));
+    canvas.width = canvas.height = total * cell;
     ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#000';
     for (let r = 0; r < count; r++)
       for (let c = 0; c < count; c++)
-        if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
-    $('qrHint').textContent = 'The whole split is inside this link — nothing is stored on a server.';
-  } catch (e) {
-    $('qrHint').textContent = 'This split is too big for a scannable code — use Copy link or Export file instead.';
+        if (qr.isDark(r, c)) ctx.fillRect((c + 4) * cell, (r + 4) * cell, cell, cell);
+    const cssModule = 300 / total;
+    $('qrHint').textContent = cssModule < 2
+      ? 'Big split: ' + count + ' squares across, about ' + cssModule.toFixed(1) +
+        ' screen pixels each. Hold the camera close — if it will not read, use Copy link below.'
+      : 'The whole split is inside this link — nothing is stored on a server. ' + LINK_WARNING;
   }
   showDlg($('qrDlg'));
 }
 
-function exportFile(){
-  const name = (state.name || (state.mode === 'trip' ? 'trip' : 'dinner'))
-    .replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'split';
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const a = el('a', { href: URL.createObjectURL(blob), download: name + '.split.json' });
+/* Keep every character a filesystem can take, including 東京旅行 and مطعم.
+   The old strip was /[^\w\- ]+/g, and \w without the u flag is ASCII, so
+   every non-Latin name collapsed to the same "split.split.json" and three
+   exports overwrote each other. */
+function safeFileName(s){
+  const out = String(s == null ? '' : s)
+    .replace(/[\\/:*?"<>|]/g, ' ')
+    .replace(/[\u0000-\u001f\u007f]+/g, '')     /* control characters */
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/^[.\-]+|[.\-]+$/g, '')
+    .slice(0, 60);
+  return out || 'split';
+}
+
+function download(blob, filename, okMsg){
+  const a = el('a', { href: URL.createObjectURL(blob), download: filename });
   document.body.append(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  toast('Exported — keep it anywhere safe');
+  toast(okMsg + ' — saved as ' + filename);
+}
+
+function exportFile(){
+  const name = safeFileName(state.name || (state.mode === 'trip' ? 'trip' : 'dinner'));
+  download(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }),
+    name + '.split.json', 'Exported');
+}
+
+/* CSV beside JSON: a spreadsheet is a normal person's receipt, and the JSON
+   is only a backup. BOM first so Excel opens UTF-8 names correctly. */
+function csvCell(v){
+  const s = String(v == null ? '' : v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function buildCSV(state){
+  const cur = state.currency;
+  const dp = currencyDigits(cur);
+  const money = c => (c / 100).toFixed(Math.min(2, dp));
+  const nameOf = Object.create(null);
+  for (const p of state.people) nameOf[p.id] = p.name;
+  const rows = [];
+  rows.push(['Split', state.name || (state.mode === 'trip' ? 'Trip' : 'Dinner')]);
+  rows.push(['Currency', cur]);
+  rows.push(['Exported', new Date().toISOString().slice(0, 10)]);
+  rows.push([]);
+  if (state.mode === 'trip') {
+    const r = tripCompute(state);
+    rows.push(['Expense', 'Amount (' + cur + ')', 'Original', 'Rate', 'Paid by', 'Split between']);
+    for (const e of state.trip.expenses) {
+      const split = expenseParticipants(e, state.people);
+      rows.push([e.label || 'Expense', money(quantize(e.baseCents, cur)),
+        e.currency === cur ? '' : money(e.cents) + ' ' + e.currency,
+        e.currency === cur ? '' : e.rate,
+        nameOf[e.paidBy] || '', split.map(s => nameOf[s.pid]).join(' / ')]);
+    }
+    if ((state.trip.payments || []).length) {
+      rows.push([]);
+      rows.push(['Repayment from', 'to', 'Amount (' + cur + ')']);
+      for (const p of state.trip.payments)
+        rows.push([nameOf[p.from] || '', nameOf[p.to] || '', money(quantize(p.cents, cur))]);
+    }
+    rows.push([]);
+    rows.push(['Person', 'Paid', 'Owed', 'Balance']);
+    for (const p of state.people)
+      rows.push([p.name, money(r.paid[p.id]), money(r.owed[p.id]), money(r.net[p.id])]);
+    rows.push([]);
+    rows.push(['Settle up — from', 'to', 'Amount (' + cur + ')']);
+    for (const t of settleUp(r.net))
+      rows.push([nameOf[t.from] || '', nameOf[t.to] || '', money(t.cents)]);
+  } else {
+    const r = dinnerCompute(state);
+    if (state.dinner.splitMode === 'items') {
+      rows.push(['Item', 'Amount (' + cur + ')', 'Shared by']);
+      for (const it of state.dinner.items)
+        rows.push([it.label || 'Item', money(quantize(it.cents, cur)),
+          it.by.length ? it.by.map(id => nameOf[id]).join(' / ') : 'everyone']);
+      rows.push([]);
+    }
+    rows.push(['Bill', money(r.subtotal)]);
+    rows.push(['Tax', money(r.tax)]);
+    rows.push(['Tip', money(r.tip)]);
+    rows.push(['Total', money(r.total)]);
+    rows.push([]);
+    rows.push(['Person', 'Pays (' + cur + ')']);
+    for (const p of state.people) rows.push([p.name, money(r.shares[p.id])]);
+  }
+  return '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+}
+
+function exportCSV(){
+  const name = safeFileName(state.name || (state.mode === 'trip' ? 'trip' : 'dinner'));
+  download(new Blob([buildCSV(state)], { type: 'text/csv;charset=utf-8' }),
+    name + '.split.csv', 'Exported for a spreadsheet');
 }
 
 function importFilePicked(file){
