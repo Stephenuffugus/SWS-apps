@@ -1268,7 +1268,9 @@ body{
 .fillbar > div{
   height:100%;
   width:var(--pct,0%);
-  background:var(--accent-fill);
+  /* --accent-deep, not --accent-fill: the fill has to clear 3:1 against its own
+     track (SC 1.4.11) and --accent-fill measured 1.9:1 on the light ramp. */
+  background:var(--accent-deep);
   border-radius:var(--r-pill);
   transition:width var(--dur-3) var(--ease);
 }
@@ -1292,13 +1294,23 @@ body{
    as one block. --line-2 is the solved 3:1 control boundary. */
 ul.plain > li{border-bottom-color:var(--line-2)}
 
+/* At Largest text on a 320px phone two 66px icon buttons and a checkbox leave
+   about 58px for the item name. Let the pair drop to their own line instead of
+   squeezing the text into a column one word wide. */
+ul.plain > li{flex-wrap:wrap; row-gap:var(--s1)}
 ul.plain label{
-  flex:1 1 auto; min-width:0;
+  flex:1 1 7rem; min-width:min(7rem, 100%);
   display:flex; align-items:center; gap:var(--s3);
   padding:var(--s2) 0;
   cursor:pointer;
   overflow-wrap:anywhere;
 }
+.rowacts{display:flex; gap:var(--s1); flex:0 0 auto; margin-left:auto}
+
+/* Multi-word buttons wrap rather than push the page sideways; .btn is
+   white-space:nowrap by default, which is right for a toolbar and wrong for
+   "Duplicate, unpacked" at 24px root on a 320px screen. */
+.cluster .btn,.row .btn{white-space:normal; text-align:center; height:auto; padding-top:var(--s2); padding-bottom:var(--s2)}
 /* em, not px: this is the control the user has to hit for every single item,
    and in raw pixels it was the one thing the comfort panel could not reach. */
 ul.plain input[type=checkbox]{width:1.5em; height:1.5em; accent-color:var(--accent); flex:0 0 auto}

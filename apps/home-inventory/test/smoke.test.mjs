@@ -16,8 +16,10 @@ global.document = doc;
 global.location = window.location;
 Object.defineProperty(global, 'navigator', { value: window.navigator, configurable: true });
 global.requestAnimationFrame = (fn) => setTimeout(fn, 0);
-window.prompt = global.prompt = () => '42 Wallaby Way';
-window.confirm = global.confirm = () => true;
+// No native dialogs anywhere any more: prompt() and confirm() are replaced by
+// #askDlg and by SWS.undo. If the app ever calls one again, this fails loudly.
+window.prompt = global.prompt = () => { throw new Error('app called prompt()'); };
+window.confirm = global.confirm = () => { throw new Error('app called confirm()'); };
 window.PDFLib = null;
 
 await import('../app.js');
@@ -41,14 +43,20 @@ const clickText = (root, text) => {
 
 check('home hero renders', $('view').textContent.includes('Photograph it before you need it'));
 
+check('trust badge states where the data lives', $('view').textContent.includes('stay in this browser'));
+
 clickText($('view'), 'Start an inventory');
-await sleep(50);
+await sleep(20);
+check('naming happens in a real dialog, not prompt()', $('askDlg').hasAttribute('open') || $('askTitle').textContent === 'Name this inventory');
+$('askField').value = '42 Wallaby Way';
+clickText($('askBtns'), 'Create');
+await sleep(60);
 check('editor opens with default rooms', $('view').textContent.includes('Living room'));
 
 // capture an item (no photo — jsdom has no canvas; name-only path)
-const nameIn = [...$('view').querySelectorAll('input')].find(i => i.placeholder && i.placeholder.includes('What is it'));
+const nameIn = $('capName');
 type(nameIn, '65-inch TV');
-const valIn = [...$('view').querySelectorAll('input')].find(i => i.placeholder && i.placeholder.includes('Value'));
+const valIn = $('capValue');
 type(valIn, '1,200');
 clickText($('view'), 'Save & next');
 await sleep(20);
@@ -61,7 +69,7 @@ await sleep(20);
 check('items list shows the TV', $('view').textContent.includes('65-inch TV'));
 
 // edit dialog: add serial
-clickText($('view'), '✎');
+[...$('view').querySelectorAll('button')].find(b => b.textContent.trim() === '✎').click();
 await sleep(20);
 $('iSerial').value = 'SN-99';
 $('iSave').click();
@@ -81,7 +89,23 @@ check('room added', $('view').textContent.includes('Home office'));
 clickText($('view'), 'Export');
 await sleep(20);
 check('off-device warning is loud', $('view').textContent.includes('cruel joke'));
-check('two PDF exports + backup offered', $('view').querySelectorAll('.exportcard').length === 3);
+check('two PDFs + CSV + backup offered', $('view').querySelectorAll('.exportcard').length === 4,
+  'exportcards: ' + $('view').querySelectorAll('.exportcard').length);
+check('the CSV is offered and the PDF is not called what adjusters ask for',
+  $('view').textContent.includes('Spreadsheet (CSV)') && !$('view').textContent.includes('the format insurance adjusters ask for'));
+
+// search and sort exist, and the count line never hides a filter
+clickText($('view'), 'Items');
+await sleep(20);
+check('search field exists', !!$('itemSearch'));
+check('sort control exists', !!$('itemSort'));
+check('the list says how much of itself it is showing', $('view').textContent.includes('Showing all 1 items'),
+  $('view').textContent.slice(0, 300));
+type($('itemSearch'), 'zzzz');
+await sleep(20);
+check('a search that hides rows says so', $('view').textContent.includes('Showing 0 of 1 items'),
+  $('view').textContent.slice(0, 300));
+check('main is not a live region', !$('view').hasAttribute('aria-live'));
 
 console.log(failures ? '\nSMOKE FAILED' : '\nSMOKE PASSED');
 process.exit(failures);

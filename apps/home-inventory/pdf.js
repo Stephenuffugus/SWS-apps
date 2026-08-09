@@ -52,7 +52,7 @@ const GRK = {
   'ς': 's', 'τ': 't', 'υ': 'y', 'φ': 'f', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o',
 };
 
-function mapChar(ch) {
+function mapChar(ch, depth) {
   if (KEEP.test(ch)) return ch;
   if (EXTRA[ch] !== undefined) return EXTRA[ch];
   const lower = ch.toLowerCase();
@@ -62,9 +62,18 @@ function mapChar(ch) {
     if (ch === lower || !t) return t;
     return t.length > 1 ? t[0].toUpperCase() + t.slice(1) : t.toUpperCase();
   }
-  // ą → a, ń → n, ř → r, ş → s: strip the combining marks the letter decomposes to.
-  const d = ch.normalize('NFD').replace(/[̀-ͯ]/g, '');
-  if (d && d !== ch && [...d].every(c => KEEP.test(c))) return d;
+  // ą → a, ń → n, ř → r, ş → s: strip the combining marks the letter decomposes to,
+  // then map what is left (ά → α → a) rather than giving up one step early.
+  const d = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (d && d !== ch && (depth || 0) < 2) {
+    let out = '';
+    for (const c of d) {
+      const m = mapChar(c, (depth || 0) + 1);
+      if (m === null) return null;
+      out += m;
+    }
+    return out;
+  }
   return null; // genuinely unprintable in this font: CJK, emoji, Hebrew, Arabic
 }
 

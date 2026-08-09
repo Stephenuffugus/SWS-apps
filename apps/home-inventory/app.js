@@ -525,9 +525,12 @@ function drawEditor(focusKey) {
   const t = totals(inv);
 
   const nameId = 'invName';
+  v.append(el('div', { class: 'printonly printhead' }, inv.name,
+    el('small', {}, t.count + ' entries · ' + t.units + ' items · ' + fmtCents(t.valueCents) +
+      ' · printed ' + new Date().toLocaleDateString() + ' · tick each item as you find it')));
   v.append(el('section', { class: 'card' },
     el('div', { class: 'row' },
-      el('button', { class: 'btn small', type: 'button', style: 'flex:0 0 auto', 'data-fk': 'back',
+      el('button', { class: 'btn small noprint', type: 'button', style: 'flex:0 0 auto', 'data-fk': 'back',
         onclick: async () => { await flush(); location.hash = '#/'; } }, '‹ Back'),
       el('label', { class: 'f grow', for: nameId }, el('span', { class: 'sr-only' }, 'Inventory name'),
         el('input', { type: 'text', id: nameId, value: inv.name, maxlength: String(LIMITS.name),
@@ -875,7 +878,7 @@ function renderExport() {
       const text = toCsv(inv);
       downloadBytes(new TextEncoder().encode('\ufeff' + text), slugify(inv.name) + '.csv', 'text/csv');
       markExported();
-    } }, 'CSV'));
+    } }, 'CSV')));
 
   const withPhotos = inv.items.filter(i => i && i.photo).length;
   if (withPhotos) {

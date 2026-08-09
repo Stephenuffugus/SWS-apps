@@ -258,16 +258,17 @@ function rowFor(item) {
 
   li.append(
     el('label', {}, cb, el('span', { class: 'lbl' }, item.label)),
-    el('button', {
-      class: 'btn icon ghost rowbtn', type: 'button',
-      'data-fk': 'ed:' + id, 'aria-label': 'Rename ' + item.label,
-      onclick: () => startEdit(li, item),
-    }, el('span', { 'aria-hidden': 'true' }, '✏️')),
-    el('button', {
-      class: 'btn icon ghost rowbtn del', type: 'button',
-      'data-fk': 'rm:' + id, 'aria-label': 'Remove ' + item.label,
-      onclick: () => removeItem(item),
-    }, el('span', { 'aria-hidden': 'true' }, '✕')),
+    el('div', { class: 'rowacts noprint' },
+      el('button', {
+        class: 'btn icon ghost rowbtn', type: 'button',
+        'data-fk': 'ed:' + id, 'aria-label': 'Rename ' + item.label,
+        onclick: () => startEdit(li, item),
+      }, el('span', { 'aria-hidden': 'true' }, '✏️')),
+      el('button', {
+        class: 'btn icon ghost rowbtn del', type: 'button',
+        'data-fk': 'rm:' + id, 'aria-label': 'Remove ' + item.label,
+        onclick: () => removeItem(item),
+      }, el('span', { 'aria-hidden': 'true' }, '✕'))),
   );
   return li;
 }
@@ -279,16 +280,23 @@ function renderList() {
 
   const shown = hidePacked ? c.items.filter((i) => !i.done) : c.items;
   const groups = groupItems(shown);
-  const single = groups.length <= 1;
+  /* Headings earn their space on a merged 56-item list and waste it on nine.
+     Below the threshold the list stays the flat column it always was. */
+  const single = groups.length <= 1 || shown.length < 12;
 
-  for (const g of groups) {
+  if (single) {
     const ul = el('ul', { class: 'plain' });
-    for (const item of g.items) ul.append(rowFor(item));
-    const packed = g.items.filter((i) => i.done).length;
-    box.append(el('section', { class: 'grp' },
-      single ? null : el('h3', {}, g.cat,
-        el('span', { class: 'cnt' }, packed + ' of ' + g.items.length + ' packed')),
-      ul));
+    for (const item of shown) ul.append(rowFor(item));   // insertion order, as before
+    if (shown.length) box.append(el('section', { class: 'grp' }, ul));
+  } else {
+    for (const g of groups) {
+      const ul = el('ul', { class: 'plain' });
+      for (const item of g.items) ul.append(rowFor(item));
+      const packed = g.items.filter((i) => i.done).length;
+      box.append(el('section', { class: 'grp' },
+        el('h3', {}, g.cat, el('span', { class: 'cnt' }, packed + ' of ' + g.items.length + ' packed')),
+        ul));
+    }
   }
 
   const s = stats(c.items);
