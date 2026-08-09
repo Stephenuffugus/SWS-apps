@@ -1250,26 +1250,182 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.padwrap{
-  position:relative; background:#ffffff; border:1px dashed var(--line); border-radius:12px;
-  touch-action:none; overflow:hidden;
-}
-#pad{display:block; width:100%; height:260px; cursor:crosshair}
-.padline{position:absolute; left:8%; right:8%; bottom:24%; border-bottom:1.5px solid #d7dde5; pointer-events:none}
-.padx{position:absolute; left:8%; bottom:25%; color:#b9c2cc; font-size:1.2rem; pointer-events:none}
 
-.btn[disabled]{opacity:.5; cursor:default}
-.opts{display:flex; gap:14px; align-items:center; margin-top:10px; flex-wrap:wrap}
-.opts .label{font-size:.85rem; color:var(--muted)}
-.dot{width:30px; height:30px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0}
-.dot.sel{box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink)}
-.sizes button{background:none; border:1px solid var(--line); border-radius:8px; padding:4px 10px; cursor:pointer; color:var(--ink)}
-.sizes button.sel{background:var(--chip); font-weight:700}
+/* ── The pad's own two colours ───────────────────────────────────────────────
+   The ruled line and the ✕ are the entire wayfinding of the signing surface,
+   and they sit on a hardcoded white pad rather than on --surface, so they
+   cannot be page tokens: --ink-3 solved against a cream card is not solved
+   against #ffffff. They are non-text graphical objects, so WCAG 1.4.11 asks
+   3:1. The shipped values were #d7dde5 (1.37:1) and #b9c2cc (1.80:1) and were
+   unreachable by the Contrast setting because they were literals. These are
+   measured against #ffffff: 4.4:1 and 5.3:1, rising to 9:1 and 13:1 on High. */
+:root{
+  --pad-rule:#6f7885;
+  --pad-mark:#5d6572;
+}
+:root[data-contrast="more"]{ --pad-rule:#39404d; --pad-mark:#252b36 }
+@media (prefers-contrast:more){
+  :root:not([data-contrast="normal"]){ --pad-rule:#39404d; --pad-mark:#252b36 }
+}
+
+/* ── The signing surface ─────────────────────────────────────────────────────
+   The pad is a WYSIWYG preview of ink on paper, so it must be a true white
+   rectangle in every theme — otherwise the ink colour the user picks is a
+   guess about what the exported file will look like. Dark mode already got
+   this right; the warm-tint overlay did not, because the base paints it as a
+   fixed multiply layer at z-index 9999 over the whole document, which rendered
+   the pad rgb(255,214,177). Lifting the pad above that layer is the only way
+   to exempt it. Everything that legitimately sits over the pad — the sticky
+   action bar, the toast, the skip link — is lifted in turn, in that order, so
+   nothing ends up underneath it. (The comfort panel is a modal <dialog>: it
+   lives in the top layer and is unaffected by any of this.) */
+.padwrap{
+  position:relative;
+  z-index:10000;
+  background:#ffffff;
+  border:1px dashed var(--line-2);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-1);
+  touch-action:none;
+  overflow:hidden;
+}
+.actionbar{z-index:10001}
+#toast{z-index:10002}
+.skip{z-index:10003}
+
+/* The pad was the one element on the page that ignored every comfort dial:
+   hardcoded 260px at Default and at Largest alike, so turning the text up made
+   the box you have to aim inside proportionally smaller. It now tracks
+   --ui-scale, and the vh ceiling is what keeps the whole pad on screen in
+   landscape, where 260px used to put its bottom edge below the fold. */
+#pad{
+  display:block;
+  width:100%;
+  height:clamp(180px, calc(260px * var(--ui-scale)), 56vh);
+  cursor:crosshair;
+  touch-action:none;
+}
+.padline{position:absolute; left:8%; right:8%; bottom:24%; border-bottom:2px solid var(--pad-rule); pointer-events:none}
+.padx{position:absolute; left:8%; bottom:calc(24% + 1px); color:var(--pad-mark); font-size:1.25rem; line-height:1; pointer-events:none}
+
+/* A cold open used to be a blank white rectangle and a 1.37:1 hairline. */
+.padprompt{
+  position:absolute; left:6%; right:6%; top:14%;
+  margin:0; text-align:center; pointer-events:none;
+  color:var(--pad-mark); font-size:var(--t-sm); line-height:var(--lh-snug);
+  transition:opacity var(--dur-2) var(--ease);
+}
+.padwrap.inked .padprompt{opacity:0}
+@media (prefers-reduced-motion:reduce){ .padprompt{transition:none} }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+.modeseg{margin-top:var(--s4)}
+.seg button{min-height:var(--tap)}   /* the base sets 38px; the floor is 44px */
+
+.modepanel{margin-top:var(--s4)}
+[hidden]{display:none !important}
+
+input[type=file]{
+  width:100%; min-height:var(--tap); padding:var(--s3);
+  font-size:max(1rem, var(--t-base)); color:var(--ink);
+  background:var(--field); border:1px solid var(--line-2); border-radius:var(--r-ctl);
+}
+input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-deep)}
+
+.opts{display:flex; gap:var(--s5); align-items:center; margin-top:var(--s4); flex-wrap:wrap}
+.optgroup{display:flex; gap:var(--s2); align-items:center; flex-wrap:wrap}
+.opts .label{
+  font-size:var(--t-micro); font-weight:650; letter-spacing:.075em;
+  text-transform:uppercase; color:var(--ink-2);
+}
+
+/* 30x30 hardcoded swatches were 14px under --tap and never scaled. The hit
+   area is now the tap floor and the colour is an inner disc that does scale;
+   the disc's ring is --line-2 (contrast-guaranteed 3:1 in every theme), which
+   is what makes a near-black swatch still read as a disc in dark mode. */
+.dot{
+  width:var(--tap); height:var(--tap); min-height:var(--tap);
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:0; border:0; background:none; border-radius:50%; cursor:pointer;
+}
+.dot .swatch{
+  display:block; border-radius:50%;
+  width:calc(26px * var(--ui-scale)); height:calc(26px * var(--ui-scale));
+  border:2px solid var(--line-2);
+}
+.dot[aria-pressed="true"] .swatch{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--ink)}
+
+/* aria-disabled rather than disabled: Undo and Download stay focusable and
+   still explain themselves when pressed, instead of going silently inert. */
+.btn[aria-disabled="true"]{opacity:.55}
+.btn[aria-disabled="true"]:hover{background:var(--surface); border-color:var(--line-2)}
+.btn.primary[aria-disabled="true"]:hover{background:var(--accent-fill); border-color:var(--accent-fill)}
+
+.acts{margin-top:var(--s4)}
+.export{margin-top:var(--s5)}
+.readout{
+  margin:var(--s2) 0 0;
+  font-size:var(--t-sm); line-height:var(--lh-body); color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+.readout b{color:var(--ink); font-weight:600}
+.trust{display:flex; align-items:flex-start; margin-bottom:var(--s4)}
+.trust svg{margin-top:2px}
+.validity p{margin:0 0 var(--s3)}
+.validity p:last-child{margin-bottom:0}
+
+/* ── Sign big ────────────────────────────────────────────────────────────────
+   The app's own hint tells people to sign larger than feels natural, and on a
+   390px phone the signable band was 316x198. This hides the reading matter and
+   gives the pad the viewport; the ResizeObserver in app.js rescales any ink
+   already on the pad to the new box rather than cropping it. */
+:root[data-signbig="1"] header.app,
+:root[data-signbig="1"] .hero,
+:root[data-signbig="1"] .modeseg,
+:root[data-signbig="1"] .modepanel,
+:root[data-signbig="1"] .trust,
+:root[data-signbig="1"] .export,
+:root[data-signbig="1"] .inkwhy,
+:root[data-signbig="1"] .validity,
+:root[data-signbig="1"] .padhint,
+:root[data-signbig="1"] #signCardH,
+:root[data-signbig="1"] footer.colophon{display:none}
+:root[data-signbig="1"] .wrap{max-width:none; padding-inline:var(--s2)}
+:root[data-signbig="1"] section.card{padding:var(--s2)}
+:root[data-signbig="1"] #pad{height:calc(100vh - 230px); height:calc(100dvh - 230px); min-height:180px}
+
+/* ── Print ───────────────────────────────────────────────────────────────────
+   Ctrl+P used to yield the marketing headline, a dead Ink/Pen toolbar, three
+   dead buttons and two solid ink-wasting circles around the signature. Print
+   is not this app's output path — the artefact is a file you paste into
+   someone else's document. But the wet-signature route the validity block
+   sends people down ends in "print it, sign it in ink, scan it", and that
+   sheet is a thing this app should be able to hand over. So printing this page
+   means exactly that, and nothing else prints. */
+.printonly{display:none}
+@media print{
+  section.card,.hero,.validity,#toast{display:none !important}
+  .printonly{display:block !important}
+  .sheet{max-width:none}
+  .sheet h2{font-size:16pt; margin:0 0 6pt}
+  .sheet p{font-size:10pt; margin:0 0 8pt}
+  .sheetbox{
+    border:1px solid #000; border-radius:2mm;
+    height:28mm; margin:0 0 8pt; position:relative; break-inside:avoid;
+  }
+  .sheetbox.short{height:16mm}
+  .sheetbox span{
+    position:absolute; left:3mm; top:2mm;
+    font-size:8pt; letter-spacing:.08em; text-transform:uppercase; color:#444;
+  }
+  .sheetfoot{font-size:8pt; color:#444}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the signing pad</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1282,39 +1438,149 @@ body{
 
   <div class="hero">
     <h2>Draw it once, use it everywhere</h2>
-    <p>A clean transparent PNG of your signature for contracts, PDFs, and forms.
-      Drawn and saved <strong>on your device</strong> — your signature never touches a server.</p>
+    <p>Draw it, type it, or photograph the one you signed on paper — then export it as a
+      transparent PNG for documents, or a JPG on white at the exact pixel size a portal demands.
+      It all happens <strong>on your device</strong>; your signature never touches a server.</p>
   </div>
 
-  <section class="card">
-    <div class="padwrap">
-      <canvas id="pad"></canvas>
-      <div class="padline"></div>
-      <div class="padx">✕</div>
+  <section class="card" id="signCard">
+    <h2 id="signCardH">Sign here</h2>
+
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5.5v6c0 4.6 3.2 8.7 8 10.5 4.8-1.8 8-5.9 8-10.5v-6L12 2Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>Nothing leaves this tab.</b> Your signature is never uploaded and never saved to
+        this device — it is held in this one browser tab, and closing the tab erases it. That is
+        deliberate. Turn your Wi-Fi off and this page still works.</span>
+    </p>
+
+    <noscript><div class="warn">This tool draws, renders and exports entirely inside your
+      browser — which is exactly why nothing is uploaded — and it needs JavaScript switched on to
+      do any of it. With JavaScript off, the signing pad below does nothing.</div></noscript>
+
+    <div class="seg modeseg" role="group" aria-label="How to make your signature" id="modeSeg">
+      <button type="button" class="active" data-mode="draw" aria-pressed="true">Draw</button>
+      <button type="button" data-mode="type" aria-pressed="false">Type</button>
+      <button type="button" data-mode="photo" aria-pressed="false">Photo</button>
     </div>
+
+    <div class="padwrap" id="padwrap">
+      <canvas id="pad" role="img" aria-label="Signature pad — empty"></canvas>
+      <div class="padline" aria-hidden="true"></div>
+      <div class="padx" aria-hidden="true">✕</div>
+      <p class="padprompt" id="padPrompt">Sign on the line with your finger, a stylus or the mouse</p>
+    </div>
+
+    <div class="modepanel" id="typePanel" hidden>
+      <label class="f" for="typeText"><span>Your name, the way you sign it</span>
+        <input id="typeText" type="text" maxlength="60" autocomplete="off" spellcheck="false"
+               placeholder="e.g. M. Lavallée"></label>
+      <div class="seg" role="group" aria-label="Handwriting style" id="styleSeg">
+        <button type="button" class="active" data-style="script" aria-pressed="true">Script</button>
+        <button type="button" data-style="formal" aria-pressed="false">Formal</button>
+        <button type="button" data-style="plain" aria-pressed="false">Plain</button>
+      </div>
+      <p class="hint">A typed signature uses a handwriting face already installed on this device,
+        so the exact letterforms differ from machine to machine — what you see here is what the
+        file will contain. Most e-sign platforms accept a typed signature; the paper documents
+        listed below do not. One line, up to 60 characters.</p>
+    </div>
+
+    <div class="modepanel" id="photoPanel" hidden>
+      <label class="f" for="photoFile"><span>A photo or scan of your signature on paper</span>
+        <input id="photoFile" type="file" accept="image/*"></label>
+      <label class="f" for="thresh"><span>How much of the paper to drop
+        (<span id="threshOut">62</span>%)</span>
+        <input id="thresh" type="range" min="20" max="90" step="2" value="62"></label>
+      <p class="hint">The picture is read inside this tab and never uploaded. Slide until the
+        paper disappears and only the ink is left. Pictures wider than 4000&nbsp;px are scaled
+        down to 4000&nbsp;px first, and an imported picture is never kept in the tab draft — if
+        you reload, you will need to pick it again.</p>
+    </div>
+
     <div class="opts">
-      <span class="label">Ink</span>
-      <button class="dot sel" type="button" data-color="#111318" style="background:#111318" aria-label="Black ink"></button>
-      <button class="dot" type="button" data-color="#1d3f8f" style="background:#1d3f8f" aria-label="Blue ink"></button>
-      <span class="label" style="margin-left:8px">Pen</span>
-      <span class="sizes">
-        <button type="button" data-size="2">Fine</button>
-        <button type="button" data-size="3" class="sel">Medium</button>
-        <button type="button" data-size="5">Bold</button>
-      </span>
+      <div class="optgroup" role="group" aria-labelledby="inkLabel">
+        <span class="label" id="inkLabel">Ink</span>
+        <button class="dot" type="button" data-color="#111318" aria-pressed="true" aria-label="Black ink"
+                title="Black — scans and prints cleanly, and it is what exam portals ask for"><span class="swatch" style="background:#111318"></span></button>
+        <button class="dot" type="button" data-color="#1d3f8f" aria-pressed="false" aria-label="Blue ink"
+                title="Blue — shows a signed page is an original rather than a photocopy"><span class="swatch" style="background:#1d3f8f"></span></button>
+      </div>
+      <div class="optgroup" role="group" aria-labelledby="penLabel" id="penGroup">
+        <span class="label" id="penLabel">Pen</span>
+        <div class="seg sizes" id="sizes">
+          <button type="button" data-size="2" aria-pressed="false">Fine</button>
+          <button type="button" data-size="3" class="active" aria-pressed="true">Medium</button>
+          <button type="button" data-size="5" aria-pressed="false">Bold</button>
+        </div>
+      </div>
     </div>
-    <div class="row">
+    <p class="hint inkwhy">Black scans and prints cleanly and is what exam portals ask for. Blue
+      shows a signed page is an original rather than a photocopy — most lenders and title
+      companies expect it on a mortgage or closing package.</p>
+
+    <div class="row acts">
       <button class="btn" id="undoBtn" type="button">Undo stroke</button>
-      <button class="btn" id="clearBtn" type="button">Clear</button>
-      <button class="btn primary" id="dlBtn" type="button">Download PNG</button>
+      <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+      <button class="btn ghost" id="bigBtn" type="button" aria-pressed="false">Sign big</button>
     </div>
-    <p class="hint">The download is auto-cropped to your signature with a transparent background — drop it straight onto any document. Tip: sign larger than feels natural; it shrinks beautifully.</p>
+
+    <div class="export">
+      <label class="f" for="preset"><span>What kind of file do you need?</span>
+        <select id="preset">
+          <option value="png">Transparent PNG — drop straight onto a document (1200 px wide)</option>
+          <option value="png-email">Transparent PNG — small, for an email footer (300 px wide)</option>
+          <option value="jpg">JPG on white — for forms that reject PNG (1200 px wide)</option>
+          <option value="jpg140">JPG on white — exactly 140 × 60 px, under 30 KB (exam portals)</option>
+          <option value="jpg160">JPG on white — exactly 160 × 60 px, under 30 KB</option>
+        </select></label>
+      <p class="readout" id="readout" role="status" aria-live="polite">Nothing on the pad yet — the exact size and weight of the file will appear here.</p>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn primary" id="dlBtn" type="button">Download</button>
+      <button class="btn" id="copyBtn" type="button" hidden>Copy image</button>
+    </div>
+
+    <p class="hint padhint">Every export is cropped tight to the ink, so there is no white box
+      around it unless you asked for one. Clear wipes the pad and the tab draft together, and it
+      always offers an Undo.</p>
   </section>
+
+  <section class="card validity" id="validity">
+    <h2>Where this works — and where it does not</h2>
+    <div class="warn">
+      <p><b>Fine for</b> leases and tenancy agreements, school and club forms, vendor paperwork,
+        invoices, delivery notes, internal HR forms and email footers. Most e-sign platforms
+        accept a drawn or typed signature.</p>
+      <p><b>Not accepted for</b> USCIS immigration filings, wills and codicils, adoption papers,
+        court orders, and most documents that have to be notarised. USCIS explicitly rejects
+        signatures “generated by software”, and under the rule in force since 10 July 2026 it can
+        <b>deny</b> a filing — and keep the fee — if the signature is found invalid after the
+        filing has already been accepted. There is no post-filing correction.</p>
+      <p>For those, the route is: print the form, sign it in ink by hand, and scan it back in.
+        <a href="../scan-to-pdf/">Scan to PDF</a> does the scanning part on your device too.</p>
+    </div>
+    <div class="row acts">
+      <button class="btn" id="printBtn" type="button">Print a sign-in-ink sheet</button>
+    </div>
+  </section>
+
+  <div class="printonly sheet" id="inkSheet">
+    <h2>Sign this in ink</h2>
+    <p>Some documents will only accept a signature made by hand: USCIS immigration filings, wills,
+      adoption papers, court orders and most notarised documents. Print this page, sign inside the
+      box with a pen, and scan or photograph it back in.</p>
+    <p>Document: ______________________________________________</p>
+    <div class="sheetbox"><span>Signature</span></div>
+    <div class="sheetbox short"><span>Date</span></div>
+    <p class="sheetfoot">Made with Signature Maker by Sky Wolf Studios. Nothing on this page left
+      your device to produce it.</p>
+  </div>
   </main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">Runs entirely in your browser. Nothing uploaded, ever.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Signature%20Maker" style="color:inherit">Feedback</a></footer>
+<footer class="colophon">Runs entirely in your browser. Nothing uploaded, ever.<br>A free tool by <a href="../">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Signature%20Maker">Feedback</a></footer>
 
 <script type="module" src="app.js"></script>
 </body>

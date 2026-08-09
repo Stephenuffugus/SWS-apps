@@ -1250,27 +1250,164 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-select,input[type=range]{
-  width:100%; padding:10px 12px; font-size:1rem; color:var(--ink);
-  background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit;
+
+/* ── Controls ──────────────────────────────────────────────────────────────
+   The base already styles select and input properly. The old app layer
+   re-declared them and in doing so put input[type=range] inside a bordered
+   38px box with a browser-default thumb in Chrome blue. Range gets a real
+   treatment instead, sized in rem so the comfort panel's text setting really
+   does grow the drag handle. */
+input[type=range]{
+  -webkit-appearance:none; appearance:none;
+  display:block; width:100%;
+  height:var(--tap);
+  margin:0; padding:0;
+  background:transparent; border:0;
+  accent-color:var(--accent-fill);
+  cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:0.5rem; border-radius:var(--r-pill);
+  background:var(--surface-2); border:1px solid var(--line-2);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:1.75rem; height:1.75rem; margin-top:-0.72rem;
+  border-radius:50%;
+  background:var(--accent-fill); border:2px solid var(--surface);
+  box-shadow:var(--shadow-1);
+}
+input[type=range]::-moz-range-track{
+  height:0.5rem; border-radius:var(--r-pill);
+  background:var(--surface-2); border:1px solid var(--line-2);
+}
+input[type=range]::-moz-range-thumb{
+  width:1.75rem; height:1.75rem; border:2px solid var(--surface);
+  border-radius:50%; background:var(--accent-fill); box-shadow:var(--shadow-1);
 }
 
-.btn[disabled]{opacity:.5; cursor:default}
+.seg button[aria-pressed=true]{
+  color:var(--accent-ink); background:var(--accent-fill); box-shadow:var(--shadow-0);
+}
 
-.thumb{width:52px; height:52px; border-radius:8px; object-fit:cover; background:var(--chip); flex:0 0 auto}
+/* Save is this app's output — the moment the work becomes a file. It used to
+   be .btn.small, a hard 36px that stayed 36px at every text size while every
+   other control grew. --tap is the floor and it scales. */
+.btn.rowbtn{min-height:var(--tap); padding:0 var(--s4); font-size:var(--t-sm)}
 
-.savings{color:var(--pos); font-weight:700}
+/* ── The drop surface ───────────────────────────────────────────────────── */
+#dropCard{transition:border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease)}
+#dropCard.dropping{border-color:var(--accent-fill); background:var(--accent-soft)}
+
+/* ── Rows ───────────────────────────────────────────────────────────────── */
+#list > li{flex-wrap:wrap; align-items:flex-start; padding:var(--s3) 0; gap:var(--s3)}
+#list .grow{flex:1 1 11rem}
+#list .rowacts{display:flex; gap:var(--s2); flex-wrap:wrap; align-items:flex-start}
+#list .fullrow{flex:1 0 100%}
+
+.thumb{
+  width:3.25rem; height:3.25rem; border-radius:var(--r-sm);
+  object-fit:cover; background:var(--surface-2); flex:0 0 auto;
+}
+.thumb.failed{
+  display:flex; align-items:center; justify-content:center;
+  font-size:var(--t-base);
+  background:var(--warn-soft); border:1px solid var(--warn-line);
+}
+
+/* Green alone cannot carry a before/after delta — red/green is the commonest
+   colour-vision deficiency and this readout IS the product. Every one of these
+   states also says its meaning in words. */
+.savings{color:var(--pos); font-weight:700; white-space:nowrap}
+.grew{color:var(--neg); font-weight:700; white-space:nowrap}
+.kept{color:var(--ink-2); font-weight:600}
+.numbers{display:block; margin-top:var(--s1)}
+.numbers .arrow{color:var(--ink-3); padding:0 var(--s1)}
+.rowname{font-weight:600; overflow-wrap:anywhere}
+.rownote{
+  display:block; margin-top:var(--s2);
+  font-size:var(--t-sm); color:var(--ink);
+  background:var(--warn-soft); border-left:3px solid var(--warn);
+  border-radius:var(--r-sm); padding:var(--s2) var(--s3);
+}
+.rownote.good{background:var(--pos-soft); border-left-color:var(--pos)}
+
+/* ── Before / after ─────────────────────────────────────────────────────────
+   A FIXED mid-grey, identical in light and dark, and deliberately the only
+   literal colour in this file. It is not decoration: simultaneous contrast
+   means a tinted surround shifts how a photograph's greens and skin tones
+   read, so a coloured field would corrupt the exact judgement this panel
+   exists to support. Every professional image tool does this and none of them
+   flip it with the theme. */
+.cmp{--photo-field:#8c8c8c; margin-top:var(--s3)}
+.cmp-view{
+  position:relative; overflow:auto;
+  max-height:60vh;
+  background:var(--photo-field);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+}
+.cmp-stage{position:relative; margin:0 auto; line-height:0; max-width:100%}
+.cmp-stage img{
+  display:block; width:100%; height:100%;
+  object-fit:contain;
+  -webkit-user-select:none; user-select:none; -webkit-user-drag:none;
+}
+.cmp-stage img.after{position:absolute; inset:0}
+.cmp-divider{
+  position:absolute; top:0; bottom:0; width:2px;
+  background:var(--photo-field); box-shadow:0 0 0 1px rgba(255,255,255,.85);
+  pointer-events:none;
+}
+.cmp-legend{
+  display:flex; justify-content:space-between; gap:var(--s3);
+  margin-top:var(--s2); font-size:var(--t-sm); color:var(--ink-2);
+}
+.cmp-controls{display:flex; align-items:center; gap:var(--s3); margin-top:var(--s2)}
+.cmp-controls input[type=range]{flex:1 1 auto}
+
+/* ── The promise, as a list of things that are not here ─────────────────── */
+.negspace{display:grid; gap:var(--s2); grid-template-columns:repeat(auto-fit, minmax(11rem, 1fr))}
+.negspace li{
+  display:flex; gap:var(--s2); align-items:baseline;
+  font-size:var(--t-sm); color:var(--ink);
+  padding:0; min-height:0; border:0;
+}
+.negspace li b{color:var(--ink); font-weight:700; flex:none}
+
+#notices .warn{margin-bottom:var(--s3)}
+#notices .warn p{margin:0 0 var(--s2)}
+#notices .warn p:last-child{margin-bottom:0}
+
+.statusline{font-size:var(--t-sm); color:var(--ink-2); flex:1 1 8rem; min-width:0}
+
+/* ── Paper ──────────────────────────────────────────────────────────────────
+   This app makes files, not paper, so printing is a receipt: what came in,
+   what went out, and how much smaller. Everything you would tap is dropped,
+   and the row becomes a block so long filenames do not collide with numbers. */
+@media print{
+  #dropCard,#settingsCard,#promiseCard,.actionbar,.rowacts,.cmp,.skip{display:none !important}
+  #list > li{display:block; padding:4pt 0}
+  .thumb{
+    width:36pt; height:36pt; float:left; margin:0 8pt 4pt 0;
+    background:transparent !important; border:1px solid #999;
+  }
+  .rownote{background:transparent !important; border-left:2px solid #999; color:#000}
+  .numbers{margin-top:2pt}
+  .savings,.grew{color:#000 !important}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the images</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
     <h1>Image Compressor</h1>
     <span class="spacer"></span>
-    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
+    <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">&hearts; Tip jar</a>
   </header>
 
   <main id="main">
@@ -1279,40 +1416,135 @@ select,input[type=range]{
     <h2>Shrink photos without uploading them</h2>
     <p>Those "free image resizer" sites keep a copy of everything you upload.
       This one does the same job <strong>in your browser</strong> — your photos never leave this device.</p>
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="4" y="10" width="16" height="10" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      </svg>
+      <span><b>Turn off your Wi-Fi, then press Compress. It still works.</b>
+        That is the proof, not the promise: the resizing is done by this browser tab, so a
+        passport scan, a payslip or a client's photo is never sent anywhere. Nothing is stored
+        either — close the tab and the queue is gone with it.</span>
+    </p>
   </div>
 
-  <section class="card">
-    <button class="btn primary big" id="addBtn" type="button">🖼️ Choose images</button>
-    <input type="file" id="fileInput" accept="image/*" class="hidden" multiple>
-    <div class="row" style="margin-top:12px">
-      <label class="f"><span>Max size</span>
-        <select id="maxSide">
-          <option value="3000">3000 px (light touch)</option>
-          <option value="1920" selected>1920 px (screens & email)</option>
-          <option value="1280">1280 px (web & chat)</option>
-          <option value="800">800 px (thumbnails)</option>
-          <option value="0">Keep dimensions</option>
+  <section class="card" id="dropCard">
+    <button class="btn primary big block" id="addBtn" type="button">Choose images</button>
+    <input type="file" id="fileInput" accept="image/*,.heic,.heif" class="hidden" multiple>
+    <p class="hint" id="addHint">Or drop files — or a whole folder — anywhere on this page, or paste a
+      screenshot with Ctrl&#8209;V. <b>Up to 200 images at a time</b>, no daily limit and no account;
+      nothing is uploaded, so your device's memory is the only real ceiling.</p>
+  </section>
+
+  <section class="card" id="settingsCard">
+    <h2>Settings</h2>
+
+    <div class="seg" id="modeSeg" role="group" aria-label="How to decide the size">
+      <button type="button" data-mode="target" aria-pressed="true">Fit under a size</button>
+      <button type="button" data-mode="quality" aria-pressed="false">Pick a quality</button>
+    </div>
+
+    <div id="targetPane">
+      <label class="f"><span>Fit under</span>
+        <select id="target">
+          <option value="20000">20 KB — signature and thumbnail fields</option>
+          <option value="50000">50 KB — small ID photos</option>
+          <option value="100000">100 KB — tight web forms</option>
+          <option value="200000">200 KB — passport and visa portals</option>
+          <option value="500000">500 KB — job boards and CV uploads</option>
+          <option value="1000000" selected>1 MB — most forms, and email</option>
+          <option value="5000000">5 MB — Marketplace, eBay, Etsy listings</option>
+          <option value="10000000">10 MB — chat apps</option>
+          <option value="25000000">25 MB — Gmail attachment limit</option>
+          <option value="custom">Some other number…</option>
+        </select></label>
+      <label class="f hidden" id="customWrap"><span>Fit under, in KB</span>
+        <input type="number" id="targetKb" min="1" max="204800" step="1" value="200" inputmode="numeric"></label>
+      <p class="hint">We try qualities until it fits, and drop the pixel size only if quality alone
+        cannot get there — then the row tells you exactly what it landed at. We aim a little under,
+        so it clears the limit whichever way the form counts a kilobyte.</p>
+    </div>
+
+    <div id="qualityPane" class="hidden">
+      <label class="f" for="quality"><span>Quality: <b id="qLabel">80%</b></span></label>
+      <input type="range" id="quality" min="30" max="95" step="5" value="80" aria-describedby="qHint">
+      <div class="chips" id="qChips">
+        <button class="btn rowbtn" type="button" data-q="90">90% — barely touched</button>
+        <button class="btn rowbtn" type="button" data-q="80">80% — safe for photos</button>
+        <button class="btn rowbtn" type="button" data-q="60">60% — noticeably softer</button>
+      </div>
+      <p class="hint" id="qHint">A percentage describes the encoder, not the result — so press Compress
+        and then open <b>Compare</b> on any row to see what it actually did before you save it.</p>
+    </div>
+
+    <div class="row">
+      <label class="f"><span>Pixel size</span>
+        <select id="sizeMode">
+          <option value="3000">Longest edge 3000 px (light touch)</option>
+          <option value="1920" selected>Longest edge 1920 px (screens &amp; email)</option>
+          <option value="1280">Longest edge 1280 px (web &amp; chat)</option>
+          <option value="800">Longest edge 800 px (thumbnails)</option>
+          <option value="0">Keep the original dimensions</option>
+          <option value="fit">Fit inside an exact width &amp; height</option>
+          <option value="exact">Exactly this width &amp; height (crops to fill)</option>
         </select></label>
       <label class="f"><span>Format</span>
         <select id="format">
           <option value="jpeg" selected>JPEG (photos)</option>
           <option value="webp">WebP (smallest)</option>
-          <option value="png">PNG (graphics)</option>
+          <option value="png">PNG (keeps transparency)</option>
         </select></label>
     </div>
-    <label class="f"><span>Quality: <b id="qLabel">80%</b></span>
-      <input type="range" id="quality" min="30" max="95" value="80"></label>
-    <p class="hint">Settings apply when you press Compress — tweak and re-run freely; originals are never touched.</p>
+
+    <div class="row hidden" id="dimRow">
+      <label class="f"><span>Width in pixels</span>
+        <input type="number" id="dimW" min="1" max="20000" step="1" value="600" inputmode="numeric"></label>
+      <label class="f"><span>Height in pixels</span>
+        <input type="number" id="dimH" min="1" max="20000" step="1" value="600" inputmode="numeric"></label>
+    </div>
+    <p class="hint hidden" id="dimHint"></p>
+    <p class="hint hidden" id="formatHint"></p>
+
+    <label class="f"><span>Photo details</span>
+      <select id="meta">
+        <option value="strip" selected>Remove location and camera info (recommended)</option>
+        <option value="date">Keep the date taken, drop everything else</option>
+      </select></label>
+    <p class="hint" id="metaHint"></p>
   </section>
 
-  <section class="card">
+  <section class="card" id="listCard">
     <h2 id="listHead">Images</h2>
-    <ul class="plain" id="list"></ul>
-    <p class="hint" id="emptyHint">Add images above — email attachments, listing photos, forum avatars, anything oversized.</p>
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="runBtn" type="button">Compress</button>
-      <button class="btn" id="allBtn" type="button">Download all</button>
+    <div id="notices"></div>
+    <ul class="plain" id="list" role="list" aria-labelledby="listHead"></ul>
+    <div class="empty" id="emptyHint">
+      <div class="glyph" aria-hidden="true">&#128444;&#65039;</div>
+      <h3>No images yet</h3>
+      <p>Add email attachments, listing photos, forum avatars, passport scans — anything a form
+        has just told you is too big. They stay on this device the whole time.</p>
     </div>
+    <div class="actionbar noprint">
+      <button class="btn primary" id="runBtn" type="button">Compress</button>
+      <button class="btn" id="allBtn" type="button" disabled>Download all as a ZIP</button>
+      <button class="btn ghost" id="clearBtn" type="button" disabled>Clear all</button>
+      <span class="statusline" id="runStatus"></span>
+    </div>
+  </section>
+
+  <section class="card" id="promiseCard">
+    <h2>What this costs you</h2>
+    <ul class="plain negspace">
+      <li><b>No</b> account or email address</li>
+      <li><b>No</b> upload — ever, to anyone</li>
+      <li><b>No</b> daily or per-batch limit</li>
+      <li><b>No</b> credit meter to run out</li>
+      <li><b>No</b> watermark on anything</li>
+      <li><b>No</b> ads and no cookie banner</li>
+      <li><b>No</b> card on file</li>
+      <li><b>No</b> file kept after you close the tab</li>
+    </ul>
+    <p class="hint">The tip jar in the header is the only ask on this page, and ignoring it changes
+      nothing at all — there is no paid tier for it to unlock.</p>
   </section>
   </main>
 </div>
