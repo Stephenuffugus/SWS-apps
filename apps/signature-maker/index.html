@@ -1362,6 +1362,15 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
 .btn.primary[aria-disabled="true"]:hover{background:var(--accent-fill); border-color:var(--accent-fill)}
 
 .acts{margin-top:var(--s4)}
+.actionbar .btn{flex:1 1 8rem}
+/* The base keeps button labels on one line, which is right for "Save" and
+   wrong for "Print a sign-in-ink sheet" — at 320px with Largest text that
+   label was 310px wide inside a 288px column and pushed the page 27px
+   sideways. These labels are sentences, so they get to wrap. */
+.acts .btn,.actionbar .btn{
+  white-space:normal; text-align:center; max-width:100%;
+  line-height:var(--lh-snug); padding-block:var(--s2);
+}
 .export{margin-top:var(--s5)}
 .readout{
   margin:var(--s2) 0 0;
@@ -1369,7 +1378,13 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
   font-variant-numeric:tabular-nums;
 }
 .readout b{color:var(--ink); font-weight:600}
-.trust{display:flex; align-items:flex-start; margin-bottom:var(--s4)}
+.trust{display:flex; align-items:flex-start; margin-top:var(--s4)}
+/* On a narrow phone the marketing was pushing the signing pad 730px down the
+   page. The hero is the part that can afford to be smaller. */
+@media (max-width:26rem){
+  .hero{padding:var(--s3) 0 var(--s3)}
+  .hero h2{font-size:var(--t-xl)}
+}
 .trust svg{margin-top:2px}
 .validity p{margin:0 0 var(--s3)}
 .validity p:last-child{margin-bottom:0}
@@ -1457,20 +1472,13 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
 
   <div class="hero">
     <h2>Draw it once, use it everywhere</h2>
-    <p>Draw it, type it, or photograph the one you signed on paper — then export it as a
-      transparent PNG for documents, or a JPG on white at the exact pixel size a portal demands.
-      It all happens <strong>on your device</strong>; your signature never touches a server.</p>
+    <p>Draw it, type it, or photograph the one you signed on paper. Export a transparent PNG for
+      documents, or a JPG on white at the exact size a portal demands — all <strong>on your
+      device</strong>.</p>
   </div>
 
   <section class="card" id="signCard" aria-labelledby="signCardH">
     <h2 id="signCardH">Sign here</h2>
-
-    <p class="trust">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5.5v6c0 4.6 3.2 8.7 8 10.5 4.8-1.8 8-5.9 8-10.5v-6L12 2Z"/><path d="m9 12 2 2 4-4"/></svg>
-      <span><b>Nothing leaves this tab.</b> Your signature is never uploaded and never saved to
-        this device — it is held in this one browser tab, and closing the tab erases it. That is
-        deliberate. Turn your Wi-Fi off and this page still works.</span>
-    </p>
 
     <noscript><div class="warn">This tool draws, renders and exports entirely inside your
       browser — which is exactly why nothing is uploaded — and it needs JavaScript switched on to
@@ -1488,6 +1496,12 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
       <div class="padx" aria-hidden="true">✕</div>
       <p class="padprompt" id="padPrompt">Sign on the line with your finger, a stylus or the mouse</p>
     </div>
+
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5.5v6c0 4.6 3.2 8.7 8 10.5 4.8-1.8 8-5.9 8-10.5v-6L12 2Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>Nothing leaves this tab.</b> Never uploaded, never saved to this device: close the
+        tab and your signature is gone, on purpose. Turn your Wi-Fi off — it still works.</span>
+    </p>
 
     <div class="modepanel" id="typePanel" hidden>
       <label class="f" for="typeText"><span>Your name, the way you sign it</span>
@@ -1537,7 +1551,7 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
       shows a signed page is an original rather than a photocopy — most lenders and title
       companies expect it on a mortgage or closing package.</p>
 
-    <div class="row acts">
+    <div class="cluster acts">
       <button class="btn" id="undoBtn" type="button">Undo stroke</button>
       <button class="btn ghost" id="clearBtn" type="button">Clear</button>
       <button class="btn ghost" id="bigBtn" type="button" aria-pressed="false">Sign big</button>
@@ -1555,14 +1569,14 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
       <p class="readout" id="readout" role="status" aria-live="polite">Nothing on the pad yet — the exact size and weight of the file will appear here.</p>
     </div>
 
+    <p class="hint padhint">Every export is cropped tight to the ink, so there is no white box
+      around it unless you asked for one. Clear wipes the pad and the tab draft together, and it
+      always offers an Undo.</p>
+
     <div class="actionbar">
       <button class="btn primary" id="dlBtn" type="button">Download</button>
       <button class="btn" id="copyBtn" type="button" hidden>Copy image</button>
     </div>
-
-    <p class="hint padhint">Every export is cropped tight to the ink, so there is no white box
-      around it unless you asked for one. Clear wipes the pad and the tab draft together, and it
-      always offers an Undo.</p>
   </section>
 
   <section class="card validity" id="validity" aria-labelledby="validityH">
@@ -1579,7 +1593,7 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
       <p>For those, the route is: print the form, sign it in ink by hand, and scan it back in.
         <a href="../scan-to-pdf/">Scan to PDF</a> does the scanning part on your device too.</p>
     </div>
-    <div class="row acts">
+    <div class="cluster acts">
       <button class="btn" id="printBtn" type="button">Print a sign-in-ink sheet</button>
     </div>
   </section>

@@ -42,6 +42,7 @@ const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
 let items = [];   // {id,key,file,thumbUrl,w,h,hasAlpha,hotX,hotY,error,out,cmp}
 let seq = 0;
 let job = null;       // the in-flight run, so Stop has something to set
+let busy = false;     // ingest or ZIP is narrating; leave the status line alone
 let settingsGen = 0;  // bumped on every settings change; stamped onto results
 
 /* ── Ingest ────────────────────────────────────────────────────────────────
@@ -120,6 +121,7 @@ async function ingest(fileList) {
   const dupes = [];
   const notImages = [];
   let added = 0;
+  busy = true;
 
   for (const f of files) {
     if (!(f.type || '').startsWith('image/') && !IMAGE_RE.test(f.name || '')) { notImages.push(f.name); continue; }
@@ -139,8 +141,9 @@ async function ingest(fileList) {
     await frame();
   }
 
-  render();
+  busy = false;
   setStatus('');
+  render();
   reportIngest(added, overCap, dupes, notImages);
 }
 
@@ -448,8 +451,8 @@ async function downloadAll() {
     toast('Saved ' + ready[0].out.name);
     return;
   }
-  const btn = $('allBtn');
-  btn.disabled = true;
+  busy = true;
+  syncActions();
   setStatus('Packing ' + plural(ready.length, 'image') + ' into one file…');
   try {
     const names = uniqueNames(ready.map((i) => i.out.name));
@@ -465,6 +468,7 @@ async function downloadAll() {
       : 'Could not build the ZIP. Use Save on each row instead — the files themselves are fine.',
       { assertive: true, ms: 8000 });
   } finally {
+    busy = false;
     setStatus('');
     syncActions();
   }
@@ -616,20 +620,21 @@ function render() {
 }
 
 function syncActions() {
-  if (job) return;
+  if (job) return;                       // setRunning owns the buttons mid-run
   const usable = items.filter((i) => !i.error).length;
   const ready = items.some((i) => i.out);
   $('runBtn').disabled = usable === 0;
-  $('allBtn').disabled = !ready;
-  $('clearBtn').disabled = items.length === 0;
+  $('allBtn').disabled = busy || !ready;
+  $('clearBtn').disabled = busy || items.length === 0;
   $('allBtn').textContent = items.filter((i) => i.out).length === 1
     ? 'Download the image' : 'Download all as a ZIP';
-  if (!$('runStatus').textContent) {
-    setStatus(items.length === 0
-      ? 'Add images to turn Compress on.'
-      : usable === 0 ? 'None of these can be opened by this browser.'
-        : !ready ? 'Press Compress, then Save or download the ZIP.' : '');
-  }
+  if (busy) return;
+  /* A disabled control with its reason permanently beside it is something you
+     can read at your own speed; a toast that teaches by failing is not. */
+  setStatus(items.length === 0
+    ? 'Add images to turn Compress on.'
+    : usable === 0 ? 'None of these can be opened by this browser.'
+      : !ready ? 'Press Compress, then Save or download the ZIP.' : '');
 }
 
 const setStatus = (t) => { $('runStatus').textContent = t; };
