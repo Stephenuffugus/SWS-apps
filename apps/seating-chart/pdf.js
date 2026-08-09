@@ -8,9 +8,76 @@ export const PAGE = {
   a4: { w: 595.28, h: 841.89 },
 };
 
-// Standard-14 fonts use WinAnsi encoding; strip anything it can't express.
+/* Standard-14 fonts use WinAnsi encoding, which covers Latin-1 and little
+ * else. The old rule replaced every codepoint outside it with '?', so
+ * "Zoë Ångström" survived but "Kateřina Nováková" printed as "Kate?ina" and
+ * "子安 花子" as "?? ??" — on the escort card sitting at that guest's place.
+ * Handing someone a card with their name replaced by question marks is worse
+ * than handing them nothing.
+ *
+ * Two-step now, per character:
+ *   1. Keep it if WinAnsi can express it. "ü" and "é" print as themselves.
+ *   2. Otherwise decompose and drop the combining marks. "ř" becomes "r",
+ *      "ā" becomes "a", "ł" becomes "l" — imperfect, but a readable name
+ *      rather than a redaction, and it rescues most of Central Europe,
+ *      Scandinavia, the Baltics, Turkish and romanised Vietnamese.
+ *   3. Only what survives neither step becomes '?', and the caller is told
+ *      exactly whose name that happened to.
+ *
+ * Non-Latin scripts — CJK, Arabic, Hebrew, Cyrillic, Greek, Thai — still
+ * cannot be drawn with a standard-14 font at all. `unprintableNames()` exists
+ * so the app can name those guests BEFORE the export rather than let the
+ * couple discover it at the reception. Printing them properly needs an
+ * embedded Unicode font, which is a much larger change than this one.
+ */
+const WINANSI_EXTRA = '–—‘’“”…';
+
+/* Letters NFD cannot help with: the stroke and bar forms are atomic
+   codepoints, not base + combining mark, so decomposition returns them
+   unchanged. Without this, Łukasz prints as "?ukasz". */
+const FOLD = {
+  'Ł': 'L', 'ł': 'l', 'Đ': 'D', 'đ': 'd', 'Ħ': 'H', 'ħ': 'h',
+  'Ŧ': 'T', 'ŧ': 't', 'Ŀ': 'L', 'ŀ': 'l', 'Ɖ': 'D', 'Ƶ': 'Z', 'ƶ': 'z',
+  'Œ': 'OE', 'œ': 'oe', 'Ĳ': 'IJ', 'ĳ': 'ij', 'ẞ': 'SS',
+  'ı': 'i', 'İ': 'I', 'ȷ': 'j', 'ŉ': 'n', 'ſ': 's',
+  'Ŋ': 'N', 'ŋ': 'n', 'Ə': 'E', 'ə': 'e', 'Ɛ': 'E', 'Ɔ': 'O',
+};
+
+function inWinAnsi(ch) {
+  const c = ch.codePointAt(0);
+  return (c >= 0x20 && c <= 0x7e) || (c >= 0xa0 && c <= 0xff) || WINANSI_EXTRA.includes(ch);
+}
+
+/** { text, lost } — `lost` is the characters no amount of folding could keep. */
+export function toWinAnsi(s) {
+  let text = '';
+  let lost = 0;
+  for (const ch of String(s || '')) {
+    if (inWinAnsi(ch)) { text += ch; continue; }
+    if (FOLD[ch]) { text += FOLD[ch]; continue; }
+    const folded = ch.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    if (folded && [...folded].every(inWinAnsi)) { text += folded; continue; }
+    text += '?';
+    lost++;
+  }
+  return { text, lost };
+}
+
 function safe(s) {
-  return String(s || '').replace(/[^\x20-\x7E\xA0-\xFF–—‘’“”…]/g, '?');
+  return toWinAnsi(s).text;
+}
+
+/**
+ * The guests whose names cannot be printed with a standard-14 font, so the app
+ * can say so up front. Returns [{ name }] — empty when everything will render.
+ */
+export function unprintableNames(project) {
+  const out = [];
+  for (const g of (project?.guests || [])) {
+    if (g.rsvp === 'no') continue;
+    if (toWinAnsi(g.name).lost > 0) out.push({ id: g.id, name: g.name });
+  }
+  return out;
 }
 
 function attending(project) {
@@ -173,7 +240,10 @@ export async function makeCatererPdf(PDFLib, project, size = 'letter') {
     line(table.label + '  ·  ' + guests.length + (guests.length === 1 ? ' guest' : ' guests'), { size: 12, font: sansBold, gap: 19 });
     for (const g of [...guests].sort((a, b) => a.name.localeCompare(b.name))) {
       const flags = (g.tags || []).join(', ');
-      line('   ' + g.name + ' — ' + (g.meal || 'Unspecified') + (flags ? '   ⚠ ' + flags : ''), { gap: 14 });
+      /* "⚠" is not in WinAnsi, so safe() rendered the allergy marker as a bare
+         "?" — the one glyph on this sheet a kitchen must not misread. Spelled
+         out, it survives any encoding and reads correctly aloud. */
+      line('   ' + g.name + ' — ' + (g.meal || 'Unspecified') + (flags ? '   ** ' + flags : ''), { gap: 14 });
     }
     const counts = Object.entries(meals).map(([m, n]) => m + ' ×' + n).join('   ');
     line('   ' + counts, { size: 9, color: soft, gap: 18 });

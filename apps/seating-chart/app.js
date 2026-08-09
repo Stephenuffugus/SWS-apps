@@ -4,9 +4,9 @@
 // All user data reaches the DOM via textContent — never innerHTML.
 import {
   newProject, newId, parseGuestPaste, validate, autoArrange,
-  occupancy, unassignedGuests,
+  occupancy, unassignedGuests, parseGuestPasteDetailed, MAX_PASTE,
 } from './model.js';
-import { makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf } from './pdf.js';
+import { makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf, unprintableNames } from './pdf.js';
 import { saveProject, getProject, allProjects, deleteProject } from './store.js';
 
 const CONFIG = {
@@ -108,9 +108,18 @@ async function renderHome() {
       el('button', { class: 'btn small', type: 'button', onclick: () => { location.hash = '#/p/' + p.id; } }, 'Open'),
       el('button', { class: 'btn small danger', type: 'button', 'aria-label': 'Delete event',
         onclick: async () => {
-          if (!confirm('Delete “' + p.name + '” from this device?')) return;
+          /* Undo, not confirm. A confirm asks before you can see what you are
+             about to lose, and it is dismissed on reflex; this deletes and
+             offers the whole event back, restoring the exact record. */
+          const snapshot = JSON.parse(JSON.stringify(p));
           try { await deleteProject(p.id); } catch (e) {}
-          renderHome();
+          await renderHome();
+          if (window.SWS) {
+            SWS.undo('Deleted “' + p.name + '”', async () => {
+              try { await saveProject(snapshot); } catch (e) {}
+              renderHome();
+            });
+          }
         } }, '✕')));
   }
   v.append(sec);
@@ -169,12 +178,36 @@ async function renderEditor(id) {
   drawEditor();
 }
 
+/**
+ * Redraw the editor, putting focus and the text caret back where they were.
+ *
+ * drawEditor() replaces the entire view on every keystroke, click and tab
+ * change, which destroys the focused element. The browser then falls back to
+ * <body>, so a keyboard user lost their place on every single interaction, and
+ * typing in the guest search jumped the caret to the end of the string after
+ * each character.
+ *
+ * Elements that need to survive a redraw carry a stable `data-fk`, and this
+ * matches them up again afterwards. It is keyed on identity rather than
+ * position so a redraw that adds a row above the focused field still works.
+ */
 function drawEditor() {
   const v = $('view');
+
+  const active = document.activeElement;
+  const keep = active && v.contains(active) && active.dataset && active.dataset.fk
+    ? {
+      fk: active.dataset.fk,
+      start: typeof active.selectionStart === 'number' ? active.selectionStart : null,
+      end: typeof active.selectionEnd === 'number' ? active.selectionEnd : null,
+    }
+    : null;
+
   v.replaceChildren();
 
   // name + tabs
   const nameIn = el('input', { type: 'text', value: project.name, maxlength: '80',
+    'aria-label': 'Event name', 'data-fk': 'eventName',
     style: 'font-weight:700; font-size:1.05rem',
     oninput: (ev) => { project.name = ev.target.value.slice(0, 80); touch(); } });
   v.append(el('section', { class: 'card' },
@@ -186,15 +219,37 @@ function drawEditor() {
     ...[['guests', 'Guests'], ['tables', 'Tables'], ['seat', 'Seat people'], ['rules', 'Rules'], ['print', 'Print & export']]
       .map(([k, label]) => el('button', {
         type: 'button', class: k === tab ? 'active' : '',
+        'aria-current': k === tab ? 'page' : null,
+        'data-fk': 'tab:' + k,
         onclick: () => { tab = k; drawEditor(); },
       }, label)));
   v.append(tabs);
+
+  /* Unseated count, visible from every tab. It was only knowable by counting
+     the pool by eye on the Seat tab, so the one number that says whether the
+     job is finished was invisible from four of the five tabs. */
+  const left = unassignedGuests(project).length;
+  v.append(el('p', { class: 'hint', id: 'seatedCount', role: 'status', style: 'margin:0 0 12px' },
+    left === 0
+      ? 'Everyone who has not declined has a seat.'
+      : [el('b', { class: 'em' }, String(left)),
+        (left === 1 ? ' guest still needs' : ' guests still need') + ' a seat.']));
 
   if (tab === 'guests') v.append(renderGuestsTab());
   else if (tab === 'tables') v.append(renderTablesTab());
   else if (tab === 'seat') v.append(...renderSeatTab());
   else if (tab === 'rules') v.append(renderRulesTab());
   else v.append(renderPrintTab());
+
+  if (keep) {
+    const again = v.querySelector('[data-fk="' + CSS.escape(keep.fk) + '"]');
+    if (again) {
+      again.focus({ preventScroll: true });
+      if (keep.start !== null && typeof again.setSelectionRange === 'function') {
+        try { again.setSelectionRange(keep.start, keep.end); } catch (e) { /* not a text input */ }
+      }
+    }
+  }
 }
 
 /* ----- guests tab ----- */
@@ -219,25 +274,42 @@ function renderGuestsTab() {
     ta,
     el('div', { style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: () => {
-        const rows = parseGuestPaste(ta.value);
+        const { rows, dropped } = parseGuestPasteDetailed(ta.value);
         if (rows.length === 0) { toast('Paste one guest per line: Name, party, meal, flags'); return; }
+
+        // Duplicates are usually a double-paste, not two people with one name —
+        // but sometimes they are two people with one name, so warn, never block.
+        const existing = new Set(project.guests.map(g => g.name.trim().toLowerCase()));
+        const dupes = rows.filter(r => existing.has(r.name.trim().toLowerCase())).length;
+
         project.guests.push(...rows);
         ta.value = '';
         touch(); drawEditor();
-        toast(rows.length + ' guests added');
+
+        /* The cap used to `break` out of the loop and report success for the
+           survivors: 1,200 rows became 1,000 guests and the toast said
+           "1000 guests added". Losing 200 people quietly is the exact failure
+           this app's whole positioning is against. */
+        if (dropped > 0) {
+          toast(`${rows.length} added — but ${dropped} did not fit. This app holds ${MAX_PASTE} guests per event.`, 7000);
+        } else if (dupes > 0) {
+          toast(`${rows.length} guests added · ${dupes} ${dupes === 1 ? 'name was' : 'names were'} already on the list`, 5000);
+        } else {
+          toast(rows.length + ' guests added');
+        }
       } }, 'Add them all'))));
   frag.append(add);
 
   const listCard = el('section', { class: 'card' },
     el('h2', {}, project.guests.length + ' guests · ' + yes + ' expected'));
-  const search = el('input', { type: 'search', id: 'guestSearch', placeholder: 'Find a guest…', value: guestFilter,
-    oninput: (ev) => {
-      guestFilter = ev.target.value;
-      drawEditor();
-      // the redraw replaced this input — hand focus back so typing continues
-      const again = $('guestSearch');
-      if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
-    } });
+  /* No ad-hoc focus restore here any more. The old one handed focus back but
+     always jammed the caret to the end of the string, so editing a typo in the
+     middle of a search term was impossible — every keystroke teleported the
+     cursor. drawEditor() now restores focus AND the selection range, for this
+     field and every other one carrying a data-fk. */
+  const search = el('input', { type: 'search', id: 'guestSearch', 'data-fk': 'guestSearch',
+    'aria-label': 'Find a guest', placeholder: 'Find a guest…', value: guestFilter,
+    oninput: (ev) => { guestFilter = ev.target.value; drawEditor(); } });
   listCard.append(search);
   const list = el('ul', { class: 'plain' });
   const q = guestFilter.trim().toLowerCase();
@@ -283,9 +355,15 @@ function renderTablesTab() {
     el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto', onclick: () => {
       const label = labelIn.value.trim() || 'Table ' + (project.tables.length + 1);
       const seats = Math.min(Math.max(parseInt(seatsIn.value, 10) || 8, 1), 30);
+      /* Seeded inside the band a table can actually be dragged to (0.07–0.93).
+         The old grid was y = 0.15 + row * 0.28, which passes 1.0 at the 13th
+         table — so at a normal 18-table wedding six were clipped by the floor's
+         overflow:hidden and two were entirely invisible, and at 50 tables 34
+         could not be seen at all. Wrapping every four rows overlaps instead,
+         which is visible and can be dragged apart. */
       const i = project.tables.length;
       project.tables.push({ id: newId(), label: label.slice(0, 40), shape: shapeIn.value, seats,
-        x: 0.12 + (i % 4) * 0.22, y: 0.15 + Math.floor(i / 4) * 0.28 });
+        x: 0.14 + (i % 4) * 0.24, y: 0.14 + (Math.floor(i / 4) % 4) * 0.24 });
       labelIn.value = '';
       touch(); drawEditor();
     } }, 'Add')));
@@ -295,6 +373,11 @@ function renderTablesTab() {
   // floor plan
   const floorCard = el('section', { class: 'card' }, el('h2', {}, 'Floor plan'));
   const floor = el('div', { class: 'floor' });
+  /* Height grows with the table count. A fixed 420px box is fine for eight
+     tables and unreadable for thirty — the positions are fractions of this
+     box, so giving it more room spreads them out rather than stacking them. */
+  const rows = Math.max(1, Math.ceil(project.tables.length / 4));
+  floor.style.height = Math.min(880, Math.max(420, rows * 130 + 90)) + 'px';
   for (const t of project.tables) floor.append(renderFloorTable(t, floor, occ));
   floorCard.append(floor, el('p', { class: 'hint', text: 'Drag to arrange · tap a table to edit it. The layout is for you — the printed chart lists tables in the order added.' }));
   frag.append(floorCard);
@@ -385,19 +468,34 @@ function renderSeatTab() {
     pool.append(el('p', { class: 'hint', text: 'Add guests first — then seating them takes minutes.' }));
   pool.append(el('div', { class: 'row', style: 'margin-top:10px' },
     el('button', { class: 'btn', type: 'button', onclick: () => {
-      // hand-placed seating is hours of work — never replace it silently
-      if (Object.keys(project.assignments).length > 0 &&
-          !confirm('Replace the current seating with a fresh suggestion? Your manual placements will be redone.')) return;
-      const a = autoArrange(project);
-      project.assignments = a;
+      /* Hand-placed seating is hours of work. This used to be guarded by a
+         confirm(), which asks before you know what you are losing; undo lets
+         you see the result and change your mind. */
+      const before = { ...project.assignments };
+      project.assignments = autoArrange(project);
       selected = new Set();
       touch(); drawEditor();
-      toast('Suggested seating applied — rearrange anything you like');
+
+      const left = unassignedGuests(project).length;
+      const msg = left
+        ? `Seating suggested — ${left} could not be placed`
+        : 'Seating suggested — rearrange anything you like';
+
+      if (window.SWS && Object.keys(before).length) {
+        SWS.undo(msg, () => { project.assignments = before; touch(); drawEditor(); },
+          { label: 'Put mine back' });
+      } else {
+        toast(msg);
+      }
     } }, 'Suggest an arrangement'),
     el('button', { class: 'btn', type: 'button', onclick: () => {
-      if (!confirm('Unseat everyone?')) return;
+      const before = { ...project.assignments };
+      if (!Object.keys(before).length) { toast('Nobody is seated yet'); return; }
       project.assignments = {};
       touch(); drawEditor();
+      if (window.SWS) {
+        SWS.undo('Everyone unseated', () => { project.assignments = before; touch(); drawEditor(); });
+      }
     } }, 'Clear all seats')));
   out.push(pool);
 
@@ -408,23 +506,71 @@ function renderSeatTab() {
   for (const t of project.tables) {
     const guests = (occ[t.id] || []).filter(g => g.rsvp !== 'no');
     const over = guests.length > t.seats;
+    const seatHere = () => {
+      const moved = [...selected];
+      const previous = moved.map((id) => [id, project.assignments[id]]);
+      for (const id of moved) project.assignments[id] = t.id;
+      selected = new Set();
+      touch(); drawEditor();
+      if (window.SWS) {
+        SWS.undo(`${moved.length} seated at ${t.label}`, () => {
+          for (const [id, before] of previous) {
+            if (before === undefined) delete project.assignments[id];
+            else project.assignments[id] = before;
+          }
+          selected = new Set(moved);
+          touch(); drawEditor();
+        });
+      }
+    };
+
     const card = el('div', { class: 'tablecard' + (selected.size ? ' droptarget' : '') },
       el('div', { class: 'thead' },
         el('span', { class: 'tname', text: t.label }),
         el('span', { class: 'tcount' + (over ? ' over' : ''), text: guests.length + ' / ' + t.seats })));
+
+    /* The core verb — "put these people at that table" — was a click listener
+       on an unfocusable <div>, so a keyboard user could select guests and then
+       had nowhere to put them. A real button says what it does, is reachable
+       by Tab, and does not need a nested-interactive workaround the way
+       role="button" on a card full of chips would. */
+    if (selected.size) {
+      card.querySelector('.thead').append(el('button', {
+        class: 'btn small primary', type: 'button',
+        'data-fk': 'seatAt:' + t.id,
+        'aria-label': `Seat ${selected.size} selected ${selected.size === 1 ? 'guest' : 'guests'} at ${t.label}`,
+        onclick: seatHere,
+      }, `Seat ${selected.size} here`));
+    }
+
     const gchips = el('div', { class: 'chips' });
     for (const g of guests) {
-      gchips.append(el('button', { class: 'chip', type: 'button', title: 'Tap to unseat',
-        onclick: () => { delete project.assignments[g.id]; touch(); drawEditor(); } },
-        g.name, el('span', { class: 'x', 'aria-hidden': 'true' }, '✕')));
+      gchips.append(el('button', {
+        class: 'chip', type: 'button',
+        'data-fk': 'unseat:' + g.id,
+        'aria-label': `Unseat ${g.name} from ${t.label}`,
+        onclick: () => {
+          const from = project.assignments[g.id];
+          delete project.assignments[g.id];
+          touch(); drawEditor();
+          // The most destructive action in the app had no confirm and no undo:
+          // one mis-tap silently undid a hand-placed seat.
+          if (window.SWS) {
+            SWS.undo(`${g.name} unseated`, () => {
+              project.assignments[g.id] = from;
+              touch(); drawEditor();
+            });
+          }
+        },
+      }, g.name, el('span', { class: 'x', 'aria-hidden': 'true' }, '✕')));
     }
     card.append(gchips);
+
     if (selected.size) {
+      // Mouse users keep the whole-card target; it is faster than aiming.
       card.addEventListener('click', (ev) => {
-        if (ev.target.closest('.chip')) return;
-        for (const id of selected) project.assignments[id] = t.id;
-        selected = new Set();
-        touch(); drawEditor();
+        if (ev.target.closest('.chip') || ev.target.closest('button')) return;
+        seatHere();
       });
       card.style.cursor = 'pointer';
     }
@@ -515,6 +661,24 @@ function renderPrintTab() {
         btn.disabled = false; btn.textContent = 'PDF';
       } }, 'PDF')));
   }
+  /* Say it BEFORE the export, not after the reception.
+     PDF standard-14 fonts are WinAnsi-only. Accented Latin now folds to a
+     readable letter, but CJK, Cyrillic, Arabic, Hebrew, Greek and Thai cannot
+     be drawn at all, and the guest whose escort card says "?? ??" is the one
+     person guaranteed to notice. */
+  const cannot = unprintableNames(project);
+  if (cannot.length) {
+    const names = cannot.slice(0, 6).map(g => g.name).join(', ');
+    card.append(el('div', { class: 'warn', style: 'margin-bottom:12px' },
+      el('b', {}, cannot.length === 1
+        ? 'One name cannot be printed in these PDFs'
+        : `${cannot.length} names cannot be printed in these PDFs`),
+      el('div', { style: 'margin-top:4px' },
+        names + (cannot.length > 6 ? ` and ${cannot.length - 6} more` : '') +
+        ' — the built-in PDF fonts cover Latin script only, so these come out as question marks. ' +
+        'Write those cards by hand, or add a Latin spelling in the guest’s name field.')));
+  }
+
   card.append(el('p', { class: 'hint', text: 'Print one physical page before the big day — paper always finds something screens miss.' }));
   frag.append(card);
 
@@ -568,13 +732,32 @@ function wire() {
   });
   $('gCancel').addEventListener('click', () => closeDlg($('guestDlg')));
   $('gDelete').addEventListener('click', () => {
-    if (!confirm('Remove ' + guestEditing.name + ' from the list?')) return;
+    /* Removing a guest also strips them out of every rule and can delete rules
+       that fall below their minimum — far more than the confirm() described.
+       Undo restores all of it, because a snapshot cannot forget a side effect
+       the way a hand-written inverse can. */
+    const name = guestEditing.name;
+    const before = {
+      guests: project.guests.slice(),
+      assignments: { ...project.assignments },
+      rules: JSON.parse(JSON.stringify(project.rules)),
+    };
+
     project.guests = project.guests.filter(x => x.id !== guestEditing.id);
     delete project.assignments[guestEditing.id];
     for (const r of project.rules) r.guestIds = r.guestIds.filter(id => id !== guestEditing.id);
     project.rules = project.rules.filter(r => r.guestIds.length > (r.type === 'mustTable' ? 0 : 1));
     touch(); drawEditor();
     closeDlg($('guestDlg'));
+
+    if (window.SWS) {
+      SWS.undo(`${name} removed`, () => {
+        project.guests = before.guests;
+        project.assignments = before.assignments;
+        project.rules = before.rules;
+        touch(); drawEditor();
+      });
+    }
   });
 
   $('tSave').addEventListener('click', () => {
@@ -589,14 +772,34 @@ function wire() {
   });
   $('tCancel').addEventListener('click', () => closeDlg($('tableDlg')));
   $('tDelete').addEventListener('click', () => {
+    const label = tableEditing.label;
     const n = Object.values(project.assignments).filter(tid => tid === tableEditing.id).length;
-    if (!confirm(n ? 'Delete ' + tableEditing.label + ' and unseat its ' + n + ' guests?' : 'Delete ' + tableEditing.label + '?')) return;
+    const before = {
+      tables: project.tables.slice(),
+      assignments: { ...project.assignments },
+      rules: JSON.parse(JSON.stringify(project.rules)),
+    };
+
     project.tables = project.tables.filter(x => x.id !== tableEditing.id);
     for (const gid of Object.keys(project.assignments))
       if (project.assignments[gid] === tableEditing.id) delete project.assignments[gid];
     project.rules = project.rules.filter(r => !(r.type === 'mustTable' && r.tableId === tableEditing.id));
     touch(); drawEditor();
     closeDlg($('tableDlg'));
+
+    const msg = n
+      ? `${label} deleted — ${n} ${n === 1 ? 'guest is' : 'guests are'} back in the pool`
+      : `${label} deleted`;
+    if (window.SWS) {
+      SWS.undo(msg, () => {
+        project.tables = before.tables;
+        project.assignments = before.assignments;
+        project.rules = before.rules;
+        touch(); drawEditor();
+      });
+    } else {
+      toast(msg);
+    }
   });
 
   $('rType').addEventListener('change', (ev) => {

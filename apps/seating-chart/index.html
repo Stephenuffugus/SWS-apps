@@ -1259,14 +1259,29 @@ body{
 header.app h1 a{color:inherit; text-decoration:none}
 
 .btn[disabled]{opacity:.5; cursor:default}
-nav.tabs{display:flex; gap:5px; margin:0 0 12px; overflow-x:auto; -webkit-overflow-scrolling:touch}
+/* Wraps rather than scrolls. As a horizontal scroller this was 472px of tabs
+   in a 382px viewport with no scrollbar and no fade, so 90px — most of
+   "Print & export", the tab the entire product exists to reach — sat off the
+   right edge with nothing to suggest it was there. */
+nav.tabs{display:flex; flex-wrap:wrap; gap:var(--s2); margin:0 0 var(--s3)}
 nav.tabs button{
-  flex:1 0 auto; padding:9px 14px; font-size:.9rem; border:1px solid var(--line); background:var(--card);
-  color:var(--muted); border-radius:10px; cursor:pointer; white-space:nowrap;
+  flex:1 1 auto;
+  min-height:var(--tap);
+  padding:0 var(--s4);
+  font-size:var(--t-sm);
+  border:1px solid var(--line-2); background:var(--surface);
+  color:var(--ink-2); border-radius:var(--r-ctl); cursor:pointer; white-space:nowrap;
 }
-nav.tabs button.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+/* --accent is the mid-tone brand colour and measured 3.95:1 against
+   --accent-ink here. --accent-fill is the token the build contrast-solves for
+   exactly this job: a label sitting on a filled control. */
+nav.tabs button.active{
+  background:var(--accent-fill); border-color:var(--accent-fill);
+  color:var(--accent-ink); font-weight:600;
+}
 
-.chip.sel{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
+.chip{min-height:var(--tap)}
 .chip .x{opacity:.6; margin-left:2px}
 .partyhead{width:100%; font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:8px 0 2px}
 
@@ -1280,6 +1295,8 @@ nav.tabs button.active{background:var(--accent); border-color:var(--accent); col
 .tablecard .tname{font-weight:600; flex:1}
 .tablecard .tcount{font-size:.8rem; color:var(--muted)}
 .tablecard .tcount.over{color:var(--neg); font-weight:700}
+/* height is set inline by renderTablesTab, scaled to the table count — a fixed
+   420px box hid everything past the twelfth table. */
 .floor{
   position:relative; background:var(--bg); border:1px dashed var(--line); border-radius:12px;
   height:420px; overflow:hidden; touch-action:none; margin-bottom:10px;
@@ -1303,6 +1320,16 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 .exportcard .grow{flex:1}
 .exportcard .grow b{display:block; margin-bottom:2px}
 .exportcard .grow span{font-size:.83rem; color:var(--muted)}
+
+/* The real output here is the PDF, but people do hit Ctrl-P on the page. The
+   tab bar is navigation and prints as five dead buttons; the floor plan is the
+   one thing on screen worth putting on paper, so it keeps its border. */
+@media print{
+  nav.tabs,.exportcard .btn,#guestSearch{display:none !important}
+  .floor{border:1px solid #999; break-inside:avoid; page-break-inside:avoid}
+  .floor .tbl{border-color:#333 !important; color:#000 !important}
+  .tablecard{break-inside:avoid; page-break-inside:avoid}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
@@ -1315,7 +1342,7 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
     <span class="spacer"></span>
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
   </header>
-  <main id="view" aria-live="polite"></main>
+  <main id="view"></main>
   <footer class="colophon">
     Nothing leaves your device. No account, no watermark, no ads — free, even the exports.<br>
     <span id="orgLine">A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Seating%20Chart" style="color:inherit">Feedback</a></span>

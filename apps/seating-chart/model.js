@@ -50,10 +50,23 @@ export function splitCsvLine(line) {
      Name, party, meal
      Name, party, meal, tags (semicolon- or space-separated)
    A leading header row ("name,party,...") is skipped. */
+/* The paste cap, named rather than buried in the loop. A wedding planner who
+   pastes 1,200 rows and is told "1000 guests added" has lost 200 people and
+   been congratulated for it — and "the cap is discovered, never disclosed" is
+   the exact betrayal the competitor research names as this category's
+   signature. If we cap, we say so. */
+export const MAX_PASTE = 1000;
+
 export function parseGuestPaste(text, idFn) {
+  return parseGuestPasteDetailed(text, idFn).rows;
+}
+
+/** Same parse, but reports how many guests the cap threw away. */
+export function parseGuestPasteDetailed(text, idFn) {
   const mk = idFn || newId;
   const out = [];
-  if (typeof text !== 'string') return out;
+  let dropped = 0;
+  if (typeof text !== 'string') return { rows: out, dropped };
   const lines = text.split(/\r?\n/);
   for (let li = 0; li < lines.length; li++) {
     const raw = lines[li].trim();
@@ -62,6 +75,7 @@ export function parseGuestPaste(text, idFn) {
     if (li === 0 && /^name$/i.test(cells[0] || '')) continue; // header row
     const name = (cells[0] || '').slice(0, 80);
     if (!name) continue;
+    if (out.length >= MAX_PASTE) { dropped++; continue; }
     out.push({
       id: mk(),
       name,
@@ -71,9 +85,8 @@ export function parseGuestPaste(text, idFn) {
       rsvp: 'unknown',
       notes: '',
     });
-    if (out.length >= 1000) break;
   }
-  return out;
+  return { rows: out, dropped };
 }
 
 export function lastNameOf(fullName) {

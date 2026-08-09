@@ -1,0 +1,728 @@
+{
+  "slug": "sub-plans",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Danielle Okonkwo",
+        "who": "34, 4th grade, seven years in. Confident with a phone, indifferent to software. She is the research's central figure — the teacher for whom 'it's easier to go to school sick than to deal with writing sub plans,' a sentiment the research confirmed independently across four teacher sources. She built her folder in this app on an August prep day and has not opened it since.",
+        "context": "Session two, the one the research says decides whether the app is loved. 05:42, dark bedroom, 38.4C, phone held in one hand above her face, screen at its lowest brightness, the other hand holding a glass of water. She has to have something at the office by 06:15 so the sub can be assigned.",
+        "task": "Change the date, replace today's hour-by-hour plan with something a stranger can run, and get it to the front office.",
+        "verdict": "She got there, but on faith rather than evidence. Two field edits took her past 3.5 screens of scrolling on a 414x900 phone (measured: the Print button sits at y=3578 of a 4104px page, 3.98 screens down), and at no point did the app show her what she had made or tell her it had been saved. Then the delivery half of the promise fell over: Show QR refused her folder outright, and Copy link handed her a 2,780-character URL to text to the office.",
+        "delights": [
+          "The saved folder was simply there. No login, no sync spinner, no 'restore from backup' — she opened the page and her August work was in the boxes.",
+          "The intro card speaks to exactly her moment: 'When you're sick at 5:30am, update Today and hit print.' She said it was the first tool that seemed to know what day it was for her.",
+          "The printed page is genuinely handsome. Serif title, ruled sections, no clip art, no rainbow. It does not look like a district form or a Pinterest printable — it looks like something a professional made."
+        ],
+        "frictions": [
+          {
+            "what": "Show QR refused her folder. Her binder — which is barely longer than the app's own placeholder examples — encodes to a 2,780-character URL against the hard 1,200-character cap at app.js:254. The button's only response is a toast: 'This folder is too big for a QR — use Copy link instead.' Measured: to fit under 1,200 the folder has to be cut to 10 of its 20 filled fields, and the fields that get dropped are health alerts, fire/lockdown drills, the laptop password, and all four phone extensions.",
+            "severity": "blocker",
+            "whyItMatters": "The QR is not a garnish. The research names it as a differentiator that 'solves the documented \"the sub never found the notes\" failure by putting the packet in two places at once,' and the app ships the button on the main card as a peer of Print. In practice the button exists to tell you it will not work, and it fails hardest on exactly the folder that is worth sharing. A feature that refuses every real input is worse than no feature — she now assumes the app is broken rather than that her folder is long."
+          },
+          {
+            "what": "There is no way to see the folder before printing. #sheet is display:none on screen (index.html:1262) and only rendered into on beforeprint (app.js:167). Nothing anywhere shows a page count: no counter, no meter, no 'preview' button — the five buttons on the page are Display and comfort settings, Print / Save as PDF, Copy link, Show QR, Close.",
+            "severity": "major",
+            "whyItMatters": "She is about to commit a stranger's whole day to paper and she cannot look at it first. The research is explicit that the category's worst failure is bloat — subs say 'a 2-page plan with clear instructions beats a 10-page packet' — and asks for 'a visible page-count estimate that updates as they type' and a 'read it as your sub would' preview. Her only preview is the browser's own print dialog, which on a phone means committing to the OS print sheet at 05:45."
+          },
+          {
+            "what": "Nothing ever says 'saved'. save() at app.js:95-97 writes on every keystroke and swallows every failure in an empty catch. There is no [data-saved-flag] element in the markup and app.js never calls SWS.saved(), even though sws-ui.js:151 ships it and index.html:667-674 styles it.",
+            "severity": "major",
+            "whyItMatters": "The intro card promises 'everything saves to this device automatically' (index.html:1309) and then never confirms it once. For a feverish person editing the one document that stands between her class and chaos, silence is not reassurance. Verified worse: when a localStorage write throws — which is the documented reality on a locked-down school machine or in a private window — the toast stays empty and the promise on screen stays up."
+          },
+          {
+            "what": "The two fields she needs are buried mid-form. 'Date' is field 5 of 23 and 'The plan, hour by hour' is field 6, inside a single 23-field card with no anchors, no collapse, and no jump. Her own plan does not fit its own box: the textarea shows 102px of 173px of content (index.html:511, min-height:6.5rem, no auto-grow), so she scrolls inside a 4-line window to read the five lines she typed.",
+            "severity": "major",
+            "whyItMatters": "The research's headline promise for this app is 'the emergency path in under 2 minutes' and a distinct panic entry point: 'Six fields, giant tap targets, one button that prints. It reuses the saved binder and only asks what changed today.' What exists instead is the August form, unchanged, with the sick-day fields hidden in the middle of it."
+          },
+          {
+            "what": "Copy link produced a 2,780-character URL and the toast said 'Link copied — the whole folder is inside it.'",
+            "severity": "minor",
+            "whyItMatters": "She pasted it into a text to the office secretary. It is roughly 18 SMS segments and most clients linkify only the head of it. The app's own copy at index.html:1309 tells her to 'copy the link and text the whole folder to the office,' so the failure lands on the app's promise, not on her."
+          }
+        ]
+      },
+      {
+        "name": "Marcus Whitfield",
+        "who": "41, 8th grade science, three preps across six periods with a different roster in each. He is half the audience the research warns about: 'Handles both elementary and secondary structures... Getting only one of these right halves the audience.' He came off a Google Doc that he has never once updated since writing it.",
+        "context": "Session one, the calm one. Thursday of the August work week, 13-inch laptop at 1280px, coffee, an hour blocked out, doing the responsible thing before the year starts.",
+        "task": "Get six periods, six rosters, six sets of 'who to trust' and 'who leaves early' into a folder he can hand to anyone.",
+        "verdict": "He did not finish, and he did not really start. Within four minutes he had worked out that the data model is one elementary classroom, and he went back to the Doc. He is not an edge case — he is every middle and high school teacher.",
+        "delights": [
+          "'Fire · lockdown · drills' and 'Health alerts' printing inside a boxed block at the top, before anything else, is right. He said no template he has bought puts the emergency information first.",
+          "The privacy line in the footer — 'Stays on your device — your class's details are nobody's business' — is the only reason he was willing to type a student name at all."
+        ],
+        "frictions": [
+          {
+            "what": "There is exactly one plan field. The schema at app.js:40-83 gives him 'The plan, hour by hour' (one textarea, 4,000-character cap) and 'Bell schedule' (one textarea). Six periods with different rosters have to be crammed into a single box, and there is no repeatable period, no per-period roster, no pull-out or specials structure.",
+            "severity": "blocker",
+            "whyItMatters": "This is a named table stake, not a wish: the research asks for 'a single all-day schedule with pull-outs, specials and lunch counts, AND a 6-8 period rotating secondary schedule with different rosters per period.' He hit the cap question immediately — 'if I write six periods properly in one box, does it just stop?' It does, at 4,000 characters, silently."
+          },
+          {
+            "what": "Every placeholder tells him he is in the wrong app. 'Ms. Rivera' / '3rd grade — 24 kids' / '8:00 Morning work — packet on my desk' / '12:15 Read-aloud — the bookmark is in the book' / '2:45 Pack up, stack chairs' / 'Marble jar on my desk' (app.js:44-80).",
+            "severity": "major",
+            "whyItMatters": "The placeholders are the app's best writing and its clearest onboarding — the research explicitly wants prompts, not bare labels — but they are 100% elementary. He read three of them and concluded the tool was built for his wife's school, not his. A grade-band switch that swaps the example set costs one object and would recover half the audience."
+          },
+          {
+            "what": "No seating chart, and no 'must-do / if-time' split with time estimates.",
+            "severity": "major",
+            "whyItMatters": "Both are table stakes in the research. A seating chart is 'named as essential by every single source,' and the must-do/if-time split with an early-finisher instruction is what subs say they need most, because 'running out of activities is the documented cause of behavior problems.' He has 'If you run out of material' as a free-text box, which is the idea without the structure."
+          },
+          {
+            "what": "The substitute feedback page is a blank rectangle. index.html:1286-1290 prints a 130pt-tall box headed 'HOW DID IT GO? LEAVE ME A NOTE —' and nothing else.",
+            "severity": "minor",
+            "whyItMatters": "The research asks for 'checkboxes for how the day went, who helped, who struggled, what got finished' and says it 'is in every credible template.' An empty box gets 'fine, good class' written in it. Checkboxes get answers."
+          }
+        ]
+      },
+      {
+        "name": "Ruth Delgado",
+        "who": "61, 2nd grade, 28 years in, three years from retirement. Early macular changes: she reads fine with her glasses on and not at all without them, and she is usually without them at home. She is exactly the reader the research had in mind when it wrote 'a chunk of the audience is over 40 reading without their glasses' and set 7:1 as the working contrast target.",
+        "context": "Sunday evening, kitchen table, an old 320px-wide phone because her tablet is at school. She has the app open in the comfort settings within thirty seconds because she does that in every app now.",
+        "task": "Read back the folder she built in September and fix the two things that changed — new room number, new nurse extension.",
+        "verdict": "The comfort panel is the best thing in the app and it did real work for her. Everything it cannot reach then undid some of the benefit: the panel makes the text bigger but not better organised, and the one preference that most matches how she reads quietly damages what she prints.",
+        "delights": [
+          "The panel opens straight from the header and is a real fieldset of real radios. At 320px with Largest text and Roomy spacing it is 634px tall in a 720px viewport and the Done/Reset footer stays on screen — measured, not assumed. axe returns zero violations with it open.",
+          "Largest text took the root from 16px to 24px and the whole layout scaled in proportion: zero horizontal overflow at 320px, zero overflowing elements. She has been burned by apps where the big-text setting shoves half the page off the right edge.",
+          "The permanent tick slot on each option means she can see which one is on without having to judge a colour. Warm tint at level 3 worked immediately and made the evening screen bearable."
+        ],
+        "frictions": [
+          {
+            "what": "The section headings are smaller than the field labels, at every text size. 'THE BASICS' / 'TODAY' render through section.card > h2 (index.html:469-477) at --t-micro, measured 12px at default and 18px at Largest; the field labels under them render through label.f > span (index.html:527-534) at --t-xs, measured 13px and 19.5px. The headings also sit at --ink-2, 5.83:1 on the card.",
+            "severity": "major",
+            "whyItMatters": "The structure she navigates by is the faintest, smallest thing on the page. She scrolled past 'TODAY' twice looking for the date. The app's own intro card tells the user to 'update Today' — pointing at a label it has styled as chrome. Making the section heading larger than its own field labels costs one selector."
+          },
+          {
+            "what": "Turning the text up made the page enormous without making it easier to move around. At 320px with Largest text and Roomy spacing the page is 6,572px tall and the Print button sits at y=5455 — 7.6 screens of scrolling from the top, on a 23-field form with no anchors, no collapsed sections and no sticky action bar (the .actionbar component exists at index.html:811-822 and this app does not use it).",
+            "severity": "major",
+            "whyItMatters": "The comfort setting she needs for the text is the same setting that turns a long form into a very long form. Density helps the air, not the count. This is the one place where the comfort panel's help is partly self-cancelling, and the fix is structural — sections that collapse, or the primary action pinned — not typographic."
+          },
+          {
+            "what": "The example text inside empty fields sits at 3.33:1. Measured: placeholder colour rgb(123,142,136) on field background rgb(255,250,244), via ::placeholder at index.html:513 using --ink-3.",
+            "severity": "major",
+            "whyItMatters": "In most apps a placeholder is a hint you can ignore. Here the placeholders are five-line worked examples that carry the app's actual teaching — '8:00 Morning work — packet on my desk / 9:15 Math — video queued on the laptop...' — and they are the only guidance a first-time user gets. She could not read them at all without her glasses, which means the onboarding is invisible to precisely the reader who most needs it. Note that no automated check catches this: axe does not test placeholder contrast, and the standard battery reports clean."
+          },
+          {
+            "what": "The comfort button itself is 36x36 (index.html:1012-1014), under the system's own --tap floor of 44px. It is the only sub-44px target on the page — the standard battery finds nothing else.",
+            "severity": "minor",
+            "whyItMatters": "A portfolio-wide issue rather than this app's, but it lands on her twice over: the control that exists to help people with imprecise vision and imprecise aim is the smallest control in the app, and unlike everything else it does not grow with --ui-scale."
+          }
+        ]
+      },
+      {
+        "name": "Tomás Iglesias",
+        "who": "29, inclusion / co-teaching across three elementary classrooms, dyslexic — diagnosed at 22, reads slowly under pressure, uses spacing and plain type wherever an app offers them. Professionally he is the FERPA-exposed one: his notes are IEP and 504 accommodations, which the research names as 'exactly the data FERPA covers.'",
+        "context": "Monday, 06:10, he has a migraine coming and is not going in. Laptop in a dim room, dark mode, Easier reading on because he set it in another Sky Wolf app weeks ago and it followed him here.",
+        "task": "Produce a packet that tells a stranger how to handle four children with plans, without writing anything that would embarrass them or him.",
+        "verdict": "The privacy posture is the reason he used it and the sharing controls are the reason he stopped short. And his own accessibility preference made his packet a page longer, which he found out only after printing it.",
+        "delights": [
+          "Easier reading is a genuine spacing change, not a novelty font — letter-spacing 0.048em, word-spacing 0.14em, line-height 1.8, ligatures off, and the display serif swapped for the system stack. Measured live: body letter-spacing 0.9984px at XL, the form's h2 resolving to ui-sans-serif.",
+          "'Kids who need something' is a kind field name. He said it let him write 'Jordan sits up front (glasses)' instead of filling out a disability form.",
+          "'Only send it to someone you'd hand the folder to' (index.html:1320) is the right sentence in the right place. It is the only warning of its kind he has seen in this category."
+        ],
+        "frictions": [
+          {
+            "what": "Easier reading follows him into print and adds a page. The @media print block resets --ui-scale and --density (index.html:1212) but nothing resets data-reading=\"easy\". Measured during print: body letter-spacing 0.704px, word-spacing 2.053px, --lh-body 1.8, #sheet body text line-height 26.4px. The same binder that prints on 2 pages at defaults prints on 3 with Easier reading on.",
+            "severity": "major",
+            "whyItMatters": "His screen preference is being applied to a document he is handing to somebody else, who did not ask for wide letter-spacing and did not ask for a third sheet of paper. The base layer's own comment two lines above the reset says the quiet part out loud — 'Density and text size are screen comfort settings... a reader who set 150% on their phone did not ask for a six-page checklist' — and then the file omits the one preference that actually changes the printed length. Related and worth fixing in the same pass: the reset it does write is dead code. :root{--ui-scale:1} at specificity (0,1,0) cannot beat :root[data-text=\"xxl\"] at (0,2,0) from index.html:884; measured --ui-scale during print at Largest text is 1.5, not 1."
+          },
+          {
+            "what": "Copy link and Show QR sit as equal peers of Print (index.html:1315-1318) with no separation and no guard, and they carry health alerts and accommodation notes inside the URL. Copying does not confirm what is travelling; the warning is a --t-sm hint below the buttons.",
+            "severity": "major",
+            "whyItMatters": "The research could not be blunter: 'if any share-by-link feature exists, it must be opt-in, obviously separate, and warn before it carries student names.' A URL is the most persistent object in a phone — it lands in the office's message history, the recipient's browser history, and any backup of either. The app's strongest claim is that student names never leave the device; the second and third buttons on the card are the two ways they can."
+          },
+          {
+            "what": "In dark mode the QR dialog's title is invisible. Measured: #qrTitle colour rgb(17,17,17) — hardcoded inline at index.html:1334 — on the dialog's UA Canvas background of rgb(18,18,18). Contrast ratio 1.01:1.",
+            "severity": "major",
+            "whyItMatters": "'Scan to open this folder' is the only instruction in the dialog, and in dark mode there is simply a QR code, a Close button, and a blank strip where the sentence should be. axe does not flag it because the inline colour is on the element and the background comes from the UA sheet. He opened the dialog, could not tell what it wanted, and closed it."
+          },
+          {
+            "what": "He typed a long paragraph about one child's plan into 'Kids who need something' and lost the end of it. FIELD_CAP is 4,000 (app.js:86) and app.js:107 stores ev.target.value.slice(0, FIELD_CAP) while leaving the full text sitting in the textarea. Measured: 5,000 characters typed, 5,000 still on screen, 4,000 in storage, 4,000 after reload. 1,000 characters gone, no counter, no warning, no visible change.",
+            "severity": "blocker",
+            "whyItMatters": "It is invisible data loss on the one field where detail is a safeguarding matter. He saw what he wrote, closed the laptop, and the truncation happened at the boundary between the screen and the disk. The research asks for 'soft character caps with live counters' precisely so a cap teaches rather than deletes."
+          }
+        ]
+      },
+      {
+        "name": "Priya Raghunathan",
+        "who": "24, first-year 5th grade, working from a district-issued Chromebook in a managed profile. She is the research's IT-friction case: '32% of educators lose at least 15 minutes a day to tech access issues,' and the district's own machines wipe profile data between sign-ins.",
+        "context": "Tuesday prep period, 22 minutes, school Chromebook at 1280px in the district's forced dark theme, a colleague texting her the link to 'that sub plans thing' while she works.",
+        "task": "Build the binder from scratch before the bell, and pull in the grade-level template her team lead shared as a link.",
+        "verdict": "She built most of it and then lost twenty minutes to two silent failures — one that did nothing and one that did too much. Neither told her anything.",
+        "delights": [
+          "It loaded with no login, no SSO wall, no 'your institution's admin needs to review this app.' She noted this out loud; it is the only tool she tried that week that did.",
+          "index.html:1321 anticipates her exact machine: 'On a school computer? Copy the link to yourself before you log out — some school machines erase browser data between sign-ins.' Somebody thought about her.",
+          "The comfort panel and the QR dialog both survived axe with zero violations, the QR dialog moves focus to Close on open and returns it to Show QR on close, and Escape closes it. The keyboard behaviour of the modal is correct."
+        ],
+        "frictions": [
+          {
+            "what": "She pasted her team lead's share link into the address bar of the tab that already had Sub Plans open, pressed Enter, and nothing happened at all. Verified: app.js reads location.hash exactly once, inside init() at app.js:208, and registers no hashchange listener. A fragment-only navigation does not re-run the module, so the link is silently ignored — no toast, no dialog, no change, and the hash sits in the address bar looking as though it worked.",
+            "severity": "major",
+            "whyItMatters": "This is the single most likely way a shared folder actually gets opened: the app is already open, the link arrives, you paste it in. The failure is completely silent, so her conclusion was that her team lead had sent a broken link. She reloaded eventually and it worked, but nothing in the app suggested that."
+          },
+          {
+            "what": "When she did reload, the confirm fired — 'Open the shared folder? Your saved one will be replaced.' — and she pressed OK. Her half-built binder was overwritten immediately with no undo. Verified: app.js:211-215 replaces `data` wholesale and calls save(); no SWS.undo anywhere in app.js despite sws-ui.js:130 shipping it and index.html loading it; the browser Back button does not restore the old folder (measured: still 'THEIRS' after goBack).",
+            "severity": "blocker",
+            "whyItMatters": "The confirm is honest about what it will do, but a confirm at speed is a thing you dismiss, not a thing you read — and the object being destroyed is the folder the research says is written once in August and used in February. There is exactly one copy of it and no way back. Note that the dismiss path is correct and was verified: pressing Cancel leaves the saved folder untouched and clears the hash so it cannot ambush you twice. The destruction path is the one with no safety net."
+          },
+          {
+            "what": "Nothing warns her that the managed profile may not persist her work. save() at app.js:95-97 catches every storage exception into an empty block. Simulated a throwing setItem: the toast stayed empty, the app carried on as normal, and the intro card kept promising 'everything saves to this device automatically.'",
+            "severity": "major",
+            "whyItMatters": "index.html:1321 shows the app already knows school machines erase data — and then handles the erasure case by saying nothing. On a locked-down or private-mode profile she can type a 23-field binder into a form that is quietly discarding all of it. One toast on first failed write turns a catastrophe into an inconvenience."
+          },
+          {
+            "what": "She hit Ctrl+P on the near-empty app to see what she was building. It printed one page containing 'Sub Plans', 'Thank you for being here today — this folder has everything you need', and an empty 'How did it go?' box.",
+            "severity": "minor",
+            "whyItMatters": "The Print button guards this case (app.js:169) and the keyboard path does not, because beforeprint at app.js:167 renders unconditionally. On a school printer with a per-teacher quota, a blank sheet is not free."
+          }
+        ]
+      },
+      {
+        "name": "Gwen Abara",
+        "who": "58, a substitute — not a teacher, and the person the research quotes most sharply. Twelve years subbing across four elementary schools. She has never seen this app and never will; her entire contact with it is the paper someone left on a desk. She is here because the two loudest sourced complaints in the file are hers: subs lose the first ten minutes hunting for basics, and bad sub notes fail on location and length, not content.",
+        "context": "07:41 in a room she has never been in, coat still on, 19 minutes before the children arrive. Overhead fluorescents, no phone in hand, a two-page packet run off on the office copier in black and white because the head has banned colour printing.",
+        "task": "In the next nineteen minutes: know what to do at 8:00, know which child has the allergy, find the bathroom rule, find the laptop password, and know who to call.",
+        "verdict": "The first page is the best sub packet she has been handed in years — the emergency box is at the top, the schedule is legible, and nobody wrote her an essay about their teaching philosophy. Then everything she needed in the first ten minutes turned out to be on page 2, which has nothing on it to say whose room it belongs to.",
+        "delights": [
+          "Two pages. She said that out loud. The research's line — 'a 2-page plan with clear instructions beats a 10-page packet' — is met at defaults, and empty sections genuinely stay off the paper.",
+          "'Thank you for being here today — this folder has everything you need' at the top, and a thank-you at the bottom, with no exclamation marks anywhere. The voice is a colleague's, not a manager's.",
+          "The hour-by-hour plan reads as instructions to a stranger, not as notes to self. 'They walk themselves down at 11:28' is the kind of specificity she almost never gets."
+        ],
+        "frictions": [
+          {
+            "what": "The first-ten-minutes answers are all on page 2. Measured from the printed PDF of a realistic binder: 'Bathroom & hallway', 'Tech' (the laptop password), 'Office / front desk', 'Nurse' and 'Admin on duty' all fall on page 2. HEADER_KEYS at app.js:84 is ['teacher','class','room','school','date'] — the page-1 header block carries identification only, no operational facts, and there is no WiFi-password field in the schema at all.",
+            "severity": "major",
+            "whyItMatters": "This is the single most specifically-sourced requirement in the research: a fixed page-1 block with 'room number, bathroom, WiFi/computer password, front office extension, nearest helpful teacher,' and the instruction 'never let that block get pushed to page 2.' The failure mode it describes — 'losing ten minutes guessing whether the password ended with an exclamation point' — is not even reachable here, because the password is not a field, it is a sentence inside 'Tech' set in the body face with no monospaced, unambiguous glyphs."
+          },
+          {
+            "what": "Page 2 is anonymous. Verified: exactly one .shead in the rendered sheet (index.html:1267), no running header, no page numbers, no 'page 1 of 2'. Page 2 begins with the word 'Routines' and carries no teacher name, no room, no date.",
+            "severity": "major",
+            "whyItMatters": "Packets get separated — in the office tray, on the copier, under a stack of worksheets. A sheet with four phone extensions and a laptop password on it and no room number is a sheet she cannot use and cannot return. She has, verbatim, been handed page 2 of somebody's plans before."
+          },
+          {
+            "what": "In black and white the emergency block is the weakest heading on the page. Measured in the print stylesheet: 'IN AN EMERGENCY' is 10pt at colour #b91c1c, which converts to grayscale level 75 of 255; ordinary section headings like 'Today' and 'Routines' are 12pt at #111, grayscale level 17. The sub-labels inside the box — including 'HEALTH ALERTS' — are 8.5pt at #666, grayscale 102, the lightest text anywhere in the document. There is no icon in the box (verified: zero svg or img inside #sheet .em) and the box's own border is 1.5pt at grayscale 75.",
+            "severity": "major",
+            "whyItMatters": "The research demands grayscale-first design for a checkable reason: colour printing is discouraged or banned in schools because it costs roughly 5x, and 'medical and allergy alerts must read as urgent through weight, rule, box, and icon — not through red fill.' On her photocopy the box carries the signal and the typography actively fights it: the words 'HEALTH ALERTS' are smaller and lighter than 'BELL SCHEDULE'. The one thing that must never be misread is the one thing set in the palest type. (One accident works in the app's favour: the base layer's .em emphasis utility at index.html:648 collides with #sheet .em and makes the body text inside the box 600-weight. That is the only reason the allergy line stands out, and nobody meant it.)"
+          },
+          {
+            "what": "Roughly a third of page 1 is blank. Measured from the PDF: last text on page 1 ends at y=544.7pt on a 792pt sheet with 14mm margins, leaving 207.6pt — 73mm, 29% of the usable column — empty at the foot, because #sheet .sec carries break-inside:avoid-page (index.html:1271) and the next whole section could not fit. With a long hour-by-hour plan it is far worse: page 1 ends at y=155.5pt, so 84% of the first sheet is white space and the plan starts on page 2.",
+            "severity": "major",
+            "whyItMatters": "It costs a sheet of paper per packet on a copier with a quota, and it costs her the thing she cares about more: a section she needed was pushed a page further away for no reason she can see. break-inside:avoid-page is the right instinct — nobody wants 'Emergencies' split across a fold — but applied to every section it turns a 1.4-page document into a 2-page one and a 2.5-page document into a 5-page one."
+          },
+          {
+            "what": "The feedback box she is meant to fill in is an empty 130pt rectangle headed 'HOW DID IT GO? LEAVE ME A NOTE —' (index.html:1286-1290).",
+            "severity": "minor",
+            "whyItMatters": "With nineteen minutes at the end of a hard day she writes 'They were great, thanks!' A row of checkboxes — what got finished, who helped, who struggled — gets her to tell the truth in the same thirty seconds, and the research says that page 'is in every credible template.'"
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The printed artifact is the best thing here and it is genuinely good. A realistic binder prints on 2 pages of Letter, empty sections drop out entirely, the emergency block sits above everything else, the type is a real hierarchy in a real serif, and there is not one piece of clip art. Against the research's competitive set — a PowerPoint that needs three fonts installed, a Canva link, a Google Doc with clipped margins — this is the only one that just works.",
+        "The privacy stance is real and it is stated where people look: the footer, the hint under the share buttons, and a privacy page. Verified in the mechanics too — every user string reaches the DOM via textContent (app.js:107-153), the standard battery reports zero injected scripts or images from hostile input, and decodeSheet (app.js:183-196) allowlists against the schema, rejects non-strings, caps at 4,000 and returns null for garbage, an empty hash, a 200,000-character payload and prototype-pollution keys alike.",
+        "The comfort panel does its job under pressure. At 320px with Largest text and Roomy spacing: zero horizontal overflow, zero overflowing elements, the dialog 634px in a 720px viewport with its Done/Reset footer still on screen, root font 16px to 24px with the layout scaling in proportion, real radios in real fieldsets, a permanent tick slot so selection is not colour-only, and axe clean with it open.",
+        "The copy is the right voice. Calm, competent, zero cheer, zero exclamation marks, no streaks or progress shaming — exactly what the research's emotionalContext asks for. 'When you're sick at 5:30am, update Today and hit print' and 'On a school computer? Copy the link to yourself before you log out' are two of the best sentences in the portfolio.",
+        "Nothing is broken underneath. Zero console errors across every run in this review. The standard battery is clean on all sixteen checks. Unicode round-trips through the share link intact and prints correctly — Korean, Arabic and accented Latin all render in the PDF with no tofu and no '?' substitution. 100 keystrokes against a maxed-out 92KB folder cost 102ms total. The QR dialog's focus behaviour is correct in all three directions: focus to Close on open, back to Show QR on close, Escape closes.",
+        "Declining a shared link is safe. Pressing Cancel on 'Open the shared folder?' leaves the stored folder byte-identical and clears the hash from the address bar, so the same link cannot ambush you on the next reload. That is the harder half of the problem and it is right."
+      ],
+      "hurts": [
+        "The delivery half of the product — the half the research says is the axis where a browser tool beats a paper binder outright — does not work. Show QR refuses every realistic folder (2,780 characters against a 1,200-character cap), there is no QR anywhere on the printed page, and the one way a QR does reach paper is a bug: printing with the dialog open replaces the entire folder with a single sheet containing a QR code and a Close button.",
+        "The app never shows the teacher what she is about to make. #sheet is display:none until beforeprint, there is no preview, no page count, no character counter, no black-and-white toggle, no completeness meter. Every one of those is named in the research; none exists. The first time anyone sees the packet is on paper.",
+        "Silent failure is the house style. 1,000 characters vanish at the 4,000 cap with the full text still on screen. A failed localStorage write says nothing while the intro card promises auto-save. A share link pasted into an already-open tab does nothing at all. Accepting a shared link destroys the year's binder with no undo and no way back through history. Four separate paths where the app changes or loses the user's work and tells them nothing.",
+        "The data model is one elementary classroom. One 'hour by hour' box, one bell schedule, one roster, elementary-only placeholders, no seating chart, no must-do/if-time split with time estimates. The research calls the secondary structure a table stake and says getting only one right halves the audience.",
+        "The information the substitute needs in her first ten minutes prints on page 2, and page 2 has no header, no page number and no room. The header block carries identification and nothing operational; there is no WiFi-password field at all, and no monospaced rendering for the passwords that do get typed.",
+        "Two comfort settings leak into the printed document. Easier reading turns a 2-page packet into 3 because the print block resets --ui-scale and --density but not data-reading; and the reset it does write is dead code anyway, out-specified by the :root[data-text] rules — measured --ui-scale of 1.5 during print at Largest text.",
+        "The screen form is undifferentiated. 23 fields in one card, section headings styled smaller and fainter than the field labels beneath them, no anchors, no collapse, no sticky action bar, placeholders at 3.33:1, and a 4-line window on the most important textarea. On a 320px phone at Largest text the Print button is 7.6 screens down."
+      ],
+      "mostWantedNext": [
+        "A Today screen — the research's PANIC MODE. Open the app on a sick morning and land on six fields (date, today's plan, backup activity, anything different, and the two emergency blocks read-only) with the print button in view, and 'Edit the whole binder' as a secondary link. Everything already stored is reused. This is the app's stated headline promise and it is currently a 3.98-screen scroll through the August form.",
+        "A preview that shows what prints, with the page count on the button. 'Print / Save as PDF (2 pages)' and a 'Read it as your sub would' toggle that reveals #sheet on screen in black and white. It costs one display rule and a height measurement, and it converts three separate absences — no preview, no page count, no grayscale check — into one control.",
+        "Fix delivery: put the QR on the paper, not in a modal. Compress the payload before base64 (CompressionStream deflate-raw on English prose of this shape is a large win), print the QR in the corner of page 1 at a scannable module size, and add the spine label and big-type cover sheet the research asks for. And in the meantime, hide #qrDlg in the print stylesheet.",
+        "Make the safety block win in grayscale: heading at least as large and as dark as an ordinary section heading, a heavier rule or a filled black bar, an icon, and the sub-labels out of 8.5pt #666. Then verify by printing it in black and white — the research is right that nobody in this category bothers, and it is a visible win.",
+        "Say things out loud. SWS.saved() on write, SWS.undo on the shared-link overwrite, a live counter as a field approaches 4,000, a toast the first time a storage write throws, and a hashchange listener so a pasted link is honoured or explicitly refused.",
+        "A grade-band choice that swaps the placeholder set and, for secondary, turns one plan box into repeatable periods. One object of example strings plus a repeatable section recovers the half of the audience that currently reads 'marble jar on my desk' and leaves.",
+        "A page-1 'first ten minutes' block: room, bathroom, WiFi and computer passwords in a monospaced face with unambiguous glyphs, office extension, and the nearest helpful teacher — pinned to the header so it can never reach page 2 — plus a running header with the teacher, room, date and 'page n of m' on every subsequent sheet."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": true,
+    "scenarios": [
+      {
+        "name": "Standard battery",
+        "method": "node design/stress.mjs sub-plans — layout at 320/414/1280 and at largest-text and roomy, touch targets, hostile text and injection, numeric edges, 30 rapid clicks on Print, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console.",
+        "result": "0 hard failures across all 16 checks. No small touch targets, 0 injected scripts or images, title not hijacked, 30 clicks in 751ms with content stable at 1175 chars, content persisted 1175→1175 across reload, booted with corrupt storage and 0 new errors, 30 focusable elements with 0 unreachable and 0 unnamed, axe clean, no console output for the whole run.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Share link and QR size against a realistic binder",
+        "method": "Seeded the 20 fields with content matched to the app's own placeholder examples, then measured the encoded payload and pressed Show QR for real.",
+        "result": "JSON 2,021 chars → base64url 2,746 chars → URL 2,780 chars, against the hard cap of 1,200 at app.js:254. Show QR does not open; the toast reads 'This folder is too big for a QR — use Copy link instead'. Stripping fields from the end until the URL fits leaves 10 of 20 fields at 1,138 chars; the 10 dropped are note, health, drills, admin, nurse, office, neighbor, tech, where, dismissal — i.e. the allergy alerts, the fire and lockdown routes, the laptop password and every phone extension.",
+        "severity": "blocker",
+        "defect": "The QR feature cannot serve any realistic folder, and the content it would have to shed to fit is precisely the safety-critical content. app.js:250-256."
+      },
+      {
+        "name": "QR legibility at the app's own cap",
+        "method": "Grew a folder until the URL was just under 1,200 chars (measured 1,152), opened the dialog, and read the module size off the canvas by scanning the finder pattern.",
+        "result": "150 modules rendered at 2 CSS px each into a 300x300 canvas. Scannable in good light with a steady hand; marginal for a phone camera photographing another phone in a dark room, which is the app's stated 5:45am scenario.",
+        "severity": "minor",
+        "defect": "Even at the cap the code is at the low end of scannable. app.js:230-237 fixes the canvas at 300px regardless of module count."
+      },
+      {
+        "name": "Printing while the QR dialog is open",
+        "method": "Opened Show QR on a folder small enough to qualify, then emulated print media, fired beforeprint, and generated the PDF.",
+        "result": "The output is one page containing the QR code, the words 'Scan to open this folder' and a 'Close' button. The entire sub folder is gone. #sheet is correctly display:block and rendered, but the open <dialog> sits in the top layer and Chrome prints it alone. Verified in the rendered PNG. Neither print hide-list mentions #qrDlg — index.html:1203 hides #swsPrefs and #swsPrefsBtn, index.html:1265 hides .screenonly, header.app, footer.colophon and #toast.",
+        "severity": "blocker",
+        "defect": "A teacher who shows the QR and then prints gets a sheet of paper with a QR code and a Close button on it instead of her sub plans, with no error and nothing to suggest anything went wrong."
+      },
+      {
+        "name": "Is the QR ever on the printed folder?",
+        "method": "Printed with the dialog closed and enumerated every canvas and img with a non-zero box in print media.",
+        "result": "Zero visible images in the printed output. The QR exists only as a screen modal.",
+        "severity": "major",
+        "defect": "The research names 'QR code on the printed cover' as a differentiator that solves the documented 'the sub never found the notes' failure. The printed packet has no QR, no spine label and no big-type cover sheet."
+      },
+      {
+        "name": "Printed page assignment of the first-ten-minutes answers",
+        "method": "Printed a realistic binder to Letter PDF and read the per-page text with pdftotext -layout.",
+        "result": "Page 1: header, emergency box (drills + health), Today (plan + backup), The class (helpers, needs, behavior). Page 2: Routines (bell schedule, attendance, bathroom, dismissal), Where things are (where, tech — the laptop password), People to lean on (all four extensions), End of the day and the feedback box. Page 2 contains no teacher name, no room, no date, no page number — verified one .shead in the sheet, no running-header or @top-center rule anywhere in the stylesheets.",
+        "severity": "major",
+        "defect": "Every operational fact a substitute needs in the first ten minutes is on an unidentified second sheet. HEADER_KEYS at app.js:84 carries identification only; there is no WiFi-password field in the schema and no monospaced rendering for passwords."
+      },
+      {
+        "name": "Wasted paper from break-inside:avoid-page",
+        "method": "Measured the y-coordinate of the last text on printed page 1 with pdftotext -bbox on two folders: a realistic one and one with a 130-line hour-by-hour plan.",
+        "result": "Realistic binder: last text at y=544.7pt on a 792pt sheet with 14mm (39.7pt) margins, leaving 207.6pt / 73mm blank — 29% of the usable column — because 'Routines' would not fit whole. Long plan: last text at y=155.5pt, leaving 596.8pt blank — 84% of the first sheet is white space, with the header and a two-line emergency box alone on page 1 and the plan starting on page 2. Total 5 pages; no content lost or clipped, and the 130th line renders correctly.",
+        "severity": "major",
+        "defect": "#sheet .sec{break-inside:avoid-page} at index.html:1271 is applied to every section including ones taller than a page, inflating page counts in a category where page count is the loudest complaint."
+      },
+      {
+        "name": "Grayscale emphasis of the emergency block",
+        "method": "Emulated print media and read computed styles and luminance for every heading level in the rendered sheet.",
+        "result": "'IN AN EMERGENCY' — 10pt, weight 600, #b91c1c, grayscale level 75/255, 6.47:1 on white. 'HEALTH ALERTS' and 'FIRE · LOCKDOWN · DRILLS' — 8.5pt, #666, grayscale 102, 5.74:1. Ordinary section heading 'Today' — 12pt, #111, grayscale 17, 18.88:1, with a 1pt rule. Emergency box border 2px at grayscale 75. Zero icons inside the box. The body text inside the box is weight 600 only because the base layer's .em emphasis utility (index.html:648) collides with #sheet .em (index.html:1281).",
+        "severity": "major",
+        "defect": "On the black-and-white copier that school printing guidance defaults to, the alert block's heading is 2pt smaller and four times lighter than every ordinary section heading, and its safety sub-labels are the palest text in the document."
+      },
+      {
+        "name": "The 4,000-character field cap",
+        "method": "Filled the 'hour by hour' textarea with 5,000 characters, read the DOM value and localStorage, then reloaded.",
+        "result": "5,000 chars on screen, 4,000 chars in storage, 4,000 after reload — 1,000 characters lost. No counter, no warning, no character-count element on the page (0 [data-count], output, progress or meter elements), and no text anywhere matching a limit warning. The truncation is invisible until the next page load.",
+        "severity": "blocker",
+        "defect": "app.js:107 slices on the way to storage but leaves the full value in the textarea, so the screen and the disk disagree and the user is shown the version that will not survive."
+      },
+      {
+        "name": "Shared link when a folder already exists — both branches",
+        "method": "Seeded a local folder, then cold-loaded a share URL and took each branch of the confirm; then tried the browser Back button.",
+        "result": "DISMISS: stored folder byte-identical, form still shows the local values, hash cleared from the address bar. Correct. ACCEPT: stored folder replaced immediately, no undo control rendered in the toast, and page.goBack() leaves the new folder in place — the old one is unrecoverable. Also noted: history.replaceState(null,'',location.pathname) at app.js:216 discards any query string (verified ?from=office removed).",
+        "severity": "blocker",
+        "defect": "One mis-tapped OK destroys the binder the research says is written in August and used in February. sws-ui.js:130 ships SWS.undo and index.html loads it; app.js calls it zero times."
+      },
+      {
+        "name": "Share link pasted into an already-open tab",
+        "method": "Loaded the app with a saved folder, then set location.hash to a valid share payload — the same same-document navigation the address bar performs.",
+        "result": "Nothing happened. Name field stayed 'MINE', no confirm dialog, empty toast, and the 71-character hash remained in the address bar. app.js reads location.hash once at app.js:208 inside init(); there is no hashchange listener anywhere in the file.",
+        "severity": "major",
+        "defect": "The most common way a shared folder is actually opened fails completely silently and leaves the address bar looking as though it succeeded."
+      },
+      {
+        "name": "Dark-mode QR dialog contrast",
+        "method": "Ran the app with colorScheme dark, opened the QR dialog, measured computed colours and contrast.",
+        "result": "#qrTitle colour rgb(17,17,17) — hardcoded inline at index.html:1334 — on the dialog's UA Canvas background rgb(18,18,18). Contrast ratio 1.01:1. The QR canvas itself is drawn white-on-black by app.js:234-237 so the code stays scannable, but the dialog's only instruction is invisible. axe reports zero violations with the dialog open, because the inline colour is authored and the background comes from the UA sheet.",
+        "severity": "major",
+        "defect": "The dialog at index.html:1333 sets border, radius, padding and text-align inline but no background or colour, so it inherits Canvas/CanvasText while its heading is pinned to #111."
+      },
+      {
+        "name": "Comfort settings leaking into print",
+        "method": "Printed the same realistic binder at data-text m / xl / xxl and again with data-reading=easy, reading computed values during print media.",
+        "result": "The base layer's print reset is dead code: :root{--ui-scale:1;--density:1} at index.html:1212 has specificity (0,1,0) and cannot beat :root[data-text=\"xxl\"] at (0,2,0) from index.html:884. Measured --ui-scale during print: 1 at m, 1.3 at xl, 1.5 at xxl; root font 16px / 20.8px / 24px. Page count stays 2 at every text size only because #sheet sizes itself in absolute pt. data-reading=easy is not reset at all and does reach the paper: during print, body letter-spacing 0.704px, word-spacing 2.053px, --lh-body 1.8, sheet body line-height 26.4px — and the packet grows from 2 pages to 3.",
+        "severity": "major",
+        "defect": "A screen accessibility preference silently adds a sheet of paper to a document handed to somebody else, and the guard that was written to prevent exactly this never fires."
+      },
+      {
+        "name": "Storage write failure",
+        "method": "Replaced Storage.prototype.setItem with a thrower, typed into a field, and watched the app.",
+        "result": "Empty toast, no visible warning, no change in behaviour. save() at app.js:95-97 catches into an empty block. The intro card at index.html:1309 continues to display 'everything saves to this device automatically', and index.html:1321 elsewhere acknowledges that school machines erase browser data.",
+        "severity": "major",
+        "defect": "On a locked-down school profile or in a private window the user can type an entire 23-field binder into a form that is discarding all of it, while the page promises the opposite."
+      },
+      {
+        "name": "Hostile share links",
+        "method": "Imported decodeSheet directly and fed it a 200,000-character field, prototype-pollution keys, a non-string value, non-base64 garbage, an empty hash, and an HTML injection payload.",
+        "result": "200,000-char field capped to exactly 4,000. {__proto__, constructor, evil} → null (allowlisted against the schema). Non-string value → null. Garbage → null. Empty → null. The HTML payload is preserved as a literal string and rendered through textContent, so it prints as visible text and injects nothing — consistent with the battery's 0 injected scripts and 0 injected images.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Unicode round-trip and print",
+        "method": "Round-tripped Korean, Arabic, Japanese, accented Latin and an emoji through encodeSheet/decodeSheet, then printed the folder to PDF and read the text back.",
+        "result": "Round-trip byte-exact. The printed sheet contains 박지훈 / Zoë Müller, أحمد يحتاج مقعدًا أماميًا and Ñoño correctly — no tofu, no '?' substitution, no mangled diacritics. The Fraunces subset is latin-only with a unicode-range, so non-Latin falls through to the system stack as intended.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Scale limits: every field at the cap",
+        "method": "Filled all 23 schema fields with 4,000 characters each, reloaded, and measured storage, render and share-URL size; also timed 100 synchronous keystroke saves.",
+        "result": "92,279 bytes in localStorage, all 23 controls render, first textarea holds its full 4,000 chars after reload, no errors. Share URL would be 123,056 characters. 100 keystrokes against that folder cost 102ms total (1.02ms each); against a realistic folder, 10ms total. A 120,001-character location.hash is accepted by the browser without error.",
+        "severity": "minor",
+        "defect": "No performance defect. The only issue is that Copy link will happily hand over a 123k-character URL with the same reassuring toast it gives a short one."
+      },
+      {
+        "name": "Ctrl+P with an empty folder",
+        "method": "Cleared storage, emulated print, fired beforeprint, generated the PDF.",
+        "result": "One page containing 'Sub Plans', 'Thank you for being here today — this folder has everything you need' and the empty 'HOW DID IT GO? LEAVE ME A NOTE —' box. The Print button guards this at app.js:169; the beforeprint handler at app.js:167 does not.",
+        "severity": "minor",
+        "defect": "The keyboard print path bypasses the empty-folder guard and prints a near-blank sheet."
+      },
+      {
+        "name": "Form legibility and hierarchy on screen",
+        "method": "Measured computed type sizes, colours and contrast at 414px default, and again at 320px with Largest text and Roomy spacing.",
+        "result": "Section headings 12px uppercase --ink-2 at 5.83:1; field labels beneath them 13px semibold — the heading is smaller than its own labels. At Largest text: 18px vs 19.5px, so the inversion holds at every size. Placeholder text measured at 3.33:1 (rgb(123,142,136) on rgb(255,250,244)) while carrying the app's five-line worked examples. The 'hour by hour' textarea shows 102px of 173px of the user's own content. At 320/xxl/roomy: 0px horizontal overflow, 0 overflowing elements, page 6,572px tall with the Print button at y=5455 (7.6 screens); the only sub-44px target on the page is #swsPrefsBtn at 36x36.",
+        "severity": "major",
+        "defect": "Inverted type hierarchy on the structure users navigate by, sub-4.5:1 contrast on text that is functioning as instructions, and a 23-field single-card form with no anchors and no sticky action bar."
+      },
+      {
+        "name": "Modal and panel accessibility",
+        "method": "Ran axe (wcag2a/2aa/21a/21aa/22aa) with the QR dialog open in dark mode and with the comfort panel open at 320px/xxl/roomy; checked focus movement and Escape.",
+        "result": "Zero violations in both states. QR dialog moves focus to #qrClose on open, returns it to #qrBtn on close, and Escape closes it. Comfort panel at 320px with Largest text and Roomy: 634px tall in a 720px viewport with the Done/Reset footer fully on screen, seven fieldsets with readable legends. Warm tint level 3 applies and the body::after overlay renders.",
+        "severity": "none",
+        "defect": null
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Hide #qrDlg in the print stylesheet — printing with the QR open prints only the QR",
+      "rationale": "Verified: with the dialog open, the printed PDF is a single page containing a QR code, 'Scan to open this folder' and a Close button. The whole folder is gone, silently. The dialog sits in the top layer so it wins over the correctly-rendered #sheet, and neither print hide-list mentions it — index.html:1203 lists #swsPrefs and #swsPrefsBtn, index.html:1265 lists .screenonly, header.app, footer.colophon, #toast. This is Danielle's exact sequence: show the QR, then print. One selector.",
+      "where": "apps/sub-plans/index.html:1265 (add #qrDlg to the app print hide-list; consider adding dialog to the base list at index.html:1203)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Stop deleting the last 1,000 characters at the 4,000-char cap",
+      "rationale": "Measured: 5,000 chars typed, 5,000 still visible in the textarea, 4,000 written to storage, 4,000 after reload. No counter, no warning, no visual change — the screen and the disk disagree and the user is shown the copy that will not survive. Tomás lost the end of a 504 accommodation note this way. The research asks for 'soft character caps with live counters' so the cap teaches instead of deleting. Either write back the truncated value to the field and announce it, or (better) keep the cap as a soft counter that appears past ~3,200 chars and never silently discards.",
+      "where": "apps/sub-plans/app.js:107 (oninput slice) with FIELD_CAP at app.js:86",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Make the shared-link overwrite undoable",
+      "rationale": "Verified: accepting 'Open the shared folder? Your saved one will be replaced.' overwrites the stored binder immediately, renders no undo control, and the browser Back button does not restore it — the folder is gone. This is the year's work, built in August, used in February. sws-ui.js:130 ships SWS.undo and index.html already loads sws-ui.js; app.js never calls it. Keep the confirm, snapshot the previous folder, and offer 'Undo' in the toast for 7 seconds. Priya hit this in a 22-minute prep period. (The dismiss branch is already correct and should not change.)",
+      "where": "apps/sub-plans/app.js:208-217 (init's shared-link branch)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Make the QR work, and put it on the paper instead of in a modal",
+      "rationale": "Measured: a realistic binder encodes to 2,780 characters against the 1,200-char cap at app.js:254, so Show QR refuses every folder worth sharing; forcing it under the cap drops health alerts, drills, the laptop password and all four extensions. Meanwhile the printed folder contains zero images — the QR the research names as a differentiator ('puts the packet in two places at once', answering the sourced 'the sub never found the notes' failure) never reaches paper. Compress the payload before base64 (CompressionStream 'deflate-raw' on prose of this shape is a large win), raise the effective cap to what a printed code can carry, and render the QR into page 1 of #sheet rather than only into a dialog. At the current cap the code is already 150 modules at 2 CSS px — sizing needs to follow module count, not stay pinned at 300px.",
+      "where": "apps/sub-plans/app.js:176-182 (encodeSheet), app.js:250-256 (cap), app.js:226-241 (showQr canvas sizing), and #sheet composition at app.js:126-129",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Pin the first-ten-minutes block to printed page 1, and give page 2 a header",
+      "rationale": "Measured from the PDF: bathroom, tech (the laptop password), office, nurse and admin all print on page 2, and page 2 carries no teacher name, no room, no date and no page number (one .shead in the sheet, no running-header rule anywhere). This is the most specifically-sourced requirement in the research — a fixed page-1 block with room, bathroom, WiFi/computer password, office extension and nearest helpful teacher, and the instruction 'never let that block get pushed to page 2.' Add a WiFi/computer password field, render passwords in a monospaced face with unambiguous glyphs, promote those keys into the header composition, and add a running header with 'page n of m'. Gwen, the substitute, is the whole reason this app exists.",
+      "where": "apps/sub-plans/app.js:84 (HEADER_KEYS), app.js:40-83 (SCHEMA — no wifi/password field), app.js:126-129 (shead composition), apps/sub-plans/index.html:1267 (.shead print rules)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Make the emergency block win in black and white",
+      "rationale": "Measured in print: 'IN AN EMERGENCY' is 10pt at #b91c1c (grayscale 75); its sub-labels 'HEALTH ALERTS' and 'FIRE · LOCKDOWN · DRILLS' are 8.5pt at #666 (grayscale 102, the palest text in the document); an ordinary heading like 'Today' is 12pt at #111 (grayscale 17). Zero icons in the box. School printing guidance defaults to black-and-white because colour costs roughly 5x, so on the copier the safety block is the weakest thing on the page. Give the heading at least the weight and darkness of a section heading, a filled black bar or heavier rule, an icon, and take the sub-labels out of 8.5pt #666.",
+      "where": "apps/sub-plans/index.html:1281-1285 (#sheet .em) and index.html:1276-1279 (#sheet .block h3)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Stop break-inside:avoid-page wasting up to 84% of page 1",
+      "rationale": "Measured with pdftotext -bbox: on a realistic binder the last text on page 1 ends at y=544.7pt of a 792pt sheet, leaving 207.6pt (73mm, 29% of the usable column) blank; with a long hour-by-hour plan, page 1 ends at y=155.5pt and 84% of the first sheet is white. #sheet .sec carries break-inside:avoid-page unconditionally, so any section taller than the remaining space is pushed whole. Keep avoid-page on .em and on short sections, drop it for .sec in favour of orphans/widows plus break-after:avoid on the h2, so a section may split but never leaves its heading stranded. Page count is the loudest complaint in the research; this inflates it for nothing.",
+      "where": "apps/sub-plans/index.html:1271",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Add a Today screen — the panic-mode entry point",
+      "rationale": "Measured: on a 414x900 phone the two fields a sick teacher needs are at y=710 and y=802 inside a 23-field single card, and Print is at y=3578 — 3.98 screens down; at 320px with Largest text it is 7.6 screens. The research's headline promise for this app is a complete packet in under 10 minutes and 'the emergency path in under 2', delivered by 'a distinct PANIC MODE entry point... Six fields, giant tap targets, one button that prints.' Land on date, today's plan, the backup activity, anything different, and the two emergency blocks read-only, with Print in view and 'Edit the whole binder' as a secondary link. Danielle is the app's core user and she is currently scrolling through the August form with a fever.",
+      "where": "apps/sub-plans/index.html:1307-1323 (screenonly card structure) and app.js:99-114 (renderForm)",
+      "severity": "major",
+      "effort": "L"
+    },
+    {
+      "title": "Show what prints, with a live page count",
+      "rationale": "#sheet is display:none until beforeprint, so nobody sees the packet before it is paper. Verified absent: no preview button (the five buttons are comfort settings, Print, Copy link, Show QR, Close), no page-count text, no counters, no completeness meter, no grayscale toggle. The research asks for all of these by name — a 'read it as your sub would' preview, 'a visible page-count estimate that updates as they type', and a 'how this prints in black and white' preview toggle. One toggle that reveals #sheet on screen, plus the page count on the Print button ('Print / Save as PDF — 2 pages'), delivers three of the research's differentiators at once and gives every persona the confirmation the app currently withholds.",
+      "where": "apps/sub-plans/index.html:1262 (#sheet{display:none}) and index.html:1314-1319 (the action card)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Say 'saved', and speak up when saving fails",
+      "rationale": "The intro card promises 'everything saves to this device automatically' (index.html:1309) and the app never confirms it once — no [data-saved-flag] element exists and app.js never calls SWS.saved(), though index.html:667-674 styles it and sws-ui.js:151 ships it. Worse: with a throwing setItem the toast stays empty and the promise stays on screen. index.html:1321 already acknowledges that school machines wipe data. Add the ambient saved flag next to the Print button, and a one-time assertive toast the first time a write throws.",
+      "where": "apps/sub-plans/app.js:95-97 (save's empty catch) and index.html:1314-1315 (nowhere to put the flag yet)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Fix the dark-mode QR dialog title — 1.01:1",
+      "rationale": "Measured: #qrTitle at rgb(17,17,17) hardcoded inline on the dialog's UA Canvas background of rgb(18,18,18). The dialog's inline style sets border, radius, padding and text-align but no background or colour, so it takes CanvasText/Canvas while its heading is pinned to #111. axe misses it because the colour is authored inline and the background comes from the UA sheet. Drop the inline colour and let the dialog use --surface/--ink like every other surface in the system.",
+      "where": "apps/sub-plans/index.html:1333-1334",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Keep Easier reading off the paper, and repair the dead print reset",
+      "rationale": "Measured: with data-reading=easy the printed packet grows from 2 pages to 3 — during print, body letter-spacing 0.704px, word-spacing 2.053px, --lh-body 1.8, sheet line-height 26.4px. The print block resets --ui-scale and --density but not data-reading. And the reset it does write never fires: :root{--ui-scale:1} at index.html:1212 has specificity (0,1,0) and loses to :root[data-text=\"xxl\"] at (0,2,0) from index.html:884 — measured --ui-scale of 1.5 during print. The base layer's own comment says a reader who set 150% did not ask for a six-page checklist; make that true by matching the selector specificity and adding a reading reset. This is a base-layer fix in design/studio.css, not a hand-edit of the app.",
+      "where": "design/studio.css @media print (spliced to apps/sub-plans/index.html:1210-1212)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Honour a share link pasted into an already-open tab",
+      "rationale": "Verified: setting location.hash on a loaded page — exactly what the address bar does for a fragment-only URL — changes nothing. No confirm, no toast, no data, and the hash stays in the bar looking successful. app.js reads location.hash once at app.js:208 inside init() and registers no hashchange listener. This is the most likely path by which a shared folder is actually opened; Priya concluded her team lead had sent a broken link.",
+      "where": "apps/sub-plans/app.js:208 (hash read inside init, no window hashchange listener)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Support the secondary-school shape, and stop the placeholders saying 'elementary only'",
+      "rationale": "The schema at app.js:40-83 offers one 'The plan, hour by hour' textarea and one 'Bell schedule' — a 6-period teacher with different rosters per period has nowhere to put them, and every example string is elementary ('3rd grade — 24 kids', 'Read-aloud — the bookmark is in the book', 'stack chairs', 'Marble jar on my desk'). The research names both structures as a table stake and warns that getting only one right halves the audience. A grade-band choice that swaps the example set is cheap and recovers most of the perceived fit; repeatable period blocks is the real fix. Marcus left in four minutes.",
+      "where": "apps/sub-plans/app.js:40-83 (SCHEMA) and app.js:99-114 (renderForm — fixed field list, no repeatable groups)",
+      "severity": "major",
+      "effort": "L"
+    },
+    {
+      "title": "Let the section headings outrank the field labels, and lift the placeholder contrast",
+      "rationale": "Measured: section headings render through section.card > h2 at 12px uppercase --ink-2 (5.83:1); the field labels beneath them render at 13px semibold — the heading is smaller than its own labels, and the inversion holds at every text size (18px vs 19.5px at Largest). 'TODAY' is the marker the app's own intro card tells the user to find, and Ruth scrolled past it twice. Separately, the placeholders carry the app's five-line worked examples at 3.33:1 via --ink-3 — invisible to the reader who most needs the onboarding, and not caught by axe or by the standard battery.",
+      "where": "apps/sub-plans/index.html:469-477 (section.card > h2) vs index.html:527-534 (label.f > span); placeholder colour at index.html:513",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Let the hour-by-hour plan field show the plan",
+      "rationale": "Measured: with a realistic five-line plan the textarea shows 102px of 173px of content — the teacher scrolls a 4-line window to read what she just typed, and at Largest text it is still 4.2 lines. This is the single most important field in the app. Auto-grow it (or give the multiline fields in 'Today' a taller min-height) so the plan is readable without a nested scroll.",
+      "where": "apps/sub-plans/index.html:511 (textarea{min-height:6.5rem}) and app.js:109 (no per-field sizing)",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Guard the keyboard print path against an empty folder",
+      "rationale": "Ctrl+P on an untouched app prints one sheet containing 'Sub Plans', the thank-you line and an empty feedback box. app.js:169 guards the button; the beforeprint handler at app.js:167 renders unconditionally. On a school printer with a per-teacher quota this is not free, and it is the first thing a curious first-time user does.",
+      "where": "apps/sub-plans/app.js:167 (window beforeprint → renderSheet)",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Separate the share buttons from Print and warn before student data leaves in a URL",
+      "rationale": "Copy link and Show QR sit as equal peers of Print at index.html:1315-1318, and the payload includes 'Health alerts' and 'Kids who need something' — allergies, medications, accommodations, the data the research names as 'exactly the data FERPA covers.' The only guard is a --t-sm hint below the buttons. The research: 'if any share-by-link feature exists, it must be opt-in, obviously separate, and warn before it carries student names.' Move sharing behind a secondary disclosure and confirm what is travelling — and note the toast currently says 'Link copied' just as cheerfully for a 123,056-character URL as for a short one.",
+      "where": "apps/sub-plans/index.html:1315-1321 (action card layout) and app.js:246-249 (shareBtn)",
+      "severity": "minor",
+      "effort": "M"
+    }
+  ],
+  "audit": {
+    "slug": "sub-plans",
+    "purpose": "A substitute-folder builder for teachers. One long form of 23 fixed fields grouped into 8 sections, saved to localStorage on every keystroke, whose only outputs are (a) a print-only rendering of the folder as a paper packet and (b) the whole folder encoded into a URL fragment, offered as a copyable link or an on-screen QR code. No accounts, no network, no upload. The research frames it as two sessions in one app: a calm August prep session that tolerates density, and a 05:45 sick-morning session on a phone that decides whether the app is loved.",
+    "structure": "Single page, no routing, no tabs, no modals except two dialogs. body > div.wrap containing: (1) header.app — icon.svg 32x32 with alt=\"\", h1 'Sub Plans', span.spacer, a#tipLink.tipbtn.hidden (CONFIG.tipUrl is '' so the tip jar never appears), plus button#swsPrefsBtn injected at runtime by sws-prefs.js before the tip link; (2) main#main containing div.screenonly with three section.card blocks — an intro hint card, the empty section#form[aria-label='Sub folder details'] that JS fills, and an action card with button#printBtn.btn.primary (full width), a .row of button#shareBtn and button#qrBtn, and two p.hint lines; (3) div#sheet, empty in source, display:none on screen, populated only for print. Outside .wrap: div#toast[role=status][aria-live=polite], footer.colophon with three links (hub, privacy.html, mailto feedback), and dialog#qrDlg[aria-labelledby=qrTitle] holding h3#qrTitle, canvas#qrCanvas 300x300 [role=img], and button#qrClose. Scripts: sws-prefs.js and sws-ui.js in head, vendor-qrcode.js then app.js as a module at the end of body. There is NO skip link element in the markup despite the base layer styling .skip at index.html:846-855, and NO [data-saved-flag] element despite the base styling it at index.html:667-674.",
+    "cssClasses": [
+      ".wrap — page gutter, max-width var(--wrap)=48rem for this skin (index.html:337)",
+      "header.app — flex app bar, wraps, min-height calc(--tap + --s4) (index.html:362)",
+      "header.app img — 32x32 icon, --r-sm (index.html:374)",
+      "header.app .spacer — flex:1 push (index.html:396)",
+      "a.tipbtn — tip pill, present in markup but permanently .hidden because CONFIG.tipUrl is '' (index.html:400 / app.js:4)",
+      "button#swsPrefsBtn — 36x36 pill, injected by sws-prefs.js, the only sub-44px target in the app (index.html:1012)",
+      "section.card / .card — the app's only surface; three instances (index.html:457)",
+      "section.card > h2 — --t-micro 12px uppercase --ink-2 micro-label; used here for the eight FORM SECTION headings, which is a demotion, not a label (index.html:469)",
+      ".screenonly — wraps everything that must not print (index.html:1265, also in the base hide-list at 1203)",
+      "label.f — block field wrapper, margin-bottom --s4 (index.html:527)",
+      "label.f > span — --t-xs 13px semibold --ink-2 field label; measures LARGER than the section heading above it (index.html:530)",
+      ".hint — --t-sm 15px --ink-2; three instances, carrying the app's instructions and its share warning (index.html:641)",
+      ".em — BASE emphasis utility, color --ink + weight 600 (index.html:648). Collides by name with #sheet .em, the printed emergency box (index.html:1281). The collision is currently load-bearing: it is the only reason the allergy text prints bold.",
+      ".btn / .btn.primary — Print is .btn.primary with an inline width:100%; Copy link and Show QR are plain .btn inside a .row (index.html:556, 578; instanced 1315-1318)",
+      ".row — wrapping equal-columns flex, children flex:1 1 12rem (index.html:353)",
+      "#toast — fixed bottom pill, role=status (index.html:759)",
+      "footer.colophon — centred --t-sm --ink-2, three inline links given color:inherit inline (index.html:428; instanced 1331)",
+      "#swsPrefs and descendants — the comfort panel, entirely from the base layer (index.html:1027-1182)",
+      ".actionbar, .trust, .empty, .chip, .seg, ul.plain, .tablewrap, .warn, [data-saved-flag], .skip — all SHIPPED IN THE STYLESHEET AND UNUSED by this app (index.html:811, 443, 708, 651, 604, 690, 735, 676, 667, 846)",
+      "#sheet — display:none on screen; the entire printed document (index.html:1262)",
+      "#sheet .shead / .shead h1 / .sub / .warm — centred print header, 2.5pt rule, 20pt title, 10.5pt subline, 9.5pt italic thank-you (index.html:1267-1270)",
+      "#sheet .sec — a printed section; break-inside:avoid-page (index.html:1271)",
+      "#sheet .sec > h2 — 12pt with a 1.25pt rule, inherits #111 (index.html:1272)",
+      "#sheet .block — a printed field; break-inside:avoid (index.html:1276)",
+      "#sheet .block h3 — 8.5pt uppercase #666 field label (index.html:1277)",
+      "#sheet .block .v — the value; white-space:pre-wrap, overflow-wrap:anywhere (index.html:1280)",
+      "#sheet .em — the emergency box; 1.5pt #b91c1c border, 6pt radius (index.html:1281)",
+      "#sheet .em h2 — 10pt uppercase #b91c1c (index.html:1285)",
+      "#sheet .noteback — the substitute's feedback box; 1pt #999, min-height 130pt (index.html:1286)"
+    ],
+    "dynamicMarkup": "Two containers are empty in source and built entirely by JS, so a restyle that reads only index.html sees neither. (1) section#form is filled by renderForm (app.js:99-114): for each of the 8 entries in SCHEMA.sections it appends a bare <h2> (which section.card > h2 then styles as a micro-label) followed by one label.f per field containing a <span> and either an <input type=text> or a <textarea>. No ids, no name attributes, no for/id pairing — labelling works only because the control is inside the label. No fieldsets, no per-section wrapper element, so there is no hook to collapse, anchor or reorder a section. 23 controls total. Each control gets an oninput handler that writes data[key] = value.slice(0,4000) and calls save(). (2) div#sheet is rebuilt from scratch by renderSheet (app.js:118-161) and ONLY on window beforeprint (app.js:167) or a click on #printBtn (app.js:168-172) — it is display:none at all other times, so it never appears in a screen screenshot or a DOM inspection of the idle page. Its shape: .shead (h1 = 'Sub Plans' + optional ' — ' + teacher; .sub = class · Room N · school · date joined with ' · '; .warm = fixed thank-you sentence), then optionally .em containing an h2 and one .block per non-empty EMERGENCY_KEY, then one .sec per remaining schema section with an h2 and one .block per non-empty field, with 'End of the day' always emitted so the .noteback feedback box always prints. Section-skipping logic is at app.js:146-148. Everything user-supplied reaches the DOM through el()'s text: attribute, i.e. textContent. The QR canvas is painted imperatively by showQr (app.js:226-241) at a fixed 300x300 with cell = floor(300/(moduleCount+8)), so module size shrinks as the folder grows — 4px at a short folder, 2px at the 1,200-char cap.",
+    "comfortDefects": [
+      {
+        "issue": "The eight form section headings are SMALLER and fainter than the field labels beneath them. Measured at 414px default: section h2 12px uppercase --ink-2 (5.83:1 on the card) via section.card > h2; label.f > span 13px semibold. At Largest text: 18px vs 19.5px, so the inversion is scale-invariant. The intro card tells the user to 'update Today' — pointing at the least prominent text on the page.",
+        "where": "index.html:469-477 (section.card > h2) applied to the runtime h2 at app.js:103; competing rule at index.html:527-534",
+        "fix": "Give the form's section headings their own rule — #form h2{font-size:var(--t-lg); text-transform:none; color:var(--ink); letter-spacing:normal; font-family:var(--font-display)} with margin-top:var(--s6) on all but the first. The micro-label treatment is correct for a card's own title and wrong for the spine of a 23-field form."
+      },
+      {
+        "issue": "Placeholder text measures 3.33:1 — rgb(123,142,136) on rgb(255,250,244) — while carrying the app's actual onboarding. These are not hints; they are five-line worked examples ('8:00 Morning work — packet on my desk / 9:15 Math — video queued on the laptop, then worksheet p. 34...') and they are the only guidance a first-time user receives. Neither axe nor the standard battery catches placeholder contrast.",
+        "where": "index.html:513 (::placeholder using --ink-3); content at app.js:44-80",
+        "fix": "Either raise ::placeholder to --ink-2 for this app, or — better, given the research's 'field placeholders written as a stranger's questions' guidance — move the worked examples out of the placeholder into a real .hint under each multiline field, where they are readable, selectable and survive typing."
+      },
+      {
+        "issue": "The hour-by-hour plan field shows 102px of 173px of the user's own content. textarea min-height is 6.5rem with no auto-grow, so the single most important field in the app is a 4-line window at every text size (measured 4.2 lines at both default and Largest).",
+        "where": "index.html:511; renderForm creates all textareas identically at app.js:109",
+        "fix": "Auto-grow multiline fields on input (set height to scrollHeight, capped), or at minimum give the 'Today' textareas a taller min-height than the incidental ones. The schema already distinguishes multiline from single-line; it should also distinguish long from short."
+      },
+      {
+        "issue": "23 fields in one undifferentiated card with no collapse, no anchors, no jump links and no sticky action bar. Measured at 414x900: page 4,104px, Print at y=3578 (3.98 screens). At 320px with Largest text and Roomy: page 6,572px, Print at y=5455 (7.6 screens). The comfort panel's text-size help makes this strictly worse, which is the one place its benefit is self-cancelling.",
+        "where": "index.html:1312 (single section#form) and app.js:102-113 (flat render, no per-section wrapper); unused .actionbar at index.html:811-822",
+        "fix": "Wrap each schema section in a real element so it can collapse or be anchored, and pin the primary action using the .actionbar component the base already ships. The deeper fix is the Today screen (see fixes)."
+      },
+      {
+        "issue": "No confirmation that anything was saved. There is no [data-saved-flag] element and app.js never calls SWS.saved(), although index.html:667-674 styles the component and sws-ui.js:151 implements it. Meanwhile index.html:1309 promises 'everything saves to this device automatically'.",
+        "where": "app.js:95-97 (save) and app.js:107 (the only caller); component styled but unused at index.html:667-674",
+        "fix": "Add <span data-saved-flag> beside the Print button and call SWS.saved() debounced on write."
+      },
+      {
+        "issue": "data-reading=\"easy\" reaches the printed page and lengthens it. Measured during print media: body letter-spacing 0.704px, word-spacing 2.053px, --lh-body 1.8, sheet line-height 26.4px; the same binder goes from 2 printed pages to 3.",
+        "where": "index.html:949-961 (the reading rules) with no counterpart in the print block at index.html:1187-1243",
+        "fix": "Reset the reading preference inside @media print in design/studio.css alongside --ui-scale and --density."
+      },
+      {
+        "issue": "The print block's reset of --ui-scale and --density is dead code. :root{--ui-scale:1;--density:1} has specificity (0,1,0) and cannot beat :root[data-text=\"xxl\"] at (0,2,0). Measured --ui-scale during print: 1.3 at XL, 1.5 at Largest. This app escapes visible harm only because #sheet is sized in absolute pt; any app whose print layout uses rem or the spacing scale is silently printing at the user's screen scale.",
+        "where": "index.html:1212 vs index.html:880-890 (base layer; source is design/studio.css)",
+        "fix": "Match the specificity — :root, :root[data-text], :root[data-density]{--ui-scale:1;--density:1} inside @media print."
+      },
+      {
+        "issue": "#swsPrefsBtn is 36x36, the only interactive target in the app under the system's own --tap floor of 44px, and it does not grow with --ui-scale.",
+        "where": "index.html:1012-1014 (base layer; source design/studio.css)",
+        "fix": "min-width/min-height:var(--tap), or keep the 36px visual pill inside a 44px hit box via padding."
+      },
+      {
+        "issue": "The warm tint overlay is applied with mix-blend-mode:multiply over the whole viewport at z-index 9999. Verified working (level 3 applies, overlay renders), and correctly disabled in print — but it also multiplies over the QR canvas, which is the one element on screen whose contrast is functional rather than aesthetic.",
+        "where": "index.html:979-996 (body::after) vs the canvas at index.html:1335",
+        "fix": "Exclude the QR canvas from the tint — e.g. give #qrCanvas a z-index above the overlay, or suppress the overlay while #qrDlg is open. Worth verifying against a real phone camera before deciding it matters."
+      },
+      {
+        "issue": "The tip jar is in the markup but permanently hidden, because CONFIG.tipUrl is ''. The header therefore renders as icon + title + a 36px settings button, with a large empty span.spacer between them.",
+        "where": "index.html:1302 and app.js:4, 202-206",
+        "fix": "Not a defect so much as a note for whoever restyles the header: the tipbtn will appear one day and the header must still wrap correctly at 320px with Largest text when it does."
+      }
+    ],
+    "navigationDefects": [
+      {
+        "issue": "No empty state and no first-run orientation beyond one paragraph. Opened cold the page is a wall of 23 labelled boxes. The .empty component is in the stylesheet and unused.",
+        "where": "index.html:1307-1312; unused component at index.html:708-729",
+        "fix": "The placeholders do a lot of this work already, but they are 3.33:1 and vanish on typing. A short 'what this is' block plus a two-choice grade-band start would orient better."
+      },
+      {
+        "issue": "No way to reach 'Today' directly. The section a returning user needs on a sick morning is the second of eight, mid-scroll, marked by a 12px grey uppercase label, in a form with no anchors or table of contents.",
+        "where": "app.js:49-53 (SCHEMA 'Today') rendered flat at app.js:102-113",
+        "fix": "The Today screen from the fixes list. Short of that, at least a sticky 'Jump to Today' affordance and section anchors."
+      },
+      {
+        "issue": "No preview of the output. #sheet is display:none until beforeprint, so the only way to see the packet is to enter the browser's print dialog. No page count, no 'read it as your sub would' toggle, no black-and-white preview.",
+        "where": "index.html:1262 and app.js:167-172",
+        "fix": "A Preview toggle that reveals #sheet in a screen-safe form, with the page count on the Print button."
+      },
+      {
+        "issue": "A share link pasted into an already-open tab is silently ignored. app.js reads location.hash once inside init() and never listens for hashchange, so a fragment-only navigation changes nothing while the hash sits in the address bar looking as though it worked.",
+        "where": "app.js:208 (inside init, no window hashchange listener)",
+        "fix": "Add a hashchange listener that runs the same decode-and-confirm path, then clears the hash."
+      },
+      {
+        "issue": "Accepting a shared folder is a one-way door. The confirm at app.js:211 is honest, but there is no undo, and the browser Back button does not restore the previous folder (verified).",
+        "where": "app.js:208-217",
+        "fix": "Snapshot before overwrite and offer SWS.undo in the toast."
+      },
+      {
+        "issue": "history.replaceState(null,'',location.pathname) after loading a shared folder discards any query string (verified: ?from=office removed). Harmless today because nothing reads location.search, but it is a silent side effect on a URL the user may have arrived on from a tracked link.",
+        "where": "app.js:216",
+        "fix": "location.pathname + location.search."
+      },
+      {
+        "issue": "No skip link. The base layer styles .skip at index.html:846-855 and the app never renders one, so keyboard users tab through the header on every visit before reaching the form. Not a battery failure — reachability is clean, with 30 focusable elements, 0 unreachable and 0 unnamed — but it is the one piece of studio chrome this app omits.",
+        "where": "index.html:1296-1305 (no a.skip before header.app); component at index.html:846-855",
+        "fix": "Add <a class=\"skip\" href=\"#main\">Skip to the form</a> as the first child of body."
+      },
+      {
+        "issue": "Copy link and Show QR are visually equal peers of Print, and one of them is a dead end for any realistic folder while the other emits a 2,780-character URL. Neither communicates its constraint until pressed.",
+        "where": "index.html:1315-1319; guards at app.js:246-256",
+        "fix": "Demote sharing to a secondary disclosure, and state the constraint before the press rather than in a toast after it."
+      },
+      {
+        "issue": "The QR dialog offers no way to save or share the code itself — no download, no 'add to the printed page', no copy-image. Its only exit is Close.",
+        "where": "index.html:1333-1337",
+        "fix": "Moot once the QR prints on page 1; until then, at least a download."
+      }
+    ],
+    "a11yDefects": [
+      {
+        "issue": "Dark-mode QR dialog title at 1.01:1. #qrTitle is pinned to color:#111 by an inline style while the dialog takes the UA's Canvas background, measured rgb(18,18,18). The only instruction in the dialog is invisible. axe returns zero violations because the foreground is authored inline and the background comes from the UA stylesheet.",
+        "where": "index.html:1334 (inline color:#111) with index.html:1333 setting no background or color on the dialog",
+        "fix": "Remove the inline colour and give #qrDlg background:var(--surface); color:var(--ink); border:1px solid var(--line)."
+      },
+      {
+        "issue": "Placeholder contrast 3.33:1 on text that functions as instructions (see comfortDefects). WCAG treats placeholders as text; more importantly these placeholders are the app's onboarding.",
+        "where": "index.html:513",
+        "fix": "--ink-2 for this app's placeholders, or move the examples into real hint text."
+      },
+      {
+        "issue": "1,000 characters are silently discarded past the 4,000-char cap with the full text still displayed in the field. Nothing is announced, no counter exists, and the loss is invisible until reload. For a user relying on a screen reader there is no signal at all.",
+        "where": "app.js:107 with FIELD_CAP at app.js:86",
+        "fix": "Write the truncated value back to the control, add a visible counter that appears near the limit, and announce once via the live region."
+      },
+      {
+        "issue": "Saving is never announced and failing to save is never announced. The #toast live region exists and is used for share and error messages but never for persistence.",
+        "where": "app.js:95-97 (empty catch); live region at index.html:1330",
+        "fix": "SWS.saved({announce:true}) debounced, and an assertive toast on the first write failure."
+      },
+      {
+        "issue": "Form controls have no id, no name and no explicit for/id association — labelling depends entirely on the control being nested inside label.f. This passes axe and works in practice, but it means no control can be targeted by an anchor, a completeness meter, or an error message, and aria-describedby cannot be attached to anything.",
+        "where": "app.js:104-111 (renderForm builds label > span + control with no ids)",
+        "fix": "Emit id/for pairs keyed off the schema key. It costs nothing and unlocks anchoring, deep links to a field, and per-field hints."
+      },
+      {
+        "issue": "The form's eight section headings are h2 elements with no programmatic grouping — no fieldset, no section, no aria-labelledby region. A screen-reader user can navigate by heading, but the fields between headings are not associated with them, so 'Bathroom & hallway' is announced without its 'Routines' context.",
+        "where": "app.js:103 (bare h2, no wrapper) inside section#form at index.html:1312",
+        "fix": "Wrap each schema section in <section aria-labelledby> or a fieldset/legend."
+      },
+      {
+        "issue": "No skip link, so every keyboard visit begins by tabbing the header. The stylesheet is ready for one.",
+        "where": "index.html:1296-1305; component at index.html:846-855",
+        "fix": "Add the .skip anchor as body's first child."
+      },
+      {
+        "issue": "#swsPrefsBtn is 36x36 — under WCAG 2.2 Target Size (Minimum) 24px only by grace, and well under the system's own 44px comfort floor. It is the sole small target in the app.",
+        "where": "index.html:1012-1014",
+        "fix": "Grow the hit box to var(--tap)."
+      },
+      {
+        "issue": "The printed emergency block encodes urgency largely in colour (#b91c1c heading and border), and school printing guidance defaults to black and white. Not a screen a11y failure but the same principle — WCAG 1.4.1, meaning carried by colour — applied to the artifact that actually gets used.",
+        "where": "index.html:1281-1285",
+        "fix": "Weight, size, rule, fill and icon, with colour as a bonus."
+      },
+      {
+        "issue": "Ctrl+P on an empty folder prints a near-blank page because the beforeprint handler renders unconditionally while the button path guards. The keyboard route is the less-guarded route, which is the wrong way round.",
+        "where": "app.js:167 vs app.js:168-172",
+        "fix": "Move the hasContent() check into renderSheet, or into the beforeprint handler."
+      },
+      {
+        "issue": "Positives worth recording so a restyle does not break them: axe is clean at wcag2a/2aa/21a/21aa/22aa in the idle state, with the comfort panel open at 320px/Largest/Roomy, and with the QR dialog open in dark mode. The QR dialog moves focus to Close on open, restores it to Show QR on close, and Escape closes it. Keyboard reachability is 30 focusable elements, 0 unreachable, 0 unnamed. The canvas carries role=img and an aria-label. The toast is role=status aria-live=polite and clears before re-announcing an identical string (app.js:26-27).",
+        "where": "app.js:239-245, app.js:22-31, index.html:1330, index.html:1335",
+        "fix": "No change needed — these are the behaviours to regression-test after any restyle."
+      }
+    ],
+    "printSupport": "Print is the product here, and unusually for this portfolio the app writes a substantial print stylesheet of its own (index.html:1263-1291) on top of the base block (index.html:1187-1243). It defines a complete second document: #sheet flipped to display:block at 11pt with 4mm side padding, a centred .shead with a 2.5pt rule and a 20pt serif title, 12pt section headings with 1.25pt rules, 8.5pt uppercase field labels, pre-wrap values, a red-bordered emergency box, and a 130pt feedback box. The result is genuinely good: a realistic binder prints on 2 pages of Letter, empty sections drop out, the emergency block leads, and Unicode renders correctly with no tofu or '?' substitution. Six real defects sit on top of that foundation. (1) #qrDlg is absent from both print hide-lists (index.html:1203, 1265), so printing with the QR dialog open outputs a single page containing only the QR and a Close button — the folder is gone. (2) #sheet .sec{break-inside:avoid-page} at index.html:1271 pushes any section that will not fit whole, wasting 207.6pt (29% of the usable column) at the foot of page 1 on a realistic binder and 596.8pt (84% of the sheet) with a long plan. (3) Only one .shead is emitted and there is no running header or page numbering, so page 2 carries the phone extensions and the laptop password with no teacher, room or date on it. (4) The emergency block's urgency is carried by colour that flattens to grayscale 75 while ordinary headings sit at 17, and its safety sub-labels are 8.5pt #666 — the palest text in the document. (5) data-reading=\"easy\" is not reset in print and turns a 2-page packet into 3; the reset of --ui-scale and --density that IS written at index.html:1212 is dead code, out-specified by the :root[data-text] rules (measured --ui-scale 1.5 during print). (6) beforeprint renders unconditionally, so Ctrl+P on an empty app prints a near-blank sheet. Base-layer print handling is otherwise correct and doing real work: the warm tint overlay is suppressed, buttons and chips are restated as ink-on-white so they survive 'background graphics off', @page margin is 14mm, and h1/h2/h3 carry break-after:avoid.",
+    "riskyToRestyle": [
+      "#sheet is display:none on screen and rebuilt from scratch on every print (app.js:118-161). Nothing you see in the browser reflects the printed document. Any change to #sheet rules must be verified by generating an actual PDF — emulate print media, dispatch beforeprint, then page.pdf() — because a screenshot will show you nothing.",
+      "The .em class is used for two unrelated things: the base layer's inline emphasis utility (index.html:648, color --ink + weight 600) and the printed emergency box (index.html:1281). They currently collide, and the collision is load-bearing — inheriting weight 600 from the base rule is the only reason the allergy text prints bold. Renaming or restyling either one changes the safety block. Rename the printed box to .alert and give it explicit weight before touching .em.",
+      "#qrCanvas is painted imperatively at a fixed 300x300 with cell = floor(300/(moduleCount+8)) (app.js:230-237), so module size is data-dependent — 4px on a short folder, 2px at the 1,200-char cap. NEVER set a CSS width or height on #qrCanvas that is not an integer multiple of the bitmap: a non-uniform scale makes modules uneven and the code unscannable. The canvas is also drawn white-on-black explicitly, so it does not follow the theme — that is deliberate and correct.",
+      "The warm tint overlay (body::after, index.html:979-996) sits at z-index 9999 with mix-blend-mode:multiply over everything, including the QR canvas. Any change to the overlay's blend mode or opacity is a change to whether a QR code scans.",
+      "section.card > h2 (index.html:469) is doing double duty: it is the intended micro-label for a card title AND, by accident of markup, the style for the eight form section headings that app.js:103 emits as bare h2s. Fixing the heading hierarchy means adding a #form-scoped rule, not editing the shared one — seven other apps depend on the shared behaviour.",
+      "The form is generated from SCHEMA (app.js:40-83) and the printed sheet is generated from the same object plus HEADER_KEYS (app.js:84) and EMERGENCY_KEYS (app.js:85). Adding a field changes both the screen and the paper, and renderSheet's skip logic (app.js:146-148) special-cases the literal strings 'The basics', 'Emergencies' and 'End of the day'. Renaming a section breaks the printed layout silently.",
+      "decodeSheet (app.js:183-196) allowlists incoming keys against SCHEMA, so removing or renaming a field permanently breaks every share link anyone has already sent that carries it. The payload has a version field (v:1) that nothing yet migrates.",
+      "The three .hint paragraphs (index.html:1309, 1320, 1321) are not decoration — they are the app's onboarding, its FERPA warning and its school-machine advice. The base layer deliberately sets .hint at --t-sm rather than --t-xs for this reason (see the comment at index.html:636-640); do not shrink them.",
+      "Print output must be validated in grayscale, not just in colour. The only colour in the printed document is #b91c1c on the emergency box, and the whole point of the research's grayscale-first requirement is that this is the copy teachers actually make. Render the PDF, convert to gray, and look at it.",
+      "The app declares CONFIG.tipUrl = '' (app.js:4) so a.tipbtn is permanently hidden. Any header layout work has to be checked with the tip pill visible as well as hidden, because it will be turned on."
+    ]
+  }
+}
