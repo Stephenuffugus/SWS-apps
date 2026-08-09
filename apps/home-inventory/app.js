@@ -504,6 +504,31 @@ function readText(file) {
   });
 }
 
+/**
+ * Leaving the editor drops `inv` from memory, so anything the device refused
+ * to store is gone at that moment. Never let that happen quietly.
+ * @returns {Promise<boolean>} true if it is safe (or chosen) to leave
+ */
+async function leaveGuard() {
+  if (await flush()) return true;
+  const n = Math.max(1, pendingChanges);
+  const r = await ask({
+    title: 'This device would not save your last changes',
+    body: [n + (n === 1 ? ' change is' : ' changes are') + ' only in this browser tab. Going back forgets them.',
+      'Export a backup file first — it contains everything, including the changes that would not store.'],
+    buttons: [
+      { label: 'Export a backup first', value: 'export', kind: 'primary' },
+      { label: 'Leave anyway', value: 'leave', kind: 'danger' },
+    ],
+  });
+  if (!r) return false;
+  if (r.choice === 'export') { exportBackup(true); return false; }
+  saveError = null; pendingChanges = 0; dirty = false;
+  renderSaveBanner();
+  toast('Left without saving — those changes are gone.', { assertive: true, ms: 6000 });
+  return true;
+}
+
 /* ---------- editor ---------- */
 async function renderEditor(id) {
   if (!inv || inv.id !== id) {
@@ -544,7 +569,7 @@ function drawEditor(focusKey) {
   v.append(el('section', { class: 'card' },
     el('div', { class: 'row' },
       el('button', { class: 'btn small noprint', type: 'button', style: 'flex:0 0 auto', 'data-fk': 'back',
-        onclick: async () => { await flush(); location.hash = '#/'; } }, '‹ Back'),
+        onclick: async () => { if (await leaveGuard()) location.hash = '#/'; } }, '‹ Back'),
       el('label', { class: 'f grow', for: nameId }, el('span', { class: 'sr-only' }, 'Inventory name'),
         el('input', { type: 'text', id: nameId, value: inv.name, maxlength: String(LIMITS.name),
           'aria-label': 'Inventory name', 'data-fk': 'invname', style: 'font-weight:700',

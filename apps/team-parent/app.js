@@ -191,6 +191,10 @@ async function renderBoard(code) {
   const v = $('view');
   if (live.code !== code) {
     live.stop();
+    // drafts belong to the board they were typed on
+    for (const k of Object.keys(manageDraft)) delete manageDraft[k];
+    wkdaysPicked = new Set();
+    lastSummary = '';
     v.replaceChildren(el('p', { class: 'hint', text: 'Opening team page…' }));
     try { await D.ensureSignedIn(); }
     catch (e) { v.replaceChildren(el('p', { class: 'warn', text: 'Couldn’t connect. Check your internet and reload.' })); return; }

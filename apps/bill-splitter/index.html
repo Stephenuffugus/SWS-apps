@@ -1692,30 +1692,89 @@ function fmtCents(cents, code){
   }
 }
 
-function splitEven(totalCents, n){
+/* ---------- the smallest unit a currency can actually show ----------
+   The engine counts hundredths, but Intl prints JPY, KRW and VND as whole
+   units. Left alone that means a ¥1,000 expense split three ways displays as
+   ¥667 / ¥333 / ¥333 — an exact internal allocation shown as numbers that do
+   not add up, which is the single accusation that kills apps in this
+   category. So every allocation is done in the unit the user will SEE.
+   Three-decimal currencies (BHD, KWD…) clamp to hundredths — 1.23 prints as
+   "BHD 1.230", which is exact, just not maximally precise. */
+const _curDigits = Object.create(null);
+function currencyDigits(code){
+  code = code || 'USD';
+  if (_curDigits[code] !== undefined) return _curDigits[code];
+  let d = 2;
+  try {
+    d = new Intl.NumberFormat(undefined, { style:'currency', currency: code }).resolvedOptions().maximumFractionDigits;
+    if (!isFinite(d)) d = 2;
+  } catch (e) { d = 2; }
+  return (_curDigits[code] = d);
+}
+/* Hundredths per displayable step: USD 1, currencies with one decimal 10,
+   zero-decimal currencies 100. */
+function moneyUnit(code){
+  const d = Math.min(2, currencyDigits(code));
+  return d === 2 ? 1 : (d === 1 ? 10 : 100);
+}
+function quantize(cents, code){
+  const u = moneyUnit(code);
+  return Math.round(cents / u) * u;
+}
+
+/* A stable per-item seed, so the spare unit does not always land on the same
+   person. Measured before this: over 60 shared items the first-added person
+   paid 60 cents more than everyone else, every time. */
+function seedOf(s){
+  s = String(s == null ? '' : s);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function splitEven(totalCents, n, unit, seed){
+  unit = unit || 1;
   if (n <= 0) return [];
-  const base = Math.floor(totalCents / n);
-  const rem = totalCents - base * n;
-  const out = new Array(n).fill(base);
-  for (let i = 0; i < rem; i++) out[i] += 1;
+  const T = Math.round(totalCents / unit);
+  const base = Math.floor(T / n);
+  const rem = T - base * n;
+  const out = new Array(n).fill(base * unit);
+  const start = n > 0 ? (seedOf(seed) % n) : 0;
+  for (let i = 0; i < rem; i++) out[(start + i) % n] += unit;
   return out;
 }
 
-/* Largest-remainder allocation: shares sum exactly to totalCents. */
-function allocateProportional(totalCents, weights){
+/* Largest-remainder allocation: shares sum exactly to totalCents, in whole
+   displayable units of the currency. Ties rotate from `seed` rather than
+   always favouring index 0. */
+function allocateProportional(totalCents, weights, unit, seed){
+  unit = unit || 1;
   const n = weights.length;
   if (n === 0) return [];
   let sumW = 0;
   for (const w of weights) sumW += (isFinite(w) && w > 0) ? w : 0;
-  if (!(sumW > 0)) return splitEven(totalCents, n);
-  const raw = weights.map(w => totalCents * ((isFinite(w) && w > 0) ? w : 0) / sumW);
+  if (!(sumW > 0)) return splitEven(totalCents, n, unit, seed);
+  const T = Math.round(totalCents / unit);
+  const raw = weights.map(w => T * ((isFinite(w) && w > 0) ? w : 0) / sumW);
   const base = raw.map(Math.floor);
-  let rem = totalCents - base.reduce((a, b) => a + b, 0);
+  let rem = T - base.reduce((a, b) => a + b, 0);
   if (rem < 0) rem = 0;
+  const start = seedOf(seed) % n;
+  const rank = i => (i - start + n) % n;
   const order = raw.map((r, i) => ({ i, frac: r - Math.floor(r) }))
-                   .sort((a, b) => b.frac - a.frac || a.i - b.i);
+                   .sort((a, b) => b.frac - a.frac || rank(a.i) - rank(b.i));
   for (let k = 0; k < rem; k++) base[order[k % n].i] += 1;
-  return base;
+  return base.map(x => x * unit);
+}
+
+/* Do the displayed shares add up to the displayed total? Rendered under every
+   result, because "the calculations are just very basically wrong" is the #1
+   one-star theme in this category and we are the only ones who can afford to
+   open the box. */
+function reconcile(total, parts){
+  let sum = 0;
+  for (const p of parts) sum += p;
+  return { sum, total, exact: sum === total, off: sum - total };
 }
 
 /* ---------- dinner ---------- */
@@ -1724,39 +1783,56 @@ function dinnerCompute(state){
   const people = state.people;
   const d = state.dinner;
   const n = people.length;
+  const cur = state.currency;
+  const unit = moneyUnit(cur);
   const shares = Object.create(null); // null-proto: person ids are map keys
-  for (const p of people) shares[p.id] = 0;
+  const work = Object.create(null);   // pid -> [{what, cents}] — the derivation
+  for (const p of people) { shares[p.id] = 0; work[p.id] = []; }
 
   let subtotal = 0;
   if (d.splitMode === 'items') {
-    for (const it of d.items) subtotal += it.cents;
+    for (const it of d.items) subtotal += quantize(it.cents, cur);
   } else {
-    subtotal = d.billCents;
+    subtotal = quantize(d.billCents, cur);
   }
-  const tax = d.taxCents;
+  const tax = quantize(d.taxCents, cur);
   const tip = d.tipMode === 'pct'
-    ? Math.round(subtotal * d.tipValue / 100)
-    : Math.round(d.tipValue);
+    ? quantize(subtotal * d.tipValue / 100, cur)
+    : quantize(d.tipValue, cur);
   const total = subtotal + tax + tip;
-  if (n === 0) return { subtotal, tax, tip, total, shares };
+  if (n === 0) return { subtotal, tax, tip, total, shares, work };
 
   if (d.splitMode === 'items') {
     const ids = people.map(p => p.id);
     for (const it of d.items) {
       let by = (it.by || []).filter(id => shares[id] !== undefined);
       if (by.length === 0) by = ids;
-      const parts = splitEven(it.cents, by.length);
-      by.forEach((id, i) => { shares[id] += parts[i]; });
+      const c = quantize(it.cents, cur);
+      const parts = splitEven(c, by.length, unit, it.id);
+      by.forEach((id, i) => {
+        shares[id] += parts[i];
+        work[id].push({
+          what: (it.label || 'Item') + ' ' + fmtCents(c, cur) +
+                (by.length > 1 ? ' ÷ ' + by.length : ''),
+          cents: parts[i],
+        });
+      });
     }
     const extra = tax + tip;
     const weights = ids.map(id => shares[id]);
-    const extraParts = allocateProportional(extra, weights);
-    ids.forEach((id, i) => { shares[id] += extraParts[i]; });
+    const extraParts = allocateProportional(extra, weights, unit, state.id);
+    ids.forEach((id, i) => {
+      shares[id] += extraParts[i];
+      if (extra > 0) work[id].push({ what: 'Share of tax and tip', cents: extraParts[i] });
+    });
   } else {
-    const parts = splitEven(total, n);
-    people.forEach((p, i) => { shares[p.id] = parts[i]; });
+    const parts = splitEven(total, n, unit, state.id);
+    people.forEach((p, i) => {
+      shares[p.id] = parts[i];
+      work[p.id] = [{ what: fmtCents(total, cur) + ' ÷ ' + n + ' people', cents: parts[i] }];
+    });
   }
-  return { subtotal, tax, tip, total, shares };
+  return { subtotal, tax, tip, total, shares, work };
 }
 
 /* ---------- trip ---------- */
@@ -1770,19 +1846,66 @@ function expenseParticipants(exp, people){
 
 function tripCompute(state){
   const people = state.people;
+  const cur = state.currency;
+  const unit = moneyUnit(cur);
   const paid = Object.create(null), owed = Object.create(null), net = Object.create(null);
-  for (const p of people) { paid[p.id] = 0; owed[p.id] = 0; }
+  const known = Object.create(null);
+  for (const p of people) { paid[p.id] = 0; owed[p.id] = 0; known[p.id] = true; }
   let total = 0;
+  /* pairwise[debtor][creditor] — who actually owes whom, before any netting */
+  const pairwise = Object.create(null);
+  const bump = (from, to, c) => {
+    if (from === to || c <= 0) return;
+    if (!pairwise[from]) pairwise[from] = Object.create(null);
+    pairwise[from][to] = (pairwise[from][to] || 0) + c;
+  };
   for (const exp of state.trip.expenses) {
-    if (paid[exp.paidBy] === undefined) continue; // payer no longer exists
-    total += exp.baseCents;
-    paid[exp.paidBy] += exp.baseCents;
+    if (!known[exp.paidBy]) continue; // payer no longer exists
+    const base = quantize(exp.baseCents, cur);
+    total += base;
+    paid[exp.paidBy] += base;
     const split = expenseParticipants(exp, people);
-    const parts = allocateProportional(exp.baseCents, split.map(s => s.weight));
-    split.forEach((s, i) => { owed[s.pid] += parts[i]; });
+    const parts = allocateProportional(base, split.map(s => s.weight), unit, exp.id);
+    split.forEach((s, i) => { owed[s.pid] += parts[i]; bump(s.pid, exp.paidBy, parts[i]); });
+  }
+  /* Repayments are first-class events, not negative expenses. A trip that
+     settles mid-week has to stay correct. */
+  let repaid = 0;
+  for (const pay of (state.trip.payments || [])) {
+    if (!known[pay.from] || !known[pay.to]) continue;
+    const c = quantize(pay.cents, cur);
+    if (c <= 0) continue;
+    repaid += c;
+    paid[pay.from] += c;
+    paid[pay.to] -= c;
+    bump(pay.to, pay.from, c);
   }
   for (const p of people) net[p.id] = paid[p.id] - owed[p.id];
-  return { paid, owed, net, total };
+  return { paid, owed, net, total, repaid, pairwise };
+}
+
+/* Every debt exactly as it was incurred, netted only between the same two
+   people. The research quotes the request verbatim: "I wish there was an
+   option to see all debts without them being combined into the least amount
+   of transfers" — because a minimised set routes your money through someone
+   you never ate with. */
+function directDebts(pairwise){
+  const seen = Object.create(null);
+  const out = [];
+  for (const from of Object.keys(pairwise)) {
+    for (const to of Object.keys(pairwise[from])) {
+      const key = from < to ? from + '|' + to : to + '|' + from;
+      if (seen[key]) continue;
+      seen[key] = true;
+      const a = pairwise[from][to] || 0;
+      const b = (pairwise[to] && pairwise[to][from]) || 0;
+      const netAmt = a - b;
+      if (netAmt > 0) out.push({ from, to, cents: netAmt });
+      else if (netAmt < 0) out.push({ from: to, to: from, cents: -netAmt });
+    }
+  }
+  out.sort((x, y) => y.cents - x.cents || (x.from < y.from ? -1 : 1));
+  return out;
 }
 
 /* Minimal transfer set over net balances (greedy, ≤ n−1 transfers). */
@@ -1841,7 +1964,12 @@ async function encodeShare(state){
   return '0.' + B64U.enc(u8);
 }
 
+/* Why the last decode failed, so the message can name the reason instead of
+   shrugging. Read by init(). */
+let lastShareError = '';
+
 async function decodeShare(hash){
+  lastShareError = 'unreadable';
   hash = String(hash || '').replace(/^#/, '');
   const dot = hash.indexOf('.');
   if (dot < 0) return null;
@@ -1852,9 +1980,17 @@ async function decodeShare(hash){
       const ds = new DecompressionStream('deflate-raw');
       const stream = new Blob([u8]).stream().pipeThrough(ds);
       u8 = new Uint8Array(await new Response(stream).arrayBuffer());
+      /* A 54kB hash can decompress to 42MB. On a phone that is a visible
+         freeze, so it is refused rather than allocated twice. */
+      if (u8.length > LIMITS.shareBytes) {
+        lastShareError = 'toobig';
+        return null;
+      }
     } else if (kind !== '0') return null;
     const obj = JSON.parse(new TextDecoder().decode(u8));
-    return sanitizeState(obj);
+    const out = sanitizeState(obj);
+    if (out) lastShareError = '';
+    return out;
   } catch (e) {
     return null;
   }
@@ -1876,10 +2012,20 @@ function newState(mode){
     currency: 'USD',
     people: [],
     dinner: { splitMode: 'even', billCents: 0, taxCents: 0, tipMode: 'pct', tipValue: 0, items: [], paidBy: null },
-    trip: { expenses: [] },
+    trip: { expenses: [], payments: [] },
     updatedAt: 0,
   };
 }
+
+/* Every cap in this app, in one place, so the UI can quote the real number at
+   the moment the cap bites instead of discovering it silently. */
+const LIMITS = {
+  people: 50, items: 200, expenses: 500, payments: 200,
+  personName: 60, splitName: 80, itemLabel: 60, expenseLabel: 80,
+  amount: 99999999,
+  shareBytes: 4 * 1024 * 1024,
+  linkChars: 2500,
+};
 
 function str(v, max){ return typeof v === 'string' ? v.slice(0, max) : ''; }
 function cents(v){ v = Math.round(Number(v)); return (isFinite(v) && v >= 0 && v <= 1e10) ? v : 0; }
@@ -1942,7 +2088,8 @@ function sanitizeState(o){
   }
 
   const t = (o.trip && typeof o.trip === 'object') ? o.trip : {};
-  const expenses = Array.isArray(t.expenses) ? t.expenses.slice(0, 500) : [];
+  const payments = Array.isArray(t.payments) ? t.payments.slice(0, LIMITS.payments) : [];
+  const expenses = Array.isArray(t.expenses) ? t.expenses.slice(0, LIMITS.expenses) : [];
   for (const e of expenses) {
     if (!e || typeof e !== 'object') continue;
     const paidBy = pid(e.paidBy);
@@ -1968,43 +2115,103 @@ function sanitizeState(o){
       split,
     });
   }
+  for (const pmt of payments) {
+    if (!pmt || typeof pmt !== 'object') continue;
+    const from = pid(pmt.from), to = pid(pmt.to);
+    const c = cents(pmt.cents);
+    if (!from || !to || from === to || c <= 0) continue;
+    s.trip.payments.push({
+      id: safeId(pmt.id) || newId(),
+      from, to, cents: c,
+      note: str(pmt.note, 80),
+    });
+  }
   return s;
 }
 
 /* ---------- plain-text summary ---------- */
 
-function buildSummary(state){
+function plural(n, one, many){ return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+
+/* What the split was for, short enough for a Venmo note. */
+function reasonLine(state, max){
+  max = max || 60;
+  const bits = [];
+  if (state.mode === 'dinner') {
+    for (const it of state.dinner.items) if (it.label) bits.push(it.label);
+  } else {
+    for (const e of state.trip.expenses) if (e.label) bits.push(e.label);
+  }
+  const seen = new Set();
+  const uniq = bits.filter(b => (seen.has(b) ? false : (seen.add(b), true)));
+  let out = uniq.slice(0, 3).join(', ');
+  if (uniq.length > 3) out += ' +' + (uniq.length - 3) + ' more';
+  return out.slice(0, max);
+}
+
+function payNote(state){
+  const base = state.name || (state.mode === 'trip' ? 'Trip' : 'Dinner');
+  const why = reasonLine(state, 50);
+  return (why ? base + ': ' + why : base + ' split').slice(0, 80);
+}
+
+function buildSummary(state, url){
   const cur = state.currency;
   const nameOf = Object.create(null);
   for (const p of state.people) nameOf[p.id] = p.name;
   const lines = [];
   if (state.mode === 'dinner') {
     const r = dinnerCompute(state);
-    lines.push((state.name || 'Dinner') + ' — split');
+    lines.push((state.name || 'Dinner') + ' — split ' + plural(state.people.length, 'way'));
     lines.push('Total ' + fmtCents(r.total, cur) +
       ' (bill ' + fmtCents(r.subtotal, cur) +
       ' + tax ' + fmtCents(r.tax, cur) +
       ' + tip ' + fmtCents(r.tip, cur) + ')');
+    const why = reasonLine(state, 120);
+    if (why) lines.push('For: ' + why);
     const payer = state.dinner.paidBy ? nameOf[state.dinner.paidBy] : null;
+    const parts = [];
     for (const p of state.people) {
-      let line = p.name + ': ' + fmtCents(r.shares[p.id], cur);
+      const c = r.shares[p.id];
+      parts.push(c);
+      let line = p.name + ': ' + fmtCents(c, cur);
       if (payer && p.id !== state.dinner.paidBy) line += '  → pay ' + payer;
       lines.push(line);
     }
+    const rec = reconcile(r.total, parts);
+    lines.push(rec.exact
+      ? plural(state.people.length, 'share') + ' add up to ' + fmtCents(r.total, cur) + ' — exactly the bill.'
+      : 'Heads up: the shares add to ' + fmtCents(rec.sum, cur) + ', not ' + fmtCents(r.total, cur) + '.');
   } else {
     const r = tripCompute(state);
-    lines.push((state.name || 'Trip') + ' — ' + state.people.length + ' people, ' +
-      state.trip.expenses.length + ' expenses, total ' + fmtCents(r.total, cur));
+    lines.push((state.name || 'Trip') + ' — ' + plural(state.people.length, 'person', 'people') + ', ' +
+      plural(state.trip.expenses.length, 'expense') + ', total ' + fmtCents(r.total, cur));
+    const why = reasonLine(state, 120);
+    if (why) lines.push('For: ' + why);
+    if (r.repaid > 0) lines.push('Already repaid: ' + fmtCents(r.repaid, cur) +
+      ' across ' + plural((state.trip.payments || []).length, 'repayment') + '.');
+    const nets = [];
     for (const p of state.people) {
       const n = r.net[p.id];
+      nets.push(n);
       lines.push(p.name + ': ' + (n >= 0 ? 'gets back ' : 'owes ') + fmtCents(Math.abs(n), cur));
     }
     const transfers = settleUp(r.net);
     if (transfers.length) {
-      lines.push('To settle up:');
-      for (const t of transfers)
+      lines.push('To settle up (fewest payments):');
+      let moved = 0;
+      for (const t of transfers) {
+        moved += t.cents;
         lines.push(nameOf[t.from] + ' → ' + nameOf[t.to] + ': ' + fmtCents(t.cents, cur));
+      }
+      const zero = nets.reduce((a, b) => a + b, 0);
+      lines.push(plural(transfers.length, 'payment') + ' moving ' + fmtCents(moved, cur) +
+        (zero === 0 ? ' — balances net to zero exactly.' : ' — balances are off by ' + fmtCents(Math.abs(zero), cur) + '.'));
     }
+  }
+  if (url) {
+    lines.push('');
+    lines.push('Open the whole split (no app, no account): ' + url);
   }
   return lines.join('\n');
 }
@@ -2108,6 +2315,9 @@ let editingPersonId = null;    // person dialog
 let recentNames = [];          // [{name, venmo, cashtag, paypal}]
 
 let saveTimer = null;
+let storageOK = true;      // false once IndexedDB has actually refused a write
+let storageToldUser = false;
+
 function touch(){
   state.updatedAt = Date.now();
   clearTimeout(saveTimer);
@@ -2117,11 +2327,49 @@ async function persist(){
   try {
     await DB.put('trips', JSON.parse(JSON.stringify(state)));
     await DB.put('misc', state.id, 'lastId');
-  } catch (e) { /* private mode etc. — app still works */ }
+    if (!storageOK) { storageOK = true; renderStorageNote(); }
+    if (window.SWS && SWS.saved) SWS.saved();
+  } catch (e) {
+    /* Private mode, or storage refused. The app keeps working from the URL —
+       but it must not go on promising that things are being saved. */
+    if (storageOK) { storageOK = false; renderStorageNote(); }
+    if (!storageToldUser) {
+      storageToldUser = true;
+      toast('This browser is not letting the app save (private mode?). Your split still lives in this page’s address — use Copy link or Export to keep it.', 7000);
+    }
+  }
   try {
     const h = await encodeShare(state);
     history.replaceState(null, '', '#' + h);
   } catch (e) { /* ignore */ }
+}
+
+function renderStorageNote(){
+  const empty = $('savedEmpty');
+  if (empty) {
+    empty.textContent = storageOK
+      ? 'Splits you create are saved here automatically — on this device only.'
+      : 'This browser is blocking storage, so nothing is being saved here. The split still travels in the page address and in Export.';
+  }
+  const note = $('storageNote');
+  if (note) note.classList.toggle('hidden', storageOK);
+}
+
+/* ---------- undo ----------
+   A snapshot cannot forget a side effect the way a hand-written inverse can:
+   removing a person also strips them from every item and from dinner.paidBy,
+   and reconstructing that by hand is exactly how undo goes wrong. */
+function snapshot(){
+  return { tab: activeTab, data: JSON.parse(JSON.stringify(state)) };
+}
+function restore(snap){
+  state = snap.data;
+  touch();
+  setTab(snap.tab === 'saved' ? state.mode : snap.tab);
+}
+function undoable(msg, snap){
+  if (window.SWS && SWS.undo) SWS.undo(msg, () => restore(snap));
+  else toast(msg);
 }
 
 async function rememberNames(){
@@ -2140,6 +2388,9 @@ async function rememberNames(){
 
 let toastTimer = null;
 function toast(msg, ms){
+  /* The shared runtime holds the message while a pointer or the focus is
+     inside it, which the local one never did. */
+  if (window.SWS && SWS.toast) return SWS.toast(msg, { ms: ms || 4000 });
   const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');

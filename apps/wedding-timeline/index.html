@@ -1250,9 +1250,76 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.time{font-weight:700; font-variant-numeric:tabular-nums; flex:0 0 76px}
 
-.warn{color:var(--neg); font-size:.85rem}
+/* The time column is the thing Marguerite turns the text up to read, so its
+   width is in rem and follows --ui-scale with everything else. It was 76px
+   flat, which wrapped "7:00 AM" onto two lines at Largest. */
+.time{font-weight:700; font-variant-numeric:tabular-nums; flex:0 0 5.5rem}
+
+/* Moment rows carry two controls now (Edit and Remove) and both have to clear
+   the tap floor at every comfort setting, so the row is allowed to wrap
+   rather than squeeze the description to nothing. */
+ul.plain > li{flex-wrap:wrap}
+ul.plain > li .grow{flex:1 1 11rem; min-width:min(11rem, 55%)}
+.rowacts{display:flex; gap:var(--s2); margin-left:auto; flex:none}
+.rowbtn{min-height:var(--tap); padding:0 var(--s4)}
+
+ul.plain > li.editing{display:block; padding:var(--s4) 0}
+.editlabel{font-size:var(--t-sm); color:var(--ink-2); margin:0 0 var(--s3)}
+
+/* The am/pm question. Shown instead of guessing when someone types "7". */
+.ampm{
+  display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center;
+  margin-top:var(--s3); padding:var(--s3) var(--s4);
+  background:var(--accent-soft);
+  border:1px solid var(--line);
+  border-radius:var(--r-ctl);
+}
+.ampm .q{flex:1 1 100%; font-size:var(--t-sm); color:var(--ink); margin:0}
+.f-time{flex:0 0 7rem}
+
+.card > .trust{margin:0 0 var(--s5); display:flex; align-items:flex-start}
+.card > .trust svg{margin-top:2px}
+
+/* Empty state: a ceremony time and two toggles, not a blank grid. */
+.empty .tmpl{text-align:left; max-width:24rem; margin-inline:auto}
+.empty .tmpl label.f{margin-bottom:var(--s3)}
+.empty .tmpl .warn,.empty .tmpl .ampm{text-align:left}
+
+.shiftbox{margin-top:var(--s4); padding-top:var(--s4); border-top:1px solid var(--line)}
+.shiftbox .f-by{flex:0 0 9rem}
+.shiftbox .cluster{margin-top:var(--s1)}
+.card .cluster + .hint{margin-top:var(--s3)}
+.dlg .cluster{margin-top:var(--s4)}
+
+.origin{margin-top:var(--s3)}
+
+/* Share dialog — tokens, not the five inline declarations it used to carry.
+   Without a background it inherited the UA's dark Canvas and its heading
+   measured 1.01:1. */
+.dlg{
+  width:min(26rem, calc(100vw - 2 * var(--s4)));
+  max-height:min(90dvh, 46rem);
+  overflow:auto;
+  padding:var(--s5);
+  color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-2);
+}
+.dlg::backdrop{background:var(--veil)}
+.dlg h2{margin:0 0 var(--s4)}
+.dlg textarea{font-size:var(--t-sm); min-height:5.5rem; word-break:break-all}
+/* Never themed, never tinted: a QR is only as good as its contrast, and the
+   canvas is a bitmap sized from the module count so it can stay scannable. */
+#qrCanvas{
+  display:block; width:100%; height:auto;
+  max-width:20rem; margin:0 auto var(--s4);
+  image-rendering:pixelated;
+  background:#fff;
+  border-radius:var(--r-sm);
+}
 
 /* ---------- printed timeline ---------- */
 #sheet{display:none}
@@ -1260,69 +1327,138 @@ body{
   body{background:#fff; padding:0}
   .screenonly, header.app, footer.colophon, #toast{display:none !important}
   #sheet{display:block; color:#1a1a1a; font-family:Georgia, 'Times New Roman', serif; padding:10mm 8mm 0}
-  #sheet .head{text-align:center; margin-bottom:16pt}
-  #sheet .head h1{margin:0; font-size:24pt; font-weight:400; font-style:italic; letter-spacing:.01em}
+  #sheet .head{text-align:center; margin-bottom:10pt}
+  #sheet .head h1{margin:0; font-size:24pt; font-weight:400; font-style:italic; letter-spacing:.01em; overflow-wrap:anywhere}
   #sheet .head .date{color:#666; font-size:11pt; margin-top:4pt; letter-spacing:.14em; text-transform:uppercase}
   #sheet .head .rule{width:60pt; border-bottom:1pt solid #999; margin:10pt auto 0}
-  #sheet .ev{display:flex; gap:14pt; padding:7pt 0; break-inside:avoid; border-bottom:.5pt solid #e5e5e5}
-  #sheet .ev:last-child{border-bottom:0}
-  #sheet .ev .t{flex:0 0 70pt; text-align:right; font-size:12pt; font-variant-numeric:tabular-nums}
-  #sheet .ev .w{flex:1; font-size:12pt}
-  #sheet .ev .who{color:#666; font-size:9.5pt; font-style:italic; margin-top:1pt}
-  #sheet .foot{text-align:center; color:#999; font-size:9pt; font-style:italic; margin-top:16pt}
+
+  /* A table, so <thead> repeats: page 3 taped inside the DJ booth now says
+     whose wedding it is and when the sheet was printed. */
+  #sheet table.sheet-t{width:100%; border-collapse:collapse; table-layout:fixed}
+  #sheet thead{display:table-header-group}
+  #sheet thead th{padding:0 0 5pt; font-weight:400; text-align:left}
+  #sheet .run{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:4pt 10pt;
+    border-bottom:.5pt solid #999; padding-bottom:3pt;
+  }
+  #sheet .run-n{font-size:10.5pt; letter-spacing:.12em; text-transform:uppercase; color:#333}
+  #sheet .run-d{font-size:10.5pt; letter-spacing:.12em; text-transform:uppercase; color:#666}
+  #sheet .run-v{margin-left:auto; font-size:9.5pt; font-style:italic; color:#555}
+  #sheet tr.ev{break-inside:avoid; page-break-inside:avoid}
+  #sheet td{padding:7pt 0; border-bottom:.5pt solid #e5e5e5; vertical-align:top}
+  #sheet tbody tr:last-child td{border-bottom:0}
+  #sheet td.t{width:76pt; padding-right:14pt; text-align:right; font-size:12pt; font-variant-numeric:tabular-nums; white-space:nowrap}
+  #sheet td.w{font-size:12pt; overflow-wrap:anywhere}
+  /* The who/where line carries the location and the person responsible and is
+     read at arm's length in a dark barn. It does not get to be 9.5pt grey. */
+  #sheet td.w .who{color:#4a4a4a; font-size:10.5pt; font-style:italic; margin-top:1pt}
+  #sheet .foot{text-align:center; color:#8a8a8a; font-size:9.5pt; font-style:italic; margin-top:14pt}
+  #sheet .promise{font-style:normal; margin-top:4pt}
 }
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the timeline</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
     <h1>Wedding Day Timeline</h1>
     <span class="spacer"></span>
+    <span data-saved-flag></span>
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
   </header>
 
   <main id="main">
 
   <div class="screenonly">
+    <noscript>
+      <section class="card">
+        <p class="warn">This tool builds and prints your timeline entirely inside this browser, so it needs JavaScript switched on. Nothing is sent anywhere either way.</p>
+      </section>
+    </noscript>
+
     <section class="card">
+      <h2>The wedding</h2>
+      <p class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 4 6v6c0 4.4 3.2 7.9 8 9 4.8-1.1 8-4.6 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span><b>The day stays on this device.</b> Times, names and who-goes-where are saved in this browser only — no account, no email, no upload, no analytics. A share link is built on your own phone; it only travels if you paste it somewhere.</span>
+      </p>
       <div class="row">
-        <label class="f" style="flex:1.6"><span>The headline</span>
-          <input type="text" id="titleInput" maxlength="80" placeholder="Jessie & Sam"></label>
+        <label class="f"><span>The headline</span>
+          <input type="text" id="titleInput" maxlength="80" placeholder="Jessie &amp; Sam"></label>
         <label class="f"><span>The date</span>
           <input type="text" id="dateInput" maxlength="40" placeholder="June 14, 2027"></label>
       </div>
+      <p class="hint origin hidden" id="originNote"></p>
     </section>
 
     <section class="card">
       <h2>Add a moment</h2>
       <div class="row">
-        <label class="f" style="flex:0 0 110px"><span>Time</span>
-          <input type="text" id="evTime" maxlength="10" placeholder="2:30 pm"></label>
-        <label class="f" style="flex:1.5"><span>What</span>
+        <label class="f f-time"><span>Time</span>
+          <input type="text" id="evTime" maxlength="10" placeholder="2:30 pm" aria-describedby="timeHint"></label>
+        <label class="f"><span>What</span>
           <input type="text" id="evWhat" maxlength="120" placeholder="First look photos"></label>
       </div>
+      <p class="hint" id="timeHint">Say am or pm — “2:30 pm”, “14:30”, “noon”, or leave it blank for a whenever moment.</p>
       <label class="f"><span>Who / where (optional)</span>
         <input type="text" id="evWho" maxlength="80" placeholder="Couple + photographer · rose garden"></label>
-      <button class="btn primary" id="addEv" type="button" style="width:100%">Add to the day</button>
-      <p class="warn hidden" id="timeWarn">That time didn’t parse — try “2:30 pm” or “14:30”.</p>
+      <button class="btn primary block" id="addEv" type="button">Add to the day</button>
+      <p class="warn hidden" id="timeWarn"></p>
+      <div class="ampm hidden" id="timeChoose" role="group" aria-label="Morning or evening?"></div>
+      <p class="warn hidden" id="dupWarn"></p>
     </section>
 
     <section class="card">
       <h2>The day</h2>
       <ul class="plain" id="evList"></ul>
-      <p class="hint" id="emptyHint">Hair, photos, ceremony, toasts, last dance — every moment lands in time order automatically.</p>
+
+      <div class="empty hidden" id="emptyBox">
+        <div class="glyph" aria-hidden="true">✽</div>
+        <h3>Start from the ceremony</h3>
+        <p>Give the ceremony time and this lays out a plausible wedding day — hair through sparkler exit — that you then correct. Or just add moments below; they land in time order automatically.</p>
+        <div class="tmpl">
+          <label class="f f-time"><span>Ceremony time</span>
+            <input type="text" id="tmplTime" maxlength="10" placeholder="4:00 pm"></label>
+          <label><input type="checkbox" id="tmplFirstLook"> We’re doing a first look</label>
+          <label><input type="checkbox" id="tmplTwoVenues"> Ceremony and reception are in different places</label>
+          <button class="btn primary block" id="tmplGo" type="button">Lay out the day</button>
+          <p class="warn hidden" id="tmplWarn"></p>
+          <div class="ampm hidden" id="tmplChoose" role="group" aria-label="Morning or evening?"></div>
+        </div>
+      </div>
+
+      <div class="shiftbox hidden" id="shiftBox">
+        <div class="row">
+          <label class="f"><span>Running late? Move</span>
+            <select id="shiftFrom"></select></label>
+          <label class="f f-by"><span>By (minutes)</span>
+            <input type="number" id="shiftBy" value="15" min="1" max="720" step="5" inputmode="numeric"></label>
+        </div>
+        <div class="cluster">
+          <button class="btn" id="shiftEarlier" type="button">Earlier</button>
+          <button class="btn primary" id="shiftLater" type="button">Later</button>
+        </div>
+        <p class="hint">Everything from that moment onward moves together. One tap of Undo puts it back.</p>
+      </div>
     </section>
 
     <section class="card">
+      <h2>Hand it out</h2>
       <div class="row">
         <button class="btn primary" id="printBtn" type="button">Print for the wedding party</button>
         <button class="btn" id="shareBtn" type="button">Copy link</button>
-        <button class="btn" id="qrBtn" type="button">Show QR</button>
+        <button class="btn" id="qrBtn" type="button">Show QR &amp; link</button>
       </div>
-      <p class="hint">Print a stack — one for the planner, the DJ, the photographer, and the person keeping grandpa on schedule.</p>
+      <p class="hint">Print a stack — one for the planner, the DJ, the photographer, and the person keeping grandpa on schedule. Every page carries your names and the time it was printed.</p>
+      <div class="cluster">
+        <button class="btn" id="backupBtn" type="button">Save a backup file</button>
+        <button class="btn" id="restoreBtn" type="button">Open a backup file</button>
+        <input type="file" id="restoreInput" accept="application/json,.json" hidden>
+      </div>
+      <p class="hint">The backup is a plain .json file saved to your own downloads. It is never uploaded.</p>
     </section>
   </div>
 
@@ -1330,13 +1466,21 @@ body{
   </main>
 </div>
 
+<p class="sr-only" id="liveStatus" role="status" aria-live="polite"></p>
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">Your day, on your device — no account, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Wedding%20Day%20Timeline" style="color:inherit">Feedback</a></footer>
+<footer class="colophon">Your day, on your device — no account, no ads.<br>A free tool by <a href="../">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Wedding%20Day%20Timeline">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan to open the timeline</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+<dialog id="qrDlg" class="dlg" aria-labelledby="qrDlgTitle">
+  <h2 id="qrDlgTitle">Share the day</h2>
+  <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code for this timeline’s link"></canvas>
+  <p class="warn hidden" id="qrNote"></p>
+  <label class="f"><span>The whole timeline, inside one link</span>
+    <textarea id="qrLink" readonly rows="3" spellcheck="false"></textarea></label>
+  <p class="hint">There is no server behind this link — the day itself is encoded in it, so it opens offline and never expires.</p>
+  <div class="cluster">
+    <button class="btn primary" id="qrCopy" type="button">Copy link</button>
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
