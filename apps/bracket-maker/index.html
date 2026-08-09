@@ -1313,23 +1313,27 @@ body{
 .bracketinner > svg.links path{fill:none; stroke:var(--line-2); stroke-width:2.5; stroke-linejoin:round}
 
 .round{
-  display:flex; flex-direction:column; gap:var(--s3);
+  position:relative;
+  display:flex; flex-direction:column;
   min-width:10rem;                 /* rem, so Largest text widens the column */
   scroll-snap-align:start;
 }
+/* Taken out of flow and dropped onto its own first pairing by drawLinks().
+   As a flex child under space-around it ended up 1,252px above the match it
+   named — the only wayfinding the bracket has, pointing at empty space. */
 .roundhead{
-  flex:none;
+  position:absolute; left:0; right:0; top:0;
   font-family:inherit;
   font-size:var(--t-micro); text-transform:uppercase; letter-spacing:.06em;
   color:var(--ink-2); text-align:center; margin:0;
+  background:var(--surface);
+  padding-bottom:1px;
 }
-/* The label is pinned to the top of its own column; only the matches are
-   distributed. It used to be just another flex child under space-around,
-   which put the word FINAL 1,252px above the final match. */
 .matches{
   flex:1 1 auto;
   display:flex; flex-direction:column; justify-content:space-around;
   gap:var(--s3);
+  padding-top:calc(var(--t-micro) + var(--s2));
 }
 
 .match{

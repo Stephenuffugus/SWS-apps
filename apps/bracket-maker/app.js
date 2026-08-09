@@ -208,16 +208,37 @@ function renderBracket() {
   updateScrollCues();
 }
 
-/* Connectors, measured from the laid-out boxes so they survive any text size,
-   density or wrapping. A bracket diagram exists to show which two matches
-   feed the next one; there were no lines at all. */
+/* Everything about the bracket that can only be known after layout: the round
+   label is dropped onto its own first match, and the connectors are drawn
+   from the real boxes. Measured from rects, so it survives any text size,
+   density, wrapping or transform. */
 function drawLinks() {
   const inner = $('bracketInner');
   if (!inner) return;
   const svg = inner.querySelector('svg.links');
   if (!svg) return;
-  const w = Math.max(inner.scrollWidth, inner.offsetWidth);
-  const h = inner.offsetHeight;
+  const origin = inner.getBoundingClientRect();
+  const rect = (node) => {
+    const r = node.getBoundingClientRect();
+    return { x: r.left - origin.left, y: r.top - origin.top, w: r.width, h: r.height };
+  };
+
+  /* The label used to be another flex child under space-around, which put the
+     word FINAL 1,252px above the final match. Pin each label to the top of
+     its own first pairing instead. */
+  for (const col of inner.querySelectorAll('.round')) {
+    const head = col.querySelector('.roundhead');
+    const first = col.querySelector('.match');
+    if (!head || !first) continue;
+    head.style.top = '0px';
+    const colTop = col.getBoundingClientRect().top;
+    const gap = first.getBoundingClientRect().top - colTop;
+    const wanted = Math.max(0, Math.round(gap - head.getBoundingClientRect().height - 4));
+    head.style.top = wanted + 'px';
+  }
+
+  const w = Math.max(inner.scrollWidth, Math.round(origin.width));
+  const h = Math.max(inner.scrollHeight, Math.round(origin.height));
   svg.setAttribute('width', String(w));
   svg.setAttribute('height', String(h));
   svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
@@ -228,13 +249,15 @@ function drawLinks() {
     const r = Number(key.split('-')[0]);
     const m = Number(key.split('-')[1]);
     if (r === 0) continue;
+    const t = rect(target);
     for (const side of [0, 1]) {
       const feed = boxes.get((r - 1) + '-' + (m * 2 + side));
       if (!feed) continue;
-      const fx = feed.offsetLeft + feed.offsetWidth;
-      const fy = feed.offsetTop + feed.offsetHeight / 2;
-      const tx = target.offsetLeft;
-      const ty = target.offsetTop + target.offsetHeight / 2;
+      const f = rect(feed);
+      const fx = Math.round(f.x + f.w);
+      const fy = Math.round(f.y + f.h / 2);
+      const tx = Math.round(t.x);
+      const ty = Math.round(t.y + t.h / 2);
       if (tx <= fx) continue;
       const mid = Math.round(fx + (tx - fx) / 2);
       const p = document.createElementNS(SVGNS, 'path');

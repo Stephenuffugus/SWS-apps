@@ -2,7 +2,7 @@
 import {
   newId, sortedEvents, lastOfKind, activeSleep, daySummary,
   agoText, durText, summaryText,
-  ROLL_HOUR, dayStart, dayEnd, dayIndexDiff, tsOk, nearestPast,
+  dayStart, dayEnd, dayIndexDiff, tsOk, nearestPast,
 } from './model.js';
 
 const CONFIG = { tipUrl: 'https://buy.stripe.com/fZu8wQ2zna5p4jr31L7EQ0j' };
@@ -67,7 +67,11 @@ function armToast() {
 function expireToast() {
   if (toastHeld) { armToast(); return; }
   const now = Date.now();
-  if (curMsg && now >= msgUntil - 10) curMsg = '';
+  if (curMsg && now >= msgUntil - 10) {
+    /* A later message must not leave a bare "Undo" with nothing to undo. */
+    curMsg = pendingUndo ? pendingUndo.msg : '';
+    msgUntil = pendingUndo ? undoUntil : 0;
+  }
   if (pendingUndo && now >= undoUntil - 10) dropUndo();
   paintToast();
   if (curMsg || pendingUndo) armToast();
@@ -343,13 +347,25 @@ function dayLabel(ts) {
     { weekday: 'long', month: 'short', day: 'numeric' });
 }
 /* Plain words for a resolved time, so "22:00" typed at 00:40 is unambiguous
-   before it is saved. */
+   before it is saved. Deliberately the CALENDAR day, not the log day: 1:10am
+   is "today" to the person reading it, whichever night it belongs to. */
 function whenWords(ts) {
-  const diff = dayIndexDiff(Date.now(), ts);
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(ts); b.setHours(0, 0, 0, 0);
+  const diff = Math.round((a - b) / 86400000);
   const t = timeOf(ts);
   if (diff === 0) return 'Today, ' + t;
   if (diff === 1) return 'Yesterday, ' + t;
   return dateOf(ts) + ', ' + t;
+}
+/* The hour the log day turns over, in the reader's own locale. */
+const ROLL_LABEL = new Date(dayStart(Date.now()))
+  .toLocaleTimeString(undefined, { hour: 'numeric' });
+/* Spelled out beside every day heading, so "Today" holding an 11pm entry from
+   the previous date is never a puzzle. */
+function daySpanWords(start) {
+  const end = dayEnd(start);
+  return ROLL_LABEL + ' ' + dateOf(start) + ' → ' + ROLL_LABEL + ' ' + dateOf(end);
 }
 /* Glyph and words kept apart so the words can stand alone in an accessible
    name and on the printed page. */
@@ -471,8 +487,9 @@ function summaryWindow() {
     const start = dayStart(now);
     return {
       start, end: dayEnd(now), now,
-      label: dayLabel(now) + ' — ' + dateOf(start) + ', 5am to 5am',
-      note: 'The log day turns over at 5am, so a night counts with the day it started.',
+      label: dayLabel(now) + ' — ' + daySpanWords(start),
+      note: 'The log day turns over at ' + ROLL_LABEL + ' (' + daySpanWords(start) +
+        '), so a night counts with the day it started.',
     };
   }
   const start = now - 24 * 3600000;
@@ -496,7 +513,7 @@ function renderSummary() {
     box.replaceChildren(el('div', {},
       data.events.length
         ? (winMode === 'day'
-          ? 'Nothing logged since 5am. Switch to Last 24 hours to see the night.'
+          ? 'Nothing logged since ' + ROLL_LABEL + '. Switch to Last 24 hours to see the night.'
           : 'Nothing logged in the last 24 hours.')
         : 'Nothing logged yet. The first tap starts the day.'));
     return;
@@ -663,7 +680,8 @@ function renderTimeline() {
       : 'Show ' + rest + ' earlier ' + (rest === 1 ? 'entry' : 'entries');
   }
   $('hiddenNote').textContent = rest
-    ? rest + ' older ' + (rest === 1 ? 'entry is' : 'entries are') + ' further down the log — nothing is deleted or capped.'
+    ? rest + ' older ' + (rest === 1 ? 'entry is' : 'entries are') +
+      ' not shown yet. Nothing is capped and nothing is deleted — every entry is here, printed and exported.'
     : '';
   $('hiddenNote').classList.toggle('hidden', !rest);
 
@@ -675,7 +693,8 @@ function renderTimeline() {
       curKey = key;
       list = el('ul', { class: 'plain daylist' });
       root.append(el('div', { class: 'dayblock' },
-        el('h3', { class: 'dayhead', text: dayLabel(e.ts) }),
+        el('h3', { class: 'dayhead' }, dayLabel(e.ts) + ' ',
+          el('span', { class: 'dayspan', text: daySpanWords(key) })),
         el('p', { class: 'daytotals', text: dayTotalsLine(key, dayEnd(e.ts)) }),
         list));
     }
@@ -723,7 +742,12 @@ function renderPrintHead() {
   $('printDate').textContent = 'Printed ' +
     now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
     ' · kept on one phone, never uploaded';
+}
 
+/* Off the tap path on purpose: this walks the whole log once per day printed,
+   and the 3am loop must stay at one tap, one paint. beforeprint always runs,
+   whether the parent used the button or Ctrl+P. */
+function renderPrintTotals() {
   const box = $('printTotals');
   box.replaceChildren();
   if (!data.events.length) return;
@@ -844,6 +868,7 @@ function wire() {
     printAll = true;
     editingId = null;
     renderPrintHead();
+    renderPrintTotals();
     renderTimeline();
   });
   window.addEventListener('afterprint', () => {
