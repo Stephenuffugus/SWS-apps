@@ -413,14 +413,22 @@ function localStamp(d) {
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
     + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
 }
-function parseStamp(m) { return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); }
+/* Anyone can type square brackets. A token whose numbers are not a real date
+   is left alone as ordinary text rather than rolled over into a nonsense
+   timestamp — a wrong time on a medication is the thing this exists to stop. */
+function parseStamp(m) {
+  const [, y, mo, d, h, mi] = m.map(Number);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
+  const out = new Date(y, mo - 1, d, h, mi);
+  return out.getMonth() === mo - 1 && out.getDate() === d ? out : null;
+}
 function parseRaw(raw) {
   let text = String(raw == null ? '' : raw);
   let when = null, edited = null;
   const w = text.match(WHEN_RE);
-  if (w) { when = parseStamp(w); text = text.slice(w[0].length); }
+  if (w) { when = parseStamp(w); if (when) text = text.slice(w[0].length); }
   const e = text.match(EDIT_RE);
-  if (e) { edited = parseStamp(e); text = text.slice(0, text.length - e[0].length); }
+  if (e) { edited = parseStamp(e); if (edited) text = text.slice(0, text.length - e[0].length); }
   return { text, when, edited };
 }
 /* Sorting 500 entries re-parses every body O(n log n) times without this.
@@ -998,8 +1006,34 @@ function fillTimeline(u, b, own, locked) {
     comp.wrap.remove();
   }
 
-  const entries = visibleEntries();
+  // A year of logging is 500 entries and 55,000 pixels. Once the log is long
+  // enough to be worth searching, it becomes searchable — nothing appears
+  // before then, because a filter box over nine notes is furniture.
+  const all = visibleEntries();
+  if (!u.filterRow) u.filterRow = buildFilter();
+  if (all.length > 25) {
+    if (u.filterRow.parentNode !== card) card.insertBefore(u.filterRow, u.entriesBox);
+  } else if (u.filterRow.parentNode === card) {
+    u.filterRow.remove();
+    filterText = '';
+  }
+  const q = filterText.trim().toLowerCase();
+  const entries = q
+    ? all.filter(e => (parseBody(e).text + ' ' + e.authorName + ' ' + (TYPE_LABEL[e.type] || '')).toLowerCase().includes(q))
+    : all;
+  if (u.filterCount) {
+    u.filterCount.textContent = q
+      ? 'Showing ' + entries.length + ' of ' + all.length + (entries.length === 1 ? ' entry' : ' entries')
+      : all.length + ' entries in the log';
+  }
   u.entriesBox.replaceChildren();
+
+  if (entries.length === 0 && q) {
+    u.entriesBox.append(el('div', { class: 'empty' },
+      el('h3', {}, 'Nothing matches “' + q + '”'),
+      el('p', {}, 'Try a name, a medicine, or a word from the note.')));
+    return;
+  }
 
   if (entries.length === 0) {
     u.entriesBox.append(el('div', { class: 'empty' },
