@@ -351,13 +351,24 @@ function fmtStamp(ms) {
     });
   } catch (e) { return new Date(ms).toISOString().slice(0, 16).replace('T', ' '); }
 }
+function fmtClock(ms) {
+  try { return new Date(ms).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit' }); }
+  catch (e) { return new Date(ms).toISOString().slice(11, 16); }
+}
+/* Which copy is this? The research's sixth complaint is that after a late
+   change everybody is holding a different sheet and nobody can tell. */
+function printStamp() {
+  const now = Date.now();
+  const sameDay = Number.isFinite(state.revisedAt)
+    && new Date(state.revisedAt).toDateString() === new Date(now).toDateString();
+  return 'Version ' + (state.rev || 1) + ' · revised ' + fmtStamp(state.revisedAt)
+    + ' · printed ' + (sameDay ? fmtClock(now) : fmtStamp(now));
+}
 function renderSheet() {
   const sheet = $('sheet');
   sheet.replaceChildren();
   const name = state.title || 'The Wedding Day';
-  const stamp = 'Version ' + (state.rev || 1)
-    + ' · revised ' + fmtStamp(state.revisedAt)
-    + ' · printed ' + fmtStamp(Date.now());
+  const stamp = printStamp();
   const rows = sortEvents(state.events);
 
   sheet.append(el('div', { class: 'head' },
@@ -377,9 +388,10 @@ function renderSheet() {
         el('div', { text: ev.what }),
         ev.who ? el('div', { class: 'who', text: ev.who }) : null))))));
 
-  sheet.append(el('div', { class: 'foot' }, 'Breathe. Everything else is somebody else’s job today.'));
-  sheet.append(el('div', { class: 'foot promise' },
-    'Built offline in a browser — this timeline was never uploaded anywhere.'));
+  sheet.append(el('div', { class: 'foot' },
+    'Breathe. Everything else is somebody else’s job today.',
+    el('br'),
+    el('span', { class: 'promise', text: 'Built offline in a browser — this timeline was never uploaded anywhere.' })));
 }
 
 /* ---------- sharing ---------- */
@@ -425,7 +437,13 @@ function drawQr(url) {
   canvas.classList.remove('hidden');
   canvas.setAttribute('aria-label',
     'QR code for this timeline’s link, ' + count + ' by ' + count + ' squares');
-  note.classList.add('hidden');
+  if (count > 100) {
+    note.textContent = 'A full day makes a dense code — hold the camera close and steady, '
+      + 'and give it a second. If it will not read, copy the link below instead.';
+    note.classList.remove('hidden');
+  } else {
+    note.classList.add('hidden');
+  }
 }
 function openShare(reason) {
   if (state.events.length === 0) { toast('Add the day’s moments first', { assertive: true }); return; }
