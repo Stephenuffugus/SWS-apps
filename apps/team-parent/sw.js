@@ -1,5 +1,5 @@
 /* Team Parent service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'team-v6';
+const VERSION = 'team-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,7 @@ const ASSETS = [
   './apple-touch-icon.png',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js', "./fonts/space-grotesk-latin.woff2"];
+  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js', "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

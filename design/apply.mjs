@@ -24,7 +24,7 @@
    in place and never touches the app's own rules below it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { SKINS } from './skins.mjs';
@@ -205,33 +205,86 @@ function pruneTemplateRules(css){
  *
  * Both are mechanical, both are easy to forget, so they happen here.
  */
-function installFont(slug, file){
-  if (!file) return null;
-  const dest = join(APPS, slug, 'fonts');
-  mkdirSync(dest, { recursive: true });
-  copyFileSync(join(HERE, 'fonts', file), join(dest, file));
-  return `fonts/${file}`;
+/**
+ * Copy only when the bytes differ, and report whether anything moved.
+ *
+ * The caller needs that boolean: the service-worker cache version must bump
+ * when an asset changes, and must NOT bump when nothing did, or every apply
+ * run would inflate the version and push a pointless update to every user.
+ */
+function copyIfChanged(src, dest){
+  mkdirSync(dirname(dest), { recursive: true });
+  const next = readFileSync(src);
+  if (existsSync(dest) && readFileSync(dest).equals(next)) return false;
+  writeFileSync(dest, next);
+  return true;
 }
 
-function updateServiceWorker(slug, fontPath){
+function installFont(slug, file){
+  if (!file) return { path: null, changed: false };
+  const rel = `fonts/${file}`;
+  return { path: rel, changed: copyIfChanged(join(HERE, 'fonts', file), join(APPS, slug, rel)) };
+}
+
+/** The comfort-preferences runtime, one copy per app so the SW can cache it. */
+function installPrefs(slug){
+  const rel = 'sws-prefs.js';
+  return { path: rel, changed: copyIfChanged(join(HERE, 'prefs.js'), join(APPS, slug, rel)) };
+}
+
+/**
+ * Point the page at that runtime.
+ *
+ * A CLASSIC, BLOCKING script in <head>, which is unusual enough to be worth
+ * stating: it has to run before the first paint, or a user who chose Dark gets
+ * a white flash on every navigation — in apps whose whole reason for existing
+ * is frequently that it is 3am. A module would be deferred and a script at the
+ * end of <body> would be far too late.
+ *
+ * External rather than inline because the strictest app here ships
+ * `script-src 'self'`, which refuses an inline block outright.
+ */
+function addPrefsTag(slug, html){
+  const tag = '<script src="sws-prefs.js"></script>';
+
+  /* Match the src attribute, not the bare filename. The base layer's own
+     comments mention sws-prefs.js, so a substring test finds a "tag" that is
+     not there and silently skips every app. */
+  if (/<script[^>]+src=["']\.?\/?sws-prefs\.js["']/.test(html)) return html;
+
+  if (html.includes('</head>')) return html.replace('</head>', `${tag}\n</head>`);
+
+  // A missing </head> is malformed but recoverable — the parser closes it
+  // implicitly at <body>, so landing just before that is the same position.
+  if (/<body[^>]*>/.test(html)) return html.replace(/<body[^>]*>/, (m) => `${tag}\n${m}`);
+
+  console.log(`  !! ${slug}: nowhere to put the prefs script`);
+  return html;
+}
+
+function updateServiceWorker(slug, assets){
   const swPath = join(APPS, slug, 'sw.js');
   if (!existsSync(swPath)) return 'no sw.js';
   let sw = readFileSync(swPath, 'utf8');
   const before = sw;
   const notes = [];
 
-  if (fontPath){
+  const wanted = assets.filter(Boolean);
+  if (wanted.length){
     // find the precache array, whatever this app happened to call it
     const m = sw.match(/const\s+(ASSETS|SHELL|FILES|PRECACHE|CORE)\s*=\s*\[([\s\S]*?)\]/);
     if (!m){
       notes.push('could not find precache array');
-    } else if (!m[2].includes(fontPath)){
-      // match the path style the existing entries use ('./x' vs 'x')
-      const dotted = /["']\.\//.test(m[2]);
-      const entry = `"${dotted ? './' : ''}${fontPath}"`;
-      const quoted = m[2].trimEnd().endsWith(',') ? ` ${entry}` : `, ${entry}`;
-      sw = sw.replace(m[0], `const ${m[1]} = [${m[2].trimEnd()}${quoted}]`);
-      notes.push('precached font');
+    } else {
+      const missing = wanted.filter((p) => !m[2].includes(p));
+      if (missing.length){
+        // match the path style the existing entries use ('./x' vs 'x')
+        const dotted = /["']\.\//.test(m[2]);
+        const entries = missing.map((p) => `"${dotted ? './' : ''}${p}"`).join(', ');
+        const joined = m[2].trimEnd().endsWith(',') ? ` ${entries}` : `, ${entries}`;
+        sw = sw.replace(m[0], `const ${m[1]} = [${m[2].trimEnd()}${joined}]`);
+        notes.push(`precached ${missing.join(' + ')}`);
+      }
     }
   }
 
@@ -339,15 +392,32 @@ for (const slug of Object.keys(SKINS)){
   }
 
   if (PALETTE[slug]) next = repaintChrome(slug, next, PALETTE[slug]);
+  next = addPrefsTag(slug, next);
 
-  if (next === html){ skipped++; continue; }
-  if (!checkOnly){
-    writeFileSync(htmlPath, next);
-    const fontPath = installFont(slug, FONTS[slug]);
-    swNotes.push(`${slug.padEnd(20)} ${fontPath ?? 'no font'.padEnd(28)}  ${updateServiceWorker(slug, fontPath)}`);
+  const htmlChanged = next !== html;
+
+  if (checkOnly){
+    if (!htmlChanged){ skipped++; continue; }
+    changed++;
+    console.log(`  would update  ${slug}`);
+    continue;
   }
+
+  /* Assets are written before the skip test on purpose. Once the script tag is
+     in place the HTML compares equal on every later run, so a change to
+     prefs.js or to a font would never reach the apps if this waited behind
+     `htmlChanged`. Their own changed-flags then feed the version bump. */
+  const font = installFont(slug, FONTS[slug]);
+  const prefs = installPrefs(slug);
+
+  if (!htmlChanged && !font.changed && !prefs.changed){ skipped++; continue; }
+
+  if (htmlChanged) writeFileSync(htmlPath, next);
+  swNotes.push(
+    `${slug.padEnd(20)} ${(font.path ?? 'no font').padEnd(28)}  ${updateServiceWorker(slug, [font.path, prefs.path])}`);
+
   changed++;
-  console.log(`  ${checkOnly ? 'would update' : 'updated'}  ${slug}`);
+  console.log(`  updated  ${slug}`);
 }
 
 console.log(`\n${changed} changed, ${skipped} already current${checkOnly ? ' (check only, nothing written)' : ''}`);

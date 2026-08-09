@@ -1,6 +1,6 @@
 /* Home Inventory service worker — the app is local-first; cache everything,
    including the vendored pdf-lib, so exports work fully offline. */
-const VERSION = 'inventory-v6';
+const VERSION = 'inventory-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   './vendor-pdf-lib.js',
   './manifest.webmanifest',
   './icon.svg',
-  './apple-touch-icon.png', "./fonts/space-grotesk-latin.woff2"];
+  './apple-touch-icon.png', "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

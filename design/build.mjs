@@ -357,11 +357,31 @@ ${tokenBlock(light)}
   --radius:var(--r-card);
   --shadow:var(--shadow-1);
 }
+
+/* Dark palette, emitted twice on purpose.
+
+   The media query is the default: follow the operating system. The
+   [data-theme] selector is the manual override the comfort panel writes, and
+   it has to be able to win in BOTH directions — a user who picks Light on a
+   phone that is in dark mode is asking for light, and gets it because the
+   media query excludes [data-theme="light"].
+
+   Keeping the two blocks identical is build.mjs's job, not a human's. */
 @media (prefers-color-scheme:dark){
-  :root{
+  :root:not([data-theme="light"]){
 ${tokenBlock(dark)}
   }
 }
+:root[data-theme="dark"]{
+${tokenBlock(dark)}
+}
+
+/* Native widgets — scrollbars, date pickers, the spin buttons on a number
+   field — take their look from color-scheme, not from our tokens. Without
+   these two lines a manually-darkened app still renders a white date picker. */
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+
 
 ${readFileSync(join(HERE, 'studio.css'), 'utf8')}
 
@@ -372,8 +392,9 @@ body{
   ${texL.support}
 }
 @media (prefers-color-scheme:dark){
-  body{background-image:${texD.image}}
-}`;
+  :root:not([data-theme="light"]) body{background-image:${texD.image}}
+}
+:root[data-theme="dark"] body{background-image:${texD.image}}`;
 }
 
 /* ── Run ────────────────────────────────────────────────────────────────── */

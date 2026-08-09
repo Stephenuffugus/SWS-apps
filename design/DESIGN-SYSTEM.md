@@ -343,3 +343,77 @@ So, as a hard invariant, not a preference:
 These are worth stating as absolutes because they are the product. Every
 incumbent in every one of these categories has a commercial reason it cannot
 follow them, and we do not.
+
+---
+
+## Comfort: the display panel
+
+Every app carries the same settings panel, opened from the sliders button in
+the header. It is built by `design/prefs.js`, which `apply.mjs` copies into each
+app as `sws-prefs.js` and loads from `<head>`.
+
+Seven controls, all of them things people actually asked competitors for and
+did not get:
+
+| Control | Values | What it moves |
+|---|---|---|
+| Appearance | Auto / Light / Dark | `data-theme` → the whole palette |
+| Text size | Small … Largest (0.9–1.5×) | `--ui-scale` → the root font size |
+| Spacing | Compact / Default / Roomy (0.8–1.25×) | `--density` → the spacing scale |
+| Reading | Default / Easier | plain type, wider letter, word and line spacing, ligatures off |
+| Warm tint | Off / Low / Medium / High | a multiply overlay that pulls the blue down |
+| Contrast | Auto / Standard / High | greys darken, the frosted bar goes solid |
+| Motion | Auto / Full / Reduced | transitions and smooth scrolling |
+
+### Rules the implementation follows
+
+**The OS preference is the default; the attribute is an override that wins both
+ways.** Someone whose phone is dark and who asks us for light has a reason. So
+each preference is expressed twice — inside its media query guarded by
+`:not([data-...])`, and again on the attribute. `build.mjs` emits the dark
+palette twice for the same reason; keeping the two copies identical is the
+build's job, not a human's.
+
+**One key for the whole origin.** All 23 apps share `localStorage['sws.prefs']`,
+so a setting made in Baby Log at 3am is already in force the first time Grocery
+List is opened. Someone who needs larger text needs it in all 23, and making
+them set it 23 times would be its own accessibility bug. A `storage` listener
+keeps open tabs in step.
+
+**Applied before first paint.** The script is classic and blocking in `<head>`,
+not a module and not at the end of `<body>`. A deferred theme switch is a white
+flash in a dark room. `prefs-test.mjs` asserts this by reading the attribute at
+the moment the document becomes interactive.
+
+**Density moves space, never targets.** `--tap` is floored at 44px and scales
+*up* with text size, because someone enlarging the text is often doing it for
+eyesight or tremor and shrinking their targets would undo the help.
+
+**Warm tint is an overlay, not a filter.** `filter` on a container makes it the
+containing block for its fixed-position descendants, which would tear the toast
+and the sticky action bar out of the viewport. `mix-blend-mode:multiply`
+attenuates the blue channel, so one declaration warms a light page and a dark
+one and never lifts the black level. Off in print.
+
+**Selection is never colour alone.** Each option chip reserves a tick slot
+whether or not it is selected — visible on the checked one. Reserving it always
+is what stops the row reflowing under the finger that just tapped it.
+
+**The options are real radios in a real `<fieldset>`.** That buys arrow-key
+navigation, "Text size, 3 of 5" from a screen reader, and correct behaviour
+before any JavaScript of ours runs. The inputs are clipped, never
+`display:none` — that would make the group keyboard-unreachable, which is the
+exact defect the Pill Schedule audit found in the shipped app.
+
+### Verifying it
+
+```bash
+npm run prefs          # drives all 23 panels in a real browser
+npm run prefs:shots    # the panel and the states it produces, as screenshots
+npm run a11y           # axe, now including the panel while it is open
+```
+
+`prefs-test.mjs` measures outcomes, not attributes: that the text really got
+bigger, the page really got darker, the choice survived a reload, and it
+carried into the next app. An attribute that lands on `<html>` while the
+stylesheet ignores it is the bug it exists to catch.

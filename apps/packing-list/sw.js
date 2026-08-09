@@ -1,6 +1,6 @@
 /* Packing List service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'pack-v6';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js"];
+const VERSION = 'pack-v12';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js", "./sws-prefs.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

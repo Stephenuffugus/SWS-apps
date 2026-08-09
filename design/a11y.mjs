@@ -65,16 +65,39 @@ for (const mode of ['light', 'dark']){
       await page.goto(`http://127.0.0.1:${port}/${slug}/`, { waitUntil: 'load', timeout: 20000 });
       await page.evaluate(() => document.fonts.ready);
       await page.addScriptTag({ content: AXE });
-      const results = await page.evaluate(async () => await window.axe.run(document, {
+
+      const scan = async () => await page.evaluate(async () => await window.axe.run(document, {
         resultTypes: ['violations'],
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'] },
       }));
-      for (const v of results.violations){
-        report.push({
-          slug, mode, id: v.id, impact: v.impact, help: v.help,
-          nodes: v.nodes.length,
-          sample: v.nodes[0]?.html?.slice(0, 110) ?? '',
-        });
+
+      const collect = (results, surface) => {
+        for (const v of results.violations){
+          report.push({
+            slug: surface ? `${slug} [${surface}]` : slug,
+            mode, id: v.id, impact: v.impact, help: v.help,
+            nodes: v.nodes.length,
+            sample: v.nodes[0]?.html?.slice(0, 110) ?? '',
+          });
+        }
+      };
+
+      collect(await scan());
+
+      /* The comfort panel is a whole UI surface that only exists once it has
+         been opened, so a page-load scan can never see it. It ships in all 23
+         apps and is the one piece of chrome specifically meant for people with
+         access needs — leaving it unscanned would be the wrong thing to miss. */
+      const opened = await page.evaluate(() => {
+        const btn = document.getElementById('swsPrefsBtn');
+        if (!btn) return false;
+        btn.click();
+        return !!document.getElementById('swsPrefs')?.open;
+      });
+      if (opened){
+        await page.waitForTimeout(120);
+        collect(await scan(), 'comfort panel');
+        await page.evaluate(() => document.getElementById('swsPrefs')?.close());
       }
     } catch (e) {
       report.push({ slug, mode, id: 'LOAD-ERROR', impact: 'critical', help: String(e).split('\n')[0], nodes: 0, sample: '' });
