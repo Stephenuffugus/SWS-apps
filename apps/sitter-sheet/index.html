@@ -1258,12 +1258,13 @@ body{
    turning the type up does not shrink the target. */
 .seg button{min-height:var(--tap)}
 
-/* The filled/empty cue is a glyph, not a colour. At data-contrast="more" the
-   base layer maps --ink-3 onto --ink, so a grey placeholder and a real answer
-   become the same ink; a tick survives that. */
-label.f .fmark{font-weight:700; color:var(--pos)}
-label.f .cnt{display:block; margin-top:var(--s1); font-size:var(--t-xs); color:var(--ink-2)}
-label.f.is-filled > input,label.f.is-filled > textarea{border-color:var(--line-2); border-width:2px}
+/* Nothing is ever rendered inside an empty field — the guidance lives under
+   the control as a real .hint. The filled/empty cue is a glyph and a border
+   weight, never a colour: at data-contrast="more" the base layer collapses
+   --ink-3 into --ink, so anything that leant on grey stops saying anything. */
+.field .fmark{font-weight:700; color:var(--pos)}
+.field .cnt{display:block; margin-top:var(--s1); font-size:var(--t-xs); color:var(--ink-2)}
+.field.is-filled > input,.field.is-filled > textarea{border-color:var(--line-2); border-width:2px}
 
 #form h3{
   font-size:var(--t-micro);

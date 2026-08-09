@@ -166,16 +166,14 @@ export const setLocked = (boardId, settings, locked) =>
 export const setApproval = (boardId, settings, approvalRequired) =>
   updateDoc(doc(db, 'boards', boardId), { settings: { ...settings, approvalRequired } });
 
-/* `wanted` lets the caller ask for a specific code — which is how "Undo" puts
-   the previous share link back after a rotation. */
-export async function rotateCode(boardId, oldCode, wanted) {
+export const setTheme = (boardId, settings, theme) =>
+  updateDoc(doc(db, 'boards', boardId), { settings: { ...settings, theme } });
+
+export async function rotateCode(boardId, oldCode) {
   for (let attempt = 0; attempt < 5; attempt++) {
-    const code = wanted || genCode();
+    const code = genCode();
     const codeRef = doc(db, 'codes', code);
-    if ((await getDoc(codeRef)).exists()) {
-      if (wanted) throw new Error('code-taken');
-      continue;
-    }
+    if ((await getDoc(codeRef)).exists()) continue;
     const batch = writeBatch(db);
     batch.delete(doc(db, 'codes', oldCode));
     batch.set(codeRef, { boardId });
@@ -195,60 +193,20 @@ export async function deleteBoard(boardId, code) {
   await batch.commit();
 }
 
-/* Undo for deleteBoard. Only the board and code documents were deleted, so
-   putting them back at the same ids revives the slots, claims and entries that
-   were only ever orphaned. Two things genuinely cannot be restored and are not
-   pretended: createdAt becomes now (the rules require createdAt == request.time
-   on any board create) and entryCount is re-asserted in a follow-up write. */
-export async function restoreBoard(board, code) {
-  const boardId = board.id;
-  const settings = board.settings || {};
-  const clean = { approvalRequired: !!settings.approvalRequired, locked: !!settings.locked };
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'boards', boardId), {
-    ownerUid: board.ownerUid,
-    skin: board.skin || SKIN,
-    title: String(board.title).slice(0, 100),
-    description: String(board.description || '').slice(0, 1000),
-    shareCode: code,
-    createdAt: serverTimestamp(),
-    settings: clean,
-    entryCount: 0,
-  });
-  batch.set(doc(db, 'codes', code), { boardId });
-  await batch.commit();
-  const n = board.entryCount || 0;
-  if (n > 0) await updateDoc(doc(db, 'boards', boardId), { entryCount: n });
-}
-
 /* ---------- slots ---------- */
 
-/* Returns the ids of the slots it created, so the caller can offer an Undo that
-   removes exactly those and nothing else. */
 export async function addSlots(boardId, rows) {
-  const ids = [];
   // chunk under the 500-op batch limit
   for (let i = 0; i < rows.length; i += 400) {
     const batch = writeBatch(db);
     rows.slice(i, i + 400).forEach((row, j) => {
-      const ref = doc(collection(db, 'boards', boardId, 'slots'));
-      ids.push(ref.id);
-      batch.set(ref, {
+      batch.set(doc(collection(db, 'boards', boardId, 'slots')), {
         label: row.label.slice(0, 120),
         capacity: Math.min(Math.max(row.capacity || 1, 1), 999),
         order: (row.order !== undefined ? row.order : Date.now() + i + j),
         claimedCount: 0,
       });
     });
-    await batch.commit();
-  }
-  return ids;
-}
-
-export async function deleteSlots(boardId, slotIds) {
-  for (let i = 0; i < slotIds.length; i += 400) {
-    const batch = writeBatch(db);
-    for (const id of slotIds.slice(i, i + 400)) batch.delete(doc(db, 'boards', boardId, 'slots', id));
     await batch.commit();
   }
 }
@@ -258,23 +216,6 @@ export const updateSlot = (boardId, slotId, fields) =>
 
 export const deleteSlot = (boardId, slotId) =>
   deleteDoc(doc(db, 'boards', boardId, 'slots', slotId));
-
-/* Undo for deleteSlot. Deleting a slot document does NOT touch its claims
-   subcollection — those docs are merely orphaned — so re-creating the slot at
-   the same id brings the signups back with it. The rules insist a new slot is
-   created with claimedCount 0 (a participant must never be able to conjure a
-   pre-filled slot), so the real count is restored in a second owner write. */
-export async function restoreSlot(boardId, slot) {
-  const ref = doc(db, 'boards', boardId, 'slots', slot.id);
-  const base = {
-    label: String(slot.label).slice(0, 120),
-    capacity: Math.min(Math.max(slot.capacity || 1, 1), 999),
-    order: slot.order !== undefined ? slot.order : Date.now(),
-  };
-  await setDoc(ref, { ...base, claimedCount: 0 });
-  const n = slot.claimedCount || 0;
-  if (n > 0) await updateDoc(ref, { ...base, claimedCount: n });
-}
 
 /* Claim = claims/{myUid} + counter, one batch. Rules verify the coupling,
    capacity, and that this uid didn't already hold a claim on the slot.

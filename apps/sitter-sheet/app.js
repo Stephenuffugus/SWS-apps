@@ -139,7 +139,7 @@ export const SCHEMAS = {
     top3: {
       alert: 'allergies',
       alertLabel: 'Allergies & medications',
-      calls: [['Call 911', '911'], ['Poison Control', '1-800-222-1222']],
+      calls: [['Ambulance, fire, police', '911'], ['Poison Control', '1-800-222-1222']],
       extra: null,
       extraLabel: '',
     },
@@ -179,7 +179,7 @@ export const SCHEMAS = {
     top3: {
       alert: 'meds',
       alertLabel: 'Medications & allergies',
-      calls: [['Call 911', '911']],
+      calls: [['Ambulance, fire, police', '911']],
       extra: 'vet',
       extraLabel: 'Vet & emergency vet',
     },
@@ -268,21 +268,28 @@ function renderForm() {
   form.replaceChildren();
   for (const [section, fields] of schema.sections) {
     form.append(el('h3', {}, section));
-    for (const [key, label, multi, placeholder, opts] of fields) {
+    for (const [key, label, multi, hint, opts] of fields) {
       const o = opts || {};
+      const id = 'f-' + key;
+      const hintId = 'h-' + key;
       /* The tick and the counter are decoration for someone looking at the
          field. aria-hidden keeps them out of the input's accessible name,
          which is the label text and nothing else. */
       const mark = el('span', { class: 'fmark', 'aria-hidden': 'true' });
       const count = el('span', { class: 'cnt', 'aria-hidden': 'true' });
       const attrs = {
-        placeholder,
+        id,
         maxlength: MAXLEN,
         autocomplete: o.auto || 'off',
+        'aria-describedby': hintId,
       };
       const input = multi ? el('textarea', attrs) : el('input', { type: 'text', ...attrs });
       input.value = data[key] || '';
-      const wrap = el('label', { class: 'f' }, el('span', {}, label, mark), input, count);
+      const wrap = el('div', { class: 'field' },
+        el('label', { for: id }, label, mark),
+        input,
+        el('p', { class: 'hint', id: hintId, text: hint }),
+        count);
 
       const paint = () => {
         const v = input.value;
@@ -644,7 +651,7 @@ function sheetText() {
   if (val('address')) lines.push('WHERE WE ARE: ' + val('address'));
   if (val('cross')) lines.push('Nearest cross street: ' + val('cross'));
   if (val(t.alert)) lines.push(t.alertLabel.toUpperCase() + ': ' + val(t.alert));
-  lines.push('EMERGENCY: ' + t.calls.map(([l, n]) => l + ' ' + n).join(' · '));
+  lines.push('IN AN EMERGENCY: ' + t.calls.map(([l, n]) => l + ' ' + n).join(' · '));
   const skip = new Set(['address', 'cross', t.alert].filter(Boolean));
   for (const [name, fields] of filledSections(skip)) {
     lines.push('', '— ' + name + ' —');

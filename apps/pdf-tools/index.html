@@ -1250,19 +1250,151 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.btn[disabled]{opacity:.5; cursor:default}
 
-.pagetag{
-  display:inline-block; min-width:34px; text-align:center; padding:6px 8px; border-radius:8px;
-  background:var(--chip); font-size:.8rem; font-weight:700;
+/* The skin asks for a 48rem workbench and a 10px radius. studio.css's own
+   :root lands after the skin tokens in this file and puts them back to
+   42rem/14px, so the intended geometry has to be restated here. */
+:root{--wrap:48rem; --r:10px}
+
+.btn[disabled]{opacity:.5; cursor:default}
+.printonly{display:none}
+
+/* ── The promise, up front ─────────────────────────────────────────────── */
+.negatives{list-style:none; margin:var(--s4) 0 0; padding:0}
+.negatives .chip{font-size:var(--t-sm)}
+.hero .trust{display:flex; align-items:flex-start; margin-top:var(--s4)}
+.hero .trust svg{margin-top:2px}
+.proof{margin-top:var(--s3); font-size:var(--t-sm); color:var(--ink-2)}
+
+/* ── Add / drop zone ───────────────────────────────────────────────────── */
+/* The Add button used to be a 189px control floating in a 382px card with no
+   hint that a drop would work — and a PDF dropped on the window navigated
+   away from an arrangement that lives only in this tab. */
+.dropzone{
+  display:flex; flex-direction:column; align-items:center; gap:var(--s3);
+  padding:var(--s6) var(--s4);
+  text-align:center;
+  background:var(--surface-2);
+  border:2px dashed var(--line-2);
+  border-radius:var(--r-card);
 }
-.doclabel{font-size:.78rem; color:var(--muted)}
-.rot{font-size:.75rem; color:var(--accent); font-weight:700}
+.dropzone.over{background:var(--accent-soft); border-color:var(--accent-deep)}
+.dropzone .hint{margin-top:0}
+
+/* ── Problems, left on screen until dismissed ──────────────────────────── */
+/* A failure that is overwritten by the next file's success toast is a pack
+   submitted with a statement silently missing. */
+#loadReport:not(:empty){margin-top:var(--s4)}
+.warnhead{font-weight:650; margin:0 0 var(--s2)}
+.warnlist{margin:0 0 var(--s3); padding-left:var(--s5)}
+.warnlist li{margin-top:var(--s1); overflow-wrap:anywhere}
+.warnlist b{font-weight:650}
+
+/* ── Loaded files ──────────────────────────────────────────────────────── */
+#fileListBox{margin-top:var(--s5)}
+#fileList > li{flex-wrap:wrap; row-gap:var(--s2)}
+#fileList .grow{flex:1 1 14rem}
+#fileList .fname{font-weight:600; overflow-wrap:anywhere}
+
+/* ── Page rows ─────────────────────────────────────────────────────────── */
+/* Four 44px controls plus a filename cannot share one line at 320px, and
+   certainly not at Largest text where --tap resolves to 66px. So the row
+   wraps: the label keeps a 12rem floor — in rem, so it grows with the text
+   setting — and the control cluster drops to its own right-aligned line the
+   moment that floor is threatened. The filename never gets squeezed to 4px
+   and set over twelve lines again. */
+#pageList > li{flex-wrap:wrap; row-gap:var(--s2); align-items:center}
+#pageList .grow{flex:1 1 12rem; min-width:0}
+#pageList .pline{display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap}
+#pageList .pnum{font-weight:600}
+#pageList .doclabel{
+  font-size:var(--t-sm); color:var(--ink-2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.pagetag{
+  flex:none;
+  display:inline-block; min-width:2.5rem; text-align:center;
+  padding:var(--s2) var(--s2);
+  background:var(--surface-2); color:var(--ink-2);
+  border-radius:var(--r-sm);
+  font-size:var(--t-xs); font-weight:700; font-variant-numeric:tabular-nums;
+}
+.rowbtns{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--s2); margin-left:auto}
+/* The destructive control sat 12px from Rotate, on a row with no undo. */
+.rowbtns .danger{margin-left:var(--s4)}
+
+/* Rotation is state, not decoration — it is the one thing on a row that
+   changes what lands in the file. It measured 3.96:1 as 12px --accent on
+   white, and High contrast does not touch --accent. As a chip it is
+   4.84:1 light / 7.26:1 dark and carries a border as well as a colour. */
+.rot{
+  flex:none;
+  padding:var(--s1) var(--s2);
+  font-size:var(--t-xs); font-weight:700;
+  color:var(--accent-deep); background:var(--accent-soft);
+  border:1px solid var(--accent);
+  border-radius:var(--r-pill);
+}
+
+/* ── Output card ───────────────────────────────────────────────────────── */
+.namewrap{display:flex; align-items:center; gap:var(--s2)}
+.namewrap input{flex:1 1 8rem; min-width:0}
+.namewrap .suffix{flex:none; font-size:var(--t-base); color:var(--ink-2)}
+#splitBox{margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line)}
+#splitBox > summary{
+  display:flex; align-items:center; gap:var(--s2);
+  min-height:var(--tap);
+  font-weight:600;
+  cursor:pointer;
+}
+#splitBox > summary::marker{color:var(--ink-2)}
+#splitFields{display:flex; flex-wrap:wrap; gap:var(--s4); margin-top:var(--s3)}
+#splitFields > label.f{flex:1 1 14rem; margin-bottom:0}
+#splitPreview{margin-top:var(--s4)}
+#splitPreview > * + *{margin-top:var(--s3)}
+.previewline{font-size:var(--t-base); overflow-wrap:anywhere}
+
+/* ── Sticky finish bar ─────────────────────────────────────────────────── */
+/* Save used to sit at the bottom of an unbounded page — y=12,814 with a
+   200-page file, y=62,020 at 1,000 pages, y=8,949 at Largest + Roomy. */
+.actionbar{flex-direction:column; align-items:stretch; gap:var(--s3)}
+.barinfo{
+  display:flex; flex-wrap:wrap; gap:var(--s1) var(--s4);
+  font-size:var(--t-sm); color:var(--ink-2);
+}
+.barinfo b{color:var(--ink); font-weight:650}
+.baractions{display:flex; flex-wrap:wrap; gap:var(--s2)}
+.baractions .btn{flex:1 1 auto}
+.baractions #topBtn{flex:0 0 auto}
+#progressBox{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
+  font-size:var(--t-sm); color:var(--ink);
+}
+#progressText{flex:1 1 12rem; overflow-wrap:anywhere}
+
+/* ── Print ─────────────────────────────────────────────────────────────── */
+/* This app makes a file, not a sheet of paper — so what it prints is the
+   manifest: the assembled order, page by page, with its source and its final
+   rotation. Everything you could press is gone. */
+@media print{
+  .hero,.dropzone,#loadReport,#outCard,#emptyState,
+  .rowbtns,#progressBox,.negatives,.proof{display:none !important}
+  .printonly{display:block !important}
+  #printHead{margin-bottom:8pt}
+  #printHead h3{font-size:12pt; margin:0 0 2pt}
+  #printMeta{font-size:10pt; color:#333; margin:0}
+  #fileListBox{margin-top:0}
+  #pageList > li{border-bottom:1px solid #ddd}
+  #pageList .doclabel{white-space:normal; overflow:visible; color:#333}
+  .pagetag{border:1px solid #999; background:transparent !important; color:#000}
+  .rot{border:1px solid #999; background:transparent !important; color:#000}
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the tools</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1277,32 +1409,114 @@ body{
     <h2>Merge, split, rotate — nothing uploaded</h2>
     <p>The popular PDF sites run your tax returns and contracts through their servers.
       This page does the same jobs <strong>entirely in your browser</strong> — your documents
-      never leave this device. Free, no limits, no watermark.</p>
+      never leave this device.</p>
+    <ul class="negatives chips">
+      <li class="chip">No account</li>
+      <li class="chip">No upload</li>
+      <li class="chip">No daily limit</li>
+      <li class="chip">No page limit</li>
+      <li class="chip">No file-size cap</li>
+      <li class="chip">No watermark</li>
+      <li class="chip">No ads</li>
+      <li class="chip">No card on file</li>
+    </ul>
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      <span>Your PDFs are opened by this page and held <b>in this tab's memory only</b>.
+        They are never uploaded, never written to disk until you press Save, and never
+        saved into the browser — close or refresh this tab and everything here is gone.</span>
+    </p>
+    <p class="proof">Don't take our word for it: turn your Wi-Fi off, reload this page, and
+      merge a file. It still works, because the whole app is already stored on your device.
+      <a href="privacy.html">What we do and don't collect</a>.</p>
   </div>
 
-  <section class="card">
-    <button class="btn primary big" id="addBtn" type="button">📄 Add PDF file(s)</button>
+  <section class="card" id="addCard">
+    <h2>Add files</h2>
+    <div class="dropzone" id="dropZone">
+      <button class="btn primary big" id="addBtn" type="button">📄 Add PDF file(s)</button>
+      <p class="hint">…or drag PDFs and drop them here. Add one file to reorder, rotate,
+        delete pages or split it. Add several to merge them — pages interleave
+        however you arrange them.</p>
+    </div>
     <input type="file" id="fileInput" accept="application/pdf,.pdf" class="hidden" multiple>
-    <p class="hint">Add one file to reorder/rotate/delete pages or split it. Add several to merge them — pages interleave however you arrange them.</p>
-  </section>
-
-  <section class="card">
-    <h2 id="pagesHead">Pages (in output order)</h2>
-    <ul class="plain" id="pageList"></ul>
-    <p class="hint" id="emptyHint">Loaded pages appear here. Use ↑ ↓ to reorder, ⟳ to rotate, ✕ to leave a page out.</p>
-  </section>
-
-  <section class="card">
-    <div class="row">
-      <button class="btn primary" id="mergeBtn" type="button">Save as one PDF</button>
-      <button class="btn" id="splitBtn" type="button">Split into one file per page</button>
+    <div id="loadReport"></div>
+    <div id="fileListBox" class="hidden">
+      <h3 id="fileCount" class="sub"></h3>
+      <ul class="plain" id="fileList" role="list" aria-labelledby="fileCount"></ul>
     </div>
   </section>
+
+  <section class="card">
+    <h2 id="pagesHead">Pages — in output order</h2>
+    <div class="printonly" id="printHead">
+      <h3>Assembled page order</h3>
+      <p id="printMeta"></p>
+    </div>
+    <div class="empty" id="emptyState">
+      <div class="glyph" aria-hidden="true">▤</div>
+      <h3>No pages yet</h3>
+      <p>Add a PDF above and every page appears here as a row. Use ↑ ↓ to reorder,
+        ↻ to rotate, ✕ to leave a page out. Whatever you see here is exactly what
+        gets written.</p>
+    </div>
+    <ul class="plain hidden" id="pageList" role="list"
+        aria-label="Assembled pages, in the order they will be written"></ul>
+  </section>
+
+  <section class="card" id="outCard">
+    <h2>Save</h2>
+    <label class="f" for="outName"><span>File name</span>
+      <span class="namewrap">
+        <input type="text" id="outName" autocomplete="off" spellcheck="false"
+               aria-describedby="sizeNote">
+        <span class="suffix" aria-hidden="true">.pdf</span>
+      </span>
+    </label>
+    <p class="hint" id="sizeNote">Add a PDF and the size of the file you are about to write
+      is shown here, before you press anything.</p>
+
+    <details id="splitBox">
+      <summary>Split into several files instead</summary>
+      <div id="splitFields">
+        <label class="f" for="splitMode"><span>How to split</span>
+          <select id="splitMode"></select>
+        </label>
+        <label class="f hidden" for="splitSpec" id="splitSpecField">
+          <span id="splitSpecLabel">Pages</span>
+          <input type="text" id="splitSpec" autocomplete="off" inputmode="numeric">
+        </label>
+        <label class="f" for="splitDelivery"><span>Deliver as</span>
+          <select id="splitDelivery">
+            <option value="zip">One .zip file</option>
+            <option value="separate">Separate downloads</option>
+          </select>
+        </label>
+      </div>
+      <div id="splitPreview" aria-live="polite"></div>
+    </details>
+  </section>
   </main>
+
+  <div class="actionbar hidden" id="actionbar">
+    <p class="barinfo"><span id="barMeta"></span><span id="splitMeta"></span></p>
+    <div class="baractions">
+      <button class="btn primary" id="mergeBtn" type="button">Save as one PDF</button>
+      <button class="btn" id="splitBtn" type="button" aria-describedby="splitMeta">Split</button>
+      <button class="btn ghost" id="topBtn" type="button">Top</button>
+    </div>
+    <div id="progressBox" class="hidden">
+      <span id="progressText" role="status" aria-live="polite"></span>
+      <button class="btn small danger" id="cancelBtn" type="button">Cancel</button>
+    </div>
+  </div>
 </div>
 
-<div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">All processing happens in this tab. Close it and nothing existed.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20PDF%20Tools" style="color:inherit">Feedback</a></footer>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<footer class="colophon">Everything happens in this tab. Close it and nothing existed.<br>
+A free tool by <a href="../">Sky Wolf Studios</a> &middot;
+<a href="privacy.html">Privacy</a> &middot;
+<a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20PDF%20Tools">Feedback</a></footer>
 
 <script src="vendor-pdf-lib.js"></script>
 <script type="module" src="app.js"></script>
