@@ -230,6 +230,7 @@ function renderList() {
     list.append(row);
   });
   $('emptyBox').classList.toggle('hidden', sorted.length > 0);
+  $('listHint').classList.toggle('hidden', sorted.length === 0);
   $('shiftBox').classList.toggle('hidden', timedCount() < 2);
   refreshShiftOptions(sorted);
   if (editingNode) {

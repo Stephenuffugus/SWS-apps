@@ -57,7 +57,7 @@ check('total shows $64.50', results.includes('64.50'));
 const aliceId = $('paidBy').options[1].value;
 change('paidBy', aliceId);
 results = $('dinnerResults').textContent;
-check('payer marked', results.includes('(paid)'));
+check('payer marked', results.includes('paid the bill'), results.slice(0, 200));
 check('copy-amount fallback button present', $('dinnerResults').querySelector('.paybtns button') !== null);
 
 // items mode
@@ -81,14 +81,14 @@ check('settle-up shows Bob → Alice', trip.includes('Bob → Alice'), trip.slic
 check('transfer amount $15.00', trip.includes('15.00'));
 
 // edit expense: change amount, save
-$('expList').querySelector('button[aria-label="Edit expense"]').click();
+$('expList').querySelector('button[aria-label^="Edit "]').click();
 check('edit mode label', $('expAdd').textContent === 'Save changes');
 type('expAmt', '40');
 $('expAdd').click();
 check('edited amount reflected', $('tripResults').textContent.includes('20.00'), $('tripResults').textContent.slice(0, 300));
 
 // zero shares in an uneven split = excluded (review finding 3)
-$('expList').querySelector('button[aria-label="Edit expense"]').click();
+$('expList').querySelector('button[aria-label^="Edit "]').click();
 const uneven = $('expUneven');
 uneven.checked = true;
 uneven.dispatchEvent(new window.Event('change', { bubbles: true }));

@@ -105,13 +105,126 @@ ok('dinner even split with pct tip', () => {
   assert.equal(r.total, 6450);
   assert.deepEqual([r.shares.pA, r.shares.pB], [3225, 3225]);
 });
-ok('dinner odd cent goes to first person', () => {
+ok('dinner odd cent: exact sum, one-cent spread, and it does not always land on the first person', () => {
+  // Review finding: splitEven filled from index 0, so the first-added person
+  // absorbed every remainder on every item -- 60c over 60 items at 3 people.
+  let firstGotIt = 0;
+  const ids = [];
+  for (let k = 0; k < 40; k++) {
+    const s = mkState('dinner');
+    s.id = 'split' + k;
+    addPeople(s, ['A', 'B', 'C']);
+    s.dinner.billCents = 1000;
+    const r = C.dinnerCompute(s);
+    const parts = [r.shares.pA, r.shares.pB, r.shares.pC];
+    assert.equal(parts.reduce((a, b) => a + b, 0), r.total, 'shares sum to the total exactly');
+    assert.equal(Math.max(...parts) - Math.min(...parts), 1, 'spread is one cent');
+    if (parts[0] === 334) firstGotIt++;
+    ids.push(parts.indexOf(334));
+  }
+  assert.ok(firstGotIt < 40, 'the first person does not absorb every remainder');
+  assert.ok(new Set(ids).size > 1, 'the odd cent rotates between people');
+});
+
+ok('rounding bias does not accumulate on one person over many items', () => {
   const s = mkState('dinner');
+  s.id = 'bias-check';
   addPeople(s, ['A', 'B', 'C']);
-  s.dinner.billCents = 1000;
+  s.dinner.splitMode = 'items';
+  for (let i = 0; i < 60; i++) s.dinner.items.push({ id: 'it' + i, label: '', cents: 1000, by: [] });
   const r = C.dinnerCompute(s);
-  assert.deepEqual([r.shares.pA, r.shares.pB, r.shares.pC], [334, 333, 333]);
-  assert.equal(r.shares.pA + r.shares.pB + r.shares.pC, r.total);
+  const parts = [r.shares.pA, r.shares.pB, r.shares.pC];
+  assert.equal(parts.reduce((a, b) => a + b, 0), r.total);
+  // measured before the fix: 60 cents. The remainder now rotates per item id.
+  assert.ok(Math.max(...parts) - Math.min(...parts) <= 20,
+    'spread over 60 shared items stays small, was 60c: ' + parts.join('/'));
+});
+
+/* ---------- zero-decimal currencies ---------- */
+ok('moneyUnit / quantize follow the currency', () => {
+  assert.equal(C.moneyUnit('USD'), 1);
+  assert.equal(C.moneyUnit('JPY'), 100);
+  assert.equal(C.moneyUnit('KRW'), 100);
+  assert.equal(C.moneyUnit('ZZ'), 1);        // unknown code falls back to 2dp
+  assert.equal(C.quantize(100050, 'JPY'), 100100);
+  assert.equal(C.quantize(1234, 'USD'), 1234);
+});
+
+ok('JPY dinner: displayed shares add up to the displayed total', () => {
+  const s = mkState('dinner');
+  s.currency = 'JPY';
+  addPeople(s, ['A', 'B', 'C']);
+  s.dinner.billCents = 100000;               // 1000 yen
+  const r = C.dinnerCompute(s);
+  const parts = [r.shares.pA, r.shares.pB, r.shares.pC];
+  for (const p of parts) assert.equal(p % 100, 0, 'every share is a whole yen: ' + p);
+  assert.equal(parts.reduce((a, b) => a + b, 0), r.total);
+  assert.equal(r.total, 100000);
+});
+
+ok('JPY trip: balances and transfers reconcile in whole yen', () => {
+  const s = mkState('trip');
+  s.currency = 'JPY';
+  addPeople(s, ['A', 'B', 'C']);
+  s.trip.expenses = [{ id: 'e1', label: 'izakaya', cents: 100000, currency: 'JPY', rate: 1,
+    baseCents: 100000, paidBy: 'pA', split: [] }];
+  const r = C.tripCompute(s);
+  for (const p of s.people) assert.equal(Math.abs(r.net[p.id]) % 100, 0, 'whole yen balance');
+  assert.equal(s.people.reduce((a, p) => a + r.net[p.id], 0), 0);
+  const transfers = C.settleUp(r.net);
+  const after = {};
+  for (const p of s.people) after[p.id] = r.net[p.id];
+  for (const t of transfers) { after[t.from] += t.cents; after[t.to] -= t.cents; }
+  for (const p of s.people) assert.equal(after[p.id], 0, 'transfers clear every balance exactly');
+});
+
+/* ---------- repayments ---------- */
+ok('a recorded repayment stops the app asking for it again', () => {
+  const s = mkState('trip');
+  addPeople(s, ['A', 'B']);
+  s.trip.expenses = [{ id: 'e1', label: 'hotel', cents: 10000, currency: 'USD', rate: 1,
+    baseCents: 10000, paidBy: 'pA', split: [] }];
+  let r = C.tripCompute(s);
+  assert.equal(r.net.pB, -5000, 'B owes 50.00');
+  s.trip.payments = [{ id: 'y1', from: 'pB', to: 'pA', cents: 5000, note: '' }];
+  r = C.tripCompute(s);
+  assert.equal(r.net.pB, 0, 'B is square after paying');
+  assert.equal(r.net.pA, 0);
+  assert.equal(r.repaid, 5000);
+  assert.equal(C.settleUp(r.net).length, 0, 'nothing left to settle');
+});
+
+ok('sanitizeState round-trips repayments and drops broken ones', () => {
+  const s = C.sanitizeState({
+    mode: 'trip',
+    people: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+    trip: { expenses: [], payments: [
+      { id: 'p1', from: 'a', to: 'b', cents: 500 },
+      { id: 'p2', from: 'a', to: 'a', cents: 500 },     // self-payment
+      { id: 'p3', from: 'a', to: 'ghost', cents: 500 }, // unknown person
+      { id: 'p4', from: 'a', to: 'b', cents: -5 },      // negative
+    ] },
+  });
+  assert.equal(s.trip.payments.length, 1);
+  assert.equal(s.trip.payments[0].cents, 500);
+});
+
+ok('directDebts shows who you actually owe, netted per pair', () => {
+  const s = mkState('trip');
+  addPeople(s, ['A', 'B', 'C']);
+  s.trip.expenses = [
+    { id: 'e1', label: '', cents: 3000, currency: 'USD', rate: 1, baseCents: 3000, paidBy: 'pA',
+      split: [{ pid: 'pA', weight: 1 }, { pid: 'pB', weight: 1 }] },
+    { id: 'e2', label: '', cents: 1000, currency: 'USD', rate: 1, baseCents: 1000, paidBy: 'pB',
+      split: [{ pid: 'pA', weight: 1 }, { pid: 'pB', weight: 1 }] },
+  ];
+  const r = C.tripCompute(s);
+  const direct = C.directDebts(r.pairwise);
+  assert.equal(direct.length, 1, 'A<->B nets to a single debt');
+  assert.equal(direct[0].from, 'pB');
+  assert.equal(direct[0].to, 'pA');
+  assert.equal(direct[0].cents, 1000);   // B owes 1500, A owes B 500
+  assert.ok(!direct.some(d => d.from === 'pC' || d.to === 'pC'), 'C was in nothing and owes nobody');
 });
 ok('dinner items mode with proportional tax+tip', () => {
   const s = mkState('dinner');
@@ -318,11 +431,13 @@ ok('buildSummary dinner + trip', () => {
   const txt = C.buildSummary(s);
   assert.ok(txt.includes('Ann'), 'names present');
   assert.ok(txt.includes('pay Ann'), 'payer hint present');
+  assert.ok(txt.includes('exactly the bill'), 'dinner reconciliation line present');
   const t = mkState('trip');
   addPeople(t, ['Ann', 'Ben']);
   t.trip.expenses = [{ id: 'e', label: '', cents: 1000, currency: 'USD', rate: 1, baseCents: 1000, paidBy: 'pAnn', split: [] }];
   const txt2 = C.buildSummary(t);
-  assert.ok(txt2.includes('To settle up:'), 'settle section');
+  assert.ok(txt2.includes('To settle up (fewest payments):'), 'settle section');
+  assert.ok(txt2.includes('balances net to zero exactly'), 'reconciliation line present');
   assert.ok(txt2.includes('Ben → Ann'), 'transfer line');
 });
 

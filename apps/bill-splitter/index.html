@@ -1362,6 +1362,9 @@ dialog::backdrop{background:var(--veil)}
 dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
 #qrBox{display:flex; justify-content:center; padding:var(--s3); background:#fff; border-radius:var(--r-ctl)}
 #qrBox.empty{display:none}
+/* The canvas is painted at ~900px and scaled to fill the box, so the code
+   always uses the whole 300px rather than 48% of it. */
+#qrCanvas{display:block; width:100%; max-width:300px; height:auto}
 #qrUrl{
   width:100%; margin-top:var(--s3); font-size:var(--t-sm);
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all;
@@ -1401,7 +1404,8 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
       <span class="spacer"></span>
       <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
     </div>
-    <p class="tagline" id="tagline">Nothing leaves your device. No account. No ads.</p>
+    <p class="tagline" id="tagline">Nothing leaves your device. No account. No ads.
+      <span data-saved-flag id="savedFlag"></span></p>
   </header>
 
   <main id="main" tabindex="-1">
@@ -1568,6 +1572,7 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
     </section>
     <section class="card">
       <h2>Saved on this device</h2>
+      <p class="warn hidden" id="storageNote">This browser is refusing to store anything (private/incognito mode does this). The app still works and the split still lives in the page address — use Copy link or Export so you do not lose it.</p>
       <ul class="plain" id="savedList"></ul>
       <p class="hint" id="savedEmpty">Splits you create are saved here automatically — on this device only.</p>
     </section>
@@ -1612,6 +1617,21 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
     <button class="btn" id="pdCancelBtn" type="button">Cancel</button>
     <button class="btn primary" id="pdSave" type="button">Save</button>
   </div>
+</dialog>
+
+<dialog id="curDlg" aria-labelledby="curTitle">
+  <h3 id="curTitle">Change the currency</h3>
+  <p>You are switching this split from <b id="curFrom">USD</b> to <b id="curTo">JPY</b>. The app will not guess an exchange rate — it never goes online.</p>
+  <label class="f"><span>What is 1 <span id="curFrom2"></span> worth in the new currency?</span>
+    <input type="text" id="curRate" inputmode="decimal" placeholder="1.00" autocomplete="off"></label>
+  <p class="hint" id="curPreview"></p>
+  <p class="warn hidden" id="curWarn" role="alert"></p>
+  <div class="row" style="margin-top:10px">
+    <button class="btn primary" id="curConvert" type="button">Convert everything</button>
+    <button class="btn" id="curRelabel" type="button">Just relabel</button>
+    <button class="btn" id="curCancel" type="button">Cancel</button>
+  </div>
+  <p class="hint">“Just relabel” keeps every number exactly as typed and only changes the symbol — right if you already entered the amounts in the new currency.</p>
 </dialog>
 
 <dialog id="qrDlg" aria-labelledby="qrTitle">
@@ -3276,9 +3296,153 @@ function importFilePicked(file){
   reader.readAsText(file);
 }
 
+/* ---------- fields that say when they did not understand ----------
+   `parseAmount(v) || 0` made "empty", "unreadable" and "over the cap"
+   indistinguishable: '12.5.5', 'abc', '-5', '1e3' and '999999999' all read as
+   $0.00 with no message. For anyone who checks their own work that is the
+   most alarming thing an app can do. */
+
+function fieldNote(id, msg){
+  const n = $(id);
+  if (!n) return;
+  n.textContent = msg || '';
+  n.classList.toggle('hidden', !msg);
+}
+
+function readAmountField(input, noteId, what){
+  const raw = input.value.trim();
+  if (!raw) { fieldNote(noteId, ''); return 0; }
+  const v = parseAmount(raw);
+  if (v === null) {
+    const looksNumeric = /^[\d.,\s$]+$/.test(raw);
+    fieldNote(noteId, looksNumeric
+      ? what + ' “' + raw + '” is either over the ' + LIMITS.amount.toLocaleString() +
+        ' limit or has more than one decimal point — counting it as 0 until it is fixed.'
+      : 'Couldn’t read “' + raw + '” as an amount — counting ' + what.toLowerCase() +
+        ' as 0. Digits and one decimal point, please.');
+    return 0;
+  }
+  const q = quantize(v, state.currency);
+  if (q !== v) {
+    fieldNote(noteId, state.currency + ' is shown without that much precision — using ' +
+      fmtCents(q, state.currency) + '.');
+  } else {
+    fieldNote(noteId, '');
+  }
+  return q;
+}
+
+function setSplitName(v){
+  if (v.length > LIMITS.splitName)
+    toast('Names are kept to ' + LIMITS.splitName + ' characters.', 5000);
+  state.name = v.slice(0, LIMITS.splitName);
+  touch();
+}
+
+/* ---------- currency ----------
+   Changing the code used to relabel money without converting it: a trip
+   reading $34.11 became ¥34 on one keystroke, and every expense row started
+   claiming a rate that was never entered. Now the app asks. */
+
+let pendingCurrency = null;
+
+function changeCurrency(raw, inputId){
+  const code = String(raw || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'USD';
+  const old = state.currency;
+  if (code === old) { $(inputId).value = old; return; }
+  const hasMoney = hasDinnerData(state) || hasTripData(state);
+  if (!hasMoney) {
+    state.currency = code;
+    $(inputId).value = code;
+    touch(); renderActiveView();
+    return;
+  }
+  pendingCurrency = { code, old, inputId };
+  $('curFrom').textContent = old;
+  $('curFrom2').textContent = old;
+  $('curTo').textContent = code;
+  $('curRate').value = '';
+  $('curPreview').textContent = '';
+  $('curWarn').classList.add('hidden');
+  showDlg($('curDlg'));
+  setTimeout(() => { try { $('curRate').focus(); } catch (e) {} }, 0);
+}
+
+function currentTotalCents(){
+  return state.mode === 'trip' ? tripCompute(state).total : dinnerCompute(state).total;
+}
+
+function previewCurrency(){
+  if (!pendingCurrency) return;
+  const rate = parseDecimal($('curRate').value);
+  const total = currentTotalCents();
+  const p = $('curPreview');
+  if (rate === null || !(rate > 0)) {
+    p.textContent = 'Everything in this split is currently ' + fmtCents(total, pendingCurrency.old) + '.';
+    return;
+  }
+  p.textContent = fmtCents(total, pendingCurrency.old) + ' becomes ' +
+    fmtCents(quantize(total * rate, pendingCurrency.code), pendingCurrency.code) + '.';
+}
+
+function applyCurrency(convert){
+  if (!pendingCurrency) return;
+  const { code, old, inputId } = pendingCurrency;
+  let rate = 1;
+  if (convert) {
+    rate = parseDecimal($('curRate').value);
+    if (rate === null || !(rate > 0)) {
+      const w = $('curWarn');
+      w.textContent = 'Enter what 1 ' + old + ' is worth in ' + code + ' — for example 150 if 1 ' + old + ' buys 150 ' + code + '.';
+      w.classList.remove('hidden');
+      return;
+    }
+  }
+  const snap = snapshot();
+  const d = state.dinner;
+  const conv = c => quantize(c * rate, code);
+  d.billCents = conv(d.billCents);
+  d.taxCents = conv(d.taxCents);
+  if (d.tipMode === 'flat') d.tipValue = conv(d.tipValue);
+  for (const it of d.items) it.cents = conv(it.cents);
+  for (const e of state.trip.expenses) {
+    if (e.currency === old) {
+      e.cents = conv(e.cents);
+      e.currency = code;
+      e.rate = 1;
+      e.baseCents = e.cents;
+    } else {
+      e.rate = e.rate * rate;
+      e.baseCents = quantize(e.cents * e.rate, code);
+    }
+  }
+  for (const pmt of (state.trip.payments || [])) pmt.cents = conv(pmt.cents);
+  state.currency = code;
+  $(inputId).value = code;
+  pendingCurrency = null;
+  closeDlg($('curDlg'));
+  touch();
+  renderActiveView();
+  undoable(convert
+    ? 'Converted everything from ' + old + ' to ' + code + ' at ' + rate + '.'
+    : 'Relabelled as ' + code + ' — the numbers were left exactly as they were.', snap);
+}
+
+function cancelCurrency(){
+  if (pendingCurrency) $(pendingCurrency.inputId).value = pendingCurrency.old;
+  pendingCurrency = null;
+  closeDlg($('curDlg'));
+}
+
 /* ---------- wiring ---------- */
 
 function wire(){
+  $('curRate').addEventListener('input', previewCurrency);
+  $('curConvert').addEventListener('click', () => applyCurrency(true));
+  $('curRelabel').addEventListener('click', () => applyCurrency(false));
+  $('curCancel').addEventListener('click', cancelCurrency);
+  $('curDlg').addEventListener('cancel', ev => { ev.preventDefault(); cancelCurrency(); });
+
   $('tabDinner').addEventListener('click', () => setTab('dinner'));
   $('tabTrip').addEventListener('click', () => setTab('trip'));
   $('tabSaved').addEventListener('click', () => { persist(); setTab('saved'); });
@@ -3295,7 +3459,10 @@ function wire(){
   $('pdSave').addEventListener('click', () => {
     const p = personById(editingPersonId);
     if (p) {
-      p.name = $('pdName').value.trim().slice(0, 60) || p.name;
+      const nm = $('pdName').value.trim();
+      if (nm.length > LIMITS.personName)
+        toast('Names are kept to ' + LIMITS.personName + ' characters.', 5000);
+      p.name = nm.slice(0, LIMITS.personName) || p.name;
       p.venmo = $('pdVenmo').value.trim().slice(0, 60);
       p.cashtag = $('pdCash').value.trim().slice(0, 60);
       p.paypal = $('pdPaypal').value.trim().slice(0, 60);
@@ -3306,27 +3473,52 @@ function wire(){
   });
   $('pdCancelBtn').addEventListener('click', () => closeDlg($('personDlg')));
   $('pdRemove').addEventListener('click', () => {
-    if (removePerson(editingPersonId)) {
-      closeDlg($('personDlg'));
-      renderPeople(); renderActiveView();
+    const p = personById(editingPersonId);
+    const snap = snapshot();
+    const refusal = removePerson(editingPersonId);
+    if (refusal) {
+      /* Inline, inside the dialog that is covering the page. The old refusal
+         was a bottom-of-page polite toast fired from behind a modal. */
+      const w = $('pdWarn');
+      w.textContent = refusal;
+      w.classList.remove('hidden');
+      return;
     }
+    closeDlg($('personDlg'));
+    renderPeople(); renderActiveView();
+    undoable('Removed ' + (p ? p.name : 'that person') + ' from this split.', snap);
   });
 
-  $('dinnerName').addEventListener('input', ev => { state.name = ev.target.value.slice(0, 80); touch(); });
+  $('dinnerName').addEventListener('input', ev => { setSplitName(ev.target.value); });
+  $('dinnerCurrency').addEventListener('change', ev => changeCurrency(ev.target.value, 'dinnerCurrency'));
   $('segEven').addEventListener('click', () => { state.dinner.splitMode = 'even'; touch(); renderDinner(); });
   $('segItems').addEventListener('click', () => { state.dinner.splitMode = 'items'; touch(); renderDinner(); });
   $('billAmt').addEventListener('input', ev => {
-    state.dinner.billCents = parseAmount(ev.target.value) || 0; touch(); renderDinnerResults();
+    state.dinner.billCents = readAmountField(ev.target, 'billNote', 'The bill');
+    claimMode('dinner');
+    touch(); renderDinnerResults();
   });
   $('taxAmt').addEventListener('input', ev => {
-    state.dinner.taxCents = parseAmount(ev.target.value) || 0; touch(); renderDinnerResults();
+    state.dinner.taxCents = readAmountField(ev.target, 'taxNote', 'The tax');
+    claimMode('dinner');
+    touch(); renderDinnerResults();
   });
   $('tipAmt').addEventListener('input', ev => {
     const raw = ev.target.value.trim();
-    const pct = parseDecimal(raw);
-    state.dinner.tipValue = state.dinner.tipMode === 'pct'
-      ? (pct !== null ? Math.min(pct, 1000) : 0)
-      : (parseAmount(raw) || 0);
+    if (state.dinner.tipMode === 'pct') {
+      const pct = parseDecimal(raw);
+      if (!raw) { fieldNote('tipNote', ''); state.dinner.tipValue = 0; }
+      else if (pct === null) {
+        fieldNote('tipNote', 'Couldn’t read “' + raw + '” as a percentage — counting the tip as 0%.');
+        state.dinner.tipValue = 0;
+      } else if (pct > 1000) {
+        fieldNote('tipNote', 'Tip capped at 1000% — using 1000%.');
+        state.dinner.tipValue = 1000;
+      } else { fieldNote('tipNote', ''); state.dinner.tipValue = pct; }
+    } else {
+      state.dinner.tipValue = readAmountField(ev.target, 'tipNote', 'The tip');
+    }
+    claimMode('dinner');
     touch(); renderDinnerResults();
   });
   $('tipMode').addEventListener('change', ev => {
@@ -3339,24 +3531,40 @@ function wire(){
     state.dinner.paidBy = ev.target.value || null; touch(); renderDinnerResults();
   });
   $('itemAdd').addEventListener('click', () => {
-    const amt = parseAmount($('itemAmt').value);
-    if (amt === null || amt === 0) { toast('Enter the item price first'); return; }
-    if (state.dinner.items.length >= 200) { toast('That’s a lot of items — maybe split the bill photo instead'); return; }
-    state.dinner.items.push({ id: newId(), label: $('itemLabel').value.trim().slice(0, 60), cents: amt, by: [] });
+    const raw = $('itemAmt').value.trim();
+    const amt = parseAmount(raw);
+    if (amt === null) {
+      toast(raw
+        ? 'Couldn’t read “' + raw + '” as a price. Digits and one decimal point — and the most this app takes is ' +
+          LIMITS.amount.toLocaleString() + '.'
+        : 'Enter the item price first.', 6000);
+      return;
+    }
+    if (amt === 0) { toast('Enter a price above zero for this item.'); return; }
+    if (state.dinner.items.length >= LIMITS.items) {
+      toast('Not added: ' + LIMITS.items + ' items is the limit for one bill and you have ' +
+        state.dinner.items.length + '. Combine a few lines, or split the bill in two.', 7000);
+      return;
+    }
+    const labelRaw = $('itemLabel').value.trim();
+    if (labelRaw.length > LIMITS.itemLabel)
+      toast('Item names are kept to ' + LIMITS.itemLabel + ' characters.', 5000);
+    const q = quantize(amt, state.currency);
+    if (q !== amt) toast(state.currency + ' has no ' +
+      (moneyUnit(state.currency) === 100 ? 'decimal places' : 'second decimal place') +
+      ' — saved as ' + fmtCents(q, state.currency) + '.', 5000);
+    state.dinner.items.push({ id: newId(), label: labelRaw.slice(0, LIMITS.itemLabel), cents: q, by: [] });
     $('itemLabel').value = ''; $('itemAmt').value = '';
     $('itemLabel').focus();
+    claimMode('dinner');
     touch(); renderItems(); renderDinnerResults();
   });
   $('itemAmt').addEventListener('keydown', ev => {
     if (ev.key === 'Enter') { ev.preventDefault(); $('itemAdd').click(); }
   });
 
-  $('tripName').addEventListener('input', ev => { state.name = ev.target.value.slice(0, 80); touch(); });
-  $('tripCurrency').addEventListener('change', ev => {
-    state.currency = ev.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'USD';
-    ev.target.value = state.currency;
-    touch(); renderTrip();
-  });
+  $('tripName').addEventListener('input', ev => { setSplitName(ev.target.value); });
+  $('tripCurrency').addEventListener('change', ev => changeCurrency(ev.target.value, 'tripCurrency'));
   $('expUneven').addEventListener('change', () => {
     $('expWeights').classList.toggle('hidden', !$('expUneven').checked);
     renderExpenseForm();
@@ -3375,17 +3583,48 @@ function wire(){
       const i = state.trip.expenses.findIndex(x => x.id === editingExpenseId);
       if (i >= 0) state.trip.expenses[i] = exp;
     } else {
-      if (state.trip.expenses.length >= 500) { toast('Expense limit reached for one trip'); return; }
+      if (state.trip.expenses.length >= LIMITS.expenses) {
+        toast('Not added: ' + LIMITS.expenses + ' expenses is the limit for one trip and you have ' +
+          state.trip.expenses.length + '. Start a second trip for the rest.', 7000);
+        return;
+      }
       state.trip.expenses.push(exp);
     }
     resetExpenseForm();
+    claimMode('trip');
     touch(); renderTrip();
   });
   $('expCancel').addEventListener('click', () => { resetExpenseForm(); renderExpenseForm(); });
 
+  $('payAdd').addEventListener('click', () => {
+    const w = $('payWarn');
+    const fail = msg => { w.textContent = msg; w.classList.remove('hidden'); };
+    w.classList.add('hidden');
+    if (state.people.length < 2) return fail('Add at least two people first.');
+    const from = $('payFrom').value, to = $('payTo').value;
+    if (!personById(from) || !personById(to)) return fail('Pick who paid and who was paid.');
+    if (from === to) return fail('A repayment needs two different people.');
+    const raw = $('payAmt').value.trim();
+    const amt = parseAmount(raw);
+    if (amt === null) return fail(raw
+      ? 'Couldn’t read “' + raw + '” as an amount. The most this app takes is ' + LIMITS.amount.toLocaleString() + '.'
+      : 'Enter how much was paid back.');
+    if (amt === 0) return fail('Enter an amount above zero.');
+    if ((state.trip.payments || []).length >= LIMITS.payments)
+      return fail(LIMITS.payments + ' repayments is the limit for one trip.');
+    if (!state.trip.payments) state.trip.payments = [];
+    state.trip.payments.push({ id: newId(), from, to, cents: quantize(amt, state.currency), note: '' });
+    $('payAmt').value = '';
+    claimMode('trip');
+    touch(); renderTrip();
+    toast('Recorded: ' + personById(from).name + ' paid ' + personById(to).name + ' ' +
+      fmtCents(quantize(amt, state.currency), state.currency) + '.');
+  });
+
   $('newDinner').addEventListener('click', () => { state = newState('dinner'); touch(); setTab('dinner'); });
   $('newTrip').addEventListener('click', () => { state = newState('trip'); touch(); setTab('trip'); });
   $('exportBtn').addEventListener('click', exportFile);
+  $('exportCsvBtn').addEventListener('click', exportCSV);
   $('importBtn').addEventListener('click', () => $('importFile').click());
   $('importFile').addEventListener('change', ev => {
     if (ev.target.files && ev.target.files[0]) importFilePicked(ev.target.files[0]);
@@ -3395,15 +3634,60 @@ function wire(){
   $('shareCopy').addEventListener('click', shareLink);
   $('shareQR').addEventListener('click', showQR);
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
-  $('shareSummary').addEventListener('click', () =>
-    copyText(buildSummary(state), 'Summary copied — paste it in the group chat'));
+  $('qrCopy').addEventListener('click', () => copyText($('qrUrl').value, 'Link copied. ' + LINK_WARNING));
+  $('sharePrint').addEventListener('click', () => {
+    updatePrintHead();
+    window.print();
+  });
+  $('shareSummary').addEventListener('click', async () => {
+    const url = await currentShareURL();
+    copyText(buildSummary(state, url), 'Summary copied — paste it in the group chat. ' + LINK_WARNING);
+  });
+
+  /* Open the working before printing so the sheet shows the arithmetic, and
+     close it again afterwards so the screen is unchanged. */
+  const printOpened = [];
+  window.addEventListener('beforeprint', () => {
+    updatePrintHead();
+    printOpened.length = 0;
+    for (const d of document.querySelectorAll('details.working')) {
+      if (!d.open) { d.open = true; printOpened.push(d); }
+    }
+  });
+  window.addEventListener('afterprint', () => {
+    for (const d of printOpened) d.open = false;
+    printOpened.length = 0;
+  });
+
+  /* The fixed share bar's real height drives the toast offset and the body
+     padding, so neither can be wrong when the bar wraps to two rows. */
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(measureShareBar).observe($('sharebar'));
+  }
+  window.addEventListener('resize', measureShareBar);
+}
+
+function measureShareBar(){
+  const bar = $('sharebar');
+  const h = (bar && !bar.classList.contains('hidden')) ? Math.round(bar.getBoundingClientRect().height) : 0;
+  document.documentElement.style.setProperty('--sharebar-h', h + 'px');
+}
+
+function updatePrintHead(){
+  const cur = state.currency;
+  $('printTitle').textContent = state.name || (state.mode === 'trip' ? 'Trip split' : 'Dinner split');
+  const bits = [kindLabel(state), plural(state.people.length, 'person', 'people'), 'in ' + cur];
+  if (state.mode === 'trip') bits.push(plural(state.trip.expenses.length, 'expense'));
+  bits.push('printed ' + new Date().toLocaleString());
+  $('printMeta').textContent = bits.join(' · ');
 }
 
 /* ---------- boot ---------- */
 
 function applyConfig(){
   $('appName').textContent = CONFIG.appName;
-  $('tagline').textContent = CONFIG.tagline;
+  /* replaceChildren, not textContent — the saved flag lives in here too. */
+  $('tagline').replaceChildren(document.createTextNode(CONFIG.tagline + ' '), $('savedFlag'));
   document.title = CONFIG.appName + ' — nothing leaves your device';
   $('orgLine').innerHTML = 'A free tool by <a href="../" style="color:inherit">' + CONFIG.orgName + '</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Bill%20Splitter" style="color:inherit">Feedback</a>';
   if (CONFIG.tipUrl) {
@@ -3421,6 +3705,9 @@ async function init(){
   if (location.hash.length > 1) {
     loaded = await decodeShare(location.hash);
     if (loaded) toast('Opened from link — saved to this device');
+    else if (lastShareError === 'toobig')
+      toast('That link unpacks to more than ' + Math.round(LIMITS.shareBytes / 1048576) +
+        ' MB, which is far larger than any real split — it was not opened.', 9000);
     else toast('Couldn’t open that link — it may be cut off, or this browser may be too old for it.', 7000);
   }
   if (!loaded) {
@@ -3434,6 +3721,8 @@ async function init(){
   }
   if (loaded) state = loaded;
   setTab(state.mode);
+  updatePrintHead();
+  measureShareBar();
   persist();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
