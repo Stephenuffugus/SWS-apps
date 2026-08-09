@@ -1,0 +1,504 @@
+{
+  "slug": "image-compressor",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Deniz Aksoy",
+        "who": "24, applying for a Schengen visa and a second job in the same week. Confident with a phone, has never heard the word 'codec'. Arrived from a search for 'compress image to 200kb' — the research names this as the single largest job in the category, driven by passport, visa, KYC and admissions portals.",
+        "context": "Bus stop, 08:40, iPhone in portrait at 414 CSS px, one thumb, bright sun on the screen. The consulate portal is open in another tab and it has already rejected her photo twice: 'max 200 KB, 600×600 px'.",
+        "task": "Get one 6.4 MB photo to under 200 KB at exactly 600×600, and upload it before her bus comes.",
+        "verdict": "Did not finish. She got the file smaller — 6.4 MB → 851 KB on the first press — and then spent four more runs failing to reach a number the app never lets her name, and could not produce 600×600 at all.",
+        "delights": [
+          "The first press of Compress took 414 ms for five files including a 4000×3000 photo, and the row told her the truth in plain units: '4000×3000 · 6.4 MB → 1920×1440 · 851 KB 87% smaller'.",
+          "No account, no email, no 'you have 2 free compressions left'. She noticed within ten seconds that nothing was being asked of her, which is exactly the grievance the research documents against TinyPNG's per-batch cap and iLoveIMG's ~15-file task limit."
+        ],
+        "frictions": [
+          {
+            "what": "There is no way to say '200 KB'. The only controls are #maxSide (index.html:1289-1295, five fixed options: 3000/1920/1280/800/keep) and #quality (index.html:1304, a 30-95 range). Reaching a byte target means guess, press Compress, read the row, guess again. Measured on her actual file: 1920/q80 → 851 KB, 1280/q80 → 401 KB, 800/q80 → 176 KB. Three full re-encodes of a 12-megapixel photo to land on a number the app could have binary-searched in one.",
+            "severity": "blocker",
+            "whyItMatters": "The research calls this out as an entire search economy — 'compress image to 200kb', 'to 50kb', 'to 20kb' — served today by anonymous ad-funded pages with binary-search quality engines. The one job most likely to bring somebody here is the one job the UI has no vocabulary for. She is being asked to think in encoder percentages when her problem is stated in kilobytes."
+          },
+          {
+            "what": "600×600 is unreachable. #maxSide is a five-option select of longest-edge presets; there is no typed width, no typed height, no percentage, no crop. The nearest she can get is 800 px on the long edge, which leaves her photo at 800×600.",
+            "severity": "blocker",
+            "whyItMatters": "Government and university portals specify pixel dimensions, not longest edges. iLoveIMG and bulkresizephotos both take typed dimensions with an aspect lock. She cannot complete her actual task in this app at any setting."
+          },
+          {
+            "what": "Quality is expressed only as an abstract percentage. The label reads 'Quality: 80%' with no statement of consequence, and the slider is min=30 max=95 with an implicit step of 1.",
+            "severity": "major",
+            "whyItMatters": "The research quotes a 2-star review — 'sometimes when you choose 50% the photo comes out 10%, and sometimes visa-versa' — and the whole 'why does my compressed JPG look blurry' guide genre exists because a percentage is a number about the encoder, not about the outcome. She dragged it to 45% with her thumb in sunlight and had no idea whether that was safe."
+          },
+          {
+            "what": "After the first run the row still shows results from the previous settings. She changed Format to WebP and Quality to 35 mid-run; the eight already-finished rows kept their JPEG-at-80 numbers and nothing marked them stale. Verified: two files added while Compress was still running were silently encoded with the settings captured when the button was pressed, not the ones on screen.",
+            "severity": "major",
+            "whyItMatters": "This is precisely the 'nothing happens / it comes out different from what I picked' unpredictability the reviews describe. The controls and the readout are allowed to disagree with no marker, so the user cannot build a mental model by experiment — and experiment is the only method the app gives her."
+          }
+        ]
+      },
+      {
+        "name": "Marcus Oyelaran",
+        "who": "46, letting agent, does his own listing photography on an iPhone 13. Not technical; his benchmark is 'the website said the photos were too big'. Works on a Windows laptop in Chrome, which is where his HEIC files stop being images.",
+        "context": "Office desk, 16:20, Windows laptop at 1280 px, mouse and keyboard, two viewings booked before six. He has just AirDropped 60 photos of a flat into a folder.",
+        "task": "Shrink 60 listing photos and get them onto the portal in the next fifteen minutes.",
+        "verdict": "Got most of it done and was quietly furious about the rest. Ten of his sixty photos vanished without being named, the six HEIC files produced one error message he could not read in time, and the download step turned into 17.6 seconds of Chrome asking him permission for something that looked like an attack.",
+        "delights": [
+          "Fifty photos compressed in 4.0 s with no jank at all — the longest frame gap measured across 240 consecutive frames during the run was 24 ms, and zero frames exceeded 32 ms. Twenty full-size 4000×3000 photos took 3.8 s and the tab stayed responsive throughout.",
+          "The filenames come back as 'batch-07-small.jpg' rather than 'download(7).jpg'. He could tell his originals from his copies in the Downloads folder, which is more than the App Store apps in the research manage ('so difficult to tell which images were optimized when they are all bunched together')."
+        ],
+        "frictions": [
+          {
+            "what": "He selected 60 files; 50 were kept. app.js:119 breaks out of the ingest loop at `if (items.length >= 50)` and shows one toast, 'ized50 at a time — download these first'. Measured: 60 in, 50 rows, exactly one toast, no list of what was dropped, no count, no mention of the cap anywhere in the UI before or after.",
+            "severity": "blocker",
+            "whyItMatters": "The research names this as the category's signature betrayal — 'the cap is discovered mid-work… that betrayal is the emotional peak of the category and we can simply never do it' — and the app's own positioning is that competitors' caps are the reason to come here. Ten of his flat's photos were silently absent and he found out at the portal, not here."
+          },
+          {
+            "what": "Six .HEIC files, offered to him by the file picker because index.html:1286 is `accept=\"image/*\"`, all failed. Verified with a real ISO-BMFF heic-branded file: `createImageBitmap` throws, app.js:121 catches, and the only output is a toast 'Couldn't read IMG_4821.HEIC'. Because the toast is overwritten per failure, ten mixed files produced four error toasts inside 2.5 s and only the last one — 'Couldn't read not-really-an-image.png' — was still on screen when the dust settled.",
+            "severity": "blocker",
+            "whyItMatters": "HEIC is the iPhone default and no non-Safari browser can decode it, so this is not an edge case, it is most of an iPhone user's library. The failure is unnamed, unlisted, unexplained and unrecoverable: the failed files leave no row, so he cannot see which ones they were, cannot retry them, and is not told that the problem is his browser rather than his photos."
+          },
+          {
+            "what": "'Download all' fires 50 separate `<a download>` clicks 350 ms apart (app.js:76-84). Measured end to end: 12 files 9.0 s, 50 files 17.6 s, and the app's own toast asks him to 'allow' something — 'If the browser asks about multiple downloads, allow it'.",
+            "severity": "blocker",
+            "whyItMatters": "Chrome shows a multiple-downloads permission bar and Safari is documented to drop queued files instead of saving them, so on an iPad this batch largely fails. And the research's own headline finding is that free file tools are now a security signal — the FBI Denver warning of March 2025 — so a tool asking a stranger to grant a bulk-download permission is asking exactly the wrong thing. A ZIP is the category norm and needs no compression at all here, since the payload is already compressed."
+          },
+          {
+            "what": "He added the wrong folder first. There is no way to take a file back out: rows carry no remove control (measured — zero buttons per row before compression, exactly one 'Save' after), there is no Clear all, and there is no dedupe (adding batch-01.jpg a second time produced a fourth row named batch-01.jpg). The only exit is a reload, which is total: 5 rows before, 0 after, all compressed results gone, and there is no beforeunload guard.",
+            "severity": "blocker",
+            "whyItMatters": "The research quotes this as a direct feature request ('let us select more than 15 images at a time, or select all'), and the other half of it — being able to unselect — is what turns a 60-photo drop into something editable. Right now one wrong folder costs him the whole session's work."
+          },
+          {
+            "what": "The Compress button sits under the list. Measured with 50 rows: page height 5138 px and #runBtn's top is 4061 px below the top of #list. There is no sticky action bar even though the design system ships `.actionbar` (index.html:805).",
+            "severity": "major",
+            "whyItMatters": "Adding photos and acting on them are the two halves of one gesture, and the app puts four thousand pixels between them. On a phone this is a dozen flicks in each direction, every time he changes a setting."
+          }
+        ]
+      },
+      {
+        "name": "Winnie Falk",
+        "who": "71, retired GP, macular degeneration in one eye and an essential tremor in her right hand. Uses an iPad and a large-print everything. This is the comfort-panel persona.",
+        "context": "Her conservatory at 11:00, iPad in portrait, propped, one hand, strong daylight on the glass. She is shrinking photographs of her late husband's watercolours to email to her sister, who has a 25 MB mailbox limit. No deadline, no patience for being made to feel stupid.",
+        "task": "Make eight photographs small enough to email, and send them.",
+        "verdict": "She got there, and the comfort panel is the reason. But the one control she has to hit eight times — Save — is the smallest thing on the page, and it is the only element in the app that refuses to grow when she turns the text up.",
+        "delights": [
+          "She found the slider icon in the header without being told, opened it, and set Text size to Largest. Measured: root font 16 px → 24 px, the whole layout scaled in proportion, zero horizontal overflow at 414 px AND at 320 px, and axe returned zero violations with the panel open. The Done button stayed on screen (bottom at 825 px in a 900 px viewport).",
+          "The permanent tick slot on each option meant she could see which setting was on without judging a colour — she has trouble with the magenta against the grey.",
+          "Adding Roomy spacing on top did not break anything: still zero overflow, still axe-clean, and the rows opened up from 128 px to 352 px so each photograph got its own block instead of a line in a list."
+        ],
+        "frictions": [
+          {
+            "what": "The per-row Save button is 36 px tall and stays 36 px tall at every text size. Measured: 56×36 at Default, 71×36 at Largest on a 320 px screen, 77×36 at Largest + Roomy on 414 px. It comes from `.btn.small{min-height:36px}` (index.html:589), a hard pixel value, while the design system's own floor is `--tap: max(44px, calc(44px * var(--ui-scale)))` (index.html:265) — which at Largest would be 66 px. Its text is 13 px.",
+            "severity": "blocker",
+            "whyItMatters": "This is the app's output. Everything before it is preamble; Save is the moment the work becomes a file. With a tremor she missed it twice and hit the row instead, which does nothing. And the comfort panel — the thing that exists precisely so she can make targets bigger — makes every other button on the page grow while leaving this one behind. A setting that helps with everything except the one control that matters teaches her not to trust it."
+          },
+          {
+            "what": "Eight buttons, all named 'Save', with nothing distinguishing them (verified: the accessible name of every row button is the bare string 'Save'). At 50 images that is 50 identical buttons.",
+            "severity": "major",
+            "whyItMatters": "With one usable eye she navigates by shape and position, and the rows are visually near-identical grey blocks. There is no 'Save Rose garden.jpg' anywhere — the filename is in a sibling div, not in the button's name — so neither her eyes nor a screen reader can tell her which photograph she is about to save."
+          },
+          {
+            "what": "The quality slider is a 38 px-tall box (measured; index.html:1253 gives `input[type=range]` a border and 10 px padding) with a native browser thumb inside it, and `accent-color` computes to `auto` — so the one signature control in a magenta app renders in default Chrome blue.",
+            "severity": "major",
+            "whyItMatters": "Her tremor and a 38 px box containing a ~16 px drag handle do not combine. She overshot from 80 to 41 in one movement and had no idea what she had done to her watercolours, because nothing shows her the result. The blue also reads to her as 'this bit belongs to something else'."
+          },
+          {
+            "what": "The before/after readout is one continuous grey run-on: '1440×900 · 138 KB → 1440×900 · 77 KB 44% smaller', 15 px, wrapping mid-value on a phone so that 'smaller' lands alone on the next line and the green percentage separates from its number.",
+            "severity": "minor",
+            "whyItMatters": "The numbers are the product. She wanted one thing from that line — is it under 25 MB now — and had to read a sentence with two dimension pairs, two byte counts, an arrow and a percentage in it to find out."
+          },
+          {
+            "what": "The results heading reads '8 image(s)' (app.js:90).",
+            "severity": "minor",
+            "whyItMatters": "Small, but it is the first thing she reads after the photographs land, and '(s)' is the tell of a form, not of something written for a person."
+          }
+        ]
+      },
+      {
+        "name": "Joon-ho Park",
+        "who": "29, front-end developer maintaining a documentation site. Knows exactly what PNG and WebP are, which is what gets him into trouble here. Came from a Squoosh issue thread — the research's #1259, 'Batch / Bulk process', open since July 2022 — looking for something that does more than one file at a time.",
+        "context": "Dual monitors at 1280 px, keyboard and mouse, mid-afternoon, no time pressure but strong opinions. A folder of 14 UI screenshots and one transparent logo.",
+        "task": "Batch-shrink a folder of PNG screenshots for a docs page without losing the transparency on the logo.",
+        "verdict": "He picked PNG — because the dropdown says 'PNG (graphics)' and his files are graphics — and the app handed him files three to ten times LARGER than the originals while announcing 'Done'. He did not notice until he looked at his Downloads folder.",
+        "delights": [
+          "Batch actually works. Fifteen files in one dialog, one press, one pass — the thing the open Squoosh issue has been asking for since 2022.",
+          "WebP output is excellent and the extension follows what was really encoded, not what the dropdown said: app.js:66 derives `outExt` from `blob.type`, so the Safari-old JPEG fallback cannot produce a file called .webp that is really a JPEG. Verified end to end: 'Screenshot 2026-08-09 at 14.22.10.png' → 'Screenshot 2026-08-09 at 14.22.10-small.webp', 138 KB → 40 KB, 71% smaller.",
+          "It genuinely runs offline. With the network cut, the app reloaded from the service worker with fonts and comfort panel intact and compressed two files successfully."
+        ],
+        "frictions": [
+          {
+            "what": "PNG output inflates, silently, and the app calls it success. Measured with Format=PNG and Max size='Keep dimensions': DSC_0431.jpg 6.4 MB → 21.5 MB (3.4×); already-small.jpg 17 KB → 187 KB (10.6×). The summary toast read, verbatim, 'Done — 6.5 MB → 21.8 MB'. Every row still offered a Save button, and no row carried a warning, because `savingsPct()` (helpers.js:17-20) returns 0 whenever after >= before, so the only signal for inflation and for zero change is the same signal: the absence of a green badge.",
+            "severity": "blocker",
+            "whyItMatters": "This is the exact failure the research documents (cropper issue #542, an 8 MB image out at 29 MB) and it is structural: app.js:60 calls `canvasToBlob(canvas, type, undefined)` for PNG, and canvas PNG is unquantised lossless RGBA with no palette reduction. An app whose entire promise is 'smaller' hands back 'bigger' and prints the word 'Done'. It also fires in JPEG mode on small inputs — tiny-icon.png 282 B → 785 B, already-small.jpg 17 KB → 21 KB — so the ordinary user meets it too."
+          },
+          {
+            "what": "He never sees the output. The 52 px thumbnail on each row is a JPEG-quality-0.7 re-encode of the ORIGINAL, built at ingest (app.js:38-41) and never replaced; there is no preview of the compressed result anywhere, at any zoom, and no before/after comparison.",
+            "severity": "blocker",
+            "whyItMatters": "The single most-cited fear in this category is 'will it look bad', and Squoosh's split-view slider is the reason people trust Squoosh. Here he is asked to download a file he has never seen, decided upon by a percentage he cannot interpret. For screenshots with 12 px text, quality 80 JPEG is visibly wrong and the app will not show him."
+          },
+          {
+            "what": "Choosing JPEG for the transparent logo composites it onto white (app.js:56) with no warning, and there is no hint that PNG or WebP would keep the alpha. Verified: logo-transparent.png at JPEG/80 came back 23 KB → 12 KB, '49% smaller', looking like a success.",
+            "severity": "major",
+            "whyItMatters": "The code comment says 'no black transparency', which is the right call, but the decision is made for him and never surfaced. A logo silently gaining a white box is the kind of thing you discover on a dark-themed docs page a week later."
+          },
+          {
+            "what": "No drag and drop, and no paste. Verified by instrumenting addEventListener across the whole page load: the app registers exactly eight listeners — storage, DOMContentLoaded, input on #quality, click on #addBtn, change on #fileInput, click on #runBtn, click on #allBtn, click on #swsPrefsBtn. Zero drag, drop, paste, or beforeunload handlers.",
+            "severity": "major",
+            "whyItMatters": "Every competitor in the category leads with a dropzone, and Cmd-V of a screenshot is the fastest path in his workflow. Worse: with no drop handler the browser's default takes over, so a dropped file navigates the tab to that image and destroys the entire in-memory queue — the app's one unrecoverable gesture is also the most natural one."
+          },
+          {
+            "what": "The compress loop iterates the live `items` array (app.js:132), so files added while a run is in flight get encoded with the settings captured at the start. Verified: with 8 large photos running at JPEG/80, he switched Format to WebP and Quality to 35 and added two more files; both new files came out JPEG-at-80 and the totals toast folded them into '87% smaller'.",
+            "severity": "minor",
+            "whyItMatters": "Nothing crashes and nothing is lost, but the app produced two files under settings that were never on screen at the same time as those files. It is a small piece of the unpredictability the reviews describe."
+          }
+        ]
+      },
+      {
+        "name": "Rachel Oduya",
+        "who": "38, HR at a 40-person company, handles scans of passports, right-to-work documents and payslips. Read the March 2025 FBI Denver warning about free online file-converter sites after IT circulated it. Deeply sceptical of exactly this kind of page and will bounce on any wrong note.",
+        "context": "Open-plan office, 09:15, work laptop at 1280 px, colleagues walking past her screen, corporate policy that says nothing sensitive leaves the device.",
+        "task": "Shrink twelve passport scans below the HR system's attachment limit without any of them touching a server.",
+        "verdict": "She believed it in the end, but only because she happened to test it herself. The app makes the strongest privacy claim in the portfolio and offers her no way to check it, no stamp, no negative-space list, and asks for money before it has done anything for her.",
+        "delights": [
+          "The claim is actually true, and it is testable in five seconds. Verified: with the network disabled the app reloaded from its service worker — title, Choose images, comfort panel, local font all intact — and compressed two files successfully with no connection of any kind.",
+          "Nothing is persisted anywhere. localStorage after a full session with 50 images compressed: `{}`, 0 bytes. For her that is the correct behaviour and nobody else offers it.",
+          "The colophon is signed — a studio name, a link back to it and a real feedback address — which the research says is now the differentiator, because the SERP is full of anonymous clones and TinyPNG brand parasites."
+        ],
+        "frictions": [
+          {
+            "what": "The privacy promise is body copy and nothing else. The design system ships a `.trust` component — a bordered stamp with a lock glyph, index.html:437 — and the string `class=\"trust\"` appears zero times in the markup. The claim lives in a hero paragraph and a grey footer line, which is exactly the form the research says users discount on arrival.",
+            "severity": "major",
+            "whyItMatters": "A dozen competing pages assert 'no upload' in the same sentence shape. Asserting it harder does not work; the only move left is to make it falsifiable — 'turn off your Wi-Fi, it still works' — which is true today and unsaid. She had to open DevTools to satisfy herself."
+          },
+          {
+            "what": "Every scrap of metadata is stripped, and the app never says so in either direction. Verified byte-level: an input JPEG carrying a real EXIF APP1 block (Make=Apple, Model=iPhone 15 Pro, DateTime=2019:07:04 18:22:31, Orientation=6) came out with markers JFIF and ICC_PROFILE only — no APP1, no Exif, no GPS.",
+            "severity": "major",
+            "whyItMatters": "For her this is the best thing the app does and she cannot know it. For the reviewer the research quotes — 'all my photos show up extremely small in my camera roll and in reverse order' — the same silent behaviour is the bug, because a re-encode with no date-taken sorts under 'now'. One switch with the consequence written out serves both, and naming it turns a hidden behaviour into the most trustworthy thing on the page."
+          },
+          {
+            "what": "The tip jar is in the header before anything has happened, and it is the second stop in the tab order — measured cold tab order: #swsPrefsBtn, #tipLink, #addBtn, #maxSide, #format, #quality, #runBtn, #allBtn, footer links.",
+            "severity": "minor",
+            "whyItMatters": "It never blocks anything and never moves, which is right. But the research is explicit that the ask must not precede a result, and on this page the money link is reachable before the file picker."
+          },
+          {
+            "what": "Nothing warns her that the queue is volatile. Measured: 5 rows and their compressed blobs before a reload, 0 after; no beforeunload handler exists; and the three settings reset to 1920 / JPEG / 80 on every visit even though the comfort preferences persist across all 23 apps.",
+            "severity": "minor",
+            "whyItMatters": "Session-only is the correct privacy posture and she wants it — but she wants to be told, and an accidental back-swipe costing twelve scans and twelve re-encodes is a bad way to learn it. The settings amnesia is the other side: the pref system already proves this origin can remember a choice."
+          }
+        ]
+      },
+      {
+        "name": "Ade Baptiste",
+        "who": "34, data analyst with RSI in both wrists, drives everything from the keyboard and uses a trackball for a few minutes a day. Screen reader on for long documents, off for short tasks.",
+        "context": "Home desk, 1280 px, keyboard only for this session, voice call in one ear. Nine chart exports to shrink for a report.",
+        "task": "Compress nine PNGs and save them, without touching the pointer.",
+        "verdict": "Completed it, but every step after Compress cost him a run at the Tab key from the top of the document, and he had no way to know which of nine identical 'Save' buttons he was on.",
+        "delights": [
+          "Everything is a real control. Nine focus stops, all named, nothing trapped, no div-with-a-click-handler anywhere — the whole app is buttons, selects and a range, and the battery's keyboard sweep found 10 focusable elements with 0 unreachable and 0 unnamed.",
+          "The comfort panel is a proper fieldset of real radios, so arrow keys move within a group and Escape closes it cleanly.",
+          "The summary lands in a live region: #toast is role=status aria-live=polite, so 'Done — 127.4 MB → 16.6 MB (87% smaller)' is spoken without him going looking for it."
+        ],
+        "frictions": [
+          {
+            "what": "Pressing Enter on Compress throws focus to <body>. Verified: `document.activeElement` is BODY after the run, because app.js:127 disables the focused button and app.js:141 re-enables it after the loop. The same thing happens on every re-render — with focus on a row's Save button, adding one more file put focus back on BODY (render() calls `list.replaceChildren()` at app.js:88).",
+            "severity": "blocker",
+            "whyItMatters": "The results are the only reason he pressed the button, and reaching the first one costs a full Tab run from the top of the document — then adding a tenth file throws him back to the start again. It converts a nine-file job into forty-odd keystrokes of navigation."
+          },
+          {
+            "what": "Nine buttons whose entire accessible name is 'Save', in a list with no role, no aria-live and no per-row heading. The count is only in #listHead, which is a static <h2> that JS overwrites (app.js:90) with no live region.",
+            "severity": "blocker",
+            "whyItMatters": "With the screen reader on, tabbing the results reads 'Save button, Save button, Save button…' nine times with no filename, no size and no savings. He cannot tell whether he has saved chart 3 or chart 7, and nothing announces that nine rows appeared in the first place."
+          },
+          {
+            "what": "The quality slider is min=30, max=95, with no step attribute — 65 arrow presses to cross the range, verified (10 presses moved it 80 → 70). There are no preset values and no way to type a number.",
+            "severity": "major",
+            "whyItMatters": "Sixty-five keypresses on wrists that are the reason he is on the keyboard in the first place. `step=\"5\"` plus three preset chips would cost one line and turn this into three presses."
+          },
+          {
+            "what": "No skip link. The base layer styles `.skip` (index.html:840) and the page has `<main id=\"main\">` (index.html:1276), but no skip anchor exists in the markup, so every keyboard pass starts with the settings button and the tip jar.",
+            "severity": "minor",
+            "whyItMatters": "Two stops, but he pays them on every single re-render because focus keeps returning to the top of the document."
+          },
+          {
+            "what": "Both action buttons are enabled with an empty queue and teach only by failing. Verified cold: #runBtn.disabled false → 'Choose images first'; #allBtn.disabled false → 'Press Compress first'.",
+            "severity": "minor",
+            "whyItMatters": "A disabled control with a reason attached is information he can get to at his own speed; a toast that vanishes in four seconds is information he has to catch."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "Speed and smoothness at real scale. 50 photos compressed in 4.0 s; 20 full-size 4000×3000 photos (127.4 MB in) in 3.8 s, out at 16.6 MB. Across 240 consecutive frames during a run the longest frame gap was 24 ms and nothing exceeded 32 ms — the serial main-thread loop yields properly on every await, so the tab never freezes. Zero console errors, zero page errors and zero failed requests across every scenario run.",
+        "The privacy claim is literally true and the app is genuinely offline-first. With the network cut, the service worker served the whole app — markup, local Space Grotesk font, comfort panel — and compression worked unchanged. localStorage after a full 50-image session: 0 bytes.",
+        "Batch is the real advantage and it works. One file dialog, 50 files, one press, one pass — which is the thing the best client-side competitor (Squoosh) still cannot do, with an open issue since July 2022.",
+        "Output naming is honest. `outExt` is derived from the blob's actual MIME type (app.js:66), so the WebP→JPEG fallback path cannot mislabel a file, and the `-small` suffix keeps originals and copies distinguishable in the Downloads folder.",
+        "Text safety is complete. A file literally named `<img src=x onerror=alert(1)>.jpg` renders as text, 0 injected nodes, no alert; the thumbnail src is guarded to `data:image/` prefixes (app.js:95). 180-character filenames, CJK, Cyrillic and emoji filenames all render without a single pixel of horizontal overflow at 320 px or 414 px.",
+        "The comfort panel is exemplary and does its job here. Largest text takes root from 16 px to 24 px with the layout scaling in proportion, zero overflow at 320 px and 414 px, Done stays on screen, and axe returns zero violations with the panel open — as it does on the populated app in light, dark, high-contrast, Largest and Roomy.",
+        "The studio base has already fixed the previous audit's type-size complaints: filenames now render at 16 px, the before/after readout and hints at 15 px, against the 13 px the audit measured."
+      ],
+      "hurts": [
+        "The app will hand back a bigger file and call it Done. PNG output measured at 6.4 MB → 21.5 MB and 17 KB → 187 KB, with the summary toast reading 'Done — 6.5 MB → 21.8 MB', every Save button still offered and no warning on any row, because savingsPct() collapses 'no change' and 'much worse' into the same silence.",
+        "There is no way to say how big you want the file. Longest-edge presets and an abstract 30-95 quality percentage cannot express 'under 200 KB' or '600×600', which the research identifies as the largest single job in the category.",
+        "You cannot take anything out. No per-row remove, no Clear all, no dedupe, no selection — the only exit from a wrong 60-photo drop is a reload, which destroys every compressed result with no warning and no beforeunload guard.",
+        "The 50-image cap drops files silently. 60 in, 50 rows, one toast, no names and no count of what was skipped — the exact 'discovered mid-work' betrayal the app's own positioning is built against.",
+        "HEIC — the iPhone default — is offered by the picker and then fails with a toast that the next failure immediately overwrites. Four rejected files produced four toasts in 2.5 s and one survivor on screen; failed files leave no row, no reason and no retry.",
+        "Download all is 50 sequential browser downloads over 17.6 s, preceded by the app asking the user to grant a multiple-download permission. No ZIP.",
+        "You never see the result. The only image on screen is a 52 px thumbnail of the original; the compressed output is never rendered at any size, so the category's central fear — 'will it look bad' — is answered with a percentage.",
+        "Save is 36 px tall, 13 px of text, and it is the one control that does not grow when the comfort panel turns the text up — 36 px at Default and 36 px at Largest, against a design-system floor of 44 px (66 px at Largest).",
+        "Fifty buttons named 'Save' and nothing else, in a list with no live region, no role and no per-row labelling.",
+        "Focus is thrown to <body> by Compress and by every re-render, so keyboard users restart from the top of the document after each action.",
+        "Metadata is stripped invisibly — verified, no EXIF APP1 in the output — which is a privacy win and a photo-library bug, and the app says nothing either way.",
+        "Actions are 4,061 px below the top of a 50-row list, with no sticky action bar, even though the base ships `.actionbar`.",
+        "No drag-and-drop, no paste, no beforeunload: 8 event listeners in the entire app, and a dropped file navigates the tab away and destroys the queue.",
+        "There is no progress of any kind. 20 large photos take 2.65 s to ingest with a single DOM update at the very end and #listHead still reading 'Images'; during compression the only signal is the button reading 'Working…'.",
+        "The privacy promise is unstamped and untestable in the UI: `.trust` is styled by the system and used zero times, the negative-space list the research asks for does not exist, and the offline claim — which is true — is never made."
+      ],
+      "mostWantedNext": [
+        "A 'fit under ___' target-size mode as the primary control, with presets for the sizes people actually fight (20 / 50 / 100 / 200 KB, 1 / 5 / 10 / 25 MB), binary-searching quality and then dimensions, and reporting the exact landed size. Demote the raw quality slider to an advanced row.",
+        "A hard promise never to make a file worse: if the re-encode is larger, hand back the original bytes, say so on the row in one sentence, and name the better option ('this is a flat graphic — WebP is 71% smaller than PNG here', which is measured and true).",
+        "A real before/after view of the OUTPUT — a draggable split at 1:1 with zoom, on a fixed neutral grey field, pre-positioned on an edge or a text region where artefacts show.",
+        "Editable queue: per-row remove, Clear all, dedupe on name+size+lastModified, and a cap expressed in device terms rather than as a number that looks like a paywall.",
+        "One ZIP instead of N downloads (store-only is correct here — the payload is already compressed), with the per-file Save kept for the single-image case.",
+        "Real HEIC handling: detect the extension before decoding, name the format, explain that this browser has no decoder, and offer the route out — and in all cases give failed files a row with a reason and a retry rather than a toast that the next failure erases.",
+        "Typed dimensions with an aspect lock and a percentage, alongside the longest-edge presets.",
+        "An explicit metadata switch with the consequences written out: 'Remove location and camera info (recommended)' / 'Keep the date taken so your photo library sorts these correctly'.",
+        "Drag-and-drop of files and folders, and Cmd/Ctrl-V paste — plus a drop handler on the document purely to stop a stray drop navigating the tab away.",
+        "Per-file progress ('12 of 50'), incremental rendering during ingest, and a cancel.",
+        "Make the promise an object: a `.trust` stamp, the negative-space list where competitors put a pricing table, and the airplane-mode challenge stated out loud, since it already passes.",
+        "Persist the three settings in the existing sws prefs store, warn before unload once there is unsaved work, and stop resetting to 1920/JPEG/80 on every visit.",
+        "Colour-managed output — `getContext('2d', { colorSpace: 'display-p3' })` with a feature detect — and say so; the context in use today reports colorSpace 'srgb'."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": true,
+    "scenarios": [
+      {
+        "name": "Standard battery",
+        "method": "node design/stress.mjs image-compressor — layout at 320/414/1280 and at largest text and roomy spacing, touch targets, hostile text and injection, numeric edges, rapid clicking, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
+        "result": "0 hard failures. All layouts clean, touch targets [], keyboard 10 focusable / 0 unreachable / 0 unnamed, axe clean, no console output. BUT the battery is close to blind on this app: every check ran against an empty page (content 744→744 chars at every step, 'bulk: 200 rapid adds {ran:false}', 'boots with corrupt storage: no app storage key to corrupt'), because the only way to put content into this app is a file input. Everything below is what the battery could not reach.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "PNG re-encode inflation",
+        "method": "Fed 5 real images (a 4000×3000 6.4 MB photo, a 1440×900 flat screenshot, a 512×512 transparent logo, a 320×240 JPEG, a 64×64 icon), set Format=PNG and Max size='Keep dimensions', pressed Compress, read the rows and the summary toast.",
+        "result": "DSC_0431.jpg 6.4 MB → 21.5 MB (3.4× larger). already-small.jpg 17 KB → 187 KB (10.6× larger). Summary toast: 'Done — 6.5 MB → 21.8 MB'. Every inflated row still rendered a Save button and carried no warning; savingsPct() (helpers.js:17) returns 0 for after>=before so inflation is indistinguishable from no change. The JPEG path does it too: tiny-icon.png 282 B → 785 B and already-small.jpg 17 KB → 21 KB inside an otherwise successful run reported as '86% smaller'.",
+        "severity": "blocker",
+        "defect": "app.js:60 encodes PNG through canvas with no quantiser and no size comparison; nothing anywhere refuses to return a larger file or flags one."
+      },
+      {
+        "name": "60-file drop against the 50 cap",
+        "method": "Selected 60 distinct JPEGs in one file dialog; observed #list, #listHead and a MutationObserver on #toast.",
+        "result": "50 rows kept, 10 files discarded. Exactly one toast: '50 at a time — download these first'. No names, no count of what was skipped, no mention of the cap before or after. Re-selecting an already-queued file while at the cap silently did nothing.",
+        "severity": "blocker",
+        "defect": "app.js:119 `if (items.length >= 50) { toast(...); break; }` — a break inside the ingest loop discards the remainder without reporting which files or how many."
+      },
+      {
+        "name": "Unreadable formats: HEIC, SVG, empty file, text-as-PNG",
+        "method": "Fed a real ISO-BMFF heic-branded IMG_4821.HEIC, an SVG, a 0-byte corrupt.jpg and a text file named .png, mixed with 6 valid images; recorded every toast via MutationObserver.",
+        "result": "4 rejections, 4 toasts inside 2.5 s, each overwriting the last: 'Couldn't read IMG_4821.HEIC' → 'Couldn't read floorplan.svg' → 'Couldn't read corrupt.jpg' → 'Couldn't read not-really-an-image.png'. Only the last was still on screen. Failed files produce no row, no reason, no retry, and 6 of 10 files silently became the whole queue.",
+        "severity": "blocker",
+        "defect": "index.html:1286 `accept=\"image/*\"` offers HEIC; app.js:120-121 catches the createImageBitmap throw into a single shared, self-overwriting toast."
+      },
+      {
+        "name": "Download all — 12 and 50 files",
+        "method": "Compressed 12 files, then 50, pressed 'Download all' and counted page 'download' events with timestamps.",
+        "result": "12 files: 12 downloads over 9.0 s. 50 files: 50 downloads over 17.6 s. Filenames correct throughout ('batch-07-small.jpg'). The app's own toast during the run reads 'If the browser asks about multiple downloads, allow it'. In headless Chromium every download is auto-accepted; in real Chrome this is the multiple-downloads permission bar, and Safari is documented to drop queued files.",
+        "severity": "blocker",
+        "defect": "app.js:76-84 downloadStaggered() fires N `<a download>` clicks 350 ms apart. No ZIP path exists."
+      },
+      {
+        "name": "Editing the queue",
+        "method": "Added 3 files, re-added an identical file, inspected each row for controls, then reloaded the page mid-work.",
+        "result": "Re-adding batch-01.jpg produced a fourth row named batch-01.jpg — no dedupe. Rows contain zero buttons before compression and exactly one ('Save') after. No Clear all anywhere. Reload: 5 rows before → 0 after, all compressed blobs gone, no beforeunload prompt (no such listener exists). Settings also reset to 1920 / JPEG / 80; localStorage remained `{}` / 0 bytes.",
+        "severity": "blocker",
+        "defect": "render() (app.js:96-108) emits no remove control; ingest (app.js:118-123) does not dedupe; nothing registers beforeunload and no setting is persisted."
+      },
+      {
+        "name": "Touch targets and the comfort panel, on a populated list",
+        "method": "8 images added and compressed, then measured every interactive element at 414 default, 414 Largest+Roomy, 320 Largest, and 414 dark + high contrast; opened the comfort panel over the populated page and ran axe.",
+        "result": "Save buttons measured 56×36 (default), 71×36 (320 Largest), 77×36 (414 Largest+Roomy), 58×36 (dark/high-contrast) — 36 px tall in every configuration, never scaling with --ui-scale, against the system floor of max(44px, 44px × ui-scale) = 66 px at Largest. #quality is 38 px tall with accent-color computing to 'auto' (browser blue). #swsPrefsBtn and #tipLink are 36 px (portfolio chrome). Everything else scales correctly: runBtn/allBtn 44 px → 66 px, root font 16 px → 24 px, rows 128 px → 352 px. Zero horizontal overflow and zero axe violations in all four configurations and with the panel open; Done stayed on screen (bottom 825 px of a 900 px viewport).",
+        "severity": "major",
+        "defect": "index.html:589 `.btn.small{min-height:36px}` is a hard pixel value applied to the app's primary output action at app.js:106; index.html:1253 gives input[type=range] a bordered 38 px box and never sets accent-color."
+      },
+      {
+        "name": "Keyboard and screen-reader path",
+        "method": "Tabbed the cold page, measured slider traversal, then compressed and inspected focus, accessible names and live regions; added a file with focus on a Save button.",
+        "result": "Cold tab order: #swsPrefsBtn → #tipLink → #addBtn → #maxSide → #format → #quality → #runBtn → #allBtn → footer links. No skip link exists despite `.skip` being styled at index.html:840 and `<main id=\"main\">` present. Slider: min 30, max 95, no step — 65 presses to cross (10 ArrowLeft moved 80 → 70), no aria-valuetext. After Compress, document.activeElement === BODY. With focus on a row's Save button, adding one file moved focus to BODY. Every row button's accessible name is the bare string 'Save' (4 of 4, and 50 of 50 at scale). #list has no role and no aria-live; #listHead is a plain <h2> overwritten by JS. #toast is correctly role=status aria-live=polite.",
+        "severity": "blocker",
+        "defect": "app.js:127/141 disables and re-enables the focused button with no focus restoration; app.js:88 replaceChildren() destroys the focused node; app.js:107 gives every row button the same name."
+      },
+      {
+        "name": "Hostile and awkward filenames",
+        "method": "Fed files named `<img src=x onerror=alert(1)>.jpg`, `日本語の写真-фото-🌅.jpg`, a 180-character name, and a file with no extension; checked for injected nodes, overflow and output names.",
+        "result": "0 injected script or img nodes, no alert, name rendered as literal text (textContent throughout). Zero horizontal overflow at 414 px even with the 180-character name — it wraps via overflow-wrap:anywhere into 8 stacked lines of 'aaaa', which is ugly but contained. 'no-extension' produced 'no-extension-small.webp' correctly. (CJK glyphs rendered as tofu in this container, which is a missing system font in the test image, not an app defect — the emoji rendered fine.)",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Load: 20 full-size camera photos",
+        "method": "Fed 20 × 4000×3000 JPEGs (6.4 MB each, 127.4 MB total), instrumented the change event and a MutationObserver on #list, then compressed and sampled 240 consecutive animation frames.",
+        "result": "Ingest: exactly one DOM mutation, 2,650 ms after the change event, going straight from 0 to 20 rows — nothing on screen for 2.65 s and #listHead still reading 'Images'. Compress: 3,772 ms, output 16.6 MB (87% smaller), longest frame gap 24 ms, 0 frames over 32 ms. No console errors.",
+        "severity": "major",
+        "defect": "render() is called once after the ingest loop (app.js:123) rather than per file, and there is no progress indicator during either phase — the only signal is #runBtn reading 'Working…'."
+      },
+      {
+        "name": "Changing settings and adding files mid-run",
+        "method": "Started a run on 8 large photos, then 120 ms in switched Format to WebP, set Quality to 35, and added 2 more files.",
+        "result": "Mid-run state: #runBtn disabled and reading 'Working…', but #addBtn, #allBtn, #maxSide, #format and #quality all still enabled. Both files added during the run were compressed — with the settings captured when Compress was pressed (JPEG/80), not the WebP/35 showing on screen — and were folded into the summary toast. The 8 finished rows kept their old results with no stale marker while the controls read something else.",
+        "severity": "minor",
+        "defect": "app.js:132 iterates the live `items` array; app.js:129-131 snapshots the settings once; nothing marks rows as belonging to a previous settings generation."
+      },
+      {
+        "name": "Metadata and EXIF survival",
+        "method": "Built a JPEG carrying a real EXIF APP1 block (Make=Apple, Model=iPhone 15 Pro, DateTime=2019:07:04 18:22:31, Orientation=6), ran it through the app's exact pipeline in-page and scanned every JPEG marker in the output.",
+        "result": "Input markers include FFE1 'Exif'. Output markers: FFE0 JFIF, FFE2 ICC_PROFILE, quantisation/Huffman tables, FFDA — no APP1, no EXIF, no GPS. Orientation is honoured on input (createImageBitmap returned the 2400×1600 source as 1600×2400 and the app reported it that way), so the pixels are correct; only the metadata is gone. Nothing in the UI mentions either fact.",
+        "severity": "major",
+        "defect": "Canvas re-encode drops all metadata by construction (app.js:50-67). This is simultaneously the app's best privacy behaviour and the cause of the documented 'photos land in my camera roll in reverse order' complaint, and it is unstated in both directions."
+      },
+      {
+        "name": "Colour management",
+        "method": "Generated a Display-P3 PNG in a p3 canvas, fed it through the pipeline, and read the app's own context attributes plus pixel values back through both an sRGB and a display-p3 context.",
+        "result": "The context the app uses reports colorSpace 'srgb' (getContext('2d') with no options, app.js:55). Clipping could NOT be demonstrated in this environment: the P3 fixture round-tripped identically through both contexts (top 0,255,0 / bottom 255,0,0 in each), i.e. headless Chromium in this container flattened the source before the app ever saw it. Source-level fact confirmed; user-visible gamut loss not reproduced here and should be re-tested on real hardware with an iPhone photo.",
+        "severity": "minor",
+        "defect": "app.js:55 requests no colorSpace, so output is sRGB-limited by construction; the practical impact is unverified in this environment."
+      },
+      {
+        "name": "Empty-state affordances",
+        "method": "Pressed Compress and then Download all on a cold page with no images.",
+        "result": "Both buttons enabled. Compress → toast 'Choose images first'. Download all → toast 'Press Compress first'. Empty hint reads 'Add images above — email attachments, listing photos, forum avatars, anything oversized' — good copy, but rendered as a plain 15 px hint below an empty list rather than as the design system's `.empty` block inside it.",
+        "severity": "minor",
+        "defect": "index.html:1313-1314 ship both actions permanently enabled; app.js:126 and app.js:145 teach only by failing into a transient toast."
+      },
+      {
+        "name": "Scroll distance between the list and its actions",
+        "method": "Loaded 50 images and measured document height and the offset from the top of #list to #runBtn.",
+        "result": "Page height 5,138 px; #runBtn top is 4,061 px below the top of #list. No sticky action bar; `.actionbar` is defined in the base at index.html:805 and never used.",
+        "severity": "major",
+        "defect": "index.html:1312-1315 places both actions after the list inside the card."
+      },
+      {
+        "name": "Event surface: drag, drop, paste, unload",
+        "method": "Wrapped EventTarget.prototype.addEventListener via an init script before any app code ran, then enumerated every listener registered on load.",
+        "result": "Exactly 8 listeners: storage (window), DOMContentLoaded (document), input#quality, click#addBtn, change#fileInput, click#runBtn, click#allBtn, click#swsPrefsBtn. Zero dragover/drop/paste/beforeunload/visibilitychange. Consequence: a file dropped on the page hits the browser default and navigates the tab to that image, destroying the queue.",
+        "severity": "major",
+        "defect": "No ingest path other than the hidden #fileInput (index.html:1286), and no document-level drop suppression."
+      },
+      {
+        "name": "Offline / PWA claim",
+        "method": "Loaded the app, waited for the service worker, cut the network at the browser context, reloaded, then added and compressed two files.",
+        "result": "sw.js active; after the offline reload the page returned complete — title, #addBtn, #swsPrefsBtn, local font stack — and compressed two files successfully with no connection. Zero errors. The claim the research says would be the strongest differentiator ('turn off your Wi-Fi; it still works') is true today and appears nowhere in the UI; `class=\"trust\"` occurs 0 times in the markup.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Storage hygiene and injection surface after a full session",
+        "method": "Ran a complete 50-image session (add, compress, save, download all) and dumped localStorage; separately checked toast and row construction paths for innerHTML.",
+        "result": "localStorage: {} , 0 bytes — the app persists nothing at all. All user-derived strings reach the DOM through textContent or createTextNode (app.js:18, 24, 99-104); the only innerHTML in the page belongs to the shared prefs script's own inline SVG icons. Thumbnail src is guarded to a `data:image/` prefix (app.js:95).",
+        "severity": "none",
+        "defect": null
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Never return a file that is larger than the one you were given, and never call it 'Done'",
+      "rationale": "Measured: PNG output 6.4 MB → 21.5 MB and 17 KB → 187 KB, with the toast reading 'Done — 6.5 MB → 21.8 MB' and every Save button still offered; JPEG does it to small inputs too (282 B → 785 B). savingsPct() collapses 'no change' and 'ten times worse' into the same absence of a badge. This is Joon-ho's blocker, it is the documented cropper #542 / MDN canvas-PNG behaviour the research flagged as a VERIFIED GAP, and it breaks the app's only promise. Fix: compare blob.size to file.size in compressOne; if it is not smaller, keep the original bytes, mark the row ('already as small as it gets' / 'PNG made this 3.4× bigger — WebP is 71% smaller here', which is measured and true), and exclude it from the savings total.",
+      "where": "apps/image-compressor/app.js:60-67 (compressOne), helpers.js:17-20 (savingsPct), app.js:137-140 (summary toast)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Make 'fit under ___ KB' the primary control; demote the quality percentage",
+      "rationale": "Deniz cannot complete her task at any setting: the only controls are five longest-edge presets and an abstract 30-95 slider, so hitting 200 KB took three full re-encodes of a 12-megapixel photo (1920/q80 → 851 KB, 1280/q80 → 401 KB, 800/q80 → 176 KB) and 600×600 is unreachable entirely. The research documents this as the largest job in the category — a whole search economy around 'compress image to 200kb' — served today only by anonymous ad-funded pages. Binary-search quality then dimensions, report the landed size, and offer presets for 20/50/100/200 KB and 1/5/10/25 MB with what each is for.",
+      "where": "apps/image-compressor/index.html:1288-1305 (the three controls), app.js:129-131 (settings read) and app.js:50-68 (compressOne)",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Make the queue editable: per-row remove, Clear all, dedupe, and a cap that explains itself",
+      "rationale": "Marcus's blocker, and four separate sourced complaints. Measured: rows carry zero controls before compression and one after; re-adding an identical file creates a duplicate row; 60 files in produces 50 rows and one nameless toast; the only exit is a reload, which took 5 rows to 0 with no beforeunload guard. Add a remove button per row with SWS.undo (sws-ui.js is loaded and called zero times), a Clear all, dedupe on name+size+lastModified, and either raise the cap or state it up front in device terms — the research is explicit that a cap discovered mid-work is the category's signature betrayal.",
+      "where": "apps/image-compressor/app.js:96-108 (render), app.js:118-123 (ingest loop and the 50 cap at :119)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "One ZIP instead of fifty downloads, and stop asking the user to grant a permission",
+      "rationale": "Measured: 12 files = 9.0 s, 50 files = 17.6 s of sequential `<a download>` clicks, preceded by the app's own toast 'If the browser asks about multiple downloads, allow it'. Chrome shows a bulk-download permission bar and Safari drops queued files, so a 30-photo iPad batch largely fails. Given the FBI file-converter warning the research cites, asking a stranger for a bulk-download permission is the worst possible ask. A store-only ZIP needs no compressor (the payload is already compressed) and is roughly 60 lines vendored.",
+      "where": "apps/image-compressor/app.js:76-84 (downloadStaggered), app.js:143-148 (#allBtn handler)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Give every rejected file a row with a reason, and handle HEIC by name",
+      "rationale": "Measured: four unreadable files produced four toasts in 2.5 s, each overwriting the last, leaving one message on screen and no record of the other three; failed files leave no row, no reason and no retry. accept=\"image/*\" offers HEIC on Windows and Android and createImageBitmap then throws — the iPhone default format, so this is most of a real batch. Detect the extension before decoding, name the format, say that this browser has no HEIC decoder and what to do, and render failures as rows rather than as a toast that erases itself.",
+      "where": "apps/image-compressor/index.html:1286 (accept attribute), app.js:115-124 (change handler, catch at :121)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Show the compressed result, not just its byte count",
+      "rationale": "Joon-ho's second blocker and the category's central fear. The only image on screen is a 52 px thumbnail of the ORIGINAL, built once at ingest at JPEG quality 0.7 (app.js:38-41) and never replaced; the output is never displayed at any size. The research's differentiator note is explicit: this is the only app in the portfolio whose subject is fidelity, and Squoosh's split view is why people trust Squoosh. A draggable 1:1 before/after on a fixed neutral field, pre-positioned on an edge or text region, is the single most persuasive thing this app could add.",
+      "where": "apps/image-compressor/app.js:35-44 (readImage thumbnail), app.js:94-95 and 96-108 (render row)",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Restore focus after Compress and after every re-render, and name the row buttons",
+      "rationale": "Ade cannot use the results without restarting from the top of the document: activeElement is BODY after Compress (the focused button is disabled at app.js:127 and re-enabled at :141) and BODY again after any add, because render() calls replaceChildren(). Every row button's accessible name is the bare word 'Save' — 50 identical buttons in a list with no role and no live region, and #listHead is a plain h2 overwritten by JS. Name them 'Save DSC_0431-small.jpg', give #list a labelled region and announce the new count.",
+      "where": "apps/image-compressor/app.js:88 (replaceChildren), app.js:106-107 (row button), app.js:125-142 (#runBtn handler), index.html:1309-1310",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Float Save off the 36 px floor and let it scale with the comfort setting",
+      "rationale": "Winnie's blocker. Measured 36 px tall in every configuration tested — 56×36 default, 71×36 at Largest on 320 px, 77×36 at Largest+Roomy — because `.btn.small` sets a hard `min-height:36px` while the system floor is `max(44px, 44px * var(--ui-scale))`, i.e. 66 px at Largest. It is the app's primary output action, at 13 px of text, and it is the one control the comfort panel cannot help. Same class of fix for #quality: a 38 px bordered box with `accent-color: auto` (renders Chrome blue in a magenta app), needing 65 arrow presses to cross with no step attribute.",
+      "where": "apps/image-compressor/index.html:589 (.btn.small), applied at app.js:106; index.html:1253-1256 and index.html:1304 (#quality)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Put the actions where the work is",
+      "rationale": "Measured with 50 rows: page height 5,138 px and #runBtn 4,061 px below the top of the list. The design system already ships `.actionbar` (index.html:805) and this app does not use it. Marcus changes a setting, scrolls four thousand pixels, presses Compress, scrolls back. Sticky bottom bar with Compress, Download all and the live total.",
+      "where": "apps/image-compressor/index.html:1312-1315",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Show progress during ingest and during the run",
+      "rationale": "Measured: 20 full-size photos produce exactly one DOM mutation 2,650 ms after the file dialog closes — 2.65 s of an unchanged page with #listHead still reading 'Images' — and during compression the only signal is the button text 'Working…' with no count, no per-file state and no cancel. On a mid-range phone with 50 iPhone photos this is the window in which a user concludes the app has hung. Render each row as it is read, and show 'n of N' plus a cancel during the run.",
+      "where": "apps/image-compressor/app.js:115-124 (render called once at :123), app.js:125-142 (run loop)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Say what happens to metadata, and make it a choice",
+      "rationale": "Verified byte-level: an input JPEG with a real EXIF APP1 (Make, Model, DateTime 2019:07:04, Orientation 6) comes out with JFIF and ICC only — no EXIF, no GPS. For Rachel that is the best thing the app does and she cannot know it; for the reviewer the research quotes ('photos show up… in reverse order') the same silence is the bug, because a file with no date-taken sorts under 'now'. One switch with the consequence written out — 'Remove location and camera info (recommended)' / 'Keep the date taken so your photo library sorts these correctly' — serves both and is a claim no competitor makes.",
+      "where": "apps/image-compressor/app.js:50-68 (compressOne — metadata is dropped by construction), index.html:1288-1305 (settings card)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Accept a drop and a paste — and stop a stray drop from destroying the queue",
+      "rationale": "Instrumented addEventListener across the whole page load: 8 listeners total, zero drag/drop/paste. Every competitor leads with a dropzone and Cmd-V of a screenshot is the fastest path for Joon-ho's use case. The urgent half is defensive: with no drop handler the browser default navigates the tab to the dropped image, which throws away the entire in-memory queue and every compressed result, with no warning and nothing persisted.",
+      "where": "apps/image-compressor/app.js:112-149 (wire — no dragover/drop/paste registered), index.html:1285-1286",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Make the privacy promise an object, and cash the offline claim",
+      "rationale": "Verified: the app really does work with the network cut — reloaded from the service worker and compressed two files offline, and persists nothing (localStorage 0 bytes after a 50-image session). The research says the 'no upload' claim is now discounted on arrival because a dozen pages assert it, and that the only moves left are falsifiable, attributable and structural. The design system's `.trust` stamp is styled at index.html:437 and used zero times; there is no negative-space list where competitors put a pricing table; the airplane-mode challenge is never made.",
+      "where": "apps/image-compressor/index.html:1278-1282 (hero) and index.html:1321 (colophon)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Disable what cannot work, remember what the user chose, and warn before the queue is lost",
+      "rationale": "Measured: both actions are enabled on a cold page and teach only by failing into a 4-second toast ('Choose images first', 'Press Compress first'); a reload takes 5 rows to 0 with no beforeunload guard; and the three settings reset to 1920/JPEG/80 on every visit even though the shared prefs store already proves this origin can remember a choice across all 23 apps. Also '8 image(s)' in the results heading, and the empty hint should be the system's `.empty` block inside the list rather than 15 px of grey below it.",
+      "where": "apps/image-compressor/index.html:1313-1314, app.js:125-126 and app.js:144-145 (fail-toasts), app.js:90 (heading), index.html:1311 (#emptyHint), app.js:151-158 (init — no persistence, no unload guard)",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ]
+}
