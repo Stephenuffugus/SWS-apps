@@ -61,7 +61,7 @@ function trustNote(tail) {
    item names DO leave the phone, because that is the entire point of a shared
    list, and pretending otherwise would be the one lie that matters here. */
 function boardTrust() {
-  return el('div', { class: 'boardtrust' },
+  return el('div', { class: 'boardtrust noprint' },
     el('div', { class: 'trust' },
       el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
       el('span', {},
@@ -531,9 +531,6 @@ function drawBoard() {
     : (live.entries.length ? 'All done 🎉' : 'Nothing on the list yet');
   const listCard = el('section', { class: 'card' },
     el('h2', { class: 'lead' }, heading));
-  if (done.length) listCard.append(el('p', { class: 'sub incart' },
-    done.length + (done.length === 1 ? ' item in the cart' : ' items in the cart') +
-    ' — ticked off, still listed where you left it.'));
   const ul = el('ul', { class: 'plain' });
   const renderItem = (e) => {
     const cb = el('input', { type: 'checkbox', 'data-fkey': 'chk:' + e.id,
@@ -565,6 +562,14 @@ function drawBoard() {
         'Copy the link to share') : null));
   }
   listCard.append(ul);
+
+  /* Everything that changes as items get ticked off lives BELOW the rows.
+     Anything above them — a count, a banner, a hint — would push the whole
+     list down the instant the first box was ticked, which is the same defect
+     wearing a different hat. */
+  if (done.length) listCard.append(el('p', { class: 'sub incart' },
+    done.length + (done.length === 1 ? ' item in the cart' : ' items in the cart') +
+    ' — ticked off, still listed where you left it.'));
 
   const foot = el('div', { class: 'listfoot row noprint' });
   if (done.length && own) {
