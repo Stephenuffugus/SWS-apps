@@ -113,7 +113,8 @@ function commit(promise, ms) {
 let user = null;
 let itemDraft = '';
 let addError = '';      // inline, under the add row — a toast is under the keyboard
-let addBusy = false;    // guards double-submit now that the field clears late
+let addBusy = false;    // one paste-a-blob run at a time
+const inFlight = new Set(); // normalized names being written right now
 let flashId = null;     // the row a duplicate add pointed at
 let flashTimer = null;
 let shareOpen = false;  // survive live-snapshot redraws
@@ -315,9 +316,10 @@ function flash(id) {
 /**
  * Add one item. Returns { state:'ok'|'dup'|'error', err }.
  *
- * The field is NOT cleared here and NOT cleared before the write: at the entry
- * cap this app used to eat "organic free-range eggs, the big box" and show a
- * message naming none of the causes.
+ * Never loses what was typed: the caller frees the box immediately so the next
+ * item can be typed without waiting on a network, and every rejection — the
+ * fast one and the one that only arrives when the queued write reaches the
+ * server — hands the exact text back through lateFailure().
  */
 async function addOne(body, quiet) {
   const key = normName(body);
@@ -346,33 +348,43 @@ async function addOne(body, quiet) {
   return { state: 'ok' };
 }
 
+/* A rejected write used to cost the user their typing and return a message
+   naming none of the causes. The text comes back into the box if the box is
+   free, and is quoted in the error if the user has already started the next
+   item — either way it is still on screen and still recoverable. */
 function lateFailure(body, e) {
   const i = addInput();
-  if (i && !i.value.trim()) { itemDraft = body; i.value = body; }
-  showAddError(friendly(e) + ' Your text is back in the box.');
+  const boxFree = !!i && !i.value.trim();
+  if (boxFree) { itemDraft = body; i.value = body; }
+  showAddError(friendly(e) + (boxFree
+    ? ' Your text is back in the box.'
+    : ' Not saved: “' + body + '”'));
+  const j = addInput();
+  if (j && boxFree) {
+    j.focus();
+    try { j.setSelectionRange(j.value.length, j.value.length); } catch (er) {}
+  }
 }
 
-async function submitAdd() {
+function submitAdd() {
   const input = addInput();
-  if (!input || addBusy) return;
+  if (!input) return;
   const body = input.value.trim();
   if (!body) return;
-  addBusy = true;
+  const key = normName(body);
+  // Three synchronous taps on Add are one item, not three — and two devices
+  // racing the same word cannot make a twin either.
+  if (inFlight.has(key)) return;
+  inFlight.add(key);
+  itemDraft = '';
+  input.value = '';
+  input.focus();
   showAddError('');
-  try {
-    const r = await addOne(body);
-    if (r.state === 'error') {
-      // Keep the text, keep the caret, say why right where they are looking.
-      showAddError(friendly(r.err));
-      const i = addInput();
-      if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
-      return;
-    }
-    itemDraft = '';
-    const i = addInput();
-    if (i) { i.value = ''; i.focus(); }
-    if (r.state === 'ok') savedFlag();
-  } finally { addBusy = false; }
+  addOne(body).then((r) => {
+    inFlight.delete(key);
+    if (r.state === 'error') lateFailure(body, r.err);
+    else if (r.state === 'ok') savedFlag();
+  }, (e) => { inFlight.delete(key); lateFailure(body, e); });
 }
 
 /* Paste a recipe's ingredient block and it becomes items, one per line — the

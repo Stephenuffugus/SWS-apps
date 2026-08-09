@@ -1611,8 +1611,9 @@ dialog .row > *{flex:1 1 8rem}
    delete it. */
 .printonly{display:none}
 /* Must out-specify the base's `section.card > h2` micro-label: on paper this is
-   the document's title, not a label. */
-section.card.printonly > h2{
+   the document's title, not a label. Descendant, not child — the printed sheet
+   nests its content inside the repeating-header table. */
+section.card.printonly h2{
   margin-bottom:var(--s2);
   font-family:var(--font-display);
   font-size:var(--t-xl); font-weight:var(--display-weight,650);
@@ -1633,7 +1634,11 @@ section.card.printonly > h2{
 .refblock{white-space:pre-wrap; overflow-wrap:anywhere; max-width:var(--measure)}
 .printq li,.printmeds li{margin-bottom:var(--s2); overflow-wrap:anywhere}
 .qsrc{color:var(--ink-2); font-size:var(--t-sm)}
-.runhead{display:none}
+/* The printed sheet is a one-column table purely so its <thead> repeats the
+   patient's name at the top of every page. It never reaches the screen — the
+   whole card is .printonly. */
+.printsheet{width:100%; border-collapse:collapse}
+.printsheet > tbody > tr > td{padding:0}
 
 @media print{
   /* THE PRINT PALETTE RESET, RESTATED AT THE DARK SELECTORS' SPECIFICITY.
@@ -1672,19 +1677,18 @@ section.card.printonly > h2{
   .dayhead{margin-top:var(--s5); break-after:avoid; page-break-after:avoid}
   .entry{break-inside:avoid; page-break-inside:avoid}
   .printsec{break-after:avoid; page-break-after:avoid}
-  /* Fifty-six loose Letter pages go onto a clipboard with three other
-     patients' paperwork. Chromium repeats a fixed element on every printed
-     page, so page 34 still says whose mother it is. The @page margin is
-     widened here to make room for it. */
-  @page{margin:20mm 14mm 14mm}
-  .runhead{
-    display:block;
-    position:fixed; top:-11mm; left:0; right:0;
-    font-size:8pt; letter-spacing:.04em; text-transform:uppercase;
+  /* Repeated by the browser at the top of every printed page, so page 34 still
+     says whose mother it is. A position:fixed header repeats too — on top of
+     the body text; measured, page 2's first line and the header both landed at
+     y=57. A <thead> is the one that reserves its space. */
+  .printsheet > thead > tr > th.runhead{
+    text-align:left;
+    font-size:8pt; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
     color:#333;
     border-bottom:1px solid #bbb;
-    padding-bottom:2mm;
+    padding:0 0 3mm;
   }
+  .printsheet{break-inside:auto; page-break-inside:auto}
   .refblock{border:1px solid #bbb; padding:6pt; border-radius:0}
   .printq,.printmeds{margin:0; padding:0; list-style:none}
   .printq li,.printmeds li{border-bottom:1px solid #ddd; padding-bottom:4pt}

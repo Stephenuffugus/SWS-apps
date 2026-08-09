@@ -538,7 +538,10 @@ function lastGivenFor(drug) {
 let shell = null;
 function ensureShell(v) {
   if (shell && shell.root === v && v.contains(shell.head)) return shell;
-  const head = el('section', { class: 'card' });
+  // The head card is screen chrome now: the printed page carries its own
+  // title, its own range line and its own disclaimer, and printing both put
+  // the patient's name and the HIPAA sentence on the sheet twice.
+  const head = el('section', { class: 'card noprint' });
   const banners = el('div', {});
   const cov = el('section', { class: 'card noprint' });
   const entriesBox = el('div', { class: 'screenonly' });
@@ -1159,11 +1162,19 @@ function buildPrintPage() {
   const withheld = all.filter(e => e.status !== 'ok' && (!from || effMs(e) >= from.getTime())).length;
   const asc = shown.slice().reverse();
 
-  // Repeats at the top of every printed page in Chromium, so page 34 still says
-  // whose mother it is when it lands on a clipboard with three other families'.
-  box.append(el('div', { class: 'runhead', text: b.title + ' — family-kept care log' }));
-  box.append(el('h2', {}, 'Care log — ' + b.title));
-  box.append(el('p', { class: 'printmeta', text:
+  // A <thead> is the one thing browsers genuinely repeat on every printed page
+  // — a position:fixed header renders on every page too, but on top of the
+  // body text. Fifty-six loose Letter pages go onto a clipboard with three
+  // other patients' paperwork; page 34 has to say whose mother it is.
+  const sheet = el('table', { class: 'printsheet' },
+    el('thead', {}, el('tr', {}, el('th', { class: 'runhead', scope: 'col',
+      text: b.title + ' — family-kept care log · not a medical record' }))));
+  const cell = el('td', {});
+  sheet.append(el('tbody', {}, el('tr', {}, cell)));
+  box.append(sheet);
+  const page = { append: (...n) => cell.append(...n) };
+  page.append(el('h2', {}, 'Care log — ' + b.title));
+  page.append(el('p', { class: 'printmeta', text:
     (from ? 'Covering ' + from.toLocaleDateString(undefined, { dateStyle: 'long' }) + ' to today'
       : 'Covering the whole log')
     + ' · printed ' + new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' })
@@ -1171,8 +1182,8 @@ function buildPrintPage() {
 
   // 1. The standing reference block every paper caregiver binder has.
   if (b.description) {
-    box.append(el('h3', { class: 'printsec' }, 'Standing details'));
-    box.append(el('p', { class: 'refblock', text: b.description }));
+    page.append(el('h3', { class: 'printsec' }, 'Standing details'));
+    page.append(el('p', { class: 'refblock', text: b.description }));
   }
 
   // 2. The running "ask at the next appointment" list, at the top where the
@@ -1180,21 +1191,21 @@ function buildPrintPage() {
   //    just the printed range.
   const questions = all.filter(e => e.type === 'question' && e.status === 'ok' && !e.done);
   if (questions.length) {
-    box.append(el('h3', { class: 'printsec' }, 'Questions for this visit'));
+    page.append(el('h3', { class: 'printsec' }, 'Questions for this visit'));
     const ul = el('ul', { class: 'plain printq' });
     for (const q of questions.slice().reverse()) {
       const d = effDate(q);
       ul.append(el('li', {}, el('span', { text: parseBody(q).text }),
         el('span', { class: 'qsrc', text: ' — ' + q.authorName + ', ' + dayKey(d) })));
     }
-    box.append(ul);
+    page.append(ul);
   }
 
   // 3. Medications given in the range, grouped by drug — the thing the medical
   //    assistant has ninety seconds to copy onto the encounter note.
   const meds = shown.filter(e => e.type === 'medication');
   if (meds.length) {
-    box.append(el('h3', { class: 'printsec' }, 'Medication given' + (from ? ' in this period' : '')));
+    page.append(el('h3', { class: 'printsec' }, 'Medication given' + (from ? ' in this period' : '')));
     const groups = new Map();
     const loose = [];
     for (const m of meds.slice().reverse()) {
@@ -1224,24 +1235,24 @@ function buildPrintPage() {
       ul.append(el('li', {}, el('span', { text: parseBody(m).text }),
         el('span', { class: 'qsrc', text: ' — ' + m.authorName + ', ' + dayKey(d) + ' ' + timeOf(d) })));
     }
-    box.append(ul);
+    page.append(ul);
   }
 
   // 4. The timeline itself, oldest first, so it reads top to bottom.
-  box.append(el('h3', { class: 'printsec' }, 'What happened'));
-  if (asc.length === 0) box.append(el('p', {}, 'Nothing was written in this period.'));
+  page.append(el('h3', { class: 'printsec' }, 'What happened'));
+  if (asc.length === 0) page.append(el('p', {}, 'Nothing was written in this period.'));
   let lastDay = null;
   for (const e of asc) {
     const d = effDate(e);
     const key = dayKey(d);
-    if (key !== lastDay) { box.append(el('div', { class: 'dayhead', text: key })); lastDay = key; }
-    box.append(el('div', { class: 'entry' },
+    if (key !== lastDay) { page.append(el('div', { class: 'dayhead', text: key })); lastDay = key; }
+    page.append(el('div', { class: 'entry' },
       el('div', { class: 'meta' },
         el('span', { class: 'who', text: e.authorName }),
         el('span', { text: (TYPE_LABEL[e.type] || 'Note') + ' · ' + timeOf(d) })),
       el('div', { class: 'body', text: parseBody(e).text })));
   }
-  box.append(el('p', { class: 'disclaimer', text: 'Family-kept notebook. Not a medical record. Not covered by HIPAA.' }));
+  page.append(el('p', { class: 'disclaimer', text: 'Family-kept notebook. Not a medical record. Not covered by HIPAA.' }));
   shell.printBox.replaceChildren(box);
 }
 
