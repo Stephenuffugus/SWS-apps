@@ -1,8 +1,8 @@
 // Signup Sheets — Engine 1, skin A. UI layer.
 // All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
 import {
-  CODE_CHARS, normalizeCode, parseBulkSlots, dateRangeSlots,
-  fillStats, nudgeMessage, shareUrl,
+  CODE_CHARS, normalizeCode, parseBulkSlotsReport, dateRangeSlotsReport,
+  fillStats, nudgeMessage, shareUrl, stillNeededSentence, MAX_SLOTS,
 } from './helpers.js';
 import * as D from './data.js';
 import { firebaseConfig } from './firebase-config.js';

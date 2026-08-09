@@ -45,6 +45,9 @@ let drawn = null;       // the draw itself: { names, assignment, pairNames, even
    closed tab and tomorrow morning. Nothing leaves this browser. */
 let saveTimer = null;
 function save(quiet) {
+  /* A participant's reveal page must leave nothing behind — the trust badge on
+     that screen says so, so nothing may write storage while it is showing. */
+  if ($('organizer').classList.contains('hidden')) return;
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({
       v: 1,
@@ -503,6 +506,13 @@ function init() {
   });
   $('startOver').addEventListener('click', startOver);
   window.addEventListener('hashchange', route);
+  /* A work laptop loses tabs. Flush the debounce before the page goes away
+     rather than trusting the last 700ms of typing to survive. */
+  const flush = () => { clearTimeout(saveTimer); save(true); };
+  window.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
 
   route();
 
