@@ -1269,13 +1269,63 @@ header.app h1 a{color:inherit; text-decoration:none}
 header.app h1 a:hover,
 header.app h1 a:focus-visible{text-decoration:underline; text-underline-offset:.18em}
 
+/* The comfort button is the one control that makes this app usable for a
+   low-vision shopper, and it was the smallest thing on the page: 36x36 at every
+   text size, the only header control that does not grow with --ui-scale. The
+   studio rule pins width/height, so both have to be restated here. */
+#swsPrefsBtn{
+  width:auto; height:auto;
+  min-width:var(--tap); min-height:var(--tap);
+}
+#swsPrefsBtn svg{width:calc(18px * var(--ui-scale)); height:calc(18px * var(--ui-scale))}
+
+/* ── The add row ─────────────────────────────────────────────────────────── */
+/* It used to be .row.nowrap with an inline flex:0 0 auto on the button, so at
+   Largest text on a 320px phone the field was 126px — nine characters against a
+   forty-character placeholder, impossible to proof-read. Wrapping instead: the
+   input keeps a real character budget and the button drops to its own full
+   width the moment they cannot share a line. */
+.addrow{display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center}
+.addrow > input{flex:1 1 16ch; min-width:16ch}
+.addrow > .btn{flex:1 0 auto}
+
+/* Failures belong where the user is looking, not in a toast the software
+   keyboard is sitting on top of. */
+.adderr{margin-top:var(--s3)}
+
+/* Reserved height, always: "Saved on this phone" fades in without moving a
+   single pixel of the list below it. */
+.addfoot{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
+  min-height:1.35em;
+  margin-top:var(--s2);
+}
+.netpill{
+  font-size:var(--t-sm);
+  line-height:var(--lh-snug);
+  color:var(--ink-2);
+}
+
+/* ── Naming the list ─────────────────────────────────────────────────────── */
+/* A shared link that opens an anonymous list is one mis-forwarded message away
+   from someone editing a stranger's groceries. */
+.boardname{margin:0 0 var(--s3); font-size:var(--t-base); color:var(--ink-2)}
+.boardname b{color:var(--ink)}
+.boardtrust{margin:var(--s4) 0}
+.printonly{display:none}
+.printhead{font-size:var(--t-sm); color:var(--ink-2)}
+
 /* ── The list itself ─────────────────────────────────────────────────────── */
-/* This runs one step larger than the studio row default on purpose: it is read
+/* This runs two steps larger than the studio row default on purpose: it is read
    at arm's length in an aisle, and tapped by a thumb that is also holding a
    melon. The checkbox is oversized for the same reason. */
-ul.plain label{flex:1; min-width:0; font-size:var(--t-lg); overflow-wrap:anywhere}
+ul.plain label{flex:1; min-width:0; font-size:var(--t-xl); overflow-wrap:anywhere}
 ul.plain input[type=checkbox]{width:1.5rem; height:1.5rem}
 ul.plain li.done label{color:var(--ink-2); text-decoration:line-through}
+/* A duplicate add points at the row that already exists. Colour only — the
+   thumb zone may change colour, it may never change size or position. */
+ul.plain li.flash{background:var(--accent-soft)}
+.incart{margin:var(--s2) 0 0}
 .listfoot{margin-top:var(--s4)}
 
 /* "5 to get" is the most-scanned string in the whole app, so it is a real

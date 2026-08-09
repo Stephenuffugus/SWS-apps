@@ -24,15 +24,31 @@ function el(tag, attrs, ...kids) {
   }
   return n;
 }
+
+/* sws-ui.js is loaded in the page and owns the toast: it holds the clock while
+   a pointer or the keyboard focus is inside, which is the only thing that makes
+   an Undo button in a toast honest. This app used to declare a private toast()
+   beside it and never call the shared one. Now the private name is a thin
+   forward, so every existing call site gained hover-hold and Undo for free. */
 let toastTimer = null;
 function toast(msg, ms) {
+  if (window.SWS && window.SWS.toast) return window.SWS.toast(msg, { ms: ms || 4000 });
   const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  // 2.4s was not long enough to read a sentence one-handed in a shop.
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 4000);
 }
+function undoToast(msg, onUndo) {
+  if (window.SWS && window.SWS.undo) return window.SWS.undo(msg, onUndo);
+  return toast(msg);
+}
+/* "Saved on this phone" rather than "Saved": the local cache really does take
+   the write first, which is why the list keeps working past the freezer wall. */
+function savedFlag() {
+  if (window.SWS && window.SWS.saved) window.SWS.saved({ text: 'Saved on this phone' });
+}
+
 // The promise as a visible object rather than grey copy in the footer. This app
 // does sync through the cloud, so the claim is scoped to what is actually true:
 // no ads, no accounts for the people you share with, nothing to subscribe to.
@@ -41,21 +57,66 @@ function trustNote(tail) {
     el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
     el('span', {}, el('b', {}, 'No ads. No accounts for family. No subscription.'), ' ' + tail));
 }
+/* The board's own badge. Specific to this app and specific about the sync: the
+   item names DO leave the phone, because that is the entire point of a shared
+   list, and pretending otherwise would be the one lie that matters here. */
+function boardTrust() {
+  return el('div', { class: 'boardtrust' },
+    el('div', { class: 'trust' },
+      el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
+      el('span', {},
+        el('b', {}, 'What leaves this phone: the item names, so the rest of the household sees them.'),
+        ' Nothing else — no contacts, no location, no account for the people you share with. ' +
+        'Your copy is kept on this phone too, so the list still opens in aisle 12 with no signal, ' +
+        'and no brand can pay to put anything on it.')));
+}
+
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
   catch (e) { toast('Could not copy'); }
 }
 function friendly(e) {
   const code = (e && (e.code || e.message)) || '';
-  if (String(code).includes('permission-denied')) return 'That didn’t save — the list may be locked, or its setup needs the latest rules.';
+  if (String(code).includes('permission-denied')) return 'That didn’t save — the list may be locked, or it has used all 500 of its lifetime item slots.';
   if (String(code).includes('unavailable')) return 'You look offline — it will sync when you reconnect.';
   return 'Something went wrong. Try again?';
+}
+/* Distinguishing "no signal" from "no such list" is the whole point of fix #4:
+   a shopper standing in a dead zone must not be told their family's list does
+   not exist. */
+function looksOffline(e) {
+  if (navigator.onLine === false) return true;
+  const s = String((e && (e.code || e.message)) || '');
+  return /unavailable|failed-precondition|deadline-exceeded|network|offline/i.test(s);
+}
+
+/* Dedupe key. "Milk", "milk" and "Milk " are one item; so are "Greek yoghurt"
+   and "greek  yoghurt". Accents are folded so "crème fraîche" matches itself
+   typed without them. */
+function normName(s) {
+  return String(s || '').toLowerCase().normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/* Firestore resolves a write only when the SERVER acknowledges it, but the
+   local cache accepted it and redrew the list long before that. In a supermarket
+   dead zone the promise simply never settles. So every write here races a short
+   timer: 'ok' = confirmed, 'queued' = the cache took it and it will sync,
+   'failed' = genuinely rejected. Nothing in the UI waits on a network. */
+function commit(promise, ms) {
+  let err = null;
+  const p = promise.then(() => 'ok', (e) => { err = e; return 'failed'; });
+  const settled = Promise.race([p, new Promise((r) => setTimeout(() => r('queued'), ms || 1200))]);
+  return { p, settled, error: () => err };
 }
 
 let user = null;
 let itemDraft = '';
-let addFocused = false; // survive live-snapshot redraws mid-typing
-let shareOpen = false;  // ditto for the share disclosure
+let addError = '';      // inline, under the add row — a toast is under the keyboard
+let addBusy = false;    // guards double-submit now that the field clears late
+let flashId = null;     // the row a duplicate add pointed at
+let flashTimer = null;
+let shareOpen = false;  // survive live-snapshot redraws
 const live = {
   boardId: null, code: null, board: null, entries: [],
   unsubs: [],
@@ -63,13 +124,32 @@ const live = {
     this.unsubs.forEach(u => u && u());
     this.unsubs = [];
     this.boardId = null; this.code = null; this.board = null; this.entries = [];
-    shareOpen = false;
+    shareOpen = false; addError = ''; flashId = null;
+    clearTimeout(flashTimer);
   },
 };
 
+/* Two entry points used to disagree: the join field normalised the code and the
+   hash route accepted uppercase only, so a link lowercased by a messaging app
+   dropped the recipient on the marketing page with no message at all. Both run
+   through normalizeCode() now, and the URL is rewritten with replaceState so
+   the corrected link is the one that gets copied next. */
+function boardCodeInHash() {
+  const m = (location.hash || '').match(/^#\/b\/([^/?#]*)/);
+  return m ? m[1] : null;
+}
+function normalizeHash() {
+  const raw = boardCodeInHash();
+  if (raw === null) return;
+  const c = normalizeCode(raw);
+  if (!c || c === raw) return;
+  try { history.replaceState(null, '', baseUrl() + '#/b/' + c); } catch (e) {}
+}
 function route() {
-  const m = location.hash.match(/^#\/b\/([A-HJ-NP-Z2-9]{6})/);
-  return m ? { view: 'board', code: m[1] } : { view: 'home' };
+  const raw = boardCodeInHash();
+  if (raw === null) return { view: 'home' };
+  const c = normalizeCode(raw);
+  return c ? { view: 'board', code: c } : { view: 'badcode' };
 }
 window.addEventListener('hashchange', render);
 const isOwner = () => !!(user && live.board && live.board.ownerUid === user.uid);
@@ -152,26 +232,48 @@ async function createList() {
 }
 
 /* ---------- board ---------- */
+function connCard(v, code, e) {
+  const offline = looksOffline(e);
+  v.replaceChildren(el('section', { class: 'card' },
+    el('h2', { class: 'lead' }, offline ? 'You look offline' : 'Couldn’t open the list'),
+    el('p', { class: 'warn' }, offline
+      ? 'No signal here — that happens in aisle 12. This list opens as soon as you have one, and nothing anybody has already added is lost.'
+      : 'Something got in the way of loading this list. Nothing has been lost; try again in a moment.'),
+    el('div', { class: 'row listfoot' },
+      el('button', { class: 'btn primary', type: 'button',
+        onclick: () => { live.stop(); renderBoard(code); } }, 'Try again'),
+      el('a', { class: 'btn', href: '#/' }, 'Go home'))));
+}
+
+function notFoundCard(v) {
+  setGrowthFooter(false);
+  v.replaceChildren(el('section', { class: 'card' },
+    el('h2', { class: 'lead' }, 'That list isn’t here'),
+    el('p', { class: 'warn' }, 'The link may have been rotated, or the code was mistyped. Codes are 6 letters and numbers.'),
+    el('p', { class: 'listfoot' }, el('a', { class: 'btn', href: '#/' }, 'Go home'))));
+}
+
+function renderBadCode() {
+  live.stop();
+  notFoundCard($('view'));
+}
+
 async function renderBoard(code) {
   const v = $('view');
   if (live.code !== code) {
     live.stop();
     v.replaceChildren(el('p', { class: 'sub', text: 'Opening the list…' }));
     try { await D.ensureSignedIn(); }
-    catch (e) {
-      v.replaceChildren(el('section', { class: 'card' },
-        el('h2', { class: 'lead' }, 'Couldn’t connect'),
-        el('p', { class: 'warn' }, 'Check your internet connection and reload the page.')));
-      return;
-    }
-    const boardId = await D.resolveCode(code).catch(() => null);
-    if (!boardId) {
-      v.replaceChildren(el('section', { class: 'card' },
-        el('h2', { class: 'lead' }, 'That list isn’t here'),
-        el('p', { class: 'warn' }, 'The link may have been rotated, or the code was mistyped.'),
-        el('p', { class: 'listfoot' }, el('a', { class: 'btn', href: '#/' }, 'Go home'))));
-      return;
-    }
+    catch (e) { connCard(v, code, e); return; }
+
+    // resolveCode used to be `.catch(() => null)`, which turned every network
+    // failure into "that list does not exist" — the worst possible answer for
+    // a category whose defining environment is a supermarket dead zone.
+    let boardId = null;
+    try { boardId = await D.resolveCode(code); }
+    catch (e) { connCard(v, code, e); return; }
+    if (!boardId) { notFoundCard(v); return; }
+
     live.boardId = boardId; live.code = code;
     live.unsubs.push(D.watchBoard(boardId, (b) => { live.board = b; drawBoard(); },
       (e) => toast(friendly(e), 5000)));
@@ -192,6 +294,172 @@ function syncEntriesWatcher() {
   live.unsubs.push(() => { if (live._entriesUnsub) live._entriesUnsub(); entriesWatcherKey = ''; });
 }
 
+/* ---------- adding ---------- */
+const addInput = () => document.querySelector('#view [data-fkey="add"]');
+
+function showAddError(msg) {
+  addError = msg || '';
+  const box = $('addErr');
+  if (!box) { if (addError) drawBoard(); return; }
+  if (!addError) { box.remove(); return; }
+  box.textContent = addError;
+}
+
+function flash(id) {
+  flashId = id;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { flashId = null; drawBoard(); }, 1800);
+  drawBoard();
+}
+
+/**
+ * Add one item. Returns { state:'ok'|'dup'|'error', err }.
+ *
+ * The field is NOT cleared here and NOT cleared before the write: at the entry
+ * cap this app used to eat "organic free-range eggs, the big box" and show a
+ * message naming none of the causes.
+ */
+async function addOne(body, quiet) {
+  const key = normName(body);
+  const dup = key && live.entries.find(e => normName(e.body) === key);
+  if (dup) {
+    flash(dup.id);
+    if (dup.done) {
+      // Already bought, needed again — put it back rather than making a twin.
+      try { await D.toggleDone(live.boardId, dup.id, false); }
+      catch (e) { return { state: 'error', err: e }; }
+      if (!quiet) toast('“' + dup.body + '” was in the cart — back on the list');
+    } else if (!quiet) {
+      toast('“' + dup.body + '” is already on the list');
+    }
+    return { state: 'dup' };
+  }
+  const c = commit(D.addEntry(live.boardId, live.board,
+    { authorName: 'someone', body, type: 'note' }));
+  const r = await c.settled;
+  if (r === 'failed') return { state: 'error', err: c.error() };
+  if (r === 'queued') {
+    // Accepted by the local cache; if the server later refuses it, hand the
+    // text back rather than letting it disappear silently.
+    c.p.then((x) => { if (x === 'failed') lateFailure(body, c.error()); });
+  }
+  return { state: 'ok' };
+}
+
+function lateFailure(body, e) {
+  const i = addInput();
+  if (i && !i.value.trim()) { itemDraft = body; i.value = body; }
+  showAddError(friendly(e) + ' Your text is back in the box.');
+}
+
+async function submitAdd() {
+  const input = addInput();
+  if (!input || addBusy) return;
+  const body = input.value.trim();
+  if (!body) return;
+  addBusy = true;
+  showAddError('');
+  try {
+    const r = await addOne(body);
+    if (r.state === 'error') {
+      // Keep the text, keep the caret, say why right where they are looking.
+      showAddError(friendly(r.err));
+      const i = addInput();
+      if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+      return;
+    }
+    itemDraft = '';
+    const i = addInput();
+    if (i) { i.value = ''; i.focus(); }
+    if (r.state === 'ok') savedFlag();
+  } finally { addBusy = false; }
+}
+
+/* Paste a recipe's ingredient block and it becomes items, one per line — the
+   reliable answer to the flaky voice-assistant complaint in the research. */
+function onPaste(ev) {
+  const dt = ev.clipboardData || window.clipboardData;
+  const text = dt ? dt.getData('text') : '';
+  if (!text || !/[\r\n]/.test(text.trim())) return; // single line: normal paste
+  const lines = text.split(/\r?\n/)
+    .map(s => s.replace(/^\s*(?:[-*\u2022\u2023]|\d+[.)])\s*/, '').trim())
+    .filter(Boolean).slice(0, 50);
+  if (lines.length < 2) return;
+  ev.preventDefault();
+  addMany(lines);
+}
+
+async function addMany(lines) {
+  if (addBusy) return;
+  addBusy = true;
+  showAddError('');
+  let added = 0, dup = 0;
+  try {
+    for (const line of lines) {
+      const r = await addOne(line.slice(0, 120), true);
+      if (r.state === 'ok') added++;
+      else if (r.state === 'dup') dup++;
+      else { showAddError(friendly(r.err)); break; }
+    }
+  } finally { addBusy = false; }
+  itemDraft = '';
+  const i = addInput();
+  if (i) { i.value = ''; i.focus(); }
+  if (added) savedFlag();
+  toast(added + (added === 1 ? ' item added' : ' items added') +
+    (dup ? ', ' + dup + ' already on the list' : ''));
+}
+
+/* ---------- destructive actions, all reversible ---------- */
+async function removeItem(entry) {
+  const own = isOwner();
+  const c = commit(D.deleteEntry(live.boardId, entry.id, {
+    asOwner: own, entryCount: (live.board && live.board.entryCount) || 0,
+  }));
+  const r = await c.settled;
+  if (r === 'failed') { toast(friendly(c.error()), 4500); return; }
+  if (r === 'queued') c.p.then((x) => { if (x === 'failed') toast(friendly(c.error()), 4500); });
+  savedFlag();
+  // A snapshot of the row, restored wholesale. A hand-written inverse forgets
+  // things; this one cannot forget that the item was already in the cart.
+  undoToast('Removed “' + entry.body + '”', async () => {
+    try {
+      await D.addEntry(live.boardId, live.board, {
+        authorName: entry.authorName || 'someone', body: entry.body,
+        type: entry.type, done: !!entry.done,
+      });
+      toast('“' + entry.body + '” is back');
+    } catch (e) { toast(friendly(e), 4500); }
+  });
+}
+
+async function clearChecked(doneList) {
+  const snapshot = doneList.map(e => ({
+    body: e.body, done: true, type: e.type, authorName: e.authorName,
+  }));
+  const c = commit(D.clearChecked(live.boardId, live.entries));
+  const r = await c.settled;
+  if (r === 'failed') { toast(friendly(c.error()), 4500); return; }
+  if (r === 'queued') c.p.then((x) => { if (x === 'failed') toast(friendly(c.error()), 4500); });
+  savedFlag();
+  // The confirm() this replaces literally said "This cannot be undone."
+  undoToast(snapshot.length + (snapshot.length === 1 ? ' item cleared' : ' items cleared'), async () => {
+    for (const e of snapshot) {
+      try { await D.addEntry(live.boardId, live.board, { ...e, authorName: e.authorName || 'someone' }); }
+      catch (err) { toast(friendly(err), 4500); return; }
+    }
+    toast('Back in the cart');
+  });
+}
+
+/* ---------- the board ---------- */
+function listAsText(b, items) {
+  const lines = [b.title || 'Grocery list'];
+  for (const e of items) lines.push((e.done ? '✓ ' : '• ') + e.body);
+  lines.push('', 'Live list, no app and no account: ' + shareUrl(live.code, baseUrl()));
+  return lines.join('\n');
+}
+
 function drawBoard() {
   if (route().view !== 'board' || !live.board) return;
   syncEntriesWatcher();
@@ -199,86 +467,133 @@ function drawBoard() {
   const own = isOwner();
   setGrowthFooter(!own);
   const v = $('view');
+
   // A snapshot from anyone in the household rebuilds this whole subtree, so
-  // remember where the keyboard was and put it back afterwards.
+  // remember where the keyboard was — and the caret inside it — and put both
+  // back afterwards. The add field carries data-fkey like every other control.
   const active = document.activeElement;
   const keepFocus = active && active.dataset ? active.dataset.fkey : null;
+  let caret = null;
+  if (keepFocus) {
+    try { if (active.selectionStart !== null && active.selectionStart !== undefined) caret = [active.selectionStart, active.selectionEnd]; }
+    catch (e) { /* checkbox and button inputs have no selection */ }
+  }
+  // Emptying #view collapses the document, so the browser clamps the scroll and
+  // everyone else's place in the aisle jumps. Hold the height across the swap.
+  const heldHeight = v.offsetHeight;
+  const heldScroll = window.scrollY;
+  v.style.minHeight = heldHeight + 'px';
   v.replaceChildren();
 
-  const open = live.entries.filter(e => !e.done);
-  const done = live.entries.filter(e => e.done);
+  /* ONE list, ONE stable order, for every row whatever its state.
+     Checking something used to move its row to the bottom and slide everything
+     below it up 61px — under a thumb that was already descending on the next
+     item. Nothing re-sorts here any more: a checked row goes grey and struck
+     through exactly where it has always been. */
+  const at = (e) => (e.createdAt && e.createdAt.toMillis) ? e.createdAt.toMillis() : Number.MAX_SAFE_INTEGER;
+  const items = live.entries.slice().sort((x, y) => at(x) - at(y));
+  const open = items.filter(e => !e.done);
+  const done = items.filter(e => e.done);
+
+  const title = b.title || 'Grocery list';
+  v.append(el('p', { class: 'boardname' }, el('b', {}, title)));
+  // On paper: which list this is, and when it was printed.
+  v.append(el('p', { class: 'printonly printhead' },
+    'Share code ' + (live.code || '') + ' · printed ' + new Date().toLocaleDateString()));
 
   // add box first — it's the most-used control
   const input = el('input', {
     type: 'text', maxlength: '120', placeholder: 'Add something… “milk”, “the good coffee”',
     'aria-label': 'Add an item to the list',
+    'data-fkey': 'add',
+    enterkeyhint: 'done',
+    autocomplete: 'off', autocapitalize: 'sentences',
     value: itemDraft,
     oninput: (ev) => { itemDraft = ev.target.value; },
-    onfocus: () => { addFocused = true; },
-    onblur: () => { addFocused = false; },
-    onkeydown: (ev) => { if (ev.key === 'Enter') addBtn.click(); },
+    onkeydown: (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); submitAdd(); } },
+    onpaste: onPaste,
   });
-  // a family member checking something off must not close YOUR keyboard
-  if (addFocused) requestAnimationFrame(() => {
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  });
-  const addBtn = el('button', { class: 'btn primary', type: 'button', style: 'flex:0 0 auto',
-    onclick: async () => {
-      const body = input.value.trim();
-      if (!body) return;
-      itemDraft = '';
-      input.value = '';
-      input.focus();
-      try { await D.addEntry(live.boardId, b, { authorName: 'someone', body, type: 'note' }); }
-      catch (e) { toast(friendly(e), 4500); }
-    } }, 'Add');
-  v.append(el('section', { class: 'card noprint' },
-    el('div', { class: 'row nowrap' }, input, addBtn)));
+  const addBtn = el('button', { class: 'btn primary', type: 'button',
+    'data-fkey': 'addbtn', onclick: () => submitAdd() }, 'Add');
+  const addCard = el('section', { class: 'card noprint' },
+    el('div', { class: 'addrow' }, input, addBtn));
+  if (addError) addCard.append(el('p', { class: 'warn adderr', id: 'addErr', role: 'alert' }, addError));
+  addCard.append(el('div', { class: 'addfoot' },
+    el('span', { 'data-saved-flag': '' }),
+    navigator.onLine === false
+      ? el('span', { class: 'netpill' }, 'Offline — kept on this phone, syncs when you have signal')
+      : null));
+  v.append(addCard);
+
+  v.append(boardTrust());
 
   const heading = open.length ? open.length + ' to get'
     : (live.entries.length ? 'All done 🎉' : 'Nothing on the list yet');
   const listCard = el('section', { class: 'card' },
     el('h2', { class: 'lead' }, heading));
+  if (done.length) listCard.append(el('p', { class: 'sub incart' },
+    done.length + (done.length === 1 ? ' item in the cart' : ' items in the cart') +
+    ' — ticked off, still listed where you left it.'));
   const ul = el('ul', { class: 'plain' });
   const renderItem = (e) => {
     const cb = el('input', { type: 'checkbox', 'data-fkey': 'chk:' + e.id,
       onchange: async () => {
-        try { await D.toggleDone(live.boardId, e.id, cb.checked); }
+        try { await D.toggleDone(live.boardId, e.id, cb.checked); savedFlag(); }
         catch (err) { cb.checked = !cb.checked; toast(friendly(err), 4500); }
       } });
     cb.checked = !!e.done;
-    return el('li', { class: e.done ? 'done' : '' },
+    const cls = [e.done ? 'done' : '', e.id === flashId ? 'flash' : ''].filter(Boolean).join(' ');
+    return el('li', cls ? { class: cls } : null,
       el('label', {}, cb, e.body),
       (own || (user && e.creatorUid === user.uid))
         // A distinct name per row: twenty buttons all reading "Remove item"
         // tell a screen-reader user nothing about which one destroys what.
         ? el('button', { class: 'btn icon noprint', type: 'button',
             'aria-label': 'Remove ' + e.body, 'data-fkey': 'rm:' + e.id,
-            onclick: () => D.deleteEntry(live.boardId, e.id).catch(err => toast(friendly(err))) }, '✕')
+            onclick: () => removeItem(e) }, '✕')
         : null);
   };
-  for (const e of open.slice().reverse()) ul.append(renderItem(e));
-  for (const e of done) ul.append(renderItem(e));
+  for (const e of items) ul.append(renderItem(e));
   if (live.entries.length === 0) {
     listCard.append(el('div', { class: 'empty' },
       el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🧺'),
       el('h3', {}, 'Nothing here yet'),
-      el('p', {}, 'Type the first thing in the box above. It lands on everyone’s phone straight away.'),
+      el('p', {}, 'Type the first thing in the box above. It lands on everyone’s phone straight away — ' +
+        'and it keeps working in the aisle where your signal does not.'),
       own ? el('button', { class: 'btn noprint', type: 'button',
         onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') },
         'Copy the link to share') : null));
   }
   listCard.append(ul);
-  if (own && done.length) {
-    listCard.append(el('div', { class: 'listfoot noprint' },
-      el('button', { class: 'btn', type: 'button', onclick: async () => {
-        // Deletes n items at once and there is no undo — so it asks first,
-        // the same way Rotate link and Delete list already do.
-        if (!confirm('Remove ' + done.length + ' checked item(s) from the list? This cannot be undone.')) return;
-        try { const n = await D.clearChecked(live.boardId, live.entries); toast(n + ' checked item(s) cleared'); }
-        catch (e) { toast(friendly(e), 4500); }
-      } }, 'Clear checked (' + done.length + ')')));
+
+  const foot = el('div', { class: 'listfoot row noprint' });
+  if (done.length && own) {
+    foot.append(el('button', { class: 'btn', type: 'button', 'data-fkey': 'clear',
+      onclick: () => clearChecked(done) }, 'Clear checked (' + done.length + ')'));
+  }
+  // 200 items is 14,000px of scroll; the only add field is at the very top.
+  if (items.length > 10) {
+    foot.append(el('button', { class: 'btn', type: 'button', 'data-fkey': 'totop',
+      onclick: () => {
+        const i = addInput();
+        if (!i) return;
+        i.scrollIntoView({ block: 'center' });
+        i.focus();
+      } }, 'Add another item'));
+  }
+  if (foot.childNodes.length) listCard.append(foot);
+  // Tomasz checked four things off and then found the app had quietly removed
+  // every control he might tidy up with, and said nothing about why.
+  if (done.length && !own) {
+    listCard.append(el('p', { class: 'hint listfoot' },
+      'Anything you added, you can remove. Emptying the cart is the job of whoever started the list — ' +
+      'untick something if you put it back on the shelf.'));
+  }
+  const used = typeof b.entryCount === 'number' ? b.entryCount : null;
+  if (own && used !== null && used >= 440) {
+    listCard.append(el('p', { class: 'warn listfoot' },
+      'This list has used ' + used + ' of its 500 lifetime item slots. ' +
+      'Clearing checked items gives them back.'));
   }
   v.append(listCard);
 
@@ -291,7 +606,11 @@ function drawBoard() {
       // Add stays the board's only primary; inside the panel these are peers.
       el('button', { class: 'btn', type: 'button',
         onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') }, 'Copy link'),
-      el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
+      el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
+      // For the household member who will never open a link.
+      el('button', { class: 'btn', type: 'button',
+        onclick: () => copyText(listAsText(b, items), 'List copied as text — paste it into the family chat') },
+        'Copy as text')),
     trustNote('Whoever you send this to just opens it.'));
   if (own) inner.append(el('div', { class: 'row listfoot' },
     el('button', { class: 'btn', type: 'button', onclick: async () => {
@@ -316,9 +635,17 @@ function drawBoard() {
   const sr = $('listStatus');
   if (sr.textContent !== status) sr.textContent = status;
 
+  v.style.minHeight = '';
+  if (window.scrollY !== heldScroll) window.scrollTo(0, heldScroll);
+
   if (keepFocus) {
     const again = v.querySelector('[data-fkey="' + keepFocus.replace(/"/g, '\\"') + '"]');
-    if (again) again.focus();
+    if (again) {
+      again.focus();
+      if (caret && again.setSelectionRange) {
+        try { again.setSelectionRange(caret[0], caret[1]); } catch (e) {}
+      }
+    }
   }
 }
 
@@ -368,11 +695,19 @@ function wire() {
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
+
+  // Connectivity was invisible: no listener anywhere, and the only signal the
+  // app ever gave was an error toast. Now the state is on screen, and coming
+  // back online retries a list that failed to open in the dead zone.
+  window.addEventListener('online', () => { toast('Back online — syncing'); render(); });
+  window.addEventListener('offline', () => { drawBoard(); });
 }
 
 function render() {
+  normalizeHash();
   const r = route();
   if (r.view === 'board') renderBoard(r.code);
+  else if (r.view === 'badcode') renderBadCode();
   else renderHome();
 }
 function refreshAuthBtn() {

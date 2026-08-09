@@ -262,7 +262,9 @@ export const renameClaim = (boardId, slotId, name) =>
 
 /* ---------- entries ---------- */
 
-export async function addEntry(boardId, board, { authorName, body, type }) {
+/* `done` is accepted so an Undo can restore a row exactly as it was, including
+   the fact that it had already been ticked off into the cart. */
+export async function addEntry(boardId, board, { authorName, body, type, done }) {
   const uid = (await ensureSignedIn()).uid;
   const owner = board.ownerUid === uid;
   const status = owner ? 'ok' : (board.settings.approvalRequired ? 'pending' : 'ok');
@@ -274,7 +276,7 @@ export async function addEntry(boardId, board, { authorName, body, type }) {
     status,
     creatorUid: uid,
     createdAt: serverTimestamp(),
-    done: false,
+    done: !!done,
   });
   batch.update(doc(db, 'boards', boardId), { entryCount: increment(1) });
   await batch.commit();
@@ -299,5 +301,27 @@ export async function clearChecked(boardId, entries) {
   return entries.length - keep.length;
 }
 
-export const deleteEntry = (boardId, entryId) =>
-  deleteDoc(doc(db, 'boards', boardId, 'entries', entryId));
+/* The 500-entry cap counts entries EVER CREATED, and a bare deleteDoc never
+   gave the slot back: a household that tidies with ✕ instead of the checkbox
+   burned its quota permanently and eventually met "that didn't save" with no
+   way to reclaim anything.
+
+   The rules deliberately refuse a PARTICIPANT-driven decrement (firestore.rules
+   'Participants: increment only' — a hostile client could otherwise drain the
+   counter and bypass the cap), but the owner's board-update rule allows any
+   entryCount >= 0. So when the owner removes a row we batch the delete with a
+   -1 and the quota is genuinely refunded. Participants keep the plain delete,
+   and clearChecked() still resets the counter for everybody's rows. */
+export function deleteEntry(boardId, entryId, { asOwner = false, entryCount = 0 } = {}) {
+  const plain = () => deleteDoc(doc(db, 'boards', boardId, 'entries', entryId));
+  if (!asOwner || !(entryCount > 0)) return plain();
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'boards', boardId, 'entries', entryId));
+  batch.update(doc(db, 'boards', boardId), { entryCount: increment(-1) });
+  // An older deployed ruleset may not accept the coupled write; losing the
+  // refund is survivable, losing the delete is not.
+  return batch.commit().catch((e) => {
+    if (!String((e && e.code) || '').includes('permission-denied')) throw e;
+    return plain();
+  });
+}

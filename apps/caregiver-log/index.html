@@ -1312,10 +1312,43 @@ header.app h1 a{color:inherit; text-decoration:none}
   border-radius:var(--r-sm);
 }
 
+/* How fresh the log is. We cannot send a push notification and refuse to
+   pretend otherwise, so the page answers "did I miss anything?" out loud. It
+   is a sentence someone reads, so it is --t-base ink, not a grey footnote. */
+.freshline{
+  margin:var(--s3) 0 0;
+  font-size:var(--t-base);
+  line-height:var(--lh-snug);
+  color:var(--ink);
+}
+/* Approvals used to be invisible: a badge 2,295px down an 11,555px page and no
+   count anywhere. The owner is told, at the top, in a countable sentence. */
+.pendbar{
+  display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  margin-top:var(--s4);
+  padding:var(--s3) var(--s4);
+  font-size:var(--t-sm);
+  color:var(--ink);
+  background:var(--accent-soft);
+  border:1px solid var(--accent);
+  border-radius:var(--r-sm);
+}
+.pendbar .btn{flex:none}
+
 /* ── Coverage days ──────────────────────────────────────────────────────── */
 .slot{border-bottom:1px solid var(--line); padding:var(--s3) 0}
 .slot:last-child{border-bottom:0}
-.slot .top{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+/* The pencil keeps one address — the end of the first line — instead of
+   dropping onto its own row directly above "I can be there" whenever the
+   status badge is the wider one. The label and status wrap inside their own
+   box; the edit control never joins them. */
+.slot .top{display:flex; align-items:flex-start; gap:var(--s3); flex-wrap:nowrap}
+.slotmeta{
+  flex:1 1 auto; min-width:0;
+  display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  min-height:var(--tap);
+}
+.slotedit{flex:none}
 .slot .label{
   flex:1 1 10rem; min-width:0;
   overflow-wrap:anywhere;
@@ -1371,6 +1404,7 @@ header.app h1 a{color:inherit; text-decoration:none}
   border-radius:var(--r-pill);
 }
 .badge.pending{background:var(--neg-soft); border-color:var(--neg-line)}
+.badge.asked{background:var(--pos-soft); border-color:var(--pos-line)}
 .badge.t-appointment{background:var(--accent-soft); border-color:var(--accent)}
 .badge.t-medication{background:var(--pos-soft); border-color:var(--pos-line)}
 .badge.t-question{background:var(--warn-soft); border-color:var(--warn-line)}
@@ -1383,7 +1417,22 @@ header.app h1 a{color:inherit; text-decoration:none}
 /* A time on a medication note is data, not decoration — it does not get to be
    the smallest thing in the row. */
 .entry .when{color:var(--ink-2); font-size:var(--t-sm)}
+/* "· logged 11:40 PM" beside a back-dated 2pm dose, and "· edited". Secondary
+   to the time it happened, but still a full --t-sm sentence fragment. */
+.entry .when.logged{color:var(--ink-2)}
 .entry .body{max-width:var(--measure); overflow-wrap:anywhere; white-space:pre-wrap}
+.entry.editing{background:var(--surface-2); border-radius:var(--r-sm); padding:var(--s4)}
+.entry.editing .row{margin-top:var(--s3)}
+/* "New since you last looked", computed on this device from the newest entry
+   it had seen. Not a notification, and never claimed to be one. */
+.seenline{
+  display:flex; align-items:center; gap:var(--s3);
+  margin:var(--s6) 0 var(--s2);
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+}
+.seenline::before,.seenline::after{content:''; flex:1 1 auto; height:1px; background:var(--line)}
+.seenline span{flex:none}
 /* Approve and delete: 44px squares, a real gap between them, pushed to the
    trailing edge by the flex row rather than by a float. */
 .entry-actions{display:flex; gap:var(--s3); margin-left:auto}
@@ -1405,6 +1454,41 @@ header.app h1 a{color:inherit; text-decoration:none}
   color:var(--ink-2);
 }
 .saveline::before{content:'✓'; color:var(--pos); font-weight:700}
+.pendnote{margin-top:var(--s3); max-width:var(--measure)}
+
+/* ── The composer ───────────────────────────────────────────────────────── */
+/* The type picker decides whether tonight's dose is filed as a medication, and
+   it was the smallest target on the page at every text size — a hardcoded 38px
+   in the shared base that the comfort panel could not reach. --tap is floored
+   at 44 and scales up with text size, which is the whole point of the setting.
+   Belongs in design/studio.css; overridden here because that file is held
+   elsewhere and this app is where the miss actually costs something. */
+.seg button,.seg .tab{min-height:var(--tap); padding:0 var(--s3)}
+
+.medfields{margin-bottom:var(--s2)}
+/* The answer to the only question anyone asks a medication log, in the size it
+   deserves, before the save rather than after it. */
+.lastgiven{
+  margin:var(--s2) 0 var(--s4);
+  padding:var(--s3) var(--s4);
+  font-size:var(--t-xl);
+  line-height:var(--lh-snug);
+  color:var(--ink);
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-left:3px solid var(--accent);
+  border-radius:var(--r-sm);
+}
+/* Inside the interval it is a warning, and red here is deliberate and reserved:
+   clinical convention, and the one thing this app exists to stop. */
+.lastgiven.soon{background:var(--neg-soft); border-color:var(--neg-line); border-left-color:var(--neg)}
+.whenrow{
+  display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap;
+  margin-bottom:var(--s4);
+}
+.whennow{font-size:var(--t-sm); color:var(--ink-2)}
+.dosedrug{font-size:var(--t-2xl); margin:0 0 var(--s2)}
+.dosewhen{font-size:var(--t-lg); line-height:var(--lh-snug); margin:0 0 var(--s4)}
 
 /* ── Owner: invite & settings ───────────────────────────────────────────── */
 .sharecode{
@@ -1498,6 +1582,8 @@ dialog::backdrop{background:var(--veil, rgba(0,0,0,.45))}
    every one of them onto its own line. */
 dialog .row > *{flex:1 1 8rem}
 .orline{margin:var(--s3) 0; text-align:center}
+.printrange{margin:0 0 var(--s4); padding:0; border:0}
+.printrange legend{padding:0; margin-bottom:var(--s2); font-size:var(--t-sm); font-weight:650; color:var(--ink)}
 .dangerrow{margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line)}
 
 /* DELIBERATE COLOUR LITERAL: a QR needs a white quiet zone to scan. Tokenising
@@ -1535,8 +1621,38 @@ section.card.printonly > h2{
   color:var(--ink);
 }
 .printmeta{font-size:var(--t-sm); color:var(--ink-2); margin-bottom:var(--s4)}
+/* The doctor's page has a shape: standing details, the open questions, the
+   medications given, then the timeline. These headings carry it. */
+.printsec{
+  margin:var(--s5) 0 var(--s2);
+  font-family:var(--font-text);
+  font-size:var(--t-micro); font-weight:700;
+  letter-spacing:.075em; text-transform:uppercase;
+  color:var(--ink-2);
+}
+.refblock{white-space:pre-wrap; overflow-wrap:anywhere; max-width:var(--measure)}
+.printq li,.printmeds li{margin-bottom:var(--s2); overflow-wrap:anywhere}
+.qsrc{color:var(--ink-2); font-size:var(--t-sm)}
+.runhead{display:none}
 
 @media print{
+  /* THE PRINT PALETTE RESET, RESTATED AT THE DARK SELECTORS' SPECIFICITY.
+     The base writes it as bare `:root` (0,1,0), which loses to the dark palette
+     at `:root:not([data-theme="light"])` (0,2,0) and to `:root[data-theme="dark"]`.
+     Result before this block, measured against white paper: printed title
+     1.2:1, and the date line, every day separator and the "not a medical
+     record" disclaimer at 2.3:1 — from a phone in dark mode, which is the
+     normal state of the phone these notes get written on. The hex literals are
+     the base's own; this is a restatement, not a new palette. Belongs in
+     design/studio.css, where it would fix all 23 apps at once. */
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+    --canvas:#fff; --surface:#fff; --surface-2:#fff; --field:#fff;
+    --ink:#000; --ink-2:#333; --ink-3:#555;
+    --line:#bbb; --line-2:#888;
+    --accent-soft:#fff; --pos-soft:#fff; --warn-soft:#fff; --neg-soft:#fff;
+    --shadow-0:none; --shadow-1:none; --shadow-2:none;
+    --ui-scale:1; --density:1;
+  }
   /* The base already hides header, footer, .noprint, .screenonly, .seg, the
      toast and the tip jar, and resets the palette to black on white. These two
      are the app's own. */
@@ -1552,9 +1668,26 @@ section.card.printonly > h2{
     page-break-inside:auto;
   }
   .disclaimer{padding:0; margin-top:var(--s4); background:none; border:0}
-  .banner{display:none !important}
+  .banner,.composer,.pendbar,.freshline,.seenline{display:none !important}
   .dayhead{margin-top:var(--s5); break-after:avoid; page-break-after:avoid}
   .entry{break-inside:avoid; page-break-inside:avoid}
+  .printsec{break-after:avoid; page-break-after:avoid}
+  /* Fifty-six loose Letter pages go onto a clipboard with three other
+     patients' paperwork. Chromium repeats a fixed element on every printed
+     page, so page 34 still says whose mother it is. The @page margin is
+     widened here to make room for it. */
+  @page{margin:20mm 14mm 14mm}
+  .runhead{
+    display:block;
+    position:fixed; top:-11mm; left:0; right:0;
+    font-size:8pt; letter-spacing:.04em; text-transform:uppercase;
+    color:#333;
+    border-bottom:1px solid #bbb;
+    padding-bottom:2mm;
+  }
+  .refblock{border:1px solid #bbb; padding:6pt; border-radius:0}
+  .printq,.printmeds{margin:0; padding:0; list-style:none}
+  .printq li,.printmeds li{border-bottom:1px solid #ddd; padding-bottom:4pt}
 }
 </style>
 <script src="sws-prefs.js"></script>
@@ -1641,6 +1774,34 @@ section.card.printonly > h2{
     <button class="btn" id="qrClose" type="button">Close</button>
   </div>
 </dialog>
+
+<dialog id="doseDlg" aria-labelledby="doseDlgTitle">
+  <h3 id="doseDlgTitle">This may already have been given</h3>
+  <p class="dosedrug" id="doseDrug"></p>
+  <p class="dosewhen" id="doseWhen"></p>
+  <p class="sub">Check with whoever logged it before giving another dose. If you know it is right, go ahead.</p>
+  <div class="row">
+    <button class="btn" id="doseCancel" type="button">Go back</button>
+    <button class="btn danger" id="doseGo" type="button">Log it anyway</button>
+  </div>
+</dialog>
+
+<dialog id="printDlg" aria-labelledby="printDlgTitle">
+  <h3 id="printDlgTitle">Print for a doctor visit</h3>
+  <fieldset class="printrange">
+    <legend>How much of the log?</legend>
+    <label><input type="radio" name="printrange" value="7" checked><span>The last 7 days</span></label>
+    <label><input type="radio" name="printrange" value="30"><span>The last 30 days</span></label>
+    <label><input type="radio" name="printrange" value="0"><span>Everything</span></label>
+  </fieldset>
+  <p class="sub">The page leads with the standing details, the questions nobody has asked yet and the medication given, then the timeline. The rota, the invite code and the tip jar never print.</p>
+  <div class="row">
+    <button class="btn" id="printCancel" type="button">Cancel</button>
+    <button class="btn primary" id="printGo" type="button">Print</button>
+  </div>
+</dialog>
+
+<datalist id="drugList"></datalist>
 
 <div id="toast" role="status" aria-live="polite"></div>
 

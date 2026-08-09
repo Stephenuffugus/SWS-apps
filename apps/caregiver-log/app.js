@@ -94,7 +94,17 @@ function restoreFocus(root, key) {
   if (!key) return;
   let target = null;
   try { target = root.querySelector('[data-fk="' + CSS.escape(key) + '"]'); } catch (e) {}
-  if (target) target.focus();
+  // Already there: never re-focus, or a remote snapshot would throw the caret
+  // to the end of the sentence somebody is in the middle of writing.
+  if (!target || target === document.activeElement) return;
+  target.focus();
+  try {
+    if (target.tagName === 'TEXTAREA'
+      || (target.tagName === 'INPUT' && /^(text|search|url|tel)$/.test(target.type))) {
+      const n = target.value.length;
+      target.setSelectionRange(n, n);
+    }
+  } catch (e) {}
 }
 
 function lockIcon() {
@@ -174,6 +184,7 @@ function commitDeletes() {
   clearTimeout(deleteTimer); deleteTimer = null;
   const ids = [...pendingDelete.keys()];
   pendingDelete.clear();
+  invalidateEntries();
   for (const id of ids) {
     D.deleteEntry(live.boardId, id).catch((err) => { toast(friendly(err), 4500); drawBoard(); });
   }
@@ -181,6 +192,7 @@ function commitDeletes() {
 function softDeleteEntry(e) {
   if (pendingDelete.has(e.id)) return;
   pendingDelete.set(e.id, e);
+  invalidateEntries();
   clearTimeout(deleteTimer);
   deleteTimer = setTimeout(commitDeletes, UNDO_MS);
   drawBoard();
@@ -191,6 +203,7 @@ function softDeleteEntry(e) {
     onAction: () => {
       clearTimeout(deleteTimer); deleteTimer = null;
       pendingDelete.clear();
+      invalidateEntries();
       drawBoard();
       // Put the keyboard back where the delete happened, not at the top.
       restoreFocus($('view'), 'delete-' + firstId);
@@ -215,7 +228,7 @@ const live = {
     this.unsubs = []; this.claimUnsubs = new Map();
     this.boardId = null; this.code = null; this.board = null;
     this.slots = []; this.entries = []; this.claims = new Map();
-    shell = null; comp = null; manageSig = null; editing = null;
+    shell = null; comp = null; manageSig = null; editing = null; veCache = null;
     clearInterval(freshTimer); freshTimer = null;
   },
 };
@@ -362,7 +375,7 @@ function syncEntriesWatcher() {
   entriesWatcherKey = key;
   if (live._entriesUnsub) live._entriesUnsub();
   live._entriesUnsub = D.watchEntries(live.boardId, user.uid, isOwner(),
-    (entries) => { live.entries = entries; drawBoard(); },
+    (entries) => { live.entries = entries; invalidateEntries(); drawBoard(); },
     (e) => toast(friendly(e), 5000));
   live.unsubs.push(() => { if (live._entriesUnsub) live._entriesUnsub(); entriesWatcherKey = ''; });
 }
@@ -401,7 +414,7 @@ function localStamp(d) {
     + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
 }
 function parseStamp(m) { return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); }
-function parseBody(raw) {
+function parseRaw(raw) {
   let text = String(raw == null ? '' : raw);
   let when = null, edited = null;
   const w = text.match(WHEN_RE);
@@ -409,6 +422,15 @@ function parseBody(raw) {
   const e = text.match(EDIT_RE);
   if (e) { edited = parseStamp(e); text = text.slice(0, text.length - e[0].length); }
   return { text, when, edited };
+}
+/* Sorting 500 entries re-parses every body O(n log n) times without this.
+   Snapshot objects are replaced wholesale, so the map empties itself. */
+const bodyCache = new WeakMap();
+function parseBody(e) {
+  if (!e || typeof e !== 'object') return parseRaw(e);
+  let p = bodyCache.get(e);
+  if (!p) { p = parseRaw(e.body); bodyCache.set(e, p); }
+  return p;
 }
 function composeBody(text, when, edited) {
   let out = String(text || '');
@@ -424,7 +446,7 @@ function entryDate(e) {
 /* The time the family cares about: when it happened, falling back to when it
    was written. Grouping, sorting and the printout all key off this. */
 function effDate(e) {
-  const p = parseBody(e.body);
+  const p = parseBody(e);
   return p.when || entryDate(e) || new Date();
 }
 const effMs = (e) => effDate(e).getTime();
@@ -453,10 +475,19 @@ function agoText(d) {
   return 'on ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-const visibleEntries = () => live.entries
-  .filter((e) => !pendingDelete.has(e.id))
-  .slice()
-  .sort((a, b) => effMs(b) - effMs(a));
+/* Newest first by when it HAPPENED, not by when someone found a free hand.
+   Memoised: one draw asks for this list five or six times. */
+let veCache = null;
+const invalidateEntries = () => { veCache = null; };
+function visibleEntries() {
+  if (!veCache) {
+    veCache = live.entries
+      .filter((e) => !pendingDelete.has(e.id))
+      .slice()
+      .sort((a, b) => effMs(b) - effMs(a));
+  }
+  return veCache;
+}
 
 /* ---------- medication ----------
    "Medication" used to be a badge class on a free-text note. A dose has a drug,
@@ -468,7 +499,7 @@ const visibleEntries = () => live.entries
 const GAVE_RE = /^Gave\s+(.+?)(?:\s+—\s+(.+?))?\s*$/;
 function medName(e) {
   if (e.type !== 'medication') return '';
-  const first = parseBody(e.body).text.split('\n')[0];
+  const first = parseBody(e).text.split('\n')[0];
   const m = first.match(GAVE_RE);
   return m ? m[1].trim() : '';
 }
@@ -490,7 +521,7 @@ function lastGivenFor(drug) {
   let best = null;
   for (const e of visibleEntries()) {
     if (e.type !== 'medication') continue;
-    const p = parseBody(e.body);
+    const p = parseBody(e);
     if (!re.test(p.text)) continue;
     const when = p.when || entryDate(e);
     if (!when) continue;
@@ -510,11 +541,14 @@ function ensureShell(v) {
   const head = el('section', { class: 'card' });
   const banners = el('div', {});
   const cov = el('section', { class: 'card noprint' });
-  const timeline = el('section', { class: 'card screenonly' });
+  const entriesBox = el('div', { class: 'screenonly' });
+  // h2 first, then the composer (inserted before entriesBox when it exists),
+  // then the list — so the order never depends on the order things were built.
+  const timeline = el('section', { class: 'card screenonly' }, el('h2', {}, 'The log'), entriesBox);
   const manageBox = el('div', {});
   const printBox = el('div', {});
   v.replaceChildren(head, banners, cov, timeline, manageBox, printBox);
-  shell = { root: v, head, banners, cov, timeline, manageBox, printBox, fresh: null };
+  shell = { root: v, head, banners, cov, timeline, entriesBox, manageBox, printBox, fresh: null };
   return shell;
 }
 
@@ -907,6 +941,7 @@ function submitEntry() {
 
   let text = extra;
   if (drug) text = ('Gave ' + drug + (dose ? ' — ' + dose : '')) + (extra ? '\n' + extra : '');
+  text = text.slice(0, 1900);   // leaves room for the when/edited tokens under the 2000 cap
   const when = whenOpen && comp.whenInput.value ? new Date(comp.whenInput.value) : null;
   const useWhen = when && !isNaN(when) && Math.abs(when.getTime() - Date.now()) > 120000 ? when : null;
   saveEntry(name, composeBody(text, useWhen, null), composeType);
@@ -947,20 +982,19 @@ function fillTimeline(u, b, own, locked) {
   const card = u.timeline;
   // The whole card is screen-only: its contents are the composer, the type
   // picker and the newest-first list, none of which belong on the printed page.
-  if (!card.firstChild) card.append(el('h2', {}, 'The log'));
   // Owners may write while the log is locked — that is what the rules say and
   // what the banner claims.
   const canWrite = !locked || own;
   if (canWrite) {
     if (!comp) comp = buildComposer();
-    if (comp.wrap.parentNode !== card) card.append(comp.wrap);
+    // Never detached once mounted: detaching blurs the textarea, closes the
+    // mobile keyboard and drops the caret.
+    if (comp.wrap.parentNode !== card) card.insertBefore(comp.wrap, u.entriesBox);
     patchComposer();
   } else if (comp && comp.wrap.parentNode === card) {
     comp.wrap.remove();
   }
 
-  if (!u.entriesBox) u.entriesBox = el('div', { class: 'screenonly' });
-  if (u.entriesBox.parentNode !== card) card.append(u.entriesBox);
   const entries = visibleEntries();
   u.entriesBox.replaceChildren();
 
@@ -994,7 +1028,7 @@ function fillTimeline(u, b, own, locked) {
 let editing = null;   // { id, text, when } — survives the redraw a snapshot forces
 function renderEntry(e, own, locked) {
   const mineE = user && e.creatorUid === user.uid;
-  const p = parseBody(e.body);
+  const p = parseBody(e);
   const d = effDate(e);
   const written = entryDate(e);
   const backdated = !!p.when && written && Math.abs(p.when.getTime() - written.getTime()) > 120000;
@@ -1150,7 +1184,7 @@ function buildPrintPage() {
     const ul = el('ul', { class: 'plain printq' });
     for (const q of questions.slice().reverse()) {
       const d = effDate(q);
-      ul.append(el('li', {}, el('span', { text: parseBody(q.body).text }),
+      ul.append(el('li', {}, el('span', { text: parseBody(q).text }),
         el('span', { class: 'qsrc', text: ' — ' + q.authorName + ', ' + dayKey(d) })));
     }
     box.append(ul);
@@ -1178,7 +1212,7 @@ function buildPrintPage() {
           + ' (' + m.authorName + ')';
       });
       const doses = [...new Set(g.rows.map(m => {
-        const mm = parseBody(m.body).text.split('\n')[0].match(GAVE_RE);
+        const mm = parseBody(m).text.split('\n')[0].match(GAVE_RE);
         return mm && mm[2] ? mm[2].trim() : '';
       }).filter(Boolean))];
       ul.append(el('li', {},
@@ -1187,7 +1221,7 @@ function buildPrintPage() {
     }
     for (const m of loose) {
       const d = effDate(m);
-      ul.append(el('li', {}, el('span', { text: parseBody(m.body).text }),
+      ul.append(el('li', {}, el('span', { text: parseBody(m).text }),
         el('span', { class: 'qsrc', text: ' — ' + m.authorName + ', ' + dayKey(d) + ' ' + timeOf(d) })));
     }
     box.append(ul);
@@ -1205,7 +1239,7 @@ function buildPrintPage() {
       el('div', { class: 'meta' },
         el('span', { class: 'who', text: e.authorName }),
         el('span', { text: (TYPE_LABEL[e.type] || 'Note') + ' · ' + timeOf(d) })),
-      el('div', { class: 'body', text: parseBody(e.body).text })));
+      el('div', { class: 'body', text: parseBody(e).text })));
   }
   box.append(el('p', { class: 'disclaimer', text: 'Family-kept notebook. Not a medical record. Not covered by HIPAA.' }));
   shell.printBox.replaceChildren(box);
@@ -1322,7 +1356,7 @@ function exportLog() {
       people: (live.claims.get(s.id) || []).map(c => ({ name: c.name, note: c.note || '' })),
     })),
     entries: visibleEntries().slice().reverse().map(e => {
-      const p = parseBody(e.body);
+      const p = parseBody(e);
       return {
         author: e.authorName, type: e.type, text: p.text,
         happenedAt: effDate(e).toISOString(),
