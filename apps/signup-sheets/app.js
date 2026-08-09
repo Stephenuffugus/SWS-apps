@@ -112,11 +112,19 @@ const live = {           // active board subscriptions
     this.unsubs = []; this.claimUnsubs = new Map();
     this.boardId = null; this.code = null; this.board = null; this.boardMissing = false;
     this.slots = []; this.entries = []; this.claims = new Map();
+    heldSlots.clear(); takenAway = [];
   },
 };
 // Owner console state that must survive a redraw — it used to be thrown away
 // on every Firestore snapshot, i.e. whenever anyone anywhere claimed anything.
 const ui = { manageOpen: false, addMode: 'single', openOnly: false };
+/* Somebody who committed to bring Tuesday's dinner to a grieving family used to
+   be un-committed in silence: the owner deleted the spot and it simply vanished
+   from the participant's screen while their old "You're in" toast still stood.
+   These two track the spots this device holds so the removal can be said out
+   loud on the next render. */
+const heldSlots = new Map();   // slotId -> label, while I hold a claim on it
+let takenAway = [];            // labels the organizer removed out from under me
 
 /* ---------- router ---------- */
 function route() {
@@ -399,6 +407,25 @@ function drawBoardNow() {
         el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied — send it anywhere') }, 'Copy link'),
         el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
       el('p', { class: 'hint', text: 'Send the link any way you like. The big code is for telling someone out loud — they type it on the app’s front page.' })));
+  }
+
+  /* A spot I hold that is no longer on the sheet was deleted by the organizer.
+     Say so; do not let it disappear quietly. */
+  const ids = new Set(live.slots.map(x => x.id));
+  for (const [id, label] of heldSlots) {
+    if (!ids.has(id)) { heldSlots.delete(id); if (!takenAway.includes(label)) takenAway.push(label); }
+  }
+  for (const s of live.slots) {
+    const holds = user && (live.claims.get(s.id) || []).some(c => c.uid === user.uid);
+    if (holds) heldSlots.set(s.id, s.label);
+    else heldSlots.delete(s.id);
+  }
+  if (takenAway.length) {
+    v.append(el('div', { class: 'warn noprint' },
+      el('strong', {}, takenAway.length === 1 ? 'You are no longer signed up for “' + takenAway[0] + '”.' : 'You are no longer signed up for: ' + takenAway.join(', ') + '.'),
+      ' The organizer removed ' + (takenAway.length === 1 ? 'that spot' : 'those spots') + ' from this sheet. Nothing you did caused it — take another spot below if you still want to help.',
+      el('div', { class: 'claimrow' },
+        el('button', { class: 'btn small', type: 'button', onclick: () => { takenAway = []; drawBoardNow(); } }, 'Got it'))));
   }
 
   if (locked) v.append(el('div', { class: 'banner', text: own

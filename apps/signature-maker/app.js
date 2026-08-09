@@ -705,7 +705,7 @@ function loadPhoto(file) {
       const k = MAX_PHOTO_PX / long;
       w = Math.round(w * k);
       h = Math.round(h * k);
-      toast(`Your picture was ${im.naturalWidth} × ${im.naturalHeight} px; it was scaled to ${w} × ${h} px before processing, which is this tool's ceiling.`, { ms: 8000 });
+      toast(`Your picture was ${im.naturalWidth} × ${im.naturalHeight} px; it was scaled to ${w} × ${h} px before processing, which is this tool's ceiling for the long edge.`, { ms: 8000 });
     }
     const c = document.createElement('canvas');
     c.width = w;

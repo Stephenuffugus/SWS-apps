@@ -417,6 +417,9 @@ async function compressOne(item, cfg, onAttempt) {
     };
   } finally {
     bmp.close && bmp.close();
+    // The old preview URL now points at a blob nobody wants. rev is part of the
+    // row signature, so the row is rebuilt and the panel makes a fresh one.
+    item.rev = (item.rev || 0) + 1;
     if (item.cmp) { revoke(item.cmp.outUrl); item.cmp.outUrl = null; }
   }
 }
@@ -574,7 +577,7 @@ function focusKey() {
 function rowSig(item) {
   const o = item.out;
   return [
-    item.id, settingsGen,
+    item.id, settingsGen, item.rev || 0,
     item.error ? item.error.reason + (item.error.retry === false ? '|noretry' : '') : '',
     o ? [o.blob.size, o.w, o.h, o.kept, o.gen, o.name, o.notes.length, o.good].join('|') : '',
     item.cmp && item.cmp.open ? 'cmp' + (item.cmp.zoom ? ':zoom' : '') : '',
@@ -695,7 +698,7 @@ function imageRow(item) {
     img,
     el('div', { class: 'grow' }, el('div', { class: 'rowname', text: item.file.name }), numbers, notes),
     acts,
-    item.cmp && item.cmp.open ? comparePanel(item) : null);
+    out && item.cmp && item.cmp.open ? comparePanel(item) : null);
 }
 
 function removeButton(item) {
@@ -723,6 +726,8 @@ function toggleCompare(item) {
 function comparePanel(item) {
   const c = item.cmp;
   const out = item.out;
+  if (!c.srcUrl) c.srcUrl = URL.createObjectURL(item.file);
+  if (!c.outUrl) c.outUrl = URL.createObjectURL(out.blob);
   const before = el('img', { class: 'before', src: c.srcUrl, alt: 'The original ' + item.file.name });
   const after = el('img', { class: 'after', src: c.outUrl, alt: 'The compressed version of ' + item.file.name });
   const divider = el('div', { class: 'cmp-divider', 'aria-hidden': 'true' });
