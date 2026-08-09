@@ -1286,6 +1286,9 @@ input[type=range]::-moz-range-thumb{
   border-radius:50%; background:var(--accent-fill); box-shadow:var(--shadow-1);
 }
 
+/* The base .seg is sized for a compact tab strip; this one is the app's main
+   mode switch and has to clear the --tap floor like every other real control. */
+#modeSeg button{min-height:var(--tap); flex:1 1 10rem}
 .seg button[aria-pressed=true]{
   color:var(--accent-ink); background:var(--accent-fill); box-shadow:var(--shadow-0);
 }
@@ -1386,7 +1389,10 @@ input[type=range]::-moz-range-thumb{
    what went out, and how much smaller. Everything you would tap is dropped,
    and the row becomes a block so long filenames do not collide with numbers. */
 @media print{
-  #dropCard,#settingsCard,#promiseCard,.actionbar,.rowacts,.cmp,.skip{display:none !important}
+  #dropCard,#settingsCard,#promiseCard,.actionbar,.rowacts,.cmp{display:none !important}
+  /* Hidden is not enough: a printer asked for "no background graphics" would
+     still drop the fill and leave the label invisible, so the accent goes too. */
+  .skip{display:none !important; background:transparent !important; color:#000 !important}
   #list > li{display:block; padding:4pt 0}
   .thumb{
     width:36pt; height:36pt; float:left; margin:0 8pt 4pt 0;

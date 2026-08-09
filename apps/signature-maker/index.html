@@ -1394,6 +1394,22 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
 :root[data-signbig="1"] section.card{padding:var(--s2)}
 :root[data-signbig="1"] #pad{height:calc(100vh - 230px); height:calc(100dvh - 230px); min-height:180px}
 
+/* A short landscape window is somebody who has turned their phone sideways
+   because the app told them to sign larger than feels natural. Measured at
+   740x360 with the reading matter in place, the signing surface started at
+   y=485 in a 360px viewport — the pad was entirely below the fold before they
+   could touch it. In that window the marketing, the stamp and the footnotes
+   step aside and the pad comes to the top; the promise still stands in the
+   colophon, and the sticky action bar keeps Download on screen throughout. */
+@media (max-height:560px) and (orientation:landscape){
+  .hero,.trust,.inkwhy,.padhint,.validity{display:none}
+  section.card{padding:var(--s3)}
+  #signCardH{margin-bottom:var(--s2)}
+  .modeseg{margin-top:var(--s2); margin-bottom:var(--s2)}
+  .opts{margin-top:var(--s2)}
+  #pad{height:max(150px, calc(100vh - 215px))}
+}
+
 /* ── Print ───────────────────────────────────────────────────────────────────
    Ctrl+P used to yield the marketing headline, a dead Ink/Pen toolbar, three
    dead buttons and two solid ink-wasting circles around the signature. Print
@@ -1530,9 +1546,9 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
     <div class="export">
       <label class="f" for="preset"><span>What kind of file do you need?</span>
         <select id="preset">
-          <option value="png">Transparent PNG — drop straight onto a document (1200 px wide)</option>
-          <option value="png-email">Transparent PNG — small, for an email footer (300 px wide)</option>
-          <option value="jpg">JPG on white — for forms that reject PNG (1200 px wide)</option>
+          <option value="png">Transparent PNG — drop straight onto a document (about 1200 px wide)</option>
+          <option value="png-email">Transparent PNG — small, for an email footer (about 300 px wide)</option>
+          <option value="jpg">JPG on white — for forms that reject PNG (about 1200 px wide)</option>
           <option value="jpg140">JPG on white — exactly 140 × 60 px, under 30 KB (exam portals)</option>
           <option value="jpg160">JPG on white — exactly 160 × 60 px, under 30 KB</option>
         </select></label>

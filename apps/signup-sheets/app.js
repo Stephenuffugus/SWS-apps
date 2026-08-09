@@ -305,6 +305,33 @@ function snapshotUI(root) {
   };
 }
 
+/* Write to whatever node currently carries this key. A handler that awaits a
+   Firestore write cannot hold onto the element it closed over: the board may
+   have redrawn underneath it, and the node it is holding is then detached, so
+   the write lands nowhere the user can see. */
+function setKeep(key, value, expected) {
+  const f = document.querySelector('[data-keep="' + CSS.escape(key) + '"]');
+  if (!f) return;
+  // A Firestore commit does not resolve until the server acks, which can be
+  // seconds. If the user has typed something else into the field in the
+  // meantime, their new text wins — we are trimming what we imported, not
+  // taking the field over.
+  if (expected !== undefined && f.value !== expected) return;
+  f.value = value;
+}
+
+/* Focus something that may not exist yet — the board redraws on a Firestore
+   round trip, so the control that should receive focus after a claim is
+   created a moment after the dialog closes. Tries the keys in order. */
+function focusWhenReady(keys, tries) {
+  const left = tries === undefined ? 40 : tries;
+  for (const k of keys) {
+    const t = document.querySelector('[data-fk="' + CSS.escape(k) + '"]');
+    if (t) { try { t.focus({ preventScroll: true }); } catch (e) {} return; }
+  }
+  if (left > 0) requestAnimationFrame(() => focusWhenReady(keys, left - 1));
+}
+
 function restoreUI(root, snap) {
   for (const f of root.querySelectorAll('[data-keep]')) {
     const k = f.getAttribute('data-keep');
@@ -485,7 +512,7 @@ function renderSlot(s, own, locked) {
   const claims = live.claims.get(s.id) || [];
   const mine = user && claims.find(c => c.uid === user.uid);
   const left = Math.max(0, (s.capacity || 1) - (s.claimedCount || 0));
-  const box = el('div', { class: 'slot' });
+  const box = el('div', { class: 'slot', 'data-fk': 'slot:' + s.id, tabindex: '-1' });
   const top = el('div', { class: 'top' },
     el('span', { class: 'label', text: s.label }),
     el('span', { class: 'count' + (left === 0 ? ' full' : ''), text: left === 0 ? 'Full' : (s.claimedCount || 0) + ' of ' + s.capacity }));
@@ -505,7 +532,7 @@ function renderSlot(s, own, locked) {
       onclick: () => openEditClaim(s, c),
     }, 'Edit'));
     if ((isMine && !locked) || own) chip.append(el('button', {
-      type: 'button', class: 'release noprint',
+      type: 'button', class: 'release noprint', 'data-fk': isMine ? 'release:' + s.id : null,
       // All eight remove buttons used to read "Remove Greedy Greg from this
       // spot" with no way to tell which spot.
       'aria-label': (isMine ? 'Give back your spot: ' : 'Remove ' + c.name + ' from ') + s.label,
@@ -517,6 +544,7 @@ function renderSlot(s, own, locked) {
           if (isMine) await D.releaseClaim(live.boardId, s.id);
           else await D.ownerRemoveClaim(live.boardId, s.id, c.uid);
           if (isMine) {
+            focusWhenReady(['claim:' + s.id, 'slot:' + s.id]);
             undoToast('You gave back “' + s.label + '”', async () => {
               try { await D.claimSlot(live.boardId, s.id, snapshot.name, snapshot.note); toast('Back in — ' + s.label); }
               catch (e2) { toast('Couldn’t take it back — someone else has it now.', 5000); }
@@ -687,7 +715,7 @@ function renderManage(b) {
           // Only clear the field if the spot was actually accepted — a rejected
           // label used to be deleted out from under the person who typed it.
           await addSlotsChecked([{ label, capacity: parseInt(cap.value, 10) || 1 }], null,
-            (added) => { if (added > 0) lab.value = ''; });
+            (added) => { if (added > 0) setKeep('single-label', '', lab.value); });
         } catch (e) { reportError(e); }
       } }, 'Add')));
   } else if (ui.addMode === 'bulk') {
@@ -695,7 +723,8 @@ function renderManage(b) {
       placeholder: 'One spot per line — add ×N for multiples:\nMain dish x3\nSide or salad x4\nDessert x2\nDrinks & ice' });
     inner.append(ta, el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
-        const rep = parseBulkSlotsReport(ta.value);
+        const pasted = ta.value;
+        const rep = parseBulkSlotsReport(pasted);
         if (rep.rows.length === 0) { toast('Paste one spot per line first'); return; }
         try {
           await addSlotsChecked(rep.rows, (added) => {
@@ -708,10 +737,10 @@ function renderManage(b) {
           }, (added) => {
             // Whatever was NOT imported stays in the box, verbatim, so it can be
             // pasted into a second sheet. The old code cleared it regardless.
-            ta.value = [
+            setKeep('bulk', [
               rep.rows.slice(added).map(x => x.capacity > 1 ? x.label + ' x' + x.capacity : x.label).join('\n'),
               rep.remainder,
-            ].filter(Boolean).join('\n');
+            ].filter(Boolean).join('\n'), pasted);
           });
         } catch (e) { reportError(e, 6000); }
       } }, 'Add all')));
@@ -940,11 +969,28 @@ function wire() {
     ok.disabled = true; ok.textContent = 'Claiming…';
     $('nameCancel').disabled = true;
     try {
-      const r = await D.claimSlot(live.boardId, target.id, name, $('noteInput').value);
+      /* A Firestore batch does not resolve until the server acks it, so on a
+         bad connection "hold the dialog until the write lands" would hold it
+         forever. Firestore has already applied the claim locally and queued it,
+         so past a short wait we say exactly that and let go. */
+      const write = D.claimSlot(live.boardId, target.id, name, $('noteInput').value);
+      let slow = false;
+      const r = await Promise.race([
+        write,
+        new Promise((res) => setTimeout(() => { slow = true; res(null); }, navigator.onLine ? 4000 : 700)),
+      ]);
       closeDlg($('nameDlg'));
-      toast(r === 'note-dropped'
-        ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
-        : 'You’re in — ' + target.label, r === 'note-dropped' ? 6000 : 3500);
+      // The button that opened this dialog no longer exists — the slot is yours
+      // now — so focus lands on the control that replaced it rather than <body>.
+      focusWhenReady(['release:' + target.id, 'slot:' + target.id]);
+      if (slow) {
+        toast('Saved on this device — “' + target.label + '” will sync when you’re back online.', 6000);
+        write.catch(() => toast('That claim didn’t stick after all — “' + target.label + '” may have filled. Open the sheet again to check.', 8000));
+      } else {
+        toast(r === 'note-dropped'
+          ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
+          : 'You’re in — ' + target.label, r === 'note-dropped' ? 6000 : 3500);
+      }
     } catch (e) {
       const denied = String((e && (e.code || e.message)) || '').includes('permission-denied');
       const locked = !!(live.board && live.board.settings && live.board.settings.locked);

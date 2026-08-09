@@ -88,6 +88,15 @@ ok('preflight names the format instead of shrugging', () => {
   assert.match(preflight({ name: 'DSC.CR3', size: 900, type: '' }).reason, /RAW/);
   assert.equal(preflight({ name: 'ok.jpg', size: 100, type: 'image/jpeg' }), null);
 });
+ok('retry is offered only where it could actually succeed', () => {
+  // no decoder will appear between now and the next click
+  assert.equal(preflight({ name: 'a.HEIC', size: 9, type: '' }).retry, false);
+  assert.equal(preflight({ name: 'a.svg', size: 9, type: '' }).retry, false);
+  assert.equal(preflight({ name: 'a.dng', size: 9, type: '' }).retry, false);
+  // these two might: the copy could finish, the memory could free up
+  assert.notEqual(preflight({ name: 'a.jpg', size: 0, type: '' }).retry, false);
+  assert.notEqual(decodeFailure({ name: 'a.jpg' }).retry, false);
+});
 ok('decodeFailure names the extension it choked on', () => {
   assert.match(decodeFailure({ name: 'weird.tif' }).reason, /\.tif/);
   assert.match(decodeFailure({ name: 'noext' }).reason, /could not decode/);

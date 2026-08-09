@@ -1327,7 +1327,10 @@ body{
   /* ---------- week nav ---------- */
   .weeknav{display:flex;align-items:center;gap:var(--s2);margin:var(--s3) 0 var(--s2);flex-wrap:wrap}
   .weeknav .btn{padding:var(--s2) var(--s3)}
-  .weeknav select{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field);color:var(--ink);max-width:60vw}
+  /* The select takes what is left of the row rather than a fixed 60vw, so the
+     five week controls sit on one line on a phone instead of two — that row is
+     a row of lessons. */
+  .weeknav select{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field);color:var(--ink);flex:1 1 7rem;min-width:6rem;max-width:100%}
   .weeknav .spacer{flex:1}
   .wk-h{font-family:'Fraunces',Georgia,serif;font-size:var(--t-lg);font-weight:600;margin:0 0 var(--s2)}
   .scroll-hint{font-size:var(--t-sm);color:var(--ink-2);margin:0 0 var(--s2)}
@@ -1341,11 +1344,14 @@ body{
      far too narrow for a week grid — at 1280px it hid 202px of the week. The
      grid alone breaks out of it, centred, never wider than the viewport. */
   @media screen and (min-width:52rem){
-    .grid-scroll{
-      --gw:min(64rem, 100vw - 3rem);
+    #view{--gw:min(64rem, 100vw - 3rem)}
+    .grid-scroll,.weeknav,#bar,.scroll-hint,.sample-bar{
       width:var(--gw);
       margin-inline:calc((100% - var(--gw)) / 2);
     }
+    /* the stamp sits at the grid's left edge, not centred on the narrower
+       reading column, or the week view reads as two misaligned pages */
+    #view > .trust{margin-left:calc((100% - var(--gw)) / 2)}
   }
   table.week{border-collapse:separate;border-spacing:0;width:100%;min-width:calc(19.5rem + var(--cols,6) * 7.25rem);table-layout:fixed}
   table.week th{font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;padding:var(--s2) var(--s3);background:var(--surface-2);border-bottom:1.5px solid var(--line-2);border-right:1px solid var(--line);text-align:left}
@@ -1844,7 +1850,7 @@ const TRUST_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 function trustHTML(full){
   const drive=CLIENT_ID?' The one exception is the Google Drive button, which uploads that same backup file to your own Drive when you press it.':'';
   const body=full
-    ? `<b>No account, no upload, and no student names anywhere.</b> This planner only ever knows dates, periods and rotation letters — there is no roster in it, so there is no student data for anyone to vet. Your schedule, lessons and notes are saved in this browser, on this device. They leave only in a backup or CSV file that you download yourself.${drive}`
+    ? `<b>No account, no upload, no student names.</b> The planner only knows dates, periods and rotation letters — there is no roster in it, so there is nothing here for a district to vet. Your lessons stay in this browser, on this device, and leave only in a backup or CSV file you download yourself.${drive}`
     : `<b>Nothing leaves this device.</b> No account, no student names.`;
   return `<p class="trust">${TRUST_SVG}<span>${body}</span></p>`;
 }
@@ -2071,7 +2077,9 @@ function onBoxFocus(b){
   barCtx={iso:b.dataset.iso,p:+b.dataset.p,letter:b.dataset.letter||''};
   document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · Period ${barCtx.p} — Ctrl+Enter reaches these buttons`;
   barDayBtn.disabled=false;
-  if(barCtx.letter){ barLetterBtn.hidden=false; barLetterBtn.disabled=false; barLetterBtn.textContent=`Fill every ${barCtx.letter}-day this year (period ${barCtx.p})`; }
+  /* The label is deliberately the same length armed or disarmed: this row sits
+     above the grid and must not change height as you tab across the week. */
+  if(barCtx.letter){ barLetterBtn.hidden=false; barLetterBtn.disabled=false; barLetterBtn.textContent=`Fill all ${barCtx.letter}-days (period ${barCtx.p})`; }
   else { barLetterBtn.hidden=true; barLetterBtn.disabled=true; }
   bar.classList.add('show');
 }

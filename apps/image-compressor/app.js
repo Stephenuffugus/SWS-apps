@@ -565,11 +565,26 @@ function focusKey() {
   return holder ? holder.getAttribute('data-fk') : null;
 }
 
+/**
+ * Everything a row displays, as one string. Rebuilding 200 rows — each with a
+ * data-URL thumbnail to decode — on every tick of a run is what turns a smooth
+ * batch into a stuttering one, so a row whose signature has not moved keeps the
+ * node it already has.
+ */
+function rowSig(item) {
+  const o = item.out;
+  return [
+    item.id, settingsGen,
+    item.error ? item.error.reason + (item.error.retry === false ? '|noretry' : '') : '',
+    o ? [o.blob.size, o.w, o.h, o.kept, o.gen, o.name, o.notes.length, o.good].join('|') : '',
+    item.cmp && item.cmp.open ? 'cmp' + (item.cmp.zoom ? ':zoom' : '') : '',
+  ].join('~');
+}
+
 function render() {
   lastRender = Date.now();
   const list = $('list');
   const key = focusKey();
-  list.replaceChildren();
 
   const failed = items.filter((i) => i.error).length;
   $('emptyHint').classList.toggle('hidden', items.length > 0);
@@ -577,11 +592,22 @@ function render() {
     ? plural(items.length, 'image') + (failed ? ' · ' + failed + ' this browser cannot open' : '')
     : 'Images';
 
-  for (const item of items) list.append(item.error ? failedRow(item) : imageRow(item));
+  const nodes = items.map((item) => {
+    const sig = rowSig(item);
+    if (item.node && item.sig === sig) return item.node;
+    item.node = item.error ? failedRow(item) : imageRow(item);
+    item.sig = sig;
+    return item.node;
+  });
 
-  if (key) {
-    const back = list.querySelector('[data-fk="' + CSS.escape(key) + '"]');
-    if (back) back.focus({ preventScroll: true });
+  const unchanged = list.childNodes.length === nodes.length &&
+    nodes.every((n, i) => list.childNodes[i] === n);
+  if (!unchanged) {
+    list.replaceChildren(...nodes);
+    if (key) {
+      const back = list.querySelector('[data-fk="' + CSS.escape(key) + '"]');
+      if (back) back.focus({ preventScroll: true });
+    }
   }
   syncActions();
 }
