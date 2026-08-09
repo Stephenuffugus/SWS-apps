@@ -446,14 +446,21 @@ function updateReadout() {
 function stamp() {
   const d = new Date();
   const p = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
+/* Eight attempts used to land as signature.png … signature(7).png with no way
+   to tell which was the one you liked. Second resolution plus a counter for
+   the burst case makes every file self-describing. */
+let lastStamp = '';
+let seq = 0;
 function filename(r, s) {
   const ext = s.type === 'image/png' ? 'png' : 'jpg';
   const dims = s.exact ? `-${s.exact.w}x${s.exact.h}` : `-${r.w}px`;
   const ink = INK_NAMES[color] || 'ink';
-  return `signature-${ink}${dims}-${stamp()}.${ext}`;
+  const t = stamp();
+  if (t === lastStamp) seq += 1; else { lastStamp = t; seq = 0; }
+  return `signature-${ink}${dims}-${t}${seq ? `-${seq + 1}` : ''}.${ext}`;
 }
 
 /* A single tap used to export a 38x38 dot with the toast "Saved". Refusing is
