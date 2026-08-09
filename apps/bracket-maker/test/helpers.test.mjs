@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   nextPow2, seedOrder, parseEntrants, roundCount, round0Slot,
   contender, winnerOf, setPick, champion, encodeBracket, decodeBracket,
+  entrantInfo, mapEntrants, resultPairs, carryPicks, sameBracket,
 } from '../helpers.js';
 
 let passed = 0;

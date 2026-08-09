@@ -1466,6 +1466,7 @@ body{
 </head>
 <body>
 <a class="skip" href="#log">Skip to the log buttons</a>
+<a class="skip" href="#backup">Skip past the timeline to Backup</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1479,6 +1480,9 @@ body{
     <h2 id="printName">Baby Log</h2>
     <div class="sub" id="printDate"></div>
   </div>
+  <!-- The pediatrician reads a sheet for about forty seconds. She should not
+       have to count 151 rows to get four numbers a day. -->
+  <div id="printTotals" class="printonly"></div>
 
   <section class="card" aria-labelledby="h-now">
     <h2 id="h-now">Right now</h2>
@@ -1489,7 +1493,8 @@ body{
         <rect x="4" y="10.5" width="16" height="10" rx="2.5"></rect>
         <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
       </svg>
-      <span><b>Nothing leaves this phone.</b> No account, no cloud, no ads.</span>
+      <span><b>Every feed, nap and diaper stays in this browser, on this phone.</b>
+        No account, no cloud, no analytics, nothing sent anywhere — the only other copy is a backup file you export yourself.</span>
     </div>
 
     <label class="f noprint namefield" for="nameInput">
@@ -1528,18 +1533,30 @@ body{
   </section>
 
   <section class="card" aria-labelledby="h-today">
-    <h2 id="h-today">Today</h2>
+    <h2 id="h-today">Summary</h2>
+    <!-- A newborn night straddles midnight, so calendar-midnight "today" cut
+         every night in half. Two honest windows, each named on the page and
+         in the copied text. -->
+    <div class="seg winseg noprint" role="group" aria-label="Which hours the summary covers">
+      <button type="button" data-win="24h" aria-pressed="true">Last 24 hours</button>
+      <button type="button" data-win="day" aria-pressed="false">Today, 5am–5am</button>
+    </div>
     <div class="status" id="summary"></div>
+    <p class="hint winnote" id="winNote"></p>
     <div class="row noprint actions">
-      <button class="btn primary" id="copyBtn" type="button">Copy today's summary</button>
+      <button class="btn primary" id="copyBtn" type="button">Copy this summary</button>
       <button class="btn" id="printBtn" type="button">Print the log</button>
     </div>
-    <p class="hint noprint">Paste it to your partner at shift change, or hand the printed log to the pediatrician.</p>
+    <p class="hint noprint">Paste it to your partner at shift change, or hand the printed log to the pediatrician. The copied text says which hours it covers.</p>
   </section>
 
   <section class="card" id="timelineCard" aria-labelledby="h-timeline">
     <h2 id="h-timeline">Timeline</h2>
-    <ul class="plain" id="timeline"></ul>
+    <a class="skip" id="skipList" href="#backup">Skip past the timeline</a>
+    <!-- One <ul> per day with a real heading beside it, rather than a
+         role="presentation" <li> that stripped the listitem role and left the
+         list with children that were not list items. -->
+    <div id="timeline"></div>
 
     <div class="empty noprint" id="timelineEmpty">
       <div class="glyph" aria-hidden="true">🕰️</div>
@@ -1549,12 +1566,13 @@ body{
 
     <div class="noprint">
       <button class="btn plain block hidden" id="moreBtn" type="button">Show earlier entries</button>
-      <p class="hint" id="timelineHint">Tapped the wrong one? Hit ✕ on the row — you get a few seconds to undo.</p>
+      <p class="hint hidden" id="hiddenNote"></p>
+      <p class="hint" id="timelineHint">Tapped the wrong one? Hit ✕ on the row — Undo stays in reach even if you tap something else. Logged it late? Tap the time on the row to move it, and a time later than now is read as yesterday.</p>
       <p class="savedline hidden" id="saveState"><span class="dot" aria-hidden="true"></span><span id="saveStateText">Saved on this device</span></p>
     </div>
   </section>
 
-  <section class="card noprint" aria-labelledby="h-backup">
+  <section class="card noprint" id="backup" tabindex="-1" aria-labelledby="h-backup">
     <h2 id="h-backup">Backup</h2>
     <p class="sub">A backup file is the only copy that exists anywhere else. Export one now and then — especially before clearing your browser.</p>
     <div class="row">
@@ -1568,7 +1586,9 @@ body{
 </div>
 
 <p id="announce" class="sr-only" role="status" aria-live="polite"></p>
-<div id="toast" role="status" aria-live="polite"></div>
+<!-- The message and the Undo are two long-lived children with two clocks, so a
+     later message can never delete the way back out from under a parent. -->
+<div id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="undoBtn" class="undo" type="button" hidden>Undo</button></div>
 <footer class="colophon">No cloud. No account. No one mining your baby's data.<br>A free tool by <a href="../">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Baby%20Log">Feedback</a></footer>
 
 <script type="module" src="app.js"></script>

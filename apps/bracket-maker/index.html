@@ -1467,13 +1467,15 @@ button.slot{cursor:pointer}
     background:transparent !important;
     color:#000 !important;
     font-weight:700;
-    box-shadow:inset 3px 0 0 #000;
+    border-left:3px solid #000;
+    padding-left:calc(var(--s3) - 3px);
   }
   .match .slot.winner .nm::after{content:' \2713'}
   .match .slot.winner .seed{color:#000}
   .match span.slot{color:#333}
 }
 </style>
+<style id="bmPageStyle"></style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
@@ -1489,29 +1491,66 @@ button.slot{cursor:pointer}
   <main id="main">
 
   <section class="card noprint">
-    <input type="text" id="titleInput" maxlength="60" placeholder="Name it — “Chili Cook-off 2026”">
-    <h2 style="margin-top:12px">Who's in? (order = seeding, top seed first)</h2>
-    <textarea id="entrants" placeholder="Aunt Rosa's Red
+    <h2>Set up the bracket</h2>
+    <p class="trust">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>No server, no account, no ads.</b> Entrant names, results and the event name are kept in this browser and packed into the link you copy — nothing is uploaded. Whoever you send that link to can read the whole bracket, so send it the way you would hand over the sheet of paper.</span>
+    </p>
+
+    <label class="f"><span>Event name</span>
+      <input type="text" id="titleInput" maxlength="60" placeholder="Chili Cook-off 2026" aria-describedby="titleHint"></label>
+    <p class="hint" id="titleHint">Shows above the bracket, in the browser tab and on the printed sheet.</p>
+
+    <label class="f"><span>Who's in? One per line — the order is the seeding, top seed first</span>
+    <textarea id="entrants" aria-describedby="entrantsHint entrantCount" placeholder="Aunt Rosa's Red
 Dad's 'Famous' Five-Alarm
 Office Microwave Special
-The Vegan Dark Horse"></textarea>
-    <p class="hint">2 to 32 entrants. Odd numbers get byes, seeded properly — the top two can only meet in the final.</p>
+The Vegan Dark Horse"></textarea></label>
+    <p class="hint" id="entrantsHint">2 to 32 entrants, up to 40 characters each. Odd numbers get byes, seeded properly — the top two can only meet in the final. Fix a typo any time: results stay put.</p>
+    <p id="entrantCount">No entrants yet</p>
+    <p class="warn" id="capWarn" hidden></p>
+    <p class="savedrow"><span data-saved-flag></span></p>
   </section>
 
-  <section class="card">
+  <section class="card" id="outCard">
+    <div class="warn noprint" id="visitNotice" hidden>
+      <p>You are looking at a bracket someone sent you. Your own — <b id="mineName"></b> — is still saved on this device and has not been touched.</p>
+      <div class="row">
+        <button class="btn small" id="openMine" type="button">Open mine instead</button>
+        <button class="btn small ghost" id="keepThis" type="button">Keep this one instead</button>
+      </div>
+    </div>
+
+    <div class="printonly printhead">
+      <h2 id="printTitle">Tournament bracket</h2>
+      <p id="printMeta"></p>
+    </div>
+
+    <h2 id="eventTitle" hidden></h2>
     <div id="champ" aria-live="polite"></div>
-    <div class="bracket" id="bracket"></div>
-    <p class="hint noprint">Tap a name to advance them. Tap the other name to change your mind — later rounds adjust honestly.</p>
+
+    <div class="empty" id="emptyState">
+      <div class="glyph" aria-hidden="true">🏆</div>
+      <h3>No bracket yet</h3>
+      <p>Type or paste at least two names above — one per line — and the bracket draws itself as you go.</p>
+    </div>
+
+    <div class="bracketwrap">
+      <div class="bracket" id="bracket" role="group" aria-label="Bracket"></div>
+    </div>
+    <p class="hint scrollcue noprint" id="scrollCue" hidden>Later rounds are off to the right — swipe or scroll sideways.</p>
+    <p class="hint noprint" id="playHint" hidden>Tap a name to advance them. Tap the other name to change your mind — later rounds adjust honestly.</p>
   </section>
 
   <section class="card noprint">
+    <h2>Share and print</h2>
     <div class="row">
-      <button class="btn" id="shareBtn" type="button">Copy link (live bracket)</button>
+      <button class="btn primary" id="shareBtn" type="button">Copy snapshot link</button>
       <button class="btn" id="qrBtn" type="button">Show QR</button>
       <button class="btn" id="printBtn" type="button">Print</button>
-      <button class="btn" id="resetBtn" type="button">Clear results</button>
+      <button class="btn danger" id="resetBtn" type="button">Clear results</button>
     </div>
-    <p class="hint">The whole bracket lives in the link — send it to the group chat and update it as games finish.</p>
+    <p class="hint">The whole bracket travels inside the link, which is why it needs no account — but that also makes it a <b>snapshot</b>. Results you record after copying will not appear for anyone holding the old link, so send a fresh one when the games are done.</p>
   </section>
   </main>
 </div>
@@ -1519,10 +1558,16 @@ The Vegan Dark Horse"></textarea>
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">On your device, in the link, nowhere else — no accounts, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Bracket%20Maker" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan to open the bracket</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+<dialog id="qrDlg" class="qrdlg" aria-labelledby="qrTitle">
+  <h2 id="qrTitle">Scan to open this bracket</h2>
+  <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code holding the bracket link"></canvas>
+  <p class="warn" id="qrDense" hidden>This bracket is big, so the code is dense. If a camera will not read it, copy the link below instead.</p>
+  <p class="hint" id="qrUrlLabel">Or read the link out — it works the same:</p>
+  <p class="qrurl" id="qrUrl"></p>
+  <div class="row">
+    <button class="btn primary" id="qrCopy" type="button">Copy link</button>
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
