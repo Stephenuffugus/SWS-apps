@@ -1,0 +1,449 @@
+{
+  "slug": "packing-list",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Nadia Okonkwo",
+        "who": "34, product manager, high tech confidence, no access needs. Her incumbent is the research's 'silent majority' — she duplicates last year's Google Keep note every trip and edits it. She came here because someone in a group chat sent a link, and she is the sceptic the research quotes ('anyone with a brain can list what they need') right up until she taps a preset.",
+        "context": "23:10 the night before an 06:15 flight. iPhone at 414×900, light mode, bedroom lamp on, suitcase half-packed on the bed. One hand on the phone, the other folding. Tired, mildly anxious, not calm — exactly the first of the three states the research names.",
+        "task": "Get a Tahoe long-weekend list built — essentials plus camping plus winter — name it, and be able to look at it in the taxi tomorrow.",
+        "verdict": "Finished in about 90 seconds and was genuinely won over by the compose-not-replace presets: three taps produced 26 items with zero duplicates in 326ms. But the app never once told her it had saved anything, her trip name came out as a 12px grey shout, and by item 26 the list was an undifferentiated 26-row scroll with no sections and no way to hide what she had already packed.",
+        "delights": [
+          "Three preset taps → 26 items, case-insensitively de-duplicated, no wall, no signup, no 'create your first trip' screen. All seven presets compose into 56 items with zero duplicates in 326ms.",
+          "Typing the trip name updates the list heading live as she types, and it survives a reload.",
+          "'Already have all of those' when she re-tapped Essentials — the app knew, and said so."
+        ],
+        "frictions": [
+          {
+            "what": "Her trip name renders as a 12px ALL-CAPS letterspaced eyebrow. 'Zoë's bachelorette' came out as 'ZOË'S BACHELORETTE' at 12px in --ink-2; 'Mum's hospital bag' the same. Even at the Largest text setting it only reaches 18px and is still uppercased.",
+            "severity": "major",
+            "whyItMatters": "#listHead is a direct child of section.card so it inherits the base card-eyebrow rule (index.html:455) whose own comment says --t-micro is for 'uppercase labels only, never sentences'. It is the only identifier on the printed sheet and the only thing distinguishing this trip from the last one."
+          },
+          {
+            "what": "The preset chips — the app's whole onboarding — are 28px tall and 1.08:1 against the card they sit on (fill #eaf8f6 on #fbfffe), with a 1.34:1 border and cursor:default on desktop. She read them as tags for a second before trying one.",
+            "severity": "major",
+            "whyItMatters": "Seven buttons at 28px against a 44px --tap floor, and a control boundary at 1.08:1 against a WCAG 1.4.11 requirement of 3:1. This is the fastest path to a useful list and it is styled as passive metadata."
+          },
+          {
+            "what": "26 items arrive as one flat insertion-ordered list — no sections, no sort, no 'hide packed'. At 414px the list is 3,415px tall; the full seven-preset list is 4,421px of page, roughly seven screens.",
+            "severity": "major",
+            "whyItMatters": "This is the PackPoint complaint the research files verbatim ('you cannot reorder items, and long generated lists become unmanageable'), inherited at exactly the scale the presets create."
+          },
+          {
+            "what": "Nothing ever says the list is saved. save() runs on every mutation and produces no feedback at all; the word 'Saved' appears once, at the end of a 15px hint under four buttons, in a sentence mostly about link sharing.",
+            "severity": "minor",
+            "whyItMatters": "sws-ui.js is loaded and exposes SWS.saved(); app.js calls it zero times. The portfolio's own audit note says saving is fire-and-forget across the apps and the user's only evidence is that nothing happened."
+          }
+        ]
+      },
+      {
+        "name": "Ray Castellanos",
+        "who": "61, retired electrician, mild essential tremor in both hands, reading glasses left in the car. Moderate tech confidence — he uses his phone daily but zooms everything. He is the person the comfort panel exists for.",
+        "context": "06:05, back seat of an airport taxi, phone at 414×900 in dark mode, one hand braced on a suitcase handle, the other thumbing the screen while the car moves. The research's second state exactly.",
+        "task": "Check off the last six things on a hospital-bag list his daughter shared with him, and delete the two he decided against.",
+        "verdict": "The comfort panel is the best thing in the app and he found it immediately — but it did not save him. A tremor double-tap on the ✕ deleted two different items, one of them the insulin, with no confirmation, no toast and no undo. He did not notice until he was at the gate.",
+        "delights": [
+          "The comfort button sits in the header at 36×36 next to the tip jar, opens a real dialog, and every option chip is a full 44×44 target — measured at both 320px and 414px. Largest took the root font from 16px to 24px and item text from 15.68px to 23.52px, 'Easier reading' added 1.152px of letter-spacing, both persisted across a reload, and the page never scrolled sideways (0px overflow at 320 and 414, at xxl, roomy and high contrast).",
+          "Done and Reset stayed on screen at every text size, and axe-core found zero violations with the panel open."
+        ],
+        "frictions": [
+          {
+            "what": "Two taps 45ms apart on one ✕ deleted TWO items: 'Insulin' and 'Reading glasses'. Five taps at one spot on a six-item list left one item standing. No confirm, no toast, no undo, and the list re-renders under the finger so the second tap lands on whatever moved up into that slot.",
+            "severity": "blocker",
+            "whyItMatters": "app.js:82 splices and re-renders immediately. The studio ships the fix twice over — #toast .undo is styled at index.html:781 and sws-ui.js exposes SWS.undo, verified loaded on the page (window.SWS.undo === function) and called zero times. The research's own line: 'a mis-tap while walking is not a decision'."
+          },
+          {
+            "what": "The ✕ is 25×32px at default and only reaches 31×43px at the Largest text setting — it never clears 44px at any comfort setting, and it has no hover or focus styling of its own.",
+            "severity": "major",
+            "whyItMatters": "The smallest target on the page is also the only destructive one. DESIGN-SYSTEM.md's invariant is that --tap is floored at 44px and grows with text size precisely because someone raising the text is often doing it for tremor."
+          },
+          {
+            "what": "The preset chips stay at 28px by default and only reach 37px at Largest — the comfort panel cannot lift them to the floor either, because .chip has no min-height.",
+            "severity": "major",
+            "whyItMatters": "The one control class the panel is powerless over is the one the app uses for its primary action."
+          },
+          {
+            "what": "At 320px, selecting Largest from inside the panel pushed the live sample out of the dialog's scroll view, so the setting he just changed had nothing visible to act on.",
+            "severity": "minor",
+            "whyItMatters": "The sample exists so a change is legible without closing the panel; at the smallest phone width and the largest text it stops doing its job. Done and Reset stayed on screen throughout, which is the important half."
+          }
+        ]
+      },
+      {
+        "name": "Priya Raghunathan",
+        "who": "38, packing for a household of four — herself, her partner, a 7-year-old and a toddler. This is the research's single most-requested category feature ('PackPoint can only be used for one person'; Packr puts family mode behind Premium). Confident with apps, impatient with signups.",
+        "context": "Airport departures, 05:50, 414×900, standing, boarding pass in the other hand, airport wifi doing nothing. She wants to push the kids' list to her partner's Android across the terminal.",
+        "task": "Build one composite list, then hand the kids' half to her partner by QR without either of them making an account.",
+        "verdict": "The share model is genuinely better than anything the paid apps offer — but it broke at exactly her size of list, and the app blamed itself in four words and stopped. She ended up reading items aloud.",
+        "delights": [
+          "Beach + With kids + International + Winter compose into one coherent list rather than 'a bunch of mini trips' — the acknowledged PackPoint failure, solved and unadvertised.",
+          "The whole thing works with the radio off. Verified: service worker registered, context set offline, full reload succeeded, all 7 presets and 9 items intact, adding and checking an item still worked, and the QR dialog still opened — vendor-qrcode.js is precached. Wanderlog charges $49/yr for this."
+        ],
+        "frictions": [
+          {
+            "what": "'Show QR' fails outright once the encoded list passes roughly 2,330 characters. Measured ladder at 414px: 54 items → QR drawn; 56 items → drawn; 58 items → 'Could not draw the QR' and the dialog never opens. Her real list was 61 items.",
+            "severity": "blocker",
+            "whyItMatters": "app.js:152 calls qrcode(0,'M') with no fallback and app.js:163 reports the hard version-40 capacity limit as a mystery. Dropping to error-correction 'L' buys ~27% more, and past that the honest message is 'too long for a QR — use Copy link', which still works at any size."
+          },
+          {
+            "what": "Below that cliff the QR degrades into something unscannable rather than failing. At 20 items the code is 109 modules at 2px each (218px on a 300px canvas). At 40 items it is 153 modules at 1px each — 153 CSS pixels wide with a 73px white margin around it. The code gets physically SMALLER as the list grows.",
+            "severity": "blocker",
+            "whyItMatters": "app.js:156 is cell = Math.floor(size / (count + 8)); at 129+ modules that floors to 1, so the QR occupies half the canvas at one device pixel per module. A phone camera cannot resolve that across a terminal. The failure is silent — it looks like a QR."
+          },
+          {
+            "what": "A shared link carrying more than 300 items silently arrives as 300. Sent 420, received exactly 300 ('Thing 1' … 'Thing 300'), and the toast said 'List loaded from the link'.",
+            "severity": "blocker",
+            "whyItMatters": "helpers.js:58 slices at 300 and the recipient is told it succeeded. The research names this the category's defining betrayal and the seating-chart review found the identical shape of bug at 1,000 guests."
+          },
+          {
+            "what": "One list, one key. app.js:37 is `const KEY = 'packing-list'` holding a single {name, items}. Building the kids' list means overwriting her own, and 'Uncheck all (reuse trip)' is the entire reuse story.",
+            "severity": "major",
+            "whyItMatters": "Every competitor including the abandoned ones has multiple trips; TripList charges $19.99/yr for the second one. The research calls reuse 'the category's unsolved problem'."
+          }
+        ]
+      },
+      {
+        "name": "Tomás Lindqvist",
+        "who": "29, developer with RSI, keyboard-only for most of the day — Tab, Space, Enter, no pointer. Expert user, zero patience for a widget that loses his place.",
+        "context": "Desk, 1280×900, light mode, two hands on a split keyboard, mid-afternoon. Packing for a two-week work trip while a build runs.",
+        "task": "Build a business + international list of ~30 items and tick off what is already in the bag.",
+        "verdict": "Building the list was fine. Checking things off was not usable: every single Space press throws focus to <body>, and getting back to where he was cost 61 Tab presses. He finished with the mouse, resenting it.",
+        "delights": [
+          "Enter in the 'Add your own' field adds the item and returns focus to the field, so he could type twelve items in a row without touching the mouse. That path is genuinely well built.",
+          "Escape closes the QR dialog. axe-core reports zero WCAG 2.0/2.1/2.2 A+AA violations on the cold page, on a 56-item list, and with the comfort panel open."
+        ],
+        "frictions": [
+          {
+            "what": "Toggling a checkbox destroys and recreates the entire list. Measured: focus on item 30's checkbox, press Space, document.activeElement becomes BODY, and it took 61 Tab presses to get back to item 31. On item 4 it took 9.",
+            "severity": "blocker",
+            "whyItMatters": "app.js:77 calls renderList() on change and app.js:67 does list.replaceChildren(). It is a flat WCAG 2.1.1 operability failure on the app's only verb, and it costs nothing to fix — toggle li.classList and update the counter in place."
+          },
+          {
+            "what": "Both text inputs have no label at all. Zero <label> elements exist in the static markup; the placeholder is the entire naming mechanism, and on a 414px screen the 'Add your own' placeholder is clipped mid-word ('Add your own — \"Nintendo Swi') — 263px of text in 237px of field.",
+            "severity": "major",
+            "whyItMatters": "The standard battery flags both as placeholderOnly. Once he types, the field is anonymous. The one visible instruction in the field is also the one that is cut off."
+          },
+          {
+            "what": "No skip link, and the third card has no heading. He tabs the prefs button and the tip jar on every visit before reaching content, and the four action buttons are an unnamed group in the heading tree.",
+            "severity": "minor",
+            "whyItMatters": "index.html has <main id=\"main\"> but no <a class=\"skip\">, and the base defines .skip at index.html:832 with a comment saying it should be in every app. Card headings read ['Start from a preset (tap to add)', 'Your list', null]."
+          },
+          {
+            "what": "The progress bar is invisible to assistive tech and the counter never announces. .fillbar has no role, no aria-valuenow; #fillText has no aria-live, so '8 packed · 48 to go' changes silently on every tick.",
+            "severity": "minor",
+            "whyItMatters": "The only live region on the page is #toast, and neither the check handler nor the delete handler toasts. A screen-reader user gets no confirmation that a tap registered."
+          }
+        ]
+      },
+      {
+        "name": "Beverly Ansah",
+        "who": "57, packs for herself and her husband twice a year, prints the list and tapes it inside the suitcase lid. Her incumbent is the research's closest functional competitor — the free printable PDF blog checklist — and she is exactly the person burned by the email wall ('led in circles after subscribing').",
+        "context": "Kitchen table, 20:30, Windows laptop at 1280, reading glasses on, printer in the next room. Two hands, no time pressure.",
+        "task": "Build a 26-item list, print it, tape it in the lid, tick it with a pen.",
+        "verdict": "The paper is better than the blog printables — no email, no watermark, real black tick-boxes — and she was pleased. But a 26-item list came out as two pages with a title she had to squint at, and the second page held eleven items and nothing else.",
+        "delights": [
+          "The printed checkboxes really do come out as solid black squares, and packed items print with a strikethrough. Verified by rendering the PDF: 8 checked items show filled ☑ plus line-through, 7 unchecked show empty ☐. The earlier audit predicted this would not survive printing; it does.",
+          "The chrome all drops out correctly — header, tip jar, prefs button, preset card, progress bar, counter, add row, action buttons, footer and every ✕ are gone from the sheet. @page margin 14mm, hairline row rules, nothing cut across a page break.",
+          "No email address, no download folder, no watermark, and she can edit it and reprint next year."
+        ],
+        "frictions": [
+          {
+            "what": "The paper is half empty. 15 items fit a Letter page in one narrow column; her 26-item list printed on 2 pages and a 120-item list printed on 8. Row pitch is ~46pt, and the right two-thirds of the sheet is blank.",
+            "severity": "major",
+            "whyItMatters": "A packing list taped inside a lid should be one page. `columns:2` on #list inside the print block halves it immediately, and the base card's break-inside:avoid (which the app layer at index.html:1259 does not override) is fighting the paginator on a container taller than a page."
+          },
+          {
+            "what": "The printed title is 'TAHOE LONG WEEKEND' at 12px in #333 uppercase — the only identifier on the sheet. No date, no item count, no app name or URL anywhere on the paper.",
+            "severity": "major",
+            "whyItMatters": "index.html:1256-1261's print block hides header.app and footer.colophon and puts nothing back. .printonly is defined in the base at index.html:1199 and used nowhere. Next year she has a sheet of ticked boxes and no idea which trip it was."
+          },
+          {
+            "what": "Ctrl-P on an empty list prints a page containing only the onboarding sentence: 'YOUR LIST / Tap a preset above, or add your own below. Nothing beats the feeling of an all-checked list at the front door.'",
+            "severity": "minor",
+            "whyItMatters": "The Print button guards on items.length === 0 (app.js:113) but the browser's own print command bypasses the guard entirely, and #emptyHint carries no .noprint."
+          }
+        ]
+      },
+      {
+        "name": "Dee Whitmore",
+        "who": "44, warehouse supervisor, cracked mid-range Android, low data allowance, roaming switched off. Deeply suspicious of anything that wants an account — the research's 'zero adoption cost' user who would otherwise reuse a note.",
+        "context": "Airport lounge, 320×720, wifi captive portal she refuses to sign into, mobile data off, phone at 11% battery. One hand.",
+        "task": "Open the link her sister sent, check she has everything, and hand the list to her son's phone.",
+        "verdict": "The offline promise is real and it is the best thing here — she tested it deliberately and it passed. But the link her sister sent had been mangled by the messaging app, and the page just sat there empty with no explanation, which read as broken rather than as a bad link.",
+        "delights": [
+          "Radio off, full reload, everything still there — app, presets, list, adding, checking, even the QR generator. This is the dare the research says to run ('turn the wifi off, it still works') and the build earns it.",
+          "At 320px nothing overflows (0px horizontal scroll), the four action buttons stack full width at 246px each, and the QR dialog fits at 282px with a 246px canvas — the earlier audit's prediction that it would overflow a 320px screen does not reproduce."
+        ],
+        "frictions": [
+          {
+            "what": "A corrupted or truncated share link produces an empty app and total silence. Four malformed hashes (non-base64, padded junk, a valid base64 object with no items array, a valid object with i as a string) all rendered 0 items with no message, and the junk hash was left sitting in the address bar.",
+            "severity": "major",
+            "whyItMatters": "helpers.js:61 returns null on any failure and app.js:126 then does nothing at all — no toast, no warn block, no replaceState. A link is the app's whole sharing story and messaging apps break long URLs routinely; hers was 1,185 characters."
+          },
+          {
+            "what": "When she did get a good link, the app asked with a native confirm() — 'Open the shared list \"Their trip\"? Your current list (2 items) will be replaced.' She tapped Cancel to finish checking off first, and the link was gone: the hash is stripped whether she accepts or declines.",
+            "severity": "major",
+            "whyItMatters": "app.js:137 runs history.replaceState outside the confirm branch, so declining destroys the only copy of the shared list — reload will not bring it back. There is also no 'merge into my list' option, even though mergePreset proves the app can merge without duplicating."
+          },
+          {
+            "what": "The privacy and offline promise appears nowhere except 15px grey footer copy. There is no .trust block in the body — the component the design system built specifically because 'users do not believe \"private\" as body copy'.",
+            "severity": "minor",
+            "whyItMatters": "The one thing that would have converted her on sight is the one thing rendered in the smallest type on the page."
+          },
+          {
+            "what": "'Copy link', 'Show QR' and 'Print' all look enabled on an empty list and then refuse with 'Add some items first'. 'Uncheck all (reuse trip)' is the FIRST and most prominent of the four, full-width at 340×44, and means nothing on a cold open.",
+            "severity": "minor",
+            "whyItMatters": "Four identical full-width buttons with the destructive one at the top and no primary anywhere. .btn.primary is defined in the sheet and used zero times, so the accent colour never appears on a control in this app."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "Presets that compose instead of replace. Seven presets tapped in sequence produce 56 items with zero duplicates in 326ms, case-insensitively de-duplicated by helpers.js mergePreset, and re-tapping says 'Already have all of those'. This is the direct answer to PackPoint's acknowledged multi-stop failure and nobody is told about it.",
+        "Offline is real, and it covers the whole app. With the service worker registered and the browser context set offline, a full reload restored the app, the presets, the saved list, and adding, checking and the QR generator all still worked — vendor-qrcode.js is precached in sw.js. Wanderlog gates this behind $49/yr and PackPoint cannot do it at all.",
+        "The comfort panel. Opens from the header, real fieldsets of real radios, every option chip a full 44×44 target at both 320px and 414px, Done and Reset always on screen, choices persist across reload, and axe-core returns zero violations with it open. Largest takes the root from 16px to 24px and item text to 23.52px with 0px of horizontal overflow at 320px, 414px, roomy spacing, high contrast, dark and warmth 3.",
+        "Text safety and data hygiene. '<script>', '<img src=x onerror=…>' and 'javascript:' payloads in a shared link render as literal text with zero injected nodes; '__proto__' and 'constructor' as item labels leave Object.prototype clean; non-string entries are dropped rather than printed as [object Object]; Arabic, Japanese, Greek, fullwidth and ZWJ-emoji labels all render correctly. Zero console errors across every run in this review.",
+        "The print sheet, as far as it goes. Checked items really do print as solid black ☑ with a strikethrough and unchecked as empty ☐; all chrome drops out; @page margins and break-inside on rows are correct. It beats the email-gated blog printable it competes with.",
+        "Performance is not a problem at any realistic size. A checkbox toggle on a 300-item list costs 6.8ms end to end; 200 adds through the real UI take 280ms; 30 rapid clicks on Add produce exactly one item. Twenty checkbox taps at a human cadence all registered, 20 of 20."
+      ],
+      "hurts": [
+        "Deleting is instant, irreversible and mounted on the smallest target on the page. Two taps 45ms apart on one ✕ deleted two DIFFERENT items — the list re-renders under the finger and the row below slides into the slot. Five taps at one spot left one item of six. No confirm, no toast, no undo, and SWS.undo is loaded on the page and never called.",
+        "Checking things off is unusable from a keyboard. Every Space press rebuilds the list and drops focus to <body>; getting back to item 31 after checking item 30 took 61 Tab presses.",
+        "The share path breaks at family scale and blames itself. QR generation dies above ~2,330 encoded characters (58 items with ordinary labels) with 'Could not draw the QR' and no fallback; below that it degrades to a 1-pixel-per-module code that looks fine and cannot be scanned. A shared link over 300 items silently arrives as 300 while the toast reports success.",
+        "Saving can fail completely and silently. app.js:48 wraps setItem in an empty catch: with setItem instrumented to throw, the app showed 10 items and 1 checked, toasted '9 items added', logged zero errors — and after a reload the list was empty. There is no export, no download, no second copy anywhere.",
+        "The user's own trip name is rendered as a 12px uppercase grey eyebrow — on screen, and as the only identifier on the printed sheet, where it prints at 12px in #333 with no date and no URL.",
+        "The primary action does not look like one and the destructive one does. Preset chips are 28px at 1.08:1 against their card with cursor:default; 'Uncheck all (reuse trip)' is the first of four identical full-width buttons directly under the list, with no undo; .btn.primary is defined and used zero times.",
+        "The emotional payoff is off-screen at the moment it happens. Ticking the last of 56 items leaves '🎉 All packed!' and the full teal bar 2,546px above the fold, with no toast. The research says the design should build toward exactly that moment.",
+        "A broken share link is indistinguishable from a broken app: four malformed hashes each produced an empty list, no message, and the junk left in the address bar. Declining the native confirm() on a good link destroys the link too."
+      ],
+      "mostWantedNext": [
+        "Undo on every destructive path — item delete, 'Uncheck all', and shared-link replace — using the SWS.undo already loaded on the page.",
+        "Multiple saved trips with duplicate-and-rename. One localStorage key means starting a second trip overwrites the first; this is the category's most-repeated complaint and it is pure local work.",
+        "'Download list' / 'Open a saved list' as a real file, next to Copy link and QR. It is the answer both to silent save failure and to the reinstall story the research quotes ('custom templates gone after a reinstall').",
+        "Category grouping and a 'Hide packed' toggle. Retagging PRESETS from flat strings to {label, cat} makes sections free, and hiding packed items is what makes a 56-item list finishable one-handed.",
+        "Edit an item's label in place. Add and delete are the only operations; a typo costs a delete and a retype, which is the exact complaint filed against TripList.",
+        "Per-item owner tags ('Mia', 'Sam') with a filter, so one list covers a household — the single most-requested thing in the category and premium-only everywhere else.",
+        "Say the offline promise out loud with the .trust component, worded as the dare the research suggests, and make the print sheet two columns with a date and the tool's URL."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": false,
+    "scenarios": [
+      {
+        "name": "Standard battery — node design/stress.mjs packing-list",
+        "method": "Ran the shared battery unchanged: layout at 320/414/1280 and at largest text and roomy spacing, touch targets, hostile text and injection, numeric edges, rapid clicking, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
+        "result": "1 HARD failure. Layout clean at all five configurations; hostile text clean (0 injected scripts/imgs, no title hijack); numeric edges clean; reload persisted 555→555 chars; booted with corrupt storage, newErrors 0; axe clean; console clean. Hard failure is keyboard reachability: 18 focusable nodes, 0 unreachable, but input#tripName and input#customItem are both unnamed and placeholder-only. Touch targets reported button.chip at 110×28 through 133×28 for all seven presets. 'rapid clicking the primary action' reported 'no primary button found' — accurate, the app has no .btn.primary. '200 rapid adds' reported ran:false with storage=50B, so that path was re-run by hand below.",
+        "defect": "Two unlabeled inputs; seven 28px primary-action chips; no primary button exists for the battery to find.",
+        "severity": "major"
+      },
+      {
+        "name": "Tremor: repeated taps on the remove ✕",
+        "method": "Six-item hospital-bag list. Took the bounding box of the ✕ on row 2 and clicked its centre twice, 45ms apart, with page.mouse (no re-query between clicks). Then rebuilt and fired five clicks 35ms apart at row 1's ✕.",
+        "result": "Double tap deleted TWO items — before ['Passport','Insulin','Reading glasses','Phone charger','Wallet & ID','Keys'], after ['Passport','Phone charger','Wallet & ID','Keys']. Insulin and Reading glasses both gone. Toast not shown, 0 undo buttons in the DOM. Five taps at one spot left exactly one item: ['Keys']. window.SWS.undo is present and was never invoked. A double tap on a checkbox is harmless by comparison — it toggles back off, 0 checked.",
+        "defect": "Every tap on ✕ deletes immediately and re-renders, so consecutive taps at one screen position delete consecutive different items. No confirm, no toast, no undo, no recovery.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Keyboard: focus survival across a check",
+        "method": "56-item list (all seven presets). Focused the checkbox of item 30 via .focus(), pressed Space, read document.activeElement, then pressed Tab repeatedly until focus landed inside item 31, counting presses. Repeated for item 4.",
+        "result": "After Space, document.activeElement.tagName === 'BODY' every time. 61 Tab presses to reach item 31; 9 presses to reach item 5 after checking item 4. Each row contributes two tab stops (checkbox, ✕), and focus resumes at the top of #list because replaceChildren() emptied the container that held the focused node.",
+        "defect": "renderList() (app.js:65-84, replaceChildren at :67) runs on every checkbox change (app.js:77), destroying the focused element. Checking off a list is not keyboard-operable at any realistic length.",
+        "severity": "blocker"
+      },
+      {
+        "name": "QR capacity ladder and module resolution",
+        "method": "Seeded lists of 20/40/50/54/56/58/59/60/61 items with 29–31 character labels, reloaded, clicked Show QR, and read back the canvas pixels: located the code's bounding box, measured the top-left finder pattern's dark run to derive module size, and computed module count. Also measured the realistic seven-preset list.",
+        "result": "Drawn up to 56 items / 2,295-character URL. Fails from 58 items / 2,375 characters: dialog never opens, toast 'Could not draw the QR'. Module resolution degrades badly before that: 20 items → 109 modules at 2px, code 218px wide; 40 items → 153 modules at 1px, code 153px wide with a 73px white margin; 54–56 items → 177 modules at 1px, code 177px wide. The code physically shrinks as data grows because app.js:156 is cell = Math.floor(size / (count + 8)). The realistic all-presets list (56 short-label items, 1,185-char URL) draws 129 modules at 2px = 258px, which is fine.",
+        "defect": "Hard cliff at QR version 40-M capacity reported as a four-word mystery with no fallback (error-correction 'L' would buy ~27% more; Copy link works at any size). Below the cliff, one device pixel per module renders an unscannable code that looks correct.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Shared-link decode: caps, hostile payloads and garbage",
+        "method": "Built base64url hashes by hand, cleared localStorage, set location.hash and forced a document reload so init() ran, then read the rendered list, the heading, injected node counts, Object.prototype and the surviving URL. Payloads: 420 items; XSS in name and items; __proto__/constructor/toString/hasOwnProperty as labels; mixed non-string entries; a 400-char name with 500-char labels; Arabic/Japanese/Greek/fullwidth/ZWJ-emoji/newline labels; an empty items array; and four malformed hashes.",
+        "result": "420 items in → exactly 300 rendered ('Thing 1'…'Thing 300'), toast 'List loaded from the link'. XSS: 3 items rendered as literal text, 0 injected script/img nodes, no window pollution. __proto__ payload: Object.prototype clean. Mixed types: 6 entries in, 1 rendered (only the string survived), no '[object Object]' anywhere. Long strings truncated to 60 characters silently. All Unicode rendered correctly. Empty array → 0 items, heading 'Your list'. All four malformed hashes → 0 items, no toast, no message, and the junk hash left in the address bar.",
+        "defect": "Two silent losses reported as success: 120 items discarded at helpers.js:58 with a success toast, and non-string entries dropped. A malformed link is indistinguishable from a broken app — helpers.js:61 returns null and app.js:126 does nothing at all.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Shared link arriving over an existing list",
+        "method": "Seeded a 2-item list with one item checked, then loaded a hash carrying a different 2-item list, once dismissing the native dialog and once accepting it. Read the dialog text, the resulting list, the checked count, the stored value and the surviving URL.",
+        "result": "confirm() fires with 'Open the shared list \"Their trip\"? Your current list (2 items) will be replaced.' Dismiss: own list intact, its checked item still checked, localStorage unchanged — correct. Accept: list replaced with ['Tent','Stove'], heading 'Their trip' — correct. But in BOTH cases location.hash is empty afterwards.",
+        "defect": "history.replaceState at app.js:137 runs outside the confirm branch, so declining a shared link destroys it — reload cannot recover it. There is also no merge option, though mergePreset already merges without duplicating.",
+        "severity": "major"
+      },
+      {
+        "name": "Silent save failure",
+        "method": "Could not exhaust the real quota in headless Chromium — 5,241,600 characters across 79×64KB and 251×256B keys still left room for the app's own 54-byte record. So Storage.prototype.setItem was instrumented to throw QuotaExceededError for the 'packing-list' key only, then a preset was added, a custom item added and an item checked, and the page reloaded.",
+        "result": "10 items on screen, 1 checked, toast said '9 items added', zero console errors, zero page errors. After reload: 0 items. Everything gone with no warning at any point.",
+        "defect": "app.js:47-49 swallows every storage failure in an empty catch. The failure mode is exactly the top-quoted competitor complaint ('Buggy when you need it… loss of packed-item progress'), and there is no export or backup path anywhere in the app.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Print, rendered and inspected as PDF",
+        "method": "Built a named 26-item list with 8 items checked, emulated print media, read computed styles for every element, then generated a real Letter PDF with page.pdf() and rendered page 1 to PNG at 100dpi to look at it. Repeated for an empty list and for a 120-item list.",
+        "result": "Page 1 carries 15 items; the 26-item list is 2 pages, the 120-item list is 8 pages, single column throughout. Checked items DO print correctly: solid black ☑ plus strikethrough, unchecked as empty ☐ — the previous audit's prediction that accent-color:#000 would be inert does not reproduce. Chrome removal is complete: header, tip jar, prefs button, preset card, progress bar, counter, add row, action buttons, footer and all ✕ buttons absent. Title prints as 'TAHOE LONG WEEKEND' at 12px in rgb(51,51,51) uppercase. break-inside on the list card computes to 'avoid'; #list column-count is 'auto'. An empty list printed via the print media path yields one page reading 'YOUR LIST / Tap a preset above, or add your own below…'.",
+        "defect": "One column and ~46pt row pitch waste two-thirds of every sheet; no date, no item count, no tool URL; the empty state prints; break-inside:avoid is applied to a container taller than a page.",
+        "severity": "major"
+      },
+      {
+        "name": "Offline with the radio off",
+        "method": "Loaded the app, added a preset, awaited navigator.serviceWorker.ready, set the browser context offline, forced a full reload, then added an item, checked it, and opened the QR dialog.",
+        "result": "Reload succeeded with no error. Title, all 7 preset chips and the 9 saved items intact. Adding 'Offline item' worked (10 rows), checking it worked (1 checked), and Show QR opened and drew — vendor-qrcode.js is in the sw.js precache list (VERSION 'pack-v14'). Fully functional with no network.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Comfort panel driven at 320 and 414",
+        "method": "Seeded a named 3-item list, opened #swsPrefsBtn from the header, measured every Text size option's box, clicked the visible 'Largest' chip label and then 'Easier reading' the way a person would, closed with Done, measured the page, and reloaded to test persistence. Repeated the whole layout pass at 320-default, 414-xxl, 414-xxl+roomy+high-contrast, 414-dark+warmth3 and 320-xxl.",
+        "result": "Panel opens at 282px (320 viewport) and 360–376px (414). All five Text size chips are 44px tall (95–111px wide). Largest → data-text=\"xxl\", root 16px→24px, item text 15.68px→23.52px; Easier reading → data-reading=\"easy\", body letter-spacing 1.152px. Both persisted across reload. Done stayed on screen in every configuration. Page overflow was 0px in all five configurations, offenders() empty, axe clean with the panel open and closed. Seven fieldsets present: Appearance, Text size, Spacing, Reading, Warm tint, Contrast, Motion.",
+        "defect": "Two things the panel cannot reach: preset chips go 28px→37px and the remove ✕ goes 25×32→31×43 at Largest — neither ever clears the 44px --tap floor, because .chip and .x declare no min-height. At 320px + Largest the live sample scrolls out of the panel's visible area.",
+        "severity": "major"
+      },
+      {
+        "name": "Touch targets and row geometry on a real list",
+        "method": "56-item list at 414×900. Ran smallTargets() and measured the bounding boxes of a row, its checkbox, its label and its ✕, plus the dead gutter between them; then clicked 6px left of the ✕ and on the ✕ itself.",
+        "result": "Row 340×61 with the label at 303×44 (so the label carries the 44px target via the base :has() rule). Checkbox 20×20 at the left edge. ✕ at 25×32, 12px gutter between label and ✕. A tap in the gutter does nothing — no accidental toggle, no accidental delete. Sub-44px controls, at every viewport and every comfort setting: #swsPrefsBtn 36×36, .tipbtn 36 tall, all seven .chip at 28 tall, every .x at 25×32.",
+        "defect": "The 12px dead gutter is good design. The ✕ at 25×32 and the chips at 28 tall are not.",
+        "severity": "major"
+      },
+      {
+        "name": "Rapid and duplicate input",
+        "method": "30 clicks on Add with 'Sunscreen' in the field; 200 sequential adds through the real input and button; 20 checkbox taps at a human cadence (180ms, each row scrolled into view) and again with no delay; and a series of edge-case adds.",
+        "result": "30 rapid Add clicks → exactly 1 'Sunscreen' row, no duplicates. 200 adds → 200 rows in 280ms, 0 errors. Twenty human-cadence checkbox taps → 20 of 20 registered in 3,803ms. Checkbox toggle cost on a 300-item list: 6.8ms (50 items 1.3ms, 100 items 2.0ms, 200 items 4.0ms). Dedupe is case- and whitespace-insensitive: 'socks', '  SOCKS  ' and 'Socks ' were all rejected against 'Socks'. A 120-character label is stored at 60. '0' and 'false' add correctly as labels.",
+        "defect": "Adding whitespace only ('   ') produces no feedback at all — addCustom returns added:0 and app.js:97 only toasts when value.trim() is truthy, so the button appears dead. Minor.",
+        "severity": "minor"
+      },
+      {
+        "name": "Cold open: empty state and enabled-but-inert actions",
+        "method": "Cleared storage, reloaded at 414, measured the empty-state band and every action button's disabled property, then pressed Copy link on the empty list.",
+        "result": "The progress bar renders on an empty list as an 8px empty track, #fillText occupies 0px of height but reserves its margin, and there is a 40px dead band between 'YOUR LIST' and the 15px hint that stands in for an empty state. The base .empty component is not used. shareBtn, qrBtn, printBtn and uncheckBtn are all enabled:  pressing Copy link toasts 'Add some items first'. No .trust block, no skip link; <main> is present. Card headings: ['Start from a preset (tap to add)', 'Your list', null].",
+        "defect": "Three enabled controls that refuse, a decorative empty progress bar, no real empty state, and an unnamed third card.",
+        "severity": "minor"
+      },
+      {
+        "name": "The completion moment",
+        "method": "56-item list with 55 already checked. Scrolled item 56 into view, ticked it, then measured where the progress bar and '🎉 All packed!' were relative to the viewport.",
+        "result": "fillText reads '🎉 All packed!' and the bar goes to a full 340 of 340px — but at the moment of the last tick the bar sits 2,546px above the top of a 900px viewport, on a 4,421px page. No toast fires. The payoff is real and completely invisible where it happens.",
+        "defect": "Progress lives above a list that is up to seven screens long, so the one moment the research says the design should build toward is never seen.",
+        "severity": "major"
+      },
+      {
+        "name": "QR dialog in dark mode and at 320px",
+        "method": "Opened the QR dialog at 320-light, 320-dark and 414-dark with theme forced through the prefs key, and read the dialog's computed background, the heading's colour, the accessible name, canvas size, page overflow and Escape behaviour.",
+        "result": "Dark: dialog background rgb(18,18,18) with the heading at rgb(17,17,17) — a contrast ratio of about 1.01:1. The heading is invisible. The dialog has no aria-labelledby and no aria-label, so it announces only as 'dialog'. Escape closes it correctly and the Close button is a full 44px. At 320px the dialog is 282px wide with a 246px canvas and page overflow is 0px — the earlier audit's predicted 320px overflow does not reproduce, because the base canvas{max-width:100%} shrinks the canvas and the dialog is width-auto.",
+        "defect": "Hardcoded color:#111 on the dialog heading (index.html:1311) against the UA's dark Canvas. No accessible name on the dialog.",
+        "severity": "major"
+      },
+      {
+        "name": "Layout, contrast and axe across the matrix",
+        "method": "overflow(), offenders(), computed colours and axe-core (wcag2a/2aa/21a/21aa/22aa) at 320 default, 414 xxl, 414 xxl+roomy+contrast:more, 414 dark+warmth:3, 320 xxl, and 1280 desktop — cold and with a 56-item list, and with the comfort panel open.",
+        "result": "0px horizontal overflow and 0 offenders in every configuration. axe: 0 violations cold, 0 with 56 items, 0 with the panel open. Contrast measured: preset chip fill 1.08:1 against its card and its border 1.34:1 (WCAG 1.4.11 wants 3:1 for a control boundary); chip label 14.8:1 inside the chip; hint text 5.87:1. At 1280 the container is 672px wide — the base's --wrap:42rem overriding the skin's --wrap:38rem, the portfolio-wide duplicate-token issue, still live. Preset chips compute cursor:default on desktop and neither .chip nor .x has any :hover rule.",
+        "defect": "No layout defects anywhere. The chip boundary contrast and the missing desktop hover/cursor affordances are real; axe cannot see either.",
+        "severity": "minor"
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Make delete undoable, and stop the second tap deleting a second item",
+      "rationale": "Two taps 45ms apart on one ✕ deleted 'Insulin' and 'Reading glasses' from a six-item hospital-bag list; five taps at one spot left one item of six. No confirm, no toast, no undo. Ray's session ended with medication missing from the bag and no way to know. The studio ships the fix twice — #toast .undo is styled at index.html:781 and sws-ui.js is loaded on the page with window.SWS.undo present and called zero times. Stash the removed item and its index, splice, then SWS.undo('Removed Insulin', restore). While there, guard against a re-render landing a new ✕ under a finger that is still coming down (ignore a second delete within ~350ms at the same row position).",
+      "where": "apps/packing-list/app.js:81-82 (the .x button and its splice handler); undo component at apps/packing-list/index.html:781; runtime at apps/packing-list/sws-ui.js:130",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Stop throwing keyboard focus to <body> on every checkbox tick",
+      "rationale": "Measured: focus item 30's checkbox, press Space, activeElement becomes BODY, and 61 Tab presses are needed to reach item 31. Tomás could build a list but could not check one off. app.js:77 calls renderList() on change and app.js:67 does list.replaceChildren(), destroying the focused node. For a toggle, mutate in place — li.classList.toggle('done'), update #fillText and the fill width — and leave the DOM alone. If a full re-render is ever kept, record the focused item's index before replaceChildren() and restore it after. This is a flat WCAG 2.1.1 failure on the app's only verb.",
+      "where": "apps/packing-list/app.js:76-78 (checkbox onchange), apps/packing-list/app.js:65-84 (renderList, replaceChildren at :67)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Never lose a list silently — surface save failure and ship a real backup",
+      "rationale": "With setItem instrumented to throw, the app showed 10 items and 1 checked, toasted '9 items added', logged zero errors, and lost everything on reload. app.js:47-49 swallows every storage failure in an empty catch, and the same pattern is in load() at :41-46. This is the exact top-quoted competitor complaint the research files ('Buggy when you need it' — crashes during use, loss of packed-item progress, templates gone after reinstall), and today we have no second copy of anything: clear the browser or switch phones and the list is gone. Two moves: make save() report a failure loudly and once ('Couldn't save — copy your link now'), and add 'Download list (.txt)' and 'Open a saved list' beside Copy link / QR / Print. The encoder already exists.",
+      "where": "apps/packing-list/app.js:47-49 (save), apps/packing-list/app.js:41-46 (load), new buttons in apps/packing-list/index.html:1295-1303, encoder at apps/packing-list/helpers.js:45-49",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Fix the share ceiling: no silent 300-item truncation, no dead-end QR",
+      "rationale": "Two silent losses on the one feature no competitor can match. A 420-item shared link arrives as exactly 300 items with the toast 'List loaded from the link' (helpers.js:58 slices at 300). And 'Show QR' fails hard from 58 items / 2,375 encoded characters with 'Could not draw the QR' (app.js:152 uses qrcode(0,'M') with no fallback, app.js:163 reports the capacity limit as a mystery). Below the cliff it is worse than a failure: at 40–56 items the code renders 153–177 modules at one pixel each — a 153–177px code with a 60–73px white margin, which no camera can read, because app.js:156 floors cell to 1. Raise or remove the 300 cap and report anything dropped; fall back to error-correction 'L'; and when it genuinely will not fit, say 'Too long for a QR — use Copy link' and open the link path instead. Draw the modules to fill the canvas rather than flooring the cell size.",
+      "where": "apps/packing-list/helpers.js:58 (slice(0,300)), apps/packing-list/app.js:151-166 (showQr — qrcode(0,'M') at :152, cell math at :156, catch at :163)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Give the preset chips and the remove ✕ a real target and a real boundary",
+      "rationale": "The primary onboarding action is seven 28px-tall chips at 1.08:1 fill and 1.34:1 border against their card, with cursor:default on desktop and no hover rule — Nadia read them as tags. The only destructive control is 25×32px with no hover rule either. Neither responds to the comfort panel: at the Largest text setting chips reach 37px and the ✕ reaches 31×43, still under the 44px floor, because .chip and .x declare no min-height. DESIGN-SYSTEM.md:388 makes --tap a floor that grows with text size precisely for tremor and eyesight. Emit a .presetbtn variant (min-height:var(--tap), border-color:var(--line-2), cursor:pointer, hover to --accent-soft, a leading '+') from app.js:55, and retire .x in favour of .btn.icon with a danger hover.",
+      "where": "apps/packing-list/app.js:55 (chip emission) against index.html:637 (.chip); apps/packing-list/index.html:1254 (.x) applied at app.js:81; --tap at index.html:257",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Show the trip name as a name, on screen and on paper",
+      "rationale": "#listHead is a direct child of section.card, so the base card-eyebrow rule (index.html:455) renders the user's own words at 12px, uppercase, letterspaced, in --ink-2 — 'Zoë's bachelorette' becomes 'ZOË'S BACHELORETTE'. At the Largest comfort setting it is still uppercase at 18px. It is also the only identifier on the printed sheet, where it prints at 12px in #333 with no date, no item count and no URL. Keep a static <h2>Your list</h2> eyebrow, render the trip name into a separate element at --t-xl in --ink with no text-transform, and add a .printonly line carrying the date, the packed/total count and the tool's URL.",
+      "where": "apps/packing-list/index.html:1284 (h2#listHead), written at apps/packing-list/app.js:74 and app.js:90; base rule at index.html:455; print block at index.html:1256-1261",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Put the completion moment where the last tick happens",
+      "rationale": "Ticking the last of 56 items sets the bar to a full 340/340px and '🎉 All packed!' — 2,546px above the top of the viewport, on a 4,421px page, with no toast. The research names this exact moment as the emotional payoff the design should build toward, and it is currently invisible to anyone who does not scroll back up. Toast the completion (SWS.toast, already loaded), and either make the progress bar a sticky strip or repeat the counter at the foot of the list.",
+      "where": "apps/packing-list/app.js:70-73 (fill width and fillText), progress markup at apps/packing-list/index.html:1285-1286",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Re-rank the action row: a primary, a heading, and 'Uncheck all' out of the blast radius",
+      "rationale": "Four identical full-width 340×44 buttons with the destructive one FIRST, directly below a list the user has just spent minutes checking off, in a card with no <h2> at all. 'Uncheck all (reuse trip)' wipes every check with no undo and no toast affordance. Copy link, Show QR and Print all look enabled on an empty list and then refuse with 'Add some items first'. .btn.primary is defined at index.html:564 and used zero times, so the accent colour never appears on a control in this app. Add <h2>Share &amp; print</h2>, promote Copy link to .btn.primary and #addBtn too, disable the three output buttons in renderList() when items.length === 0, and move 'Uncheck all' below a divider as .btn.ghost with an undo in its toast.",
+      "where": "apps/packing-list/index.html:1295-1303 (the four buttons, uncheckBtn at :1297), handler at apps/packing-list/app.js:101-105, guards at app.js:107/113/172, #addBtn at index.html:1291",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Label the two inputs, and stop clipping the one instruction the app gives",
+      "rationale": "There is not a single <label> element in the body; the placeholder is the entire naming mechanism for both text fields, and the standard battery flags both as placeholderOnly. On a 414px screen the 'Add your own' placeholder is clipped mid-word — 263px of text in 237px of field, rendering as 'Add your own — \"Nintendo Swi'. Once a user types, both fields are anonymous. Wrap each in the base label.f pattern with visible text ('Trip name' with a hint reading 'Optional — names the printed sheet', and 'Add an item'), which fixes the accessible name and the clipping at once.",
+      "where": "apps/packing-list/index.html:1278 (input#tripName) and apps/packing-list/index.html:1290 (input#customItem); label.f styling at index.html:513",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Make the printed sheet one page and worth taping in a lid",
+      "rationale": "Beverly's 26-item list printed on 2 Letter pages at 15 items per page in a single narrow column; 120 items printed on 8 pages. Row pitch is about 46pt and two-thirds of every sheet is blank. The base's break-inside:avoid on section.card is still live because the app print block at index.html:1259 overrides border and padding but not break-inside, and it is being applied to a container taller than a page. Ctrl-P on an empty list prints a sheet containing only the onboarding sentence, because the Print button's guard at app.js:113 does not cover the browser's own print command and #emptyHint has no .noprint. Add columns:2 (with columns:1 under about 40 items), tighten the row pitch for paper, unset break-inside on the list card, and mark the empty state .noprint. The good news to preserve: black ☑/☐ and strikethrough print correctly today.",
+      "where": "apps/packing-list/index.html:1256-1261 (app print block), base print block at index.html:1173-1229, empty state at index.html:1288",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Handle a broken share link, and stop destroying a link the user declined",
+      "rationale": "Four malformed hashes each produced 0 items, no toast, no message, and left the junk hash in the address bar — Dee could not tell a bad link from a broken app, and share links from this tool run to 1,185+ characters, which messaging apps break routinely. Separately, history.replaceState at app.js:137 runs outside the confirm branch, so tapping Cancel on 'Open the shared list …?' strips the hash too and the link is unrecoverable. Show a .warn block (defined at index.html:662, unused) when decodeList returns null on a non-empty hash; replace the native confirm() with an in-page choice offering 'Open it', 'Merge into my list' (mergePreset already merges without duplicating) and 'Keep mine'; and only strip the hash once the user has chosen.",
+      "where": "apps/packing-list/app.js:126-140 (shared import, confirm at :130, replaceState at :137 and :139), apps/packing-list/helpers.js:50-62 (decodeList returns null at :61)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Fix the QR dialog's invisible heading and give it a name",
+      "rationale": "In dark mode the dialog paints rgb(18,18,18) from the UA's Canvas while its heading is hardcoded to color:#111 — measured at both 320 and 414, a contrast ratio of roughly 1.01:1, so 'Scan to open the list' is invisible exactly when someone is using the app in a dark taxi. The dialog also has no aria-labelledby or aria-label, so a screen reader announces only 'dialog'. Delete the inline colour, style #qrDlg in the app layer from tokens, add id=\"qrTitle\" plus aria-labelledby, and style ::backdrop. Not a defect: at 320px the dialog fits at 282px with 0px page overflow, so no width change is needed.",
+      "where": "apps/packing-list/index.html:1310-1314 (dialog#qrDlg, the inline color:#111 on its h3 at :1311)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Say the offline promise out loud, and say that the list is saved",
+      "rationale": "The app's strongest hard advantage — verified working with the radio off, including the QR generator — is claimed only in 15px grey footer copy, and the .trust component that exists specifically because 'users do not believe private as body copy' is absent from the body. Nothing anywhere confirms a save: save() runs on every mutation, SWS.saved() is loaded and never called, and the word appears once at the end of a hint under four buttons. Add a .trust block near the list header worded as the research's dare ('Turn the wifi off. It still works. Nothing about this list leaves your phone.'), and wire SWS.saved() into save(). Replace the 15px hint standing in for an empty state with the base .empty component, which also removes the 40px dead band and the empty 8px progress track on a cold open.",
+      "where": "apps/packing-list/index.html:1283-1288 (list card header and #emptyHint), .trust at index.html:429, .empty at index.html:694, save() at apps/packing-list/app.js:47-49, SWS.saved at apps/packing-list/sws-ui.js:151",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Group the list and let the user hide what is packed",
+      "rationale": "Three preset taps produce 26 flat insertion-ordered rows; all seven produce 56 rows and a 4,421px page, roughly seven screens at 414×900, with no sections, no sort and no filter. This is the PackPoint complaint the research files verbatim ('you cannot reorder items, and long generated lists become unmanageable') and we inherit it at exactly the scale our own presets create. Two cheap moves before any drag-and-drop: retag helpers.js PRESETS from flat string arrays to {label, cat} so category sections come free, and add a 'Hide packed' toggle so remaining items rise as the work gets done. Performance is not the constraint — a toggle on a 300-item list costs 6.8ms.",
+      "where": "apps/packing-list/helpers.js:3-11 (PRESETS), apps/packing-list/app.js:65-84 (renderList), list markup at apps/packing-list/index.html:1287",
+      "severity": "minor",
+      "effort": "L"
+    }
+  ]
+}
