@@ -1,0 +1,561 @@
+{
+ "slug": "scan-to-pdf",
+ "focusGroup": {
+  "personas": [
+   {
+    "name": "Deshawn Bell",
+    "who": "31, applying for an apartment, high phone confidence but zero patience for installs. Came from a Reddit thread hunting a CamScanner replacement after reading 'the free version puts a visible watermark on exported documents unless you pay'.",
+    "context": "The research's own scene: standing at a leasing-office counter, iPhone in portrait at 414 CSS px, one thumb because the other hand is flattening an 8-page lease against the desk. Fluorescent overhead, his own shadow across the paper. The agent is waiting. He needs to email the signed lease before he leaves the building.",
+    "task": "Photograph 8 pages of a signed lease and get one PDF into his share sheet in under two minutes.",
+    "verdict": "Got 8 pages captured and then lost all of them. A call came in, he took it, and when he came back to Safari the tab had been evicted and reloaded. Eight pages, gone, with no warning and nothing to restore. He re-shot them, exported, and it worked — but he will not use this at a counter again.",
+    "delights": [
+     "First tap is the camera. No splash, no email capture, no account — exactly the 'registration is a disqualifier' complaint the research quotes, answered.",
+     "The export is real and instant: 8 pages, 309ms at 100 pages so his 8 were imperceptible, a genuine .pdf in the download tray, and the toast says 'PDF saved — no watermark, obviously'. Verified against the file: no watermark string anywhere in the bytes.",
+     "It works with the network cut. Reloaded with the context offline and the whole app, pdf-lib included, came back from the service worker."
+    ],
+    "frictions": [
+     {
+      "what": "Nothing is persisted. `let pages = []` (app.js:32) is the only store — measured after 8 captures: localStorage 0 bytes, indexedDB.databases() empty. One reload took the app from 8 cards to 0, the heading from '8 pages' back to 'Pages', with no warning, no beforeunload guard (window.onbeforeunload === null, a dispatched beforeunload is not cancelled) and no recovery.",
+      "severity": "blocker",
+      "whyItMatters": "The research names this exactly: 'captured pages survive a reload, a phone call, or backgrounding the tab mid-scan. Losing eight scanned pages to an incoming call is fatal for a browser app in a way it isn't for a native one.' iOS Safari evicts backgrounded tabs aggressively; on a phone at a counter, taking a call IS the normal case. Everything else the app does well is downstream of surviving this."
+     },
+     {
+      "what": "The thumbnails cannot be trusted to check the shot. `.pagecard img` is a hard `height:150px; object-fit:cover` (index.html:1257): measured, a 1500x2000 page shows 69% of its height at 414px, and at 320px — where the grid collapses to one 272px column — only 40% of the page is visible. There is no tap-to-enlarge and no full-page preview anywhere in the app.",
+      "severity": "blocker",
+      "whyItMatters": "He is photographing under a shadow at arm's length. The one question he has after every shot — 'did I get the bottom of the page, is it readable?' — the app cannot answer. He found out the signature block on page 6 was cut off only after opening the exported PDF, by which point he had left the counter."
+     },
+     {
+      "what": "Delete is one tap on a 37x36px ✕ with no confirm, no toast and no undo. Measured after a delete: card count 7, toast never shown, no #toast .undo node — while `typeof window.SWS.undo === 'function'`, loaded and unused (sws-ui.js is in <head>, app.js:84 just calls pages.splice).",
+      "severity": "major",
+      "whyItMatters": "Four 37px buttons sit in a 165px row under a thumbnail he cannot read. Mis-tapping ✕ instead of → destroys a page he has to physically re-photograph, and the paper may already be back in the folder. The portfolio's own runtime ships the answer and this app is the one place a mistake costs a trip back to the counter."
+     },
+     {
+      "what": "Nothing tells him a capture landed until the whole batch finishes. Measured with 20 twelve-megapixel photos: 4,606ms before ANY thumbnail appeared, the count heading unchanged the entire time, Add button still enabled, no aria-busy, no progress element, no toast — then all 20 appeared at once. The loop at app.js:95-111 awaits each file and only calls render() at app.js:112.",
+      "severity": "major",
+      "whyItMatters": "4.6 seconds on a desktop-class CPU is 15–20 on a mid-range phone. The research is blunt about this: 'give unmistakable capture feedback — shutter flash, thumbnail fly-in, incrementing page count — so a stressed person never wonders whether page 3 landed.' He tapped Add a second time because he thought the first had failed."
+     }
+    ]
+   },
+   {
+    "name": "Marguerite Okonkwo",
+    "who": "71, retired teacher, macular degeneration in one eye plus a mild essential tremor. Uses an iPad daily and a phone reluctantly. This is the comfort-panel persona.",
+    "context": "Kitchen table, 09:40, phone propped against the fruit bowl at 414px, bright window behind her. Both hands available but the tremor means anything under a centimetre is a coin flip. No deadline, low patience.",
+    "task": "Photograph a 5-page insurance claim form and the Medicare card, and send one PDF to her daughter.",
+    "verdict": "Finished, slowly, with two accidental deletions she could not undo. The comfort panel helped the page as a whole and helped none of the controls she actually needed.",
+    "delights": [
+     "She found the gear beside the tip pill unprompted and opened it. It is a real dialog with real fieldsets: seven groups, arrow keys work, every chip carries a permanent ✓ slot so she can see which one is on without judging colour. axe with the panel open at Largest text: zero violations.",
+     "Setting Text size to Largest took the root from 16px to 24px and the whole page scaled with it — hero, hints, 'Make the PDF' (66px tall), the count heading from 12px to 18px. Horizontal overflow stayed at 0px at 414px, 320px and 1280px, at Largest, at Roomy, and at Largest+Roomy together.",
+     "Warm tint at High plus dark mode rendered as a fixed multiply overlay with no layout effect at all and no new axe violations — she uses it in the evening."
+    ],
+    "frictions": [
+     {
+      "what": "Largest text does not reach the page controls. `.btn.small` is a hardcoded `min-height:36px` (index.html:589), so the ← ⟳ → ✕ buttons measured 37x36 at default AND 43x36 at Largest AND 49x36 at Largest+Roomy — while --tap rose to max(44px, 44px*1.5) = 66px for everything else. The main buttons grew; the four that manage her pages did not.",
+      "severity": "blocker",
+      "whyItMatters": "The comfort setting exists for exactly her, and it moves every control except the ones she is failing to hit. With a tremor, a 36px-tall, 37px-wide target sitting 2px from a delete button is where her two lost pages came from. It is also below the system's own stated floor at every single setting."
+     },
+     {
+      "what": "The page-size select is clipped at Largest. index.html:1295 carries an inline `style=\"flex:0 0 130px\"`; measured clientWidth 128px at every text size, so at Largest the option renders as 'US Lett' with the caret over the last glyph (screenshot: design/out/drive-scan-to-pdf-shot-414-xxl.png).",
+      "severity": "major",
+      "whyItMatters": "An inline pixel width is the one thing --ui-scale cannot override. She turned the text up because she cannot read small text, and the result is the only truncated string on the page — on the control that decides whether her form comes out Letter or A4."
+     },
+     {
+      "what": "High contrast does not reach the page-number badge. Measured at data-contrast=\"more\": `.hint` correctly went from 5.53:1 to 15.1:1, but `.pagecard .num` stayed at rgb(84,104,105) on rgb(238,250,251) — 5.53:1, still 12px. The cause is the legacy alias: `--muted:var(--ink-2)` is declared on :root (index.html:81) so it computes once against the light value, while the override is scoped to body (`:root[data-contrast=\"more\"] body{--ink-2:var(--ink)}`, index.html:926) and can never reach it. index.html:1259 uses var(--muted).",
+      "severity": "major",
+      "whyItMatters": "The page number is the one label the research insists on — 'a page-number badge on each thumbnail so the user can verify before exporting'. It is the smallest text in the app, it is the only way to check the order, and it is the single thing High contrast silently declines to darken."
+     },
+     {
+      "what": "At Largest the four buttons wrap to two rows inside the 165px card and the page number ends up floating between them, vertically centred against a two-row group (screenshot as above). Card height grows from 232px to 238px but the row order reads as ← ⟳ → / ✕ with '1' beside the gap.",
+      "severity": "minor",
+      "whyItMatters": "It looks broken, and 'looks broken' is what stops a 71-year-old trusting an app with an insurance claim. The delete button also ends up alone on its own line directly under the ⟳ she was aiming for."
+     },
+     {
+      "what": "She could not tell the claim form pages apart in the grid. Each thumbnail shows a 150px cover-cropped band, so five near-identical form pages render as five near-identical grey rectangles, and the only distinguishing mark is the 12px number.",
+      "severity": "major",
+      "whyItMatters": "Ordering is the whole reason the thumbnail strip exists. She reordered by trial and error and checked the result by opening the exported PDF twice."
+     }
+    ]
+   },
+   {
+    "name": "Priya Raghunathan",
+    "who": "38, operations manager, Android (Pixel, Chrome). A Microsoft Lens refugee — the research's named opportunity, with Lens scanning dead as of 9 March 2026 — and she refuses to sign into anything new.",
+    "context": "Open-plan office, 16:20, phone in one hand and a laptop open in front of her. HR's portal closes at 17:00 and rejects anything over 5 MB. She has already photographed the four documents with her camera app, so they are sitting in her photo library, not in front of her.",
+    "task": "Turn four photos already in her gallery into one PDF under 5 MB, named something she can find again, and upload it before five.",
+    "verdict": "Got a PDF. Could not tell whether it would clear the portal until she left the app and checked in Files, and it landed in Downloads as 'scan.pdf' next to last month's 'scan.pdf'.",
+    "delights": [
+     "Mixing library photos with fresh captures works — the input takes multiple files and 110 landed in 11.1s, about 101ms each, with no dropped frames and zero console errors.",
+     "It compresses hard and honestly: a 4032x3024 phone photo became a 2000x1500 JPEG of about 149 KB in 224ms, and the PDF embeds the JPEG untouched (/DCTDecode passthrough) rather than re-encoding it. 100 pages exported in 309ms to 11.87 MB — about 119 KB a page.",
+     "No counter, no 'you have 3 scans left', no upgrade word anywhere on the page. That absence is the product."
+    ],
+    "frictions": [
+     {
+      "what": "The hint says 'You can add from the camera or your photo library' (index.html:1284) but the input is `<input type=\"file\" accept=\"image/*\" capture=\"environment\" multiple>` (index.html:1283 — verified in the live DOM: accept 'image/*', capture 'environment', multiple true). Per HTML Media Capture, `capture` instructs the UA to go straight to the camera; Chrome on Android and Safari on iOS both honour it and skip the picker.",
+      "severity": "blocker",
+      "whyItMatters": "Her documents are already photographs. The research puts it plainly: 'most users have already photographed the thing before they find your app.' The app's own copy promises the library and the markup forbids it. NOTE ON METHOD: I verified the attribute in the live DOM and the desktop harness ignores `capture` — I did not test on an Android or iOS device, and this needs one tap on real hardware to confirm the picker is suppressed."
+     },
+     {
+      "what": "There is no size estimate and no quality control. Measured output geometry: a Letter page photographed at 2000px on the long side is drawn at 567x756pt, i.e. 190 dpi effective; maxSide and quality are hardcoded at 2000/0.85 (app.js:34) with no UI. Her four pages came to 0.5 MB — fine — but she had no way to know that before downloading, and no way to raise the resolution when the portal later complained the small print was illegible.",
+      "severity": "major",
+      "whyItMatters": "The research's own unglamorous differentiator: 'Target file size with a live estimate under the export button (2.1 MB) so the scan clears the HR portal / court e-filing / insurance upload on the first try.' 190 dpi is also below the 200+ dpi SwiftScan advertises on its FREE tier and well below the 300 dpi many e-filing portals demand."
+     },
+     {
+      "what": "Every export is `scan.pdf` (app.js:121). No filename field, no date, no label.",
+      "severity": "major",
+      "whyItMatters": "She now has scan.pdf, scan(1).pdf and scan(2).pdf in Downloads and has to open each to find the right one, three minutes before the portal closes. The research costs the fix at almost nothing: '2026-08-09-insurance.pdf instead of scan_0001.pdf'."
+     },
+     {
+      "what": "No enhancement of any kind — no grayscale, no black-and-white for forms, no contrast nudge, no edge detection, no perspective correction, no crop, no retake-one. The page ships exactly what the camera saw, desk and shadow included.",
+      "severity": "major",
+      "whyItMatters": "Six of the ten items the research lists as table stakes are absent. Her office-lit photos include the desk around the paper, which is both ugly on the HR side and pure wasted bytes against a 5 MB cap. The best browser competitor (DocScan) lacks edge detection too, so this is survivable — but grayscale/B&W is a canvas one-liner and it halves the file."
+     },
+     {
+      "what": "A landscape page is letterboxed into a portrait sheet. Measured from the exported PDF: a 2000x933 capture is drawn 576x268.7pt on a 612x792pt Letter page — 32% of the sheet — with no auto-orientation and no fit-to-image page option.",
+      "severity": "minor",
+      "whyItMatters": "Wide receipts and landscape forms print at a third of the size they could. The page-size select offers Letter and A4 and nothing else."
+     }
+    ]
+   },
+   {
+    "name": "Owen Marchetti",
+    "who": "44, r/privacy regular. Left Adobe Scan over 'uploads documents to cloud without permission' and Content Analysis being on by default; still cites the 2019 CamScanner Necro dropper as the reason he trusts no scanner binary.",
+    "context": "Home desk at 22:30, dark room, dark mode, 1280px laptop plus his iPhone beside him. No deadline. He is testing the claim before he trusts it with a passport.",
+    "task": "Prove the page is telling the truth, then scan a passport and a birth certificate.",
+    "verdict": "The privacy claim survived every test he threw at it — and then the app quietly threw away the two documents he came to scan, because they were HEIC off his iPhone.",
+    "delights": [
+     "Airplane mode is a real offer. Instrumented every request for a whole session: 1 request after load, and it was the blob: URL of his own PDF. Zero external hosts. Then cut the network at the context level, reloaded, and the app came back complete — title, Add button, window.PDFLib present — from the service worker.",
+     "The output leaks nothing. Grepped the exported PDFs: 0 occurrences of 'Exif' and 0 of 'GPS' across a 3-page, a 2-page and a 100-page export. The canvas re-encode at app.js:34-43 strips the camera metadata as a side effect, so the location where he photographed his passport is not in the file. Nobody says this out loud and it is a better privacy story than the copy currently on the page.",
+     "The whole thing is 23 files and one vendored library, no APK, no SDK, nothing that auto-updates behind him — which is exactly the 'it's a web page as a security feature' argument the research says to lean on."
+    ],
+    "frictions": [
+     {
+      "what": "Undecodable files become blank pages that export as nothing. Fed four realistic failures — a text file renamed .jpg, a 0-byte .jpg, an SVG, and a HEIC — and all four were accepted as pages. Measured: 4 cards, each with a src set and naturalWidth 0 (the SVG rendered fine at 400x600 and still failed), no error state, no toast. Export then produced a 578-byte, ONE-PAGE, completely blank PDF (pdf.js:33 adds an empty page when everything is skipped) and the toast read 'PDF saved (4 unreadable page(s) skipped)'.",
+      "severity": "blocker",
+      "whyItMatters": "HEIC is the iPhone default. Chrome and Firefox cannot decode it, so createImageBitmap throws, the FileReader fallback at app.js:104-109 stores the raw HEIC bytes as a data URL, the card looks like a page, and the export silently discards it. He downloaded a blank PDF that the app called 'saved'. The word 'saved' after losing 100% of the input is the single most dishonest moment in the app, and it is the app most likely to be handed a HEIC."
+     },
+     {
+      "what": "There is no CSP. No Content-Security-Policy meta in index.html (0 matches; none of the 23 apps has one).",
+      "severity": "minor",
+      "whyItMatters": "For an app whose entire pitch is 'your documents never leave your device', a `default-src 'self'; connect-src 'none'; img-src 'self' data: blob:` header is the machine-readable version of the promise, and it is the one thing he could point a sceptic at. It also makes the airplane-mode claim enforceable rather than merely true today."
+     },
+     {
+      "what": "Nothing in the UI says the session is ephemeral, and there is no 'clear everything' control. Pages exist only in a JS array; closing the tab is the only way to clear, and the app never tells him that either way.",
+      "severity": "major",
+      "whyItMatters": "The research asks for exactly this pairing — 'Deliberately ephemeral, and sold as such… a visible clear everything that really clears'. He wants to scan a passport and then be told, out loud, that it is gone. Instead the app is silently ephemeral, which reads as an omission rather than a policy — and it is the same silence that costs Deshawn his eight pages."
+     },
+     {
+      "what": "The 100-page cap is real and announced by a 2.4-second toast. Loading 110 files produced exactly 100 cards and one transient 'ature100-page limit — make this PDF and start another'; the remaining 10 were dropped. The Add button stays enabled and there is no persistent indication.",
+      "severity": "minor",
+      "whyItMatters": "The hero copy sells 'no 3 free scans ransom' and the research says 'no counters, no caps, no page limits'. A cap that only exists as a disappearing toast is the shape of the thing the page promises not to do. 100 pages is generous, the performance headroom is there (11.87 MB, 309ms), and the honest move is either to remove it or to state it before the user hits it."
+     }
+    ]
+   },
+   {
+    "name": "Teodora Ilić",
+    "who": "52, blind since her thirties, NVDA on Windows and VoiceOver on her phone, expert keyboard user. Handles her own benefits paperwork and refuses tools that make her ask a sighted person for help.",
+    "context": "Home office, laptop at 1280px, NVDA at 1.6x speed, no mouse at all. She has a stack of letters already photographed by a volunteer and needs them combined.",
+    "task": "Combine six photographed letters into one PDF in the right order and export it.",
+    "verdict": "Exported a PDF. Has no idea whether the pages are in the right order, whether the reorder she performed did anything, or how many pages the file has. She described the experience as 'operating a machine with the lights off'.",
+    "delights": [
+     "Nothing is trapped and everything is named. axe after interaction, with pages present, at every viewport and every comfort setting: zero violations. All four page controls carry aria-labels, the file input is correctly hidden and driven by a named button, and the count heading is a real <h2>.",
+     "The comfort panel is a proper <fieldset> of real radios, so it announces 'Text size, 3 of 5' and arrow keys move between options — she does not use it, but she noticed it was built right.",
+     "The toast is role=status aria-live=polite and does speak the export result: 'PDF saved — no watermark, obviously'."
+    ],
+    "frictions": [
+     {
+      "what": "Adding pages is announced to nobody. #pageHead changes from 'Pages' to '6 pages' but it is a plain <h2> with no role and no aria-live, it is not inside any live region (verified: h.closest('[aria-live]') is null), and the toast does not fire on a successful add. After a 4.6-second import of 20 photos she got exactly zero spoken feedback.",
+      "severity": "blocker",
+      "whyItMatters": "The research demands 'incrementing page count so a stressed person never wonders whether page 3 landed'. For her it is not a nicety, it is the only possible confirmation that the capture worked at all. One aria-live on the heading fixes it."
+     },
+     {
+      "what": "Every button press throws focus to <body>. Verified: focused the 'Move earlier' button on card 3, pressed Enter, activeElement became BODY. render() (app.js:65-87) calls box.replaceChildren() and rebuilds every card, so the element she was on ceases to exist. Same after delete, same after rotate, same after export.",
+      "severity": "blocker",
+      "whyItMatters": "To move page 5 to position 2 she must press Enter, land on <body>, and tab back through the header, the Add button and sixteen page buttons — three times. With 20 pages the tab order is 3 + 4×20 = 83 stops and every single reorder restarts it from the top."
+     },
+     {
+      "what": "The reorder did happen and she could not tell. Alt text is positional — 'Page ' + (i+1) at app.js:71 — so after a successful swap the six images still announce as 'Page 1'…'Page 6' in the same order, and the four buttons on every card announce identically as 'Move earlier / Rotate / Move later / Delete page' with no page identity. Measured on a 2-page document: the button-name list is literally ['Move earlier','Rotate','Move later','Delete page','Move earlier','Rotate','Move later','Delete page'].",
+      "severity": "blocker",
+      "whyItMatters": "Her rotor shows twenty identical 'Move earlier' buttons and the images are labelled by slot rather than by content, so the reorder is both unverifiable and unnavigable. 'Move page 3 earlier' and an announcement of the new order after the move would make the whole feature usable."
+     },
+     {
+      "what": "Delete is silent and irreversible for her too: no toast, no undo, and focus lands on <body> so she cannot even tell which row disappeared.",
+      "severity": "blocker",
+      "whyItMatters": "A sighted user at least sees the grid shrink. She gets nothing at all — the count heading changes without speaking. SWS.undo is loaded on the page and never called."
+     },
+     {
+      "what": "There is no skip link, although <main id=\"main\"> exists at index.html:1273 and the base ships a .skip style at index.html:840.",
+      "severity": "minor",
+      "whyItMatters": "Small on a 3-control header, but the target and the CSS are both already there — it is two lines of markup that were left out."
+     }
+    ]
+   },
+   {
+    "name": "Rick Halloran",
+    "who": "59, self-employed contractor, does his own taxes, low-to-medium tech confidence. Reading glasses on top of his head half the time.",
+    "context": "Kitchen table, 21:00, a shoebox of 34 receipts, phone flat on the table and both hands free. Warm-white ceiling light throwing his shadow across the paper. His accountant wants one file by Friday.",
+    "task": "Photograph 34 receipts of wildly different sizes and send his accountant one PDF.",
+    "verdict": "Finished in about twenty minutes and the file was correct. Spent a third of that fixing rotations and one stretch convinced the app had frozen.",
+    "delights": [
+     "34 pages in one document, in order, with no merge step and no separate files — the exact complaint the research quotes ('many phone scanners save each page as a separate file, and when you merge them the order follows filename sorting').",
+     "It never slowed down. 100 pages in the grid scrolled in 10ms for two full jumps, a reorder at that size redrew in 155ms, and heap sat at 73 MB with zero errors.",
+     "Rotate visibly works: the thumbnail flips immediately and the dimensions swap 1400x1900 → 1900x1400."
+    ],
+    "frictions": [
+     {
+      "what": "Rotate only goes one way and re-encodes the photo every time. rotateDataUrl (app.js:45-61) draws to a canvas and calls toDataURL('image/jpeg', 0.9), so each tap is a fresh lossy generation. Measured on a text-heavy 1240x1754 scan: four rotations back to the original orientation gave PSNR 37.67 dB, MSE 11.13, max channel delta 28 — and the file GREW from 472 KB to 558 KB, because rotation re-encodes at 0.9 while capture used 0.85.",
+      "severity": "major",
+      "whyItMatters": "Half his receipts landed sideways the wrong way, which is three taps each — three lossy generations on small printed totals, and a bigger file at the end. Rotation should be a 0/90/180/270 integer applied once at export (pdf-lib takes a rotation on drawImage), plus a counter-clockwise button."
+     },
+     {
+      "what": "Double-tapping rotate loses a rotation. Two taps in the same frame produce ONE net rotation (measured: 1400x1900 → 1900x1400, not back to 1400x1900), because both handlers read the same source data URL before either writes.",
+      "severity": "minor",
+      "whyItMatters": "On a laggy phone with no busy state on the button, double-tapping is what people do. He then tapped a third time and overshot."
+     },
+     {
+      "what": "He could not tell which receipt was which. At 414px each thumbnail is a 163x150 cover crop, and a stack of receipts photographed on the same table crop to 34 near-identical brown rectangles. The only label is a 12px grey number.",
+      "severity": "major",
+      "whyItMatters": "He put a receipt in the wrong month because the thumbnail showed the middle of the paper, not the date at the top. Cover-cropping to a fixed 150px is the wrong default for an app whose thumbnails exist to be verified."
+     },
+     {
+      "what": "There is no 'clear all' and no way to start a second document without reloading the page — which is also the action that silently destroys everything.",
+      "severity": "minor",
+      "whyItMatters": "After exporting the receipts he wanted to scan a separate invoice. His only options were 34 individual ✕ taps or a reload, and nothing in the UI told him which."
+     }
+    ]
+   }
+  ],
+  "consensus": {
+   "worksWell": [
+    "The privacy promise is literally true and I could not break it. Instrumented every request across a full session: 1 request after load and it was the blob: URL of the user's own PDF; zero external hosts. Cut the network at the browser-context level, reloaded, and the app came back whole — title, controls, window.PDFLib — from the service worker (scan-v14 precaches all 12 assets including the 525 KB pdf-lib). The research's 'try it in airplane mode' headline is available today at zero engineering cost.",
+    "The exported PDFs are clean and correct. Letter 612x792, A4 595.28x841.89, every image a /DCTDecode passthrough of the JPEG the canvas produced (no double re-encode by pdf-lib), no watermark string anywhere in the bytes, and — grepped across three exports — zero 'Exif' and zero 'GPS' occurrences, because the canvas step strips camera metadata. That is a privacy feature the page does not yet claim.",
+    "Speed and stability at real scale. 100 pages: 11.1s to ingest 110 files (~101ms each), 309ms to export, 11.87 MB out (~119 KB/page), 73 MB heap, 10ms for two full-page scroll jumps, 155ms to redraw after a reorder at that size. Zero console errors, zero page errors, zero failed requests in every single run in this review.",
+    "Layout is genuinely bulletproof. Horizontal overflow measured 0px in all six comfort/viewport combinations with pages present — 320, 414, 1280, Largest text, Largest+Roomy, and High contrast + Easier reading — with no offending elements at all. axe (wcag2a/2aa/21a/21aa/22aa) returned zero violations in every one of those states, with pages present and with the comfort panel open.",
+    "The comfort panel itself is the portfolio standard done right: seven real fieldsets of real radios, a permanent ✓ slot so selection is not colour-only, header and footer pinned so Done never scrolls away at 24px root text, and a live sample block. Zero axe violations open.",
+    "Honest positioning throughout. No account, no splash, no modal between capture and export, no counter, no 'upgrade' word, the tip jar a quiet 36px pill in the header. Every one of the research's five disqualifiers — ads, watermark, registration, subscription, undismissable upsell — is genuinely absent.",
+    "The reorder-versus-async-rotate race is safe, and not by accident. Firing rotate on page 4 and deleting page 1 in the same tick leaves the rotation on the right page (verified by colour-fingerprinting all pages before and after), because `pages[i].dataUrl = await …` resolves the member reference before awaiting. Worth a comment in the source so nobody 'fixes' it into a bug."
+   ],
+   "hurts": [
+    "Nothing is persisted. Eight captured pages became zero on one reload, with no warning and no beforeunload guard — localStorage 0 bytes, no IndexedDB. The research calls losing pages mid-scan 'fatal for a browser app', and on a phone at a counter a backgrounded tab is the normal case, not the edge one.",
+    "Undecodable files become blank pages and the export calls it a success. Four realistic bad inputs (HEIC, SVG, 0-byte, text-renamed-.jpg) all became page cards; the export was a 578-byte one-page BLANK PDF and the toast said 'PDF saved (4 unreadable page(s) skipped)'. HEIC is the iPhone default and Chrome cannot decode it.",
+    "You cannot see your own scans. Every thumbnail is a fixed 150px `object-fit:cover` crop — 69% of a portrait page visible at 414px, 40% at 320px — and there is no tap-to-enlarge anywhere. The one job of a page grid is verification before export.",
+    "Deleting a page is a single 37x36px tap with no confirm, no toast and no undo, while SWS.undo sits loaded on the page and is never called.",
+    "Importing gives no feedback at all. 20 twelve-megapixel photos: 4,606ms with no thumbnail, no count change, no spinner, no aria-busy, no disabled button — then everything at once.",
+    "The comfort settings do not reach the controls that matter. .btn.small is a hardcoded 36px so the four page buttons measure 37x36 at default and 43x36 at Largest while --tap is 66px; the page-size select is pinned by an inline `flex:0 0 130px` and truncates to 'US Lett' at Largest; and High contrast cannot darken the page-number badge because it is styled with the :root-resolved legacy alias var(--muted).",
+    "For a screen-reader or keyboard user the core loop is unverifiable: no live region on the count, focus thrown to <body> after every action, positional alt text so a reorder announces identically before and after, and twenty identically-named 'Move earlier' buttons.",
+    "No output control. Always 'scan.pdf', always ~190 dpi effective for a Letter page, no size estimate before export, no quality choice, no fit-to-image page option — so a landscape capture fills 32% of the sheet.",
+    "The markup contradicts the copy: the hint promises the photo library while `capture=\"environment\"` on the input tells mobile browsers to open the camera directly.",
+    "Six of the research's ten table-stakes items are simply absent: edge detection, perspective correction, enhancement filters, retake-one, session persistence, and any statement about OCR.",
+    "Printing the page prints the interface. Under print emulation the hero, the Add button, all eight page buttons and the cropped 150px thumbnails all still render — in the one app in the portfolio where Ctrl+P is a thing a confused user will genuinely try."
+   ],
+   "mostWantedNext": [
+    "Persist the session — pages into IndexedDB as blobs on every add, restored on load with a 'you have 8 pages from earlier, keep or clear?' prompt. This is the difference between a demo and a tool.",
+    "Refuse a page you cannot embed, at the moment it is added: decode-test each file, reject with a named error ('scan.heic — this browser can't read HEIC photos, try exporting as JPEG'), and never let the export ship a blank page while saying 'saved'.",
+    "Tap a thumbnail to see the whole page, full-bleed, with rotate / retake / delete on that view — and stop cover-cropping the grid.",
+    "Undo on delete via the SWS.undo that is already loaded, plus a visible 'Clear everything' that says out loud that nothing was stored.",
+    "Live capture feedback: render each page as it finishes rather than after the batch, put aria-live on the count, and show a 'Page 7 added' flash.",
+    "Output control under the export button — editable filename with a date and a label chip, a live size estimate, a quality/dpi choice, and fit-to-image page sizing for landscape captures.",
+    "Grayscale and hard black-and-white filters. A canvas one-liner each, they halve the file size, they are the most-requested thing after edge detection, and they make an office-lit receipt legible.",
+    "Make the four page controls real 44px targets that scale with --ui-scale, name them by page ('Move page 3 earlier'), and keep focus on the equivalent control after a redraw."
+   ]
+  }
+ },
+ "stressTest": {
+  "ranInBrowser": true,
+  "batteryClean": true,
+  "scenarios": [
+   {
+    "name": "The standard battery",
+    "method": "node design/stress.mjs scan-to-pdf — layout at 320/414/1280 and at largest-text and roomy, touch targets, hostile text, numeric edges, 30 rapid clicks, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console.",
+    "result": "0 hard failures. But read the detail: 'bulk: 200 rapid adds {\"ran\":false}', 'boots with corrupt storage: no app storage key to corrupt', 'survives reload: content 571→571 chars (persisted)', 'rapid clicking the primary action: 30 clicks in 713ms, content 571→571 chars'. The battery found no text inputs and no storage because this app has neither, and its 30 clicks landed on #addBtn which only opens a file dialog. It also reported 'touch targets under 32px []' — the four page controls are 36px, and they are additionally exempted by the harness because .btn.small matches its `closest('.small')` inline-in-prose filter. Everything below had to be driven by hand.",
+    "defect": "No defect in the app. A harness note worth carrying: the battery scores this app on an empty page, and its small-target check silently excludes any control carrying the .small class.",
+    "severity": "none"
+   },
+   {
+    "name": "Reload mid-scan — the incoming phone call",
+    "method": "Generated four realistic page photos in-canvas, pushed them through #fileInput, confirmed 8 cards, read localStorage and indexedDB.databases(), then page.reload() and re-measured. Also probed window.onbeforeunload and dispatched a cancelable beforeunload event.",
+    "result": "Before: 8 cards, localStorage 0 bytes, indexedDB.databases() []. After reload: 0 cards, heading back to 'Pages', no toast, no recovery offer. window.onbeforeunload is null and the dispatched beforeunload was not cancelled (defaultPrevented false).",
+    "defect": "Total, silent loss of the whole session on any reload, tab eviction or crash. `let pages = []` at app.js:32 is the entire store.",
+    "severity": "blocker"
+   },
+   {
+    "name": "Files the browser cannot decode",
+    "method": "Fed four files through the real input: a text file named notes.jpg, a 0-byte empty.jpg, a valid drawing.svg, and a scan.heic with an ftypheic header. Inspected every card, then exported and parsed the PDF with pdf-lib.",
+    "result": "All four accepted as pages. Card srcs: data:image/jpeg;base64,dGhpcyB… (naturalWidth 0), data:image/jpeg;base64, (empty, 0x0), data:image/svg+xml (renders at 400x600 and looks perfect), data:image/heic (0x0). No error state on any card. Export produced a 578-byte, 1-page, image-free PDF (pdf.js:33 inserts the empty page) and the toast read 'PDF saved (4 unreadable page(s) skipped)'.",
+    "defect": "createImageBitmap failure falls through to a raw FileReader data URL (app.js:104-109) that looks like a page and cannot be embedded, so the user downloads a blank PDF that the app calls saved. HEIC — the iPhone camera default — takes this path in every non-Safari browser.",
+    "severity": "blocker"
+   },
+   {
+    "name": "100-page cap and 12-megapixel throughput",
+    "method": "One 4032x3024 photo timed end to end, then 110 more files in a single change event, measuring cards, toast, heap, total data-URL bytes, scroll cost, reorder cost and export time at the cap.",
+    "result": "One 12MP photo: 224ms, compressed to 2000x1500 at ~149 KB. 110 files: 11,142ms to reach the cap (~101ms each). At the cap: exactly 100 cards, heading '100 pages', toast '100-page limit — make this PDF and start another', heap 73 MB, 11 MB of data URLs, page height 12,872px, overflow 0px. Scroll 10ms for two jumps, reorder redraw 155ms, export 309ms → 11,866,998 bytes. Add button still enabled, no persistent cap indicator. Zero errors.",
+    "defect": "The 150 MB memory guard at app.js:97 is unreachable on the normal path — 100 compressed pages total 11 MB — so the only real limit is the 100-page cap, announced by a 2.4-second toast in an app whose hero copy sells the absence of limits.",
+    "severity": "minor"
+   },
+   {
+    "name": "Rotation: generational loss, double-tap, and the delete race",
+    "method": "Rotated one text-heavy 1240x1754 scan four times (back to the original orientation) and compared pixel-for-pixel against the original for MSE/PSNR; double-tapped rotate in one frame; then fired rotate on page 4 and delete on page 1 in the same tick and colour-fingerprinted all pages before and after.",
+    "result": "Four rotations: dimensions correct, MSE 11.13, PSNR 37.67 dB, max channel delta 28, bytes 472,247 → 557,798 (+18%, because rotate re-encodes at quality 0.9 while capture used 0.85). Double tap: one net rotation only (1400x1900 → 1900x1400). Race: the rotation landed on the correct page — before [red, green(rot), blue, yellow, magenta], after deleting red [green(rot), blue, yellow(rot), magenta] — because `pages[i].dataUrl = await …` resolves its member reference before the await.",
+    "defect": "Visible generational JPEG loss and file growth on every rotate tap, and no counter-clockwise button so a left rotation costs three of them. The async race is NOT a defect.",
+    "severity": "major"
+   },
+   {
+    "name": "Comfort matrix with five pages loaded",
+    "method": "Six separate withApp runs — 414 default, 320 default, 414 text:xxl, 414 text:xxl + density:roomy, 414 contrast:more + reading:easy, 1280 default — each with five pages added, measuring overflow, offenders, small targets, axe, grid columns, card geometry and every control's box.",
+    "result": "Horizontal overflow 0px and offenders [] in all six. axe: zero violations in all six. Grid: 165px×2 at 414, one 272px column at 320, 140px×4 at 1280, 156px×2 at Largest+Roomy. Root font 16px → 24px at Largest; 'Make the PDF' 44px → 66px; 'Add a page' pinned at 52px (.btn.big). The four page controls: 37x36 default, 39x36 at High contrast, 43x36 at Largest, 49x36 at Largest+Roomy — never 44px tall, at any setting, while --tap reads max(44px, 44px*1.5). #pageSize clientWidth 128px at every setting (inline flex:0 0 130px at index.html:1295), truncating to 'US Lett' at Largest. At Largest the button row wraps to two lines inside the card and the page number floats between them.",
+    "defect": "Two hardcoded pixel values defeat the comfort system: .btn.small's 36px floor (index.html:589) and the inline 130px on the page-size select.",
+    "severity": "major"
+   },
+   {
+    "name": "High contrast, dark mode and warm tint, measured not eyeballed",
+    "method": "Four runs (light default, light contrast:more, dark default, dark warmth:3) with three pages loaded; read computed colours and custom-property values off the live nodes and computed WCAG ratios.",
+    "result": "Light default: .hint 5.53:1, .pagecard .num 5.53:1 at 12px, .btn.danger 5.54:1. Light + High contrast: .hint jumps to 15.1:1 but .num stays at rgb(84,104,105) — 5.53:1, unchanged. Root --ink-2 stays #546869 while body --ink-2 becomes #122425, and the computed value of --muted on .num is #546869. Dark: .num 7.99:1, danger 7.4:1, all fine; warmth:3 changes nothing structurally. axe zero violations in all four.",
+    "defect": "High contrast cannot reach anything styled with the legacy aliases. `--muted:var(--ink-2)` is declared on :root (index.html:81) and so computes once against the light value, while the override is scoped to body (index.html:926). .pagecard .num (index.html:1259) is the casualty — the page-order badge, at 12px, is the one label High contrast declines to darken.",
+    "severity": "minor"
+   },
+   {
+    "name": "Keyboard and screen-reader path through the core loop",
+    "method": "Enumerated every focusable element with four pages loaded, focused a reorder button by id, pressed Enter and read activeElement, listed every button's accessible name, and checked whether the page count sits in a live region.",
+    "result": "23 focusable stops with 4 pages (prefs, tip, Add, 4×4 page buttons, page size, Make the PDF, 2 footer links) — the formula is 3 + 4N + 4, so 83 stops at 20 pages. After Enter on 'Move earlier': activeElement === BODY. Same after delete. #pageHead has no role and no aria-live and closest('[aria-live]') is null; the toast does not fire on add. Button names on a 2-page document: ['Move earlier','Rotate','Move later','Delete page'] twice, with no page identity. Image alt is positional ('Page 1'…'Page N'), so a completed reorder announces identically before and after. No skip link, though <main id=\"main\"> and the .skip style both exist.",
+    "defect": "The core verbs are performable but not verifiable without sight: no announcement on add, focus destroyed on every action, and reordering is undetectable through the accessibility tree.",
+    "severity": "blocker"
+   },
+   {
+    "name": "Import feedback under a realistic library import",
+    "method": "20 files of 4032x3024 through one change event, polling the DOM every 60ms for the first thumbnail, the first count change, any progress element, aria-busy, a disabled Add button or a toast.",
+    "result": "First thumbnail at 4,606ms. Count heading changed at 4,606ms. Total 4,606ms. During the whole wait: 0 thumbnails, heading still 'Pages', Add button enabled and unchanged, no progress element, no aria-busy, no toast. All 20 cards appeared in the same frame.",
+    "defect": "app.js:95-111 awaits each file in sequence and calls render() once at app.js:112, so the app is visually frozen for the whole import. 4.6s on this machine implies 15–20s on a mid-range phone.",
+    "severity": "major"
+   },
+   {
+    "name": "The privacy claim, tested rather than read",
+    "method": "Recorded every request the page made for a whole session including an export; listed distinct hosts; set the browser context offline and reloaded; grepped all exported PDFs for Exif/GPS/JFIF and watermark strings.",
+    "result": "1 request after load, and it was blob:http://127.0.0.1/… — the user's own PDF. Zero external hosts. Offline reload: full app back from the service worker, title intact, #addBtn present, window.PDFLib an object. Exported PDFs: Exif 0, GPS 0 (JFIF present, which is just the JPEG header), no watermark string, Producer 'pdf-lib'.",
+    "defect": null,
+    "severity": "none"
+   },
+   {
+    "name": "EXIF-rotated phone photos",
+    "method": "Hand-built a JPEG carrying an APP1/Exif IFD0 with Orientation=6 on a 1240x1754 image, compared createImageBitmap with default options against explicit imageOrientation values and against an <img>, then fed it to the real app.",
+    "result": "Default call 1754x1240, from-image 1754x1240, <img> 1754x1240 — the orientation is honoured, the canvas bakes it in, and the app rendered 1754x1240. The re-encode then drops the EXIF entirely, so nothing downstream double-rotates and no GPS survives into the PDF.",
+    "defect": null,
+    "severity": "none"
+   },
+   {
+    "name": "Exported PDF geometry and effective resolution",
+    "method": "Parsed three exports with pdf-lib and by raw stream scan: page boxes, image XObject dimensions, filters, and the drawn rectangle computed from pdf.js:28-31 (margin 18).",
+    "result": "Letter 612x792 and A4 595.28x841.89 exactly. Every image /DCTDecode /DeviceRGB 8bpc — the capture JPEG passed through untouched. A 1500x2000 portrait page draws at 567x756pt: 88% of the sheet, 190 dpi effective. A 2000x933 landscape capture draws at 576x268.7pt: 32% of the sheet. When every page is unembeddable the export is a single blank 612x792 page.",
+    "defect": "No fit-to-image or auto-landscape option, so wide captures waste two thirds of the sheet; and the fixed 2000px/0.85 capture setting yields ~190 dpi for a Letter page, below the 300 dpi many e-filing and HR portals require, with no control to raise it.",
+    "severity": "major"
+   },
+   {
+    "name": "Print emulation with pages present",
+    "method": "emulateMedia('print') with two pages loaded, then checked which elements still render.",
+    "result": "The thumbnail grid prints, still at height:150px with object-fit:cover; all 8 page buttons print; 'Add a page' prints; 'Make the PDF' prints; the marketing hero prints. Width 414px, one dark fill. Header, footer, tip pill, toast and the comfort panel are correctly hidden by the base layer.",
+    "defect": "Ctrl+P — a thing people genuinely try in an app called Scan to PDF — produces a sheet of cropped thumbnails and UI buttons rather than the pages. Nothing in the app layer is marked .noprint, and there is no print path that lays the captures out one per sheet.",
+    "severity": "minor"
+   },
+   {
+    "name": "Degenerate and rapid interactions",
+    "method": "Exported with zero pages; double-clicked Make the PDF programmatically in one frame; clicked 'Move earlier' on the first card; 30 rapid clicks on the primary action via the battery.",
+    "result": "Zero pages: toast 'Add at least one page', no download, correct. Double export: exactly one download, because app.js:117 disables the button synchronously before awaiting and a disabled button ignores click(); the label restored to 'Make the PDF' and disabled false afterwards. 'Move earlier' on page 1: order unchanged (moveItem returns the same array), no toast, and the button is not disabled — a dead control that looks live. 30 rapid clicks: no errors, no duplicates.",
+    "defect": "Dead-but-enabled reorder buttons at the ends of the list; no other defect. Double-submit is correctly guarded.",
+    "severity": "minor"
+   }
+  ]
+ },
+ "fixes": [
+  {
+   "title": "Persist the scan session — one reload currently destroys every page",
+   "rationale": "Measured: 8 captured pages, localStorage 0 bytes, no IndexedDB, no beforeunload guard; one reload → 0 cards and no warning. Deshawn lost eight pages of a lease to an incoming call at a leasing-office counter, which is the research's named fatal case ('losing eight scanned pages to an incoming call is fatal for a browser app in a way it isn't for a native one') and a stated table-stakes item. Store each page as a Blob in IndexedDB on add (not a data URL — 100 pages is 11 MB and blobs avoid the base64 tax), restore on load behind a 'You have 8 pages from earlier — keep them, or clear?' prompt, and pair it with Owen's visible 'Clear everything' so ephemerality becomes a stated policy rather than an accident.",
+   "where": "apps/scan-to-pdf/app.js:32 (`let pages = []` — the entire store), app.js:101 (push site), app.js:132-144 (init, needs a restore step)",
+   "severity": "blocker",
+   "effort": "M"
+  },
+  {
+   "title": "Never accept a page you cannot embed, and never call a blank PDF 'saved'",
+   "rationale": "A HEIC, an SVG, a 0-byte file and a text file renamed .jpg were all accepted as page cards; the export was a 578-byte one-page BLANK PDF and the toast said 'PDF saved (4 unreadable page(s) skipped)'. HEIC is the iPhone camera default and Chrome cannot decode it, so this is a first-run failure for a large share of users, and the SVG case is worse: it renders perfectly in the grid and vanishes from the export. Decode-test at add time and reject by name ('scan.heic — this browser can't read HEIC photos; export it as JPEG first'); delete the raw-FileReader fallback that manufactures the un-embeddable page; and when everything is skipped, do not download at all — say so.",
+   "where": "apps/scan-to-pdf/app.js:101-110 (the catch → FileReader fallback), app.js:124 (the 'PDF saved' toast), apps/scan-to-pdf/pdf.js:33 (`if (doc.getPageCount() === 0) doc.addPage(...)`)",
+   "severity": "blocker",
+   "effort": "M"
+  },
+  {
+   "title": "Let people see the page they just photographed — the grid crops 31–60% of it away",
+   "rationale": "`.pagecard img{height:150px; object-fit:cover}` shows 69% of a portrait page at 414px and 40% at 320px, and there is no tap-to-enlarge anywhere. Deshawn shipped a lease with the signature block cut off; Marguerite could not tell five identical claim-form pages apart; Rick filed a receipt in the wrong month. Verification before export is the entire purpose of a thumbnail strip, and the research asks for retake-one on top of it. Make a thumbnail tap open the page full-bleed with rotate / retake / delete on that view, and use object-fit:contain with a letterboxed aspect box in the grid.",
+   "where": "apps/scan-to-pdf/index.html:1257 (.pagecard img), apps/scan-to-pdf/app.js:70-86 (render — the card has no open affordance)",
+   "severity": "blocker",
+   "effort": "M"
+  },
+  {
+   "title": "Undo on delete — the runtime is already loaded and never called",
+   "rationale": "Delete is a single 37x36px tap with no confirm, no toast and no undo (verified: card count drops, toast never shows, no .undo node), while `typeof window.SWS.undo === 'function'` because sws-ui.js is loaded in <head>. Both Marguerite (tremor, two accidental deletions) and Teodora (no feedback at all) hit this, and here a mistake costs a physical re-photograph of a document that may already be back in the folder. Snapshot the page, splice, then SWS.undo('Page 3 deleted', restore). Add the 'Clear everything' the research asks for behind the same undo.",
+   "where": "apps/scan-to-pdf/app.js:84-85 (`pages.splice(i, 1); render();`)",
+   "severity": "blocker",
+   "effort": "S"
+  },
+  {
+   "title": "Speak and show every capture as it lands",
+   "rationale": "20 twelve-megapixel photos: 4,606ms with zero thumbnails, zero count change, no spinner, no aria-busy and no disabled button, then everything at once — because the loop awaits every file and renders once at the end. Deshawn tapped Add twice thinking it had failed; Teodora, who is blind, got no confirmation that anything happened at all. Render each page as it finishes, put aria-live=\"polite\" on #pageHead so '7 pages' is announced, and show a per-file progress line during a batch.",
+   "where": "apps/scan-to-pdf/app.js:95-112 (sequential loop, single render), apps/scan-to-pdf/index.html:1288 (h2#pageHead — no role, no aria-live)",
+   "severity": "major",
+   "effort": "S"
+  },
+  {
+   "title": "Make the four page controls real targets that grow with the comfort setting",
+   "rationale": "Measured at every setting: 37x36 default, 39x36 High contrast, 43x36 Largest, 49x36 Largest+Roomy — never once 44px tall, while --tap reads max(44px, 44px*1.5)=66px at Largest. `.btn.small{min-height:36px}` is a hardcoded pixel floor. At Largest the row also wraps to two lines inside the 165px card with the page number stranded between them. This is the comfort panel failing the exact user it exists for: a tremor plus a 37px delete button 2px from the rotate button. Give the page controls their own class sized on --tap, and lay the bar out as a grid that stays on one row.",
+   "where": "apps/scan-to-pdf/index.html:589 (.btn.small), index.html:1258 (.pagecard .bar), apps/scan-to-pdf/app.js:78-85 (the four buttons use .btn.small)",
+   "severity": "major",
+   "effort": "S"
+  },
+  {
+   "title": "Stop re-encoding the photo on every rotate tap",
+   "rationale": "rotateDataUrl draws to a canvas and re-encodes at JPEG 0.9 each time. Four rotations of a text scan measured PSNR 37.67 dB / MSE 11.13 / max channel delta 28 and grew the file from 472 KB to 558 KB, because capture encodes at 0.85 and rotation at 0.9. Rick's receipts landed sideways the wrong way, which is three taps and three generations each — there is no counter-clockwise button. Store rotation as an integer 0/90/180/270 on the page, apply it with CSS transform in the grid and with pdf-lib's rotate at export, and add a rotate-left control. A double tap in one frame also currently nets only one rotation.",
+   "where": "apps/scan-to-pdf/app.js:45-61 (rotateDataUrl), app.js:80-81 (the rotate button), apps/scan-to-pdf/pdf.js:9-10 and :31 (the 'rotation is applied at capture time' comment and drawImage)",
+   "severity": "major",
+   "effort": "M"
+  },
+  {
+   "title": "Keep focus, and name things by page, so the app can be driven without sight",
+   "rationale": "Enter on 'Move earlier' leaves activeElement === BODY because render() replaces the whole grid; a 20-page document is 83 tab stops and every reorder restarts from the top. All four buttons on every card are named identically ('Move earlier', 'Rotate', 'Move later', 'Delete page') and image alt is positional, so Teodora's completed reorder announces exactly the same before and after. Restore focus to the equivalent control after a redraw by stable page id, name buttons 'Move page 3 earlier', and announce the resulting order. While in there: disable (or hide) the reorder button at each end — 'Move earlier' on page 1 is a live-looking dead control.",
+   "where": "apps/scan-to-pdf/app.js:65-87 (render/replaceChildren), app.js:71 (alt), app.js:78-85 (aria-labels), helpers.js:15-21 (moveItem returns the same array at the ends)",
+   "severity": "major",
+   "effort": "M"
+  },
+  {
+   "title": "Give the export a name, a size and a resolution the user chooses",
+   "rationale": "Every file is 'scan.pdf'; a Letter page comes out at ~190 dpi effective (567x756pt from a 1500px capture) with maxSide/quality hardcoded at 2000/0.85; and there is no size estimate before the download. Priya had three scan.pdf files in Downloads with an HR portal closing in three minutes and no way to know whether her file would clear the 5 MB cap — the research's stated differentiator ('a live estimate under the export button (2.1 MB)') and its one-tap naming idea ('2026-08-09-insurance.pdf'). Add a filename field defaulting to date + label chip, a live size estimate, and a quality/dpi choice.",
+   "where": "apps/scan-to-pdf/app.js:121 (download 'scan.pdf'), app.js:34 (compressImage maxSide 2000, quality 0.85), apps/scan-to-pdf/index.html:1293-1301 (the export card has room for both)",
+   "severity": "major",
+   "effort": "M"
+  },
+  {
+   "title": "Fix the copy/markup contradiction on photo-library import",
+   "rationale": "The hint says 'You can add from the camera or your photo library' while the input carries `capture=\"environment\"` (verified in the live DOM), which per HTML Media Capture tells mobile browsers to open the camera directly and skip the picker — and the research's whole point is that 'most users have already photographed the thing before they find your app'. Priya's four documents were already in her gallery. Drop `capture` and offer two buttons ('Take a photo' with capture, 'Choose from photos' without), which also keeps the one-tap camera path Deshawn needs. Confirm on real Android and iOS hardware; my check was DOM-level, since the desktop harness ignores the attribute.",
+   "where": "apps/scan-to-pdf/index.html:1283 (the input), index.html:1284 (the hint that contradicts it), apps/scan-to-pdf/app.js:90 (addBtn → fileInput.click())",
+   "severity": "major",
+   "effort": "S"
+  },
+  {
+   "title": "Let High contrast reach the page-number badge",
+   "rationale": "With High contrast on, .hint went 5.53:1 → 15.1:1 but .pagecard .num stayed at 5.53:1 and 12px, because it uses var(--muted), and --muted is declared on :root as var(--ink-2) so it resolves once against the light value while the contrast override is scoped to body. The page number is the only way to verify order and it is the smallest text in the app. Swap it to var(--ink-2) directly and raise it to --t-sm; the same one-line alias trap will be waiting in every app that styles anything with --muted, --chip-ink or --line-strong.",
+   "where": "apps/scan-to-pdf/index.html:1259 (.pagecard .num), index.html:81 (--muted:var(--ink-2)), index.html:926 (:root[data-contrast=\"more\"] body)",
+   "severity": "minor",
+   "effort": "S"
+  },
+  {
+   "title": "Unpin the page-size select and let landscape captures fill the sheet",
+   "rationale": "index.html:1295 carries an inline `style=\"flex:0 0 130px\"`; clientWidth measured 128px at every text size, so at Largest the control reads 'US Lett'. And in the output, a 2000x933 landscape capture is drawn at 576x268.7pt — 32% of a Letter sheet — because the page box is always portrait. Replace the inline width with a min-width that scales, and add a 'Fit to image' option (or rotate the page box when the capture is landscape) alongside Letter and A4.",
+   "where": "apps/scan-to-pdf/index.html:1295 (select#pageSize inline style), apps/scan-to-pdf/pdf.js:4-7 (PAGE table) and pdf.js:27-31 (addPage/scale)",
+   "severity": "minor",
+   "effort": "S"
+  },
+  {
+   "title": "Make Ctrl+P print the pages, not the interface",
+   "rationale": "Under print emulation the hero, the Add button, all eight page controls and the 150px cover-cropped thumbnails all still render. In an app called Scan to PDF, printing is something people will try instead of finding the export button, and what comes out is a sheet of cropped thumbnails with ← ⟳ → ✕ on them. Mark the hero, the add card and the page controls .noprint, and give .pagecard img a print rule that lays each capture out uncropped, one per sheet.",
+   "where": "apps/scan-to-pdf/index.html:1252-1259 (the whole app layer, none of it print-aware), index.html:1196-1197 (the base's print hide list)",
+   "severity": "minor",
+   "effort": "S"
+  },
+  {
+   "title": "Say the two true things the page is not currently claiming",
+   "rationale": "Verified and unadvertised: the app makes zero external requests after load and works fully offline from the service worker, and the canvas re-encode strips EXIF so exported PDFs contain no camera metadata and no GPS (0 matches for 'Exif' and 'GPS' across three exports). The research says the privacy-anxious only convert if they can test the claim in ten seconds ('try it in airplane mode') and that the 2026-specific anxiety is AI training and telemetry. Add the airplane-mode invitation, an explicit 'no analytics, no telemetry, no third-party scripts, nothing is stored' line, a note that location data is stripped from your scans, and a CSP meta (`default-src 'self'; connect-src 'none'; img-src 'self' data: blob:`) so the promise is machine-checkable. Naming Microsoft Lens and its 9 March 2026 cutoff belongs in the same block.",
+   "where": "apps/scan-to-pdf/index.html:1275-1279 (the hero), index.html:1306 (colophon), index.html:3-16 (head — no CSP meta)",
+   "severity": "minor",
+   "effort": "S"
+  }
+ ],
+ "audit": {
+  "slug": "scan-to-pdf",
+  "purpose": "A zero-install, no-backend document scanner: photograph pages (or pick images), see them as an ordered thumbnail grid, reorder / rotate / delete, choose Letter or A4, and download one unwatermarked PDF assembled on-device by a vendored pdf-lib. Capture-time compression to a 2000px JPEG at quality 0.85. Nothing is uploaded, nothing is stored — pages live in a JS array for the life of the tab. The only network dependency is the Stripe tip link in the header, and it is a static href that fires nothing until clicked.",
+  "structure": "One short single-purpose page, no router, no dialogs of its own. body > div.wrap containing: (1) header.app (index.html:1266-1271) — 32px icon.svg with alt=\"\", h1 'Scan to PDF', span.spacer, a#tipLink.tipbtn.hidden un-hidden by app.js:134-138; sws-prefs.js injects button#swsPrefsBtn before the tip pill at runtime (sws-prefs.js:356-404), so the header has three controls at run time and two in source; (2) main#main (1273) — a real landmark with NO skip link pointing at it, though the base ships the .skip style at index.html:840; (3) div.hero (1275-1279) — h2 'Your documents never leave your device' plus one marketing paragraph; (4) section.card #1 (1281-1285) — button#addBtn.btn.primary.big '📷 Add a page', input#fileInput[type=file][accept=image/*][capture=environment][multiple].hidden, p.hint; (5) section.card #2 (1287-1291) — h2#pageHead 'Pages' (rendered by the base as a 12px uppercase micro-label and reused as the live page COUNT), div.pages#pages (EMPTY in source, the whole grid comes from JS), p.hint#emptyHint; (6) section.card #3 (1293-1301) — div.row holding select#pageSize with an inline style=\"flex:0 0 130px\" and an aria-label but no visible label, and button#makeBtn.btn.primary. Outside .wrap: div#toast[role=status][aria-live=polite] (1305) and footer.colophon (1306) with two inline-styled links. Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head> (1261-1262), then vendor-pdf-lib.js (525 KB classic, exposing window.PDFLib) and app.js as a module (1308-1309). app.js imports helpers.js (moveItem, dataUrlToBytes) and pdf.js (makePdfFromImages). There is NO <noscript>, NO skip link, NO CSP meta, and no .empty component in use.",
+  "cssClasses": [
+   ".wrap — page gutter, max-width var(--wrap)=44rem (index.html:331)",
+   "header.app — flex app bar, wraps at narrow widths, min-height calc(--tap + --s4) (356)",
+   "header.app img — 32x32 icon.svg, alt=\"\" (368)",
+   "header.app .spacer — flex:1 push (390)",
+   "header.app .tagline — subtitle slot, SHIPPED BUT UNUSED here (381)",
+   "a.tipbtn / #tipLink — 36px pill, revealed by app.js:136-137 (394)",
+   "#swsPrefsBtn — 36x36 icon button injected at runtime by sws-prefs.js (1006)",
+   ".hero / .hero h2 / .hero p — the marketing block; h2 is --t-2xl (413-416)",
+   "section.card / .card — surface panel, --r-card 10px, --s5/--s6 padding (451)",
+   "section.card > h2 — 12px uppercase micro-label; here it carries the LIVE PAGE COUNT ('4 PAGES'), which is the app's only capture feedback (463)",
+   ".hint — 15px instruction text; used for the capture tip and the empty state (635)",
+   ".btn / .btn.primary / .btn.big / .btn.small / .btn.danger — control set (550-590)",
+   ".btn.small — APP-CRITICAL: hardcoded min-height:36px, does not scale with --ui-scale; all four page controls use it (589)",
+   ".btn[disabled] — APP LAYER duplicate of the base's disabled rule (1253)",
+   ".pages — APP LAYER. grid, repeat(auto-fill, minmax(140px,1fr)), gap 10px; resolves to 1 column at 320px, 2 at 414px, 4 at 1280px (1255)",
+   ".pagecard — APP LAYER. 1px --line border, radius 12px (a magic number, not --r-card), overflow:hidden, background var(--bg) so a card sits canvas-coloured on a surface-coloured panel (1256)",
+   ".pagecard img — APP LAYER. width:100%, HARD height:150px, object-fit:cover — the crop that hides 31–60% of every page (1257)",
+   ".pagecard .bar — APP LAYER. flex, justify-content:space-between, 4px padding; wraps to two rows at Largest text (1258)",
+   ".pagecard .num — APP LAYER. .75rem/12px page-order badge in var(--muted), which High contrast cannot reach (1259)",
+   ".row / .row > * — legacy equal-columns row, children flex 1 1 12rem (347)",
+   "#toast — fixed pill, role=status; used only for errors, caps and the export result — never for a successful add (753)",
+   "#toast.act / #toast .undo — the shared undo affordance, styled and loaded, NEVER used by this app (784-802)",
+   "footer.colophon — centred privacy + feedback block, two inline style=\"color:inherit\" links (422)",
+   ".trust — the privacy stamp component; SHIPPED BUT UNUSED, despite this being the app whose whole pitch is privacy (437)",
+   ".empty / .empty .glyph / .empty h3 — the empty-state component; UNUSED, the app uses a bare p.hint#emptyHint instead (702-723)",
+   ".seg — segmented control; UNUSED (598)",
+   ".actionbar — sticky bottom bar; UNUSED, although the research puts every control in the bottom-third thumb zone (805)",
+   ".chip / .chips / .warn / .tablewrap / ul.plain — UNUSED by this app",
+   "[data-saved-flag] — the quiet 'Saved' flag; UNUSED (661)",
+   ".skip — skip-link style present in the base, no element uses it (840)",
+   "body background — app skin adds a fixed 26px scanner grid over the canvas in both schemes (1241-1249)"
+  ],
+  "dynamicMarkup": "Everything inside #pages is built by render() (app.js:65-87) on every single interaction. It calls box.replaceChildren() and rebuilds the whole grid from the `pages` array, so N pages means N full <img> elements each carrying a base64 data URL of roughly 100–150 KB in the src attribute (11 MB of DOM string at 100 pages, 73 MB heap). Per card: div.pagecard > img[alt='Page N'] (src set only if safeSrc() confirms a data:image/ prefix — app.js:63) + div.bar > span.num (the index) and a bare <span> holding four .btn.small buttons with aria-labels 'Move earlier' (←), 'Rotate' (⟳), 'Move later' (→) and 'Delete page' (✕). Names are positional and identical across cards. render() also toggles .hidden on #emptyHint and rewrites #pageHead.textContent to 'N page'/'N pages' or 'Pages' — the only capture feedback in the app, and it sits in a plain <h2> outside any live region. The file input's change handler (app.js:91-113) clears ev.target.value first, then awaits compressImage() for each file IN SEQUENCE, breaking at 100 pages or 150 MB of accumulated data URLs, falling back to a raw FileReader data URL when createImageBitmap throws, and calling render() exactly once at the end — so the UI shows nothing for the whole import. makeBtn (app.js:114-129) disables itself, swaps its label to 'Working…', calls makePdfFromImages, builds an <a download=\"scan.pdf\"> from a blob URL, clicks it, revokes after 500ms, and toasts the result. No element is ever focused programmatically, so every interaction ends with activeElement === BODY.",
+  "comfortDefects": [
+   "index.html:589 — .btn.small{min-height:36px} is a hardcoded pixel floor, so the four page controls measure 37x36 at default and 43x36 at Largest text while --tap is 66px. The comfort panel's headline setting does not move the only controls that manage the user's pages.",
+   "index.html:1295 — the page-size select carries an inline style=\"flex:0 0 130px\"; clientWidth is 128px at every text size and the option truncates to 'US Lett' at Largest. An inline pixel width is the one thing --ui-scale cannot override.",
+   "index.html:1259 + :81 + :926 — .pagecard .num uses var(--muted); --muted is declared on :root as var(--ink-2) and therefore computes once against the light value, while the High contrast override is scoped to body. Measured: .hint 5.53:1 → 15.1:1 with contrast:more, .num stays 5.53:1. The page-order badge is the one label High contrast cannot darken.",
+   "index.html:1259 — that same badge is .75rem/12px. The system's own comment says 14px body copy is 'the single most common reason a free tool feels cheap', and the research demands 16px minimum for labels that must survive glare. This is the label that proves the page order.",
+   "index.html:1288 — the page COUNT is rendered through `section.card > h2`, i.e. 12px uppercase --ink-2 micro-label styling. The most important status in the app is styled as chrome.",
+   "index.html:1258 — .pagecard .bar is a plain flex row with no wrap control; at Largest text the four buttons break to two lines inside the 165px card and the page number is stranded vertically centred beside the gap.",
+   "index.html:1257 — the 150px thumbnail height is fixed in px and never grows with --ui-scale, so a low-vision user who turns text up still gets the same tiny cropped preview.",
+   "index.html:1255 — minmax(140px, 1fr) is also a fixed px minimum, so at Largest+Roomy the columns SHRINK to 156px while everything in them grows.",
+   "No app-level use of .actionbar, so on a phone the export button sits at the bottom of a 12,872px page at 100 pages; the research is explicit that every control belongs in the bottom-third thumb zone.",
+   "Warm tint, dark mode, Easier reading and Reduced motion all behave correctly with pages loaded — verified, no defects there.",
+   "The comfort panel itself is clean: 7 fieldsets, real radios, permanent ✓ slot, pinned Done/Reset, zero axe violations open at Largest text on a 414px viewport."
+  ],
+  "navigationDefects": [
+   "There is no way back from a delete. app.js:84 splices and re-renders; no confirm, no toast, no undo — while sws-ui.js is loaded in <head> and window.SWS.undo is a function that this app never calls.",
+   "There is no way to see a page. The only view of a capture is the 150px cover-cropped thumbnail; no tap-to-enlarge, no full-page preview, no retake-one.",
+   "There is no way to clear the document. No 'Clear everything' control; the only reset is a reload, which is also the action that silently destroys the session.",
+   "The reorder buttons at the ends of the list are enabled and dead. moveItem (helpers.js:15-21) returns the same array when the target index is out of bounds, so 'Move earlier' on page 1 does nothing, shows nothing and stays clickable.",
+   "Reordering is one-step-at-a-time only. Moving page 12 to the front is 11 taps, each a full grid re-render (155ms at 100 pages), with no drag-to-reorder — the research asks for 'drag to reorder' where 'the visible order IS the export order'.",
+   "app.js:112 — one render() after the whole batch means an import of 20 photos leaves the UI unchanged for 4.6 seconds with no progress, no aria-busy and no disabled Add button.",
+   "The 100-page cap (app.js:96) announces itself only through a 2.4-second toast, and the Add button stays enabled afterwards with no persistent indicator.",
+   "The export is unnamed and unmeasured: always 'scan.pdf' (app.js:121), no size estimate before download, no quality choice.",
+   "A capture that cannot be embedded still looks like a page and is dropped at export (app.js:104-109 → pdf.js:26), so navigation from grid to output is not truth-preserving.",
+   "No skip link, though main#main exists at index.html:1273 and the .skip style at index.html:840.",
+   "No add-to-home-screen offer at any point, although a manifest ships; the research recommends offering it only after the first successful export.",
+   "Printing the page (Ctrl+P) is an unguarded path: the hero, the Add button and all page controls render on paper alongside cropped thumbnails."
+  ],
+  "a11yDefects": [
+   "app.js:65-87 — render() replaces the entire grid on every action, so activeElement is BODY after every move, rotate, delete and export. Verified by focusing a reorder button and pressing Enter.",
+   "index.html:1288 / app.js:69 — the page count is written to a plain <h2> with no role and no aria-live and is not inside any live region, so adding pages is announced to nobody. The toast never fires on a successful add.",
+   "app.js:78-85 — all four controls on every card share identical accessible names across the whole document ('Move earlier', 'Rotate', 'Move later', 'Delete page'). A screen-reader rotor on a 20-page document lists 20 identical entries.",
+   "app.js:71 — image alt is positional ('Page ' + (i+1)), so a completed reorder announces exactly the same before and after; the operation is undetectable through the accessibility tree.",
+   "Tab cost scales linearly and resets constantly: 3 + 4N + 4 stops (23 measured at 4 pages, 83 at 20), and every action returns focus to the top of the document.",
+   "app.js:84 — destructive delete with no confirmation and no live-region announcement; a screen-reader user cannot tell which page went.",
+   "No skip link (index.html:1273 has the target, index.html:840 has the style).",
+   "index.html:1295 — select#pageSize has an aria-label but no visible <label>; sighted users see a bare dropdown, and it is the one that truncates at Largest text.",
+   "index.html:1259 — 12px page-order badge that High contrast cannot darken (5.53:1 at contrast:more).",
+   "Cards that hold an undecodable image render a broken <img> with alt 'Page N' and no error text, so both sighted and screen-reader users are told it is a page.",
+   "app.js:117 — the export button's label is swapped to 'Working…' with no aria-busy and no role=status announcement of progress.",
+   "Rotate has no busy state, so a slow rotation on a large image gives no feedback and a second tap silently loses a rotation.",
+   "WHAT IS CORRECT AND WORTH KEEPING: axe (wcag2a/2aa/21a/21aa/22aa) returns ZERO violations in every state tested — empty, with pages, at 320/414/1280, at Largest, at Largest+Roomy, at High contrast + Easier reading, in dark mode, at warmth 3, and with the comfort panel open. Every focusable element is reachable and named; the file input is correctly hidden and driven by a labelled button; the toast is role=status aria-live=polite; the icon is alt=\"\".",
+   "Also correct: no keyboard trap anywhere, Escape closes the comfort panel, and the panel's radios support arrow-key navigation."
+  ],
+  "printSupport": "Inherited from the base layer only; the app layer contains no print rules at all. The base correctly hides header.app, footer.colophon, .tipbtn, #toast, #swsPrefsBtn and #swsPrefs, neutralises the warm tint, resets --ui-scale and --density, and forces ink-on-white for buttons and chips. What survives is wrong for this app: under print emulation with two pages loaded, the marketing hero prints, 'Add a page' prints, 'Make the PDF' prints, all eight page-control buttons print, and the thumbnails print still cropped at height:150px with object-fit:cover. Measured print width 414px, one dark fill. Nothing in the app layer is marked .noprint and there is no printonly path. For the one app in the portfolio whose output IS a document, Ctrl+P should either lay the captures out uncropped one per sheet or say 'use Make the PDF' — currently it prints the interface. Note that the real output path (the exported PDF) is correct and unwatermarked: Letter 612x792, A4 595.28x841.89, JPEG passthrough via /DCTDecode, no EXIF or GPS in the bytes.",
+  "riskyToRestyle": [
+   ".pagecard img height:150px (index.html:1257) — app.js does no measurement, so this can be changed freely, but object-fit:cover must go with it or a taller box just crops a different band.",
+   ".pages minmax(140px, 1fr) (index.html:1255) — safe to change, but note the 320px case already collapses to one column; anything above ~150px makes a 320px phone scroll a full screen per page.",
+   "The inline style=\"flex:0 0 130px\" on select#pageSize (index.html:1295) — this is markup, not CSS, so a stylesheet change will not win without !important. Remove the attribute.",
+   ".btn.small (index.html:589) is a BASE-layer rule shared by the whole portfolio; do not raise it here. Give the page controls their own class instead, or the change lands in 22 other apps.",
+   "var(--muted), var(--bg), var(--card), var(--chip) in the app layer (index.html:1256, 1259) are the base's legacy aliases resolved at :root — they are immune to the body-scoped High contrast override. Migrating them to --ink-2 / --canvas / --surface is a behaviour change, not a rename.",
+   "#pageHead is styled by the shared `section.card > h2` rule (index.html:463) but is used as a live count. Restyling that selector to make the count bigger will change the card heading in every app; give it its own element or class.",
+   "app.js:63 safeSrc() only sets img.src when the string starts with 'data:image/' — any restyle that swaps <img> for a CSS background must keep that guard.",
+   "Card content is rebuilt wholesale by replaceChildren() on every interaction, so no CSS transition on .pagecard will ever run and any JS-added class is lost on the next render.",
+   "The 26px scanner grid on <body> (index.html:1241-1249) is background-attachment:fixed and is declared three times (light, media-dark, attribute-dark); changing it means changing all three or the schemes diverge.",
+   ".pagecard uses a literal 12px border-radius rather than var(--r-card)=10px, so cards are visibly rounder than the panels they sit in.",
+   "vendor-pdf-lib.js is a 525 KB classic script loaded before app.js and precached by sw.js — any change to the script tags must be mirrored in the ASSETS list in sw.js and the VERSION bumped.",
+   "The four ← ⟳ → ✕ glyphs are text content inside buttons, not SVG; changing font-family or the Easier-reading letter-spacing shifts their optical centre inside a 37px box."
+  ]
+ }
+}
