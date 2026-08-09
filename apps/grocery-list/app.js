@@ -30,7 +30,16 @@ function toast(msg, ms) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
+  // 2.4s was not long enough to read a sentence one-handed in a shop.
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 4000);
+}
+// The promise as a visible object rather than grey copy in the footer. This app
+// does sync through the cloud, so the claim is scoped to what is actually true:
+// no ads, no accounts for the people you share with, nothing to subscribe to.
+function trustNote(tail) {
+  return el('div', { class: 'trust' },
+    el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
+    el('span', {}, el('b', {}, 'No ads. No accounts for family. No subscription.'), ' ' + tail));
 }
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
@@ -46,6 +55,7 @@ function friendly(e) {
 let user = null;
 let itemDraft = '';
 let addFocused = false; // survive live-snapshot redraws mid-typing
+let shareOpen = false;  // ditto for the share disclosure
 const live = {
   boardId: null, code: null, board: null, entries: [],
   unsubs: [],
@@ -53,6 +63,7 @@ const live = {
     this.unsubs.forEach(u => u && u());
     this.unsubs = [];
     this.boardId = null; this.code = null; this.board = null; this.entries = [];
+    shareOpen = false;
   },
 };
 
@@ -77,7 +88,7 @@ function setGrowthFooter(participant) {
   if (!o) return;
   if (!o.dataset.home) o.dataset.home = o.innerHTML;
   o.innerHTML = participant
-    ? 'Made with <a href="./" style="color:inherit">Grocery List</a> — free, no ads. <a href="./" style="color:inherit">Start yours</a>'
+    ? 'Made with <a href="./">Grocery List</a> — free, no ads. <a href="./">Start yours</a>'
     : o.dataset.home;
 }
 
@@ -90,7 +101,8 @@ async function renderHome() {
     el('h2', {}, 'The list is always in your pocket'),
     el('p', {}, 'Add from the couch, check off at the store — live for the whole household from one link. ',
       el('strong', {}, 'No app installs for family, no accounts, no ads.')),
-    el('button', { class: 'btn primary', type: 'button', onclick: startCreate }, 'Start our list')));
+    el('button', { class: 'btn primary big', type: 'button', onclick: startCreate }, 'Start our list'),
+    trustNote('Only the person who starts the list signs in.')));
 
   const codeInput = el('input', {
     type: 'text', placeholder: 'ABC123', maxlength: '8', autocomplete: 'off',
@@ -106,23 +118,24 @@ async function renderHome() {
     } }, 'Open');
   v.append(el('section', { class: 'card' },
     el('h2', {}, 'Joining a household list?'),
-    el('div', { class: 'row' }, codeInput, openBtn)));
+    el('div', { class: 'row nowrap' }, codeInput, openBtn)));
 
   if (user && !D.isAnon(user)) {
     const sec = el('section', { class: 'card' }, el('h2', {}, 'Your lists'));
     const ul = el('ul', { class: 'plain' });
-    sec.append(ul, el('p', { class: 'hint', text: 'Loading…' }));
+    sec.append(ul, el('p', { class: 'sub', text: 'Loading…' }));
     v.append(sec);
     try {
       const boards = (await D.myBoards(user.uid)).filter(b => b.skin === 'grocery');
       sec.lastChild.remove();
-      if (boards.length === 0) sec.append(el('p', { class: 'hint', text: 'No lists yet — most households only ever need one.' }));
+      if (boards.length === 0) sec.append(el('p', { class: 'sub', text: 'No lists yet — most households only ever need one.' }));
       for (const b of boards) {
         ul.append(el('li', {},
-          el('label', { style: 'cursor:default' }, b.title),
-          el('button', { class: 'btn small', type: 'button', onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open')));
+          el('span', { class: 'grow' }, b.title),
+          el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
+            'aria-label': 'Open ' + b.title, onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open')));
       }
-    } catch (e) { sec.lastChild.textContent = friendly(e); }
+    } catch (e) { const p = sec.lastChild; p.className = 'warn'; p.textContent = friendly(e); }
   }
 }
 
@@ -143,14 +156,20 @@ async function renderBoard(code) {
   const v = $('view');
   if (live.code !== code) {
     live.stop();
-    v.replaceChildren(el('p', { class: 'hint', text: 'Opening the list…' }));
+    v.replaceChildren(el('p', { class: 'sub', text: 'Opening the list…' }));
     try { await D.ensureSignedIn(); }
-    catch (e) { v.replaceChildren(el('p', { class: 'sub', text: 'Couldn’t connect — check your internet and reload.' })); return; }
+    catch (e) {
+      v.replaceChildren(el('section', { class: 'card' },
+        el('h2', { class: 'lead' }, 'Couldn’t connect'),
+        el('p', { class: 'warn' }, 'Check your internet connection and reload the page.')));
+      return;
+    }
     const boardId = await D.resolveCode(code).catch(() => null);
     if (!boardId) {
       v.replaceChildren(el('section', { class: 'card' },
-        el('p', { class: 'sub', text: 'That list doesn’t exist — the link may have been rotated.' }),
-        el('p', {}, el('a', { href: '#/' }, 'Go home'))));
+        el('h2', { class: 'lead' }, 'That list isn’t here'),
+        el('p', { class: 'warn' }, 'The link may have been rotated, or the code was mistyped.'),
+        el('p', { class: 'listfoot' }, el('a', { class: 'btn', href: '#/' }, 'Go home'))));
       return;
     }
     live.boardId = boardId; live.code = code;
@@ -180,6 +199,10 @@ function drawBoard() {
   const own = isOwner();
   setGrowthFooter(!own);
   const v = $('view');
+  // A snapshot from anyone in the household rebuilds this whole subtree, so
+  // remember where the keyboard was and put it back afterwards.
+  const active = document.activeElement;
+  const keepFocus = active && active.dataset ? active.dataset.fkey : null;
   v.replaceChildren();
 
   const open = live.entries.filter(e => !e.done);
@@ -188,6 +211,7 @@ function drawBoard() {
   // add box first — it's the most-used control
   const input = el('input', {
     type: 'text', maxlength: '120', placeholder: 'Add something… “milk”, “the good coffee”',
+    'aria-label': 'Add an item to the list',
     value: itemDraft,
     oninput: (ev) => { itemDraft = ev.target.value; },
     onfocus: () => { addFocused = true; },
@@ -209,14 +233,16 @@ function drawBoard() {
       try { await D.addEntry(live.boardId, b, { authorName: 'someone', body, type: 'note' }); }
       catch (e) { toast(friendly(e), 4500); }
     } }, 'Add');
-  v.append(el('section', { class: 'card' },
-    el('div', { class: 'row' }, input, addBtn)));
+  v.append(el('section', { class: 'card noprint' },
+    el('div', { class: 'row nowrap' }, input, addBtn)));
 
+  const heading = open.length ? open.length + ' to get'
+    : (live.entries.length ? 'All done 🎉' : 'Nothing on the list yet');
   const listCard = el('section', { class: 'card' },
-    el('h2', {}, open.length ? open.length + ' to get' : 'All done 🎉'));
+    el('h2', { class: 'lead' }, heading));
   const ul = el('ul', { class: 'plain' });
   const renderItem = (e) => {
-    const cb = el('input', { type: 'checkbox',
+    const cb = el('input', { type: 'checkbox', 'data-fkey': 'chk:' + e.id,
       onchange: async () => {
         try { await D.toggleDone(live.boardId, e.id, cb.checked); }
         catch (err) { cb.checked = !cb.checked; toast(friendly(err), 4500); }
@@ -225,49 +251,83 @@ function drawBoard() {
     return el('li', { class: e.done ? 'done' : '' },
       el('label', {}, cb, e.body),
       (own || (user && e.creatorUid === user.uid))
-        ? el('button', { class: 'btn small', type: 'button', 'aria-label': 'Remove item',
+        // A distinct name per row: twenty buttons all reading "Remove item"
+        // tell a screen-reader user nothing about which one destroys what.
+        ? el('button', { class: 'btn icon noprint', type: 'button',
+            'aria-label': 'Remove ' + e.body, 'data-fkey': 'rm:' + e.id,
             onclick: () => D.deleteEntry(live.boardId, e.id).catch(err => toast(friendly(err))) }, '✕')
         : null);
   };
   for (const e of open.slice().reverse()) ul.append(renderItem(e));
   for (const e of done) ul.append(renderItem(e));
-  if (live.entries.length === 0)
-    listCard.append(el('p', { class: 'hint', text: 'Empty list, full fridge — for now.' }));
+  if (live.entries.length === 0) {
+    listCard.append(el('div', { class: 'empty' },
+      el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🧺'),
+      el('h3', {}, 'Nothing here yet'),
+      el('p', {}, 'Type the first thing in the box above. It lands on everyone’s phone straight away.'),
+      own ? el('button', { class: 'btn noprint', type: 'button',
+        onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') },
+        'Copy the link to share') : null));
+  }
   listCard.append(ul);
   if (own && done.length) {
-    listCard.append(el('div', { style: 'margin-top:10px' },
-      el('button', { class: 'btn small', type: 'button', onclick: async () => {
+    listCard.append(el('div', { class: 'listfoot noprint' },
+      el('button', { class: 'btn', type: 'button', onclick: async () => {
+        // Deletes n items at once and there is no undo — so it asks first,
+        // the same way Rotate link and Delete list already do.
+        if (!confirm('Remove ' + done.length + ' checked item(s) from the list? This cannot be undone.')) return;
         try { const n = await D.clearChecked(live.boardId, live.entries); toast(n + ' checked item(s) cleared'); }
         catch (e) { toast(friendly(e), 4500); }
       } }, 'Clear checked (' + done.length + ')')));
   }
   v.append(listCard);
 
-  const share = el('details', { class: 'manage' }, el('summary', {}, 'Share with the household'));
+  const share = el('details', Object.assign({ class: 'manage noprint',
+    ontoggle: (ev) => { shareOpen = ev.target.open; } }, shareOpen ? { open: '' } : null),
+    el('summary', { 'data-fkey': 'share' }, 'Share with the household'));
   const inner = el('div', { class: 'inner' },
     el('div', { class: 'sharecode', text: live.code }),
     el('div', { class: 'row' },
-      el('button', { class: 'btn primary', type: 'button',
+      // Add stays the board's only primary; inside the panel these are peers.
+      el('button', { class: 'btn', type: 'button',
         onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') }, 'Copy link'),
-      el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')));
-  if (own) inner.append(el('div', { class: 'row', style: 'margin-top:8px' },
+      el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
+    trustNote('Whoever you send this to just opens it.'));
+  if (own) inner.append(el('div', { class: 'row listfoot' },
     el('button', { class: 'btn', type: 'button', onclick: async () => {
       if (!confirm('Rotate the link? The old one stops working for everyone.')) return;
       try { const code = await D.rotateCode(live.boardId, live.code);
         live.code = code; location.hash = '#/b/' + code; toast('New link ready'); }
       catch (e) { toast(friendly(e), 4500); }
     } }, 'Rotate link'),
-    el('button', { class: 'btn small', type: 'button', style: 'color:var(--neg)', onclick: async () => {
+    // .danger is a border and a hover state, not colour alone.
+    el('button', { class: 'btn danger', type: 'button', onclick: async () => {
       if (!confirm('Delete the whole list for everyone?')) return;
       try { await D.deleteBoard(live.boardId, live.code); location.hash = '#/'; }
       catch (e) { toast(friendly(e), 4500); }
     } }, 'Delete list')));
   share.append(inner);
   v.append(share);
+
+  // One short live announcement per change, instead of aria-live on #view
+  // re-reading the entire board every time a family member checks something off.
+  const status = open.length ? open.length + ' to get'
+    : (live.entries.length ? 'All done' : 'List is empty');
+  const sr = $('listStatus');
+  if (sr.textContent !== status) sr.textContent = status;
+
+  if (keepFocus) {
+    const again = v.querySelector('[data-fkey="' + keepFocus.replace(/"/g, '\\"') + '"]');
+    if (again) again.focus();
+  }
 }
 
 function showQR() {
   const url = shareUrl(live.code, baseUrl());
+  // The QR path was empty for anyone not looking at the screen: the canvas
+  // carries the URL as its name, and the URL is also selectable text below it.
+  $('qrCanvas').setAttribute('aria-label', 'QR code for ' + url);
+  $('qrUrl').textContent = url;
   try {
     const qr = qrcode(0, 'M');
     qr.addData(url); qr.make();

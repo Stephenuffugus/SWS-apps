@@ -4,6 +4,16 @@
 const CONFIG = { tipUrl: 'https://buy.stripe.com/bJe28s1vj5P98zH7i17EQ0a' };
 
 const $ = (id) => document.getElementById(id);
+
+/* A segmented control is a toggle-button group: .active carries the look,
+   aria-pressed carries the same fact to a screen reader. Keeping the two in
+   one function is what stops them drifting apart. */
+const setPressed = (el, on) => {
+  if (!el) return;
+  el.classList.toggle('active', on);
+  el.setAttribute('aria-pressed', on ? 'true' : 'false');
+};
+
 function el(tag, attrs, ...kids) {
   const n = document.createElement(tag);
   if (attrs) for (const k of Object.keys(attrs)) {
@@ -99,8 +109,10 @@ function save() {
 }
 
 function renderForm() {
-  $('modeBaby').classList.toggle('active', mode === 'baby');
-  $('modePet').classList.toggle('active', mode === 'pet');
+  // .active carries the look; aria-pressed carries the same fact to a screen
+  // reader. This is a toggle-button group, not a tablist.
+  setPressed($('modeBaby'), mode === 'baby');
+  setPressed($('modePet'), mode === 'pet');
   const schema = SCHEMAS[mode];
   const form = $('form');
   form.replaceChildren();

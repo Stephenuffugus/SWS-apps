@@ -1,6 +1,6 @@
 /* Signature Maker service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'sig-v4';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest"];
+const VERSION = 'sig-v6';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest", "./fonts/fraunces-latin.woff2"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

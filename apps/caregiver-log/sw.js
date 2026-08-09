@@ -1,5 +1,5 @@
 /* Caregiver Log service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'care-v4';
+const VERSION = 'care-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -13,8 +13,7 @@ const ASSETS = [
   './apple-touch-icon.png',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js',
-];
+  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js', "./fonts/fraunces-latin.woff2"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

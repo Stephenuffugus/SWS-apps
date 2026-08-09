@@ -1,6 +1,6 @@
 /* Scan to PDF service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'scan-v4';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./pdf.js","./vendor-pdf-lib.js"];
+const VERSION = 'scan-v6';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./pdf.js","./vendor-pdf-lib.js", "./fonts/space-grotesk-latin.woff2"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

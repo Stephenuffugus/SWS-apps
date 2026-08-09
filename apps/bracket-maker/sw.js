@@ -1,6 +1,6 @@
 /* Bracket Maker service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'bracket-v4';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js"];
+const VERSION = 'bracket-v6';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js", "./fonts/space-grotesk-latin.woff2"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

@@ -20,12 +20,22 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 let toastTimer = null;
-function toast(msg, ms) {
+/* `action` turns the toast into the app's undo surface: {label, onclick}. It
+   lives inside the aria-live region so the way back is announced, not just
+   drawn. */
+function toast(msg, ms, action) {
   const t = $('toast');
-  t.textContent = msg;
+  const hide = () => { t.classList.remove('show'); clearTimeout(toastTimer); };
+  t.replaceChildren(document.createTextNode(msg));
+  if (action) {
+    t.append(' ', el('button', {
+      class: 'undo', type: 'button',
+      onclick: () => { hide(); action.onclick(); },
+    }, action.label));
+  }
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
+  toastTimer = setTimeout(hide, ms || 2400);
 }
 
 async function copyText(text, okMsg) {
@@ -52,20 +62,39 @@ export function sortTimes(times) {
   return [...times].sort((a, b) => TIME_ORDER.indexOf(a) - TIME_ORDER.indexOf(b));
 }
 
+/* Removing is one tap and always reversible — the person using this is often
+   tired, and a confirm dialog on every row is its own kind of hostile. */
+function removeMed(id) {
+  const idx = data.meds.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  const [gone] = data.meds.splice(idx, 1);
+  save(); renderList();
+  // focus must not fall to <body> when the button the user pressed disappears
+  const buttons = $('medList').querySelectorAll('button');
+  const next = buttons[Math.min(idx, buttons.length - 1)] || $('emptyAdd');
+  if (next) next.focus();
+  toast('Removed ' + gone.name, 7000, {
+    label: 'Undo',
+    onclick: () => {
+      data.meds.splice(Math.min(idx, data.meds.length), 0, gone);
+      save(); renderList();
+      toast(gone.name + ' is back on the card');
+    },
+  });
+}
+
 function renderList() {
   const list = $('medList');
   list.replaceChildren();
-  $('emptyHint').classList.toggle('hidden', data.meds.length > 0);
+  $('emptyState').classList.toggle('hidden', data.meds.length > 0);
   for (const m of data.meds) {
     list.append(el('li', {},
       el('div', { class: 'grow' },
         el('div', {}, el('strong', {}, m.name), m.dose ? ' — ' + m.dose : ''),
         el('div', { class: 'sub', text: sortTimes(m.times).join(' · ') + (m.notes ? '  ·  ' + m.notes : '') })),
+      // every delete button on the page would otherwise announce as "Remove"
       el('button', { class: 'btn small danger', type: 'button', 'aria-label': 'Remove ' + m.name,
-        onclick: () => {
-          data.meds = data.meds.filter(x => x.id !== m.id);
-          save(); renderList();
-        } }, '✕')));
+        onclick: () => removeMed(m.id) }, 'Remove')));
   }
 }
 
@@ -116,8 +145,10 @@ function wire() {
     $('medName').value = ''; $('medDose').value = ''; $('medNotes').value = '';
     $('medTimes').querySelectorAll('input').forEach(c => { c.checked = false; });
     save(); renderList();
+    toast(name + ' added to the card');
     $('medName').focus();
   });
+  $('emptyAdd').addEventListener('click', () => { $('medName').focus(); });
   $('printBtn').addEventListener('click', () => {
     if (data.meds.length === 0) { toast('Add the medications first'); return; }
     renderSheet();

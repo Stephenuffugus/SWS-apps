@@ -6,6 +6,31 @@ with a tip jar — the brand promise across every app here:
 
 > Nothing leaves your device. No account. No ads. No subscription.
 
+## Design
+
+All 23 apps share one design system: identical geometry, spacing, components,
+focus behaviour and print rules — and a palette, display face and background
+texture that are different for every app. One studio, twenty-three products.
+
+- [`design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md) — the system: tokens,
+  component contract, the five identity axes, and the rules for an app layer
+- [`design/STATUS.md`](design/STATUS.md) — what the overhaul changed, what is
+  still outstanding
+- [`design/findings/`](design/findings/) — per-app competitor research, real
+  user complaints, and the UI audit that drove the work
+
+Colours are specified in OKLCH and compiled to hex, with every text,
+control-boundary, focus and semantic colour solved against a WCAG target rather
+than chosen by eye. `npm run design:check` fails the build if any palette
+would ship unreadable.
+
+```bash
+npm run design:apply     # rebuild tokens, splice the base into all 23 apps
+npm run design:check     # contrast audit (non-zero exit on failure)
+npm run design:preview   # screenshot all 23 skins, light and dark
+npm test                 # every app's test suite
+```
+
 ## Product docs
 
 - [`00-portfolio-brief.md`](00-portfolio-brief.md) — the nine products, four engines, sequencing, open brand decisions
