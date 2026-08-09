@@ -86,3 +86,243 @@ export function nudgeMessage(boardTitle, slots, url) {
 export function shareUrl(code, base) {
   return base + '#/b/' + code;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE DATE MODEL
+
+   firestore.rules pins a slot document to exactly
+   ['label','capacity','order','claimedCount'] — a new `startsAt` field cannot
+   ship without a rules change, and the rules are shared with signup-sheets.
+   `order` is already a number, so the date IS the order key:
+
+       202609120900  =  Sat 12 Sep 2026, 09:00
+
+   That sorts chronologically for free, survives a reschedule (edit the date,
+   the row moves), and is fully recoverable, so "next up", the week block, the
+   .ics export and the past/upcoming split all become possible.
+
+   Undated events get a key in the year-3000 band so they land after the real
+   schedule. Slots written before this model have a small append index (1, 2,
+   3…); those are treated as undated and keep their hand-made order.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export const DATED_MIN = 190001010000;
+export const DATED_MAX = 299912312359;
+export const UNDATED_BASE = 300000000000;
+
+/** '2026-09-12' + '09:00' → 202609120900. Time is optional; 0000 means
+    "no start time given" (nobody schedules a 12:00am practice). */
+export function dateKey(dateStr, timeStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || '').trim());
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 1900 || y > 2999) return null;
+  let hh = 0, mi = 0;
+  const t = /^(\d{1,2}):(\d{2})/.exec(String(timeStr || '').trim());
+  if (t) {
+    hh = +t[1]; mi = +t[2];
+    if (hh > 23 || mi > 59) { hh = 0; mi = 0; }
+  }
+  return ((y * 100 + mo) * 100 + d) * 10000 + hh * 100 + mi;
+}
+
+export function isDated(order) {
+  const n = Number(order);
+  return Number.isFinite(n) && n >= DATED_MIN && n <= DATED_MAX;
+}
+
+/** 202609120900 → {y,m,d,hh,mm,hasTime}, or null when the slot has no date. */
+export function keyParts(order) {
+  if (!isDated(order)) return null;
+  const n = Math.floor(Number(order));
+  const mm = n % 100, hh = Math.floor(n / 100) % 100;
+  const d = Math.floor(n / 10000) % 100;
+  const m = Math.floor(n / 1000000) % 100;
+  const y = Math.floor(n / 100000000);
+  if (m < 1 || m > 12 || d < 1 || d > 31 || hh > 23 || mm > 59) return null;
+  return { y, m, d, hh, mm, hasTime: hh !== 0 || mm !== 0 };
+}
+
+/** A local Date for the slot's start (midnight when no time was given). */
+export function keyToDate(order) {
+  const p = keyParts(order);
+  if (!p) return null;
+  const dt = new Date(p.y, p.m - 1, p.d, p.hh, p.mm, 0, 0);
+  return isNaN(dt) ? null : dt;
+}
+
+/** 'YYYY-MM-DD' and 'HH:MM' back out of a key, for re-filling an edit form. */
+export function keyToInputs(order) {
+  const p = keyParts(order);
+  if (!p) return { date: '', time: '' };
+  const p2 = (n) => String(n).padStart(2, '0');
+  return {
+    date: `${p.y}-${p2(p.m)}-${p2(p.d)}`,
+    time: p.hasTime ? `${p2(p.hh)}:${p2(p.mm)}` : '',
+  };
+}
+
+/* ---------- the label carries the human parts, in plain readable text ----------
+   "Game vs Hawks · at Kestrel Park, Field 4 · wear blue"
+   Prefixes rather than sigils, so the label still reads correctly in a printed
+   sheet, a pasted text message and a calendar entry. Anything unrecognised
+   stays part of the name, which is what every pre-existing label does. */
+
+const SEP = ' · ';
+
+export function composeLabel({ name, where, wear }) {
+  const clean = (s, n) => String(s || '').replace(/[·\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+  const parts = [clean(name, 70)];
+  const w = clean(where, 44);
+  const k = clean(wear, 24);
+  if (w) parts.push('at ' + w);
+  if (k) parts.push('wear ' + k);
+  return parts.filter(Boolean).join(SEP).slice(0, 120);
+}
+
+export function parseLabel(label) {
+  const segs = String(label || '').split(SEP);
+  const nameBits = [];
+  let where = '', wear = '';
+  for (const raw of segs) {
+    const s = raw.trim();
+    if (!where && /^at\s+\S/i.test(s)) { where = s.slice(3).trim(); continue; }
+    if (!wear && /^wear\s+\S/i.test(s)) { wear = s.slice(5).trim(); continue; }
+    nameBits.push(s);
+  }
+  return { name: nameBits.join(SEP).trim(), where, wear };
+}
+
+/* ---------- formatting ---------- */
+
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function formatTime(hh, mm) {
+  const ap = hh < 12 ? 'AM' : 'PM';
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, '0')} ${ap}`;
+}
+
+/** 202609120900 → 'Sat, Sep 12 · 9:00 AM'. Returns '' for undated slots. */
+export function formatKey(order, { withYear = false } = {}) {
+  const p = keyParts(order);
+  if (!p) return '';
+  const dt = keyToDate(order);
+  let s = `${DOW[dt.getDay()]}, ${MON[p.m - 1]} ${p.d}`;
+  if (withYear) s += `, ${p.y}`;
+  if (p.hasTime) s += ` · ${formatTime(p.hh, p.mm)}`;
+  return s;
+}
+
+/** Short form for a text message: 'Sat 9/12'. */
+export function shortDate(order) {
+  const p = keyParts(order);
+  if (!p) return '';
+  const dt = keyToDate(order);
+  return `${DOW[dt.getDay()]} ${p.m}/${p.d}`;
+}
+
+/* Chronological first, then undated/legacy rows in their hand-made order. */
+export function sortSlots(slots) {
+  return [...(slots || [])].sort((a, b) => {
+    const da = isDated(a.order), db_ = isDated(b.order);
+    if (da !== db_) return da ? -1 : 1;
+    return (Number(a.order) || 0) - (Number(b.order) || 0);
+  });
+}
+
+/** An event is "over" once its day has ended (or 4h after a timed start). */
+export function isPast(order, now) {
+  const dt = keyToDate(order);
+  if (!dt) return false;
+  const p = keyParts(order);
+  const end = p.hasTime
+    ? new Date(dt.getTime() + 4 * 3600 * 1000)
+    : new Date(p.y, p.m - 1, p.d, 23, 59, 59);
+  return end.getTime() < (now instanceof Date ? now : new Date(now)).getTime();
+}
+
+/* ---------- escape hatches: nobody is ever trapped in this app ---------- */
+
+const icsEsc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/[;,]/g, (c) => '\\' + c).replace(/\r?\n/g, '\\n');
+const p2 = (n) => String(n).padStart(2, '0');
+
+/** RFC 5545 folding: no line over 75 octets. */
+function fold(line) {
+  if (line.length <= 73) return line;
+  const out = [line.slice(0, 73)];
+  let rest = line.slice(73);
+  while (rest.length > 72) { out.push(' ' + rest.slice(0, 72)); rest = rest.slice(72); }
+  if (rest) out.push(' ' + rest);
+  return out.join('\r\n');
+}
+
+/** The whole season as a calendar file. Floating local times — no timezone
+    database, no permission prompt, no OAuth: the parent gets a file. */
+export function seasonIcs({ title, slots, url, stamp }) {
+  const now = stamp instanceof Date ? stamp : new Date();
+  const dtstamp = `${now.getUTCFullYear()}${p2(now.getUTCMonth() + 1)}${p2(now.getUTCDate())}T${p2(now.getUTCHours())}${p2(now.getUTCMinutes())}${p2(now.getUTCSeconds())}Z`;
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sky Wolf Studios//Team Parent//EN',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'X-WR-CALNAME:' + icsEsc(title),
+  ];
+  let n = 0;
+  for (const s of sortSlots(slots)) {
+    const p = keyParts(s.order);
+    if (!p) continue; // undated rows are duties, not calendar entries
+    const { name, where, wear } = parseLabel(s.label);
+    const day = `${p.y}${p2(p.m)}${p2(p.d)}`;
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + (s.id || 'slot' + n) + '@team-parent.sws');
+    lines.push('DTSTAMP:' + dtstamp);
+    if (p.hasTime) {
+      const startMin = p.hh * 60 + p.mm;
+      const endMin = Math.min(startMin + 90, 23 * 60 + 59);
+      lines.push(`DTSTART:${day}T${p2(p.hh)}${p2(p.mm)}00`);
+      lines.push(`DTEND:${day}T${p2(Math.floor(endMin / 60))}${p2(endMin % 60)}00`);
+    } else {
+      const d2 = new Date(p.y, p.m - 1, p.d + 1);
+      lines.push(`DTSTART;VALUE=DATE:${day}`);
+      lines.push(`DTEND;VALUE=DATE:${d2.getFullYear()}${p2(d2.getMonth() + 1)}${p2(d2.getDate())}`);
+    }
+    lines.push('SUMMARY:' + icsEsc(name || s.label));
+    if (where) lines.push('LOCATION:' + icsEsc(where));
+    const desc = [wear ? 'Wear ' + wear : '', url ? 'Always-current schedule: ' + url : ''].filter(Boolean).join('\n');
+    if (desc) lines.push('DESCRIPTION:' + icsEsc(desc));
+    if (url) lines.push('URL:' + url);
+    lines.push('END:VEVENT');
+    n++;
+  }
+  lines.push('END:VCALENDAR');
+  return lines.map(fold).join('\r\n') + '\r\n';
+}
+
+/** The paste-into-the-group-chat block for the next few days. The category's
+    push notifications land ~30% of the time; a text message lands. */
+export function weekMessage({ title, url, events, now, days = 7 }) {
+  const from = now instanceof Date ? now : new Date();
+  const until = new Date(from.getFullYear(), from.getMonth(), from.getDate() + days, 23, 59, 59);
+  const soon = sortSlots(events || []).filter((s) => {
+    const dt = keyToDate(s.order);
+    return dt && !isPast(s.order, from) && dt <= until;
+  });
+  const lines = [`${title} — next ${days} days:`];
+  if (soon.length === 0) lines.push('Nothing on the calendar this week.');
+  for (const s of soon.slice(0, 20)) {
+    const { name, where, wear } = parseLabel(s.label);
+    const bits = [shortDate(s.order)];
+    const p = keyParts(s.order);
+    if (p.hasTime) bits.push(formatTime(p.hh, p.mm));
+    bits.push(name || s.label);
+    if (where) bits.push(where);
+    if (wear) bits.push('wear ' + wear);
+    if (s.who && s.who.length) bits.push(s.who.join(', '));
+    else if (s.needed > 0) bits.push(`${s.needed} still needed`);
+    lines.push('• ' + bits.join(' · '));
+  }
+  lines.push('');
+  lines.push(`Always current (no app, no account): ${url}`);
+  return lines.join('\n');
+}

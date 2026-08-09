@@ -1242,28 +1242,138 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.fillbar{height:8px; border-radius:4px; background:var(--chip); overflow:hidden; margin:8px 0 4px}
-.fillbar>div{height:100%; background:var(--accent); border-radius:4px; transition:width .3s}
+
+/* ── The trip name. It is the only thing identifying this list on screen and
+   the only thing identifying it on paper, so it is not an eyebrow. ───────── */
+.triptitle{
+  font-size:var(--t-xl);
+  font-weight:650;
+  line-height:var(--lh-tight);
+  color:var(--ink);
+  margin:0;
+  overflow-wrap:anywhere;
+}
+.titlerow{display:flex; align-items:baseline; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s3)}
+.titlerow .triptitle{flex:1 1 auto; min-width:0}
+
+/* ── Progress ───────────────────────────────────────────────────────────── */
+.fillbar{
+  height:10px;
+  border-radius:var(--r-pill);
+  background:var(--surface-2);
+  border:1px solid var(--line-2);
+  overflow:hidden;
+  margin:0 0 var(--s2);
+}
+.fillbar > div{
+  height:100%;
+  width:var(--pct,0%);
+  background:var(--accent-fill);
+  border-radius:var(--r-pill);
+  transition:width var(--dur-3) var(--ease);
+}
+#fillText{margin:0 0 var(--s3)}
+
+/* ── List rows ──────────────────────────────────────────────────────────── */
+.grp{margin:0 0 var(--s4); break-inside:auto}
+.grp:last-child{margin-bottom:0}
+.grp > h3{
+  display:flex; align-items:baseline; gap:var(--s2);
+  font-size:var(--t-micro);
+  font-weight:650;
+  letter-spacing:0.075em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+  margin:var(--s3) 0 var(--s1);
+}
+.grp > h3 .cnt{font-weight:600; letter-spacing:0; text-transform:none; color:var(--ink-3)}
+
+/* The row hairline used to measure 1.31:1 — invisible, so a 56-row list read
+   as one block. --line-2 is the solved 3:1 control boundary. */
+ul.plain > li{border-bottom-color:var(--line-2)}
 
 ul.plain label{
-  flex:1; display:flex; align-items:center; gap:10px; padding:9px 0; cursor:pointer;
-  font-size:.98rem; overflow-wrap:anywhere; min-width:0;
+  flex:1 1 auto; min-width:0;
+  display:flex; align-items:center; gap:var(--s3);
+  padding:var(--s2) 0;
+  cursor:pointer;
+  overflow-wrap:anywhere;
 }
-ul.plain input[type=checkbox]{width:20px; height:20px; accent-color:var(--accent); flex:0 0 auto}
-ul.plain li.done label{color:var(--muted); text-decoration:line-through}
-.x{border:0; background:none; color:var(--muted); cursor:pointer; font-size:.95rem; padding:6px}
+/* em, not px: this is the control the user has to hit for every single item,
+   and in raw pixels it was the one thing the comfort panel could not reach. */
+ul.plain input[type=checkbox]{width:1.5em; height:1.5em; accent-color:var(--accent); flex:0 0 auto}
+ul.plain li.done > label{color:var(--ink-2); text-decoration:line-through}
+.rowbtn{flex:0 0 auto; font-size:var(--t-base)}
+.rowbtn.del:hover:not(:disabled){color:var(--neg); background:var(--neg-soft)}
+.editrow{flex:1 1 auto; min-width:0; display:flex; gap:var(--s2); flex-wrap:wrap}
+.editrow input{flex:1 1 8rem; min-width:0}
 
+/* ── Preset chips are the app's primary path, so they are real targets ──── */
+#presets .chip{
+  min-height:var(--tap);
+  padding:var(--s2) var(--s4);
+  font-size:var(--t-sm);
+  border-color:var(--line-2);
+  cursor:pointer;
+}
+#presets .chip:hover:not(.on){background:var(--accent-soft); border-color:var(--accent)}
+#presets .chip .tick{font-weight:700}
+
+/* ── The shared-link chooser. In flow, never over a primary surface. ────── */
+#importBar:not(.hidden){display:block; margin-bottom:var(--s4)}
+#importBar .warn p{margin:0 0 var(--s3)}
+#importBar .warn p:last-child{margin-bottom:0}
+
+/* ── QR dialog. The heading used to be a hardcoded #111 on the UA's dark
+   Canvas: 1.01:1, i.e. not there at all. ────────────────────────────────── */
+#qrDlg{
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  padding:var(--s5);
+  max-width:min(92vw, 26rem);
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow-2);
+  text-align:center;
+}
+/* ::backdrop does not inherit custom properties in every engine we ship to,
+   which is why the base writes this one literal too (#swsPrefs::backdrop). */
+#qrDlg::backdrop{background:rgba(0,0,0,0.45)}
+#qrDlg h3{font-size:var(--t-lg); color:var(--ink); margin:0 0 var(--s4)}
+#qrCanvas{
+  display:block; margin:0 auto;
+  max-width:100%; height:auto;
+  border-radius:var(--r-sm);
+  image-rendering:pixelated;
+}
+#qrNote{margin:var(--s4) 0 0; text-align:left}
+#qrActions{margin-top:var(--s4); justify-content:center}
+
+/* The base only un-hides .printonly inside @media print; nothing hides it on
+   screen, so that is this layer's job. */
+.printonly{display:none}
+
+/* ── Print. 38 items used to take three sheets in one column. ───────────── */
 @media print{
-  header.app, footer.colophon, #toast, .noprint{display:none !important}
-  body{background:#fff; color:#000}
-  section.card{border:0; padding:4px 0}
   ul.plain input[type=checkbox]{accent-color:#000}
+  section.card,.card{break-inside:auto; page-break-inside:auto}
+  .fillbar,.fillbar > div{background:transparent !important; border-color:#999 !important}
+  #list{columns:2; column-gap:14mm}
+  .grp{break-inside:avoid-column}
+  ul.plain > li{min-height:0; padding:2pt 0; font-size:10.5pt; border-bottom:1px dotted #bbb}
+  ul.plain label{padding:0; gap:6pt}
+  ul.plain input[type=checkbox]{width:10pt; height:10pt}
+  .triptitle{font-size:16pt; margin-bottom:2pt}
+  .printmeta{font-size:9pt; color:#333; margin:0 0 8pt}
+  .grp > h3{font-size:9pt; color:#000; margin:6pt 0 2pt}
+  section.card{border:0; padding:0}
 }
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to your list</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1274,32 +1384,78 @@ ul.plain li.done label{color:var(--muted); text-decoration:line-through}
 
   <main id="main">
 
-  <section class="card noprint">
-    <input type="text" id="tripName" maxlength="60" placeholder="Name the trip — “Tahoe long weekend”">
-    <h2 style="margin-top:12px">Start from a preset (tap to add)</h2>
-    <div class="chips" id="presets"></div>
-  </section>
+  <div id="importBar" class="hidden noprint" tabindex="-1"></div>
 
-  <section class="card">
-    <h2 id="listHead">Your list</h2>
-    <div class="fillbar noprint"><div id="fill" style="width:0%"></div></div>
-    <div class="sub noprint" id="fillText"></div>
-    <ul class="plain" id="list"></ul>
-    <p class="hint" id="emptyHint">Tap a preset above, or add your own below. Nothing beats the feeling of an all-checked list at the front door.</p>
-    <div class="row noprint" style="margin-top:10px">
-      <input type="text" id="customItem" maxlength="60" placeholder="Add your own — “Nintendo Switch”">
-      <button class="btn" id="addBtn" type="button" style="flex:0 0 auto">Add</button>
+  <section class="card" id="listCard">
+    <h2>Your list</h2>
+    <div class="titlerow">
+      <p class="triptitle" id="listHead">Untitled trip</p>
+      <span id="saved" data-saved-flag class="noprint"></span>
     </div>
+    <p class="printmeta printonly" id="printMeta"></p>
+
+    <div class="fillbar noprint hidden" id="fillbar" role="progressbar" aria-label="Packing progress"
+         aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"><div id="fill"></div></div>
+    <p class="sub noprint" id="fillText" aria-live="polite" aria-atomic="true"></p>
+
+    <div class="cluster noprint hidden" id="listTools">
+      <button class="btn" id="hideBtn" type="button" aria-pressed="false">Hide packed</button>
+    </div>
+
+    <div id="list"></div>
+
+    <div class="empty noprint" id="emptyHint">
+      <div class="glyph" aria-hidden="true">🧳</div>
+      <h3>Nothing on the list yet</h3>
+      <p>Type an item below and press Add, or tap one of the presets further down. Nothing beats the feeling of an all-checked list at the front door.</p>
+    </div>
+
+    <div class="row noprint" style="margin-top:var(--s4)">
+      <label class="f" style="flex:1 1 12rem; margin-bottom:0" for="customItem"><span>Add an item</span>
+        <input type="text" id="customItem" maxlength="60" placeholder="Nintendo Switch" aria-describedby="addHint">
+      </label>
+      <button class="btn primary" id="addBtn" type="button" style="flex:0 0 auto; align-self:flex-end">Add</button>
+    </div>
+    <p class="hint noprint" id="addHint">Item names are kept to 60 characters. Duplicates are skipped, whatever the capitalisation.</p>
+
+    <p class="trust noprint" style="margin-top:var(--s4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span><b>Your trips never leave this phone.</b> Trip names, every item you type and every tick are stored only in this browser — there is no account, no server and nothing to sync. A shared link or QR carries the list inside the link's <code>#</code> fragment, which browsers never send to a web server, so it only ever reaches the person you hand it to.</span>
+    </p>
   </section>
 
   <section class="card noprint">
+    <h2>Start from a preset (tap to add)</h2>
+    <div class="chips" id="presets"></div>
+    <p class="hint">Presets combine — tap several and nothing gets added twice.</p>
+  </section>
+
+  <section class="card noprint">
+    <h2>Trips</h2>
+    <label class="f" for="tripName"><span>Trip name</span>
+      <input type="text" id="tripName" maxlength="60" placeholder="Tahoe long weekend" aria-describedby="tripHint">
+      <p class="hint" id="tripHint">Optional, and up to 60 characters. It heads the list on screen, on paper and in a shared link.</p>
+    </label>
+    <label class="f" for="tripSel"><span>Saved trips</span>
+      <select id="tripSel"></select>
+    </label>
+    <div class="cluster">
+      <button class="btn" id="newTripBtn" type="button">+ New trip</button>
+      <button class="btn" id="dupTripBtn" type="button">Duplicate, unpacked</button>
+      <button class="btn danger" id="delTripBtn" type="button">Delete this trip</button>
+    </div>
+    <p class="hint">Every trip is kept, so next time you can start from the last one instead of from nothing. <strong>Duplicate, unpacked</strong> copies the items and clears the ticks.</p>
+  </section>
+
+  <section class="card noprint">
+    <h2>Share &amp; print</h2>
     <div class="row">
-      <button class="btn" id="uncheckBtn" type="button">Uncheck all (reuse trip)</button>
+      <button class="btn" id="uncheckBtn" type="button">Uncheck all</button>
       <button class="btn" id="shareBtn" type="button">Copy link</button>
       <button class="btn" id="qrBtn" type="button">Show QR</button>
       <button class="btn" id="printBtn" type="button">Print</button>
     </div>
-    <p class="hint">The link carries the whole list — send it to whoever's packing the kids' bags. Saved on this device automatically.</p>
+    <p class="hint">The link carries the whole list — send it to whoever's packing the kids' bags, and their checkboxes start fresh. A link holds up to 300 items; a QR holds far fewer, and will say so.</p>
   </section>
   </main>
 </div>
@@ -1307,10 +1463,14 @@ ul.plain li.done label{color:var(--muted); text-decoration:line-through}
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">On your device, in your pocket, at the airport — no account, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Packing%20List" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan to open the list</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <h3 id="qrTitle">Scan to open the list</h3>
+  <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code linking to this packing list"></canvas>
+  <p id="qrNote" class="hint"></p>
+  <div class="cluster" id="qrActions">
+    <button class="btn" id="qrCopy" type="button">Copy link instead</button>
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>

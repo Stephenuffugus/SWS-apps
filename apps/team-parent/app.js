@@ -4,6 +4,9 @@
 // All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
 import {
   normalizeCode, parseBulkSlots, dateRangeSlots, fillStats, shareUrl,
+  dateKey, isDated, keyParts, keyToDate, keyToInputs, formatKey, formatTime,
+  composeLabel, parseLabel, sortSlots, isPast, seasonIcs, weekMessage,
+  nudgeMessage, UNDATED_BASE,
 } from './helpers.js';
 import * as D from './data.js';
 import { firebaseConfig } from './firebase-config.js';
@@ -37,12 +40,26 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 let toastTimer = null;
+// Delegates to the studio runtime so a plain toast and an Undo toast share one
+// lifecycle (and one timer). Falls back if sws-ui.js failed to load.
 function toast(msg, ms) {
+  if (window.SWS && window.SWS.toast) return window.SWS.toast(msg, { ms: ms || 2400 });
   const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
+  return t;
+}
+function undoToast(msg, restore, ms) {
+  if (window.SWS && window.SWS.undo) return window.SWS.undo(msg, restore, { ms: ms || 8000 });
+  return toast(msg, ms);
+}
+/* #view is no longer a live region (it is rebuilt wholesale). Anything a
+   screen reader must hear about the board goes through this one small one. */
+function announce(msg) {
+  const n = $('liveStatus');
+  if (n) n.textContent = msg;
 }
 function showDlg(d) { try { d.showModal(); } catch (e) { d.setAttribute('open', ''); } }
 function closeDlg(d) { try { d.close(); } catch (e) { d.removeAttribute('open'); } }
@@ -230,27 +247,173 @@ function baseUrl() {
     : location.origin + location.pathname;
 }
 
+/* ---------- redraw model ----------
+   Four Firestore listeners, plus one per slot, plus the segmented control all
+   called drawBoard() directly: measured 108 full teardowns of #view in 3.14s
+   on a 100-event board. Coalesce them into one paint per animation frame, and
+   carry across the things a rebuild would otherwise throw away — the Manage
+   accordion's open state, the scroll position, the focused field, its caret,
+   and every half-typed value in the panel. */
+let paintQueued = false;
+let manageOpen = false;
+const manageDraft = Object.create(null);
+const draft = (k, fallback) => (manageDraft[k] !== undefined ? manageDraft[k] : (fallback || ''));
+
 function drawBoard() {
+  if (paintQueued) return;
+  paintQueued = true;
+  const run = () => { paintQueued = false; paintBoard(); };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+  else setTimeout(run, 16);
+}
+
+function focusSnapshot() {
+  const a = document.activeElement;
+  if (!a || !a.dataset || !a.dataset.k) return null;
+  const s = { k: a.dataset.k };
+  try { s.start = a.selectionStart; s.end = a.selectionEnd; } catch (e) {}
+  return s;
+}
+function focusRestore(snap) {
+  if (!snap) return;
+  let n = null;
+  try { n = document.querySelector('[data-k="' + (window.CSS && CSS.escape ? CSS.escape(snap.k) : snap.k) + '"]'); }
+  catch (e) { return; }
+  if (!n) return;
+  try { n.focus({ preventScroll: true }); } catch (e) { return; }
+  if (snap.start !== null && snap.start !== undefined && n.setSelectionRange) {
+    try { n.setSelectionRange(snap.start, snap.end); } catch (e) {}
+  }
+}
+function scrollRestore(y) {
+  if (Math.abs(window.scrollY - y) < 2) return;
+  try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
+  catch (e) { window.scrollTo(0, y); }
+}
+
+/* A tracked field: its value survives a redraw and so does the caret. */
+function tracked(key, attrs) {
+  const n = el(attrs.tag === 'textarea' ? 'textarea' : 'input', {
+    ...attrs, tag: undefined, 'data-k': key,
+    oninput: (ev) => { manageDraft[key] = ev.target.value; if (attrs.oninput) attrs.oninput(ev); },
+  });
+  n.value = draft(key, attrs.value);
+  return n;
+}
+
+/* ---------- links out of plain text ----------
+   Nothing is fetched: these are ordinary links the reader chooses to tap. */
+const mapsUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+function linkify(text) {
+  const out = [];
+  const re = /(https?:\/\/[^\s<>"']+)|(\+?\d[\d\s().-]{7,}\d)/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    if (m[1]) out.push(el('a', { href: m[1], target: '_blank', rel: 'noopener noreferrer', text: m[1] }));
+    else out.push(el('a', { href: 'tel:' + m[2].replace(/[^\d+]/g, ''), text: m[2] }));
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+const TRUST_PATH_A = 'M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z';
+const TRUST_PATH_B = 'm9 12 2 2 4-4';
+function trustBadge() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of [TRUST_PATH_A, TRUST_PATH_B]) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d);
+    svg.append(p);
+  }
+  return el('p', { class: 'trust noprint' }, svg,
+    el('span', {}, el('b', {}, 'No ads. No account. Nothing tracked.'),
+      ' Families never sign up or install anything — tapping the link is the whole thing. ' +
+      'The only information this page holds is what the organizer typed (the schedule, the team details) ' +
+      'and the name and note a family adds when they claim a spot; that is stored so everyone sees the ' +
+      'same page, and it is never sold, never advertised against, and there is no tracking and no email list.'));
+}
+
+/* The printed sheet has to lead back to the live page — that is the whole
+   point of putting it on the fridge. */
+let printQrCanvas = null, printQrFor = '';
+function printQr(url) {
+  if (printQrFor === url && printQrCanvas) return printQrCanvas;
+  if (typeof qrcode !== 'function') return null;
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(url); qr.make();
+    const c = printQrCanvas || (printQrCanvas = document.createElement('canvas'));
+    const size = 216, count = qr.getModuleCount();
+    c.width = size; c.height = size;
+    c.setAttribute('role', 'img');
+    c.setAttribute('aria-label', 'QR code for this team page');
+    const cell = Math.floor(size / (count + 6));
+    const off = Math.floor((size - cell * count) / 2);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < count; r++) for (let cc = 0; cc < count; cc++)
+      if (qr.isDark(r, cc)) ctx.fillRect(off + cc * cell, off + r * cell, cell, cell);
+    printQrFor = url;
+    return c;
+  } catch (e) { return null; }
+}
+
+function paintBoard() {
   if (route().view !== 'board' || !live.board) return;
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
   setGrowthFooter(!own);
+  // The recipient's four seconds must not open on an account prompt and a
+  // money link — the documented "I thought it was spam" reflex.
+  $('authBtn').classList.toggle('hidden', !own);
+  const tip = $('tipLink');
+  if (tip) tip.classList.toggle('hidden', !own || !CONFIG.tipUrl);
   const locked = !!b.settings?.locked;
   applyTheme(b.settings?.theme);
   const v = $('view');
+  const keepY = window.scrollY;
+  const keepFocus = focusSnapshot();
   v.replaceChildren();
+
+  const url = shareUrl(live.code, baseUrl());
+  const now = new Date();
+  const sorted = sortSlots(live.slots);
+  const dated = sorted.filter(s => isDated(s.order));
+  const undatedSlots = sorted.filter(s => !isDated(s.order));
+  const upcoming = dated.filter(s => !isPast(s.order, now));
+  const pastSlots = dated.filter(s => isPast(s.order, now));
+
+  // --- print-only masthead: the code and the QR that reopen the live page ---
+  const qrc = printQr(url);
+  v.append(el('div', { class: 'printonly printhead' },
+    el('div', { class: 'ph-text' },
+      el('div', { class: 'ph-title', text: b.title }),
+      el('div', { class: 'ph-sub', text: 'Always-current schedule — no app, no account:' }),
+      el('div', { class: 'ph-url', text: url }),
+      el('div', { class: 'ph-code' }, 'Team code: ', el('b', { text: live.code }))),
+    qrc ? el('div', { class: 'ph-qr' }, qrc) : null));
 
   // --- title ---
   const head = el('section', { class: 'card' });
   head.append(el('div', { style: 'display:flex;align-items:baseline;gap:8px' },
     el('h2', { style: 'all:unset;font-size:1.3rem;font-weight:700;flex:1;overflow-wrap:anywhere', text: b.title }),
-    own ? el('span', { class: 'badge', text: 'you run this' }) : null));
-  if (b.description) head.append(el('p', { class: 'sub', style: 'margin:6px 0 0', text: b.description }));
+    own ? el('span', { class: 'badge noprint', text: 'you run this' }) : null));
+  if (b.description) head.append(el('p', { class: 'sub desc', style: 'margin:6px 0 0' }, linkify(b.description)));
+  head.append(trustBadge());
   v.append(head);
 
   if (own) {
-    const url = shareUrl(live.code, baseUrl());
     v.append(el('section', { class: 'card noprint' },
       el('h2', {}, 'Share with the families'),
       el('div', { class: 'sharecode', text: live.code }),
@@ -270,14 +433,14 @@ function drawBoard() {
   if (announcements.length) {
     const latest = announcements[0];
     v.append(el('div', { class: 'announce' },
+      el('div', { class: 'who', text: 'Updated ' + entryStamp(latest) }),
       el('div', { style: 'font-weight:600', text: '📣 ' + latest.body }),
-      el('div', { class: 'who', text: latest.authorName }),
       announcements.length > 1
         ? el('details', { style: 'margin-top:8px' },
             el('summary', { class: 'sub', style: 'cursor:pointer' }, 'Older announcements (' + (announcements.length - 1) + ')'),
             el('ul', { class: 'plain' },
               announcements.slice(1).map(a => el('li', {},
-                el('div', { class: 'grow' }, el('div', {}, a.body), el('div', { class: 'sub', text: a.authorName }),
+                el('div', { class: 'grow' }, el('div', {}, a.body), el('div', { class: 'sub', text: entryStamp(a) }),
                 ),
                 own ? el('button', { class: 'btn small danger noprint', type: 'button', 'aria-label': 'Delete announcement',
                   onclick: () => D.deleteEntry(live.boardId, a.id).catch(err => toast(friendly(err))) }, '✕') : null))))
@@ -288,10 +451,9 @@ function drawBoard() {
     ));
   }
   if (own) {
-    // live snapshots redraw this whole view — the draft must survive redraws
-    const input = el('input', { type: 'text', maxlength: '2000', placeholder: 'Practice cancelled — field is flooded…',
-      'aria-label': 'New announcement', value: announceDraft,
-      oninput: (ev) => { announceDraft = ev.target.value; },
+    // live snapshots redraw this whole view — the draft and the caret survive it
+    const input = tracked('announce', { type: 'text', maxlength: '2000', placeholder: 'Practice cancelled — field is flooded…',
+      'aria-label': 'New announcement',
       onkeydown: (ev) => { if (ev.key === 'Enter') postBtn.click(); } });
     const postBtn = el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
       onclick: async () => {
@@ -299,15 +461,19 @@ function drawBoard() {
         if (!body) return;
         try {
           await D.addEntry(live.boardId, b, { authorName: b.title + ' organizer', body, type: 'announcement' });
-          announceDraft = '';
+          manageDraft.announce = '';
           input.value = '';
+          toast('Posted — it is pinned to the top for every family, with the time on it');
         } catch (e) { toast(friendly(e), 4500); }
       } }, 'Post');
     v.append(el('section', { class: 'card noprint' },
       el('h2', {}, 'Post an announcement'),
       el('div', { class: 'row' }, input, postBtn),
-      el('p', { class: 'hint', text: 'Pinned to the top of the page for every family.' })));
+      el('p', { class: 'hint', text: 'Pinned to the top of the page for every family, stamped with the time you posted it.' })));
   }
+
+  // --- next up: the answer, above the list ---
+  v.append(renderNextUp(upcoming, undatedSlots, own, locked));
 
   // --- schedule ---
   const schedCard = el('section', { class: 'card' }, el('h2', {}, 'Schedule & duties'));

@@ -194,18 +194,34 @@ export async function deleteBoard(boardId, code) {
 
 /* ---------- slots ---------- */
 
+/* Returns the created slot ids, in order — the caller needs them to offer an
+   Undo on a bulk add without re-reading the collection. */
 export async function addSlots(boardId, rows) {
+  const ids = [];
   // chunk under the 500-op batch limit
   for (let i = 0; i < rows.length; i += 400) {
     const batch = writeBatch(db);
     rows.slice(i, i + 400).forEach((row, j) => {
-      batch.set(doc(collection(db, 'boards', boardId, 'slots')), {
+      const ref = doc(collection(db, 'boards', boardId, 'slots'));
+      ids.push(ref.id);
+      batch.set(ref, {
         label: row.label.slice(0, 120),
         capacity: Math.min(Math.max(row.capacity || 1, 1), 999),
         order: (row.order !== undefined ? row.order : Date.now() + i + j),
         claimedCount: 0,
       });
     });
+    await batch.commit();
+  }
+  return ids;
+}
+
+/* Undo for a bulk add / a delete of an empty event. Chunked for the same
+   reason addSlots is. */
+export async function deleteSlots(boardId, slotIds) {
+  for (let i = 0; i < slotIds.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const id of slotIds.slice(i, i + 400)) batch.delete(doc(db, 'boards', boardId, 'slots', id));
     await batch.commit();
   }
 }
