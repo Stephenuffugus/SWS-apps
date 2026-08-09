@@ -5,13 +5,13 @@ this directory. Every number is counted, not maintained by hand — re-run it
 after any review lands.
 
 **23 of 23 apps reviewed** · **23 of 23 researched**
-· 350 fixes identified · 287 sourced competitor complaints
+· 351 fixes identified · 287 sourced competitor complaints
 
 | Severity | Count |
 |---|---|
-| Blocker | 127 |
+| Blocker | 129 |
 | Major | 161 |
-| Minor | 62 |
+| Minor | 61 |
 
 ---
 
@@ -23,18 +23,18 @@ handful of defects in every copy. Sorted by how many apps carry each one:
 
 | Defect | Apps | Fixes | Where the fix belongs |
 |---|---|---|---|
-| Silent caps and truncation | **23** | 77 | The single most repeated defect. Every limit must say its own name at the moment it bites — a cap discovered later is the category betrayal the research names. |
-| Targets under the 44px floor | **23** | 44 | --tap in the base is the floor and scales with the comfort panel. App layers still set their own smaller paddings. |
-| Print output defects | **22** | 107 | Half these apps exist to produce paper. Printing is a feature, not an afterthought. |
-| No undo on destructive actions | **22** | 41 | SWS.undo() in the shared runtime. Undo, not a confirm dialog: a confirm taxes the 99 deliberate taps to catch the one mistake, and is dismissed on reflex. |
-| Focus destroyed on redraw | **22** | 39 | Apps that rebuild their DOM drop focus to <body> on every interaction. Preserve focus and selection across a redraw, keyed on a stable identity. |
-| Comfort panel ignored | **21** | 47 | Canvas and animation get no cascade. They have to read the root font size and honour data-motion themselves. |
-| Contrast and colour-only state | **21** | 42 | The build contrast-solves every token. Failures are app layers reaching past the tokens, in states that only exist after interaction — which is why axe misses them. |
-| Breaks on a narrow screen | **21** | 36 | Measured by the stress battery at 320px, 414px, and at largest text and roomy spacing. |
-| Never says the work is saved | **19** | 32 | SWS.saved(). Apps speak only when saving FAILS, so the evidence that a list survived is that nothing happened. |
-| Privacy promise as grey copy | **18** | 41 | The .trust component. Research is blunt: nobody believes a privacy claim written as body text at the bottom of a page. |
-| Unlabelled controls | **15** | 24 | A placeholder is not a label: it disappears exactly when the user needs it, mid-form. |
-| No empty state | **10** | 12 | An empty state is the cheapest onboarding there is, and most apps open cold showing an empty box. |
+| Silent caps and truncation | **23** | 75 | The single most repeated defect. Every limit must say its own name at the moment it bites — a cap discovered later is the category betrayal the research names. |
+| Targets under the 44px floor | **23** | 45 | --tap in the base is the floor and scales with the comfort panel. App layers still set their own smaller paddings. |
+| Print output defects | **22** | 105 | Half these apps exist to produce paper. Printing is a feature, not an afterthought. |
+| No undo on destructive actions | **22** | 40 | SWS.undo() in the shared runtime. Undo, not a confirm dialog: a confirm taxes the 99 deliberate taps to catch the one mistake, and is dismissed on reflex. |
+| Focus destroyed on redraw | **22** | 37 | Apps that rebuild their DOM drop focus to <body> on every interaction. Preserve focus and selection across a redraw, keyed on a stable identity. |
+| Comfort panel ignored | **21** | 49 | Canvas and animation get no cascade. They have to read the root font size and honour data-motion themselves. |
+| Contrast and colour-only state | **20** | 43 | The build contrast-solves every token. Failures are app layers reaching past the tokens, in states that only exist after interaction — which is why axe misses them. |
+| Breaks on a narrow screen | **20** | 38 | Measured by the stress battery at 320px, 414px, and at largest text and roomy spacing. |
+| Privacy promise as grey copy | **18** | 40 | The .trust component. Research is blunt: nobody believes a privacy claim written as body text at the bottom of a page. |
+| Never says the work is saved | **17** | 29 | SWS.saved(). Apps speak only when saving FAILS, so the evidence that a list survived is that nothing happened. |
+| Unlabelled controls | **15** | 25 | A placeholder is not a label: it disappears exactly when the user needs it, mid-form. |
+| No empty state | **10** | 10 | An empty state is the cheapest onboarding there is, and most apps open cold showing an empty box. |
 
 The practical consequence: anything at the top of that table should be fixed
 **once** — in `design/studio.css`, in the shared runtime, or by a sweep over
@@ -58,17 +58,16 @@ interacting rather than on load.
 ## Blockers by app
 
 - **bracket-maker** — 8 blockers
+- **home-inventory** — 8 blockers
+- **bill-splitter** — 7 blockers
 - **image-compressor** — 7 blockers
 - **pdf-tools** — 7 blockers
 - **secret-santa** — 7 blockers
 - **specials-planner** — 7 blockers
 - **baby-log** — 6 blockers
-- **home-inventory** — 6 blockers
-- **moving-boxes** — 6 blockers
 - **seating-chart** — 6 blockers
 - **signup-sheets** — 6 blockers
 - **wheel-picker** — 6 blockers
-- **bill-splitter** — 5 blockers
 - **caregiver-log** — 5 blockers
 - **grocery-list** — 5 blockers
 - **pill-schedule** — 5 blockers
@@ -76,6 +75,7 @@ interacting rather than on load.
 - **sitter-sheet** — 5 blockers
 - **team-parent** — 5 blockers
 - **wedding-timeline** — 5 blockers
+- **moving-boxes** — 4 blockers
 - **packing-list** — 4 blockers
 - **scan-to-pdf** — 4 blockers
 - **sub-plans** — 4 blockers
@@ -122,16 +122,13 @@ defects — the backlog after the bleeding stops.
   - Clamp and sanity-check timestamps on import and on display, and guard agoText against negative intervals.
 
 **bill-splitter**
-  - Convert, don't relabel: changing the trip currency should either convert every stored amount at a rate the user supplies, or refuse and explain — never re-denominate the same integer cents.
-  - Undo on every destructive path, using the SWS.undo runtime already loaded on the page, and drop the lone confirm() so the four delete paths behave identically.
-  - Promote the payment row to a real control: 44px minimum, 15px text, an accent that passes 4.5:1, Copy-amount always present and never styled as the poor relation.
-  - Show the working: a per-person expansion ('Steak 34.00, half the calamari 6.25, share of tax 2.41, share of tip 4.02 → 46.68') and a reconciliation line under every total ('6 shares · $158.32 · exactly the bill').
-  - Record a repayment as a first-class event, and offer 'pay who you actually owe' beside 'fewest payments' with one line explaining each.
-  - Make the reason travel: date and note on an expense, the derivation inside the copied summary, and the real 'what for' in the Venmo/Cash App note instead of the trip name.
-  - A Print / Save-as-PDF action, and a print stylesheet that hides the editors, prints the split's name as a heading, and renders chip selection with a glyph rather than a fill.
-  - 44px targets and a non-colour selected state (tick plus aria-pressed) on every chip, plus accessible names on #itemLabel, #itemAmt, #expLabel and #expAmt and role=alert on #expWarn.
-  - A CSV export beside the JSON one — Kittysplit gives it away free and Settle Up charges for it, and a spreadsheet is what a normal person calls a receipt.
-  - Say what a shared link contains at the moment it is copied, including the payment handles, rather than only in the privacy line.
+  - Show the working: expand each person's figure into the arithmetic that produced it, and print a reconciliation line under every total ('4 shares · $169.14 · exactly the bill'). The app is the only one in the category that can afford to open the box, and today it is the only one that refuses to.
+  - Record repayments as first-class events, so a trip that settles mid-week stays correct — and offer 'pay who you actually owe' beside 'fewest payments'.
+  - Make the payment row the biggest control on the results card: 44px, 15px, 4.5:1, with Copy amount always present as the Zelle/cash/bank fallback, and the reason travelling in the note ('Tahoe: groceries 22.10, gas 12.60').
+  - A Print button, and a print stylesheet that emits the settle-up sheet only. Plus CSV beside the JSON export — a spreadsheet is a normal person's receipt.
+  - Convert on currency change (or refuse and explain), and add a currency control to the Dinner tab.
+  - Undo on every delete, using the SWS.undo runtime the page already loads.
+  - Dates and a note on an expense, so 'what for' can be answered a week later.
 
 **bracket-maker**
   - Preserve results when the entrant list is edited — match by identity, not by position — and put the wipe behind SWS.undo if it must ever happen at all.
@@ -168,17 +165,14 @@ defects — the backlog after the bleeding stops.
   - Show the list's name on the board, on the print, and in the share panel.
 
 **home-inventory**
-  - Normalise every record on read — coerce rooms/items to arrays and valueCents to a number in totals() and getInventory() — and make renderHome() render the list even when one row is bad, with a repairable 'this inventory looks damaged' row instead of a blank page.
-  - Fail loudly on a photo that will not decode: keep the original bytes, tell the user which file failed, and never let the preview state say 'photo attached' when nothing was stored.
-  - Unicode-capable PDF output: embed a subsetted TrueType face with fontkit (the app already vendors pdf-lib and ships a woff2) so item names print as themselves.
-  - SWS.undo on every destructive action, and move the whole-inventory ✕ out of the row next to Open.
-  - Validate money on the way in: reject a value that does not parse instead of writing 0, and keep the previous value until a good one replaces it.
-  - A CSV export with the columns carriers ingest — Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo filename — plus quantity and condition on the item, and a photo-folder naming scheme that matches the rows.
-  - Search, sort and an 'Unsorted' chip in the Items tab, with the tab strip and filter chips sticky.
-  - An evidence-grade capture path: keep serials, receipts and appraisals at full resolution (or 2400px/0.92), render them large in the PDF, and allow more than one photo per item.
-  - Drop capture="environment" so the library and Files are available, and add navigator.share() to the export so the backup can actually leave the device.
-  - Treat durability as product surface: request persistent storage on first save, offer Add to Home Screen with the reason attached, show remaining quota, and stamp an ageing last-exported date on the home screen.
-  - Give .btn.small, the room chips and the tab buttons min-height:var(--tap) so the comfort panel's Largest setting reaches the controls, not just the labels.
+  - A CSV export whose columns match what carriers and the Xactimate family ingest — Quantity, Description, Brand/Make, Model, Serial, Room, Age/Purchase date, Condition, Original cost, Replacement cost, Photo filename — with the PDF kept as the human exhibit. Every persona who has met an adjuster asked for it and it is the cheapest competitive advantage available.
+  - An always-visible search field plus sort by value / name / date added, and two saved filters ('missing a photo', 'over $500'). Nothing else changes the feel of a 300-item inventory as much.
+  - Quantity as a stepper, condition as a three-way control in the carrier's own vocabulary, and separate original and replacement cost — all optional so name-plus-photo stays a two-tap item.
+  - An explicit 'After a loss' mode that hides the camera, leads with room-by-room recall prompts, stops grading a missing photo as a deficiency, and exports CSV first.
+  - A close-up capture that keeps full resolution for serial plates, hallmarks, appraisals and receipts, and renders them large in the PDF — plus more than one photo per item.
+  - Treat installation and re-export as product: request persistent storage on first save, present Add to Home Screen with the seven-day WebKit reason attached, show remaining quota, and put an ageing 'last exported 94 days ago' line on the home screen.
+  - Tappable 'common in this room' prompt lists — the mechanism behind State Farm's 39 templates and United Policyholders' 3,000-line spreadsheet, and the completion lever that beats the AI walkthrough apps without a model or a server.
+  - Coverage sub-limit awareness: tag items into the standard special-limit classes and say 'Jewelry documented: $6,400. Typical policy limit: $1,500.' One static lookup table, and the only thing in this category anyone would tell a friend about.
 
 **image-compressor**
   - A 'fit under ___' target-size mode as the primary control, with presets for the sizes people actually fight (20 / 50 / 100 / 200 KB, 1 / 5 / 10 / 25 MB), binary-searching quality and then dimensions, and reporting the exact landed size. Demote the raw quality slider to an advanced row.
@@ -196,21 +190,19 @@ defects — the backlog after the bleeding stops.
   - Colour-managed output — `getContext('2d', { colorSpace: 'display-p3' })` with a feature detect — and say so; the context in use today reports colorSpace 'srgb'.
 
 **moving-boxes**
-  - Make the scan work, and put a browser regression test behind it — load a generated label URL cold and assert the box number is visible.
-  - Flip the label default to number + room + QR only, with an explicit opt-in for printing contents, and market the discretion as the security feature the research says nobody has claimed.
-  - Undo everywhere: a session-level undo stack surfaced in the existing toast for delete, import and edit-cancel, replacing the native confirm.
-  - A status per box (packed → loaded → arrived) and one arm's-length reconciliation readout: '54 of 62 arrived · missing 12, 19, 33'.
-  - Make search results actionable: a real count, a button per hit that scrolls to and highlights the box, and an honest empty state.
-  - Finish print: labels on their own pages, a deliberate one-page manifest as a separate action, fixed label heights, copies-per-box for the movers' rule of three, and a room colour plus door signs.
+  - Make the scan work, then keep it working: rename the inner container, hide that one, and add a browser regression test that loads a real label URL and asserts the reveal card is on screen.
+  - Undo everywhere destructive — Import, Delete, and an explicit Cancel out of edit mode — using the SWS.undo helper the page already loads.
+  - Split printing into 'Labels only' and 'Packing manifest', with a label-size choice and a copies-per-box control, and cap the QR by module count rather than character count so a full box's code stays above ~0.5mm/module.
+  - Make the printed label safe and useful at three paces: room in the largest type, an optional colour band per room, handling flags (FRAGILE / THIS WAY UP / OPEN FIRST), and contents in the QR only by default.
+  - Make search finish the job: real hit count, every result a button that scrolls to and highlights its box, an explicit empty state, and an accessible name on the field.
 
 **packing-list**
-  - Undo on every destructive path — item delete, 'Uncheck all', and shared-link replace — using the SWS.undo already loaded on the page.
-  - Multiple saved trips with duplicate-and-rename. One localStorage key means starting a second trip overwrites the first; this is the category's most-repeated complaint and it is pure local work.
-  - 'Download list' / 'Open a saved list' as a real file, next to Copy link and QR. It is the answer both to silent save failure and to the reinstall story the research quotes ('custom templates gone after a reinstall').
-  - Category grouping and a 'Hide packed' toggle. Retagging PRESETS from flat strings to {label, cat} makes sections free, and hiding packed items is what makes a 56-item list finishable one-handed.
-  - Edit an item's label in place. Add and delete are the only operations; a typo costs a delete and a retype, which is the exact complaint filed against TripList.
-  - Per-item owner tags ('Mia', 'Sam') with a filter, so one list covers a household — the single most-requested thing in the category and premium-only everywhere else.
-  - Say the offline promise out loud with the .trust component, worded as the dare the research suggests, and make the print sheet two columns with a date and the tool's URL.
+  - Saved trips with a switcher and 'Duplicate this trip' — the category's unsolved problem and pure local-storage work for us.
+  - Undo on every destructive action, using the SWS.undo() already sitting unused in sws-ui.js, plus 'Merge into my list' as a third option when a shared link arrives.
+  - A QR that degrades instead of failing: error correction 'L', a canvas sized to the viewport rather than a hardcoded 300px, and 'Too long for a QR — use Copy link' when it genuinely will not fit.
+  - Categories and a 'Hide packed' toggle, so a merged 56-item list stops being 56 unsorted rows.
+  - Edit an item's text in place, and a real file export ('Download list', 'Open a saved list') so the phone is not the only copy.
+  - Names on the two inputs, role=progressbar plus a live counter, and focus preserved across the re-render — the difference between passing axe and being usable.
 
 **pdf-tools**
   - Rendered page thumbnails, large enough to answer 'is that the signed one?' on a 390px screen, with the resulting rotation shown on the thumbnail itself rather than as a delta badge.
