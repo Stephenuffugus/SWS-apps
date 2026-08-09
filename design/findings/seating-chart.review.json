@@ -1,0 +1,659 @@
+{
+  "slug": "seating-chart",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Marisol Alvarez-Chen",
+        "who": "33, getting married in nine weeks, comfortable with software but not a power user. Keeps the master guest list in Google Sheets — the research's 'THE real competitor'. Came here after reading 'I only seem to find ones with terrible reviews, or they're paid apps.'",
+        "context": "Session one from the research: kitchen table, 22:10, 13-inch laptop at 1440x900, two hands, overhead light on. Her mother is in the next chair with opinions. She is not tired, she is tense and negotiating, and she expects to make and unmake the same decision ten times.",
+        "task": "Get 140 names out of the spreadsheet, build 18 rounds of 8, and have a first pass at the tables before her mother goes to bed.",
+        "verdict": "Finished, in about 25 minutes, and was genuinely impressed twice — the paste importer and the caterer's PDF. But she stopped trusting the floor plan inside the first two minutes and never went back to it, and she learned to fear her own clicks because there is no undo anywhere in the app.",
+        "delights": [
+          "Pasting 140 tab-separated rows straight out of Sheets worked first try and took 424ms — the 'nobody retypes 140 names' summary is the best copy in the app.",
+          "'Suggest an arrangement' respected her party groupings without being asked, which is exactly the WeddingWire regression the research quotes ('now you have to drag and drop individual people instead of whole parties').",
+          "The caterer's sheet made her say 'oh, that's the thing the venue keeps emailing me about.'"
+        ],
+        "frictions": [
+          {
+            "what": "The Floor plan in the Tables tab. She added 18 tables; the .floor box is a hard 420px tall with overflow:hidden, and the auto-placement grid runs y = 0.15 + floor(i/4) * 0.28, so from the 13th table on they are laid out below the visible box. Measured: 6 of 18 partly clipped, 2 completely invisible. At 50 tables it is 34 of 50, with 37 overlapping.",
+            "severity": "blocker",
+            "whyItMatters": "She created Tables 13–18 and they vanished. Her first instinct was that the app had eaten them — the exact 'I've deleted tables and centerpieces at least 20–30 times, and they keep reappearing on their own' glitchiness the research names as the market leader's worst axis. She stopped using the floor plan entirely, which means the whole spatial half of the product is dead for any wedding bigger than 48 guests."
+          },
+          {
+            "what": "'Suggest an arrangement' fires a confirm() — 'Replace the current seating with a fresh suggestion? Your manual placements will be redone.' — and then there is no way back. Same for 'Clear all seats', 'Remove <guest>', 'Delete <table>' and 'Delete <event>'. Five native confirm dialogs, zero undo.",
+            "severity": "blocker",
+            "whyItMatters": "The research is unambiguous: 'every action reversible and visibly so — a real undo, no destructive confirm dialogs that punish exploring, because exploring IS the task.' She wanted to try a suggestion, look at it, and go back. She could not, so she stopped trying things — with her mother watching. The repo now ships SWS.undo in sws-ui.js and index.html loads it; app.js does not call it once."
+          },
+          {
+            "what": "'New event' is a native prompt() with no length limit, and the event name has no cap on the way in.",
+            "severity": "minor",
+            "whyItMatters": "A browser modal is a jarring first interaction for a page that otherwise looks designed, and it is the one control her mother could not read. A 518-character name is accepted whole (verified): it then drives a 531-character PDF filename, which most filesystems reject."
+          },
+          {
+            "what": "The event-name field at the top of the editor is an unlabelled <input> (axe: 'label', critical, on every tab).",
+            "severity": "major",
+            "whyItMatters": "It reads as decoration, not as the field that names the PDF she is about to hand a caterer. Two people looking at one screen both asked 'what is that box?'"
+          }
+        ]
+      },
+      {
+        "name": "Dolores Weatherstone",
+        "who": "68, mother of the bride, low vision (macular changes) plus varifocals. Confident with an iPad, wary of anything that looks like software. This is the comfort-panel persona.",
+        "context": "Her own sitting room the next morning, iPad in portrait at 414 CSS px propped on a cushion, bright window behind her, one hand. No time pressure but low patience.",
+        "task": "Check that her side of the family is together and print the entrance sign so she can show it at bridge.",
+        "verdict": "Got the family check done. Never found the print button, and gave up on the sign.",
+        "delights": [
+          "She found the gear in the header unprompted, opened it, and set Text size to Largest and Contrast to High. It worked: root font went 16px → 24px, the whole layout scaled in proportion, the page still had zero horizontal overflow at 414px, and axe on the open panel returned zero violations. The permanent tick slot on each option meant she could tell what was on without squinting at colour.",
+          "At Largest, the guest rows and the Add/PDF buttons all got bigger with her — nothing was left behind at 13px."
+        ],
+        "frictions": [
+          {
+            "what": "The tab bar. nav.tabs is a horizontal scroller with no scroll affordance; at 414px its content is 472px wide, so 90px is hidden and 'Print & export' sits entirely off the right edge (right edge measured at 488px against a 414px viewport). Same at 320px.",
+            "severity": "blocker",
+            "whyItMatters": "She could see Guests, Tables, Seat people and the left half of Rules, and concluded that was the whole app. The PDF export — the thing the product exists to produce, and the only place the tip jar is ever offered — is invisible on the two most common phone widths unless you happen to swipe a strip of the page that does not look swipeable."
+          },
+          {
+            "what": "The active tab is #fdfbff on #976db5 — 3.95:1 at 14.4px. axe flags it 'serious' on all five tabs. The base layer has a darker --accent-fill (#7d549a) exactly for filled surfaces; the app layer at index.html:1267 and :1269 uses --accent instead.",
+            "severity": "major",
+            "whyItMatters": "With High contrast on, the greys darkened but this did not — the one control that tells her where she is remains the lowest-contrast text on the page. Selected guest chips (.chip.sel) have the same 3.95:1 problem, and those are how you know who you have picked up."
+          },
+          {
+            "what": "Guest chips in the Seat people tab are 28px tall (measured, at default and at High contrast). The tab buttons are 39px. The design system's floor is --tap: max(44px, ...).",
+            "severity": "major",
+            "whyItMatters": "Every mis-tap on a 28px chip either selects the wrong relative or, on a seated chip, unseats someone instantly with no undo. The research's own brief says 44px+ targets because 'two people read one screen from across a table'."
+          },
+          {
+            "what": "The 'declined' / 'no reply' status is rendered as a .sub span appended inline after the name, at 15px grey, with a leading double space instead of a separator.",
+            "severity": "minor",
+            "whyItMatters": "She read 'Uncle Gerald · no reply' as part of the name. Status that changes who gets a seat should not look like punctuation."
+          }
+        ]
+      },
+      {
+        "name": "Ola Okafor",
+        "who": "41, the day-of coordinator. Runs 30 weddings a year, has been burned by a QR-code seating chart at a venue with no bandwidth ('your venue does not have the bandwidth for 350 people'). Has no account with anything and does not want one.",
+        "context": "Session two from the research: 60 hours out, standing in a hotel corridor, iPhone at 414px, one thumb, the other hand holding a clipboard. Signal is one bar. Someone is waiting on her.",
+        "task": "Six cancellations came in overnight. Unseat them, rebalance two tables, and get a corrected caterer's sheet to the kitchen in the next ten minutes.",
+        "verdict": "Got it done in about six minutes, and the PDF was correct. But she did it with her heart in her mouth, because two of those six taps were irreversible and she had to find the export tab by accident.",
+        "delights": [
+          "It genuinely works offline — service worker registers, the whole app and pdf-lib are local, and the caterer's sheet generated in 52ms with no network at all.",
+          "Marking a guest 'Declined' and having them drop out of the meal counts automatically, while still being flagged as 'still has a seat at Table 6' until she clears it, is better logic than anything she pays for.",
+          "The caterer's sheet counts unseated stragglers in a 'Not yet seated' block rather than dropping them — verified in the generated text. That is the undercount that gets a coordinator shouted at."
+        ],
+        "frictions": [
+          {
+            "what": "Unseating is a single tap on a 28px chip whose only affordance is title='Tap to unseat' (a hover tooltip, which does not exist on a phone). No confirm, no undo, no toast.",
+            "severity": "blocker",
+            "whyItMatters": "On a corridor wall at arm's length she unseated the wrong Okafor and had no way to know which table he had been at. The one place the app should be forgiving — the 72-hour churn the research calls the emotional peak — is the one place it is silently destructive."
+          },
+          {
+            "what": "Nothing tells her what changed since the last export. She reprinted all 140 escort cards because she could not identify the six.",
+            "severity": "major",
+            "whyItMatters": "This is the research's highest-value cheap differentiator: 'a changed since last export view … turns a full 140-card reprint into reprint these 6 place cards.' The data to diff is already sitting in IndexedDB."
+          },
+          {
+            "what": "The unseated count only exists as a card heading inside the Seat people tab ('Not seated yet (6) — tap to pick up, then tap a table'). Switch tabs and it is gone.",
+            "severity": "major",
+            "whyItMatters": "The research names this exactly: 'a permanent unseated tray with a live count … visible at all times and never scrolls away. This is the single highest-value UI element in the whole app and half the competition omits it.' Here it is neither permanent nor visible from the Print tab where she makes the go/no-go call."
+          },
+          {
+            "what": "After she taps a guest chip, focus is thrown to <body> (verified: activeElement === BODY after Enter on a chip), because drawEditor() replaces the entire #view subtree on every interaction.",
+            "severity": "major",
+            "whyItMatters": "Even with a thumb this means the page scroll position and her place in a 140-chip list are unstable; each selection re-renders 419+ characters of content inside a live region."
+          }
+        ]
+      },
+      {
+        "name": "Jules Kenny",
+        "who": "29, developer with RSI, drives everything from the keyboard and a small trackball used sparingly. Helping a friend build her chart while on a call.",
+        "context": "Desk, 1280px window, headset on, hands on the keyboard only for a 20-minute stretch. No time pressure, high standards.",
+        "task": "Seat the eight remaining guests at Tables 3 and 4 without touching the pointer.",
+        "verdict": "Could not do it. Not slowly — at all. He got the guests selected and then had nowhere to put them.",
+        "delights": [
+          "The tab through the editor is orderly: ‹ Events → name field → five tabs → guest chips → Suggest/Clear → seated chips → footer. Nothing is trapped and Escape closes the dialogs correctly.",
+          "The comfort panel is a proper fieldset of real radios, so arrow keys work and the group announces itself. axe on the open panel: zero violations."
+        ],
+        "frictions": [
+          {
+            "what": "The drop target is a plain <div class=\"tablecard\"> with a click listener (app.js:411, 423). Measured: 43 focusable elements on the Seat people tab, 0 of the 5 table cards among them. There is no keyboard path from 'guest selected' to 'guest seated'.",
+            "severity": "blocker",
+            "whyItMatters": "Moving one guest to a table is, in the research's words, 'THE core verb'. It is available by mouse and by touch and not at all by keyboard, so the app is unusable for keyboard and switch users and fails WCAG 2.1.1 outright. It also means the app cannot honestly claim the third of the three interaction models the research lists as table stakes."
+          },
+          {
+            "what": "Pressing Enter on a guest chip selects it and then dumps focus on <body>. To pick a second guest he had to Tab from the top of the document again — 7 to 13 stops each time.",
+            "severity": "blocker",
+            "whyItMatters": "Selecting a party of four costs roughly forty keystrokes. Combined with the unfocusable table cards, the core loop is not merely awkward, it is impossible to complete."
+          },
+          {
+            "what": "The floor plan tables are <div class=\"tbl\"> with pointerdown/move/up handlers and no tabindex, no role, no aria-label (verified: tag DIV, tabindex null, role null, aria-label null).",
+            "severity": "major",
+            "whyItMatters": "Arranging the room and opening a table's editor are both pointer-only. A screen reader gets a bare stack of text like 'Table 3 4/8' with no indication it is interactive."
+          },
+          {
+            "what": "After a PDF export the focused button is disabled then re-enabled, and focus ends on <body> (verified). The Tip jar link that appears inside the #toast is technically focusable but sits at the very end of the document and disappears after 6 seconds.",
+            "severity": "minor",
+            "whyItMatters": "The one moment the app asks for money is the one moment a keyboard user cannot realistically reach the ask."
+          }
+        ]
+      },
+      {
+        "name": "Tomás Rivera",
+        "who": "52, off-premise caterer. Receives a PDF by email from a different stranger every weekend, prints it, and tapes it inside the kitchen door. Does not want an account and will never open the app.",
+        "context": "Commercial kitchen office, 09:00, a laser printer and reading glasses. Reads the paper, not the screen.",
+        "task": "Get accurate meal counts and every allergy, on one sheet, in a form he can hand to a line cook.",
+        "verdict": "Best free caterer's sheet he has seen — and it has two printed characters that made him stop and phone the bride.",
+        "delights": [
+          "One page, table by table, per-table meal tallies, a Totals block, and a separate 'Dietary flags & allergies' section with the table each person is at. Verified in the generated PDF text.",
+          "Declined guests are excluded from every count and never appear (verified: 'Declined Dave' is absent from both the entrance and caterer PDFs), and the 'counts include only guests not marked as declined' line under the title says so.",
+          "Nothing about who is being kept apart from whom appears on any of the three PDFs (verified against every drawText call in all three generators). That is the research's privacy differentiator, actually honoured."
+        ],
+        "frictions": [
+          {
+            "what": "Allergy lines print as '   Ann Alvarez — Beef   ? nut allergy'. pdf.js safe() strips anything outside WinAnsi to '?', and the warning glyph ⚠ used at pdf.js:176 is outside it.",
+            "severity": "major",
+            "whyItMatters": "A bare '?' in front of an allergy on a kitchen sheet reads as uncertainty about the allergy. He called to ask whether the nut allergy was confirmed. On the one page where ambiguity is a safety issue, the app introduces some."
+          },
+          {
+            "what": "The sheet does not flag over-capacity or unseated counts. A table holding 12 people with 8 seats prints as 'Table 1 · 12 guests' with no note, even though validate() knows.",
+            "severity": "minor",
+            "whyItMatters": "He sets the room from this sheet. Twelve covers on an eight-top is his problem at 18:00, and the app knew at 22:00 the night before."
+          },
+          {
+            "what": "Generated date prints as '8/9/2026' via toLocaleDateString() with no locale hint.",
+            "severity": "minor",
+            "whyItMatters": "He is looking at a sheet that might be from August 9th or September 8th, and it is the only thing telling him whether this is the current version."
+          }
+        ]
+      },
+      {
+        "name": "Priya Raman",
+        "who": "37, corporate events, running a 500-guest gala plus two weddings. Has a 40-seat king's table in the ballroom and guests whose names are not Latin script (花子 Kawaguchi, Émilie Ångström-Ñuñez). Picked this because the research's competitors cap at 30–50 guests.",
+        "context": "Office, 27-inch monitor, mouse and keyboard, mid-afternoon, deadline in two days.",
+        "task": "Import 1,200 names from a master CSV, model the real room, and print escort cards.",
+        "verdict": "Lost 200 people without being told, and then found her own colleagues' names printed as question marks on their cards.",
+        "delights": [
+          "500 guests and 50 tables stayed responsive: guests tab rendered in 124ms, the Seat people tab in 204ms, all three PDFs generated in 52–172ms. No spinner, no jank, no console errors. This genuinely beats 'about 30 seconds to search each time I click' from the research.",
+          "Search across 500 guests filtered in 44ms and typing stayed at roughly 40ms per keystroke with no dropped characters."
+        ],
+        "frictions": [
+          {
+            "what": "Pasting 1,200 lines added exactly 1,000 and toasted '1000 guests added'. model.js:74 does `if (out.length >= 1000) break;` with no warning that anything was discarded.",
+            "severity": "blocker",
+            "whyItMatters": "This is precisely the dark pattern the research says the app exists to invert: 'the cap is discovered mid-work, after the user has typed in 40 names — that betrayal is the emotional peak of the category and we can simply never do it.' Here it is worse than a cap, because it is silent: the toast reports success and 200 people are gone. She only found out when the count read 1,000."
+          },
+          {
+            "what": "Escort cards for 花子 Kawaguchi printed as '?? Kawaguchi' — pdf.js safe() (line 13) replaces every non-WinAnsi codepoint with '?'. Verified in the drawText stream: '?? ?? · Émilie Ångström-Ñuñez'.",
+            "severity": "blocker",
+            "whyItMatters": "The escort card is the physical object with a guest's name on it, sitting on a table at their wedding. Replacing a person's name with question marks is not a rendering nit, it is the product failing at its single most visible output. The accented Latin names survive; CJK, Cyrillic, Greek, Arabic, Hebrew and Devanagari do not."
+          },
+          {
+            "what": "Seats per table are hard-clamped to 30 (app.js:285, and the tSeats input max=\"30\"). Her king's table is 40.",
+            "severity": "major",
+            "whyItMatters": "The research's table stakes call for 'long banquet and king's tables'. She cannot model her actual room, so the capacity warnings — the app's signature logic — are wrong for the biggest table in it."
+          },
+          {
+            "what": "The Add-a-rule dialog renders every guest as a chip in a 180px-tall scroller with no search: at 300 guests that is 300 chips in a box whose scrollHeight is 5,420px (measured). No aria-pressed on the chips, and the 'Who' label points at nothing.",
+            "severity": "major",
+            "whyItMatters": "Rules are the app's differentiator — the standing conflicts panel is supposed to be 'the app's signature screen'. Declaring one at real scale means hand-scrolling thirty screenfuls twice to find two people."
+          },
+          {
+            "what": "'Suggest an arrangement' with a constraint it cannot satisfy leaves people unseated and reports zero problems. Measured: 12 guests, 3 tables, one mutual keep-apart rule → 3 seated, 9 unseated, validate() returns 0 violations.",
+            "severity": "major",
+            "whyItMatters": "The conflicts panel says everything is fine while three quarters of the room has nowhere to sit. validate() only inspects seated guests, so 'unseated' is never a violation. A suggestion engine that gives up silently is the opposite of the app's stated promise to 'show you exactly what broke'."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The paste importer. 1,200 lines parsed in 424ms, CSV/TSV/quoted cells all handled, header row skipped, party and meal and dietary flags picked up per line. It is the fastest path from the research's real competitor (Google Sheets) into a data model, and every persona noticed it.",
+        "Speed at real scale. 500 guests × 50 tables: 124ms to render the guest list, 204ms for the conflicts-and-tables screen, 44ms search, 52–172ms per PDF. Zero console errors across every run. The category complaint 'about 30 seconds to search each time I click' does not apply here.",
+        "The caterer's sheet. Per-table meal tallies, a Totals block, a separate allergy section with table locations, unseated guests counted rather than dropped, declined guests excluded everywhere. Competitors treat this as a paid feature.",
+        "Privacy honoured in the output, not just the copy. Keep-apart rules appear in none of the three PDFs — verified against every drawText call — which is the one promise no cloud competitor can make.",
+        "The comfort panel. It opens from the header, it is a real fieldset of real radios with a permanent tick slot, axe returns zero violations with it open, Largest text takes the root from 16px to 24px and the whole layout scales in proportion with no horizontal overflow at 414px or 320px.",
+        "Persistence. Reload mid-task and all 1,012 guests, the event name and the current event are still there; only the half-typed field and the search box clear, which is correct. Corrupt JSON in the sws.prefs key and bogus pref values are both shrugged off cleanly.",
+        "Text safety. Every user string reaches the DOM via textContent — '<script>alert(1)</script>' and '<img src=x onerror=…>' render as literal text with zero injected nodes. 2000-character names truncate to 80. Whitespace-only names are rejected. No NaN, Infinity, undefined or [object Object] reached the UI under any numeric input tested."
+      ],
+      "hurts": [
+        "The core verb is impossible without a mouse. Table cards are unfocusable divs, so a keyboard user can select guests and then has nowhere to put them — and every selection throws focus back to <body>.",
+        "The floor plan silently swallows tables past the 12th. Fixed 420px box with overflow:hidden against a layout grid that runs off the bottom: 6 of 18 clipped at a normal wedding, 34 of 50 at a gala. It reads as the app deleting things, which is the exact complaint the research says the category leader is hated for.",
+        "Nothing is reversible. Five confirm() dialogs, no undo, and the most destructive action of all — unseating a guest — has no confirm either. sws-ui.js now ships SWS.undo and index.html loads it; app.js never calls it.",
+        "The 1,000-guest paste cap is silent and reports success. It is the category's signature betrayal, shipped by the app whose positioning is 'no cap, ever'.",
+        "'Print & export' is off-screen at 320px and 414px with no scroll affordance — 90px of the tab bar is hidden. The product's entire purpose, and the only place the tip jar is offered, is invisible on a phone.",
+        "Names outside WinAnsi print as '?' on escort cards and the entrance display, and the ⚠ marker on the caterer's allergy lines prints as a bare '?'.",
+        "Contrast and target size on the two controls used most: active tab and selected chip both 3.95:1, tabs 39px, chips 28px.",
+        "The conflicts panel is a red alarm with no accessible role. The research explicitly asks for 'a quiet amber row with neutral wording, never a red alarm', and screen readers are never told a new conflict appeared. It also says '2 people for 1 seats'.",
+        "A malformed or legacy project record crashes the editor to a blank shell of tabs with an uncaught TypeError and no message.",
+        "<main aria-live=\"polite\"> wraps the entire view, which is replaced wholesale on every keystroke, tab change and selection — a screen reader is asked to re-read the page continuously.",
+        "The search box forces the caret to the end after every keystroke: typing 'An' at the start of 'lvarez' produces 'Alvarezn'."
+      ],
+      "mostWantedNext": [
+        "Undo on every destructive action, replacing all five confirm() calls — the shared SWS.undo runtime is already loaded and unused.",
+        "A persistent unseated tray with a live count that is visible from every tab, not a heading inside one card.",
+        "'Changed since last export' diffing, so the 72-hour churn means reprinting six cards instead of 140.",
+        "Keyboard seating: focusable table cards, a 'move to table' action, and focus preserved across redraws.",
+        "A guest search inside the Add-a-rule dialog, and a way to see which table a searched guest is at from the Guests tab.",
+        "A scrollable or zoomable floor plan that grows with the table count, plus non-table objects (bar, dance floor, DJ) and tables above 30 seats.",
+        "Unicode-capable PDF output — embed a subsetted TrueType face instead of the Standard-14 fonts — so a guest's actual name appears on their card.",
+        "Read-only share or a printable alphabetical guest→table sign as a paper fallback, for the coordinator, caterer and venue who all need the list and none of whom should need an account."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "scenarios": [
+      {
+        "name": "500 guests × 50 tables × 40 rules, every tab",
+        "method": "Seeded a project directly into IndexedDB ('sws-seating' → 'projects'), navigated to #/p/big, timed each tab render and the search, then generated all three PDFs in-page via dynamic import of pdf.js with the real window.PDFLib.",
+        "result": "Guests tab 124ms for 500 rows. Search filter 44ms → 111 rows. Typing 9 characters 358ms (≈40ms/keystroke, no dropped characters). Seat people tab 204ms with 33 violations listed. Tables tab 93ms. Rules 37ms. Print 48ms. PDFs: entrance 172ms/10,587 bytes, escort 59ms/26,161 bytes, caterer 52ms/20,344 bytes. Zero console or page errors.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Floor plan at real table counts",
+        "method": "Measured every .tbl bounding rect against the .floor rect at 18 tables (a 140-guest wedding) and at 50 tables (a 500-guest gala), at 414×900.",
+        "result": "At 18 tables: 6 of 18 partly clipped below the 420px box, 2 completely invisible. At 50 tables: 34 of 50 entirely below the visible area and 37 overlapping another table. The box is height:420px; overflow:hidden (index.html:1283) and app.js:288 seeds y = 0.15 + floor(i/4)*0.28, which exceeds 1.0 from the 13th table on.",
+        "defect": "Tables 13+ are created outside the visible floor and clipped away with no scroll, no zoom and no message. Reads as data loss.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Hostile text into the guest name field",
+        "method": "Typed nine payloads into 'Guest name' and pressed Add: 2000×'A', 500×'Z' as one word, '<script>alert(1)</script>', '<img src=x onerror=alert(1)>', a family of ZWJ emoji, an Arabic RTL string, whitespace-only, embedded newlines, and '__proto__'. Then queried the rendered list for injected nodes and measured page overflow.",
+        "result": "Eight accepted, whitespace-only correctly rejected with a 'Type a name first' toast. Longest rendered name 92 characters (80-char slice plus the ' · no reply' suffix) — the 2000-char and 500-char inputs truncate. Zero script or img nodes in the list; both payloads render as literal text. RTL and emoji render without breaking the row. document overflow 0px. '__proto__' as a name did not poison anything. No errors.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Paste import of 1,200 rows",
+        "method": "Opened the 'Paste a list or spreadsheet' details, filled the textarea with 1,200 'Name, party, meal' lines, clicked 'Add them all', then read the toast and counted rows.",
+        "result": "424ms. Toast said '1000 guests added'. Row count went to 1,011. 200 guests were discarded with no warning — model.js:74 breaks at 1,000.",
+        "defect": "Silent hard cap at 1,000 imported guests, reported to the user as a success.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Numeric edges on the Seats field",
+        "method": "For each of '0', '-5', '1e9', '0.0001', 'abc', '' (empty), '1000000000' and '2.7', typed it into the Seats input, clicked Add, and read the seat count rendered on the new floor table. Then scanned the whole body text for NaN / Infinity / undefined / [object.",
+        "result": "0 → 8 seats. -5 → 1. '1e9' → 1. 0.0001 → 8. 'abc' → 8. empty → 8. 1000000000 → 30. 2.7 → 2. No NaN, Infinity, undefined or [object anywhere in the UI. The clamp is `Math.min(Math.max(parseInt(v,10) || 8, 1), 30)` at app.js:285.",
+        "defect": "Falsy-but-typed values silently become 8, not 1 or a validation message: a user who types 0 gets an 8-seat table. 'parseInt' truncates exponent notation, so 1e9 becomes a 1-seat table. Nothing tells the user their number was replaced.",
+        "severity": "minor"
+      },
+      {
+        "name": "Duplicate and identical entries",
+        "method": "Added 'Ann Alvarez' three times in a row and counted matching rows; separately imported a CSV with repeated names.",
+        "result": "Three identical rows accepted with no warning, no merge offer, and no visual distinction. They sort adjacently and are individually seatable. No errors.",
+        "defect": "Duplicate guests are silently allowed and indistinguishable. With a real RSVP list arriving in several pastes, double-entry is likely and produces a wrong headcount on the caterer's sheet.",
+        "severity": "minor"
+      },
+      {
+        "name": "Rapid interaction: 30 clicks on the primary action",
+        "method": "Clicked Add 30 times as fast as Playwright allows with a name in the field; separately clicked 'Suggest an arrangement' 30 times with a 300-guest project, auto-accepting each confirm.",
+        "result": "Add: exactly 1 guest created — the field clears on first success and the remaining 29 clicks toast 'Type a name first'. 2,037ms for the burst on a 1,000-row list (~68ms per redraw). Suggest: 5,796ms for 30 full re-arrangements of 300 guests, ended in a consistent state ('Everyone is seated'), zero errors. No double-submit, no duplicate records, no corruption.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "320px, 414px at text:xxl, 414px at density:roomy, dark, warmth:3",
+        "method": "Five separate withApp runs over a 60-guest/8-table project, visiting all five tabs in each and calling overflow() and offenders() per tab, plus smallTargets().",
+        "result": "Page overflow was 0px in all 25 tab/viewport combinations — no horizontal page scroll anywhere. The only offenders() entries are the tab buttons inside nav.tabs, which is its own overflow-x:auto scroller. Dark + warmth:3 renders the tint as a fixed rgba(255,166,86,0.46) multiply overlay at z-index 9999 with no layout effect; axe found no new violations. At text:xxl the tab buttons and guest rows scale correctly.",
+        "defect": "No overflow defects. But smallTargets() reports the same set at every size: nav.tabs buttons 39px tall, guest chips 28px, #swsPrefsBtn and .tipbtn 36px, and the .btn.small controls 36px — all below the --tap 44px floor the system defines.",
+        "severity": "major"
+      },
+      {
+        "name": "Tab bar reachability at phone widths",
+        "method": "Measured nav.tabs clientWidth vs scrollWidth and the bounding rect of the last tab at 414px and 320px.",
+        "result": "At 414px: clientWidth 382, scrollWidth 472, 90px hidden, 'Print & export' right edge at 488px — entirely outside the viewport. Same at 320px. overflowX is 'auto' with no fade, arrow, or partial-tab peek, and no scroll snap.",
+        "defect": "The export tab — the product's whole output, and the only place the tip jar is shown — is invisible and undiscoverable on a phone.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Keyboard-only completion of the core job",
+        "method": "Tabbed 40 stops through the Seat people tab logging activeElement each time; focused a guest chip and pressed Enter; enumerated all focusable elements and intersected them with the .tablecard set; inspected the floor-plan table nodes.",
+        "result": "Tab order is orderly and untrapped (‹ Events → name → 5 tabs → 7 guest chips → Suggest → Clear → 4 seated chips → footer → body → header). But: 43 focusable elements on the tab, of which 0 of 5 .tablecard drop targets — they are <div> with tabindex null and role null. After Enter on a guest chip, activeElement is BODY. Floor-plan tables are <div> with tabindex null, role null, aria-label null.",
+        "defect": "There is no keyboard path from selecting a guest to seating them, and every selection resets focus to the document body. WCAG 2.1.1 failure on the app's core verb.",
+        "severity": "blocker"
+      },
+      {
+        "name": "axe after interacting, on every tab and in the comfort panel",
+        "method": "Ran axe() (wcag2a/2aa/21a/21aa/22aa) on the home screen and then on each of the five editor tabs after the JS had rendered them, and again with the comfort panel open, and again at warmth:3 + contrast:more + reading:easy.",
+        "result": "Home: 0 violations. Comfort panel open: 0 violations. Every editor tab: 'color-contrast' (serious) on the active tab button — measured 3.95:1 for #fdfbff on #976db5 at 14.4px — and 'label' (critical) on the unlabelled event-name input. Tables tab adds 'select-name' (critical) on the table-shape <select>, which is created at app.js:277 with no aria-label. Same three under the comfort settings.",
+        "defect": "Three persistent violations that only appear after JS renders: one serious contrast, two critical naming. Selected chips (.chip.sel, index.html:1269) share the 3.95:1 problem at 13px but axe does not flag them because the text is bold.",
+        "severity": "major"
+      },
+      {
+        "name": "Reload mid-task",
+        "method": "With 1,012 guests, a half-typed name in the add field and a live search filter, reloaded the page and inspected what survived.",
+        "result": "Hash, event, event name and all 1,012 guests survived (IndexedDB, 400ms debounce plus a pagehide flush). The half-typed guest name and the search filter both cleared — correct. Tab reset to Guests. No errors.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Corrupt records in the app's own store",
+        "method": "Wrote two malformed projects into the 'sws-seating' IndexedDB store — one with guests/tables/rules/assignments all null, one with a guest that has an id but no name and an assignment pointing at a nonexistent table — then navigated to each. Also wrote '{{{not json' and then {text:'ENORMOUS',theme:'plaid',warmth:99} into the localStorage sws.prefs key and reloaded.",
+        "result": "Null arrays: uncaught 'TypeError: Cannot read properties of null (reading 'filter')' and the editor renders as a bare strip of tabs with no content and no message. The nameless guest renders as an empty row without crashing (a search would crash it, since app.js:244 calls g.name.toLowerCase()). Corrupt prefs JSON: app boots normally, prefs button present. Bogus pref values: all rejected, no attributes written to <html>.",
+        "defect": "No shape normalisation on load (app.js:166) — a legacy, hand-edited or partially-written record produces an uncaught exception and a blank screen with no recovery path. importFile() normalises exactly these fields; getProject() does not.",
+        "severity": "major"
+      },
+      {
+        "name": "Storage growth and what localStorage holds",
+        "method": "Called navigator.storage.estimate() and serialised every project after heavy use; called storage() from the harness.",
+        "result": "localStorage: 0 bytes for the app itself (only sws.prefs when the comfort panel is used, ~60 bytes). All app data is IndexedDB. Four projects including a 1,012-guest one serialise to 3,989 bytes of JSON; origin usage 796KB against a 2.1GB quota, almost all of it the service-worker cache of the 525KB vendored pdf-lib. A 500-guest project is roughly 90KB. Storage pressure is a non-issue, and saveProject failures already surface a toast telling the user to export a backup.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "PDF content, privacy and unicode",
+        "method": "Stubbed window.PDFLib with a recorder that captures every drawText call, ran all three generators over a fixture containing a declined guest, an unseated guest, an over-capacity table, a keep-apart rule and a name mixing CJK with accented Latin. Also computed the real entrance-title geometry with the genuine pdf-lib font metrics for a 518-character event name.",
+        "result": "Keep-apart rules appear in none of the three PDFs. Declined guests appear in none. Unseated guests are correctly counted on the caterer's sheet as 'Not yet seated · 1 guest'. Meal tallies and totals are arithmetically correct. But: '子安 花子 · Émilie Ångström-Ñuñez' is drawn as '?? ?? · Émilie Ångström-Ñuñez' (pdf.js:13 strips non-WinAnsi to '?'), the caterer's allergy marker prints as '   Ann Alvarez — Beef   ? nut allergy' because ⚠ is also stripped, and the over-capacity table prints as a neutral 'Table 1 · 4 guests'. The 518-character title shrinks only to the 14pt floor, measures 3,324pt wide on a 612pt page, and is drawn at x = -1,356 — entirely off the sheet. The resulting filename is 531 characters.",
+        "defect": "Non-Latin guest names print as question marks on escort cards and the entrance display; the caterer's allergy marker degrades to a bare '?'; a very long event name draws its PDF title off the page and produces an unsaveable filename.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Auto-arrange under an unsatisfiable constraint",
+        "method": "Called autoArrange() then validate() on 12 guests, 3 tables of 8, and one keep-apart rule naming all 12 guests.",
+        "result": "3 guests placed, 9 left unseated, validate() returned 0 violations. The Seat people screen would show 'Not seated yet (9)' and no conflict at all.",
+        "defect": "The suggestion engine gives up silently and the conflicts panel — the app's signature screen — reports all clear while three quarters of the room has no seat. validate() never treats 'unseated' as a violation.",
+        "severity": "major"
+      },
+      {
+        "name": "Search caret handling",
+        "method": "Filled the guest search with 'lvarez', moved the caret to position 0, and typed 'An'.",
+        "result": "Value became 'Alvarezn' instead of 'Anlvarez'. app.js:239 forces setSelectionRange(value.length, value.length) after each redraw. Fast typing at the end of the string is fine — 'Family17' typed with zero delay came through intact and the field kept focus.",
+        "defect": "Editing anywhere but the end of the search term scrambles it, because the caret is reset to the end after every keystroke.",
+        "severity": "major"
+      },
+      {
+        "name": "Live region volume",
+        "method": "Inspected the <main id=\"view\" aria-live=\"polite\"> wrapper and measured how much of it is replaced per interaction.",
+        "result": "aria-live=\"polite\", no aria-atomic. On a small project the region holds 419 characters across 5 child sections, and drawEditor() calls replaceChildren() on it for every keystroke in the name field, every tab change, every chip selection and every seat.",
+        "defect": "A screen reader is asked to re-announce the entire application view on every interaction, including each character typed into the event-name field. The genuinely announceable events — a new conflict, a guest seated — have no live region of their own (.violations has no role and no aria-live).",
+        "severity": "major"
+      },
+      {
+        "name": "Browser print (page.emulateMedia({media:'print'}))",
+        "method": "Switched to print media on the Tables and Seat people tabs and inspected what remains.",
+        "result": "The base print stylesheet correctly hides header.app, .tipbtn, #swsPrefsBtn, #toast and the warm-tint overlay. But nav.tabs stays VISIBLE — the print rule at index.html:1202 hides .seg, and this app uses its own nav.tabs. The floor plan prints as a 420px box with overflow:hidden, so clipped tables are clipped on paper too. Printing the Seat people tab yields a sheet headed with the tab strip and 'NOT SEATED YET (6) — TAP TO PICK UP, THEN TAP A TABLE'.",
+        "defect": "Ctrl+P produces a sheet with navigation chrome and touch instructions on it. The app's real paper path is the PDF, but the browser print path is what a panicking user reaches for, and it is unhandled.",
+        "severity": "minor"
+      },
+      {
+        "name": "Rule dialog at scale",
+        "method": "Opened 'Add a rule' on a 300-guest project and measured the guest picker.",
+        "result": "Dialog opened in 315ms and Escape closes it correctly. The picker (#rGuests) holds 300 chips at 28px each inside a 180px-tall scroller with scrollHeight 5,420px. No search field. Chips carry no aria-pressed and the 'Who' <label class=\"f\"> is associated with no control.",
+        "defect": "Declaring a rule at real scale requires scrolling roughly thirty screenfuls twice, with no way to search, and selection state is invisible to assistive technology.",
+        "severity": "major"
+      },
+      {
+        "name": "Focus after the main action (PDF export)",
+        "method": "Clicked the entrance-display PDF button, captured the download, then read activeElement and the toast.",
+        "result": "Export took 305ms and produced 'big-wedding-entrance.pdf' correctly. activeElement afterwards is BODY — the handler disables the focused button (app.js:509) and re-enables it without restoring focus. The toast becomes 'Exported ✓ Tip jar ♥' with a real, focusable link inside a role=\"status\" region, and hides after 6 seconds.",
+        "defect": "Focus is lost on the app's most important success. The tip-jar ask sits at the very end of the tab order behind a 6-second timer.",
+        "severity": "major"
+      },
+      {
+        "name": "Comfort panel driven for real",
+        "method": "Opened #swsPrefsBtn from the header, set Text size = Largest, Contrast = High, Warm tint = High and Reading = Easier by clicking the option labels, closed with Done, then re-ran axe and overflow across the editor.",
+        "result": "Panel opens as a modal 736px tall with focus moved inside; axe on the open panel: 0 violations. Largest sets data-text=\"xxl\" and the root font to 24px; High contrast sets data-contrast=\"more\"; warmth 3 renders the multiply overlay at rgba(255,166,86,0.46). Page overflow stayed 0 on every tab afterwards, and the settings persisted into a fresh navigation via the sws.prefs key.",
+        "defect": "The panel itself has no defect and it does help. What it cannot fix is inside the app layer: the 3.95:1 active tab and 28px chips are unaffected by High contrast, and at Largest the tab bar hides even more of 'Print & export'.",
+        "severity": "minor"
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Make table cards a real drop target for the keyboard, and stop throwing focus to <body> on every redraw",
+      "rationale": "Jules could select guests and had nowhere to put them: 0 of 5 .tablecard elements are focusable among 43 focusable nodes, and pressing Enter on a guest chip leaves activeElement === BODY. The research calls moving a guest 'THE core verb' and lists keyboard operation as table stakes; this is a flat WCAG 2.1.1 failure on the app's only job. Make each card a <button> (or add role=\"button\" + tabindex=0 + Enter/Space), give it an accessible name like 'Seat 3 selected guests at Table 4 — 6 of 8 taken', and after drawEditor() restore focus to the element that had it by stable id.",
+      "where": "apps/seating-chart/app.js:411-430 (the .tablecard div and its click listener), app.js:172-198 (drawEditor's replaceChildren)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Let the floor plan hold every table — it currently clips everything past the 12th",
+      "rationale": "Measured: 6 of 18 tables partly clipped and 2 invisible at a normal 140-guest wedding; 34 of 50 invisible and 37 overlapping at a gala. .floor is height:420px; overflow:hidden while app.js seeds y = 0.15 + floor(i/4)*0.28, which passes 1.0 at the 13th table. Marisol concluded the app had eaten her tables — the research's top-quoted complaint is 'I've deleted tables and centerpieces at least 20–30 times, and they keep reappearing on their own'. Grow the floor with the table count (or make it a scrollable/zoomable canvas), and clamp seeded y into the visible range with a wrap onto a new column.",
+      "where": "apps/seating-chart/index.html:1283-1286 (.floor height/overflow), apps/seating-chart/app.js:287-288 (seeded x/y grid)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Stop silently discarding pasted guests past 1,000",
+      "rationale": "Pasting 1,200 rows added exactly 1,000 and toasted '1000 guests added' — success wording for a 200-person loss. The research names this as the category's defining betrayal ('the cap is discovered mid-work … that betrayal is the emotional peak of the category and we can simply never do it') and the app's own hero copy promises no limits. Either remove the cap (500 guests render in 124ms, so there is headroom) or, if a guard is kept for pathological pastes, report it: 'Added 1,000 — 200 more lines were not imported.'",
+      "where": "apps/seating-chart/model.js:74 (`if (out.length >= 1000) break;`), reported at apps/seating-chart/app.js:227",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Surface 'Print & export' on a phone — 90px of the tab bar is off-screen with no affordance",
+      "rationale": "At both 414px and 320px, nav.tabs is 472px of content in a 382px scroller and the last tab's right edge sits at 488px. Dolores never found it and gave up on printing; Ola found it by accident. The PDF is the entire product and the only place the tip jar is offered. Wrap the tabs onto two rows at narrow widths, or shorten the label to 'Print' and add a scroll fade plus a peeking partial tab.",
+      "where": "apps/seating-chart/index.html:1262-1268 (nav.tabs), label list at apps/seating-chart/app.js:186",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Print guests' actual names — non-Latin names come out as '??'",
+      "rationale": "pdf.js safe() replaces every codepoint outside WinAnsi with '?', so '子安 花子' is drawn as '?? ??' on the escort card that sits at that guest's place setting. Verified in the drawText stream of all three generators. The escort card is the product's most visible physical artifact. Embed a subsetted TrueType face (the app already vendors pdf-lib and ships a woff2 in fonts/) with fontkit, or at minimum warn in the Print tab which names cannot be rendered rather than silently mangling them.",
+      "where": "apps/seating-chart/pdf.js:12-14 (safe()), used at pdf.js:51, 79, 85, 132, 136, 161",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Replace all five confirm() dialogs with SWS.undo, and add undo to unseating",
+      "rationale": "The research is explicit: 'every action reversible and visibly so — a real undo, no destructive confirm dialogs that punish exploring, because exploring IS the task.' Marisol stopped experimenting; Ola unseated the wrong guest with a single 28px tap that has no confirm and no undo at all. The shared runtime landed in this repo as sws-ui.js and index.html already loads it — app.js calls it zero times. Snapshot the mutated slice, mutate, then SWS.undo('Uncle Gerald unseated', restore).",
+      "where": "apps/seating-chart/app.js:111 (delete event), :390 (replace seating), :398 (clear all seats), :571 (remove guest), :593 (delete table), and :417-419 (unseat chip — no guard at all)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Fix the 3.95:1 active tab and selected chip, and lift tabs and chips to the 44px floor",
+      "rationale": "axe flags the active tab as a serious contrast violation on every tab: #fdfbff on #976db5 = 3.95:1 at 14.4px. .chip.sel is the same pair at 13px. Both use --accent where the base layer provides --accent-fill (#7d549a) precisely for filled surfaces. Separately, tab buttons measure 39px and guest chips 28px against a --tap floor of 44px, and High contrast does not touch either. Dolores mis-tapped chips repeatedly; on a seated chip a mis-tap unseats someone.",
+      "where": "apps/seating-chart/index.html:1267 (nav.tabs button.active), :1269 (.chip.sel), :1263-1266 (tab padding), :651-659 (.chip padding)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Make the conflicts panel calm, announced, and grammatical",
+      "rationale": "It is currently a red-bordered box with a red 'N to fix' heading, no role, no aria-live, and it says '2 people for 1 seats'. The research asks for the opposite on all three counts: 'a keep-apart violation is a quiet amber row with neutral wording, never a red alarm', and this is meant to be 'the app's signature screen'. Recolour to --warn, give the box role=\"status\" (or a dedicated aria-live region so new conflicts are announced without re-reading the page), reword the heading to something clerical like '3 things to look at', and pluralise seats.",
+      "where": "apps/seating-chart/index.html:1273-1276 (.violations / .allclear), apps/seating-chart/app.js:351-357, apps/seating-chart/model.js:132 (\"has ${n} people for ${t.seats} seats\")",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Give the event-name input and the table-shape select accessible names",
+      "rationale": "Two critical axe violations present on every render after JS: 'label' on the event-name input (app.js:177) and 'select-name' on the shape select (app.js:277). Marisol and her mother both asked what the unlabelled box at the top was — it is the field that names every PDF and every backup file. A visible 'Event name' label fixes both the a11y violation and the comprehension problem.",
+      "where": "apps/seating-chart/app.js:177-183 (nameIn), apps/seating-chart/app.js:277-280 (shapeIn)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Normalise a project's shape on load so a bad record cannot blank the editor",
+      "rationale": "A record with guests:null throws 'TypeError: Cannot read properties of null (reading 'filter')' and leaves a bare strip of tabs with no message and no way back. importFile() already coerces exactly these fields (app.js:141-145); getProject() does not. Reuse that coercion in renderEditor, and show 'This event's file looks damaged — here's what we could recover' instead of an empty shell. Also guard app.js:244, where a guest with no name crashes search.",
+      "where": "apps/seating-chart/app.js:156-170 (renderEditor), reusing the coercion at app.js:141-145; app.js:244 (g.name.toLowerCase())",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Stop resetting the search caret to the end of the string",
+      "rationale": "Typing 'An' at position 0 of 'lvarez' produces 'Alvarezn'. app.js:239 unconditionally calls setSelectionRange(value.length, value.length) after the redraw destroys the input. Preserve the real selectionStart/selectionEnd across the redraw — or better, stop redrawing the entire editor on every keystroke and update only the list, which also removes the 40ms-per-keystroke cost at 500 guests.",
+      "where": "apps/seating-chart/app.js:233-240 (the guest search oninput handler)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Take aria-live off <main> and put it where something actually changes",
+      "rationale": "<main id=\"view\" aria-live=\"polite\"> wraps the whole application, and drawEditor() replaces its entire subtree on every keystroke, tab change and selection — a screen reader is asked to re-read hundreds of characters continuously. Meanwhile the two things worth announcing, a new conflict and a guest being seated, have no live region at all. Remove aria-live from #view; add it to the conflicts box and to a short status line ('Ann Alvarez seated at Table 4 — 12 unseated').",
+      "where": "apps/seating-chart/index.html:1318 (<main id=\"view\" aria-live=\"polite\">), apps/seating-chart/app.js:173-174",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Add a persistent unseated count, visible from every tab",
+      "rationale": "The count exists only as the heading of a card inside the Seat people tab. The research names this the single highest-value element in the whole app — 'a permanent unseated tray with a live count (\"14 of 137 unseated\") that is visible at all times and never scrolls away' — quoting the review 'there is no view to see all the guests and whether or not they have been seated.' Ola makes her go/no-go call from the Print tab, where the number is invisible. A one-line status strip under the tab bar carrying '126 seated · 14 unseated · 2 conflicts' serves every persona.",
+      "where": "apps/seating-chart/app.js:185-197 (after the tabs nav in drawEditor), counts already available from model.js unassignedGuests() and validate()",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Make the rule picker searchable and its selection perceivable",
+      "rationale": "At 300 guests the Add-a-rule dialog renders 300 chips in a 180px box with scrollHeight 5,420px and no search — Priya had to hand-scroll thirty screenfuls twice to declare one keep-apart pair. Rules are the app's differentiator. Add a filter input at the top of #rGuests, put aria-pressed on the chips, and associate the 'Who' label with the group. While there: keep-apart is the most sensitive data in the app, so say in the dialog that it never appears on any printed output — it is true (verified across all three PDFs) and the research says to say it where the user types it.",
+      "where": "apps/seating-chart/index.html:1370-1375 (#rGuests and the 'Who' label), apps/seating-chart/app.js:466-484 (openRuleDlg)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Report what auto-arrange could not do instead of leaving people unseated silently",
+      "rationale": "12 guests, 3 tables, one unsatisfiable keep-apart rule: 3 seated, 9 unseated, validate() returns 0 violations and the panel says all clear. The app's promise is 'when the guest list changes, we show you exactly what broke.' Treat unseated attendees as a violation kind, and have autoArrange return the guests it gave up on with a reason ('no table without someone they must avoid').",
+      "where": "apps/seating-chart/model.js:106-166 (validate — no 'unseated' kind), model.js:278-286 (the silent give-up branch of autoArrange), surfaced at apps/seating-chart/app.js:350-357",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Restore focus and keep the tip-jar ask reachable after an export",
+      "rationale": "The export handler disables the focused button and re-enables it, leaving activeElement on <body>; Jules lost his place on the app's most important success. The 'Tip jar ♥' link then lives inside #toast at the very end of the document behind a 6-second timer — the one moment the app asks for money is the one moment a keyboard user cannot reach it. Re-focus the button after the export, and let the toast hold while it has focus (sws-ui.js already implements exactly that hold-on-focus behaviour).",
+      "where": "apps/seating-chart/app.js:507-516 (export click handler), app.js:542-553 (afterExportAsk)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Cap the event name, and stop a long one from destroying the PDF title",
+      "rationale": "createProject() uses prompt() with no length limit; a 518-character name is stored whole, produces a 531-character PDF filename that most filesystems reject, and shrinks the entrance-display title only to the 14pt floor — 3,324pt of text drawn at x = -1,356 on a 612pt page, i.e. entirely off the sheet. Slice the name to 80 on entry to match the editor's own maxlength, and let fitSize wrap or ellipsise below its minimum instead of overflowing.",
+      "where": "apps/seating-chart/app.js:127-133 (createProject), apps/seating-chart/pdf.js:38-42 and :49-52 (fitSize and the title draw), apps/seating-chart/app.js:533-535 (slugify)",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Say what happened to a rejected seat count instead of silently substituting 8",
+      "rationale": "Typing 0, 0.0001, 'abc' or nothing into Seats all produce an 8-seat table; '1e9' produces a 1-seat table because parseInt truncates at the 'e'. No NaN or Infinity reaches the UI, which is good, but a number the user typed being replaced by a different one without a word is how capacity warnings quietly become wrong. Clamp visibly, and raise the max above 30 so a 40-seat king's table can be modelled — the research lists long banquet and king's tables as table stakes.",
+      "where": "apps/seating-chart/app.js:285 (add-table clamp), apps/seating-chart/app.js:585 (edit-table clamp), apps/seating-chart/index.html:1356 (#tSeats max=\"30\")",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Print the caterer's warning marker as text, and hide the tab bar on browser print",
+      "rationale": "The ⚠ in the allergy line is stripped by safe() to a bare '?', so the kitchen sheet reads 'Ann Alvarez — Beef   ? nut allergy' — Tomás phoned to ask whether the allergy was confirmed. Use the word 'ALLERGY' or '!!' instead. Separately, Ctrl+P leaves nav.tabs visible (the base print rule at index.html:1202 hides .seg, not nav.tabs) and prints the 420px clipped floor and 'tap to pick up' instructions.",
+      "where": "apps/seating-chart/pdf.js:176 (the ⚠ literal), apps/seating-chart/index.html:1202 (print hide list — add nav.tabs), index.html:1283 (.floor under print)",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Warn on duplicate guests instead of accepting them silently",
+      "rationale": "'Ann Alvarez' added three times produces three identical, individually seatable rows with no warning. With a real RSVP list arriving as several pastes over weeks, double entry is likely, and the caterer's sheet Tomás cooks from would over-count. A non-blocking 'Ann Alvarez is already on the list — add anyway?' inline note, or a 'find duplicates' action on the guest list, is enough.",
+      "where": "apps/seating-chart/app.js:208-214 (add-guest handler), apps/seating-chart/model.js:53-77 (parseGuestPaste)",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ],
+  "audit": {
+    "slug": "seating-chart",
+    "purpose": "A local-first wedding and event seating planner. Build a guest list (typed one at a time or pasted as CSV/TSV out of a spreadsheet), define tables with shapes and seat counts, declare constraints ('keep together', 'keep apart', 'must be at this table'), seat people by tap-select-then-tap-table or by asking for a suggested arrangement, and export three print-ready unwatermarked PDFs — an entrance display, escort cards on a cut-line grid, and a caterer's kitchen sheet. Everything persists to IndexedDB; nothing is uploaded; the only network dependency is the Stripe tip link. Multiple events are supported, each addressable at #/p/<id>, with a JSON export/import for backup.",
+    "structure": "Two-view hash router inside one page. body > div.wrap containing: header.app (index.html:1312-1317 — 32px icon.svg with alt=\"\", h1 > a#brandLink 'Seating Chart', span.spacer, a#tipLink.tipbtn.hidden un-hidden by app.js:630-634; sws-prefs.js injects button#swsPrefsBtn before the tip pill at runtime); main#view[aria-live=polite] (1318), EMPTY in source and entirely rendered by JS; footer.colophon (1319-1322) carrying the privacy line and two inline-styled links. Outside .wrap sit three <dialog> elements written in source — #guestDlg (1324-1343: #gName, #gParty, #gMeal, #gTags, select#gRsvp, and Remove/Cancel/Save), #tableDlg (1345-1362: #tLabel, select#tShape, input#tSeats[type=number][min=1][max=30], Delete/Cancel/Save), #ruleDlg (1364-1379: select#rType, a 'Who' label bound to nothing, div.chips#rGuests with an inline max-height:180px scroller, label#rTableWrap.hidden > select#rTable, Cancel/Add rule) — then div#toast[role=status][aria-live=polite] (1381). Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head>, then vendor-pdf-lib.js (525KB, classic) and app.js as a module (1383-1384). There is NO skip link, NO <noscript>, and no <nav> landmark in source. app.js imports model.js (pure logic), store.js (IndexedDB) and pdf.js (three generators).",
+    "cssClasses": [
+      ".wrap — page gutter, max-width var(--wrap)=64rem (index.html:337)",
+      "header.app — flex app bar, wraps, min-height calc(--tap + --s4) (362)",
+      "header.app h1 a — inherits colour, no underline; app-layer override (1259)",
+      "a.tipbtn / #tipLink — 36px pill, revealed by JS (400)",
+      "#swsPrefsBtn — 36x36 icon button injected by sws-prefs.js (1012)",
+      "main#view — the entire rendered app; also a polite live region (1318)",
+      "footer.colophon — centred trust + feedback block (428)",
+      ".hero / .hero h2 / .hero p — home-screen headline block (419-422)",
+      "section.card / .card — surface panel, --r-card 14px (457)",
+      "section.card > h2 — 12px uppercase micro-label; used for card titles AND for live counts like '140 guests · 132 expected' and 'Not seated yet (6) — tap to pick up, then tap a table' (469)",
+      ".hint — 15px secondary instruction text (641)",
+      ".sub — 15px secondary line; also used inline after a guest name to carry RSVP status (690)",
+      "ul.plain > li — guest and rule rows, min-height --tap, bottom-ruled (678)",
+      "ul.plain .grow — the flexible label cell, overflow-wrap:anywhere (686)",
+      ".row / .row > * — legacy equal-columns row that wraps at 12rem (353)",
+      ".btn / .btn.small / .btn.primary / .btn.danger — control set (556-596)",
+      "nav.tabs — APP LAYER. Horizontal overflow-x:auto scroller holding the five tab buttons; 90px of content is hidden at 414px (1262)",
+      "nav.tabs button — 9px/14px padding, 0.9rem, --card background, --muted text; measures 39px tall (1263)",
+      "nav.tabs button.active — filled with --accent (#976db5) + --accent-ink; 3.95:1, axe 'serious' (1267)",
+      ".chips — flex-wrap chip container (661)",
+      ".chip — 13px pill, measures 28px tall; used for unseated guests, seated guests and rule-dialog guest picking (651)",
+      ".chip.sel — APP LAYER selected state, --accent fill, 3.95:1 (1269)",
+      ".chip .x — the ✕ glyph inside a seated chip, opacity .6, aria-hidden (1270)",
+      ".partyhead — full-width 12px uppercase party divider inside .chips (1271)",
+      ".violations — red-bordered conflict box, no role, no aria-live (1273)",
+      ".violations h3 — 'N to fix' in --neg red (1274)",
+      ".violations div — 13.9px conflict rows (1275)",
+      ".allclear — green-bordered '✓ No broken rules. Everyone fits.' (1276)",
+      ".tablecard — a table on the Seat people screen; a plain DIV that becomes a click-to-drop target when a selection exists (1277)",
+      ".tablecard.droptarget — accent border + focus-coloured ring while guests are picked up (1278)",
+      ".tablecard .thead / .tname / .tcount / .tcount.over — table header row and the 'n / seats' counter, red+bold when over capacity (1279-1282)",
+      ".floor — the drag surface: fixed height:420px, overflow:hidden, touch-action:none, dashed border (1283)",
+      ".floor .tbl — an absolutely-positioned draggable table; a DIV with pointer handlers, cursor:grab, no tabindex/role (1287)",
+      ".floor .tbl.round / .rect / .head — 76x76 circle, 110x56, 150x44 (1293-1295)",
+      ".floor .tbl .n — the 10.4px 'occupied/seats' line inside a table (1296)",
+      "dialog — APP LAYER override: 14px radius, --card, 18px padding, max-width min(92vw,440px) (1297)",
+      ".exportcard — a PDF row in the Print tab: title, description, PDF button (1301)",
+      ".exportcard .grow b / span — export title and its 13.3px description (1304-1305)",
+      "#toast — fixed pill, role=status; after an export it holds an inline Tip jar <a> and gets pointer-events:auto (746, app.js:546-549)",
+      ".empty / .empty .glyph / .empty h3 — shipped by the base but UNUSED here; the app uses bare .hint paragraphs for its empty states (695-716)",
+      ".seg / .seg button — the base's segmented control, UNUSED; this app rolled its own nav.tabs, which is why the print rule that hides .seg misses it (604-633)",
+      ".actionbar — sticky bottom bar, UNUSED (769)",
+      ".tablewrap / table / th / td — UNUSED, no tables in the DOM sense (722-743)",
+      ".trust — the privacy stamp component, UNUSED; the promise is plain footer text instead (443)",
+      ".warn — the amber advisory block, UNUSED; conflicts use the red .violations box instead (663)",
+      ".skip — skip-link styling present in the base but NO skip link exists in the markup (846)"
+    ],
+    "dynamicMarkup": "main#view is empty in source; render() (app.js:622) picks a view from location.hash. renderHome() (86) writes a .hero with an h2, a marketing paragraph and a 'New event' button, then a 'Your events' card listing every IndexedDB project as ul.plain rows (name, 'N guests · N tables', Open, and a ✕ delete button labelled 'Delete event'), then a 'Backup' card with a hidden file input and an 'Import an event file' button. renderEditor(id) (156) loads the project or renders a two-paragraph 'That event isn't on this device' card. drawEditor() (172) replaceChildren()s the whole live region on EVERY interaction and rebuilds: a card holding a '‹ Events' button plus an unlabelled event-name input with inline font styling; nav.tabs with five buttons (plain <button>, no role=tab, no aria-selected, no aria-current); then one of five tab bodies. Guests (201): an 'Add guests' card with name/party inputs and an Add button, a <details> holding the paste textarea and 'Add them all', then a card headed 'N guests · N expected' with a type=search filter and one ul.plain row per guest (name, inline RSVP status span, a '·'-joined party/meal/tags sub-line, and a ✎ edit button whose only accessible name is the pencil). Tables (271): an 'Add a table' card (label input, unlabelled shape select, aria-labelled Seats number input, Add) plus a .floor containing one absolutely-positioned .tbl div per table, placed in a requestAnimationFrame and dragged via pointerdown/move/up with pointer capture; a pointerup that did not move opens #tableDlg. Seat people (348): the .violations or .allclear box, a pool card whose h2 carries the live unseated count, .chips grouped by party with a 'whole party (n)' chip per party, 'Suggest an arrangement' and 'Clear all seats' buttons, then one .tablecard per table with its occupancy chips — each seated chip unseats on click, and each card gains a click listener and cursor:pointer only while a selection exists. Rules (438): one ul.plain row per rule rendered as a plain sentence with a ✕ delete, plus 'Add a rule' which populates #ruleDlg's chip picker from the full guest list. Print (487): a page-size select, three .exportcard rows wired to the pdf.js generators (the button's own label is swapped to '…' and then permanently to 'PDF' while disabled), and a Backup card that serialises the project to a downloaded .json. Persistence is a 400ms debounced snapshot written on every touch() plus a synchronous flush on pagehide; a failed write toasts a storage warning at most once a minute.",
+    "comfortDefects": [
+      { "issue": "Guest chips — the primary touch target for selecting, seating and unseating people — measure 28px tall, well under the 44px --tap floor, and do not grow with High contrast.", "where": "index.html:651-659 (.chip padding var(--s1) var(--s3), font-size --t-xs)", "fix": "Give .chip min-height:var(--tap) in this app, or scope a .chips.pick variant with real padding for the seating surface." },
+      { "issue": "Tab buttons measure 39px tall with hardcoded 9px/14px padding and a 0.9rem font, bypassing the system's control sizing entirely.", "where": "index.html:1263-1266 (nav.tabs button)", "fix": "min-height:var(--tap) and padding from the --s scale, or adopt the base .seg control which already sizes correctly." },
+      { "issue": "The active tab is 3.95:1 (#fdfbff on --accent #976db5) — axe 'serious' on all five tabs — because the app layer fills with --accent instead of --accent-fill.", "where": "index.html:1267", "fix": "Swap to var(--accent-fill)/var(--accent-ink), matching .btn.primary and .seg button.active." },
+      { "issue": ".chip.sel has the same 3.95:1 fill, at 13px, and selection rests on colour alone — no tick, no aria-pressed.", "where": "index.html:1269, app.js:370-381", "fix": "Use --accent-fill, and add a ✓ glyph plus aria-pressed the way the comfort panel's own options do." },
+      { "issue": "The conflicts box is a red alarm (--neg border and heading) for content the research says must be calm and clerical.", "where": "index.html:1273-1275", "fix": "Recolour to --warn / --warn-soft / --warn-line and reword the heading away from 'N to fix'." },
+      { "issue": "Conflict rows render at 13.9px (.87rem) and the table occupancy counter at 12.8px (.8rem) — both below the 15px floor the system sets for anything instructional.", "where": "index.html:1275 (.violations div), index.html:1281 (.tablecard .tcount)", "fix": "Use var(--t-sm)." },
+      { "issue": "The floor plan's table labels are 11.5px (.72rem) and their occupancy line 10.4px (.65rem) in --muted — the smallest text in the app, carrying the numbers the user is there to read.", "where": "index.html:1287-1292, index.html:1296", "fix": "Raise to at least var(--t-xs) and use --ink for the count." },
+      { "issue": ".floor is a hard 420px with overflow:hidden and does not respond to --density or --ui-scale, so at Largest text the tables grow while the room does not.", "where": "index.html:1283-1286", "fix": "Size the floor from an aspect-ratio and the table count, in rem, so it scales with the comfort settings." },
+      { "issue": "The event-name input carries inline font-weight:700; font-size:1.05rem, escaping the type scale.", "where": "app.js:178", "fix": "Move to a class and use var(--t-lg)." },
+      { "issue": "The export-card description is 13.3px (.83rem) and the party divider 12px, both below the instructional floor.", "where": "index.html:1305 (.exportcard .grow span), index.html:1271 (.partyhead)", "fix": "var(--t-sm) for the description; keep --t-micro only for the true uppercase divider." },
+      { "issue": "Eight inline style attributes are written from JS (flex:0 0 auto, margin-top:10px, max-height:180px, align-self:center, flex:0 0 110px …), which the comfort settings cannot reach.", "where": "app.js:178, 182, 217, 220, 283, 386, 459, 491, 496; index.html:1374", "fix": "Promote each to a class in the app layer." },
+      { "issue": "The dialog override sets a fixed 18px padding and a 440px cap, so at Largest text the three-column button row in #guestDlg and #tableDlg is cramped against the edges.", "where": "index.html:1297", "fix": "Use var(--s5) padding and let the width follow the comfort scale, as #swsPrefs does." },
+      { "issue": "The RSVP status is appended as an inline .sub span prefixed with two literal spaces rather than a separator or a chip.", "where": "app.js:248-249", "fix": "Render as a .chip or a bulleted separator so it does not read as part of the name." },
+      { "issue": "The base's .empty component is unused; every empty state here is a bare .hint paragraph placed after the control rather than a titled, centred empty state.", "where": "app.js:102, 253, 385, 407, 456-457", "fix": "Adopt .empty with a glyph, an h3 and one sentence — the app's copy is already good enough to carry it." },
+      { "issue": "The base's .trust stamp and .warn block are both unused; the privacy promise is grey footer prose, which the design system explicitly says users do not believe.", "where": "index.html:1319-1322", "fix": "Put a .trust stamp on the home hero." }
+    ],
+    "navigationDefects": [
+      { "issue": "nav.tabs overflows its scroller by 90px at 414px and 320px, putting 'Print & export' — the product's entire output — fully off-screen with no fade, arrow or partial-tab peek.", "where": "index.html:1262, app.js:185-191", "fix": "Wrap to two rows under 30rem, or shorten the label and add a scroll affordance." },
+      { "issue": "Tabs are plain buttons: no role=tablist/tab, no aria-selected, no aria-controls, no arrow-key navigation. The active state is a class only.", "where": "app.js:185-191", "fix": "Either adopt the base .seg pattern with proper tab semantics or add role/aria-selected and arrow handling." },
+      { "issue": "The current tab is not in the URL — the hash is only #/p/<id>. Reload always lands on Guests, and a tab cannot be linked, bookmarked or reached by Back.", "where": "app.js:48 (module-level `tab`), app.js:79-82 (route)", "fix": "Encode the tab in the hash (#/p/<id>/seat)." },
+      { "issue": "Back does not undo anything inside the editor. Every destructive action is a confirm() with no history entry and no undo.", "where": "app.js:111, 390, 398, 571, 593", "fix": "SWS.undo, which sws-ui.js already provides and index.html already loads." },
+      { "issue": "The floor-plan tables are the only way to edit or delete a table, and they are pointer-only DIVs — clipped ones (13th onward) are unreachable by any means.", "where": "app.js:304-336, index.html:1283", "fix": "Add a plain list of tables with edit/delete buttons alongside the visual floor." },
+      { "issue": "The .tablecard drop target is a DIV with a click handler and no keyboard or AT affordance; 0 of 5 are focusable.", "where": "app.js:411, 423-430", "fix": "Make it a button, or give it role=button + tabindex=0 + key handling." },
+      { "issue": "Focus lands on <body> after every chip selection, every seat, and every PDF export, because drawEditor() replaces the subtree and the export handler disables the focused button.", "where": "app.js:173-174, 380, 425-427, 509-515", "fix": "Record and restore focus by a stable element id after each redraw." },
+      { "issue": "The guest search filters the Guests tab only. There is no way to find out where a named guest is seated, which the research lists as table stakes ('typing a name should highlight that guest's seat').", "where": "app.js:233-252", "fix": "Show the table label on each guest row, and add the same search to the Seat people tab." },
+      { "issue": "The Add-a-rule dialog has no search across its 300-chip picker inside a 180px scroller (scrollHeight 5,420px at 300 guests).", "where": "index.html:1374, app.js:471-478", "fix": "Add a filter input; virtualise or paginate the chip list." },
+      { "issue": "The unseated count lives only in a card heading inside one tab, so the number the whole product turns on is invisible from the other four.", "where": "app.js:360-361", "fix": "A persistent status strip under the tab bar." },
+      { "issue": "No skip link, despite the base shipping .skip styling — and the header now carries four focusable elements before the content.", "where": "index.html:1310-1317 (no .skip anchor), index.html:846 (unused style)", "fix": "Add <a class=\"skip\" href=\"#view\">Skip to content</a> as the first child of body." },
+      { "issue": "'New event' is a native prompt(); if the browser suppresses dialogs (some in-app browsers do) the primary call to action silently does nothing.", "where": "app.js:127-133", "fix": "Create the event immediately with a placeholder name and let the user edit the name field in place." }
+    ],
+    "a11yDefects": [
+      { "issue": "axe critical, present on every tab: the event-name input has no label of any kind.", "where": "app.js:177-179", "fix": "Wrap in label.f with a visible 'Event name' span." },
+      { "issue": "axe critical on the Tables tab: the table-shape <select> has no accessible name.", "where": "app.js:277-280", "fix": "aria-label=\"Table shape\", or a real label as its sibling Seats input already has." },
+      { "issue": "axe serious on every tab: active tab text is 3.95:1 against its own fill.", "where": "index.html:1267", "fix": "Use --accent-fill." },
+      { "issue": "No keyboard path exists from selecting a guest to seating them — the drop targets are unfocusable divs. WCAG 2.1.1 failure on the core task.", "where": "app.js:411, 423-430", "fix": "Focusable, named button targets plus a 'move to…' action." },
+      { "issue": "Floor-plan tables are drag-only DIVs with no tabindex, role, aria-label or keyboard nudge. WCAG 2.1.1 and 2.5.7.", "where": "app.js:304-336", "fix": "role=button, tabindex=0, arrow-key nudging, and an accessible name including label and occupancy." },
+      { "issue": "<main id=\"view\" aria-live=\"polite\"> makes the whole application a live region whose entire subtree is replaced on every keystroke, tab change and selection.", "where": "index.html:1318, app.js:173-174", "fix": "Remove aria-live from main; add a small dedicated status region." },
+      { "issue": "The conflicts box has no role and no aria-live, so a newly broken rule is never announced — while the live region that does exist announces everything else.", "where": "app.js:351-357, index.html:1273", "fix": "role=\"status\" on .violations (or render conflicts into the dedicated status region)." },
+      { "issue": "Selection state on guest chips is conveyed by colour and a class only — no aria-pressed anywhere, in the pool, the party chips or the rule dialog. WCAG 1.4.1 / 4.1.2.", "where": "app.js:370-381, app.js:472-477", "fix": "aria-pressed on every toggle chip, plus a non-colour indicator." },
+      { "issue": "The 'unseat' affordance is title=\"Tap to unseat\" — a hover tooltip, absent on touch and unreliable in AT — on a chip whose accessible name is 'Ann Alvarez✕'.", "where": "app.js:417-419", "fix": "aria-label=\"Unseat Ann Alvarez from Table 4\" and a visible affordance." },
+      { "issue": "The edit-guest button's entire accessible name is '✎'.", "where": "app.js:251", "fix": "aria-label=\"Edit \" + guest name." },
+      { "issue": "The rule dialog's 'Who' <label class=\"f\"> is associated with no control, and the chip group has no accessible group name.", "where": "index.html:1373, app.js:471-478", "fix": "Use a fieldset with a legend, or role=group with aria-labelledby." },
+      { "issue": "Three <dialog> elements have no aria-labelledby pointing at their own h3, and none moves focus to a sensible first control on open.", "where": "index.html:1324, 1345, 1364; app.js:260-267, 339-345, 466-484", "fix": "aria-labelledby on each dialog and an explicit focus target after showModal()." },
+      { "issue": "No skip link, so every keyboard user passes the brand link, the comfort button and the tip pill on every render.", "where": "index.html:1310", "fix": "Add the .skip anchor the base already styles." },
+      { "issue": "The Tip jar link inside #toast lives at the end of the document behind a 6-second timer, inside a role=status region.", "where": "app.js:542-553", "fix": "Hold the toast while it has focus (sws-ui.js already does this) and move focus deliberately, or offer the tip elsewhere in the Print tab." }
+    ],
+    "printSupport": "Two separate paper paths, one excellent and one unhandled. The real one is pdf.js: three vector PDFs at explicit Letter/A4 geometry with embedded Standard-14 fonts, generated locally by the vendored pdf-lib in 52–172ms at 500 guests, unwatermarked, with shrink-to-fit sizing on titles and names, dashed cut lines on the escort grid, and correct exclusion of declined guests. Verified against every drawText call: keep-apart rules never appear on any output, unseated guests are counted on the caterer's sheet rather than dropped, and meal tallies are arithmetically right. Its three defects are that safe() (pdf.js:13) reduces any non-WinAnsi codepoint to '?', so CJK/Cyrillic/Greek/Arabic names print as question marks and the ⚠ allergy marker prints as a bare '?'; that fitSize floors at 14pt and then draws anyway, so a 518-character event name is laid out 3,324pt wide at x=-1,356 on a 612pt page; and that over-capacity is not flagged on the caterer's sheet even though validate() knows. The second path is the browser's own Ctrl+P, which is unhandled: the base print stylesheet correctly hides header.app, .tipbtn, #swsPrefsBtn, #toast and the warm-tint overlay, but its hide list names .seg and this app rolled its own nav.tabs (index.html:1202 vs :1262), so the tab strip prints; the floor plan prints as a clipped 420px box; and printing the Seat people tab yields a sheet headed 'NOT SEATED YET (6) — TAP TO PICK UP, THEN TAP A TABLE'. Adding nav.tabs to the print hide list and giving .floor a print treatment would make the accidental path harmless.",
+    "riskyToRestyle": [
+      ".floor's height:420px and overflow:hidden are load-bearing for the drag maths: renderFloorTable positions each table with left/top computed as a percentage of the box minus half the node's measured width, inside a requestAnimationFrame. Changing the box's size or making it scroll requires re-running place() and clamping the stored fractional x/y, or existing projects will render their tables in the wrong spots.",
+      ".floor .tbl.round/.rect/.head carry fixed pixel dimensions (76/110/150px) that the placement code reads via offsetWidth. Making them scale with --ui-scale will move every previously saved table unless place() is recomputed on a resize observer.",
+      "touch-action:none on .floor is what makes dragging work on a phone; removing it hands the gesture back to the browser's scroller and pointer capture will fight it.",
+      "nav.tabs' overflow-x:auto is the only reason the fifth tab is reachable at all right now. Switching it to flex-wrap without also checking the 320px case will simply hide it differently.",
+      "The dialog{} override at index.html:1297 is a bare element selector and also applies to #swsPrefs — the comfort panel's own rules are scoped by ID and currently win, but any new specificity here can reach the shared panel in all 23 apps.",
+      ".chip is used for four different jobs (unseated guest, whole-party selector, seated guest with an unseat action, rule-dialog picker). Sizing it up fixes the touch problem but also widens the rule dialog's 180px scroller problem; they need separate variants.",
+      ".tablecard gains cursor:pointer and a click listener from JS only while a selection exists (app.js:429), so a purely CSS hover or focus treatment will promise interactivity that is not there half the time.",
+      ".violations and .allclear are the only consumers of --neg and --pos in the app layer; recolouring conflicts to amber means the 'all clear' state needs rethinking too, or the screen loses its only positive signal.",
+      "The eight JS-written inline styles (app.js:178, 182, 217, 220, 283, 386, 459, 491, 496) beat every stylesheet rule including the comfort settings; restyling those controls means editing app.js, not the CSS.",
+      "#toast is mutated by app.js after an export — replaceChildren with a link plus pointer-events:auto — so any change to the toast's box model has to keep an inline anchor clickable and legible.",
+      "main#view is aria-live and fully replaced on every interaction; any CSS transition attached to its children will fire continuously and any :target or :focus-within styling will be destroyed on each redraw.",
+      "vendor-pdf-lib.js is a 525KB classic script loaded before app.js and precached by sw.js; it defines window.PDFLib, which pdf.js receives by injection. Moving it to a module or deferring it breaks the export path and the offline promise at once."
+    ]
+  }
+}

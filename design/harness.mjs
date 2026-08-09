@@ -144,11 +144,23 @@ export async function withApp(slug, fn, opts = {}) {
           el.closest('p,li,footer,.hint,.footnote,.small,.sub');
         if (inlineInProse) return;
 
-        if (r.height < 44 || r.width < 24) {
+        /* A checkbox inside its own <label> is not a 22px target — the label
+           is clickable too, so the real hit area is the label's box. Measuring
+           the input alone reports a false positive on every app that does the
+           correct thing. */
+        let box = r;
+        const wrapper = (el.tagName === 'INPUT' || el.tagName === 'SELECT') ? el.closest('label') : null;
+        if (wrapper && wrapper.contains(el)) {
+          const wr = wrapper.getBoundingClientRect();
+          if (wr.height >= r.height) box = wr;
+        }
+
+        if (box.height < 44 || box.width < 24) {
           out.push({
             sel: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') +
               (typeof el.className === 'string' && el.className ? `.${el.className.trim().split(/\s+/)[0]}` : ''),
-            w: Math.round(r.width), h: Math.round(r.height),
+            w: Math.round(box.width), h: Math.round(box.height),
+            viaLabel: box !== r,
             label: (el.getAttribute('aria-label') || el.textContent || el.value || '').trim().slice(0, 30),
           });
         }

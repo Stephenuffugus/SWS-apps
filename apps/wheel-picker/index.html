@@ -1250,25 +1250,90 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.wheelwrap{position:relative; max-width:380px; margin:0 auto}
+
+/* This app is regularly projected. A teacher standing 8-12 feet from a
+   whiteboard was capped at a 380px disc and 24px of winner text no matter how
+   much screen there was, so the wheel grows with the viewport now. */
+.wheelwrap{position:relative; max-width:min(560px, 92vw); margin:0 auto}
+@media (min-width:60rem){ .wheelwrap{max-width:640px} }
 #wheel{display:block; width:100%; height:auto}
 .pointer{
   position:absolute; top:-6px; left:50%; transform:translateX(-50%);
   width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent;
   border-top:22px solid var(--ink); filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); z-index:2;
 }
+/* Scales with the viewport AND with the comfort panel, because it is the one
+   thing in the room everybody is trying to read at once. */
 #winner{
-  text-align:center; font-size:1.5rem; font-weight:800; min-height:2.2rem; margin:12px 0 4px;
+  text-align:center;
+  font-size:clamp(1.75rem, 7vw, 3.25rem);
+  font-weight:800;
+  line-height:var(--lh-tight);
+  min-height:2.4em;
+  margin:var(--s3) 0 var(--s1);
   overflow-wrap:anywhere;
 }
 
-.btn[disabled]{opacity:.5; cursor:default}
-label.chk{display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); margin-top:10px; cursor:pointer}
+/* aria-disabled rather than disabled, so the button keeps focus while it
+   works — the styling has to follow the attribute the app actually sets. */
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.55; cursor:default}
+.btn.is-busy{cursor:progress}
+
+/* Was a 13x20px checkbox — the single smallest target in the app, and the one
+   a teacher toggles most. */
+label.chk{
+  display:flex; align-items:center; gap:var(--s3);
+  min-height:var(--tap);
+  margin-top:var(--s3);
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+  cursor:pointer;
+}
+label.chk input{width:1.35rem; height:1.35rem; flex:none}
+
+#nameCount{
+  display:block;
+  margin-top:var(--s2);
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+
+#historyBox h2{margin-bottom:var(--s3)}
+#history{max-height:18rem; overflow-y:auto}
+
+#qrDlg{
+  width:min(92vw, 24rem);
+  padding:var(--s5);
+  text-align:center;
+  color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+}
+#qrDlg::backdrop{background:rgba(0,0,0,.45)}
+#qrDlg h3{margin:0 0 var(--s3); font-size:var(--t-xl)}
+#qrNote{margin:var(--s3) 0 0; font-size:var(--t-sm); color:var(--ink-2)}
+#qrCanvas{max-width:100%; height:auto; border-radius:var(--r-sm)}
+
+/* Printing a wheel is useless; printing the roster is the point. */
+@media print{
+  .wheelwrap,#spinBtn,#winner,.row,label.chk,#nameCount,.hint,#qrDlg{display:none !important}
+  #historyBox{display:block !important}
+  #names{
+    display:block !important;
+    width:100%; min-height:0; height:auto;
+    border:0; padding:0;
+    font:inherit; color:#000; background:transparent;
+    resize:none;
+  }
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the wheel</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1290,13 +1355,24 @@ label.chk{display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(
 
   <section class="card">
     <h2>Who's on the wheel</h2>
+    <label class="f" for="names"><span>One name per line</span></label>
     <textarea id="names" placeholder="One per line:
 Aaliyah
 Marcus
 Jade
 Tommy"></textarea>
-    <label class="chk"><input type="checkbox" id="removeMode" style="width:auto">
-      Remove the winner after each spin (great for classrooms & raffles)</label>
+    <span id="nameCount" role="status"></span>
+    <label class="chk"><input type="checkbox" id="removeMode">
+      Remove the winner after each spin (great for classrooms &amp; raffles)</label>
+
+    <label class="f" for="spinLen"><span>Spin length</span>
+      <select id="spinLen">
+        <option value="normal">Normal — about 4 seconds</option>
+        <option value="quick">Quick — about 1.5 seconds</option>
+        <option value="none">No spinning — show the result</option>
+      </select>
+    </label>
+
     <div class="row">
       <button class="btn" id="shareBtn" type="button">Copy link to this wheel</button>
       <button class="btn" id="qrBtn" type="button">Show QR</button>
@@ -1304,16 +1380,24 @@ Tommy"></textarea>
     </div>
     <p class="hint">The whole wheel lives inside the link — bookmark your class list, share the chore wheel, and it's there forever. No account. No ads. Ever.</p>
   </section>
+
+  <section class="card hidden" id="historyBox">
+    <h2>This session's spins</h2>
+    <p class="sub">Newest first. It never leaves this device — it is here so you can point at it when somebody says the wheel was rigged.</p>
+    <ol class="plain" id="history"></ol>
+    <button class="btn small" id="clearHistory" type="button">Clear history</button>
+  </section>
   </main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Fair spins, on your device. Nobody's watching.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Wheel%20Picker" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan to open this wheel</h3>
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <h3 id="qrTitle">Scan to open this wheel</h3>
   <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+  <p id="qrNote"></p>
+  <div style="margin-top:var(--s4)"><button class="btn" id="qrClose" type="button">Close</button></div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>

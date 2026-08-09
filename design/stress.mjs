@@ -264,15 +264,31 @@ async function runApp(slug) {
           return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden';
         });
       const unreachable = focusable.filter((el) => el.tabIndex < 0);
-      const unnamed = focusable.filter((el) => {
-        const name = (el.getAttribute('aria-label') || el.textContent || el.value ||
-          el.getAttribute('title') || '').trim();
-        return !name && !el.labels?.length;
-      });
+      /* `el.value` is NOT a name source. Counting it meant a field the battery
+         had just typed into looked labelled, so this check silently passed on
+         any app whose inputs were filled earlier in the run. */
+      const nameOf = (el) => (
+        el.getAttribute('aria-label') ||
+        (el.getAttribute('aria-labelledby') || '')
+          .split(/\s+/).map((id) => document.getElementById(id)?.textContent || '').join(' ') ||
+        [...(el.labels || [])].map((l) => l.textContent).join(' ') ||
+        el.getAttribute('title') ||
+        (el.tagName === 'BUTTON' || el.tagName === 'A' ? el.textContent : '') ||
+        ''
+      ).trim();
+
+      const unnamed = focusable.filter((el) => !nameOf(el));
+
+      /* A placeholder is not a label. It disappears the moment someone types,
+         which is exactly when they most need to know what the field was —
+         and it leaves anyone who paused mid-form with a row of empty boxes. */
+      const placeholderOnly = focusable.filter((el) => !nameOf(el) && el.getAttribute('placeholder'));
+
       return {
         focusable: focusable.length,
         unreachable: unreachable.length,
-        unnamed: unnamed.map((e) => e.tagName.toLowerCase() + (e.id ? `#${e.id}` : '')).slice(0, 6),
+        unnamed: unnamed.map((e) => e.tagName.toLowerCase() + (e.id ? `#${e.id}` : '')).slice(0, 8),
+        placeholderOnly: placeholderOnly.map((e) => e.tagName.toLowerCase() + (e.id ? `#${e.id}` : '')).slice(0, 8),
       };
     });
     record(slug, 'keyboard reachability', {
