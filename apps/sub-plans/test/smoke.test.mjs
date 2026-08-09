@@ -112,5 +112,52 @@ $('qrBtn').click();
 await sleep(120);
 check('oversize folder steers QR to Copy link', $('toast').textContent.includes('Copy link'));
 
+// --- the cap writes back to the control, so screen and disk agree
+const needs = byPlaceholder('Jordan sits up front');
+setField(needs, 'q'.repeat(5000));
+check('cap writes the truncation back to the field', needs.value.length === 4000);
+check('cap keeps screen and storage in step', JSON.parse(window.localStorage.getItem('subplans')).needs.length === needs.value.length);
+check('a counter appears near the cap', ($('f-needs-c') || {}).textContent.includes('4,000'));
+
+// --- fields carry ids, so anchors and describedby become possible
+check('controls have ids keyed off the schema', inputs().every((i) => /^f-[a-z]+$/.test(i.id)));
+
+// --- every schema section is a real, named region
+const secs = [...$('form').querySelectorAll('section.fsec')];
+check('each schema section is a labelled region', secs.length === SCHEMA.sections.length
+  && secs.every((s) => !!doc.getElementById(s.getAttribute('aria-labelledby'))));
+check('Today view hides the sections it is not about', secs.filter((s) => s.hasAttribute('data-today')).length === 2);
+
+// --- the page-1 block and the running header
+setField(byPlaceholder('MapleGuest'), 'WiFi: CedarGuest / cedar2024!');
+$('printBtn').click();
+await sleep(120);
+const first = $('sheet').querySelector('.first');
+check('first-ten-minutes block prints', !!first && first.textContent.includes('Room'));
+check('passwords render monospaced', !!$('sheet').querySelector('.first .mono'));
+check('a running header exists for page 2 onward', !!$('sheet').querySelector('table.pw > thead .run'));
+check('feedback page has checkboxes, not just a rectangle', $('sheet').querySelectorAll('.noteback .ticks li').length >= 6);
+
+// --- the emergency box no longer borrows the base .em utility
+check('printed alert box is not the shared .em utility', !$('sheet').querySelector('#sheet .em') && !!$('sheet').querySelector('.alert svg'));
+
+// --- compressed share links round-trip and are still allowlisted
+const { decodeAny, encodeSheet } = app;
+check('a compressed hash is refused by the sync decoder', decodeSheet('#z.abc') === null);
+if (typeof CompressionStream === 'function') {
+  const json = JSON.stringify({ v: 1, d: { teacher: 'Mr. Ito', health: 'nut allergy', evil: 'nope' } });
+  const cs = new CompressionStream('deflate-raw');
+  const w = cs.writable.getWriter(); w.write(new TextEncoder().encode(json)); w.close();
+  const buf = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+  let bin = ''; for (const b of buf) bin += String.fromCharCode(b);
+  const packed = 'z.' + Buffer.from(bin, 'binary').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const back = await decodeAny(packed);
+  check('compressed link round-trips', back && back.teacher === 'Mr. Ito' && back.health === 'nut allergy');
+  check('compressed link is still allowlisted', back && !('evil' in back));
+  check('compressed link is shorter than the plain one', packed.length < encodeSheet().length);
+} else {
+  console.log('  skip: CompressionStream unavailable in this runtime');
+}
+
 console.log(failures ? '\nSMOKE FAILED' : '\nSMOKE PASSED');
 process.exit(failures);

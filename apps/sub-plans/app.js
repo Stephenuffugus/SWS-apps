@@ -291,6 +291,14 @@ function applyView() {
   const t = $('viewToday'), a = $('viewAll');
   if (t) { t.classList.toggle('active', view === 'today'); t.setAttribute('aria-pressed', String(view === 'today')); }
   if (a) { a.classList.toggle('active', view === 'all'); a.setAttribute('aria-pressed', String(view === 'all')); }
+  if (form) {
+    /* :first-child cannot see that the sections above are display:none, so the
+       leading separator rule has to be placed from here. */
+    const all = [...form.querySelectorAll('.fsec')];
+    all.forEach((s) => s.classList.remove('lead'));
+    const shown = all.filter((s) => view === 'all' || s.hasAttribute('data-today'));
+    if (shown[0]) shown[0].classList.add('lead');
+  }
   const note = $('viewNote');
   if (note) {
     note.textContent = view === 'today'
@@ -721,6 +729,7 @@ function init() {
     t.classList.remove('hidden');
   }
   load();
+  $('qrPrint').checked = qrOnPaper;   // wire() ran before the preference was read
   renderForm();
   /* A returning teacher on a sick morning wants Today; a first-time teacher on
      an August prep day wants the whole thing. */

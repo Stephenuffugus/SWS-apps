@@ -39,10 +39,25 @@ let opts = { labelContents: false };
 
 /* ── storage ───────────────────────────────────────────────────────────── */
 
+/* Anything we cannot read is moved aside rather than overwritten by the next
+   save, so "we couldn't read it" never quietly becomes "we deleted it". */
+function stash(text) {
+  try { localStorage.setItem(KEY + '-unreadable', String(text).slice(0, 500000)); }
+  catch (e) {}
+}
+
 function load() {
-  let raw = null;
-  try { raw = JSON.parse(localStorage.getItem(KEY)); }
-  catch (e) { raw = null; }
+  let text = null;
+  try { text = localStorage.getItem(KEY); } catch (e) { return; }
+  if (text === null || text === undefined || text === '') return;
+
+  let raw;
+  try { raw = JSON.parse(text); }
+  catch (e) {
+    stash(text);
+    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted — import a backup to carry on.', 10000);
+    return;
+  }
   if (raw === null || raw === undefined) return;
 
   // Never trust what came back. One malformed record used to throw inside
@@ -50,7 +65,8 @@ function load() {
   const r = sanitizeBoxes(raw);
   boxes = r.boxes;
   if (r.unusable) {
-    toast('Your saved list couldn’t be read — starting empty. Import a backup if you have one.', 8000);
+    stash(text);
+    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted — import a backup to carry on.', 10000);
     return;
   }
   const notes = [];
@@ -152,7 +168,7 @@ function renderBoxes() {
   $('emptyHint').classList.toggle('hidden', boxes.length > 0);
   const things = boxes.reduce((a, b) => a + b.items.length, 0);
   $('boxHead').textContent = boxes.length
-    ? boxes.length + ' boxes · ' + things + ' things'
+    ? boxes.length + (boxes.length === 1 ? ' box · ' : ' boxes · ') + things + (things === 1 ? ' thing' : ' things')
     : 'Boxes';
 
   const dupes = new Set();
@@ -181,9 +197,10 @@ const SEARCH_SHOWN = 20;
 function revealBox(b) {
   const row = document.getElementById('box-' + b.id);
   if (!row) return;
-  // 'auto', deliberately: this app's copy of sws-ui.js predates
-  // SWS.prefersLessMotion, and an instant jump is the reduced-motion answer
-  // anyway — there is nothing here that a smooth scroll would explain.
+  // 'auto' defers to CSS scroll-behavior, and the base already resolves the
+  // comfort panel's Motion setting there (:root[data-motion="less"] and
+  // prefers-reduced-motion both force it to auto). Hard-coding 'smooth' here
+  // would step over that precedence.
   row.scrollIntoView({ block: 'center', behavior: 'auto' });
   for (const other of document.querySelectorAll('.found')) other.classList.remove('found');
   row.classList.add('found');
