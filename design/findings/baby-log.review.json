@@ -1,0 +1,503 @@
+{
+  "slug": "baby-log",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Aoife Brennan-Osei",
+        "who": "31, four days postpartum, first baby. The IBCLC at discharge told her the baby is down 9% from birth weight and to count every wet and dirty diaper until the day-10 weight check. She is in the research's HIGH-STAKES state: this is not habit-tracking, it is a clinical instruction. Comfortable with phones, not with software. Was handed a printed hospital feeding log and lost it on day two.",
+        "context": "02:47, nursery chair in a fully dark room, partner asleep six feet away. Baby latched on the left arm, iPhone 13 (390 CSS px) in the right hand, thumb only, no grip change possible. Dark-adapted eyes, glasses on the nightstand across the room. Cognitively she is on about four hours of broken sleep.",
+        "task": "Log this feed and the diaper she just changed, and find out how long it has been since the last one, without waking anyone and without putting the baby down.",
+        "verdict": "Finished in under five seconds and was genuinely relieved. This is the app at its best — the whole 3am flow is right. She hit real trouble only later, at 04:20, when she tapped the wrong ✕ and discovered the Undo she had been promised was already gone.",
+        "delights": [
+          "It opens dark. No white flash, no splash, no cookie banner, no upgrade prompt. The dark palette measures out at 7.3:1 for the asleep banner, 15.2:1 for the timeline rows and 7.9:1 for the timestamps against the card — every reading surface clears AA comfortably with room to spare, which is rare and is exactly the physiological requirement the research states.",
+          "One tap logs. Six giant tiles, all of them at least 44px tall in a 3-across grid, no form, no confirm, no amount field blocking her on data she does not have at 3am. Measured 30 consecutive taps in 1192ms with zero dropped events.",
+          "The 'next' pill on the Right tile. It told her which side to start on before she had to remember, it is a ringed AND worded marker rather than colour alone, and the word rides in the button's accessible name. The research says the absence of this 'instantly reads as not built by anyone who has nursed'; its presence reads the opposite way.",
+          "'Nothing leaves this phone. No account, no cloud, no ads' sits as an object on the readout, not as grey 12px legalese in the footer. She read it once and stopped worrying about it.",
+          "The running sleep timer survived being closed. She force-quit Safari mid-nap, reopened four hours later, and the status still said 'Asleep — 1h 35m so far' with the button correctly reading 'Woke up' and aria-pressed=true. Every timer is a stored timestamp, exactly as the research demands."
+        ],
+        "frictions": [
+          {
+            "what": "At 04:20 she meant to tap 'Wet' and hit the ✕ on the row above. The toast said 'Deleted: Diaper — wet, 3:52 AM   Undo'. She then did the thing any parent does next — tapped 'Wet' to log the diaper properly — and the Undo vanished. Measured: 350ms after the delete, one further tap replaces the toast's children with 'Logged ✓' and the Undo button is gone (app.js:35-36 clears the node the Undo lives in). The promised 8-second window (app.js:59) is void the instant she touches anything.",
+            "severity": "blocker",
+            "whyItMatters": "The app's own teaching copy at index.html:1541 says 'Hit ✕ on the row — you get a few seconds to undo.' She had a few hundred milliseconds. And she is under instruction to count diapers, so the deleted row is data a clinician will ask about at the day-10 visit. Deleting is the only destructive act in the app and its single safety net is cancelled by the app's most common action."
+          },
+          {
+            "what": "There is no way to fix a mis-timed entry. Every event gets ts: Date.now() at tap time (app.js:322) and there is no edit path anywhere: one control per timeline row (the delete button), zero time/date inputs in the whole document, and the word 'edit' appears nowhere on the page. She fed at 01:10, fell asleep, and logged it at 02:47.",
+            "severity": "blocker",
+            "whyItMatters": "Her log now says the baby fed at 02:47. That is the number she will read out at the weight check, and it is 97 minutes wrong. The research names backdating as both a table stake and a headline differentiator ('built for the entry you make an hour late', 'a ten-line fix that competitors have shipped wrong for years'). Here it is not shipped wrong, it is absent — the only remedy is delete-and-lose-it."
+          },
+          {
+            "what": "She fell asleep with the baby and forgot to tap 'Woke up'. Seeded a 14-hour open sleep and reopened: the status reads '😴 Asleep — 14h 0m so far' and the Today card reports 'Sleep: 14h 0m' as a plain total. No 'still going?', no 'ended at ___', nothing matching /still going|ended at|is this right/ anywhere in the page text.",
+            "severity": "major",
+            "whyItMatters": "The research calls this out as the one case every competitor has a dedicated FAQ answer for — 'which is the tell' — and instructs treating it as the primary flow, not an error case: 'a stopwatch that has been running 4 hours should not be shown as a triumphant big number.' Her daily sleep total is now garbage, it inflates by another minute every minute, and her only options are to record a wake time that is hours wrong or delete the nap entirely."
+          },
+          {
+            "what": "The 'next' pill collides with the emoji on the Right tile at Largest text (visible in design/out/drive-baby-log-xxl-more-320.png) — .nextmark is absolutely positioned at top/right (index.html:1353-1361) and does not reflow.",
+            "severity": "minor",
+            "whyItMatters": "Cosmetic, but it lands on the one tile the app is actively recommending, at the text size a tired parent without glasses is most likely to be using."
+          }
+        ]
+      },
+      {
+        "name": "Marguerite Sowande",
+        "who": "71, the baby's grandmother, doing the 11pm–4am shift twice a week so her daughter can sleep. Cataract in one eye and an essential tremor in her right hand — she taps with the pad of her thumb and often twice. Uses a hand-me-down Android at 320 CSS px. This is the comfort-panel persona.",
+        "context": "The spare room, 01:30, one small lamp on. Baby on her shoulder, phone in her left hand, reading glasses somewhere downstairs. No time pressure, but she will not persevere with something she cannot read.",
+        "task": "Make the text big enough to read, then log the bottle and the diaper so her daughter can see the night in the morning.",
+        "verdict": "The comfort panel worked beautifully and then broke the app for her. At Largest text with Roomy spacing on her narrow phone, the two tiles she needed most ran off the right-hand edge of the screen.",
+        "delights": [
+          "She found the settings control in the header unprompted and the panel is genuinely excellent: it opens as a modal with focus moved inside, axe returns ZERO violations on the open panel, and Largest takes the root font from 16px to 24px with the whole layout scaling in proportion — the log tiles grow to 112px tall, the status readout to 25.5px, the timeline rows to 24px and the row delete buttons to 66px.",
+            "The timestamp column grew with everything else without clipping (.when is min-width:4.75rem with flex:0 0 auto at index.html:1375-1377, not the fixed 70px basis it used to be). At Largest the times still read '1:13 PM' in full.",
+          "Nothing was left behind at 13px. The hint copy, the day headings and the 'Saved on this device' line all scaled — the app layer deliberately overrides the base's 13px hint size (index.html:1281) precisely for a reader like her.",
+          "At Largest text alone, at both 320px and 414px, horizontal overflow measured exactly 0px with no offending elements."
+        ],
+        "frictions": [
+          {
+            "what": "Largest text PLUS Roomy spacing at 320px overflows the page by 22px, and the elements hanging off the edge are the third log tile in each row. Measured: button.feed 'Bottle' spans x=240→342 against a 320px viewport; button.diaper 'Both' spans x=235→323. Reproduced identically on three separate runs, and also with Reading=Easier added. Largest alone: 0px. Roomy alone: 0px. High contrast alone: 0px. Only the combination, and only at 320px — 414px is clean.",
+            "severity": "blocker",
+            "whyItMatters": "'Bottle' is the button she came to press, and 'Both' is the diaper she is actually holding. Both are physically off the screen and she has no idea the page scrolls sideways. The one user the comfort panel exists for is the one user who can turn it into an unusable app, because .bigbtns is grid-template-columns:repeat(3, 1fr) at index.html:1314 and 1fr cannot shrink below the min-content width of a 22.5px label plus padding."
+          },
+          {
+            "what": "The comfort button itself is 36×36px and the Tip jar pill is 36px tall — the only two controls in the app under the 44px floor, and they do NOT scale with text size (still 36px at Largest, measured).",
+            "severity": "major",
+            "whyItMatters": "With a tremor she missed it twice before opening it. The door to the accessibility features is the least accessible target on the page, and it gets proportionally smaller the more help you have asked for."
+          },
+          {
+            "what": "Her tremor produced double taps. Thirty taps on 'Left' in 1192ms created thirty separate feed events with no dedupe, no 'you just logged this' guard and no merge offer.",
+            "severity": "minor",
+            "whyItMatters": "A genuine double-tap logs two feeds four seconds apart. She then has to find and delete one — using the ✕ whose Undo she cannot reach (see Ines). The count her daughter reads in the morning is wrong in the direction that causes anxiety."
+          }
+        ]
+      },
+      {
+        "name": "Dev Ramanathan",
+        "who": "36, the other parent. Does the 4am-to-8am stretch, then hands the baby to his mother-in-law and goes to work. Wants exactly one thing from this app: a message he can paste into the family WhatsApp so nobody has to reconstruct the night. The research's 'shift handoff' user.",
+        "context": "06:40, kitchen, standing, phone in one hand and a bottle steriliser in the other. Ninety seconds before he has to leave.",
+        "task": "Copy the night's summary and paste it to his wife and his mother-in-law.",
+        "verdict": "Copied it in two taps, pasted it, and sent a summary of the night that was wrong by four feeds and four diapers — because the app's 'Today' starts at calendar midnight and his night does not.",
+        "delights": [
+          "Two taps, no export dialog, no share sheet, no account. The copied text is plain and readable — 'Wren — Sunday, Aug 9 / Feeds: 1 (1 bottle) / Sleep: 0m / Diapers: 0' — and includes the per-side breakdown when there is one.",
+          "It is the four numbers a pediatrician or an IBCLC actually asks for, which is the research's 'be paper that adds itself up' promise, kept.",
+          "Hostile and non-Latin text in the baby's name survives the copy intact — '<script>alert(1)</script> ݺݺݺݺݺ 花子 …' came through as literal text with no injection anywhere (0 injected script or img nodes), and the field is capped at 40 characters by maxlength."
+        ],
+        "frictions": [
+          {
+            "what": "Everything logged before midnight is excluded from 'Today' and therefore from the copied handoff. Verified: with four feeds/diapers in the four hours before midnight and one bottle after it, the Today card reads 'Feeds: 1 | Sleep: 0m | Diapers: 0' and the copied text says the same. todayWindow() (app.js:225-229) is a strict calendar midnight-to-midnight window.",
+            "severity": "blocker",
+            "whyItMatters": "The single artifact the app produces for its named handoff use case reports one feed for a night that had five. This is not a rounding error, it is the wrong answer to the only question the message is sent to answer — and for Aoife, who is counting diapers under clinical instruction, it is the wrong answer to a clinical question. A newborn night straddles midnight by definition; the app's day does not."
+          },
+          {
+            "what": "At 00:05, after a full day of logging, the Today card shows three zeros. The 'Nothing logged today yet' empty-state guard at app.js:237 tests data.events.length (all events ever), not events in today's window, so it never fires for a returning user.",
+            "severity": "major",
+            "whyItMatters": "The code's own comment says 'Three zeros is not a summary, it is a shrug' — and then shrugs at every parent five minutes past midnight, which is peak usage hours for this app."
+          },
+          {
+            "what": "He had the app open on his phone while his wife had it open on the tablet in the nursery — no, worse, he had the installed PWA and the browser tab it was installed from both open on the same phone. Verified with two pages on one origin: tab A logs a feed, tab B (holding a stale in-memory copy) logs a diaper and writes its whole snapshot over the store, tab A then logs a bottle and writes its snapshot back. On disk afterwards: feed:left, feed:bottle. The diaper is gone. Tab B still displays it as though it saved, and 'Saved on this device' is showing under it.",
+            "severity": "blocker",
+            "whyItMatters": "dbPut writes the entire log object to a single 'main' key on every tap (app.js:100-108, 124-135) with no merge, no version check and no storage/BroadcastChannel listener — last writer wins the whole document. The research positions this app squarely against exactly this failure ('We structurally cannot lose data to a sync conflict because there is no sync… there is no class of bug where the other parent's phone eats your night'). Two tabs on one phone is not exotic; it is what installing the PWA leaves behind."
+          }
+        ]
+      },
+      {
+        "name": "Dr Priya Venkataraman",
+        "who": "44, general pediatrician. Sees the baby for the two-week weight check. Will look at a sheet of paper for about forty seconds and wants feeds per day, wet count per day, dirty count per day and total sleep per day. Will never open the app.",
+        "context": "Clinic room, 09:15, overhead fluorescents, printed A4 in her hand, parents and a crying baby in front of her.",
+        "task": "Read the last two weeks off the sheet and decide whether feeding frequency is adequate.",
+        "verdict": "Got a real, respectable printout — and then had to count 151 rows by hand, because the only totals on the page are for today. The parent had printed it from a phone in dark mode, so every day heading came out invisible.",
+        "delights": [
+          "The print CSS is genuinely well made and mostly right. Verified under print media: the header, the whole Log card with its seven tiles, the name field, the tip jar, the comfort button, the skip link, the footer, the toast, every hint and every per-row ✕ are all hidden. Nothing meaningless printed.",
+          "A real header block appears only on paper: 'Wren Okonkwo-Baptiste — feeding, sleep & diaper log' over 'Printed Sunday, August 9, 2026 · kept on one phone, never uploaded'. It identifies the patient and the date without being asked.",
+          "Ctrl+P produces the same paper as the button — the expansion hangs off beforeprint (app.js:362-365), not off the click — and the timeline card is explicitly allowed to break across pages (index.html:1451) instead of inheriting the base's break-inside:avoid.",
+          "Day separators are set to break-after:avoid so a heading never orphans at the foot of a page."
+        ],
+        "frictions": [
+          {
+            "what": "There are no per-day totals. The sheet is today's three numbers followed by a flat 151-row chronological list across seven days. Verified: no /feeds:\\s*\\d+/ pattern anywhere in the printed timeline.",
+            "severity": "blocker",
+            "whyItMatters": "This is the artifact the whole print path exists to produce, and it makes her do the arithmetic — the exact failure the research says paper has and this app is supposed to fix ('adding up daily totals means arithmetic, which is not something you want to do while sleep-deprived'). The app already computes daySummary() for one window; running it per day would turn 151 rows into 7 lines."
+          },
+          {
+            "what": "The parent's phone was in dark mode, so the day headings printed white. Measured under print media with a dark OS scheme: .dayhead h3 computes to rgb(235,233,243) and .status .sleeping to rgb(128,165,231), while body correctly forces rgb(0,0,0). .dayhead h3 sets color:var(--ink) at index.html:1400 and the print block at index.html:1447-1462 never restates it, so the explicit rule beats body{color:#000}. The card fill also stays rgb(22,20,30).",
+            "severity": "blocker",
+            "whyItMatters": "With background graphics off (every browser's default) she got a page of black rows with no visible day boundaries at all — she could not tell where Tuesday ended. With background graphics on she would get near-black pages. Which she gets depends on a print dialog checkbox the parent has never looked at."
+          },
+          {
+            "what": "The sheet can never show more than 200 entries. With 540 events in storage, the printed log stopped after 8 days.",
+            "severity": "major",
+            "whyItMatters": "She asked for two weeks. She got eight days and nothing on the page says the rest exists."
+          },
+          {
+            "what": "Sleep is logged as bare start/stop events in the same undifferentiated list as feeds and diapers, so a nap reads as two rows ('😴 Fell asleep' at 1:14, '🌅 Woke up' at 2:44) rather than one duration.",
+            "severity": "minor",
+            "whyItMatters": "On paper she is doing subtraction as well as counting. A printed row of 'Slept 1h 30m (1:14–2:44)' costs nothing and is what she actually reads."
+          }
+        ]
+      },
+      {
+        "name": "Ines Chaudhry",
+        "who": "34, blind since birth, VoiceOver on iOS and a Bluetooth keyboard on the iPad. Second baby, so she knows the routine — she chose this app specifically because it does not upload anything and because it opened from a link with no App Store account.",
+        "context": "Nursery, 03:10, iPad propped on the arm of the chair, external keyboard on her lap, VoiceOver at a fast speech rate. Baby asleep on her chest.",
+        "task": "Log the feed, then delete the duplicate she created earlier when she double-pressed.",
+        "verdict": "Logging works well and the announcements are thoughtful. Deleting does not: the Undo she is offered is unreachable, and the list she has to walk to find the wrong row is announced as a broken list.",
+        "delights": [
+          "Every log action speaks. A dedicated off-screen live region (#announce, role=status) carries the status sentence after each tap, while the 30-second refresh writes to #status which is deliberately NOT a live region — so she is never interrupted by a timer. The zero-width-space trick at app.js:70 means two identical feeds in the same minute are both announced instead of the second one falling silent. This is better than most commercial apps.",
+          "Emoji are properly hidden. Every glyph is in its own aria-hidden span (app.js:28, index.html tile markup), so she hears 'Fed — left', not 'woman feeding baby Fed dash left'.",
+          "Each delete button names its own row: 'Delete Diaper — wet at 3:52 AM', not 'Delete entry' N times.",
+          "The sleep toggle is a real toggle — aria-pressed flips and the label swaps between 'Fell asleep' and 'Woke up', so state is never carried by fill colour alone.",
+          "Every control has a name and is reachable: 48 focusable elements with a 3-day log, 0 unreachable, 0 unnamed, 0 placeholder-only. The name field has a real visible <label>, not a placeholder."
+        ],
+        "frictions": [
+          {
+            "what": "Pressing Enter on a row's ✕ deletes it and leaves focus on <body>, so the Undo button is unreachable. Root cause found: removeEntry calls btn.focus() synchronously (app.js:264) but #toast is visibility:hidden with visibility included in its transition (index.html:785, 787). Adding .show at app.js:57 does not make it visible until the transition completes, and focus() on a visibility:hidden subtree is silently rejected. Instrumented proof — 'focus(BUTTON.undo) before=BODY after=BODY inDoc=true tabIdx=0 disp=block'. It only appears to work when a toast was already on screen from an earlier action in the same page load; on a page restored from IndexedDB, which is every returning user, it fails 4 runs out of 4.",
+            "severity": "blocker",
+            "whyItMatters": "She is told 'Deleted: Fed — left, 1:14 AM, Undo' by a live region and then cannot get to the button, because it sits at the very end of the document behind an 8-second timer and 48 tab stops. The one affordance standing between her and permanent data loss is announced and then withheld. The code comment at app.js:262-264 says this was deliberately built; it does not work."
+          },
+          {
+            "what": "axe reports a serious 'list' violation on #timeline as soon as there is anything in it: '<ul> and <ol> must only directly contain <li>, <script> or <template> elements'. The day separators are emitted as <li class=\"dayhead\" role=\"presentation\"> (app.js:286) — valid HTML, but role=presentation strips the listitem role, so the <ul> now has children that are not list items. Present at every text size and contrast setting; absent only when the log is empty, which is why the standard battery reports the app clean.",
+            "severity": "major",
+            "whyItMatters": "VoiceOver announces a wrong item count for the list and the day headings are stripped of the semantics that would let her jump between days. This is a regression introduced by the fix for the previous audit's invalid-HTML finding — the markup got better and the exposed semantics got worse."
+          },
+          {
+            "what": "Tabbing to Export means passing 30 delete buttons. Measured with a 3-day log: 48 focusable elements, of which 30 are row ✕ buttons, and #exportBtn is stop 45 of 48. The only skip link goes TO the log buttons, not past the timeline.",
+            "severity": "major",
+            "whyItMatters": "The backup card is the one thing standing between her and total data loss, and reaching it means holding Tab past thirty unguarded destructive controls. Expanding the list makes it 200."
+          },
+          {
+            "what": "Clicking 'Show earlier entries' hides the button and drops focus on <body>, at scroll position 2848px down a 16,099px page.",
+            "severity": "major",
+            "whyItMatters": "She asked to see more and was returned to the start of the document with no announcement that 170 rows had appeared. app.js:346-351 scrolls a row into view but never moves focus."
+          }
+        ]
+      },
+      {
+        "name": "Tomasz Wieczorek",
+        "who": "39, three months in, twins' father, and the reason the research's 'privacy-first offline cluster' exists — he read the Surfshark finding and refuses anything with an account. Logs religiously and has never exported anything. Technical enough to notice when numbers do not add up.",
+        "context": "Sunday afternoon, sofa, phone at 414px, two hands, no pressure. Doing a monthly tidy-up and wanting to look back at week two.",
+        "task": "Scroll back to the first week to check whether the cluster-feeding stretch was as bad as he remembers, and take a backup.",
+        "verdict": "The backup is perfect. The scroll-back is not: 340 of his 540 entries cannot be displayed at all, and the app never says so.",
+        "delights": [
+          "Export gave him everything. A 20-day, 500-event log exported to a 50,008-byte baby-log.json containing all 500 events spanning 2026-07-20 to 2026-08-09 — including the 300 the screen refuses to show him. The backup is complete even when the UI is not.",
+          "Import is properly guarded. A file that does not parse, or has no events array, is rejected with 'That file doesn't look like a Baby Log backup.' A valid restore over existing data shows a native confirm naming the exact counts on both sides, and then offers a 10-second Undo. A '__proto__' key in the file poisons nothing.",
+          "It really does keep working with storage blocked. With indexedDB removed entirely, the app boots, logs in-session, flips the status line to 'Not saved — storage may be full or blocked. Export a backup.' with a warning dot, and raises a toast — no exceptions, no silent lie.",
+          "Performance is a non-issue. One tap paints in 11–22ms whether the log holds 50 or 4,500 events, 200 rows scroll in 8ms, and 540 events serialise to 50KB. localStorage holds nothing but the comfort prefs."
+        ],
+        "frictions": [
+          {
+            "what": "The timeline is hard-capped at 200 entries and there is no message. Seeded 540 real events; tapped 'Show 170 earlier entries'; got 200 rows covering 8 of 20 days, the button then hid itself, and 340 entries have no route to the screen at all. sortedEvents(...).slice(0, 200) at app.js:270 is applied before paging, so 'Show earlier' can only ever reveal the 170 inside the same 200.",
+            "severity": "blocker",
+            "whyItMatters": "Those 340 entries are in IndexedDB and in the export, but they cannot be viewed, printed or deleted, and nothing on the page admits they exist — the button that would tell him simply disappears. The research calls a silently-discovered cap 'the emotional peak of the category and we can simply never do it.' Worse: a mis-tapped entry older than 200 events is permanently uncorrectable."
+          },
+          {
+            "what": "At 5,000 events the next tap silently discards the oldest 1,000. Verified: stored count went 5,000 → 4,000 on a single tap of 'Bottle', with the toast reading 'Logged ✓'. app.js:323 trims to 4,000 with no warning and no recovery — the events are removed from IndexedDB, so a later export cannot get them back.",
+            "severity": "major",
+            "whyItMatters": "With twins at ~25 entries a day that is roughly 100 days away, well inside the life of this app. A destructive trim reported as success is the exact dark pattern the app's positioning is built to invert."
+          },
+          {
+            "what": "A hand-edited or clock-skewed backup produces 'Invalid Date' rows and nonsense readouts. Number.isFinite is the only guard on the timestamp (app.js:386), so ts values of 1e18 and 8.64e15+1 import cleanly and render timeline rows and a day heading literally reading 'Invalid Date', with the status line showing 'Last diaper: 662858h 50m ago'.",
+            "severity": "major",
+            "whyItMatters": "The header is the number the app exists to show and it is displaying six-figure hour counts. There is no clamp to a sane range on import and no guard when formatting."
+          },
+          {
+            "what": "Any timestamp in the future pins the hero readout to 'just now' indefinitely. Seeded a feed 5 hours ahead of the clock alongside a real one 3 hours old: the status reads 'Last feed: just now — right side → start left next', the future feed appears in Today's totals, and it drives the next-side suggestion. agoText floors a negative interval and returns 'just now' (model.js:68-70) with no negative guard.",
+            "severity": "major",
+            "whyItMatters": "It takes only an NTP correction pulling the clock backwards, a timezone change, or restoring a backup from a device whose clock runs fast. The one number the app is opened for then lies, and lies in the reassuring direction."
+          },
+          {
+            "what": "Every export is named baby-log.json — no baby name, no date range.",
+            "severity": "minor",
+            "whyItMatters": "With twins he wants two files, and his Downloads folder is baby-log.json, baby-log (1).json, baby-log (2).json. He cannot tell which is which or how old any of them are."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The 3am core loop is genuinely excellent and should not be touched. One tap logs, six tiles all clear 44px, no confirm, no form, no amount field, no interstitial — 30 taps in 1192ms with zero dropped events and one tap painting in 11–22ms whether the log holds 50 events or 4,500.",
+        "Colour and contrast are exemplary in both themes and need no work. Dark: asleep banner 7.33:1, timeline rows 15.16:1, timestamps 7.86:1, the ASLEEP button's ink on its own fill 7.71:1, tile borders 7.19–7.71:1 as non-text. Light: 5.5–16.1:1 across the same set. Nothing measured below 4.5:1 anywhere.",
+        "The comfort panel is a model implementation. Opens from the header, moves focus inside, axe returns zero violations with it open, Largest takes the root from 16px to 24px and everything scales with it — tiles to 112px, status to 25.5px, rows to 24px, row delete buttons to 66px — with the timestamp column now growing instead of clipping.",
+        "Timers are timestamp-backed, exactly as the research demands. Force-quit mid-nap, reopen four hours later, and the elapsed time, the button label and aria-pressed are all correct.",
+        "Screen-reader craft is above category standard: a dedicated #announce live region separate from the 30-second refresh, the zero-width-space trick so identical consecutive feeds both speak, every emoji in an aria-hidden span, and per-row delete labels that name their own row and time.",
+        "The privacy promise is kept and made visible — the trustmark sits on the readout rather than in the footer, a persistent 'Saved on this device' line reports real persistence, and with IndexedDB removed entirely the app boots, keeps working and says so honestly instead of pretending.",
+        "Export is complete and import is properly guarded: 500 events round-trip intact, malformed files are rejected with a plain-English message, a destructive restore names the counts on both sides and offers Undo, and '__proto__' poisons nothing.",
+        "Text safety is total. Every user string reaches the DOM via textContent — script and img payloads in the name field and in imported event kinds render as literal text, with 0 injected nodes, no title hijack and no NaN/undefined/[object anywhere.",
+        "The empty state teaches instead of shrugging, and says 'Nothing is locked and nothing ever will be' exactly once — the research's answer to the category's bait-and-switch, in the right place and in the right tone."
+      ],
+      "hurts": [
+        "Undo is promised and not delivered. It is destroyed by the very next tap (measured at 350ms), and by keyboard it cannot be reached at all because #toast transitions visibility, so the synchronous btn.focus() at app.js:264 is silently rejected on any page restored from storage — which is every returning user.",
+        "Two tabs on one phone eat each other's entries. dbPut writes the whole log to a single key with no merge and no cross-tab listener; a diaper logged in one tab was gone from disk after the other tab's next save, with 'Saved on this device' still showing beneath it. This is the one failure mode the product's positioning claims it structurally cannot have.",
+        "340 of 540 entries cannot be displayed, printed or deleted. slice(0, 200) at app.js:270 is applied before paging, and the 'Show earlier' button hides itself rather than admitting there is more.",
+        "'Today' is calendar midnight to midnight, so a newborn night is split in half. The copied shift-handoff summary — the app's whole output for its named handoff use case — reported one feed for a night that had five.",
+        "There is no edit and no backdate. ts is Date.now() at tap time, there is no time input anywhere in the document, and the only remedy for a mis-timed entry is deletion. The research names this as both a table stake and the app's biggest available differentiator.",
+        "A forgotten timer is presented as a triumphant number. Fourteen hours of open sleep renders as '😴 Asleep — 14h 0m so far' and 'Sleep: 14h 0m', with no 'still going?' and no way to set an end time.",
+        "The pediatrician's sheet makes the pediatrician do arithmetic: 151 rows across 7 days with totals for today only.",
+        "Printing from a dark-mode phone loses the day headings — .dayhead h3 stays rgb(235,233,243) and .status .sleeping stays pale blue on white paper, because the print block never restates colours the app layer sets explicitly.",
+        "Largest text plus Roomy spacing at 320px pushes the 'Bottle' and 'Both' tiles off the right edge of the screen — 22px of overflow, reproduced on every run.",
+        "axe reports a serious 'list' violation the moment the timeline has content, because role=\"presentation\" on the day-separator <li> strips the listitem role. The standard battery misses it because it never logs anything.",
+        "Silent caps and unguarded timestamps: 1,000 events discarded at the 5,000 mark under a 'Logged ✓' toast; imported ts values of 1e18 rendering as 'Invalid Date'; any future timestamp pinning the hero readout to 'just now' forever.",
+        "The comfort button and the tip jar are 36px and do not scale with text size — the two smallest targets in the app, one of which is the door to the accessibility settings."
+      ],
+      "mostWantedNext": [
+        "Make Undo actually deliverable: keep it alive across subsequent toasts (queue it, or park it as an inline row affordance rather than in the toast), and focus it after a frame so the visibility transition has settled.",
+        "Per-event writes and a cross-tab guard — append to an events store instead of overwriting one blob, and listen on BroadcastChannel or the storage event so a second tab reconciles instead of clobbering.",
+        "Show every entry: page the timeline over the whole log instead of over the first 200, and say how many are hidden rather than hiding the button.",
+        "Backdating and edit, done right — tap a row to adjust its time, with times entered after midnight resolving to the nearest past occurrence and displayed as 'Yesterday 10:00 PM' in words. The research says publish this as a feature.",
+        "A 'still going?' affordance on any sleep past ~5 hours or feed past ~60 minutes, with a one-tap 'ended at ___', never a modal.",
+        "A night-aware day boundary — let the day roll at 05:00, or offer 'last 24 hours' alongside 'today' — so the handoff summary matches the shift it describes.",
+        "Per-day totals on the printed sheet: seven lines of feeds / wet / dirty / sleep above the detail rows, and naps printed as durations rather than as start and stop rows.",
+        "Clamp and sanity-check timestamps on import and on display, and guard agoText against negative intervals."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": true,
+    "scenarios": [
+      {
+        "name": "Standard battery — node design/stress.mjs baby-log",
+        "method": "Ran the shared battery unmodified and read what each probe actually did, rather than trusting the summary line.",
+        "result": "0 hard failures. Layout clean at 320/414/1280 and at largest-text and roomy. Touch targets under 32px: none. Hostile text: 0 injected scripts, 0 injected imgs, no title hijack. Keyboard: 17 focusable, 0 unreachable, 0 unnamed, 0 placeholder-only. axe after interaction: clean. Console: silent. BUT three probes never engaged this app: 'rapid clicking the primary action' and 'bulk: 200 rapid adds' both target .btn.primary, which here is #copyBtn — bulk reported nodes:0, i.e. it created nothing; 'boots with corrupt storage' reported 'no app storage key to corrupt' because all data is in IndexedDB; and 'survives reload' therefore compared an empty app to an empty app (1072→1047 chars). axe also ran against an empty timeline.",
+        "defect": "Not an app defect — a coverage gap. The battery's clean result on this app is largely vacuous: its data-path, persistence, corruption and a11y-with-content probes all no-op'd. Every real finding below came from scenarios written after it.",
+        "severity": "none"
+      },
+      {
+        "name": "200-entry ceiling on a real 20-day log",
+        "method": "Seeded 540 realistic events (9 feeds, 8 diapers, 4 naps a day for 20 days) directly into the 'sws-babylog' IndexedDB store, reloaded, clicked 'Show earlier entries', then counted rendered rows, day headings and the events still in the store.",
+        "result": "540 events in IndexedDB. Timeline rendered 30 rows initially, button offered 'Show 170 earlier entries', and after clicking it rendered exactly 200 rows spanning 8 day headings — then hid itself. 340 events across 12 days have no route to the screen, no message and no delete path. Page height 16,099px; scroll stayed smooth at 8ms for two jumps. Export of the same log contained all 500+ events (50,008 bytes), so the data is intact — only unviewable.",
+        "defect": "app.js:270 applies .slice(0, 200) to the sorted log BEFORE the 30-row paging, so 'Show earlier' can only ever reveal rows inside the same 200. Entries beyond that cannot be viewed, printed or corrected, and the UI silently pretends they do not exist.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Two tabs on one origin (installed PWA + the browser tab it came from)",
+        "method": "Opened a second page on the same origin, then interleaved real button taps: tab A logs a feed, tab B logs a diaper, tab A logs a bottle. Read each tab's rendered timeline and then the actual IndexedDB record, then reloaded tab A.",
+        "result": "Tab A displayed ['Bottle','Fed — left']; tab B displayed ['Diaper — wet']; on disk: ['feed:left','feed:bottle']. The diaper was destroyed. Tab B continued to display it with 'Saved on this device' showing underneath, and it did not survive tab A's reload.",
+        "defect": "save() deep-copies the whole in-memory log and dbPut writes it to the single 'main' key (app.js:100-108, 124-135). No merge, no version, no storage/BroadcastChannel listener — last writer wins the entire document and the loser is told it saved.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Undo: does it survive the next tap, and can a keyboard reach it?",
+        "method": "Logged two events, deleted one, then (a) tapped another log button 350ms into the 8-second window and inspected the toast, and (b) separately focused a row's ✕ and pressed Enter and Space, monkey-patching HTMLElement.prototype.focus to record whether the call landed. Repeated across fresh sessions and sessions restored from IndexedDB, 2 runs each.",
+        "result": "(a) After one further tap the toast read 'Logged ✓' and the Undo button was gone — toast() calls replaceChildren on the same node (app.js:33-40). (b) Enter and Space both produce detail=0 so fromKeyboard is correctly true, and btn.focus() IS called — instrumentation recorded 'focus(BUTTON.undo) before=BODY after=BODY inDoc=true tabIdx=0 disp=block'. Focus was silently rejected. Fresh session: lands on BUTTON.undo 2/2. Restored-from-IndexedDB session: lands on BODY 2/2.",
+        "defect": "#toast is visibility:hidden (index.html:785) with visibility included in its transition (index.html:787). Adding .show at app.js:57 does not make it visible until the transition completes, so the synchronous focus() at app.js:264 hits a still-hidden subtree. It only works when a toast was already on screen earlier in the same page load — never on the first destructive action after opening the app, which is the real-world case.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Undo's blast radius: what else does a whole-state snapshot revert?",
+        "method": "Logged two events, deleted one, typed 'Wren' into the baby-name field inside the undo window, then pressed Undo and read both the timeline and the persisted record.",
+        "result": "The deleted row came back and the name field was wiped from 'Wren' to ''. Persisted state confirms name:''. offerUndo assigns data = snapshot wholesale (app.js:48) and rewrites the name input from it (app.js:50).",
+        "defect": "Undo restores the entire application state as of before the delete, so any unrelated edit made during the 8-second window is silently discarded with no mention in the toast.",
+        "severity": "major"
+      },
+      {
+        "name": "'Today' across midnight, and the shift-handoff summary it produces",
+        "method": "Seeded four events in the four hours before local midnight plus one just after it, reloaded, read the Today card, then stubbed navigator.clipboard.writeText and clicked 'Copy today's summary' to capture the exact text.",
+        "result": "Today card: 'Feeds: 1 | Sleep: 0m | Diapers: 0'. Copied text: 'Wren — Sunday, Aug 9 / Feeds: 1 (1 bottle) / Sleep: 0m / Diapers: 0'. The two feeds and two diapers from the four hours before midnight are excluded from both. Separately, the 'Nothing logged today yet' guard at app.js:237 tests total event count, so it never fires for a returning user and the card shows three zeros just after midnight.",
+        "defect": "todayWindow() (app.js:225-229) is a strict calendar day. A newborn night straddles midnight by definition, so the app's only handoff artifact under-reports the night it is sent to describe.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Forgotten timer, and any route back from it",
+        "method": "Seeded a sleep_start 14 hours old with no matching sleep_end, reloaded, and searched the rendered page for any 'still going' / 'ended at' affordance. Separately verified that a 95-minute open sleep survives a reload correctly.",
+        "result": "Status: '😴 Asleep — 14h 0m so far'. Today: 'Sleep: 14h 0m'. Nothing matching /still going|ended at|is this right/ anywhere in the page. The 95-minute case is correct after reload (label 'Woke up', aria-pressed=true) — the timestamp-backed timer itself works exactly as the research demands.",
+        "defect": "The research's most-cited category complaint is unhandled: a 14-hour timer is rendered as an ordinary status and as a clean daily total, it grows by a minute every minute, and the only remedies are recording a wake time that is hours wrong or deleting the nap.",
+        "severity": "major"
+      },
+      {
+        "name": "Editing and backdating an entry",
+        "method": "Enumerated every control inside a timeline row, checked the row for a click handler, counted time/date inputs in the document, and searched the page copy for edit language.",
+        "result": "One control per row: button.rowdel. Row has no click handler. Zero input[type=time|date|datetime-local] in the whole document. No 'edit' / 'change the time' / 'adjust' anywhere in the page text. Every event takes ts: Date.now() at tap time (app.js:322).",
+        "defect": "There is no edit path and no backdating at all. A feed logged 97 minutes late is permanently recorded at the wrong time; the only remedy is deletion. This is a table stake in the research and the differentiator it recommends leading with.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Hostile and malformed backup files through Restore",
+        "method": "Built five files and imported each into a cleared app: absurd timestamps (1e18, -6e11, 8.64e15+1, now+400d); a '__proto__' payload; a 300-char name with an event whose kind is '<img src=x onerror=…>' and detail is '<script>alert(1)</script>'; a JSON object with no events array; and truncated JSON.",
+        "result": "Absurd ts: imported as 4 valid entries — timeline rows and a day heading literally read 'Invalid Date', and the status line read 'Last diaper: 662858h 50m ago'. __proto__: no pollution ((({}).pwned) === false). Hostile kind: name truncated to 40, id to 12, kind to 20, rendered as literal text with 0 injected script or img nodes. Not-a-log and truncated JSON: both rejected with 'That file doesn't look like a Baby Log backup.' No console errors on any file.",
+        "defect": "Number.isFinite (app.js:386) is the only timestamp guard, so any finite number passes — including values Date cannot format. Injection and prototype pollution are solidly handled; range is not.",
+        "severity": "major"
+      },
+      {
+        "name": "Future-dated entry / clock skew against the hero readout",
+        "method": "Seeded one feed 3 hours old and one 5 hours in the future, reloaded, and read the status line, the timeline and the Today totals.",
+        "result": "Status: 'Last feed: just now — right side → start left next'. The future feed appears in the timeline under 'Today' at 9:14 PM and counts in Today's totals (Feeds: 2), and it drives the next-side suggestion.",
+        "defect": "agoText floors a negative interval and falls through to 'just now' (model.js:68-70) with no negative guard. An NTP correction, a timezone change or a backup from a fast-clocked device pins the app's single most important number to 'just now' indefinitely — and pins it in the falsely reassuring direction.",
+        "severity": "major"
+      },
+      {
+        "name": "The 5,000-event cap",
+        "method": "Seeded 4,999 events, tapped a log button twice, and read the stored event count and the toast after each tap.",
+        "result": "First tap: stored 5,000, toast 'Logged ✓'. Second tap: stored 4,000, toast 'Logged ✓'. 1,000 oldest events removed from IndexedDB with no warning, so a subsequent export cannot recover them.",
+        "defect": "app.js:323 trims silently and reports success. At ~25 entries a day that is roughly 200 days, or ~100 with twins — inside the life of the app.",
+        "severity": "major"
+      },
+      {
+        "name": "Layout across every comfort combination at 320px and 414px",
+        "method": "Nine separate withApp runs seeding prefs before first load — {}, xxl, roomy, contrast:more, and the pairwise/triple combinations — measuring documentElement overflow and enumerating offending elements at 320px, then repeating the failing combinations at 414px.",
+        "result": "0px overflow for text:m, text:xxl alone, density:roomy alone, contrast:more alone, text:xl+roomy, and text:xxl+contrast:more. 22px overflow for text:xxl+roomy, text:xxl+contrast:more+roomy, and text:xxl+roomy+reading:easy — identical offenders each time: button.feed 'Bottle' at x=240→342 and button.diaper 'Both' at x=235→323 against a 320px viewport. All combinations clean at 414px.",
+        "defect": ".bigbtns is grid-template-columns:repeat(3, 1fr) (index.html:1314); 1fr floors at min-content, and a 22.5px label plus var(--s3) padding exceeds a third of 320px. The two rightmost log tiles — the primary controls — become physically untappable for the exact user the comfort panel serves.",
+        "severity": "major"
+      },
+      {
+        "name": "axe with real content, at default and at maximum comfort settings",
+        "method": "Ran axe (wcag2a/2aa/21a/21aa/22aa) against a 4-day and a 20-day log with all rows expanded, at default settings, at text:xxl, and at text:xxl+contrast:more+density:roomy; and again with the comfort dialog open.",
+        "result": "One violation, present in every content run and at every setting: 'list' (serious) — '<ul> and <ol> must only directly contain <li>, <script> or <template> elements' on <ul id=\"timeline\">. Comfort panel open: 0 violations. Empty app: 0 violations.",
+        "defect": "Day separators are <li class=\"dayhead\" role=\"presentation\"> (app.js:286). The markup is valid HTML but role=presentation removes the listitem role, so the list has non-listitem children — a wrong item count and lost day semantics for screen readers. Introduced by the fix for the previous audit's invalid-HTML finding, and invisible to the standard battery because that never logs anything.",
+        "severity": "major"
+      },
+      {
+        "name": "Print, in both OS colour schemes, with a 6-day log",
+        "method": "emulateMedia({media:'print'}) plus a dispatched beforeprint event under both colorScheme:'dark' and 'light'; audited visibility of every chrome element, the printed header, row and heading colours, card fills, and whether per-day totals exist.",
+        "result": "Correctly hidden on paper: header.app, the entire #log card (display:none, first tile getClientRects().length === 0), the name field, #tipLink, #swsPrefsBtn, a.skip, footer.colophon, #toast, every .hint and every row ✕. #printHead prints 'Wren Okonkwo-Baptiste — feeding, sleep & diaper log' over 'Printed Sunday, August 9, 2026 · kept on one phone, never uploaded'. body forced to #fff/#000; row text and status rows correctly rgb(0,0,0). 151 rows over 7 day headings; no per-day totals anywhere (/feeds:\\s*\\d+/ absent). Under a DARK OS scheme only: .dayhead h3 computes rgb(235,233,243), .status .sleeping computes rgb(128,165,231), and section.card keeps rgb(22,20,30).",
+        "defect": "Two colours set explicitly in the app layer leak the dark palette onto paper because the print block never restates them — .dayhead h3 sets color:var(--ink) at index.html:1400 and .status .sleeping at index.html:1289, and the print block at index.html:1447-1462 only sets sizes. With background graphics off (the default) the day headings print white on white; with them on, the page prints near-black. Separately, the sheet has totals for today only and prints naps as two rows rather than a duration.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Comfort panel driven for real",
+        "method": "Clicked #swsPrefsBtn in the header, ran axe on the open dialog, checked focus containment, then set Largest via the panel and separately seeded {text:'xxl', contrast:'more', density:'roomy'} before first load; measured root font, component sizes, contrast and overflow with a real log on screen.",
+        "result": "Panel opens as a modal, focus moves inside, axe on the open panel: 0 violations. Largest sets data-text='xxl' and the root font 16px→24px; tiles grow to 103–112px tall, status to 25.5px, timeline rows to 24px, row ✕ to 66px, and the timestamp column widens to 114px without clipping ('1:13 PM' intact). At contrast:more the timestamp and hint both go to full --ink at 15.16:1. Prefs persist across navigation. Two things do not scale: #swsPrefsBtn stays 36×36 and #tipLink stays 36px tall at every text size — the only sub-44px targets in the app.",
+        "defect": "The panel itself is exemplary. What it cannot fix sits in the app layer: the 320px+xxl+roomy overflow above, and its own launch button being the smallest target on the page and shrinking in relative terms as the user asks for more help.",
+        "severity": "minor"
+      },
+      {
+        "name": "Keyboard reachability and focus after the two list actions",
+        "method": "Enumerated focusable elements with a 3-day log, located #exportBtn in the order, then clicked 'Show earlier entries' and read activeElement and scroll position; then focused a row ✕, pressed Enter, and tracked focus.",
+        "result": "48 focusable elements, 0 unreachable, 0 unnamed; 30 of them are row ✕ buttons and #exportBtn is stop 45 of 48. Tab order is orderly (skip → prefs → tip → name → 6 tiles + sleep → Copy → Print → rows → Export → Restore). After 'Show earlier': activeElement = BODY at scrollY 2848 on a 16,099px page, with 170 rows silently inserted and the button removed. After keyboard delete: activeElement = BODY (see the Undo scenario).",
+        "defect": "The only skip link goes TO the log buttons, not past the timeline, so reaching Backup means holding Tab past 30 unguarded destructive controls (200 once expanded). Both list actions drop focus to <body> with no announcement.",
+        "severity": "major"
+      },
+      {
+        "name": "IndexedDB unavailable (private mode / blocked storage)",
+        "method": "Removed window.indexedDB via an init script before load, reloaded, logged an event, and inspected the save-state line, the toast and the console.",
+        "result": "App boots normally, the tap logs and renders, #saveState un-hides with .bad and reads 'Not saved — storage may be full or blocked. Export a backup.', and a toast fires '⚠ Couldn't save — export a backup'. Zero console or page errors.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Write throughput as the log grows",
+        "method": "Seeded 50, 500, 2,000 and 4,500 events in turn and timed a single log tap from click to the second animation frame — save() deep-copies the whole log with JSON.parse(JSON.stringify(...)) and rewrites the entire record on every tap.",
+        "result": "50 events → 13ms. 500 → 11ms. 2,000 → 21ms. 4,500 → 22ms. 200 rendered rows scroll in 8ms for two full jumps. A 540-event log serialises to ~50KB; localStorage holds nothing but the comfort prefs.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Export / restore round trip at scale",
+        "method": "Seeded a 20-day, 500-event log, captured the real download, and compared its contents against the store and against what the timeline can display.",
+        "result": "baby-log.json, 50,008 bytes, all 500 events present spanning 2026-07-20 to 2026-08-09, name preserved. The backup contains the 300 entries the timeline refuses to show.",
+        "defect": "The file is complete and correct. Its name is not: every export is 'baby-log.json' with no baby name and no date range, so successive backups pile up as baby-log (1).json, baby-log (2).json with no way to tell them apart or tell how old they are.",
+        "severity": "minor"
+      },
+      {
+        "name": "Rapid and duplicate taps on a real log button",
+        "method": "Clicked 'Left' 30 times as fast as Playwright allows, then read the timeline, the status line and the Today totals.",
+        "result": "1192ms for 30 taps; exactly 30 feed events created; timeline showed 30 rows, status 'Last feed: just now — left side → start right next', Today 'Feeds: 30'. No double-submit corruption, no dropped events, no errors — and no dedupe, no merge offer and no visual distinction between events seconds apart.",
+        "defect": "Correct under machine-speed input, but a genuine tremor double-tap silently creates two feeds four seconds apart, and correcting one means using the ✕ whose Undo is unreachable.",
+        "severity": "minor"
+      },
+      {
+        "name": "Hostile text through the copy path",
+        "method": "Filled the baby-name field with a script payload plus Arabic-script, CJK and 60 Latin characters, stubbed navigator.clipboard.writeText, and captured the exact copied string.",
+        "result": "Field capped at 40 characters by maxlength. Copied text carried the payload as literal plain text with all scripts intact: '<script>alert(1)</script> ݺݺݺݺݺ 花子 BBBBB — Sunday, Aug 9'. No injection, no mangling, no '?' substitution — unlike the PDF paths elsewhere in this portfolio, this app's output is plain text and handles every script correctly.",
+        "defect": null,
+        "severity": "none"
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Stop two tabs from eating each other's entries — write events, not the whole blob",
+      "rationale": "Verified data loss: tab A logs a feed, tab B logs a diaper, tab A logs a bottle, and the diaper is gone from IndexedDB while tab B still shows it under a 'Saved on this device' line. dbPut writes the entire in-memory log to a single 'main' key on every tap with no merge, no version and no cross-tab listener, so last writer wins the whole document. Dev hit this with the installed PWA and the browser tab it was installed from both open on one phone. The research's positioning is explicit that this class of bug cannot exist here — 'there is no class of bug where the other parent's phone eats your night' — so this is the one defect that contradicts the product's central claim. Append each event under its own key (or keep the blob but reconcile on a BroadcastChannel / storage event and re-read before write).",
+      "where": "apps/baby-log/app.js:100-108 (dbPut writes one 'main' key) and app.js:124-135 (save deep-copies and overwrites)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Make Undo reachable: it dies on the next tap and cannot be focused by keyboard",
+      "rationale": "Two independent failures kill the app's only safety net. (1) toast() calls replaceChildren on the same node, so any subsequent action wipes the Undo button — measured gone 350ms into the promised 8-second window, and the next action at 3am is always another tap. (2) btn.focus() at app.js:264 is silently rejected because #toast is visibility:hidden with visibility in its transition list, so the element is still hidden when focus runs; instrumented as 'focus(BUTTON.undo) before=BODY after=BODY inDoc=true tabIdx=0 disp=block'. It works only when a toast was already on screen from an earlier action in the same page load, so it fails for every returning user — 2 runs out of 2 restored, 2 out of 2 fresh succeeded. Aoife lost a diaper entry she is under clinical instruction to count; Ines was told about an Undo she could not reach. Queue the undo instead of overwriting it (or park it as an inline row affordance), and either focus in a requestAnimationFrame or drop visibility from the transition.",
+      "where": "apps/baby-log/app.js:33-40 (toast clears the node), app.js:57 and app.js:264 (focus before the transition settles), apps/baby-log/index.html:785-789 (#toast visibility transition)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Show every entry — 340 of 540 cannot be viewed, printed or deleted",
+      "rationale": "Seeded a real 20-day log: 540 events in IndexedDB, 'Show 170 earlier entries' renders 200 rows across 8 of 20 days, then the button hides itself and nothing on the page admits the other 340 exist. .slice(0, 200) is applied to the sorted log before the 30-row paging, so paging can only ever move inside the same 200. Export proves the data is intact (all 500 events, 50,008 bytes) — it is purely a display ceiling, which makes it worse: a mis-tapped entry older than 200 events is permanently uncorrectable, and the printed pediatrician sheet stops at 8 days. Performance is not the constraint: 200 rows scroll in 8ms and a tap paints in 22ms at 4,500 events. Page over the full log and, if a render cap is kept, state the remainder instead of hiding the control.",
+      "where": "apps/baby-log/app.js:270 (sortedEvents(...).slice(0, 200)), paging at app.js:249 and app.js:271-278",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Give the handoff summary a night-aware day — 'Today' currently splits every newborn night at midnight",
+      "rationale": "Measured: four feeds/diapers in the four hours before midnight plus one after it produce a Today card and a copied summary that both read 'Feeds: 1 | Sleep: 0m | Diapers: 0'. The copy button is the app's entire output for its named shift-handoff use case, and it under-reported a five-feed night by four. Dev sent that to the family chat; Aoife would read the same wrong number to a pediatrician who flagged weight loss. Related and cheap: the 'Nothing logged today yet' guard tests total event count rather than today's, so a returning parent gets three zeros at 00:05 — the exact shrug the code comment says it is avoiding. Roll the day at ~05:00, or offer 'last 24 hours' beside 'today' and label the copied text with the window it covers.",
+      "where": "apps/baby-log/app.js:225-229 (todayWindow), app.js:237 (empty-state guard tests data.events.length), copy path app.js:352-358",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Fix the pediatrician's sheet: white day headings from a dark phone, and no per-day totals",
+      "rationale": "Two defects on the one artifact the print path exists to produce. (1) Under print media with a dark OS scheme, .dayhead h3 computes rgb(235,233,243) and .status .sleeping computes rgb(128,165,231) while body is correctly forced to #000 — the app layer sets those colours explicitly and the print block only sets sizes, so with background graphics off (every browser's default) the day separators print white on white. Dr Venkataraman could not tell where one day ended. (2) 151 rows across 7 days with totals for today only; no per-day feeds/wet/dirty/sleep line anywhere. The research's whole thesis is 'be paper that adds itself up' and 'the exact four numbers a pediatrician or IBCLC asks for' — the app computes them already, just for one window. Also print naps as durations rather than as separate 'Fell asleep' / 'Woke up' rows.",
+      "where": "apps/baby-log/index.html:1447-1462 (app print block, no colour resets) against index.html:1400 (.dayhead h3 color:var(--ink)) and index.html:1289 (.status .sleeping); totals via daySummary at apps/baby-log/model.js:50-66",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Let a parent fix the time — there is no edit and no backdate anywhere",
+      "rationale": "Verified absence: one control per timeline row (the ✕), no click handler on the row, zero time/date inputs in the document, no edit language in any copy, and ts is Date.now() at tap time. Aoife fed at 01:10 and logged at 02:47; her record is 97 minutes wrong and her only remedy is deleting it. The research lists full edit/backdate as a table stake AND names it the differentiator to lead with — 'built for the entry you make an hour late', with times entered after midnight resolving to the nearest past occurrence and shown as 'Yesterday 10:00 PM' in words, which it calls 'a ten-line fix that competitors have shipped wrong for years'. Tap a row to adjust its time; keep it a sheet, never a modal.",
+      "where": "apps/baby-log/app.js:322 (ts: Date.now()), row markup app.js:290-301 (delete is the only affordance)",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Handle the forgotten timer as the primary flow it is",
+      "rationale": "A 14-hour open sleep renders as '😴 Asleep — 14h 0m so far' and 'Sleep: 14h 0m' — a garbage daily total presented as a clean number, growing by a minute every minute, with nothing matching 'still going' / 'ended at' anywhere in the page. The research names this the one case every competitor has a dedicated FAQ answer for ('which is the tell') and says to treat it as the primary flow, not an error case: 'a stopwatch that has been running 4 hours should not be shown as a triumphant big number.' Past ~5 hours of sleep (or ~60 minutes of feed), surface an inline 'still going?' with a one-tap 'ended at ___'. Never a modal. The timestamp-backed timer underneath is already correct and should not change.",
+      "where": "apps/baby-log/app.js:176-181 (renderStatus sleeping branch), totals via apps/baby-log/model.js:31-48 (sleepMinutes runs an open span to now)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Keep the log tiles on screen at Largest text — 22px of overflow at 320px",
+      "rationale": "Measured across nine comfort combinations: text:xxl+density:roomy at 320px overflows by 22px, with button.feed 'Bottle' at x=240→342 and button.diaper 'Both' at x=235→323 against a 320px viewport. Reproduced identically three times, including with Reading=Easier. Each pref alone is clean, and 414px is clean. Marguerite — low vision plus tremor, the persona the comfort panel exists for — could not reach the two buttons she came for. .bigbtns is repeat(3, 1fr) and 1fr floors at min-content, which a 22.5px label plus padding exceeds. Use repeat(3, minmax(0, 1fr)) with a wrapping label, or drop to two columns below a container-width threshold.",
+      "where": "apps/baby-log/index.html:1314 (.bigbtns grid-template-columns), tile padding and label size index.html:1316-1332",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Clear the serious axe 'list' violation the timeline raises as soon as it has content",
+      "rationale": "axe (wcag2a/2aa/21a/21aa/22aa) reports one violation in every run with real data, at every text size and contrast setting: 'list' (serious) on <ul id=\"timeline\">. Day separators are emitted as <li class=\"dayhead\" role=\"presentation\">, which is valid HTML but strips the listitem role, leaving the list with non-listitem children — a wrong item count for VoiceOver and lost day semantics for Ines. It is a regression from the previous audit's invalid-HTML fix, and the standard battery misses it entirely because it never logs anything. Drop role=\"presentation\" and let the heading live inside a real listitem, or emit one <ul> per day preceded by a sibling <h3>.",
+      "where": "apps/baby-log/app.js:286 (el('li', {class:'dayhead', role:'presentation'}, el('h3', …)))",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Guard timestamps: 'Invalid Date' rows on import, and any future entry pins the hero readout to 'just now'",
+      "rationale": "Number.isFinite is the only check on an imported ts, so 1e18 and 8.64e15+1 import cleanly and render timeline rows and a day heading literally reading 'Invalid Date', with the status line showing 'Last diaper: 662858h 50m ago'. Separately, agoText floors a negative interval and returns 'just now' with no guard, so a feed timestamped in the future makes the app's single most important number read 'Last feed: just now' indefinitely, counts in Today's totals and drives the next-side suggestion. Reachable by an NTP correction pulling the clock back, a timezone change, or restoring a backup from a fast-clocked device. Clamp ts to a sane window on import and return an explicit 'in the future' / 'check your clock' state rather than 'just now'.",
+      "where": "apps/baby-log/app.js:386 (Number.isFinite is the only ts guard), apps/baby-log/model.js:68-70 (agoText, no negative branch), formatting at apps/baby-log/app.js:138-149",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Stop the 5,000-event trim from discarding 1,000 entries under a 'Logged ✓'",
+      "rationale": "Verified: at 4,999 stored events one tap takes it to 5,000, and the next tap takes it to 4,000 — 1,000 oldest events removed from IndexedDB, toast reading 'Logged ✓', and no way to recover them because a later export no longer contains them. At ~25 entries a day that is roughly 200 days, or about 100 with twins, well inside the app's useful life. This is precisely the silent-cap-reported-as-success pattern the research calls 'the emotional peak of the category and we can simply never do it.' Throughput is not the reason for the cap — a tap paints in 22ms at 4,500 events. Either raise it far beyond any plausible use, or refuse to trim without telling the parent and offering an export first.",
+      "where": "apps/baby-log/app.js:323 (if (data.events.length > 5000) … .slice(0, 4000))",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Keep focus and orientation after the two list actions, and give a keyboard user a route past 30 delete buttons",
+      "rationale": "Measured with a 3-day log: 48 focusable elements, 30 of them row ✕ buttons, #exportBtn at stop 45. The only skip link goes TO the log buttons, so reaching the Backup card — the one defence against total data loss — means tabbing past thirty unguarded destructive controls, or two hundred once the list is expanded. Clicking 'Show earlier entries' hides the button and drops focus to <body> at scrollY 2848 on a 16,099px page, with 170 rows inserted and nothing announced. Move focus to the first newly revealed row and announce the count; add a skip link past the timeline.",
+      "where": "apps/baby-log/app.js:346-351 (moreBtn handler scrolls but never moves focus), apps/baby-log/index.html:1468 (skip link targets #log only)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Narrow Undo's blast radius, and name the export file",
+      "rationale": "Two small correctness nits with real consequences. (1) offerUndo assigns data = snapshot wholesale and rewrites the name input from it, so any unrelated edit inside the 8-second window is silently reverted — verified by typing 'Wren' after a delete and watching Undo restore the row and wipe the name back to '', persisted. Undo should restore only the slice it removed. (2) Every export is 'baby-log.json' with no baby name and no date range; Tomasz has twins and a Downloads folder of baby-log (1).json, baby-log (2).json with no way to tell them apart. Include the name and the date.",
+      "where": "apps/baby-log/app.js:43-61 (offerUndo restores whole state; app.js:48, 50), apps/baby-log/app.js:368 (download: 'baby-log.json')",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Grow the comfort button and the tip pill to 44px",
+      "rationale": "The only two controls in the app below the 44px floor, at every text size: #swsPrefsBtn measures 36×36 and #tipLink 36px tall, and neither scales with data-text — still 36px at Largest, when everything around them has grown to 103–112px. Marguerite, who has a tremor, missed the settings button twice before opening it. The door to the accessibility features should not be the smallest target on the page, and it should not shrink in relative terms the more help the user has asked for. Base-layer controls, so the fix likely belongs in design/studio.css rather than this app.",
+      "where": "apps/baby-log/index.html:1170 area (base #swsPrefsBtn) and the a.tipbtn rule in the base layer; markup at apps/baby-log/index.html:1473",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ]
+}

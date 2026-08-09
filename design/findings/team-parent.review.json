@@ -1,0 +1,478 @@
+{
+  "slug": "team-parent",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Dana Whitcomb",
+        "who": "44, the team parent for a U10 soccer side. Not a technologist but competent; runs the team out of a group text today. Sits squarely in the research's organizer profile — part of the ~4.2 hrs/week of unpaid volunteer labour 61% of sports parents take on, and the person the Capterra quote 'setting up your roster and getting the parents onto the app was the hardest part' is about.",
+        "context": "Kitchen table, Sunday 21:40, 13-inch laptop but she does the whole thing in a 414px phone window because that is where the league's email is. Two hands, dishwasher running, first game is in six days. She is tired and wants the feeling of DONE.",
+        "task": "Get the twelve-game fall season plus twice-weekly practices plus a snack rotation into one page, and get the link into the group chat tonight.",
+        "verdict": "She finished, but it took roughly three times as many taps as it should have, and she never trusted that she had actually finished. The Manage panel slams shut after literally every action — measured: it closed after adding one event, after switching from 'One event' to 'Repeating', and again when a parent claimed a slot from another device while she was mid-typing. She built 57 events by reopening the same accordion 30-odd times.",
+        "delights": [
+          "Sign-in to a live shareable board took 3.3s (email link) + 1.6s (create). She was looking at a real team page inside ten seconds of deciding to make one.",
+          "'Paste a list' is genuinely the fastest thing in the category — 30 snack weeks in one paste, committed in 2.5s, with '×2' understood as a two-person duty and unmarked lines becoming open RSVPs.",
+          "The repeating generator produced 26 correctly-dated Tue/Thu practices from four inputs in 4.9s.",
+          "The 100-event cap is handled honestly: adding the 101st is refused with 'Pages max out at 100 events — archive last season or split by month' and nothing is silently dropped."
+        ],
+        "frictions": [
+          {
+            "what": "<details class=\"manage\"> is rebuilt with no `open` attribute on every redraw (app.js:438), and drawBoard() re-renders the entire view on every Firestore snapshot (app.js:186, 188, 202, 215) and on every segmented-control click (app.js:445). Measured: open→add one event→closed; open→click 'Repeating'→closed; open→a parent on another device claims a slot→closed. Also measured window.scrollY jumping to 498 after an add.",
+            "severity": "blocker",
+            "whyItMatters": "This is the app's primary job — the organizer builds the season here — and the panel cannot survive doing the job even once. Switching between 'One event', 'Repeating' and 'Paste a list' costs two taps instead of one, because the first tap closes the thing you are trying to use. Building a 24-event season is ~50 wasted taps at 21:40 on a Sunday. It also reads as a bug, which is the opposite of the 'done, stop thinking about it' feeling the research says this user needs."
+          },
+          {
+            "what": "There is no place to put a field, an address, an arrive-by time or a jersey colour. The only free text on an event is the name (80 chars) plus a 'Time (optional)' box capped at maxlength 20 (app.js:451). Typing '9:00am · Field 4 · blue jerseys' silently truncated to '9:00am · Field 4 · b' — verified in the rendered slot label and in the printed PDF.",
+            "severity": "blocker",
+            "whyItMatters": "The research names 'which field?' and 'what colour shirt?' as the two texts the team parent gets every Saturday morning, and lists field NAME + tappable address + uniform colour as table stakes. The app truncates that information mid-word without warning. She got the truncation, shrugged, and typed the field into the team Details line instead — where it is not attached to any game."
+          },
+          {
+            "what": "Events render in insertion order only (`order` = append index, app.js:588-589) and dates live inside the label string, not as data. Verified: the Sep 12 game sits above the Sep 1 practice on both screen and paper, and the snack weeks land below three months of practices. There is no reorder control anywhere.",
+            "severity": "blocker",
+            "whyItMatters": "A rescheduled game added in week six lands at the bottom of a 24-row list forever. There is no way to fix it short of deleting and re-adding everything after it. It also makes every downstream feature the research asks for — 'next up', a week block, an .ics export, hiding past games — structurally impossible."
+          },
+          {
+            "what": "The five colour dots under Settings (index.html:1295-1297, app.js:220-225) write only `--accent`. Every visible surface uses `--accent-fill`. Measured across blue/amber/green/slate: the primary button background stayed rgb(42,103,189) in all four. The dots are also 34×34px, below the 44px floor the design system sets as invariant #4.",
+            "severity": "minor",
+            "whyItMatters": "She picked amber to match the team's kit, saw essentially nothing change, and picked it twice more thinking she had mis-tapped. A control that appears to do nothing costs more trust than no control."
+          },
+          {
+            "what": "'Generate events' fires a native confirm('Add 26 events?') (app.js:501), and 'Rotate link' and 'Delete page' do too. Meanwhile the genuinely destructive one-tap action on the parent side has no confirm and no undo.",
+            "severity": "minor",
+            "whyItMatters": "Confirms are taxed on the safe bulk action and absent on the unsafe single one — exactly backwards. sws-ui.js with SWS.undo is loaded on the page (index.html:1331) and never called once."
+          }
+        ]
+      },
+      {
+        "name": "Priya Raghunathan",
+        "who": "37, recipient parent, two kids in two sports. The research's grocery-aisle reader. Has never made an account for anything school-related and refuses to install another app; she is the reason 'they don't have to download anything' is the headline claim.",
+        "context": "Friday 18:20, standing in a supermarket aisle, iPhone at 414px, one thumb, trolley in the other hand, about four seconds of attention. She tapped the link Dana posted in the WhatsApp group.",
+        "task": "Answer one question: is it our snack turn this weekend, and if so what am I bringing.",
+        "verdict": "The page opened fast and looked trustworthy, and she could not answer her question. She scrolled, gave up, and texted Dana — the exact failure the product exists to prevent.",
+        "delights": [
+          "440ms from tapping the link to the first event on screen, with no install, no code, no name entry and no cookie banner. That is the whole competitive thesis working.",
+          "Zero horizontal overflow at 414px and at 320px, and axe returned zero violations on the live board view.",
+          "When she did claim a slot, it stuck through a full reload with no save button — the TeamReach 'the app resets' complaint does not reproduce for the claim itself."
+        ],
+        "frictions": [
+          {
+            "what": "There is no 'next up' and no 'your turn'. Measured on a real 24-event season: the first thing under the team name is 'Duties filled: 1 of 12' (an organizer metric), then an undifferentiated list of identical rows. Her own claimed snack week rendered at y=2351 — 2.61 screens below the fold — and after a reload the page returns to scrollY 0. Regex for /next up|this week|today|upcoming|your turn/ over the whole rendered page: no match. No search box, no date headings, no today marker.",
+            "severity": "blocker",
+            "whyItMatters": "The research is explicit that a 'Next up' answer block pinned above any table is table stakes and that 'a full-season grid as the landing state reads as amateur'. She gets the full-season grid. In four seconds in a supermarket she learned the team has 12 duties and 1 is filled, which is not one of the three questions she has."
+          },
+          {
+            "what": "The header shown to a parent contains a 'Sign in' button (index.html:1340) and a '♥ Tip jar' link (index.html:1339). At 414px the header wraps to two rows, 112px tall, with 'Sign in' alone on the second row directly above the team name.",
+            "severity": "major",
+            "whyItMatters": "The research's single most-quoted complaint is a parent who thought a shared signup link was spam, and the countermeasure is a clean recipient page that answers 'do I need an account / is someone selling me something' immediately. Instead the two most prominent controls above the team name are an account prompt and a money link. The research says the tip jar should be 'never on the shared parent view'."
+          },
+          {
+            "what": "The trust line is real but buried. 'One coach signs in — every family just taps the link. No accounts, no ads.' lives in footer.colophon, i.e. below 3457px of schedule on a 24-event board and below 6526px on a 57-event board.",
+            "severity": "major",
+            "whyItMatters": "The one sentence that answers her spam reflex is seven screens past the point where she would have bounced. The research's prescription is a literal one-line trust stamp near the TOP of the shared view."
+          },
+          {
+            "what": "The team's field and the coach's phone number are plain text in the description (app.js:249). Measured: zero <a> elements inside it, so no tel: link and no Maps link. Separately, pasting a real Google Maps URL there — the obvious thing an organizer does — produced 387px of horizontal page overflow at 414px.",
+            "severity": "major",
+            "whyItMatters": "She cannot tap the address to navigate or tap the number to call, which the research lists as table stakes, and the workaround her organizer would reach for actively breaks the layout for every family on the team."
+          }
+        ]
+      },
+      {
+        "name": "Eleanor Vasquez-Byrne",
+        "who": "71, grandmother, does two pickups a week and one snack duty a season. Macular degeneration in one eye plus varifocals; reads phones at arm's length in bright light. This is the comfort-panel persona.",
+        "context": "Saturday 07:52, parked outside Kestrel Park, sun straight onto the screen, phone at 414px in one hand, engine running, a nine-year-old asking questions from the back seat.",
+        "task": "Confirm the start time and check whether it is her week for the orange slices.",
+        "verdict": "The comfort panel is the best thing in the app and it saved her — but it also made the underlying layout problem worse, because bigger type on an unsorted 24-screen list is still an unsorted list, now longer.",
+        "delights": [
+          "She found the sliders icon in the header unprompted and it opened first try. Setting Text size → Largest took the root font from 16px to 24px and the event labels from 16px to 24px, the whole layout scaled with it, horizontal overflow stayed at 0 at both 414px and 320px, and axe on the open panel returned zero violations. Done and Reset stayed on screen (footer bottom 845px against a 900px viewport).",
+          "Contrast → High genuinely worked on the text that mattered: the grey secondary line went from 5.61:1 to 15.20:1 against the page.",
+          "Nothing was left behind at small type — the claim buttons grew with everything else and dropped off the sub-44px list entirely at Largest."
+        ],
+        "frictions": [
+          {
+            "what": "The ✕ that releases your own duty is a 16×19px button inside the chip (index.html:1276 — `padding:0 2px; font-size:.9rem`, no min-height). Measured on a real claim: chip 340×65, its ✕ 16×19. One tap releases the duty immediately: chips before/after = 1 → 0, toast 'Duty released', and `#toast .undo` count = 0. No confirm, no undo, nothing.",
+            "severity": "blocker",
+            "whyItMatters": "This is the single most destructive action available to a parent and it is the smallest target on the page, four times under the 44px floor, sitting immediately after their own name where a thumb naturally lands. In the sun, at arm's length, with a child talking, she gave up her snack week and had no idea she had done it. The design system's invariant #4 and the repo's own SWS.undo both exist and neither is applied here."
+          },
+          {
+            "what": "At default text the claim buttons measure 87×36px and the 'Edit event' ✎ buttons 37×36px — both below var(--tap) 44px. The header's #swsPrefsBtn, #tipLink and #authBtn are all 36px tall.",
+            "severity": "major",
+            "whyItMatters": "The research asks for 48px targets specifically because fall and winter seasons mean cold hands and gloves. She only got usable targets by going to Largest text, which is a workaround, not a default."
+          },
+          {
+            "what": "Contrast of the secondary line ('0 going', 'Covered', '2 of 3', all the hints) measures 5.61:1 at default, and the primary button's ink on its fill measures 5.42:1.",
+            "severity": "minor",
+            "whyItMatters": "Both pass WCAG AA, so nothing flags them — but the research sets 7:1 for this app specifically 'because direct sunlight collapses perceived contrast on a phone at auto-brightness', which is precisely the 07:52-in-a-parked-car condition. The count text is the field that answers 'is this covered'."
+          },
+          {
+            "what": "The whole board is a single <main id=\"view\" aria-live=\"polite\"> (index.html:1342) that is emptied and rebuilt by v.replaceChildren() (app.js:242) on every snapshot. Measured on a 100-event board: 108 full teardown/rebuild cycles of #view within 3.14 seconds of opening the link.",
+            "severity": "major",
+            "whyItMatters": "For her friend who uses VoiceOver this is 108 announcements of the entire page in three seconds — the live region is unusable and the page is effectively unreadable until the storm ends. For her it means anything she taps in the first three seconds may be replaced under her finger."
+          }
+        ]
+      },
+      {
+        "name": "Marcus Oyelaran",
+        "who": "39, assistant coach and the team's de-facto tech person; also blind and a full-time NVDA/VoiceOver user. Volunteered to help Dana set up the repeating practice schedule because he does spreadsheets for a living.",
+        "context": "Weeknight, desktop at 1280px, NVDA, keyboard only. No time pressure, high standards.",
+        "task": "Add the Tue/Thu practice block for September through November on Dana's behalf.",
+        "verdict": "Could not do it. Everything else in the app was reachable and correctly named; the one control he needed does not exist for him.",
+        "delights": [
+          "Every focusable control on the parent board view has an accessible name — 68 focusables, zero unnamed, and axe clean at wcag2a/aa/21a/21aa/22aa on the live board.",
+          "Tab depth from page load to the first claim action is 5. The reading order is sane and the dialogs are real <dialog> elements.",
+          "The claim dialog's fields are properly labelled and Enter submits."
+        ],
+        "frictions": [
+          {
+            "what": "The weekday picker in 'Repeating' is seven checkboxes hidden with `.wkdays input{display:none}` (index.html:1314), styled purely through `label:has(input:checked)` (index.html:1315). Measured: 7 inputs present, 0 reachable (offsetParent null), 0 labels with tabIndex >= 0, and focus() on an input does not move activeElement. axe reports zero violations because display:none elements are out of scope.",
+            "severity": "blocker",
+            "whyItMatters": "display:none removes an element from the accessibility tree and from the tab order entirely. The 'Repeating' generator — the app's biggest time-saver and the thing that makes a 26-practice season take four inputs — is pointer-only. He can reach the date fields, the prefix, the time and the Generate button, and cannot select a single day. This is the exact class of defect that a clean axe run certifies as fine."
+          },
+          {
+            "what": "In #slotDlg the buttons are stacked full-width at 414px with Delete FIRST at the top (index.html:1392-1396). Measured: Delete 343×44 at left 36, then Cancel 343×44, then Save 343×44, all at the same x.",
+            "severity": "major",
+            "whyItMatters": "Screen-reader order and visual order both put the destructive action first in a dialog whose purpose is renaming an event. Deleting has a confirm, so it is recoverable, but 'Delete' is the first thing announced when the edit dialog opens."
+          },
+          {
+            "what": "The capacity field in that dialog is labelled 'Spots needed (999 = open RSVP)' (index.html:1391) and shows the literal value 999 when editing an ordinary game. RSVP_CAP is an implementation constant (app.js:20) leaking into the UI.",
+            "severity": "major",
+            "whyItMatters": "He opened a game to fix a typo and was told the game needs 999 spots. Any value he types converts the game from an open RSVP into a capped duty slot, silently. There is no 'this is an RSVP / this is a duty' control — only a magic number."
+          },
+          {
+            "what": "The board colour picker exposes five buttons whose only accessible names are 'blue theme', 'green theme', 'plum theme', 'slate theme', 'amber theme' (app.js:536), with no indication of which is selected other than a CSS box-shadow (index.html:1297).",
+            "severity": "minor",
+            "whyItMatters": "Colour-named buttons carrying no state to a screen reader, controlling a variable that changes almost nothing visible anyway."
+          }
+        ]
+      },
+      {
+        "name": "Tomás Ferreira",
+        "who": "46, dad of two, the household's 'I'll do it later' parent. Reads the team page at the field where signal is one bar, and has been burned by a school app that lost his RSVP.",
+        "context": "Saturday morning at Kestrel Park, 414px phone, one bar dropping to none behind the concession stand, gloves on in November.",
+        "task": "Grab the last open snack week before someone else does, then check it stuck.",
+        "verdict": "It worked, and the conflict handling is genuinely better than the Google Sheet it replaces — but the offline path tells him nothing and the printed sheet on the fridge is a dead end.",
+        "delights": [
+          "The two-device race is handled at the rules layer, not the UI. Two families tapped the same 1-person duty simultaneously: exactly one claim landed, the slot read 'Covered' with one chip, and the loser got 'That didn't go through — the spot may have just filled, or the page is locked.' The research's 'parents overwrite each other's cells' failure mode does not reproduce here.",
+            "The loser's view of the taken slot shows who has it — 'Snack duty — Sat 9/12 | Covered | Family B' — rather than silently swallowing the tap.",
+          "Going offline surfaced 'You're offline — you can read the page; RSVPs will sync when you're back.' and the claim he made while offline appeared locally and reached the organizer's screen 3.5s after reconnecting.",
+          "Locking the board behaved exactly as advertised for a participant: banner shown, 0 claim buttons, note form gone, own ✕ removed."
+        ],
+        "frictions": [
+          {
+            "what": "The offline claim produces no confirmation at all. Measured: the chip appeared locally but #toast was empty, because claimSlot awaits batch.commit() (app.js:657) which never resolves while offline, so neither the success toast nor friendly()'s 'You look offline — the change is queued' branch (app.js:62) ever fires.",
+            "severity": "major",
+            "whyItMatters": "He taps 'I'll cover this' with gloves on, the dialog closes, and the app says nothing. His whole reason for checking is that an app once lost his RSVP. The one message written specifically for this case is unreachable."
+          },
+          {
+            "what": "The printed sheet has no share code and no QR. Verified by generating the PDF: the share card is `section.card noprint` (app.js:254) and @media print hides `.noprint` and all `.btn` (index.html:1323), and the QR only exists inside a closed <dialog>. The parent's printed page also carries device-specific text — 'A family arriving mid-typing (you)' — and prints a note still marked 'awaiting approval', while 'Older announcements (2)' prints as a dead summary line with the two announcements missing.",
+            "severity": "major",
+            "whyItMatters": "The research's flagship differentiator is 'the paper artifact that beats paper, because scanning it reopens the always-current version… it puts our URL on 14 refrigerators.' The current printout is a snapshot with no way back, personalised to whoever printed it, containing unapproved content and hiding approved content."
+          },
+          {
+            "what": "Announcements carry no timestamp. The pinned block shows '📣 RAIN DELAY: Sat game pushed to 11am, Field 2' and the author line 'Roadrunners U10 organizer' — a regex for any time or date form over the announcement block returns false.",
+            "severity": "major",
+            "whyItMatters": "The research asks for a dated 'Updated Tue 6:10pm — Sat game moved to Field 2' banner precisely so parents can trust what they are seeing is current. Standing at the field, he cannot tell whether the rain-delay notice is from ten minutes ago or from last season. The author line is also redundant — it is the team name plus the word 'organizer'."
+          },
+          {
+            "what": "There is no way to send anything to the group chat. helpers.js exports nudgeMessage() (helpers.js:71-84), a paste-ready 'still need a hand with…' block, and team-parent's app.js never imports it (app.js:5-7). There is no .ics export anywhere in the app.",
+            "severity": "major",
+            "whyItMatters": "Two of the eight named differentiators — the one-tap SMS block that routes around the category's broken notifications, and the permission-free season .ics — are absent, and one of them is already written and sitting unused in the same directory."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The zero-onboarding claim is real and fast: 440ms from tapping a shared link to the first event on screen, no install, no account, no code entry, no banner. This is the whole competitive thesis and it works.",
+        "Concurrency is correct where it matters. Two devices claiming the same 1-person duty at the same instant produced exactly one claim, an accurate 'Covered' count, a visible owner name, and a clear refusal message for the loser — the rules layer, not the UI, enforces it.",
+        "The comfort panel is the strongest part of the experience. Largest text takes the root from 16px to 24px with the whole layout in proportion, zero horizontal overflow at 320px and 414px, High contrast lifts secondary text from 5.61:1 to 15.20:1, and axe is clean with the panel open.",
+        "Bulk entry beats every competitor: 30 duty rows from one paste in 2.5s, '×2' understood, and a 100-event cap that refuses honestly instead of silently dropping rows.",
+        "Nothing user-typed can be injected. Hostile strings with <img src=x onerror=alert(1)>, RTL overrides, CJK and emoji all round-trip as text: 0 alerts, 0 injected images, title intact.",
+        "Offline reads work, the offline banner appears, claims made offline sync on reconnect, and locking a board freezes participants exactly as described."
+      ],
+      "hurts": [
+        "The parent's question is never answered. No 'next up', no 'your turn', no date sorting, no today marker, no search — a 24-event season puts a family's own snack week 2.61 screens down, and reload returns them to the top.",
+        "Events are ordered by insertion, not by date, because dates are only ever a substring of the label. The Sep 12 game printed above the Sep 1 practice on real data. Nothing downstream — a week block, an .ics, hiding past games — is possible until that changes.",
+        "The organizer's Manage panel closes on every single action: after an add, after switching tabs inside it, and when any family claims anything from another device. The core setup job fights the person doing it.",
+        "The most destructive parent action — releasing your own duty — is a 16×19px ✕ with no confirm, no undo and no way back, on a page where SWS.undo is already loaded and never called.",
+        "The recipient view leads with 'Sign in' and '♥ Tip jar' in a two-row 112px header, and buries the 'no accounts, no ads' trust line below 3457–6526px of schedule — the opposite of the research's answer to the 'I thought it was spam' reflex.",
+        "Event data is too thin to do the job: no field, no address, no arrive-by, no jersey colour, no allergy note, and a 20-character time box that truncates mid-word. The workaround (a Maps URL in Details) breaks the layout with 387px of horizontal overflow.",
+        "The 'Repeating' weekday picker is pointer-only — 7 checkboxes at display:none, 0 keyboard-reachable — and axe cannot see it.",
+        "The board colour picker changes nothing visible: all five themes leave the primary button at rgb(42,103,189) because applyTheme writes --accent while the UI paints from --accent-fill."
+      ],
+      "mostWantedNext": [
+        "A real date field on an event, sorted chronologically, with a pinned 'Next up' block at the top of the shared view: the next game, its time, its field, and whose snack turn it is, in large type above any list.",
+        "A 'your turn' marker and an in-page jump so a parent's own claim is findable without scrolling 2.61 screens.",
+        "Undo on every destructive tap, starting with releasing a claim, and a ✕ that is at least 44px.",
+        "Keep the Manage panel open and the scroll position stable across redraws — reconcile the view instead of replaceChildren-ing it.",
+        "Field name, tappable address, arrive-by time and jersey colour as first-class event fields, plus a team-wide allergy note.",
+        "Put the share code and QR on the printed sheet, and add the .ics download and the 'copy this week' text block (nudgeMessage is already written)."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": true,
+    "scenarios": [
+      {
+        "name": "Standard battery (design/stress.mjs team-parent)",
+        "method": "node design/stress.mjs team-parent — layout at 320/414/1280 and at largest-text and roomy, touch targets, hostile text and injection, numeric edges, rapid clicking, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
+        "result": "0 hard failures, and effectively uninformative: every check ran against the marketing home screen only. 'bulk: 200 rapid adds' reported ran:true addMs:11 nodes:0 with 0 bytes of storage; 'boots with corrupt storage' reported 'no app storage key to corrupt'; keyboard found 9 focusables. The app's real UI lives behind a Firebase board that the battery cannot create, so everything below was run against the live app driven onto real boards through the Firestore/Auth emulators with the real firestore.rules loaded.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Organizer builds a real season (email-link sign-in → 57 events)",
+        "method": "Drove the actual UI at 414px: email-link sign-in via the auth emulator's oob code, create board, add one dated game, generate 26 Tue/Thu practices over Sep–Nov, paste 30 snack weeks.",
+        "result": "Sign-in 3.3s, create→board 1.6s, one event 2.1s, 26 generated events 4.9s, 30 pasted events committed. But details.manage measured open=false after the single add, after clicking the 'Repeating' tab, and after a remote claim arrived; window.scrollY jumped to 498 after the add. '9:00am · Field 4 · blue jerseys' truncated to '9:00am · Field 4 · b' (Time input maxlength=20, app.js:451).",
+        "severity": "blocker",
+        "defect": "renderManage() rebuilds <details class=\"manage\"> without `open` (app.js:438) and drawBoard() re-renders the whole view on every snapshot and every seg click (app.js:186/188/202/215/445). The event Time field silently truncates at 20 characters."
+      },
+      {
+        "name": "100-event cap boundary",
+        "method": "Pasted 96 rows onto a board already holding 4, then attempted one more.",
+        "result": "Exactly 100 slots after the 96-row paste; the 101st was refused with 'Pages max out at 100 events — archive last season or split by month.' and the slot count stayed at 100. No partial writes, no silent drops.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Two families race for the last spot",
+        "method": "Two independent browser contexts (separate anonymous UIDs) claiming the same capacity-1 duty via Promise.all against the real firestore.rules.",
+        "result": "Exactly one claim landed. Owner view: count 'Covered', chips [\"Family B\"]. Loser toast: 'That didn't go through — the spot may have just filled, or the page is locked.' Loser's row shows the slot as Covered with Family B named. Counter and claim doc stayed coupled.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Releasing your own duty",
+        "method": "Claimed a duty with a long allergy note, then tapped the ✕ inside the chip.",
+        "result": "Chip 340×65px; its ✕ measured 16×19px. One tap: chips 1 → 0, toast 'Duty released', `#toast .undo` count 0. No confirm dialog, no undo, no re-claim shortcut. sws-ui.js (SWS.undo) is loaded at index.html:1331 and never called anywhere in app.js.",
+        "severity": "blocker",
+        "defect": "index.html:1276 — `.chip button{padding:0 2px; font-size:.9rem}` gives the only destructive parent-side action a 16×19px hit area, 4x under var(--tap), with no undo."
+      },
+      {
+        "name": "Hostile and long text through every user-writable field",
+        "method": "Board title, description, event labels via bulk paste, claim name and claim note filled with '<img src=x onerror=alert(1)>「テスト」🏈 عربى ‮RTL' and with a 240-char unbroken word; then a realistic pasted Google Maps URL in Details.",
+        "result": "No injection: 0 alerts, 0 <img src=x>, document.title intact, everything rendered as text (the el() helper uses textContent throughout). Long event labels wrap safely (`.slot .label` has overflow-wrap:anywhere). But the description does not: the 240-char word produced document.scrollWidth 1578 against clientWidth 414 (1164px of horizontal overflow), and a real Maps URL produced 387px. Culprit isolated to p.sub inside section.card — overflowWrap 'normal'. Note the harness's offenders() returns [] for this class of overflow, because the inline content overflows a block box whose own rect stays in bounds.",
+        "severity": "blocker",
+        "defect": "app.js:249 renders the board description as `el('p', {class:'sub'})` with no overflow-wrap; the title beside it at app.js:247 does set overflow-wrap:anywhere. Any pasted URL or long token in Details sideways-scrolls the page for every family."
+      },
+      {
+        "name": "Redraw storm and screen-reader impact on a 100-event board",
+        "method": "MutationObserver on #view childList, counting teardowns from link-open for 6 seconds on a 100-slot board.",
+        "result": "108 full teardown/rebuild cycles of <main id=\"view\" aria-live=\"polite\"> between t+4ms and t+3136ms. The app opens one onSnapshot per slot for claims (app.js:207-218) and each one calls drawBoard(), which does v.replaceChildren() (app.js:242). Playwright could not hold a stable element reference during the storm.",
+        "severity": "blocker",
+        "defect": "index.html:1342 marks the whole board aria-live=\"polite\" while app.js:242 replaces its entire contents 108 times in 3.1s — a screen reader re-announces the full page on every one, and any tap in the first three seconds lands on an element being replaced."
+      },
+      {
+        "name": "Comfort panel on the shared parent view",
+        "method": "Opened #swsPrefsBtn from the header at 414px and 320px, set Text size Largest, Spacing Roomy, Contrast High one at a time, then measured.",
+        "result": "Panel opens (381px wide at 414px, 288px at 320px), Done/Reset stay on screen (footer bottom 845px vs 900px viewport) even after Largest+Roomy grew it to 792px. Root font 16px → 24px, event labels 16px → 24px, count text 13.12px → 19.68px. Horizontal overflow 0 at both widths. axe clean with the panel open and after applying. High contrast lifted the secondary/hint colour from 5.61:1 to 15.20:1 against the page. Doc height grew 6583 → 9036px at 414px.",
+        "severity": "none",
+        "defect": null
+      },
+      {
+        "name": "Keyboard-only and screen-reader path through Manage",
+        "method": "Enumerated focusables inside details.manage on the 'Repeating' tab and tried to focus the weekday checkboxes.",
+        "result": "24 focusables in the panel; 7 weekday <input type=checkbox> present, 0 reachable (offsetParent null, focus() does not move activeElement), 0 labels with tabIndex >= 0. axe on the same DOM: zero violations. Theme dots measured 34×34px. On the parent board view: 68 focusables, 0 unnamed, tab depth 5 to the first claim action, axe clean.",
+        "severity": "blocker",
+        "defect": "index.html:1314 — `.wkdays input{display:none}` removes all seven weekday controls from the tab order and the accessibility tree, making the repeating-schedule generator pointer-only. axe cannot see it."
+      },
+      {
+        "name": "Offline, reconnect and lock",
+        "method": "context.setOffline(true) + an 'offline' event on a participant tab, claim while offline, reconnect, then lock the board from the owner tab.",
+        "result": "Banner 'You're offline — you can read the page; RSVPs will sync when you're back.' appeared. The offline claim rendered locally from Firestore's cache and reached the owner's screen 3.5s after reconnect — but #toast was empty throughout, because claimSlot awaits batch.commit() which never settles offline, so friendly()'s 'You look offline — the change is queued' (app.js:62) never fires. Locking produced the correct participant banner, 0 claim buttons, no note form, and removed the own-chip ✕.",
+        "severity": "major",
+        "defect": "app.js:657 — the offline claim path gives no feedback at all; the message written for exactly this case is unreachable because the promise never resolves."
+      },
+      {
+        "name": "Print / PDF for both roles",
+        "method": "emulateMedia('print') + page.pdf() on an owner board with 60 duty slots and on a participant board, then read the PDFs back with pdftotext.",
+        "result": "Owner sheet: 6 pages, 60 '________________' write-in blanks rendered correctly, header/manage/colophon suppressed. Neither sheet contains the share code or the QR — the share card is `card noprint` (app.js:254) and @media print hides .noprint and all .btn (index.html:1323), and the QR canvas only exists inside a closed dialog. The owner sheet prints the 'you run this' badge; the parent sheet prints '(you)' beside a claim, prints a note still marked 'awaiting approval', and prints 'Older announcements (2)' as a dead summary with those two announcements omitted.",
+        "severity": "major",
+        "defect": "The printable sheet — named in the research as the flagship differentiator because the QR turns paper back into the live version — has no code and no QR, and leaks device-specific and unapproved content."
+      },
+      {
+        "name": "Board colour picker",
+        "method": "Selected blue, amber, green and slate in turn and read the computed styles of the primary button, the accent variables and the body.",
+        "result": "--accent changed correctly (#4481da → #b45309 → #0f766e → #475569) but --accent-fill stayed #2a67bd in every case, so .btn.primary background measured rgb(42,103,189) under all four themes. The only surfaces that follow --accent are the .announce border, the .chip.mine border and the checked weekday label. Dots are 34×34px. In dark mode the picker still writes light-mode hexes.",
+        "severity": "minor",
+        "defect": "app.js:221-225 sets only --accent; index.html:590-593 paints .btn.primary from --accent-fill, so the visible palette never changes."
+      },
+      {
+        "name": "Chronological order and the four-second glance",
+        "method": "Seeded a realistic 12-game / 12-snack season through data.js, opened it as a participant at 414px, claimed a November snack week, reloaded, and measured.",
+        "result": "Events render in insertion order: on the earlier board the Sep 12 game printed above the Sep 1 practice. First content under the team name is 'Duties filled: 1 of 12'. The family's own claim sits at y=2351 — 2.61 viewports down a 3457px page — and reload returns scrollY to 0. No 'next up'/'this week'/'today'/'your turn' string anywhere in the rendered page; no search field; no date headings. The header wraps to 2 rows / 112px at 414px with 'Sign in' alone on the second row, and '♥ Tip jar' sits above the team name on the shared parent view.",
+        "severity": "blocker",
+        "defect": "No date model (dates are substrings of the label, app.js:462-467) and no answer-first block, so the shared view lands on the full-season grid the research explicitly calls amateur."
+      },
+      {
+        "name": "Rotate link and the stale-link parent",
+        "method": "Rotated the share code from the owner tab while a participant tab was open on the old code, then reloaded the participant.",
+        "result": "New code issued and the owner's hash updated. The participant on the old link got 'That team page doesn't exist — the organizer may have rotated the link.' plus a 'Go home' link. Honest copy, and the owner's confirm warns first — but the parent's only recovery is to ask the organizer, and the organizer is never told how many people are still holding the dead link.",
+        "severity": "minor",
+        "defect": null
+      },
+      {
+        "name": "Announcements, notes and approval",
+        "method": "Posted three announcements, typed a fourth halfway and forced a remote redraw, then posted participant notes with approval off and on.",
+        "result": "Newest announcement pins correctly with 'Older announcements (2)' beneath. The half-typed draft survived a remote redraw (announceDraft at app.js:435 is deliberate and works) — but details.manage did not: open=false after the remote claim. Approval flow is correct: participant gets 'Added — the organizer will approve it shortly', sees their own pending item badged 'awaiting approval', owner sees it with a ✓. No announcement carries any timestamp; the author line is the team name + ' organizer' (app.js:301).",
+        "severity": "major",
+        "defect": "Announcements have no timestamp, so the research's 'Updated Tue 6:10pm — Sat game moved to Field 2' trust signal is absent on the one feature built for it."
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Give events a real date field and sort the schedule chronologically",
+      "rationale": "Dates today exist only as a formatted substring inside `label` (app.js:462-467), and slots render in insertion order (`order` = append index, app.js:588-589). Verified on real data: the Sep 12 game renders and prints above the Sep 1 practice, and a rescheduled game added mid-season lands at the bottom permanently with no reorder control. Every other thing the research asks for — 'Next up', a week block, an .ics, hiding past games, a 'your turn' marker — is blocked on this. Add `startsAt` (and optional `arriveBy`) to the slot shape, sort by it, and keep the label for the human name only. Note firestore.rules pins the slot document shape with hasOnly(['label','capacity','order','claimedCount']), so the rules change ships with it.",
+      "where": "apps/team-parent/app.js:459-473 (single), :492-503 (range), :583-592 (addSlotsChecked); apps/signup-sheets/firestore.rules slots create/update shape",
+      "severity": "blocker",
+      "effort": "L"
+    },
+    {
+      "title": "Put an answer-first 'Next up' block at the top of the shared view",
+      "rationale": "Priya's measured session: the first content under the team name is 'Duties filled: 1 of 12' (an organizer metric) and her own snack week sits at y=2351, 2.61 viewports down a 3457px page, with reload returning her to scrollY 0. A regex for next up|this week|today|your turn over the whole rendered page returns no match, and there is no search. The research calls a pinned 'Next up' answer block table stakes and says a full-season grid as the landing state 'reads as amateur'. Render, above the schedule card: the next dated event in large type with its time, field and jersey colour, plus whose duty it is, plus a 'YOUR TURN' badge when one of this device's claims falls in that window. Depends on the date field above.",
+      "where": "apps/team-parent/app.js:312-322 (drawBoard's schedule card) — insert before it; the 'Duties filled' line at app.js:314-315 should move into the owner-only region",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Stop tearing down the whole view on every snapshot; keep Manage open and scroll stable",
+      "rationale": "drawBoard() does v.replaceChildren() (app.js:242) and is called from four separate onSnapshot handlers plus every seg-control click (app.js:186, 188, 202, 215, 445). Measured: 108 full rebuilds of #view in 3.14s on a 100-event board; details.manage open=false after adding one event, after switching to the 'Repeating' tab, and after a remote claim; scrollY jumped to 498 after an add. Because #view is aria-live=\"polite\" (index.html:1342) each rebuild is a full-page announcement. Minimum viable fix: persist the open/scroll state across redraws and coalesce snapshot callbacks into one rAF-batched render; better: reconcile slot rows in place and drop aria-live from #view in favour of targeted live regions.",
+      "where": "apps/team-parent/app.js:233-337 (drawBoard), :438 (details.manage built without `open`), :445 (seg onclick → drawBoard); apps/team-parent/index.html:1342",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Make releasing a claim a 44px target with an Undo, and stop the description overflowing",
+      "rationale": "Two independent blockers in the same render path. (1) The chip ✕ measures 16×19px (index.html:1276) and one tap releases the duty with no confirm and no undo — measured chips 1→0, toast 'Duty released', #toast .undo count 0 — while SWS.undo is already loaded at index.html:1331 and never called. Design-system invariant #4 sets a 44px floor. (2) The board description renders as p.sub with overflowWrap 'normal' (app.js:249): a 240-char token gave 1164px of horizontal overflow at 414px and a real pasted Google Maps URL gave 387px, while the title right beside it at app.js:247 already sets overflow-wrap:anywhere. Note design/harness.mjs offenders() cannot see this class of overflow, so it will not be caught by the standard battery.",
+      "where": "apps/team-parent/index.html:1276 (.chip button), apps/team-parent/app.js:358-367 (release handler), apps/team-parent/app.js:249 (description <p>)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Make the weekday picker keyboard- and screen-reader-operable",
+      "rationale": "`.wkdays input{display:none}` (index.html:1314) with `label:has(input:checked)` styling (index.html:1315) removes all seven checkboxes from the tab order and the accessibility tree: measured 7 inputs, 0 reachable, 0 focusable labels, focus() does not move activeElement. axe reports zero violations because display:none is out of scope, so nothing in the existing tooling catches it. The repeating generator is the app's biggest time-saver and it is pointer-only. Replace display:none with a visually-hidden pattern that keeps the input focusable and add a :focus-visible ring on the label.",
+      "where": "apps/team-parent/index.html:1309-1315; apps/team-parent/app.js:480-482",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Take 'Sign in' and the tip jar off the shared parent view and move the trust line to the top",
+      "rationale": "The recipient's header shows a 'Sign in' button (index.html:1340) and '♥ Tip jar' (index.html:1339); at 414px it wraps to two rows, 112px tall, with 'Sign in' alone on the row directly above the team name. The 'no accounts, no ads' line lives in footer.colophon, below 3457-6526px of schedule. The research's most-cited complaint is a parent who read a shared signup link as spam, and its prescription is explicit: a one-line trust stamp near the top of the shared view, and the tip jar 'never on the shared parent view'. drawBoard already knows `own` — use it to hide both controls for participants and render 'No ads. No account. Nothing tracked.' under the team title instead.",
+      "where": "apps/team-parent/app.js:233-250 (drawBoard title block, has `own`), :98-105 (setGrowthFooter); apps/team-parent/index.html:1339-1340",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Give an event the fields Saturday morning actually needs",
+      "rationale": "Dana had nowhere to put a field, an address, an arrive-by time, a jersey colour or an allergy note. The only extra text box is 'Time (optional)' at maxlength 20 (app.js:451), which truncated '9:00am · Field 4 · blue jerseys' to '9:00am · Field 4 · b' on screen and in the printed PDF without warning. Her workaround — a Maps URL in the team Details — caused 387px of horizontal overflow. The research names field NAME, a tappable address, arrive-by, jersey colour and a team-wide allergy note as table stakes ('which field?' and 'what colour shirt?' are the two Saturday texts). Add location + arriveBy + kit fields on the event and an allergies note on the board, and linkify the address to a maps: URL and phone numbers to tel:.",
+      "where": "apps/team-parent/app.js:448-473 (single-event form), :249 (description render), apps/signup-sheets/firestore.rules slot shape",
+      "severity": "major",
+      "effort": "L"
+    },
+    {
+      "title": "Put the share code and a QR on the printed sheet, and keep device-specific content off it",
+      "rationale": "Generated both PDFs: neither contains the share code or the QR, because the share card is `card noprint` (app.js:254) and @media print hides .noprint and every .btn (index.html:1323), while the QR only exists inside a closed dialog. The parent's sheet also prints '(you)' beside a claim, prints a note still badged 'awaiting approval', and prints 'Older announcements (2)' as a dead summary with the two announcements missing; the owner's prints the 'you run this' badge. The research's flagship differentiator is the paper artifact whose QR reopens the live version and 'puts our URL on 14 refrigerators'. Render a print-only header carrying the code and a QR canvas, expand <details> for print, drop '(you)' and the owner badge, and exclude pending entries.",
+      "where": "apps/team-parent/index.html:1322-1328 (@media print), apps/team-parent/app.js:252-261 (share card), :276-284 (older announcements <details>), :356-357 ('(you)'), :248 (owner badge)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Timestamp announcements and wire up the copy-as-text and .ics escape hatches",
+      "rationale": "Announcements render with no date or time at all — measured false for any time/date pattern in the block — while the research asks specifically for a dated 'Updated Tue 6:10pm — Sat game moved to Field 2' banner so parents can trust what they are seeing, and names the rain-delay banner as a differentiator. Separately, helpers.js already exports nudgeMessage() (helpers.js:71-84), the paste-ready group-chat block that routes around the category's 30%-delivery notifications, and team-parent's app.js never imports it (app.js:5-7); there is no .ics export anywhere. entries already carry createdAt, so the timestamp is a render change.",
+      "where": "apps/team-parent/app.js:268-289 (announcement render), :5-7 (imports), :523-527 (Share & print row); apps/team-parent/helpers.js:71-84",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Replace the 999 capacity magic number with an explicit RSVP/duty control, and fix the dialog's button order",
+      "rationale": "#slotDlg is labelled 'Spots needed (999 = open RSVP)' (index.html:1391) and shows a literal 999 when the organizer opens an ordinary game — RSVP_CAP (app.js:20) leaking into the UI, and any number typed silently converts the game into a capped duty. In the same dialog the buttons stack full-width at 414px with Delete first: measured Delete 343×44 at the top, then Cancel, then Save at the same x. Offer a two-way 'Everyone RSVPs / N volunteers needed' choice and move Delete out of the primary row.",
+      "where": "apps/team-parent/index.html:1388-1397 (#slotDlg), apps/team-parent/app.js:594-600 (openSlotDlg), :666-679 (save/delete handlers)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Say something when a claim is made offline",
+      "rationale": "Tomás claimed a duty with no signal: the chip appeared from Firestore's cache but #toast stayed empty, because claimSlot awaits batch.commit() (app.js:657) which never settles while offline, so neither the success toast nor friendly()'s purpose-written 'You look offline — the change is queued and will sync when you reconnect' (app.js:62) ever fires. The research lists 'full offline function with a visible showing-your-saved-copy state' as table stakes, and this user's stated fear is an app that loses his RSVP. Race the commit against navigator.onLine / a short timeout and show the queued message.",
+      "where": "apps/team-parent/app.js:651-662 (#nameOk handler), apps/team-parent/data.js:223-241 (claimSlot)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Make the board colour picker do something, or remove it",
+      "rationale": "applyTheme writes only --accent (app.js:221-225) while .btn.primary and every filled surface paint from --accent-fill (index.html:590-593). Measured across all five themes: primary button background stayed rgb(42,103,189). The only things that follow are the .announce border, the .chip.mine border and the checked weekday label. The dots are also 34×34px, under the 44px floor, and they write light-mode hexes that are reused unchanged in dark mode. Either derive the full accent ramp (fill/deep/press/soft/ink/mine) per theme, or drop the control — the research would rather the chrome stay warm and neutral so it does not fight real team colours.",
+      "where": "apps/team-parent/app.js:220-225 (THEMES/applyTheme), :529-542 (themedots render); apps/team-parent/index.html:1295-1297",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ],
+  "audit": {
+    "slug": "team-parent",
+    "purpose": "Engine-1 shared-link coordination, team-sports skin: one organizer signs in with Google or an email link and creates a 'team page'; every family opens a 6-character share link with no account and no install, RSVPs to games, claims duty slots (snack, scorekeeper, carpool), reads pinned announcements and posts questions. Same Firestore engine and rules as signup-sheets — slots are events/duties, claims are RSVPs, entries are announcements (owner) and notes (anyone). Firebase-backed and online-first, with Firestore persistent local cache for offline reads.",
+    "structure": "body > div.wrap containing: (1) header.app — 32px icon.svg alt=\"\" (index.html:1336), h1 > a#brandLink 'Team Parent' (1337), span.spacer (1338), a#tipLink.tipbtn.hidden un-hidden by app.js:714-718 (1339), button#authBtn 'Sign in' (1340); sws-prefs.js injects button#swsPrefsBtn immediately before .tipbtn at runtime. At 414px this header wraps to two rows, 112px tall, with #authBtn alone on the second row. (2) main#view[aria-live=polite] (1342) — EMPTY in source; the entire app is rendered into it by app.js and replaced wholesale on every redraw. (3) footer.colophon (1343-1346) with a static 'One coach signs in… No accounts, no ads.' line and span#orgLine whose innerHTML is swapped to a growth line on participant views (app.js:98-105). Outside .wrap: five <dialog>s — #authDlg (1349), #nameDlg (1363), #createDlg (1376), #slotDlg (1388), #qrDlg with canvas#qrCanvas 300×300 (1399) — and div#toast[role=status][aria-live=polite] (1408). Scripts: sws-prefs.js and sws-ui.js in <head> (1330-1331), an importmap resolving firebase/* to gstatic ESM (20-28), vendor-qrcode.js as a classic script exposing global qrcode() (1410), then app.js as a module (1411). No <noscript>, no skip link, no <nav>. Routing is hash-only: #/ = home, #/b/CODE = board (app.js:86-90).",
+    "cssClasses": [
+      "Base layer (generated, index.html:30-1268) supplies .wrap, header.app, .card, .btn/.btn.primary/.btn.small/.btn.danger, .row, .f, .hint, .sub, .seg, .chip, .plain, .grow, .spacer, .hidden, #toast, the comfort tokens and the whole #swsPrefs panel.",
+      "APP LAYER starts at index.html:1270.",
+      ".slot — one event row, border-bottom 1px var(--line), 12px padding (1277-1278)",
+      ".slot .top — flex baseline row: label / count / owner ✎ (1279)",
+      ".slot .label — flex:1, overflow-wrap:anywhere, weight 600 (1280) — the only app-layer element that guards long tokens",
+      ".slot .count — 0.82rem var(--muted), white-space:nowrap; measured 5.61:1 against the page (1281)",
+      ".slot .count.full — var(--pos) 'Covered' state (1282)",
+      ".chip.mine — background var(--mine) #dae9ff, border-color var(--accent) (1275)",
+      ".chip button — the release/remove ✕; border:0, padding:0 2px, font-size:.9rem — measures 16×19px (1276)",
+      ".badge / .badge.pending — 0.72rem pill; 'you run this' and 'awaiting approval' (1284-1285)",
+      ".banner — locked / offline notice, var(--chip) on var(--line) (1286)",
+      ".announce — pinned announcement card, background var(--mine), border var(--accent) (1287-1290); .announce .who is the author line (1291)",
+      ".warn — var(--neg) 0.85rem error paragraph (1293)",
+      ".sharecode — 1.7rem letter-spaced share code, owner only, inside a .noprint card (1294)",
+      ".themedots / .themedots button — five 34×34px colour circles; .sel adds a double box-shadow ring (1295-1297)",
+      "details.manage / >summary / >.inner — the owner accordion; summary has list-style:none and a ▸/▾ ::after (1298-1307)",
+      ".wkdays / .wkdays label / .wkdays input{display:none} / label:has(input:checked) — the weekday picker (1309-1315)",
+      "dialog — app-layer override: 18px padding, max-width min(92vw,420px); #swsPrefs beats it on ID specificity (1316-1318)",
+      "#qrBox — always #fff so the QR stays scannable in dark mode (1319)",
+      ".printonly — display:none on screen, block in print; used for the '________________' write-in blanks (1321, 1326)",
+      "@media print (1322-1328) — hides header.app, details.manage, .btn, .noprint, #toast, footer.colophon; body forced to #fff/#000; .slot break-inside:avoid"
+    ],
+    "dynamicMarkup": "Everything inside main#view is built by app.js's el() helper, which sets text via textContent and never innerHTML — verified safe against injection. renderHome() (app.js:107-160) paints .hero, a 'Got a team code?' card with an uppercase-transformed input, and, for signed-in owners, a 'Your teams' list filtered to skin==='team'. renderBoard()/drawBoard() (app.js:171-337) paints, in order: a title card (h2 with all:unset and overflow-wrap:anywhere, plus a p.sub description WITHOUT overflow-wrap), an owner-only 'Share with the families' card (.card.noprint with .sharecode, Copy link, QR), a locked and/or offline .banner, the pinned .announce block with a <details> of older ones, an owner-only 'Post an announcement' row whose draft is kept in the module-level announceDraft so it survives redraws, the 'Schedule & duties' card with a 'Duties filled: n of m' line and one .slot per event, a 'Questions & notes' card, the owner's details.manage panel, and for participants a second 'Share' card. renderEvent() (app.js:339-378) branches on capacity >= RSVP_CAP (999) to decide 'n going' vs 'n of m'/'Covered', renders one .chip per claim, appends .chip.printonly blanks for unfilled duty seats, and shows a claim button only when !mine && left>0 && !locked. renderManage() (app.js:436-581) is a three-mode segmented form (single / repeating range / bulk paste) plus Share & print, Settings (colour dots, approval, lock, rotate, delete) and team name/details. Redraw model: drawBoard() calls v.replaceChildren() and is invoked from watchBoard, watchSlots, watchEntries and one watchClaims listener PER SLOT (app.js:207-218), plus directly from the seg-control onclick (app.js:445) — measured 108 full rebuilds in 3.14s on a 100-event board. Persistence: only two localStorage keys, tp-myname (app.js:68-70) and tp-signin-email (data.js:67); all real state is Firestore.",
+    "comfortDefects": [
+      "index.html:1276 — .chip button gives the destructive 'release my claim' control a 16×19px hit area (measured), 4x under the design system's 44px --tap floor, and it sits immediately after the user's own name where a thumb lands.",
+      "app.js:351 — the owner's 'Edit event' ✎ measures 37×36px; app.js:372-376 — claim buttons measure 87×36px; index.html:1296 — theme dots are 34×34px. All below --tap at default text. They do scale correctly at Largest.",
+      "app.js:249 — the board description is a p.sub with overflowWrap 'normal'. A pasted Google Maps URL produced 387px of horizontal page overflow at 414px; a 240-char token produced 1164px. The sibling title at app.js:247 sets overflow-wrap:anywhere.",
+      "app.js:451 — the event 'Time (optional)' input is maxlength=20 and truncates silently mid-word; there is no field at all for location, arrive-by or kit colour.",
+      "index.html:1281 — .slot .count (the 'Covered' / 'n of m' answer) measures 5.61:1 against the canvas. AA-passing but under the 7:1 the research sets for a screen read in direct sunlight; the primary button's ink on fill measures 5.42:1.",
+      "app.js:221-225 — applyTheme writes only --accent while .btn.primary paints from --accent-fill (index.html:590-593), so all five board themes render an identical blue primary button (measured rgb(42,103,189) in every case). THEMES are light-mode hexes reused unchanged in dark mode.",
+      "index.html:1339-1340 — the tip jar and the 'Sign in' button render in the header on the shared participant view, and at 414px the header wraps to two rows / 112px with 'Sign in' directly above the team name.",
+      "app.js:268-289 — announcements carry no timestamp, so the 'is this current?' question the pinned banner exists to answer is unanswered."
+    ],
+    "navigationDefects": [
+      "app.js:438 — renderManage() constructs <details class=\"manage\"> with no `open` attribute, and drawBoard() replaces the view on every snapshot, so the owner's Manage panel closes after every add (measured), after every segmented-tab click (measured), and whenever any family claims a slot from another device (measured).",
+      "app.js:445 — the 'One event / Repeating / Paste a list' segmented control calls drawBoard() to switch modes, which is what collapses the panel it lives inside: switching modes costs two taps instead of one.",
+      "app.js:242 + index.html:1342 — v.replaceChildren() on an aria-live=\"polite\" <main>, 108 times in 3.14s on a 100-event board; scroll position is not preserved (scrollY jumped to 498 after an add, and resets to 0 on reload).",
+      "app.js:588-589 — slots are ordered by insertion, and dates exist only inside the label string (app.js:462-467), so the schedule is not chronological (verified: Sep 12 game above Sep 1 practice) and there is no reorder UI.",
+      "No 'next up', no 'your turn', no today marker, no search and no in-page jump: a family's own claim measured 2.61 viewports down a 3457px page on a 24-event season.",
+      "index.html:1392-1396 — #slotDlg stacks Delete / Cancel / Save full-width at 414px (measured 343×44 each) with the destructive action first.",
+      "app.js:501, :557, :563, :623, :676 — five native confirm() dialogs, including on the safe bulk 'Add 26 events?' path, while the genuinely destructive claim release (app.js:358-367) has neither a confirm nor an undo. sws-ui.js (SWS.undo) is loaded at index.html:1331 and never called.",
+      "helpers.js:71-84 — nudgeMessage(), the paste-ready group-chat block, is exported and never imported by app.js:5-7; there is no .ics export anywhere."
+    ],
+    "a11yDefects": [
+      "index.html:1314 — `.wkdays input{display:none}` removes all seven weekday checkboxes from the tab order and the accessibility tree (measured: 7 present, 0 reachable, 0 focusable labels, focus() does not move activeElement), making the repeating-schedule generator pointer-only. axe reports zero violations because display:none is out of scope.",
+      "index.html:1342 — main#view is aria-live=\"polite\" and is fully replaced 108 times in 3.14s on a large board; a screen reader re-announces the entire page each time.",
+      "app.js:536 — the five theme buttons are named only 'blue theme'…'amber theme' with selection conveyed by a CSS box-shadow (index.html:1297) and no aria-pressed / role=radio.",
+      "app.js:443-446 — the add-mode segmented control is three plain <button>s with an .active class and no role=tablist/aria-selected, unlike qr-maker's equivalent.",
+      "app.js:400 — the 'awaiting approval' status is a .badge span appended inline after the note body, so it reads as part of the sentence.",
+      "app.js:375 — button copy mixes a straight apostrophe in \"I'm going\" with a curly one in 'I’ll cover this'.",
+      "Print output leaks per-device and unapproved content: '(you)' beside a claim (app.js:356-357), the 'you run this' badge (app.js:248), notes still marked pending (app.js:400), and 'Older announcements (2)' printing as a dead <summary> with its contents hidden (app.js:276-284).",
+      "Verified clean: axe returns zero wcag2a/2aa/21a/21aa/22aa violations on the home view, the live board view, the open comfort panel and after applying Largest text + Roomy + High contrast; 68 focusables on the board view with zero unnamed; tab depth 5 to the first claim action; no horizontal overflow at 320px or 414px at default or Largest."
+    ],
+    "printSupport": "A real print path exists and is better than most of the portfolio: @media print (index.html:1322-1328) hides header.app, details.manage, every .btn, .noprint and the colophon, forces #fff/#000, flattens cards, sets .slot break-inside:avoid, and reveals .printonly — which app.js:370 uses to emit one '________________' write-in blank per unfilled duty seat, so an unfinished rotation prints as a sign-up sheet. Verified by generating PDFs: the owner's 60-duty board printed 6 correct Letter pages with 60 blanks. The gaps: no share code and no QR anywhere on the sheet (the share card is .card.noprint, app.js:254, and the QR lives only in a closed dialog), so paper cannot lead back to the live page — the exact reverse of the research's flagship differentiator; the sheet prints device-specific '(you)' text, the owner 'you run this' badge, and notes still awaiting approval; and 'Older announcements (2)' prints as a summary line with its two announcements omitted.",
+    "riskyToRestyle": [
+      "index.html:1314 `.wkdays input{display:none}` — the label styling at :1315 depends on `:has(input:checked)`; fixing the accessibility bug means swapping to a visually-hidden pattern AND adding a focus-visible ring on the label, or the picker becomes silently unusable for sighted keyboard users too.",
+      "index.html:1316-1318 — the app layer restyles the bare `dialog` element (18px padding, max-width min(92vw,420px)) after the studio base. #swsPrefs only survives on ID specificity; any future rule that lowers that specificity will reshape the comfort panel in this app only.",
+      "index.html:1319 `#qrBox{background:#fff}` is deliberate — the QR must stay light in dark mode. Do not token-ise it.",
+      "app.js:221-225 applyTheme writes an inline `--accent` onto documentElement.style, which outranks every stylesheet rule including the comfort panel's high-contrast block. Any accent change made in CSS will be invisible on a themed board.",
+      "app.js:247 the board title uses `all:unset` on an h2 and then re-declares font-size/weight inline — restyling h2 globally will not reach it.",
+      "app.js:370 the print blanks are `.chip.printonly` spans inside `.chips`; restyling .chip to a flex row or a grid will break the write-in lines on paper.",
+      "The RSVP_CAP=999 sentinel (app.js:20) is load-bearing in three places — renderEvent's branch (app.js:342), fillStats' filter (app.js:314) and the bulk-parse default (app.js:514) — and is surfaced literally in #slotDlg's label (index.html:1391). Changing the capacity model touches all four plus firestore.rules."
+    ]
+  }
+}
