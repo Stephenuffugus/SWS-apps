@@ -597,7 +597,7 @@ function fillHead(u, b, own) {
         ? '1 note is waiting for you to approve it.'
         : pending.length + ' notes are waiting for you to approve them.' }),
       el('button', {
-        class: 'btn small', type: 'button', 'data-fk': 'reviewpending',
+        class: 'btn', type: 'button', 'data-fk': 'reviewpending',
         onclick: () => {
           const first = document.querySelector('[data-fk^="approve-"]');
           if (!first) return;
@@ -841,7 +841,7 @@ function buildComposer() {
   // Defaults to now; one tap to say it happened earlier.
   c.whenSummary = el('span', { class: 'whennow', text: 'Happened just now' });
   c.whenBtn = el('button', {
-    class: 'btn small', type: 'button', 'data-fk': 'whenbtn',
+    class: 'btn', type: 'button', 'data-fk': 'whenbtn',
     onclick: () => {
       whenOpen = !whenOpen;
       if (whenOpen && !c.whenInput.value) c.whenInput.value = localStamp(new Date());
@@ -1097,7 +1097,7 @@ function renderEntryEditor(e, p) {
     onchange: (ev) => { editing.when = new Date(ev.target.value); },
   });
   const save = el('button', {
-    class: 'btn primary small', type: 'button', 'data-fk': 'editsave-' + e.id,
+    class: 'btn primary', type: 'button', 'data-fk': 'editsave-' + e.id,
     onclick: async () => {
       const text = String(editing.text || '').trim();
       if (!text) { toast('An entry needs some words'); ta.focus(); return; }
@@ -1116,7 +1116,7 @@ function renderEntryEditor(e, p) {
     },
   }, 'Save the change');
   const cancel = el('button', {
-    class: 'btn small', type: 'button', 'data-fk': 'editcancel-' + e.id,
+    class: 'btn', type: 'button', 'data-fk': 'editcancel-' + e.id,
     onclick: () => { const id = e.id; editing = null; drawBoard(); restoreFocus($('view'), 'edit-entry-' + id); },
   }, 'Cancel');
   return el('div', { class: 'entry editing' },
