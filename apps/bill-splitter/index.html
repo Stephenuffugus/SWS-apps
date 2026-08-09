@@ -1250,15 +1250,21 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-.brandrow{display:flex; align-items:center; gap:10px}
-.brandrow img{width:34px; height:34px; border-radius:8px}
-.brandrow h1{font-size:1.22rem; margin:0; letter-spacing:-.01em}
-.brandrow .spacer{flex:1}
-.tagline{color:var(--muted); font-size:.83rem; margin:4px 0 0 44px}
+/* flex-wrap, because the header's real children live in here rather than
+   directly under header.app, so the base layer's header.app{flex-wrap:wrap}
+   never reaches them. Measured before this line: 320px + Largest text pushed
+   the ♥ Tip jar pill to right:334 and scrolled the page sideways by 14px
+   (24px with Roomy, 43px with Easier reading). */
+.brandrow{display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2) var(--s3)}
+.brandrow img{width:34px; height:34px; border-radius:var(--r-sm)}
+.brandrow h1{font-size:var(--t-xl); margin:0; letter-spacing:-.01em}
+.brandrow .spacer{flex:1 1 0; min-width:0}
+/* No left indent: at 320px + Largest the icon is no longer on the same line. */
+.tagline{color:var(--ink-2); font-size:var(--t-sm); margin:var(--s1) 0 0}
 
-nav.tabs{display:flex; gap:var(--s2); margin:var(--s4) 0 var(--s3)}
+nav.tabs{display:flex; flex-wrap:wrap; gap:var(--s2); margin:var(--s4) 0 var(--s3)}
 nav.tabs button{
-  flex:1; min-height:var(--tap); padding:0 var(--s3);
+  flex:1 1 6rem; min-height:var(--tap); padding:0 var(--s3);
   font-size:var(--t-sm); font-weight:600;
   border:1px solid var(--line-2); background:var(--surface);
   color:var(--ink-2); border-radius:var(--r-ctl); cursor:pointer;
@@ -1273,51 +1279,120 @@ nav.tabs button.active{
   color:var(--accent-ink);
 }
 
-.chip .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px}
-.chip.ghost{background:transparent; border-style:dashed; color:var(--muted)}
-.chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
-
-.totline{display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); padding:2px 0}
-.totline.grand{color:var(--ink); font-weight:700; font-size:1.05rem; border-top:1px solid var(--line); margin-top:6px; padding-top:8px}
-.persongrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:10px}
-.personcard{border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--bg)}
-.personcard .nm{font-size:.86rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.personcard .amt{font-size:1.65rem; font-weight:700; letter-spacing:-.02em; margin:2px 0 8px}
-.paybtns{display:flex; flex-wrap:wrap; gap:6px}
-.paybtns a,.paybtns button{
-  font-size:.78rem; padding:5px 9px; border-radius:8px; border:1px solid var(--line);
-  background:var(--card); color:var(--accent); text-decoration:none; cursor:pointer;
+/* Every chip in this app is a tap target that moves money between two named
+   people. --tap is the floor and it scales with the comfort panel; the old
+   inline `padding:4px 10px;font-size:.8rem` measured 28px (37px at Largest). */
+.chips button.chip{
+  min-height:var(--tap); padding:0 var(--s3);
+  font-size:var(--t-sm); cursor:pointer;
 }
+.chip .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px}
+.chip.ghost{background:transparent; border-style:dashed; color:var(--ink-2)}
+.chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
+/* Selection is never colour alone (WCAG 1.4.1). The slot is permanent so the
+   row cannot reflow under the finger that just tapped it. */
+.chip .tick{flex:none; width:1em; text-align:center; font-weight:700}
+
+.totline{display:flex; justify-content:space-between; gap:var(--s3); font-size:var(--t-sm); color:var(--ink-2); padding:2px 0}
+.totline.grand{color:var(--ink); font-weight:700; font-size:var(--t-lg); border-top:1px solid var(--line); margin-top:var(--s2); padding-top:var(--s2)}
+.recon{
+  margin-top:var(--s2); padding:var(--s2) var(--s3);
+  font-size:var(--t-sm); color:var(--ink); line-height:var(--lh-snug);
+  background:var(--pos-soft); border:1px solid var(--pos-line); border-radius:var(--r-sm);
+}
+.recon.off{background:var(--warn-soft); border-color:var(--warn-line)}
+.persongrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:var(--s3); margin-top:var(--s3)}
+.personcard{border:1px solid var(--line); border-radius:var(--r-ctl); padding:var(--s3); background:var(--surface-2)}
+/* The name is the one thing that must stay readable — no ellipsis, no tooltip
+   users cannot reach on a phone. It wraps instead. */
+.personcard .nm{font-size:var(--t-sm); color:var(--ink); font-weight:600; overflow-wrap:anywhere}
+.personcard .nm .paidmark{color:var(--ink-2); font-weight:400}
+.personcard .amt{font-size:1.65rem; font-weight:700; letter-spacing:-.02em; margin:2px 0 var(--s2)}
+details.working{margin:0 0 var(--s2)}
+details.working > summary{
+  display:inline-flex; align-items:center; min-height:var(--tap);
+  font-size:var(--t-sm); color:var(--accent-deep); cursor:pointer;
+}
+details.working .steps{list-style:none; margin:0 0 var(--s2); padding:0; font-size:var(--t-sm); color:var(--ink-2)}
+details.working .steps li{display:flex; justify-content:space-between; gap:var(--s3); padding:1px 0; border:0; min-height:0}
+details.working .steps li.tot{color:var(--ink); font-weight:600; border-top:1px solid var(--line); margin-top:2px; padding-top:2px}
+
+.paybtns{display:flex; flex-wrap:wrap; gap:var(--s2)}
+/* The terminal action of every flow. It used to be the smallest thing on the
+   page: 12.48px, 28px tall, and 3.68:1 against the card (axe: serious, 8
+   nodes). --accent-deep is contrast-solved to 4.6:1 against every surface. */
+.paybtns a,.paybtns button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--tap); padding:0 var(--s4);
+  font-size:var(--t-sm); font-weight:650;
+  border-radius:var(--r-ctl); border:1px solid var(--line-2);
+  background:var(--surface); color:var(--accent-deep); text-decoration:none; cursor:pointer;
+}
+.paybtns a:hover,.paybtns button:hover{background:var(--accent-soft)}
 .bal{font-weight:700}
 .bal.pos{color:var(--pos)} .bal.neg{color:var(--neg)}
+
+/* --sharebar-h is measured from the real bar by a ResizeObserver, because it
+   wraps to two rows at 320px and at Largest text. The toast and the body
+   padding are both derived from it: before this, the toast sat 37px on top of
+   the QR button (55px at 320px) and the colophon's last 21px hid under the
+   bar. */
 .sharebar{
-  position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line);
-  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  position:fixed; left:0; right:0; bottom:0; z-index:40;
+  background:var(--surface); border-top:1px solid var(--line-2);
+  padding:var(--s2) var(--s3) calc(var(--s2) + env(safe-area-inset-bottom));
 }
-.sharebar .inner{max-width:640px; margin:0 auto; display:flex; gap:8px}
-.sharebar button{flex:1; padding:10px 4px; font-size:.83rem; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer}
+.sharebar .inner{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; gap:var(--s2)}
+.sharebar button{
+  flex:1 1 6.5rem; min-height:var(--tap); padding:0 var(--s2);
+  font-size:var(--t-sm); font-weight:600;
+  border-radius:var(--r-ctl); border:1px solid var(--line-2);
+  background:var(--surface-2); color:var(--ink); cursor:pointer;
+}
+.sharebar button:hover{background:var(--accent-soft)}
+body{padding-bottom:calc(var(--sharebar-h, 4rem) + var(--s5) + env(safe-area-inset-bottom))}
+#toast{bottom:calc(var(--sharebar-h, 4rem) + var(--s4) + env(safe-area-inset-bottom))}
 
-.warn{color:var(--neg); font-size:.85rem; margin-top:6px}
+.fieldnote{margin-top:var(--s1); font-size:var(--t-sm); color:var(--neg); line-height:var(--lh-snug)}
 dialog{
-  border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink);
-  padding:18px; max-width:min(92vw,420px); width:100%;
+  border:1px solid var(--line); border-radius:var(--r-card); background:var(--surface); color:var(--ink);
+  padding:var(--s5); max-width:min(92vw,420px); width:100%;
 }
-dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog h3{margin:0 0 12px; font-size:1.05rem}
-#qrBox{display:flex; justify-content:center; padding:10px; background:#fff; border-radius:10px}
+dialog::backdrop{background:var(--veil)}
+dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
+#qrBox{display:flex; justify-content:center; padding:var(--s3); background:#fff; border-radius:var(--r-ctl)}
+#qrBox.empty{display:none}
+#qrUrl{
+  width:100%; margin-top:var(--s3); font-size:var(--t-sm);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all;
+}
 
-.hero strong{color:var(--ink); display:block; font-size:1.05rem; margin-bottom:4px}
+.hero strong{color:var(--ink); display:block; font-size:var(--t-lg); margin-bottom:var(--s1)}
+.trust{margin:0 0 var(--s4)}
+.printonly{display:none}
 
+/* ── Print: the settle-up sheet, not the editor ────────────────────────────
+   Measured before this block: 33 form controls printed ahead of any number
+   and "Who owes whom" began at 1,400px of a 2,072px sheet. Everything that
+   exists to *edit* the split is chrome on paper. */
 @media print{
-  .sharebar,nav.tabs,.tipbtn,#toast{display:none !important}
+  .sharebar,nav.tabs,.tipbtn,#toast,.hero,.trust,
+  #peopleBox,#dinnerForm,#tripForm,#expForm,#payForm,#viewSaved,
+  .paybtns,details.working > summary{display:none !important}
   body{background:#fff; color:#000; padding-bottom:0}
-  section.card{border:0; padding:4px 0}
+  section.card{border:0; padding:4px 0; margin-bottom:6pt}
+  .printhead{border-bottom:1.5pt solid #000; margin-bottom:8pt; padding-bottom:4pt}
+  .printhead h2{font-size:16pt; margin:0}
+  .printhead p{font-size:9pt; color:#333; margin:2pt 0 0}
+  .personcard{border:1px solid #999}
+  .recon{background:transparent !important; border:1px solid #999 !important; color:#000 !important}
 }
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the split</a>
 <div class="wrap">
   <header class="app">
     <div class="brandrow">
@@ -1329,7 +1404,21 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
     <p class="tagline" id="tagline">Nothing leaves your device. No account. No ads.</p>
   </header>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
+
+  <!-- The promise as a stamp, not as grey body copy — and specific about the
+       one real leak this app has: the split rides in the page address. -->
+  <p class="trust">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-3 8.2-7 9-4-.8-7-4.6-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+    <span><b>Nothing is uploaded.</b> Names, amounts and Venmo/Cash App/PayPal handles are held in this browser and packed into this page's own web address — so a link you send carries the whole split with it. No account, no server, no analytics.</span>
+  </p>
+
+  <!-- The printed sheet's own header. Hidden on screen; the base layer's print
+       block reverts .printonly to visible. -->
+  <div class="printonly printhead">
+    <h2 id="printTitle">Split</h2>
+    <p id="printMeta"></p>
+  </div>
 
   <nav class="tabs" aria-label="Views">
     <button id="tabDinner" type="button">Dinner</button>
@@ -1346,7 +1435,7 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
       <button class="btn" id="personAdd" type="button" style="flex:0 0 auto">Add</button>
     </div>
     <div class="chips" id="peopleSuggest" style="margin-top:8px"></div>
-    <p class="hint">Tap a name to edit it or add payment handles (Venmo, Cash App, PayPal).</p>
+    <p class="hint" id="peopleCount">Tap a name to edit it or add payment handles (Venmo, Cash App, PayPal). Up to 50 people on one split.</p>
   </section>
 
   <!-- ============ dinner view ============ -->
@@ -1355,39 +1444,46 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
       <strong>Split a bill in under a minute.</strong>
       Nothing leaves your device. No account. No ads. No subscription.
     </div>
-    <section class="card">
+    <section class="card" id="dinnerForm">
       <h2>Bill</h2>
-      <label class="f"><span>Name (optional)</span>
-        <input type="text" id="dinnerName" placeholder="Dinner at …" autocomplete="off"></label>
+      <div class="row">
+        <label class="f" style="flex:2"><span>Name (optional)</span>
+          <input type="text" id="dinnerName" placeholder="Dinner at …" autocomplete="off"></label>
+        <label class="f"><span>Currency</span>
+          <input type="text" id="dinnerCurrency" maxlength="3" autocomplete="off" style="text-transform:uppercase" placeholder="USD"></label>
+      </div>
       <div class="seg" role="group" aria-label="Split method">
         <button id="segEven" type="button" aria-pressed="true">Split evenly</button>
         <button id="segItems" type="button" aria-pressed="false">By items</button>
       </div>
       <div id="evenFields">
         <label class="f"><span>Bill (before tax)</span>
-          <input type="text" id="billAmt" inputmode="decimal" placeholder="0.00" autocomplete="off"></label>
+          <input type="text" id="billAmt" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-describedby="billNote"></label>
+        <p class="fieldnote hidden" id="billNote"></p>
       </div>
       <div id="itemFields" class="hidden">
         <ul class="plain" id="itemList"></ul>
         <div class="row" style="margin-top:8px">
-          <input type="text" id="itemLabel" placeholder="Item (optional)" autocomplete="off" style="flex:1.4">
-          <input type="text" id="itemAmt" inputmode="decimal" placeholder="0.00" autocomplete="off">
+          <input type="text" id="itemLabel" placeholder="Item (optional)" autocomplete="off" style="flex:1.4" aria-label="Item name (optional)">
+          <input type="text" id="itemAmt" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Item price">
           <button class="btn" id="itemAdd" type="button" style="flex:0 0 auto">Add</button>
         </div>
-        <p class="hint">After adding an item, tap names under it to set who shared it. Items with nobody selected are split by everyone.</p>
+        <p class="hint" id="itemCount">After adding an item, tap names under it to set who shared it. Items with nobody selected are split by everyone. Up to 200 items on one bill.</p>
       </div>
       <div class="row">
         <label class="f"><span>Tax</span>
-          <input type="text" id="taxAmt" inputmode="decimal" placeholder="0.00" autocomplete="off"></label>
+          <input type="text" id="taxAmt" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-describedby="taxNote"></label>
         <label class="f"><span>Tip</span>
           <div class="row" style="gap:6px">
-            <input type="text" id="tipAmt" inputmode="decimal" placeholder="0" autocomplete="off">
+            <input type="text" id="tipAmt" inputmode="decimal" placeholder="0" autocomplete="off" aria-describedby="tipNote">
             <select id="tipMode" aria-label="Tip type" style="flex:0 0 74px">
               <option value="pct">%</option>
               <option value="flat">$</option>
             </select>
           </div></label>
       </div>
+      <p class="fieldnote hidden" id="taxNote"></p>
+      <p class="fieldnote hidden" id="tipNote"></p>
       <label class="f"><span>Who paid? (optional — enables pay buttons)</span>
         <select id="paidBy"></select></label>
     </section>
@@ -1396,7 +1492,7 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 
   <!-- ============ trip view ============ -->
   <div id="viewTrip">
-    <section class="card">
+    <section class="card" id="tripForm">
       <h2>Trip</h2>
       <div class="row">
         <label class="f" style="flex:2"><span>Trip name</span>
@@ -1405,11 +1501,11 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
           <input type="text" id="tripCurrency" maxlength="3" autocomplete="off" style="text-transform:uppercase" placeholder="USD"></label>
       </div>
     </section>
-    <section class="card">
+    <section class="card" id="expForm">
       <h2 id="expFormTitle">Add expense</h2>
       <div class="row">
-        <input type="text" id="expLabel" placeholder="What was it?" autocomplete="off" style="flex:1.5">
-        <input type="text" id="expAmt" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        <input type="text" id="expLabel" placeholder="What was it?" autocomplete="off" style="flex:1.5" aria-label="What was it?">
+        <input type="text" id="expAmt" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount">
       </div>
       <label class="f" style="margin-top:10px"><span>Paid by</span>
         <select id="expPaidBy"></select></label>
@@ -1441,6 +1537,22 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
       <h2>Expenses</h2>
       <ul class="plain" id="expList"></ul>
       <p class="hint" id="expEmpty">No expenses yet. Log them as they happen — who paid, and who it covers.</p>
+      <p class="hint" id="expCount"></p>
+    </section>
+    <section class="card" id="payForm">
+      <h2>Repayments</h2>
+      <p class="hint">Someone paid you back mid-trip? Record it here so the app stops asking for it.</p>
+      <div class="row">
+        <label class="f"><span>From</span><select id="payFrom"></select></label>
+        <label class="f"><span>To</span><select id="payTo"></select></label>
+        <label class="f"><span>Amount</span>
+          <input type="text" id="payAmt" inputmode="decimal" placeholder="0.00" autocomplete="off"></label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="payAdd" type="button">Record repayment</button>
+      </div>
+      <p class="warn hidden" id="payWarn"></p>
+      <ul class="plain" id="payList"></ul>
     </section>
     <section class="card" id="tripResults"></section>
   </div>
@@ -1462,36 +1574,39 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
     <section class="card">
       <h2>Backup</h2>
       <div class="row">
-        <button class="btn" id="exportBtn" type="button">Export file</button>
+        <button class="btn" id="exportBtn" type="button">Export JSON</button>
+        <button class="btn" id="exportCsvBtn" type="button">Export CSV</button>
         <button class="btn" id="importBtn" type="button">Import file</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
       </div>
-      <p class="hint">Everything lives on this device. Export the current split as a file to keep a backup or move it to another device.</p>
+      <p class="hint">Everything lives on this device. Export the current split as a file to keep a backup or move it to another device. JSON restores into this app; CSV opens in a spreadsheet.</p>
     </section>
   </div>
 
+  <div class="sharebar" id="sharebar">
+    <div class="inner">
+      <button id="shareCopy" type="button">Copy link</button>
+      <button id="shareQR" type="button">QR code</button>
+      <button id="shareSummary" type="button">Copy summary</button>
+      <button id="sharePrint" type="button">Print</button>
+    </div>
+  </div>
+
   <footer class="colophon">
-    <span id="privacyLine">Runs entirely in your browser — no server ever sees your data.</span><br>
+    <span id="privacyLine">Runs entirely in your browser — no server ever sees your data. The split is also packed into this page's address, so if your browser syncs history between devices, it travels with it.</span><br>
     <span id="orgLine"></span>
   </footer>
   </main>
 </div>
 
-<div class="sharebar" id="sharebar">
-  <div class="inner">
-    <button id="shareCopy" type="button">Copy link</button>
-    <button id="shareQR" type="button">QR code</button>
-    <button id="shareSummary" type="button">Copy summary</button>
-  </div>
-</div>
-
-<dialog id="personDlg">
-  <h3>Edit person</h3>
+<dialog id="personDlg" aria-labelledby="pdTitle">
+  <h3 id="pdTitle">Edit person</h3>
   <label class="f"><span>Name</span><input type="text" id="pdName" autocomplete="off"></label>
   <label class="f"><span>Venmo username (optional)</span><input type="text" id="pdVenmo" autocomplete="off" placeholder="username"></label>
   <label class="f"><span>Cash App $cashtag (optional)</span><input type="text" id="pdCash" autocomplete="off" placeholder="cashtag"></label>
   <label class="f"><span>PayPal.me name (optional)</span><input type="text" id="pdPaypal" autocomplete="off" placeholder="name"></label>
   <p class="hint">Handles let others pay this person in one tap. They're stored only on your device and inside links you share.</p>
+  <p class="warn hidden" id="pdWarn" role="alert"></p>
   <div class="row" style="margin-top:10px">
     <button class="btn danger" id="pdRemove" type="button">Remove</button>
     <button class="btn" id="pdCancelBtn" type="button">Cancel</button>
@@ -1499,11 +1614,14 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
   </div>
 </dialog>
 
-<dialog id="qrDlg">
-  <h3>Scan to open this split</h3>
-  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300"></canvas></div>
+<dialog id="qrDlg" aria-labelledby="qrTitle">
+  <h3 id="qrTitle">Scan to open this split</h3>
+  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code for this split's link. The same link is written out below."></canvas></div>
   <p class="hint" id="qrHint">The whole split is inside this link — nothing is stored on a server.</p>
+  <label class="f"><span>The link this code carries</span>
+    <textarea id="qrUrl" rows="3" readonly></textarea></label>
   <div class="row" style="margin-top:10px">
+    <button class="btn" id="qrCopy" type="button">Copy link</button>
     <button class="btn" id="qrClose" type="button">Close</button>
   </div>
 </dialog>

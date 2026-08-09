@@ -4,7 +4,7 @@
 // All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
 import {
   normalizeCode, parseBulkSlots, dateRangeSlots, fillStats, shareUrl,
-  dateKey, isDated, keyParts, keyToDate, keyToInputs, formatKey, formatTime,
+  dateKey, isDated, keyParts, keyToInputs, formatKey, formatTime,
   composeLabel, parseLabel, sortSlots, isPast, seasonIcs, weekMessage,
   nudgeMessage, sniffDateTime, UNDATED_BASE,
 } from './helpers.js';
