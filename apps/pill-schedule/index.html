@@ -1246,6 +1246,34 @@ body{
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 
+/* ---------- the skin's type uplift, restated ----------
+   build.mjs emits the skin block ABOVE studio.css, so studio's own :root wins
+   on source order and this app was rendering 14% smaller than its skin asks
+   for — in the one product in the portfolio drawn for ageing eyes. The real
+   fix is the emit order in design/build.mjs and it is portfolio-wide; the app
+   layer is the only place inside this app that can win the cascade, so the
+   three values are restated here verbatim from the skin block above. */
+:root{
+  --t-base:1.140rem;
+  --t-lg:1.211rem;
+  --t-sm:1.069rem;
+  --wrap:52rem;
+  --r:10px;
+}
+
+/* ---------- targets that were left behind by the comfort panel ----------
+   At Largest text the time tiles reach 66px while these stayed pinned at 36px
+   — including the one destructive control in the app and the button that
+   opens the accessibility settings. --tap is floored at 44px and grows with
+   text size, which is exactly what these needed. */
+a.tipbtn,.btn.small,.seg button,.seg .tab{min-height:var(--tap)}
+#swsPrefsBtn{width:var(--tap); height:var(--tap)}
+
+/* "Carbidopa/Levodopa" was breaking as "Carbidopa/Levo" / "dopa" at Largest
+   text. A drug name split mid-syllable is an identification hazard on a
+   medication list, so names break only where a separator already exists. */
+ul.plain .grow{overflow-wrap:break-word; hyphens:none}
+
 /* ---------- time-of-day picker ----------
    Four checkboxes drawn as pressable tiles. The input is visually hidden but
    NOT `display:none` — that took the whole control out of the tab order and
@@ -1382,25 +1410,27 @@ body{
   </header>
 
   <main id="main">
-   <div class="screenonly">
+   <div class="screenonly" id="editor">
     <section class="card">
       <label class="f"><span>Whose meds? (first name is plenty)</span>
         <input type="text" id="whoInput" maxlength="40" placeholder="Mom"></label>
       <p class="disclaimer">A memory aid, not medical advice — confirm doses and times with the pharmacist.</p>
       <p class="trust">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
-        <span><b>Stays on this device.</b> No account, no ads, nothing uploaded — and the printed card keeps working even if this site disappears.</span>
+        <span><b>The medication list stays on this device.</b> Names, doses, allergies and phone numbers are saved only in this browser — no account, no ads, no server. A shared link carries the card inside the link itself, so it is never uploaded either. The printed card keeps working even if this site disappears.</span>
       </p>
     </section>
 
-    <section class="card">
-      <h2>Add a medication</h2>
+    <section class="card" id="addCard">
+      <h2 id="addHeading">Add a medication</h2>
       <div class="row">
         <label class="f f-wide"><span>Medication</span>
           <input type="text" id="medName" maxlength="60" placeholder="Lisinopril"></label>
         <label class="f"><span>Dose</span>
           <input type="text" id="medDose" maxlength="40" placeholder="5 mg, 1 tablet"></label>
       </div>
+      <label class="f"><span>Also called (the other name on the bottle)</span>
+        <input type="text" id="medAlias" maxlength="60" placeholder="Zestril"></label>
       <fieldset class="whenset">
         <legend>When</legend>
         <div class="times" id="medTimes">
@@ -1410,14 +1440,22 @@ body{
           <label><input type="checkbox" value="Bedtime"><span aria-hidden="true">🌙</span> Bedtime</label>
         </div>
       </fieldset>
+      <label class="check"><input type="checkbox" id="medPrn"> <span>Only as needed — not on the schedule</span></label>
+      <label class="f hidden" id="maxField"><span>Most in 24 hours</span>
+        <input type="text" id="medMax" maxlength="24" placeholder="4 tablets"></label>
       <label class="f"><span>Notes (optional)</span>
         <input type="text" id="medNotes" maxlength="120" placeholder="with food · not with grapefruit"></label>
-      <button class="btn primary block" id="addMed" type="button">Add to the schedule</button>
+      <div class="row">
+        <button class="btn primary block" id="addMed" type="button">Add to the schedule</button>
+        <button class="btn hidden" id="cancelEdit" type="button">Cancel</button>
+      </div>
     </section>
 
     <section class="card">
-      <h2>The schedule</h2>
+      <h2>The schedule <span class="savedflag" data-saved-flag aria-hidden="true"></span></h2>
+      <p class="warn hidden" id="dupWarn"></p>
       <ul class="plain" id="medList"></ul>
+      <p class="hint" id="rowCount"></p>
       <div class="empty" id="emptyState">
         <div class="glyph" aria-hidden="true">💊</div>
         <h3>No medications on the card yet</h3>
@@ -1426,18 +1464,67 @@ body{
       </div>
     </section>
 
+    <details class="card details" id="extrasCard">
+      <summary>Allergies, prescriber and pharmacy — printed on the card</summary>
+      <div class="stack">
+        <label class="f"><span>Allergies and what they do</span>
+          <input type="text" id="allergyInput" maxlength="200" placeholder="penicillin — rash and trouble breathing"></label>
+        <div class="row">
+          <label class="f"><span>Prescriber</span>
+            <input type="text" id="prescriber" maxlength="60" placeholder="Dr Ellery"></label>
+          <label class="f"><span>Prescriber phone</span>
+            <input type="tel" id="prescriberPhone" maxlength="30" placeholder="555 0134"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Pharmacy</span>
+            <input type="text" id="pharmacy" maxlength="60" placeholder="Hilltop Drug"></label>
+          <label class="f"><span>Pharmacy phone</span>
+            <input type="tel" id="pharmacyPhone" maxlength="30" placeholder="555 0199"></label>
+        </div>
+        <fieldset class="whenset">
+          <legend>Clock times, if the household uses them</legend>
+          <div class="row clocks">
+            <label class="f"><span>Morning</span><input type="text" id="clockMorning" maxlength="12" placeholder="8:00 am"></label>
+            <label class="f"><span>Noon</span><input type="text" id="clockNoon" maxlength="12" placeholder="12:00 pm"></label>
+            <label class="f"><span>Evening</span><input type="text" id="clockEvening" maxlength="12" placeholder="6:00 pm"></label>
+            <label class="f"><span>Bedtime</span><input type="text" id="clockBedtime" maxlength="12" placeholder="9:00 pm"></label>
+          </div>
+        </fieldset>
+      </div>
+    </details>
+   </div>
+
+   <section class="card" id="previewCard">
+     <h2 class="screenonly">The card, exactly as it prints</h2>
+     <div class="screenonly stack-sm">
+       <div class="seg" id="sizeSeg" role="group" aria-label="Size of the printed text">
+         <button type="button" data-size="std" aria-pressed="false">Compact 11 pt</button>
+         <button type="button" data-size="lg" aria-pressed="true">Large 18 pt</button>
+         <button type="button" data-size="xl" aria-pressed="false">Larger 22 pt</button>
+         <button type="button" data-size="xxl" aria-pressed="false">Largest 28 pt</button>
+       </div>
+       <p class="hint">18 pt is the large-print floor used by the American Printing House, the ACB and the Library of Congress. The card is set to it by default, because the person reading it at the fridge is not the person holding the phone.</p>
+       <p class="hint" id="fitNote"></p>
+     </div>
+     <div class="preview screenonly-frame" id="previewFrame" role="group" aria-label="Preview of the printed card">
+       <div id="sheetScale"><div id="sheet"></div></div>
+     </div>
+   </section>
+
+   <div class="screenonly">
     <section class="card stack">
-      <button class="btn primary block" id="printBtn" type="button">Print the weekly card</button>
+      <h2>Send it to someone else</h2>
       <div class="row">
         <button class="btn" id="shareBtn" type="button">Copy link</button>
         <button class="btn" id="qrBtn" type="button">Show QR</button>
       </div>
-      <p class="hint">Send it to another phone — the schedule travels inside the link, nothing uploaded anywhere.</p>
-      <p class="hint">One page: every med with its dose and times, plus Mon–Sun check-off boxes.</p>
+      <p class="hint">The schedule travels inside the link itself — nothing is uploaded. That also means the link <em>is</em> the medication list: anyone who has it can read the card, so treat it like the paper copy.</p>
     </section>
    </div>
 
-   <div id="sheet"></div>
+   <div class="actionbar hidden" id="actionBar">
+     <button class="btn primary block" id="printBtn" type="button">Print the weekly card</button>
+   </div>
   </main>
 </div>
 
@@ -1447,8 +1534,13 @@ body{
 <dialog id="qrDlg" aria-labelledby="qrTitle">
   <h2 id="qrTitle">Scan to open this schedule</h2>
   <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code holding this medication schedule"></canvas>
-  <p class="hint">Point another phone's camera at it. The whole schedule travels inside the code — nothing is uploaded.</p>
-  <button class="btn block" id="qrClose" type="button">Close</button>
+  <p class="hint" id="qrNote"></p>
+  <label class="f"><span>Or copy the link</span>
+    <textarea id="qrUrl" rows="3" readonly spellcheck="false"></textarea></label>
+  <div class="row">
+    <button class="btn" id="qrCopy" type="button">Copy link</button>
+    <button class="btn" id="qrClose" type="button">Close</button>
+  </div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>

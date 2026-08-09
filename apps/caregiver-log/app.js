@@ -647,7 +647,7 @@ function fillFresh() {
   const d = effDate(newest);
   const fresh = 'Last written ' + agoText(d) + ' by ' + newest.authorName + ' · ' + timeOf(d);
   const unseen = seenAt ? entries.filter(e => effMs(e) > seenAt).length : 0;
-  shell.fresh.textContent = fresh + (unseen ? ' · ' + unseen + (unseen === 1 ? ' new since you last looked' : ' new since you last looked') : '');
+  shell.fresh.textContent = fresh + (unseen ? ' · ' + unseen + ' new since you last looked' : '');
 }
 
 function fillBanners(u, own, locked) {
