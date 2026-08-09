@@ -1,0 +1,507 @@
+{
+  "slug": "bracket-maker",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Marcus Ozor",
+        "who": "38, facilities coordinator, runs the office cornhole league. Comfortable with software, no patience for it. Came here after Bracket HQ's free tier capped him at 32 participants and put ads on the page his colleagues were looking at — the research's 'their 32-participant free cap and their logo on free exports are precisely the two indignities we can remove for nothing'.",
+        "context": "Break room, 12:05, fluorescent overhead, iPhone at 414px in one hand, a paper plate in the other. Sixteen coworkers are eating and shouting names at him. He has the length of a lunch break.",
+        "task": "Get sixteen names in, post the bracket to the team Slack so people can see who they play, and keep it updated as games finish over the next two lunchtimes.",
+        "verdict": "Set it up in under two minutes and was delighted — then discovered the link he had already pasted into Slack was frozen at zero results, and that fixing one misspelled surname on day two deleted every game they had played.",
+        "delights": [
+          "Paste sixteen names, bracket appears as he types. No account, no 'create tournament' wizard, no upgrade badge anywhere on the page — the research's 'the absence of a counter is the product' actually delivered.",
+          "Cold launch with the network off took 115ms to a usable name field (DOMContentLoaded 58ms, 0 bytes transferred). The research's measurable target was 'under one second on a cold, offline launch'; this is eight times inside it.",
+          "Seeding is correct and he could check it: 16 entrants gave him 1v16, 8v9, 4v13 in the top half, and the round labels read Round 1 / Quarterfinals / Semifinals / Final rather than 'Round 4'."
+        ],
+        "frictions": [
+          {
+            "what": "The share button says 'Copy link (live bracket)' and the hint below it says 'update it as games finish'. It is not live. Measured: three taps produced four different URLs, and a second browser opened on the first link showed 0 winners and no champion while his own screen showed 3 winners.",
+            "severity": "blocker",
+            "whyItMatters": "He pasted the link into Slack during setup, exactly as the copy told him to. Sixteen people clicked it over two days and saw an empty bracket, then asked him in DMs who was winning. To actually keep them updated he has to re-copy and re-paste a 300-character URL after every single game — which is the opposite of what the button promised. The research names the read-only spectator link as 'the single feature people grudgingly register for elsewhere'; the app claims to have it and does not."
+          },
+          {
+            "what": "On day two he fixed 'Sarrah' to 'Sarah' in the textarea. Every result vanished. Measured: 7 picks and the champion line went to 0 picks and empty text, with no confirm, no toast and no undo — app.js:100-104 resets picks:{} whenever the parsed list differs by one character.",
+            "severity": "blocker",
+            "whyItMatters": "This is the exact 1-star trigger the research quotes — 'I can't even change the order that they are in' / 'Can't even edit the amount of players on the first bracket' — and the answer the research demands is 'everything stays editable after generation … correct a mis-entered result without rebuilding'. Here a typo fix is a silent tournament reset, in front of sixteen people, and sws-ui.js's SWS.undo is loaded on the page and never called."
+          },
+          {
+            "what": "At 16 entrants the bracket scroller is 698px of content in a 340px box — 358px hidden — with overflow-x:auto and no fade, no partial-column peek, no scroll-snap, no scrollbar and no 'swipe for later rounds' text anywhere on the page.",
+            "severity": "major",
+            "whyItMatters": "Two colleagues told him the app 'only shows the first round'. The research is blunt about this axis: 'brackets are inherently wider than a phone; every credible tool has solved this and the ones that haven't get called literally unusable.'"
+          },
+          {
+            "what": "Name slots are 37px tall at 14.4px type with short names. Measured across an 8-entrant bracket: 8 of 14 slots under the 44px floor, minimum 37px.",
+            "severity": "major",
+            "whyItMatters": "It is the only control the app has, tapped 15 times per tournament, standing up, one-handed, with a plate in the other hand. The research's own requirement is 'whole-card tap targets rather than radio buttons or small chips'."
+          }
+        ]
+      },
+      {
+        "name": "Dee Whitlock",
+        "who": "61, organises the church-hall chili cook-off every February. Macular changes plus reading glasses; she can read a phone but not comfortably at 14px. Confident on an iPad, suspicious of anything that asks her to make an account. This is the comfort-panel persona.",
+        "context": "Church hall, 11:00, big south windows and hard overhead light, iPad in portrait at 414px propped against a coffee urn. Eleven pots of chili, eleven cooks, and two teenagers who want to know when it starts.",
+        "task": "Name the event 'Chili Cook-off 2026', get eleven cooks in with byes handled, and put a readable bracket on the wall.",
+        "verdict": "The comfort panel genuinely rescued her — it more than doubled the size of everything she had to touch. But the event name she typed appears nowhere, and once the text was large the bracket became a 6,100px-tall page where the word FINAL sits over a thousand pixels away from the final match.",
+        "delights": [
+          "She found the gear in the header without being told, opened it, and set Text size to Largest and Contrast to High. It worked and it worked on the thing that mattered: the root font went 16px → 24px, name slots went from 37px to 76px tall (0 of them under 44px afterwards), and the page still had 0px of horizontal overflow at 414px. axe on the open panel returned zero violations.",
+          "High contrast also fixed something the app layer got wrong on its own: the .match border went from 1.34:1 to 3.59:1 against the card, so for the first time she could see where one pairing ended and the next began.",
+          "Eleven cooks produced a correct bracket without her doing anything — 4 rounds, 15 matches, 5 byes given to the top seeds, and the undecided slots honestly labelled 'winner of earlier game' rather than auto-advancing anyone."
+        ],
+        "frictions": [
+          {
+            "what": "She typed 'Chili Cook-off 2026' into the top field. It is saved to localStorage and encoded into the shared link (verified: both), and rendered nowhere — not on screen, not in the browser tab (document.title stays 'Free Bracket Maker — Tournament Brackets, No Sign-Up'), and not on the printed sheet.",
+            "severity": "blocker",
+            "whyItMatters": "The research lists 'I would also give you the option to name your bracket' as a real review request, and this app has the field and throws the answer away. She printed two sheets — the cook-off and the kids' bracket — and could not tell them apart on the wall. A field that accepts your input and never shows it back reads as broken, not as minimal."
+          },
+          {
+            "what": "Round labels drift away from the matches they name. Measured at 32 entrants: the gap between a .roundhead and its first match is 10px for Round 1, 189px for Round 2, 432px for Quarterfinals, 796px for Semifinals and 1,252px for the Final. `.round{justify-content:space-around}` (index.html:1267) treats the label as just another flex child and spaces it away from its content.",
+            "severity": "major",
+            "whyItMatters": "At Largest text the page is 6,105px tall, so the labels are not merely offset — they are on a different screenful from the matches. The only wayfinding the bracket has points at empty space, and it prints that way too."
+          },
+          {
+            "what": "The bye and 'winner of earlier game' slots are `disabled` buttons, so the base layer's `button:disabled{opacity:.5}` (index.html:527) drops them to 2.10:1 in light and 2.89:1 in dark. High contrast does not touch them — measured 2.89:1 before and after turning it on.",
+            "severity": "major",
+            "whyItMatters": "With eleven cooks, five of the fifteen matches contain a bye. The text that explains why half her bracket looks lopsided is the least legible text on the page, in a hall with the sun coming in, and it is the one thing High contrast cannot rescue because opacity is not a colour token."
+          },
+          {
+            "what": "Both text fields are placeholder-only. The battery flags it: `input#titleInput` and `textarea#entrants` are the app's only two unnamed focusable elements, and both rely on a placeholder that disappears the moment you type.",
+            "severity": "minor",
+            "whyItMatters": "She came back after taking a phone call and had two boxes with text in them and no idea which was which. The placeholder that said 'Name it — Chili Cook-off 2026' had gone the moment she typed her first character."
+          }
+        ]
+      },
+      {
+        "name": "Priya Deshmukh",
+        "who": "29, hosts a 32-player Mario Kart night twice a year in a friend's basement. Phone permanently in dark mode. Prints the bracket beforehand and tapes it to the wall next to the TV, because the research's real competitor — PrintYourBrackets.com — is what she used for years.",
+        "context": "Her kitchen the night before, laptop and a home inkjet, dark mode on both. Then the basement itself: low light, a TV, thirty-two people, phone handed round.",
+        "task": "Print a wall bracket for 32 players and run the night off her phone.",
+        "verdict": "The printed sheet came out of the printer with only the winners' names on it. Everyone who had been knocked out was a blank line.",
+        "delights": [
+          "32 entrants render instantly and correctly: 5 rounds, 31 matches, no console errors, and the page itself never scrolls sideways at any width (0px overflow at 320, 414, 1280, at Largest text and at Roomy spacing).",
+          "In dark mode the winner slot is genuinely good — gold fill with near-black text at 9.25:1, 8.09:1 against the card. In a dark basement it reads across the room.",
+          "Tapping the other name to change her mind works exactly as advertised, and downstream results invalidate honestly rather than leaving a ghost champion."
+        ],
+        "frictions": [
+          {
+            "what": "Printing with the device in dark mode produces eliminated names at 1.20:1 on white paper. Measured under print media with a dark colour scheme: loser text rgb(236,235,225) = 1.20:1, champion 2.37:1, round labels 2.31:1, while the winner rule in the app layer pins winners to #000 = 21:1. The app's own print block (index.html:1279-1285) never redefines the palette tokens, and the dark selectors at index.html:104-144 and :145-183 outrank the base print block's bare `:root`.",
+            "severity": "blocker",
+            "whyItMatters": "Verified end to end: rendered the real PDF with background graphics off (the browser default) and rasterised it — the sheet shows Rosa, Vegan, Dad, Microwave in black and Gary, Pete, Terry, Gwen as ghosts. A bracket that prints only the winners is not a bracket, it is a list of winners. This is the audit's most serious finding, still live, and it fires or does not fire depending on what the phone's appearance setting happens to be — so it will look fine on the developer's machine."
+          },
+          {
+            "what": "The printed sheet is anonymous and clipped. No event title (the field is on a .noprint card), no app name, no date. At US Letter portrait the document is 874px wide against an 816px page — 58px of the final round is cut off the right edge — and it runs to 3 pages with `break-inside:auto` on `.match`, so pairings split across the page break.",
+            "severity": "blocker",
+            "whyItMatters": "The research says the paper competitor 'wins because it needs no install, no account, and produces a thing you can tape to a wall'. This produces three pages, one of them with the Final sliced in half, and nothing on any of them says what tournament it is. There is no @page size hint, no landscape suggestion, and no scale-to-fit."
+          },
+          {
+            "what": "At 32 entrants the Final match sits 2,361px down the page and 751px to the right inside a 340px-wide scroller. Every round column is stretched to 2,627px tall by space-around, so the last column is one small box floating alone in the middle of a very tall empty stripe.",
+            "severity": "major",
+            "whyItMatters": "To watch the final game she has to scroll down two and a half screens and then sideways past two entirely off-screen columns. The research's quoted delight in this category is 'Now, you can see the entire tournament in one screen! W update!' — there is no fit-to-screen, no zoom out, and no landscape handling."
+          },
+          {
+            "what": "Two of her friends are both called Mike. Entered twice, they render as two identical 'Mike' buttons with no seed number, no index, no distinguishing mark (verified: no '#', no '(1)', no seed text anywhere in the button labels), and after a pick the champion line reads '🏆 Mike'.",
+            "severity": "minor",
+            "whyItMatters": "Duplicate first names at a party of 32 are close to guaranteed. The bracket is internally correct — the two Mikes are separate indices — but nobody in the room can tell which one advanced."
+          }
+        ]
+      },
+      {
+        "name": "Sam Reilly",
+        "who": "34, product designer, blind, drives everything with VoiceOver and a keyboard. Runs the pub quiz playoff every month and has never found a bracket tool that lets them referee it themselves rather than dictating to someone sighted.",
+        "context": "Pub back room, laptop on a table, headphones in one ear so they can still hear the room. Eight teams, no time pressure but a lot of ambient noise.",
+        "task": "Run an 8-team single-elimination playoff from the keyboard, announcing each result as it happens.",
+        "verdict": "Completed it, and it cost 49 Tab presses for 7 results — because focus is thrown to the top of the document after every single pick. They could never tell, from the screen reader alone, which team had actually advanced.",
+        "delights": [
+          "Nothing is trapped, nothing is unreachable — 10 focusable elements, 0 with a negative tabindex, and Escape closes the QR dialog correctly.",
+          "The champion line is a real aria-live=\"polite\" region and it behaves: measured 0 mutations while typing the entrant list and exactly 1 when the champion was decided. Most apps in this portfolio over-announce; this one announces once, at the right moment.",
+          "axe after interaction returns zero violations, and the comfort panel is a proper fieldset of real radios with arrow-key navigation."
+        ],
+        "frictions": [
+          {
+            "what": "Who won is conveyed to assistive technology by nothing at all. The advanced entrant gets `class=\"winner\"` and nothing else — verified: aria-pressed null, no aria-label, no visually-hidden text, accessible name is just the team's name (app.js:80-87).",
+            "severity": "blocker",
+            "whyItMatters": "Reading the bracket, every button sounds identical. They could not verify a single result they had entered, in a room where getting it wrong means an argument. The state the entire app exists to record is invisible to them."
+          },
+          {
+            "what": "Focus is destroyed on every pick. `box.replaceChildren()` (app.js:59) rebuilds the whole bracket, so activeElement is BODY afterwards — measured. Completing an 8-team tournament took 49 Tab presses for 7 picks: roughly 7 stops back through the header, the name field and the entrant textarea for every single result.",
+            "severity": "blocker",
+            "whyItMatters": "The research's context for this app is 'ninety minutes of three-second interactions — who won?, tap, next'. For a keyboard user each of those three seconds is thirty, and the cost grows with the size of the bracket."
+          },
+          {
+            "what": "The focus indicator on the primary control is completely invisible. `.match{overflow:hidden}` (index.html:1269) clips both halves of the shared ring — the 2px outline sits at outline-offset:2px and the halo is a 4px box-shadow, and the buttons are inset only 1px from the .match edge. Screenshotted a focused winner button in dark mode: no ring visible at all. Where the ring would show against the winner's own gold fill it measures 1.03:1.",
+            "severity": "major",
+            "whyItMatters": "Sam's sighted colleague took the laptop for two matches and could not tell where the keyboard was. This is precisely the risk the audit flagged before the studio base landed — the app adopted the shared focus ring and the app layer's overflow:hidden eats it."
+          },
+          {
+            "what": "Byes and undecided slots are rendered as `disabled` buttons (app.js:77-78), so keyboard navigation skips them entirely and several screen-reader element lists drop them.",
+            "severity": "major",
+            "whyItMatters": "'bye' and 'winner of earlier game' are the two pieces of text that explain the shape of a non-power-of-two bracket. Tabbing through, Sam heard eleven team names and no explanation of why some matches had only one — the information a non-visual user needs most is the only information they cannot reach."
+          },
+          {
+            "what": "The bracket has no structure in the accessibility tree: #bracket has no role and no label, .match has no role and no name, and .roundhead is a plain DIV rather than a heading. The document's headings are H1 'Bracket Maker', H2 \"WHO'S IN?…\" and the QR dialog's H3.",
+            "severity": "major",
+            "whyItMatters": "There is no way to jump to the semifinals or to know which two names form a pairing. It is an undifferentiated stream of buttons."
+          }
+        ]
+      },
+      {
+        "name": "Tomás Iglesias",
+        "who": "44, runs a backyard bags tournament every Fourth of July. Not a software person; uses his phone for everything and has never printed anything from it. Twelve neighbours, several of whom will take turns keeping score while he cooks.",
+        "context": "Sunlit patio, 15:00, phone at 414px, screen brightness maxed and still washing out. The phone spends the afternoon on a picnic table being picked up by whoever is nearest.",
+        "task": "Run twelve neighbours through a bracket without having to be the one holding the phone.",
+        "verdict": "It worked — right up until his brother-in-law picked up the phone, decided 'Dave B.' should say 'Big Dave', and wiped the afternoon.",
+        "delights": [
+          "Handing the phone to a stranger works: there is nothing to explain. Tap the name that won. No mode, no menu, no dialog in the way.",
+          "It survived being reloaded, backgrounded and reopened all afternoon — content came back identical after reload (525 → 525 characters), and it kept working with the wifi off.",
+          "Twelve people produced byes automatically and the app never advanced anyone it should not have — the 'opponent undecided' slots stayed undecided."
+        ],
+        "frictions": [
+          {
+            "what": "The entrants textarea stays live and editable for the whole tournament, sitting directly above the bracket, and any change to it silently resets every result. There is no confirm, no toast, no undo, and no lock.",
+            "severity": "blocker",
+            "whyItMatters": "The research's emotional core for this category is 'the organizer is humiliated in front of a room' — 'I was embarrassed as I was hosting a tournament and it blacked out'. This is the same humiliation delivered by a text field left unlocked next to eleven drunk people. Once the phone leaves your hand, the app has no idea which taps were intended."
+          },
+          {
+            "what": "The pairing box is invisible in bright light. Measured in light mode: .match background 1.06:1 against the card it sits on, border 1.34:1. The only thing separating one match from the next is a hairline nobody can see on a patio.",
+            "severity": "major",
+            "whyItMatters": "People kept tapping the wrong row because they could not see where a pairing started. The research explicitly calls for 'contrast high enough for a sunlit patio, because this is often an outdoor daytime app (cornhole, backyard games)' and for 'chunky 2-3px connectors that survive zoom-out'. There are no connectors at all — nothing draws the line from two feeding matches to the one they feed."
+          },
+          {
+            "what": "'Clear results' sits fourth in a row of four byte-identical buttons, guarded only by a native confirm(). Once confirmed, 7 picks go to 0 with no undo — and the toast afterwards still displayed the previous message ('Link copied — results and all'), so the app gives no feedback at all that it just deleted the tournament.",
+            "severity": "major",
+            "whyItMatters": "window.SWS.undo is loaded on this page and the app calls it zero times. A native confirm at a noisy barbecue is one more thing to tap through; an Undo would have cost nothing and caught the mistake the confirm waved past."
+          },
+          {
+            "what": "Pasting a list of 40 names keeps 32 and truncates each name to 40 characters, with no warning, no count and no toast — the textarea keeps showing all 40 lines while the bracket quietly disagrees.",
+            "severity": "minor",
+            "whyItMatters": "The hint does say '2 to 32 entrants', but the app never tells you when the cap has actually bitten. The research is emphatic that the silent discovered cap is 'the emotional peak of the category and we can simply never do it'."
+          }
+        ]
+      },
+      {
+        "name": "Jenny Kwan",
+        "who": "25, organises a pub darts ladder for a group that only ever coordinates by group chat. The person who reaches for a QR code because typing a URL into a phone at a bar is not happening.",
+        "context": "Pub, 21:30, dim, phone in dark mode at 414px, 24 players who each want to see the bracket on their own screen.",
+        "task": "Get 24 people looking at the bracket on their own phones without anyone signing up for anything.",
+        "verdict": "The QR worked at eight players and stopped working as the ladder grew. In the dark bar the dialog it appeared in had an invisible heading and no URL she could read out.",
+        "delights": [
+          "One tap to a QR code, drawn locally with no network call, is exactly the right instinct — the research calls QR-on-share 'the smartest thing on their site' about fixture.cc.",
+          "No account for her and no account for the 24 people scanning it. That is the whole reason she is here.",
+          "Escape closes the dialog, focus lands on the Close button when it opens, and the app never once errored across the entire run."
+        ],
+        "frictions": [
+          {
+            "what": "The QR code degrades to unscannable as the bracket grows, because the whole bracket travels inside the URL. Measured cell size (app.js:147 does `Math.floor(300 / (moduleCount + 8))`): 2 entrants → 49 modules at 5px each; 8 → 69 modules at 3px; 24 → 109 modules at 2px; 32 short names → 121 modules at 2px; 32 realistic 40-character names → a 1,945-character URL, 165 modules, and 1 pixel per module.",
+            "severity": "blocker",
+            "whyItMatters": "A 1px module on a 414px phone screen is below what a camera resolves at arm's length, and at 320px the canvas is scaled to 0.82 so modules land on fractional pixels. The feature silently gets worse exactly as the tournament gets bigger — the opposite of how a user expects software to behave — and nothing in the dialog warns them."
+          },
+          {
+            "what": "In dark mode the dialog's heading is invisible. `<h3 style=\"color:#111\">` (index.html:1333) against the UA dialog background of rgb(18,18,18) measures 1.01:1 — verified by screenshot, where 'Scan to open the bracket' is a ghost.",
+            "severity": "major",
+            "whyItMatters": "The dialog opens as a white square floating in a dark page with no caption. Half the pub is on dark mode; every one of them gets an unexplained white rectangle."
+          },
+          {
+            "what": "The dialog offers the QR image and nothing else: no URL as selectable text, no copy button inside the dialog, no accessible name on the dialog and no role/alt on the canvas (verified: aria-label null, aria-labelledby null, role null, and `d.innerText` contains no 'http').",
+            "severity": "major",
+            "whyItMatters": "Two people could not scan it — one had a cracked lens, one had the camera permission off — and there was no fallback of any kind. The dialog is the only place in the app where the shareable link is ever surfaced as an object."
+          },
+          {
+            "what": "There is no share sheet. app.js:107-111 writes to the clipboard and nothing else; navigator.share is never referenced.",
+            "severity": "minor",
+            "whyItMatters": "The app's own hint says 'send it to the group chat'. On a phone that is a share sheet, not a clipboard copy followed by a hunt for the right app."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The bracket logic is correct and the unit tests back it: 9 helper tests pass including a 60-tournament fuzz, byes go to the top seeds via a real empty-subtree check so 'opponent undecided' never auto-advances anyone, and changing your mind invalidates downstream picks honestly. 2, 3, 5, 11 and 32 entrants all produce the right round count, match count and round names.",
+        "Speed and offline. Cold start with the network off reached a usable name field in 115ms (DOMContentLoaded 58ms, 0 bytes transferred). Sixty rapid alternating taps on one match completed in 46ms and ended in a consistent single-pick state with no duplicate history entries. Zero console errors across every scenario in this review.",
+        "It is genuinely ungated. No counter, no crown, no upgrade prompt, no ad, no cookie banner, no onboarding — the research's core positioning is honoured in the product and not just in the copy.",
+        "Hostile input is handled. Twenty-four fills of script tags, img-onerror, RTL, combining marks, 500-character words and formula injection produced 0 injected nodes, no title hijack and no NaN/undefined on screen. A hash carrying 5,000 names clips to 32; a hash carrying `__proto__` in the picks object does not pollute Object.prototype; garbage and truncated hashes boot cleanly with no errors.",
+        "The comfort panel is the best thing on the page and it reaches the right control. Largest text takes the root from 16px to 24px and the name slots from 37px to 76px — 0 of them under the 44px floor afterwards — with 0px horizontal overflow at 414px and zero axe violations with the panel open. High contrast lifts the .match border from 1.34:1 to 3.59:1, which is the app layer's own defect being repaired by the shared layer.",
+        "The champion line is a well-behaved live region: 0 mutations while typing the entrant list, exactly 1 when a champion is decided. It announces once, at the moment worth announcing.",
+        "Persistence is quiet and reliable. Content survived reload identically (525 → 525 characters), a corrupted app storage key still booted with 0 new errors, and the whole state is 1,441 bytes at 32 entrants."
+      ],
+      "hurts": [
+        "Editing the entrant list after play has started deletes every result — 7 picks to 0, no confirm, no toast, no undo — and the textarea stays live and unlocked directly above the bracket for the whole tournament.",
+        "Opening someone else's shared link silently overwrites your own saved bracket. Verified: a local bracket of four names survived the load, then the first tap on the shared bracket wrote the other person's names and title over it in localStorage.",
+        "Printing from a device in dark mode produces a sheet where only the winners are legible: eliminated names at 1.20:1, champion 2.37:1, round labels 2.31:1, winners at 21:1. The app's print block never resets the palette tokens, so the dark selectors win.",
+        "The link is advertised as 'live' and is a snapshot. Three taps produced four different URLs; a recipient holding the first one saw zero results while the sender had three.",
+        "Focus on the app's primary control is invisible — `.match{overflow:hidden}` clips both the outline and the halo of the shared focus ring — and every pick throws focus to <body>, costing 49 Tab presses to complete a 7-match tournament.",
+        "Nothing tells assistive technology who won: no aria-pressed, no label, no hidden text, no roles on the bracket, and the bye/undecided slots are disabled buttons that the keyboard skips entirely.",
+        "Round labels detach from their matches — 1,252px between 'Final' and the final match at 32 entrants — because the label is just another flex child under justify-content:space-around.",
+        "The event title is captured, stored and shared, and rendered nowhere: not on screen, not in document.title, not on paper.",
+        "The QR gets worse as the tournament gets bigger, ending at 1 pixel per module for 32 realistic names, and the dialog that holds it has an invisible heading in dark mode and no URL fallback.",
+        "The printed sheet is anonymous (no title, no date, no app name), 58px too wide for Letter portrait, three pages long, and splits pairings across page breaks.",
+        "Bye and 'winner of earlier game' text sits at 2.10:1 in light and 2.89:1 in dark, and High contrast cannot fix it because the cause is `button:disabled{opacity:.5}`.",
+        "The horizontal scroller hides 358px at 16 entrants and 536px at 32 with no fade, no snap, no peek and no instruction.",
+        "Four visually identical action buttons, one of which is destructive; `.btn.primary` exists in the stylesheet and is applied to nothing."
+      ],
+      "mostWantedNext": [
+        "Preserve results when the entrant list is edited — match by identity, not by position — and put the wipe behind SWS.undo if it must ever happen at all.",
+        "Reset the palette tokens inside the app's @media print block, mark winners structurally rather than with a background fill, and add a .printonly header carrying the event title and date.",
+        "Make the title real: render it above the bracket, into document.title, and onto the printed sheet.",
+        "Either tell the truth about the link ('Copy a snapshot — re-copy after each result') or make it live via the portfolio's share-doc pattern, which is the research's single highest-value differentiator.",
+        "Give the bracket semantics and keep focus: aria-pressed on the two sides of a match, a role and name on each pairing, real headings for round names, non-interactive elements for byes, and focus restored to the equivalent node after re-render.",
+        "Drop overflow:hidden from .match and round the child buttons individually, so the shared focus ring is visible on the control the app is made of.",
+        "Anchor each round label to its own matches, draw connectors between rounds, and give the scroller a fade plus scroll-snap — or a fit-to-screen overview, which is what the research says wins this category.",
+        "Show the URL as selectable text with a copy button inside the QR dialog, shorten the payload (or fall back to a short share link) so the code stays scannable, and give the dialog a real accessible name and dark-mode colours.",
+        "A live entrant count with a warning when the 32-name cap or the 40-character truncation bites.",
+        "navigator.share on the share button, falling back to clipboard."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": false,
+    "scenarios": [
+      {
+        "name": "Standard battery (node design/stress.mjs bracket-maker)",
+        "method": "Ran the shared battery as shipped: layout at 320/414/1280 and at largest-text and roomy, touch targets, 12 hostile strings into every text field, numeric edges, rapid clicking, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console.",
+        "result": "1 hard failure. Layout: 0px overflow at every one of the five configurations. Touch targets under 32px: none. Hostile text: 24 fills, 0 injected scripts, 0 injected imgs, no title hijack, no poison on screen. Numeric edges: no number inputs, clean. Rapid clicking and bulk adds: did not run — the app has no .btn.primary and no add-row form, which is itself a finding. Reload: 525 → 525 characters, persisted. Corrupt storage: booted, 0 new errors. axe after interaction: clean. Print: 414px wide, 1 dark fill. Console over the whole run: 0 errors. The hard failure is keyboard reachability — 10 focusable elements, 0 unreachable, but `input#titleInput` and `textarea#entrants` are unnamed and placeholder-only.",
+        "defect": "Two unlabelled text inputs; and `.btn.primary` is defined in the stylesheet and applied to nothing, so the battery could not identify a primary action at all.",
+        "severity": "major"
+      },
+      {
+        "name": "Editing the entrant list after the tournament has started",
+        "method": "Entered 8 names, played the bracket to completion by clicking every undecided match, recorded picks and the champion, then changed one character in one name in the textarea and dispatched input.",
+        "result": "Before: 7 picks in localStorage, champion '🏆 Aunt Rosa's Red', 303-character hash. After a one-character edit: 0 picks, champion empty, toast text empty and the toast not shown. No confirm, no undo, no announcement. app.js:100-104 replaces state with `{names, picks:{}, title}` whenever the parsed list differs.",
+        "defect": "A typo fix silently deletes the entire tournament, and the field that does it stays live and unlocked directly above the bracket for the whole event.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Opening a shared link while you already have your own bracket saved",
+        "method": "Wrote a four-name bracket with two results and the title 'My Saturday league' into localStorage, hard-navigated (via about:blank to force a real load) to a link whose hash carried a different two-name bracket titled 'Theirs', then tapped one winner and re-read localStorage.",
+        "result": "On load the screen showed the shared bracket and localStorage still held MY OWN A–D — the collision is deferred, not avoided. After a single tap, localStorage held ['Their A','Their B'] with title 'Theirs'. The original bracket is gone: it is not in the hash, not in a backup key, and there is no undo.",
+        "defect": "Following a friend's link destroys your own saved tournament on the first interaction, with no warning and no way back.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Printing, in light mode and in dark mode, as PDF and rasterised",
+        "method": "Played an 8-entrant bracket to a champion, set a title, switched to print media at 816×1056 (US Letter at 96dpi), measured computed colours against white, generated real PDFs with page.pdf() at portrait and landscape with printBackground:false, and rasterised page 1 with pdftoppm to look at the actual sheet. Repeated with the browser colour scheme set to dark. Also printed a 32-entrant bracket.",
+        "result": "Light mode is fine: losers 21:1, winners #000 on #eee at weight 700, champion 6.18:1. Dark mode is not: loser text rgb(236,235,225) = 1.20:1 on paper, champion 2.37:1, round labels 2.31:1, card background still rgb(32,31,20), winners 21:1. The rasterised no-background PDF shows the four winners in black and the four eliminated names as ghosts. The app's print block (index.html:1279-1285) sets only `body{background:#fff;color:#000}` and never redefines the tokens, so `:root:not([data-theme=\"light\"])` (index.html:105) and `:root[data-theme=\"dark\"]` (:145) outrank the base print block's bare `:root` at index.html:1191. Separately, at 32 entrants: document 874px wide against an 816px page (58px of the final round clipped), 3 PDF pages, `break-inside:auto` on .match, no title, no app name, no date, no @page size.",
+        "defect": "Printing from a device in dark mode yields a sheet on which only the winners are legible. The printed sheet is also anonymous, clipped at Letter portrait, and splits pairings across page breaks.",
+        "severity": "blocker"
+      },
+      {
+        "name": "The 'live bracket' claim, across two browser contexts",
+        "method": "Copied the URL after setup, then made three picks and captured the URL after each. Opened the originally-copied URL in a second page and compared what each side sees. Also read the clipboard after clicking the share button.",
+        "result": "Three taps produced four distinct URLs (the hash is rewritten by history.replaceState on every save). The second page, holding the first link, showed 0 winners and an empty champion line while the origin page showed 3 winners. The button reads 'Copy link (live bracket)' and the hint reads 'The whole bracket lives in the link — send it to the group chat and update it as games finish.' Clipboard write worked: 133 characters, toast 'Link copied — results and all'. navigator.share is never referenced in app.js.",
+        "defect": "The link is a snapshot presented as live. Anyone the organiser shared with sees a frozen bracket until a fresh link is re-copied and re-sent after every result.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Keyboard-only completion of a tournament, and the focus indicator",
+        "method": "With 8 entrants, pressed Tab repeatedly and Enter whenever the focused element was an undecided contender, counting presses until a champion existed. Separately focused a winner button and read outline, offset, box-shadow and the parent's overflow, then screenshotted the pairing.",
+        "result": "7 picks cost 49 Tab presses; activeElement is BODY after every pick because app.js:59 calls replaceChildren() on the whole bracket. The focus ring: outline 2px solid at offset 2px plus a 4px halo box-shadow, on buttons inset exactly 1px from a `.match` with overflow:hidden — the screenshot of a focused winner in dark mode shows no ring at all. Where the outline colour would fall on the winner's own fill it measures 1.03:1; against the card it would be 8.35:1 if it were not clipped.",
+        "defect": "Focus is thrown to the document body on every pick, and the focus indicator on the app's primary control is entirely clipped away by the app layer's overflow:hidden.",
+        "severity": "blocker"
+      },
+      {
+        "name": "What a screen reader can learn from the bracket",
+        "method": "Enumerated roles, labels, aria-pressed, headings and disabled state across a played 8-entrant bracket; ran axe after interaction; watched the #champ live region with a MutationObserver while typing and while playing.",
+        "result": "#bracket: role null, aria-label null. .match: role null, aria-label null. .roundhead: a DIV, not a heading. The winner button: className 'winner', aria-pressed null, accessible name is just the entrant's name. 4 bye/TBD slots are `disabled` buttons, skipped by keyboard. Document headings are only H1 'Bracket Maker', H2 \"WHO'S IN?…\" and the QR dialog's H3. axe: 0 violations. Live region: 0 mutations across 20 typed characters, 1 mutation when the champion resolved.",
+        "defect": "The single most important state in the app — who advanced — is conveyed by a CSS class and nothing else, and the bye/undecided explanations are unreachable by keyboard. axe cannot see any of this, which is why it passes.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Bracket geometry at 32 entrants on a phone",
+        "method": "Filled 32 realistic 40-character names at 414×900 and measured the scroller, the round columns, the gap between each round label and its first match, and the position of the Final.",
+        "result": "5 rounds, 31 matches. Scroller: 876px of content in a 340px box, 536px hidden, 2 of 5 columns entirely off the right of the viewport. Every round column is 2,627px tall. The Final match sits 2,361px down the page and 751px right inside the scroller, on a 3,697px page. Round-label-to-first-match gaps: Round 1 10px, Round 2 189px, Quarterfinals 432px, Semifinals 796px, Final 1,252px. Page overflow 0px. Storage 1,441 bytes, hash 1,889 characters, href 1,926.",
+        "defect": "Round labels drift up to 1,252px away from the matches they name, and the Final is two and a half screens down and two columns to the right with no fit-to-screen, no zoom, no landscape handling and no connectors.",
+        "severity": "major"
+      },
+      {
+        "name": "Horizontal scroll affordance",
+        "method": "At 16 entrants on a 414px viewport, measured the .bracket scroller and looked for any cue.",
+        "result": "698px of content in a 340px box — 358px hidden. overflow-x auto, scroll-snap none, no mask-image, no background gradient, scrollbar height 0, and no text on the page containing 'swipe', 'scroll' or 'drag'.",
+        "defect": "Later rounds exist off-screen with nothing whatsoever indicating it.",
+        "severity": "major"
+      },
+      {
+        "name": "Touch target size, before and after the comfort panel",
+        "method": "Measured every `.match button` at 414px with short names at default settings, then opened #swsPrefsBtn from the header, selected Largest text and High contrast by clicking the option labels, closed with Done, and re-measured.",
+        "result": "Default: 14 slots, minimum 37px, maximum 57px, 8 of 14 under 44px, font 14.4px. After the panel: data-text=\"xxl\", data-contrast=\"more\", root font 24px, slot font 21.6px, minimum height 76px (or 47px in the dark run), 0 under 44px, page overflow still 0px, axe on the open panel 0 violations. The panel is 376×736 and focus moves inside it.",
+        "defect": "The app's only control is 37px at default settings. The comfort panel fixes it, but it should not have to — and the two header pills (#swsPrefsBtn 36×36, .tipbtn 82×36) stay at 36px.",
+        "severity": "major"
+      },
+      {
+        "name": "Contrast of every part of the bracket, light and dark, before and after High contrast",
+        "method": "Computed WCAG ratios in-page from getComputedStyle against the real effective backgrounds, blending the disabled slots' 0.5 opacity properly.",
+        "result": "Light — winner text on fill 4.94:1; loser text 15.2:1; bye/TBD text 2.10:1; round label 5.93:1; champion 6.11:1; .match border vs card 1.34:1; .match background vs card 1.06:1; winner fill vs card 3.80:1. Dark — winner text on fill 9.25:1; loser 15.33:1; bye/TBD 2.89:1; champion 6.99:1; border vs card 1.32:1; background vs card 1.11:1; winner fill vs card 8.09:1. With High contrast on, the border rises to 3.59:1 but bye/TBD stays 2.89:1.",
+        "defect": "The pairing box — the thing that says which two names are playing each other — is 1.06:1 against its parent, and the bye/undecided text fails 4.5:1 in both schemes because `button:disabled{opacity:.5}` is not something a contrast preference can reach.",
+        "severity": "major"
+      },
+      {
+        "name": "QR code across the whole entrant range, and the dialog it lives in",
+        "method": "For 2, 4, 8, 16, 24 and 32 entrants, computed the real module count from the vendored generator against the live URL and the cell size the app's own arithmetic produces. Then opened the dialog at 414px and at 320px, sampled the canvas pixels, and inspected it in dark mode with a screenshot.",
+        "result": "2 entrants → 125-char URL, 49 modules, 5px cells. 4 → 184 chars, 57 modules, 4px. 8 → 301 chars, 69 modules, 3px. 16 → 545 chars, 89 modules, 3px. 24 → 790 chars, 109 modules, 2px. 32 short names → 1,036 chars, 121 modules, 2px. 32 realistic 40-character names → 1,945 chars, 165 modules, 1px per module (a 165px code inside a 300px canvas). At 414px the dialog is 336px wide and the canvas renders 1:1; at 320px the canvas is scaled to 0.82, so modules land on fractional pixels. In dark mode the dialog background is rgb(18,18,18) and the inline `color:#111` heading measures 1.01:1 against it. The dialog has no aria-label or aria-labelledby, the canvas has no role and no aria-label, and the dialog's text contains no URL. Focus does move to the Close button, and Escape closes it.",
+        "defect": "The QR silently degrades to 1 pixel per module as the bracket grows; the dialog's heading is invisible in dark mode; and there is no readable-URL fallback, no accessible name and no copy button inside the only place the link is ever surfaced as an object.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Hostile and malformed URL hashes",
+        "method": "Six payloads, each with a real page load and a cleared storage key: unparseable text, a truncated base64 fragment, 5,000 names of 200 characters each, a picks object containing `__proto__`, out-of-range and negative pick indices, and a single-entrant bracket.",
+        "result": "No crashes, no console errors, no prototype pollution (Object.prototype.polluted stayed undefined) in any case. 5,000 names clipped to 32 and rendered 31 matches. Out-of-range picks were dropped and the surviving valid pick rendered correctly ('SEMIFINALS A bye B C / FINAL A C'). Garbage and truncated hashes both fell back to an empty bracket with 0 matches and no message. A one-name hash also produced an empty bracket.",
+        "defect": "The codec is genuinely hardened — but a truncated shared link (the normal failure mode when a URL is broken by a chat client) renders as an empty app with no explanation, so the recipient concludes the sender made a mistake.",
+        "severity": "minor"
+      },
+      {
+        "name": "Rapid alternating taps on the same match",
+        "method": "Clicked the two sides of the first match alternately 60 times as fast as the page allows, then read state, DOM and history length.",
+        "result": "46ms for 60 clicks. Exactly 1 pick in localStorage, 1 winner in the DOM, history length unchanged by the picks (save uses replaceState). No double-recording, no corruption, no errors.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Non-power-of-two counts, duplicates and degenerate lists",
+        "method": "Rendered 1, 2, 3, 5 and 11 entrants and counted rounds, matches, byes and undecided slots; entered two entrants named 'Mike' and two named 'Sarah' and played a match; ran the unit suite.",
+        "result": "2 → 1 round, 1 match, 0 byes, labelled 'Final'. 3 → 2 rounds, 3 matches, 1 bye, 1 undecided. 5 → 3 rounds, 7 matches, 3 byes. 11 → 4 rounds, 15 matches, 5 byes, 9 undecided, labelled Round 1 / Quarterfinals / Semifinals / Final. 1 entrant → 0 matches, an empty box, and the hint still reading 'Tap a name to advance them'. Duplicates: two 'Mike' buttons with no seed number, index or distinguishing mark; the champion line reads '🏆 Mike'. `node test/helpers.test.mjs`: 9 tests passed.",
+        "defect": "Seeding and byes are correct. But there is no empty state — 0 or 1 entrant leaves a blank box under an instruction to tap names that do not exist — and duplicate names are indistinguishable to everyone in the room.",
+        "severity": "minor"
+      },
+      {
+        "name": "Silent caps on the entrant list",
+        "method": "Pasted 40 lines of 56-character names and compared what the textarea shows with what the state holds.",
+        "result": "40 lines visible in the textarea, 32 names in state, every name truncated to exactly 40 characters. No .warn element, no toast, no count anywhere on the page.",
+        "defect": "Both caps bite silently and the textarea keeps showing the discarded input, so the visible list and the rendered bracket disagree until a reload throws the extras away.",
+        "severity": "major"
+      },
+      {
+        "name": "Clear results, and the shared undo runtime",
+        "method": "Clicked #resetBtn with 7 picks recorded, captured the native dialog, and inspected the toast and the SWS namespace afterwards.",
+        "result": "One native confirm: 'Clear all results and start the bracket fresh?'. Accepted → 7 picks to 0. No undo button in the toast; the toast still displayed the previous, unrelated message ('Link copied — results and all'). window.SWS exposes toast, undo, hideToast and saved, and the app calls none of them. There is no [data-saved-flag] element in the DOM.",
+        "defect": "The destructive action is guarded by a browser modal and followed by no feedback at all, while the studio's undo and saved-flag runtime sits loaded and unused.",
+        "severity": "major"
+      },
+      {
+        "name": "A shared link tapped while the app is already open",
+        "method": "With an 8-entrant bracket on screen, set location.hash to a different bracket's payload and waited.",
+        "result": "The URL changed; the UI did not. The textarea still listed the old 8 entrants and the DOM still held 7 matches. There is no hashchange listener — app.js reads location.hash exactly once, inside init().",
+        "defect": "Tapping a bracket link from a group chat when the app is already open in that tab (the normal case for an installed PWA) shows the wrong bracket with no indication anything was ignored.",
+        "severity": "major"
+      },
+      {
+        "name": "Offline cold start and service worker",
+        "method": "Warmed the service worker, set the context offline, opened a second page and timed it to a visible entrant field; read the navigation timing.",
+        "result": "115ms to a usable field with the network off. DOMContentLoaded 58ms, load 58ms, transferSize 0. The app rendered fully and the service worker was registered and controlling.",
+        "defect": null,
+        "severity": "none"
+      },
+      {
+        "name": "Layout under every comfort setting, including Largest text at 32 entrants",
+        "method": "Measured document overflow and the bracket geometry at 320, 414 and 1280, at text:xxl and at density:roomy, in light and dark, with the comfort panel driven for real.",
+        "result": "0px horizontal page overflow in every configuration measured. At text:xxl with 32 entrants: root font 24px, slot font 21.6px, minimum slot height 76px, page height 6,105px, bracket scroller still 876px inside a 340px box. `.round{min-width:160px}` does not scale with --ui-scale, so the columns stay 160px wide while their contents grow.",
+        "defect": "No overflow defects at all — the page never scrolls sideways. But the bracket's own scroller is unaffected by any comfort setting, so at Largest text the user gets a 6,105px page and the same 536px of hidden rounds.",
+        "severity": "minor"
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Stop deleting the tournament when someone edits the entrant list",
+      "rationale": "Measured: 7 recorded picks and a decided champion go to 0 picks and an empty champion line when one character of one name changes, with no confirm, no toast and no undo. app.js:100-104 rebuilds state as `{names, picks:{}, title}` on any parsed difference. Marcus lost two lunchtimes of results fixing a misspelled surname; Tomás lost an afternoon because his brother-in-law renamed 'Dave B.' while holding the phone. This is the research's most-quoted editing complaint — 'I can't even change the order that they are in' — answered with something worse than not allowing the edit. Diff the old and new lists and carry picks across by identity: a pure rename at the same position should keep everything, a reorder should remap, and only a genuine structural change should clear — and that one behind SWS.undo, which is already loaded on the page and called zero times.",
+      "where": "apps/bracket-maker/app.js:99-106 (the entrants input handler; the wipe is at :102)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Do not let a shared link overwrite the bracket the user already has saved",
+      "rationale": "Verified with a real load: a local bracket ['MY OWN A'…'MY OWN D'] titled 'My Saturday league' survives opening a friend's link, and is then overwritten in localStorage by the first tap on the shared bracket — names and title both. load() prefers the hash (app.js:47) and save() writes the single KEY unconditionally (app.js:42), so there is exactly one slot and the visitor's own tournament occupies it until a stranger's link evicts it. Every persona in this group is someone who both runs brackets and receives them. Either key storage by a bracket id, or detect that the incoming hash differs from the stored bracket and offer 'You have another bracket saved — keep it?' with an undo.",
+      "where": "apps/bracket-maker/app.js:38 (single KEY), :41-45 (save), :46-53 (load)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Reset the palette tokens inside the print block — dark-mode users print blank names",
+      "rationale": "Measured under print media with the browser in dark mode: eliminated names render at 1.20:1 on white paper (rgb(236,235,225)), the champion at 2.37:1, round labels at 2.31:1, while winners are pinned to #000 at 21:1. Rasterised the real PDF with background graphics off — the default — and the sheet shows four names in black and four ghosts. The cause is that the app's own print block sets only `body{background:#fff;color:#000}` and never redefines the tokens, so `:root:not([data-theme=\"light\"])` and `:root[data-theme=\"dark\"]` outrank the base print block's bare `:root`. Priya's wall bracket came out as a list of winners. Do exactly what the base layer does at index.html:1191-1196: redefine --ink, --ink-2, --line, --surface, --canvas and --win inside the app's print block too, and mark the winner structurally (a rule, a border-left, a ✓) rather than with a background fill that background-graphics-off strips.",
+      "where": "apps/bracket-maker/index.html:1279-1285 (app print block), losing to :104-144 and :145-183 (dark palette)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Stop calling the link live, or make it live",
+      "rationale": "Three taps produced four distinct URLs and a second browser holding the first link showed 0 winners against the sender's 3. The button says 'Copy link (live bracket)' (index.html:1319) and the hint says 'update it as games finish' (index.html:1324). Marcus pasted it into Slack during setup exactly as instructed and sixteen colleagues watched an empty bracket for two days. The research names the read-only spectator link as the single feature people grudgingly register elsewhere for. The cheap honest fix is to relabel — 'Copy a snapshot' plus 'send a fresh link after each result' — and re-offer the copy after every pick. The right fix is the portfolio's share-doc pattern so the link stays current.",
+      "where": "apps/bracket-maker/index.html:1319 (button label), :1324 (hint); apps/bracket-maker/app.js:107-111 (share handler)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Make who won visible to assistive technology, and keep focus where the user left it",
+      "rationale": "The advanced entrant carries `class=\"winner\"` and nothing else: aria-pressed null, no aria-label, no hidden text (app.js:80-87). Sam could not verify a single result they had entered. Compounding it, app.js:59 tears down the whole bracket on every pick so activeElement is BODY afterwards — completing a 7-match tournament took 49 Tab presses. Render each pairing as two aria-pressed toggle buttons inside a `role=\"group\"` named 'Semifinals, match 2', append an sr-only ' — advanced' to the winner, make .roundhead a real heading, and after re-render restore focus to the button with the same round/match/side.",
+      "where": "apps/bracket-maker/app.js:57-95 (renderBracket), :59 (replaceChildren), :74-88 (side()), :68 (roundhead)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Un-clip the focus ring on the app's only control",
+      "rationale": "`.match{overflow:hidden}` (index.html:1269) clips both halves of the shared focus treatment — a 2px outline at outline-offset:2px and a 4px halo box-shadow — on buttons inset 1px from the .match edge. A screenshot of a focused winner button in dark mode shows no ring whatsoever; where the outline would land on the winner's own gold fill it measures 1.03:1. This is the exact regression the audit predicted when the studio base landed. Drop overflow:hidden, round the first and last child buttons individually, and give a focused winner a ring colour that is not its own fill.",
+      "where": "apps/bracket-maker/index.html:1269 (.match overflow:hidden) against :831-835 (base :focus-visible)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Render the event title — on screen, in the tab, and on the paper",
+      "rationale": "Verified: 'Chili Cook-off 2026' is written to localStorage and encoded into the shared hash, and appears nowhere in document.body.innerText, nowhere in document.title, and nowhere on the printed sheet (the card holding the field is .noprint). Dee printed two brackets and could not tell them apart on the wall. The printed sheet also has no app name and no date — a stack of them is indistinguishable. Render state.title as a heading above #champ, mirror it into document.title, and add a `.printonly` block carrying the title and today's date.",
+      "where": "apps/bracket-maker/index.html:1302 (#titleInput), :1311-1315 (output card); apps/bracket-maker/app.js:98 (input handler), :132 (rehydrate), :57-95 (renderBracket)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Keep the QR scannable, and give the dialog a readable heading and a URL",
+      "rationale": "Measured cell size from the app's own `Math.floor(300/(count+8))`: 5px at 2 entrants, 3px at 8, 2px at 24, and 1px per module at 32 realistic 40-character names (1,945-character URL, 165 modules). At 320px the canvas is additionally scaled to 0.82 so modules land on fractional pixels. In dark mode the dialog's inline `color:#111` heading measures 1.01:1 against the UA dialog background of rgb(18,18,18) — verified by screenshot. The dialog has no aria-label, the canvas has no role or alt, and no URL text appears anywhere inside it. Jenny's code stopped working as her ladder grew and two people had no fallback. Raise the canvas backing resolution so the CSS size is an integer multiple of (count+8), warn or fall back when the payload pushes the module count past a scannable size, show the URL as selectable text with a copy button, and give the dialog real tokens plus aria-labelledby.",
+      "where": "apps/bracket-maker/app.js:142-157 (showQr; the arithmetic at :146-148); apps/bracket-maker/index.html:1332-1336 (#qrDlg, inline-styled h3 and canvas)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Anchor each round label to its own matches and draw the bracket's connections",
+      "rationale": "Measured at 32 entrants: the gap between a .roundhead and its first match is 10px, 189px, 432px, 796px and 1,252px across the five rounds, because `.round{justify-content:space-around}` (index.html:1267) treats the label as another flex child. The word FINAL floats 1,252px above the final match, on screen and on paper. There are also no connector lines at all, so nothing shows which two matches feed the next one — the one thing a bracket diagram exists to communicate, and the research asks specifically for 'chunky 2-3px connectors that survive zoom-out'. Pin the label to the top of its column and align feeding pairs with a grid.",
+      "where": "apps/bracket-maker/index.html:1266-1268 (.bracket, .round, .roundhead)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Give the primary control a 44px hit area and stop hiding half the rounds",
+      "rationale": "At default settings the name slots are 37px tall at 14.4px type — 8 of 14 below the 44px floor — and it is the only control the app has, tapped fifteen times a tournament, standing up, one-handed. Separately the scroller hides 358px at 16 entrants and 536px at 32, with overflow-x:auto and no fade, no scroll-snap, no scrollbar, no peeking column and no cue text on the page; two of five columns are entirely off-screen at 32. Largest text fixes the target size (37px → 76px) but nobody should need the comfort panel to reach the floor, and it does nothing for the scroller. Set `min-height:var(--tap)` and `font-size:var(--t-base)` on .match button, and add an edge fade plus scroll-snap on .round — or a fit-to-screen overview, which the research says is what wins this category.",
+      "where": "apps/bracket-maker/index.html:1270-1273 (.match button), :1266 (.bracket overflow-x)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Make the bye and 'winner of earlier game' slots legible and readable",
+      "rationale": "They are rendered as `disabled` buttons (app.js:77-78), so the base layer's `button:disabled{opacity:.5}` (index.html:527) puts them at 2.10:1 in light and 2.89:1 in dark, and High contrast cannot help because opacity is not a colour token — measured 2.89:1 both before and after turning it on. Disabled controls are also skipped by keyboard navigation, so Sam heard eleven names and no explanation of the bracket's shape. With eleven entrants, 5 of 15 matches contain a bye. Render them as non-interactive `<span>` or `<div>` with the same classes instead of disabled buttons, and give them a real --ink-2 colour.",
+      "where": "apps/bracket-maker/app.js:74-79 (side() for null contenders); apps/bracket-maker/index.html:527 (base disabled opacity), :1276-1277 (.tbd, .bye)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Fix the printed sheet's page geometry",
+      "rationale": "At US Letter portrait the document measures 874px against an 816px page, so 58px of the final round is cut off; the sheet runs to 3 pages with `break-inside:auto` on .match, so pairings split across page breaks; and `.round{justify-content:space-around}` distributes whitespace against an on-screen column height that is meaningless once the content paginates. There is no @page rule, no size hint and no scale-to-fit. Priya taped up a bracket with a bisected Final. Add `@page{size:landscape}` or a scale-to-fit transform for wide brackets, `break-inside:avoid` on .match and .round, and switch the print layout off space-around.",
+      "where": "apps/bracket-maker/index.html:1279-1285 (app print block), :1267 (.round justify-content)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Tell the user when the 32-entrant cap or the 40-character truncation bites",
+      "rationale": "Pasting 40 lines of 56-character names keeps 32 names truncated to exactly 40 characters, with no warning element, no toast and no count — and the textarea keeps displaying all 40 lines, so the visible list and the rendered bracket disagree until a reload discards the extras. The research is unambiguous that a cap discovered after the work is done is 'the emotional peak of the category and we can simply never do it'. A live '28 of 32 entrants' counter plus a `.warn` when either limit fires costs almost nothing.",
+      "where": "apps/bracket-maker/helpers.js:24-28 (parseEntrants); apps/bracket-maker/app.js:99-106; apps/bracket-maker/index.html:1308 (the hint that states the rule)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Use the studio's undo and saved runtime — and give the action row a hierarchy",
+      "rationale": "'Clear results' is guarded by a native confirm() and followed by nothing: 7 picks went to 0 and the toast still displayed the previous, unrelated message ('Link copied — results and all'). window.SWS exposes toast, undo, hideToast and saved; the app calls none of them, and there is no [data-saved-flag] in the DOM even though state is written to localStorage and the hash on every keystroke. The four action buttons are also byte-identical while one of them is destructive, and `.btn.primary` is defined in the stylesheet and applied to nothing — the standard battery could not even identify a primary action. Replace confirm() with SWS.undo, add a quiet saved flag, and make shareBtn .btn.primary / resetBtn .btn.danger.",
+      "where": "apps/bracket-maker/app.js:116-121 (resetBtn), :41-45 (silent save); apps/bracket-maker/index.html:1318-1323 (the four .btn)",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Label the two text fields, add an empty state, and listen for hashchange",
+      "rationale": "Three smaller gaps with the same character — the app not speaking. (1) `input#titleInput` and `textarea#entrants` are the app's only unnamed focusable elements and both are placeholder-only; this is the standard battery's single hard failure, and Dee came back from a phone call to two filled boxes with no idea which was which. (2) With 0 or 1 entrant, renderBracket returns at app.js:63 leaving an empty box under a hint that reads 'Tap a name to advance them' — an instruction to tap names that do not exist. (3) app.js reads location.hash exactly once inside init(), so tapping a shared bracket link while the app is already open in that tab changes the URL and leaves the old bracket on screen (verified: URL changed, textarea and all 7 matches unchanged).",
+      "where": "apps/bracket-maker/index.html:1302 (#titleInput), :1304 (#entrants), :1314 (the hint); apps/bracket-maker/app.js:57-63 (empty render), :124-138 (init, no hashchange listener)",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ]
+}
