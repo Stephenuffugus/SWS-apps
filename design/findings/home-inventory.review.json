@@ -3,262 +3,266 @@
   "focusGroup": {
     "personas": [
       {
-        "name": "Dev Rasmussen",
-        "who": "38, owns a 1970s split-level, was told to do this by his agent after the Eaton fire coverage. Started once before in a spreadsheet and stopped at the kitchen. Comfortable with software, zero patience for it. The research's first user: 'pre-loss and mildly guilty… their enemy is not confusion, it is attrition.'",
-        "context": "Saturday morning, walking the house with an Android phone at 414px, one hand, the other opening cupboards. Garage and attic are the two rooms with no working light. He has given himself an hour.",
-        "task": "Get the whole ground floor photographed and named before lunch — the fast-capture loop, forty or fifty items.",
-        "verdict": "Got 34 items in and it worked, but the loop costs one extra tap per item that it does not have to, and twice he created the same item twice without noticing.",
+        "name": "Renata Kowalczyk",
+        "who": "44, homeowner, moderately confident with a phone. Came here because Encircle switched its free Home Inventory off on 17 December 2025 and she cannot log in to the one she started in 2021 — the research's single most useful fact, and it is the reason she is willing to try a stranger's web app at all. Polish-American household; half the things worth documenting have Polish names on them.",
+        "context": "Saturday, 19:40. Standing in an unheated garage with one bare bulb, iPhone at 414 CSS px in her right hand, left hand moving boxes. She has maybe forty minutes before dinner. This is the research's primary pre-loss user: 'their enemy is not confusion, it is attrition.'",
+        "task": "Photograph and name everything in the garage and the attic — she guesses 60 or 70 items — and get a PDF out at the end so there is finally something on paper.",
+        "verdict": "Got 31 items done in 40 minutes, roughly half her target, and the pace was set almost entirely by the app rather than by her. The PDF at the end is the part that upset her: her own possessions came out with question marks in their names.",
         "delights": [
-          "Fast capture is genuinely the right shape. Room selector, camera, name, value, Save & next, and the room selector does not reset between saves (verified: still 'Living room' after each save). 30 saves in a row took 2,049ms — 68ms per redraw, no jank.",
-          "'Just added in this room' showing the last four is the only progress feedback in the app and it is the one he actually used to know he had not skipped the bookcase.",
-          "It is honestly offline. Service worker registers, pdf-lib is vendored, and the whole PDF path runs with no network.",
-          "The hint under the save button — 'Serial numbers, receipts, and purchase dates can be added later… Speed now, detail later' — is the single best piece of copy in the app, and it is what stopped him trying to fill in every field."
+          "The Capture tab really is the right shape. Room selector, one big camera button, name, value, Save & next — she never had to think about where she was, and the room selector does not reset between items.",
+          "It works with the garage wifi dead. Service worker registers, the whole app plus pdf-lib is local, and both PDFs generate with the network switched off — verified.",
+          "Nothing asked her to make an account, and there is no counter anywhere telling her she is approaching a limit. After Encircle and after reading Sortly's pricing, that absence is the product."
         ],
         "frictions": [
           {
-            "what": "After every 'Save & next', focus goes to <body> (verified: activeElement === BODY on all 30 saves). drawEditor() replaceChildren()s the whole view, so the name field he was just typing in no longer exists. Every single item costs an extra tap to get the keyboard back.",
-            "severity": "major",
-            "whyItMatters": "The research names this exact number: an Under My Roof reviewer quit over data entry 'taking at least 25% longer per item.' At 50 items that is 50 extra taps and 50 chances to tap the room selector instead. The one thing the Capture tab exists to protect is taps per item, and it leaks one on the last step of every loop."
+            "what": "The very first action is a native prompt(): 'Name it (address works well)'. With dialogs suppressed — the automation default, Firefox's 'prevent this page from creating additional dialogs', and some managed-device profiles — the button does nothing at all: hash stays empty, the page does not change, no toast, no message. Measured: the standard stress battery never once got past this screen and reported the whole app as 'clean' on 534 characters of hero copy.",
+            "severity": "blocker",
+            "whyItMatters": "The entry point to the product is a browser modal that can silently not appear. When it does appear it is unstyled and, in her garage, unreadable against the torch glare. A user in that state has no way to know the app is working."
           },
           {
-            "what": "The Save & next button is not disarmed between clicks and the name field is only cleared by the re-render, so a double-tap creates duplicates. Measured: three synchronous clicks with 'Double' in the field created 3 identical items.",
-            "severity": "major",
-            "whyItMatters": "This is a button pressed hundreds of times in a session, on a phone, in a cold garage, by someone moving fast. There is no duplicate warning, no merge, and no undo, and the duplicates inflate the documented total that goes to the insurer — which is the number the whole exercise exists to produce."
+            "what": "After every Save & next, focus falls to <body>. Measured: the name field is the 12th of 20 focusable elements on first entry, and 9 Tab presses away from wherever focus lands after a save. The camera does not re-arm either — she had to reach for the big button every time.",
+            "severity": "blocker",
+            "whyItMatters": "This is the attrition tax the research says decides whether an inventory ever gets finished ('if a single item takes more than roughly fifteen seconds they will stop'). An Under My Roof reviewer quit over data entry 'taking at least 25% longer per item'. Here every item costs an extra deliberate reach, and with a phone in one hand it is the difference between 70 items and 31."
           },
           {
-            "what": "He photographed the water heater's rating plate in the dark garage. The photo he took is 4032×3024; compressImage() forces it to 1280×960 at JPEG 0.8 before anything else happens (measured: scale 0.317). The plate text survives at 1:1 on screen but the app never shows it at 1:1 — the list thumbnail is 52px and the PDF cell is 146.7pt.",
+            "what": "She photographed the whole chest freezer, expecting the model plate to be readable later. Measured through the real capture path: a 4032×3024 phone photo is downscaled to 1280×960 at JPEG 0.8, and a serial plate occupying 8.4% of the frame comes out with a 3.7px cap height — the rendered crop is an illegible smear. The same plate at 2400/0.92 gives 6.9px and the model number survives.",
             "severity": "major",
-            "whyItMatters": "He has no way to check that the serial he needs is readable, and by the time he finds out the original is gone — the compression happens at capture, the full-resolution file is never kept. The research quotes the exact 1-star review this produces: 'The small photos are so pixelated, the information on the product labels is unreadable.'"
+            "whyItMatters": "'The small photos are so pixelated, the information on the product labels is unreadable' is a real one-star review of the free government app in this exact category. She thinks she has documented the freezer's serial. She has not."
           },
           {
-            "what": "At the end of an hour there is nowhere that tells him what he has and has not done. The totals line says '34 items · 28 photographed · $18,400' and that is the whole of it — no per-room progress, no 'you have not started the garage', no prompt list.",
-            "severity": "minor",
-            "whyItMatters": "The research's biggest completion lever is recognition over recall — State Farm ships 39 room templates and United Policyholders a 3,000-line tick list precisely because nobody can list their own possessions unprompted. He stood in the living room and could not think of anything else, so he stopped."
+            "what": "In the finished PDF, 'Łukasz's Gdańsk crystal decanter set' prints as '?ukasz's Gda?sk crystal decanter set'; her mother's folding screen prints as 'Grandmother's ?? folding screen'; a room named 客厅 prints as '??'. pdf.js:13 strips everything outside Latin-1 to '?'. Both PDFs are affected, and the euro sign goes too — '€1,200' becomes '?1,200'.",
+            "severity": "blocker",
+            "whyItMatters": "The PDF is the artifact. It is the thing she emails to herself and hands to an adjuster, and it silently corrupts the names of exactly the heirloom objects that need the most description. She noticed and said the app had 'broken' her list — she did not trust the rest of the file after that."
+          },
+          {
+            "what": "Tapping 'Add receipt photo' opens the camera and only the camera. The single shared file input carries capture=\"environment\" (index.html:1330), which on iOS Safari and several Android browsers removes the photo-library option.",
+            "severity": "major",
+            "whyItMatters": "Her receipts are already photographs in her camera roll. The one control that would let her attach them insists she photograph a screen instead. The same input is reused for item photos and Replace photo, so the restriction applies everywhere."
           }
         ]
       },
       {
-        "name": "Marguerite Boisvert",
-        "who": "71, widowed, doing the inventory herself because her broker asked for one before renewal. Macular changes in one eye and a mild essential tremor; reads with varifocals. Uses an iPad daily and is not frightened of it, but everything small is a fight. This is the comfort-panel persona.",
-        "context": "Her own house, mid-afternoon, iPad in portrait at 414 CSS px on the kitchen counter, then carried down to an unlit basement. One hand on the rail. No deadline, low patience.",
-        "task": "Photograph the dining room silver and the two paintings, put values on them, and correct a value she typed wrong yesterday.",
-        "verdict": "The comfort panel found her and helped — and then the app kept two of the three controls she needs pinned at the size they were before she touched it. She also silently wiped the value off a painting and did not find out.",
+        "name": "Marcus Tillery",
+        "who": "58, lost the house in the Eaton fire. Retired transit supervisor, competent with a laptop, has never used an inventory app. Working from the United Policyholders material and a carrier proof-of-loss deadline. The research's second user: 'reconstructing from memory, against a carrier deadline, with no house to walk through, from a hotel room.'",
+        "context": "Extended-stay hotel, 23:15, borrowed 1280px laptop, then his phone at 414px in bed. Eleven days until proof of loss. His wife is reading item names off a list she wrote on hotel notepaper.",
+        "task": "Get roughly 400 remembered items typed in, room by room, and produce something the adjuster will accept.",
+        "verdict": "Entered about 90 items over two evenings and then stalled — not because of a bug, but because the app is built for the job he cannot do any more and produces the wrong file for the job he has.",
         "delights": [
-          "She found the gear icon in the header without prompting and understood the panel immediately. Largest took the root font from 16px to 24px, and the whole layout scaled with it — page overflow stayed at 0px on all four tabs at 414px. axe on the open panel: 0 violations.",
-          "The permanent tick slot on each option meant she could see which setting was on without leaning in. High contrast and Warm tint both applied cleanly (verified: data-contrast=more, data-warmth=3, secondary text went to 15.97:1).",
-          "Contrast on the coloured controls is genuinely fine and she never mentioned it: the active tab and the selected room chip both measure 5.22:1, and the 'no photo' placeholder 5.4:1. Nothing here is the washed-out state badge she expected.",
-          "At Largest, the 'no photo' label grew from 10.4px to 15.6px — the one piece of tiny type that does scale."
+          "It is fast at his scale. 300 items render in 43ms, the adjuster's value-sorted PDF for a 200-item inventory comes out in 205ms, and nothing stuttered.",
+          "The value-descending list is the right idea and reads like a document, not a screenshot.",
+          "Money entry is forgiving: '$3,000', '2 500', '1,234.56' and even the European '1.234,56' all parse to the right number. He typed values the way he thinks about them and the app kept up."
         ],
         "frictions": [
           {
-            "what": "The pencil buttons she has to hit to edit anything are 36px tall AT LARGEST TEXT (measured: 43×36 with data-text=xxl). They are 36px at every setting, because .btn.small hard-codes min-height:36px instead of using --tap. The room filter chips reach 37px. The ‹ Back button, the tip pill and the settings gear are all 36px.",
+            "what": "Every one of his items is marked 'no photo' — a grey placeholder on every row and an outlined empty box in the PDF — because his possessions burned. The Capture tab, with its 📷 emoji and full-width camera button, is the default landing screen every time he opens the app and after every reload.",
             "severity": "blocker",
-            "whyItMatters": "She turned the text up because of her eyes and her hands, and the app's answer was to make the labels bigger while leaving every target the same size. That is the comfort panel visibly failing at the thing it exists for. With a tremor, a 36px pencil sitting in a row next to nothing else is the difference between editing the painting and scrolling the page."
+            "whyItMatters": "The research is explicit that this is a second, unserved job and that 'in loss mode a missing photo is the normal case'. Presenting a camera to a man whose house is gone, and then grading his record as deficient for not using it, is the cruellest possible default. He said the app 'keeps telling me what I don't have.'"
           },
           {
-            "what": "She retyped the value on the painting and fat-fingered it — '1,2OO' with a letter O. Save closed the dialog and the row now reads 'Living room · SN AB-114' with no money on it at all. Measured: parseValue('1,2OO') returns null, app.js does `parseValue(...) || 0`, the item is stored at 0 cents, and nothing is said. The old $503.79 is gone.",
+            "what": "There is no quantity field. Six dining chairs is either six identical rows typed six times or one row that understates the loss. There is also no condition, no brand/model, no category, and one single 'Value ($)' that has to stand in for both what he paid and what it costs to replace.",
             "severity": "blocker",
-            "whyItMatters": "This is an insurance document. A value that silently becomes zero is worse than a value that fails to save, because the total on the adjuster's PDF still looks plausible — it is just smaller. She had no toast, no red field, no 'that does not look like a number'. The research's unforgivable-bug quote is about a photo going missing on save; this is the same bug pointed at money."
+            "whyItMatters": "State Farm's own Contents Inventory Aids ask for 'Quantity, age, condition and notes'; claim guidance treats original cost and replacement cost as separate columns. The fields the carrier will ask him for are not in the app, so the export cannot answer the form he has to fill in."
           },
           {
-            "what": "At Largest text the tab strip no longer fits: nav.tabs measures 448px of content in a 382px scroller and 'Export' runs to x=464 against a 414px viewport — 50px of it off the right edge, with no fade, arrow or partial-tab peek. Same shape at 320px (Export right edge 360 against a 320px viewport).",
+            "what": "The Export tab calls the value-sorted PDF 'the format insurance adjusters ask for' (app.js:367). There is no CSV and no spreadsheet anywhere — the three exports are two PDFs and a .json backup.",
+            "severity": "blocker",
+            "whyItMatters": "Verisk's XactContents and ClaimXperience both ingest Excel, and Xactware's own guidance is that the spreadsheet gets sent to the insured to fill in. The app makes a confident claim that the sources contradict, and then hands him the one format that guarantees somebody retypes his 400 lines."
+          },
+          {
+            "what": "Line items and the total do not agree on the adjuster's own page. fmtCents rounds to whole dollars (model.js:42), so a $19.99 item prints as $20 in every row while the total is computed from the true cents. Measured on 312 items at $19.99: the rows print $6,240, the Total line prints $6,237, the true figure is $6,236.88.",
             "severity": "major",
-            "whyItMatters": "Export is the entire product. Turning the text up — the thing she did to be able to use the app at all — is what pushes the export tab off her screen. She could still see a sliver of it and guessed; someone less determined would conclude there are three tabs."
+            "whyItMatters": "He is handing this to a person whose job is to find reasons to pay less. A document whose own column does not sum to its own total invites exactly the 'excessive proof' response the claim-guidance sources describe."
           },
           {
-            "what": "The item dialog opens with focus on 'Replace photo' (verified: activeElement === iRephoto), and at Largest its content is 1,120px tall inside an 808px box, so Delete / Cancel / Save are below an internal scroll she has to find.",
-            "severity": "minor",
-            "whyItMatters": "The first thing the dialog offers her is the one action that overwrites the photo she already took. The field she opened it for — Name, or in her case Value — is three stops further down."
+            "what": "By item 90 he could not find anything. There is no search field anywhere in the app, no sort control, and the Items tab renders every row in reverse-insertion order. Measured at 300 items: one list, 26,078px of scroll, and the room-filter chips and tab bar both scroll away off the top.",
+            "severity": "major",
+            "whyItMatters": "His wife reads a name off the notepad and he has to establish whether it is already in. At 400 items that is unanswerable, so he either duplicates or skips. The research names this as the thing that 'will make a 300-item inventory feel broken'."
           }
         ]
       },
       {
-        "name": "Adaeze Nwosu",
-        "who": "44, lost the house in the Eaton fire, now four weeks into a contents claim. Household is bilingual — a good half of the furniture and art in her spreadsheet is named in Igbo and Japanese, because that is what her family calls those objects. The research's second user: reconstructing from memory against a proof-of-loss deadline.",
-        "context": "Extended-stay hotel, 22:00, borrowed 1280px laptop, exhausted. The carrier's adjuster wants a contents list in ten days and has already sent her an Excel template.",
-        "task": "Get 300-odd remembered items into something she can send the adjuster, and get the PDF to her public adjuster tonight.",
-        "verdict": "She could enter the items — the app never made her feel bad about having no photos, which she noticed and was grateful for. Then the export handed her a document with her own family's furniture printed as rows of question marks, and nothing the adjuster's system can actually ingest.",
+        "name": "Dolores 'Dee' Aranda",
+        "who": "71, low vision (macular changes) and a mild essential tremor. Retired school administrator. Doing this at her daughter's insistence after the wildfire news. Confident with an iPad, deeply unconfident that she will not 'press the wrong thing'. This is the comfort-panel persona.",
+        "context": "Her kitchen table, 10:30, bright window behind her, iPhone at 414px propped against the fruit bowl, later at 320px because she runs iOS Display Zoom. Reading glasses on. No time pressure, low patience.",
+        "task": "Photograph the living room and the china cabinet, then produce a PDF to email to her daughter.",
+        "verdict": "Got 14 items in and made the app genuinely readable. Then could not find the Export button, decided the PDF must be a feature she did not have, and stopped.",
         "delights": [
-          "Nothing in the app celebrates. No confetti, no 'great job', no progress ring. The counters state facts. After four weeks of apps being cheerful at her this was the first one that behaved like a records office, which is exactly the register the research asks for.",
-          "The Export tab's warning banner — 'A local-only inventory that burns up with the house is a cruel joke' — is the sentence that made her trust it, because it is the one thing every other app she tried got wrong at her expense.",
-          "Scale is a non-issue. 300 items with photos: Items tab rendered in 224ms, Rooms 77ms, Export 81ms. Reload keeps everything. Zero console errors across every run.",
-          "The full report does emit an 'Unsorted' page for items whose room was deleted, so nothing she typed disappears from the PDF."
+          "She found the settings control in the header without being told, and it worked. Setting Text size to Largest took the root font from 16px to 24px and the whole layout scaled with it — measured zero horizontal page overflow at both 414px and 320px, and axe returned zero violations with the panel open.",
+          "Warm tint on High made the bright-window glare bearable without washing out the photographs of her china.",
+          "Contrast is genuinely good everywhere she looked: the active tab is 5.22:1, the grey secondary line under each item name is 5.85:1 at 15px, the 'no photo' placeholder is 5.4:1. Nothing was grey-on-grey."
         ],
         "frictions": [
           {
-            "what": "Non-Latin item names print as question marks in BOTH PDFs. Verified against real pdf-lib font metrics: '花子の茶箪笥 (tansu chest)' is drawn as '?????? (tansu chest)'; 'Диван из Москвы' as '????? ?? ??????'. pdf.js:13 replaces every codepoint outside WinAnsi with '?'. Accented Latin survives ('Émilie Ångström-Ñuñez' is intact); CJK, Cyrillic, Greek, Arabic, Hebrew and Devanagari do not.",
+            "what": "At Largest text the Export tab is off the right-hand edge of the screen. Measured: nav.tabs is 382px wide holding 448px of content at 414/Largest, so the Export button's right edge sits at 464px and it is entirely invisible. At 320px with default text it is also hidden (56px of overflow). At 320px with Largest text, both Rooms and Export are gone (160px hidden). There is no arrow, no fade, no scrollbar — the strip does not look scrollable.",
             "severity": "blocker",
-            "whyItMatters": "The PDF is the exhibit she hands a stranger who decides what she is paid. Six lines reading '??????  $2,500' is not a rendering nit — it is an itemised claim that looks fabricated. The research warns that 'some insurers use vague home inventory checklist information to reduce the value of your claim'; this app manufactures the vagueness itself."
+            "whyItMatters": "She turned the text up because she needs it, and doing so hid the one tab that produces the thing she came for. She concluded the PDF was not available to her. The same defect took a blocker in the seating-chart review; this app has it on the two most common phone widths."
           },
           {
-            "what": "There is no CSV or spreadsheet export. The three exports are a full-report PDF, a value-sorted PDF, and a .json backup (verified: exactly three .exportcard rows). The value-sorted PDF is labelled in the UI as 'the format insurance adjusters ask for'.",
-            "severity": "blocker",
-            "whyItMatters": "Her adjuster emailed her an Excel template, which is what Xactimate/XactContents and ClaimXperience actually ingest, and what State Farm ships across 39 room templates. The app's own copy tells her the PDF is what they want; it is not, and the consequence is that someone retypes 300 rows or she does. The research calls this a verified gap and 'one afternoon of work'."
-          },
-          {
-            "what": "Every item is one row with one value. There is no quantity, no condition, no brand/model, no separate original vs replacement cost — the model is {name, room, serial, purchaseDate, valueCents, notes}. 'Eight dining chairs' is either eight rows she types eight times or one row that is wrong.",
+            "what": "The comfort panel scales the type but not the controls. Measured at 414/Largest/Roomy: the ✎ edit buttons are 49×36px, ‹ Back is 91×36, the settings button itself is 36×36, the Tip jar link 36px, the export PDF buttons 51×36, and the tab buttons 49px tall. The design system floor is 44px.",
             "severity": "major",
-            "whyItMatters": "The carrier's form asks for quantity, age and condition explicitly. Working from memory in a hotel room, quantity is the fastest multiplier there is and its absence turns a 40-minute job into a four-hour one — while the single value field silently conflates what she paid with what it costs to replace, which is the number a replacement-cost policy actually pays on."
+            "whyItMatters": "With a tremor, a 36px-tall pencil sitting 10px from nothing else is a coin toss, and the coin-toss consequence in the item dialog is a Delete button. Making the words bigger while leaving the targets small is the specific failure the comfort panel exists to prevent."
           },
           {
-            "what": "A 300-item list is 26,556px of scroll — 29.5 screenfuls — with no search field, no sort control, and neither the tab strip nor the room filter chips sticky (both position:static). At the bottom of the list the tabs are off-screen entirely.",
+            "what": "Opening an item at 320px with Largest text produces a dialog 294×648px containing 1,166px of content — it scrolls, and the button row at the bottom stacks Delete, Cancel, Save as three identical 256×66px blocks with Delete on top. Focus on open lands on 'Replace photo', not the Name field, and the dialog has no aria-labelledby.",
             "severity": "major",
-            "whyItMatters": "She types an item, remembers she may already have entered it, and has no way to check except scrolling. The research is blunt: 'a 400-item list stops being browsable and becomes a database you cannot query,' and search is the one thing every credible competitor has."
+            "whyItMatters": "She scrolls to the bottom to save and the first full-width button under her thumb is the one that destroys the item and its photos, with no undo behind it. '.btn.danger' changes only the text colour, so at her contrast setting it reads as one more grey button."
           },
           {
-            "what": "Item names in the full report are truncated by character count, not measured width. Verified: a 48-character wide name renders 375.4pt into a 252pt cell; the right-hand column's name starts at x=314 and ends at x=689.4 on a 612pt page — 77pt off the edge of the paper.",
-            "severity": "major",
-            "whyItMatters": "The adjuster PDF gets this right (it truncates by measured width with an ellipsis). The full report — the one with the photographs, the one she is proudest of — overlaps its two columns and runs names off the sheet whenever an item has a long descriptive name, which is exactly what you write when you are describing something that no longer exists."
+            "what": "The 'no photo' placeholder is 10.4px text inside a 52×52px box — the smallest type in the app, on exactly the rows she needs to notice.",
+            "severity": "minor",
+            "whyItMatters": "She could not read it at all and assumed those rows were still loading. The one piece of per-item state the app does show is the one piece she cannot see."
           }
         ]
       },
       {
-        "name": "Hector Delgado",
-        "who": "29, renter, moving out of a flat where the landlord is already talking about the kitchen worktop. Android phone, everything lives in Google Photos, takes photos before he thinks about apps. Found this because it does not need an account.",
-        "context": "Empty flat, evening, phone at 414px, one hand, a suitcase in the other. Forty minutes before he hands the keys back.",
-        "task": "Document the condition of six rooms using photos he already took this morning, then export something dated he can email to the letting agent.",
-        "verdict": "Could not use his existing photos at all, and the two he did manage to attach silently saved with no photo. He does not know that yet.",
+        "name": "Desmond Ofori-Atta",
+        "who": "49, quantity surveyor, methodical, the kind of user who reads the footer. Took the app's own promise seriously — 'a folder of static files and a .json file you hold', 'boring on purpose', readable in a text editor — and treats the backup file as the real asset. Owns two properties and keeps a March export in Dropbox.",
+        "context": "Home office, weekday evening, 1280px desktop, two hands, unhurried. Migrating to a new laptop and tidying up as he goes.",
+        "task": "Restore his backup on the new machine, fix a room name he had mistyped throughout, and re-import.",
+        "verdict": "Destroyed his own inventory twice in fifteen minutes, both times through the door the app told him to use, and both times the app said the operation had succeeded.",
         "delights": [
-          "No account, no cap, no upsell, nothing asking for a card. He got from the URL to a named inventory in under fifteen seconds.",
-          "Deleting a room moves its items to 'Unsorted' instead of destroying them, and the PDF still prints them.",
-          "The .json backup is human-readable and re-importable, and a deliberately malformed file is refused politely: 'That file doesn't look like an inventory backup.'"
+          "The backup file really is plain, readable JSON with the photos inline, and importing a good one is instant and unambiguous.",
+          "Genuinely malformed files are handled well: a truncated file and one missing the items array are both refused with 'That file doesn't look like an inventory backup.' — no crash, no half-import.",
+          "Nothing hostile got through. A backup carrying photo:'javascript:alert(1)' imports with the image simply blank (safeSrc gates src to data:image/*), and no payload in any field produced a script node."
         ],
         "frictions": [
           {
-            "what": "The photo input is `<input type=\"file\" accept=\"image/*\" capture=\"environment\">` (index.html:1330). On Android Chrome and several mobile browsers `capture` forces the camera and removes the gallery option entirely.",
+            "what": "He opened the backup in a text editor to fix the room name, deleted one item block sloppily and left a bare `null` in the items array, then re-imported. Measured: the import succeeds and routes into the inventory, then 'TypeError: Cannot read properties of null (reading valueCents)' throws in totals() (model.js:59) every time the home screen renders. The home screen is left with the hero and nothing else — no 'Your inventories' card, no inventory rows, and no Restore control. Verified across two reloads: still bricked.",
             "severity": "blocker",
-            "whyItMatters": "He is standing in an empty flat with the photographs already on his phone from this morning. The app's only way in is to re-photograph everything, and for receipts — which live in an email or a photo library, never in front of the camera — there is no path at all. The 'Add receipt photo' button in the item dialog uses the same input."
+            "whyItMatters": "One malformed row in one file makes every other inventory on the device permanently unreachable, and it takes the import button with it, so he cannot even restore a good backup to recover. The only escape is clearing site data, which deletes everything. This is the worst possible outcome for an app whose pitch is 'this one cannot be switched off'."
           },
           {
-            "what": "Any file the browser cannot decode is accepted silently and saved with no photo. Verified twice: a .heic file and a .txt file both produced an empty preview box, flipped the button to 'Retake photo', and saved the item with the 'no photo' placeholder and a counts line reading '0 photographed'. No toast, no console error, nothing.",
+            "what": "Restoring his March backup over the live inventory replaced it silently. Measured: 300 items before, imported a same-id backup containing 1 item, IndexedDB afterwards holds one record with 1 item. The toast read 'Imported “Real house — six months of work”'. No warning, no merge, no undo, no second copy.",
             "severity": "blocker",
-            "whyItMatters": "The app tells him it worked — the preview appears, the button changes state — and then stores nothing. This is verbatim the NAIC review the research quotes as the category's unforgivable bug: 'After filling in the form and having my pictures showing at the top, I hit save… some of the items' pictures are missing.' HEIC is the default iPhone camera format, so any photo shared out of an iPhone album is a live trigger."
+            "whyItMatters": "importFile keeps obj.id and writes straight over the existing record (app.js:173). Restoring an old backup is the single most likely reason anyone opens that button, and doing it costs everything added since. 299 items vanished behind a success message."
           },
           {
-            "what": "There is no last-export date, no install prompt, and no storage persistence. Measured: navigator.storage.persisted() === false, and navigator.storage.persist / estimate / beforeinstallprompt / navigator.share appear zero times across app.js, index.html and sw.js.",
-            "severity": "major",
-            "whyItMatters": "His whole deposit case now lives in one Safari-or-Chrome tab. WebKit clears script-writable storage after seven days of browser use without returning to the site, and installed apps are exempt — so the one setup step that would save him is never offered. And with no navigator.share() on Android the export lands in Downloads rather than the share sheet that would actually email it."
+            "what": "A backup with a non-numeric value — the sort of thing a text-editor edit produces — imports happily and puts '$NaN' on the inventory header line. Measured: {valueCents:'lots'} renders '1 items · 0 photographed · $NaN'.",
+            "severity": "minor",
+            "whyItMatters": "The app invites hand-editing and then does not defend against the obvious consequence. NaN on screen is also the thing that makes a careful user stop trusting every other number in the app."
           },
           {
-            "what": "Deleting a room orphans its items to 'Unsorted', but there is no 'Unsorted' chip in the Items filter. Measured: 25 orphaned items, 12 chips, none of them Unsorted.",
+            "what": "There is no undo behind anything. Deleting a room, an item, or an entire inventory-with-all-its-photos is guarded only by window.confirm(). window.SWS.undo exists — sws-ui.js is loaded on the page and provides it — and app.js never calls it once.",
             "severity": "major",
-            "whyItMatters": "In an app with no search, 25 items become findable only by scrolling the All list reading sub-lines. The PDF knows about Unsorted; the screen does not."
+            "whyItMatters": "The shared runtime that solves this is already sitting in the page, unused. And deleting a room quietly reassigns its items to 'Unsorted', which is not a filter chip, so those items become findable only by scrolling the unsorted 'All' list."
           }
         ]
       },
       {
-        "name": "Wanda Osei-Bright",
-        "who": "57, moving her mother into assisted living and inventorying the family house before the estate sale. Two devices — her own laptop and her mother's old tablet — and she has already restored the same backup onto both. Careful, methodical, keeps notes.",
-        "context": "Her mother's dining table, three inventories on the go (the house, the storage unit, and her own place), 1280px laptop, afternoon. No deadline but a lot of grief in the room.",
-        "task": "Open the house inventory she has been building for a fortnight and add the contents of the china cabinet.",
-        "verdict": "Opened the app and her three inventories were gone. All of them. The data was still on disk, but nothing on screen said so and there was no way back in.",
+        "name": "Aiyana Redcloud",
+        "who": "29, renter, phone-only — no laptop in the house. A 64GB Android that is permanently near-full; she deletes photos to install things. Documenting the flat for renters' insurance after a break-in on her street.",
+        "context": "Sunday afternoon, moving room to room, 414px phone, one hand, the other holding the cat. Data saver on. She will not think about this app again for two years, which is the whole point of it.",
+        "task": "Photograph everything worth more than about $50 — she estimates 120 items — and keep it somewhere it will still be in two years.",
+        "verdict": "Lost five items without knowing it, and the copy she is relying on is sitting in a browser tab that nothing has asked the operating system to protect.",
         "delights": [
-          "The home screen sorts by most recently updated and shows item count and value per inventory, which is exactly the orientation she needs across three properties.",
-          "Persistence is otherwise solid: a 400ms debounced write plus a pagehide flush, and reloading mid-task loses nothing but the half-typed field.",
-          "When a save genuinely fails the app does say so. Simulating a QuotaExceededError produced '⚠ Couldn't save to this device — storage may be full. Export your backup NOW.' and the toast stayed up for the full 8 seconds."
+          "Point, shoot, name, next genuinely takes about ten seconds an item once you are moving.",
+          "Rapid or shaky tapping on Save & next is safe: five real taps in a row produce exactly one item, the rest correctly toast 'Give it a name'. No duplicates reached storage.",
+          "Photographing a receipt on its own, filling the frame, comes out fine — measured 17.9px cap height at 1280/0.8, fully legible. The compression only fails on small details inside big scenes."
         ],
         "frictions": [
           {
-            "what": "One malformed record hides every inventory. Verified: three good inventories listed normally; writing a fourth record with rooms:null made the home screen render the hero and NOTHING else — 0 rows, no 'Your inventories' card, no 'Restore' card, and an uncaught 'TypeError: inv.rooms is not iterable'. All four records were still in IndexedDB and #/i/houseB still opened fine.",
+            "what": "When the phone runs out of room the app lies to her. Simulated a full device by failing IndexedDB writes after three successful items. Measured: item 4 correctly raised '⚠ Couldn't save to this device — storage may be full. Export your backup NOW.' Items 5, 6, 7 and 8 each said 'Saved — next one' and the header counted up to '8 items', because the warning is throttled to once per 60 seconds (app.js:88) while the success toast is unconditional (app.js:271). After reload, three items survived. Five were gone, four of them reported as saved.",
             "severity": "blocker",
-            "whyItMatters": "renderHome() calls totals(r) inside the loop and appends the section after it, so one bad row throws before anything is appended and takes the import/restore path down with it. To her, an app whose entire promise is 'this will still be here in three years' has eaten a fortnight of work and offers no error, no recovery and no way to reach the data that is sitting right there. model.js:54 spreads `...inv` over its defaults, so an explicit null beats the default [] — which a partially written save, a hand-edited backup or any future schema change will produce."
+            "whyItMatters": "'After filling in the form and having my pictures showing at the top, I hit save… some of the items' pictures are missing' is the review that put the free government app at 2.1 stars. This build reproduces it, and adds a success message on top. The research calls losing a photo on save 'the unforgivable bug in this category'."
           },
           {
-            "what": "Nothing is reversible anywhere. The ✕ that destroys an entire inventory and every photo in it sits 12px from 'Open' in the same row, both 36px tall, behind one native confirm(). Deleting an item: 12 rows → 11, empty toast, no undo. Deleting an inventory: 1 → 0, no toast at all. window.SWS.undo is loaded on the page and app.js calls it zero times.",
+            "what": "Nothing in the app calls navigator.storage.persist(), navigator.storage.estimate(), or handles beforeinstallprompt — verified by grep across index.html, app.js, model.js, store.js and sw.js. Measured in the browser: navigator.storage.persisted() returns false. There is no 'Add to Home Screen' step anywhere, and the manifest is linked but never promoted.",
             "severity": "blocker",
-            "whyItMatters": "The research's own note: 'the photo you just deleted may be the only one of an object that no longer exists.' She is doing this for a parent who is losing her memory, in a house that is about to be emptied. A 37px ✕ next to Open, guarded by a dialog she will learn to dismiss, is the worst possible geometry for the most destructive action in the product."
+            "whyItMatters": "WebKit deletes all script-writable storage after seven days of Safari use without interacting with the site, and home-screen-installed apps are exempt. She will not open this app for two years. For a product whose premise is 'make this now, need it in three years', not asking for persistent storage and not asking to be installed is the difference between an inventory and nothing."
           },
           {
-            "what": "A hand-edited or legacy backup can put '$NaN' on the screen. Verified twice — a record with valueCents as a string rendered '1 items · 1 photographed · $NaN', and importing a crafted backup landed her in an inventory whose header read the same. importFile() checks only that obj.items is an array; item shapes are never validated.",
+            "what": "Photos are stored as base64 inside one IndexedDB record and the whole record is deep-cloned on every change. Measured with 200 photographed items: the record is 146.5MB, and typing in the inventory-name field costs 514ms of blocked main thread per keystroke (10 keystrokes, 5,142ms) because touch() runs JSON.parse(JSON.stringify(inv)) on the entire inventory on every input event.",
             "severity": "major",
-            "whyItMatters": "She restores backups between two devices as a matter of routine. '$NaN' where the documented value should be is the moment she stops believing any number in the app."
+            "whyItMatters": "Renaming her inventory made the phone feel broken. And 200 photos at 146MB against a browser origin quota is not an abstract concern — it is the mechanism behind the failure above, and the app never tells her how much room is left."
           },
           {
-            "what": "The active tab is not in the URL. Switching to Items keeps the hash at #/i/big, so browser Back from the Items tab exits the whole inventory to the home screen (verified) and every reload drops her back on Capture.",
+            "what": "She took a photo of the bike, then hit ‹ Back before naming it. Measured: the staged photo is silently discarded — coming back to the inventory shows an empty capture panel, no warning, no toast, nothing.",
+            "severity": "major",
+            "whyItMatters": "It is the same class of loss as the save failure, at a smaller scale, and it happens constantly when a phone call or a knock at the door interrupts a capture run."
+          },
+          {
+            "what": "Typing a value the parser rejects saves the item with no value at all and says nothing. Measured: '100000000', '1e9', '-40' and 'abc' each produce a row whose secondary line reads only 'Living room' — no value, no error, no hint that anything was dropped.",
             "severity": "minor",
-            "whyItMatters": "With three inventories open across two devices, Back meaning 'leave the house entirely' is a small, constant tax on orientation."
+            "whyItMatters": "Silent coercion in the one field that decides what the claim is worth. She would rather be told."
           }
         ]
       },
       {
-        "name": "Ray Kupiec",
-        "who": "61, independent public adjuster. Receives contents documentation from strangers every week, prints it, marks it up in red pen, and sits across a table from a carrier's adjuster with it. Will never open the app. Reads paper.",
-        "context": "Office, laser printer, reading glasses, 08:30. Ten minutes per file.",
-        "task": "Read the client's inventory, verify the high-value items have serials and evidence, and mark what needs re-shooting before the carrier sees it.",
-        "verdict": "The adjuster's list is the best free one he has been handed. The photo report is the one he had to send back.",
+        "name": "Tomás Iriarte",
+        "who": "41, blind since his twenties, NVDA on Windows and VoiceOver on iPhone, a fast and impatient screen-reader user. His contents insurer asked for an inventory; he found this app because it is free and has no login to fight with.",
+        "context": "Weeknight, Windows desktop at 1280px, NVDA at about 400 words per minute, headphones. Two hands, keyboard only, no mouse.",
+        "task": "Add the front room and the study — about 45 items — then export the adjuster's list.",
+        "verdict": "Finished, and got the PDF, but described the experience as 'shouting at me'. Every save re-read a large part of the page to him, and he never knew which tab he was on.",
         "delights": [
-          "The adjuster's list is laid out correctly and the columns do not collide: names truncate by measured width with an ellipsis (fit() at pdf.js:120), room caps at 90pt, serial at 100pt, and values are right-aligned to a clean 566pt edge with a bold Total row. Verified against real font metrics across five rows including an 80-character name.",
-          "It is sorted highest value first, which is how he reads a file, and the header line states the total documented value and the generation date.",
-          "The cover page paginates instead of running off. A 40-room inventory produced a 42-page document with the room summary spilling correctly onto page two and the lowest text baseline at y=78 — inside the 46pt margin.",
-          "Every room becomes its own page with a per-room item count and subtotal in the top right. That is the structure he would have asked for."
+          "Everything is a real button or a real input; nothing is a div pretending. Keyboard reachability came back clean: 7 focusable elements on the home screen, none unreachable, none unnamed, no placeholder-only labels.",
+          "The comfort panel is a proper fieldset of proper radios and axe found zero violations with it open.",
+          "The delete buttons on rows carry aria-labels, and the room and page-size selects are labelled."
         ],
         "frictions": [
           {
-            "what": "Serial plates in the photo report are unreadable on paper. Measured end to end: a 4032×3024 phone photo is downscaled to 1280×960 at capture, and the PDF draws it at 146.7 × 110pt — 2.04 inches wide. A model/serial sticker occupying 2% of the original frame height ends up with a 2.2pt cap height on the printed page.",
+            "what": "<main id=\"view\"> carries aria-live=\"polite\" and the entire view is rebuilt with replaceChildren() on every render. Measured on the Items tab with 300 items: the live region holds 10,904 characters / 2,521 words, and it is re-announced on every tab switch, every filter change, every item save and every dialog save.",
+            "severity": "blocker",
+            "whyItMatters": "Saving one item makes NVDA start reading the inventory. He cannot interrupt it usefully because the next save starts it again. This makes the app's core loop unusable at any real size — and #toast, which is already role=status, is right there for the discrete announcements the app actually wants to make."
+          },
+          {
+            "what": "Focus is destroyed on every render — measured: document.activeElement is BODY after each Save & next, and the name field is 9 Tab presses away.",
+            "severity": "blocker",
+            "whyItMatters": "45 items cost him roughly 400 extra keystrokes, each one through a tab strip and a room selector he has already dealt with. The sighted attrition problem and the keyboard accessibility failure are the same bug."
+          },
+          {
+            "what": "The inventory-name field at the top of the editor is an unlabelled <input> — axe flags it 'label', critical, on all four tabs, in both light and dark.",
             "severity": "major",
-            "whyItMatters": "The photo of the serial plate exists to prove the model. At 2.2pt it proves nothing, and he cannot tell whether the client shot it badly or the app threw the resolution away — it was the app, at capture, irreversibly. He marks the file 'reshoot serials', which is a second trip through a house that may no longer exist."
+            "whyItMatters": "It reads as 'edit text, Nav test' with no indication of what it names. It is also the first control after the Back button, so he hit it on every screen."
           },
           {
-            "what": "Item names in the photo report overlap and run off the page. Verified: names are cut with .slice(0,48) rather than measured, so a wide 48-character name draws 375.4pt into a 252pt cell — the left column's name runs under the right column's photo, and the right column's name ends at x=689.4 on a 612pt page.",
+            "what": "The four tabs are plain buttons with no aria-current, aria-selected or tablist semantics; the active one is conveyed only by the .active class's background. The room filter chips have no aria-pressed. Both PDF export buttons have the identical accessible name 'PDF'.",
             "severity": "major",
-            "whyItMatters": "He is reading a two-up photo grid where the captions collide and some are simply missing off the right edge. On the one document whose job is to say 'this photograph is of this object', the caption is the least reliable element on the page."
+            "whyItMatters": "He could not tell which tab he was in, could not tell which room filter was applied while it was silently hiding most of the list, and had to guess which of two identically-named buttons produced the adjuster's list."
           },
           {
-            "what": "Every value is printed in US dollars regardless of who made it. fmtCents() hardcodes currency:'USD', and the edit dialog's label is literally 'Value ($)'. Under a French locale the same call emits a U+202F narrow no-break space, which pdf.js safe() strips: '1 235 $US' prints as '1?235 $US'.",
+            "what": "After an export the tip-jar link is injected as an <a> inside #toast — a role=status region that removes itself after 7 seconds. Measured: 64×20px, focusable, at the very end of the DOM.",
             "severity": "minor",
-            "whyItMatters": "He handles Canadian files. A CAD inventory that prints 'US$1,235' per line and 'US$412,000' as a total is a document he cannot submit, and there is no setting anywhere to change it."
-          },
-          {
-            "what": "The generated date prints via toLocaleDateString() with no locale hint — '8/9/2026'.",
-            "severity": "minor",
-            "whyItMatters": "It is the only thing on the sheet telling him whether this is the current version of a file that gets revised four times, and it is ambiguous between August 9th and September 8th."
-          },
-          {
-            "what": "Browser print is unhandled. Verified with print media emulation on the Items tab: nav.tabs is VISIBLE, the ‹ Back button is VISIBLE, and all 15 pencil edit buttons print. The base print block hides .seg, and this app uses nav.tabs.",
-            "severity": "minor",
-            "whyItMatters": "Clients who cannot find the export hit Ctrl+P and send him a sheet with a tab strip and fifteen pencil icons on it. Rows do at least break correctly (break-inside: avoid)."
+            "whyItMatters": "Interactive content inside a live region is a defect in both directions: he cannot realistically reach it, and its presence means the status region announces a control rather than a status. There is no skip link either — .skip is styled in the base stylesheet (index.html:840) but no skip element exists in the body."
           }
         ]
       }
     ],
     "consensus": {
       "worksWell": [
-        "Text safety is genuinely solid. Twelve hostile payloads through the item name field — script tags, an onerror img, 500 chars, RTL, combining marks, '=1+1', '__proto__' — produced 0 injected scripts, 0 non-data: image sources, no title hijack, 0px page overflow, no prototype pollution, and names truncate to 80 characters. Whitespace-only is correctly rejected. safeSrc() also blocked a 'javascript:' photo URL smuggled in through a crafted backup file.",
-        "Contrast is correct on every coloured surface, which is unusual for this portfolio. Active tab 5.22:1, selected room chip 5.22:1, 'no photo' placeholder 5.4:1, secondary text 15.97:1 under High contrast. Nothing here relies on a washed-out fill.",
-        "Speed and persistence at real scale. 300 items with photos: Items 224ms, Rooms 77ms, Export 81ms, Capture 83ms; 30 sequential saves at 68ms each; reload keeps everything via a 400ms debounce plus a pagehide flush. Zero console errors across every scenario in this review.",
-        "The adjuster's PDF is well built. Measured-width truncation with ellipsis, non-colliding columns, right-aligned values, a bold Total row, value-descending order, and a cover page that paginates cleanly at 40 rooms (42 pages, nothing off-sheet).",
-        "The comfort panel works and is reachable. axe: 0 violations with it open, Largest takes the root from 16px to 24px, High contrast and warmth 3 apply, and page overflow stays 0px on all four tabs at 414px, 320px, roomy and 1280px.",
-        "Save failure is not silent. A simulated QuotaExceededError produced a visible 8-second warning telling the user to export immediately — better than the category norm.",
-        "The tone is right and it matters. No celebration, no counters that congratulate, and the Export tab's 'a local-only inventory that burns up with the house is a cruel joke' is the most honest sentence in the portfolio."
+        "It is genuinely offline and genuinely free of any payment surface. Service worker registers, the app plus pdf-lib boots and generates both PDFs with the network off, no account, no ad, no item counter, no upgrade prompt anywhere. Against a category whose defining events are Encircle's 17 December 2025 sunset and Sortly's repricing, that is the product.",
+        "Fast capture is the right shape and it is fast. Room selector that does not reset, one big camera button, name, value, Save & next. 300 items render in 43ms; the adjuster's PDF for a 200-item photographed inventory takes 205ms and 19KB; the full illustrated report takes 426ms and 2.1MB.",
+        "Text and data safety are solid. The hostile-text battery came back clean — no injected script or img nodes, no title hijack, no NaN or [object Object] on screen from any typed input. A malicious backup carrying photo:'javascript:alert(1)' imports with the image simply blank because safeSrc gates src to data:image/* (app.js:42). Truncated and items-less backups are refused with a plain-English message.",
+        "Money parsing is unusually tolerant and correct: '$3,000', '2 500', '1,234.56' and the European '1.234,56' all land on the right integer cents.",
+        "Colour and contrast pass everywhere measured, in the app's own palette: active tab 5.22:1, secondary item line 5.85:1 at 15px, selected chip 5.22:1, 'no photo' 5.4:1. axe returns exactly one violation across all four tabs in both light and dark, and zero with the comfort panel open.",
+        "The comfort panel does the hard part. Largest text takes the root from 16px to 24px and the whole layout scales with it — zero horizontal page overflow at 414px and at 320px, and no clipping of content.",
+        "Rapid or shaky tapping is safe. Five real taps on Save & next produce exactly one stored item; the item dialog stages photo changes so Cancel discards them.",
+        "A receipt photographed on its own, filling the frame, survives compression intact — 17.9px cap height at 1280/0.8, fully legible in the stored image."
       ],
       "hurts": [
-        "One malformed record blanks the entire home screen. Three good inventories plus one row with rooms:null renders the hero and nothing else — no list, no Restore card — with an uncaught TypeError. The data is intact in IndexedDB and unreachable through the UI. For an app whose promise is 'still here in three years', this is the failure it exists to prevent.",
-        "Undecodable photos are accepted and saved as nothing. A .heic and a .txt both showed a preview box, flipped the button to 'Retake photo', and stored the item with no photo and no message. This is the NAIC review the research quotes, reproduced exactly.",
-        "Non-Latin item names print as '??????' in both PDFs. Accented Latin survives; CJK, Cyrillic, Greek, Arabic, Hebrew and Devanagari do not.",
-        "An unparseable value silently becomes $0 on save. parseValue('1,2OO') → null → `|| 0`, no toast, no field error, and the previous value is destroyed. Same path for '-500', '1e9', '100000000' and any typo.",
-        "Nothing is reversible. Item delete, room delete and whole-inventory delete are all a single native confirm() with no undo and, for the inventory, no toast at all — with the ✕ sitting 12px from Open at 36px. window.SWS.undo is loaded and never called.",
-        "The full report truncates item names by character count, so captions overlap the next column and run 77pt off a 612pt page.",
-        "A 300-item inventory is 26,556px of scroll with no search, no sort, no sticky tabs and no sticky filter chips — and orphaned 'Unsorted' items have no filter chip at all, so 25 of them are reachable only by reading sub-lines while scrolling.",
-        "The comfort panel cannot fix the targets. .btn.small is pinned at 36px and room chips reach only 37px at Largest text, so the edit, delete, Back, tip and settings controls stay under the 44px floor at the exact setting a user picks because of their hands.",
-        "Focus goes to <body> after every Save & next, every filter chip, every tab switch and every export — and the save button is not disarmed, so a double-tap creates duplicate items.",
-        "<main id=\"view\" aria-live=\"polite\"> wraps the whole application: 5,527 characters and 743 nodes on a 120-item Items tab, replaced wholesale on every tab switch and filter tap. Alongside it: 15 pencil buttons with no accessible name, two export buttons both named 'PDF', no aria-selected or aria-current on the tabs, no aria-pressed on the chips, no accessible name on the item dialog, no skip link, and one axe-critical unlabelled input (the inventory name) present on every tab at every size.",
-        "The photo input carries capture=\"environment\", which on mobile removes the gallery — so existing photos and receipts cannot be attached at all.",
-        "There is no CSV, no quantity, no condition and no replacement-cost field, while the UI calls a PDF 'the format insurance adjusters ask for'.",
-        "Storage is never made durable: persist(), estimate(), beforeinstallprompt and navigator.share appear zero times, and persisted() reports false.",
-        "The standard stress battery reports 'clean' for this app and is measuring almost nothing: createInventory() uses window.prompt(), which Playwright auto-dismisses, so all twelve scenarios ran against the 377-character home screen and never entered an inventory."
+        "The app tells the user their work is saved when it is not. With writes failing, items 5–8 each reported 'Saved — next one' while the header counted up to 8; three of eight survived a reload. The failure warning is throttled to once a minute, the success toast is not.",
+        "One malformed backup permanently bricks the home screen. A bare null in the items array throws in totals() on every home render, leaving the hero and nothing else — no inventory list, no Restore button — across reloads, making every other inventory on the device unreachable and unrecoverable through the UI.",
+        "Restoring a backup silently overwrites the live inventory of the same id. 300 items became 1, reported as 'Imported'.",
+        "The PDF — the artifact the whole app exists to produce — replaces every character outside Latin-1 with '?'. Polish, Turkish, Cyrillic, Chinese, emoji and the euro sign all become question marks in item names, room names and serials, in both exports.",
+        "Long names run off the paper. A 62-character inventory name is drawn at x = -96 on a 612pt page and is clipped at both edges of the cover; item names are truncated by character count rather than measured width, so a long name in the right-hand column of the room grid is drawn to x = 790 on a 612pt page and collides with the neighbouring cell in the left column.",
+        "The Export tab is invisible at 320px, and at 414px as soon as the text size is raised. nav.tabs is a silent horizontal scroller with no affordance; at 320px + Largest, both Rooms and Export are off-screen.",
+        "The whole application is a live region. main[aria-live=polite] plus wholesale replaceChildren means 10,904 characters are re-announced on every save, tab switch and filter change.",
+        "Focus is thrown to <body> on every render — 9 Tab presses back to the name field, on every single item, for both keyboard and screen-reader users. It is simultaneously the accessibility failure and the attrition failure.",
+        "There is no undo anywhere, although window.SWS.undo is loaded on the page and never called. Deleting an inventory destroys every photo in it behind a single confirm().",
+        "There is no search, no sort and no filter beyond room chips. At 300 items that is one 26,078px list in reverse-insertion order.",
+        "Nothing asks for durable storage. navigator.storage.persist(), estimate() and beforeinstallprompt appear nowhere; persisted() is false; there is no install step. WebKit clears an uninstalled site's storage after seven days of disuse.",
+        "The data model cannot answer the carrier's form: no quantity, no condition, no category, no brand/model, and one value field standing in for both original and replacement cost. The Export tab nonetheless calls a PDF 'the format insurance adjusters ask for', and there is no CSV.",
+        "Serial plates inside wide shots do not survive the 1280/0.8 pipeline — 3.7px cap height, measured, on a plate filling 8.4% of the frame.",
+        "Photo-heavy inventories make the app itself slow: 146.5MB for 200 items, and 514ms of blocked main thread per keystroke when renaming, because touch() deep-clones the whole inventory on every input event."
       ],
       "mostWantedNext": [
-        "Normalise every record on read — coerce rooms/items to arrays and valueCents to a number in totals() and getInventory() — and make renderHome() render the list even when one row is bad, with a repairable 'this inventory looks damaged' row instead of a blank page.",
-        "Fail loudly on a photo that will not decode: keep the original bytes, tell the user which file failed, and never let the preview state say 'photo attached' when nothing was stored.",
-        "Unicode-capable PDF output: embed a subsetted TrueType face with fontkit (the app already vendors pdf-lib and ships a woff2) so item names print as themselves.",
-        "SWS.undo on every destructive action, and move the whole-inventory ✕ out of the row next to Open.",
-        "Validate money on the way in: reject a value that does not parse instead of writing 0, and keep the previous value until a good one replaces it.",
-        "A CSV export with the columns carriers ingest — Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo filename — plus quantity and condition on the item, and a photo-folder naming scheme that matches the rows.",
-        "Search, sort and an 'Unsorted' chip in the Items tab, with the tab strip and filter chips sticky.",
-        "An evidence-grade capture path: keep serials, receipts and appraisals at full resolution (or 2400px/0.92), render them large in the PDF, and allow more than one photo per item.",
-        "Drop capture=\"environment\" so the library and Files are available, and add navigator.share() to the export so the backup can actually leave the device.",
-        "Treat durability as product surface: request persistent storage on first save, offer Add to Home Screen with the reason attached, show remaining quota, and stamp an ageing last-exported date on the home screen.",
-        "Give .btn.small, the room chips and the tab buttons min-height:var(--tap) so the comfort panel's Largest setting reaches the controls, not just the labels."
+        "A CSV export whose columns match what carriers and the Xactimate family ingest — Quantity, Description, Brand/Make, Model, Serial, Room, Age/Purchase date, Condition, Original cost, Replacement cost, Photo filename — with the PDF kept as the human exhibit. Every persona who has met an adjuster asked for it and it is the cheapest competitive advantage available.",
+        "An always-visible search field plus sort by value / name / date added, and two saved filters ('missing a photo', 'over $500'). Nothing else changes the feel of a 300-item inventory as much.",
+        "Quantity as a stepper, condition as a three-way control in the carrier's own vocabulary, and separate original and replacement cost — all optional so name-plus-photo stays a two-tap item.",
+        "An explicit 'After a loss' mode that hides the camera, leads with room-by-room recall prompts, stops grading a missing photo as a deficiency, and exports CSV first.",
+        "A close-up capture that keeps full resolution for serial plates, hallmarks, appraisals and receipts, and renders them large in the PDF — plus more than one photo per item.",
+        "Treat installation and re-export as product: request persistent storage on first save, present Add to Home Screen with the seven-day WebKit reason attached, show remaining quota, and put an ageing 'last exported 94 days ago' line on the home screen.",
+        "Tappable 'common in this room' prompt lists — the mechanism behind State Farm's 39 templates and United Policyholders' 3,000-line spreadsheet, and the completion lever that beats the AI walkthrough apps without a model or a server.",
+        "Coverage sub-limit awareness: tag items into the standard special-limit classes and say 'Jewelry documented: $6,400. Typical policy limit: $1,500.' One static lookup table, and the only thing in this category anyone would tell a friend about."
       ]
     }
   },
@@ -267,259 +271,252 @@
     "batteryClean": true,
     "scenarios": [
       {
-        "name": "The standard battery — and what it cannot see",
-        "method": "node design/stress.mjs home-inventory, then re-ran its entry point by hand with a dialog handler to find out where it had actually been.",
-        "result": "0 hard failures, all 12 scenarios reported clean or benign. But it never entered the app: clicking 'Start an inventory' fires window.prompt() at app.js:159, Playwright auto-dismisses it, prompt returns null and createInventory() returns early. Verified: view content 377 chars before the click and 377 after, location.hash still empty. So 'bulk: 200 rapid adds' reported nodes:0 / textLen 534, 'survives reload' compared the home screen with itself, 'boots with corrupt storage' found 'no app storage key to corrupt' (all data is IndexedDB), keyboard reachability saw 7 focusable elements, and axe ran on the hero. Everything in this review below the battery was found in territory the battery cannot reach.",
-        "defect": "The battery's green result for this app is vacuous — a prompt() on the only entry path makes the whole editor invisible to it, and the app's real storage is IndexedDB, which the battery's corruption test does not touch.",
+        "name": "The standard battery — and why it saw almost nothing",
+        "method": "node design/stress.mjs home-inventory, then reproduced its entry path by hand with dialogs dismissed and with them accepted.",
+        "result": "Reported 'clean', 0 hard failures: layout clean at 320/414/1280 and at largest-text and roomy, hostile text clean, numeric edges clean, keyboard reachability 7/7 named, axe clean, no console errors. But every one of those results was measured on 534 characters of home-screen hero copy. 'Start an inventory' calls prompt() (app.js:159); with dialogs auto-dismissed the handler returns immediately, the hash stays empty and nothing on screen changes. 'bulk: 200 rapid adds' reported nodes:0, 'boots with corrupt storage' reported 'no app storage key to corrupt', and 'survives reload' compared 534 chars to 534 chars. Accepting the prompt enters the editor normally and seeds Living room / Kitchen / Bedroom.",
+        "defect": "The app's entry point is a native prompt(), so a browser or profile that suppresses dialogs dead-ends on the primary CTA with no message. It also means the standard battery's clean sheet for this app is close to meaningless and every result below had to be re-established by hand.",
         "severity": "major"
       },
       {
-        "name": "Layout and axe inside the editor at five viewport/comfort combinations",
-        "method": "Seeded a 40-item, 6-room inventory into IndexedDB, opened #/i/big, and visited all four tabs plus the item dialog at 320px, 414px, 414px+text:xxl, 414px+density:roomy and 1280px, running overflow(), offenders(), axe() and smallTargets() at each.",
-        "result": "Page overflow was 0px in all 20 tab/viewport combinations — no sideways page scroll anywhere. axe reported exactly one violation, on every tab at every size: 'label' (critical) on the inventory-name input at app.js:214, which has no label, no aria-label and no placeholder. The item dialog itself was axe-clean at every size, its paired .row fields correctly stack below ~30rem (343px children at 414px, 207px side-by-side at 1280px), but it opens with focus on #iRephoto and has no aria-labelledby and no role.",
-        "defect": "One persistent axe-critical unlabelled input that only exists after JS renders, so it is invisible to any check that does not enter an inventory. Dialog has no accessible name and focuses the photo-overwrite button first.",
-        "severity": "major"
-      },
-      {
-        "name": "Tab strip reachability at 320px and at Largest text",
-        "method": "Measured nav.tabs clientWidth vs scrollWidth and the bounding rect of the last tab at 414px default, 320px default, and 414px with data-text=xxl set through the real comfort panel.",
-        "result": "At 414px default everything fits: client 382, scroll 382, all four tabs on screen. At 320px: 'Export' spans x=285→360 against a 320px viewport — 40px hidden. At 414px + Largest: client 382, scroll 448, 'Export' right edge at 464 against 414 — 50px hidden. overflow-x is auto with no fade, arrow, scroll snap or partial-tab affordance.",
-        "defect": "The Export tab — the product's entire output — is clipped at the narrowest common phone width and at the text size a low-vision user selects. Not fully hidden as in seating-chart, but cut with no affordance.",
-        "severity": "major"
-      },
-      {
-        "name": "300 items with photos: render, scroll and storage",
-        "method": "Seeded 300 items across 12 rooms with 240 photos directly into the 'sws-inventory' IndexedDB store, opened the editor, timed each tab, measured document height and the position of the navigation, and called navigator.storage.estimate().",
-        "result": "Items 224ms / 300 rows, Rooms 77ms, Export 81ms, Capture 83ms. Zero console errors. Document height on the Items tab: 26,556px against a 900px viewport — 29.5 screenfuls. nav.tabs position:static and .chips position:static, so at the bottom of the list the tab strip is off-screen. No search input exists anywhere in the app (0 matches for input[type=search]); the only input on the Items tab is the inventory-name field. Storage: 0 bytes localStorage, 2.10MB IndexedDB against a 2.15GB quota, navigator.storage.persisted() === false.",
-        "defect": "A realistic inventory becomes a 26,000px wall with no search, no sort and no sticky controls. Persistence is never requested, so on WebKit the whole store is eligible for deletion after seven days of not returning.",
-        "severity": "major"
-      },
-      {
-        "name": "Photo fidelity through the app's own capture pipeline",
-        "method": "Rendered a 4032×3024 frame containing a model/serial plate at realistic scale (plate 24% of frame width, text 2% of frame height), ran it through an exact copy of app.js compressImage(), wrote the result to disk, and cropped the plate at 1:1 and at the size the PDF actually draws it. Also measured worst-case compressed size with a high-entropy frame.",
-        "result": "4032×3024 → 1280×960, scale 0.317, 13.7KB for the synthetic frame (a high-detail frame came out at 515KB). At 1:1 in the stored 1280px image the plate is legible — cap height ≈19px. The PDF draws that image at 146.7 × 110pt (measured from the real drawImage call), i.e. 2.04 inches wide, putting the plate's cap height at 2.2pt on paper. The list thumbnail renders it at 52px. Inspected both crops as images: the 1:1 crop reads 'MODEL KDL-65X900F / S/N 4CE0460D0G-2291' clearly; the PDF-cell version is an illegible grey smudge.",
-        "defect": "Compression is applied at capture and the original is discarded, so evidence-grade detail is destroyed before the user can ever check it — and the PDF then renders what survives at 2 inches wide. This is the exact 1-star review the research quotes about the free government app.",
-        "severity": "major"
-      },
-      {
-        "name": "Both PDF generators against real pdf-lib font metrics",
-        "method": "Imported model.js and pdf.js in-page and ran makeInventoryPdf and makeAdjusterPdf through a recorder that wrapped the genuine window.PDFLib fonts, capturing every drawText x/y/size/measured-width and every drawImage box. Fixtures: Japanese, Cyrillic and accented-Latin item names, an 80-character name, a 60-character serial, a 40-room inventory, and a photographed item.",
-        "result": "Non-Latin names are destroyed in both documents: '花子の茶箪笥 (tansu chest)' → '?????? (tansu chest)', 'Диван из Москвы' → '????? ?? ??????', 'Кресло ✅🔥 emoji sofa' → '?????? ??? emoji sofa'. 'Émilie Ångström-Ñuñez' survives intact. Full-report grid captions: a 48-char wide name measures 375.4pt in a 252pt cell (spills 123.4pt); the right column starts at x=314 and ends at 689.4 on a 612pt page. Adjuster list: clean — names fit to 240pt with an ellipsis, room to 90pt (max end 386 before serial starts at 396), serial to 100pt, values right-aligned to 566, bold Total row, no collisions across five rows. 40-room cover: 42 pages total, room summary spills correctly to page 2, lowest baseline y=78 (inside the 46pt margin), nothing off-sheet.",
-        "defect": "Non-Latin item names print as question marks in both PDFs, and the full report's captions overlap columns and run off the right edge of the paper because it truncates by character count while the adjuster list correctly truncates by measured width.",
+        "name": "Saving when the device is full",
+        "method": "Created an inventory through the UI, added three items that saved, then made IndexedDB writes abort the way a full phone does, and added five more items one at a time through the real Save & next path, reading the toast and header after each. Then reloaded and read the store.",
+        "result": "Item 4: '⚠ Couldn't save to this device — storage may be full. Export your backup NOW.' Items 5, 6, 7, 8: 'Saved — next one' each time, header counting 5 → 8 items. Exactly 1 of 5 failures was reported. After reload, IndexedDB held 3 items: Sofa, Coffee table, Floor lamp. Persian rug, Grandfather clock, Wedding china, Piano and Camera bag were gone, and the home screen showed no sign anything had been lost.",
+        "defect": "Save failure is throttled to one warning per 60 seconds (app.js:88) while the success toast fires unconditionally (app.js:271), so the app actively reports unsaved work as saved. Five items lost, four of them under a success message.",
         "severity": "blocker"
       },
       {
-        "name": "Currency formatting against the PDF's WinAnsi filter",
-        "method": "Ran the app's fmtCents() shape — Intl.NumberFormat(locale, {style:'currency', currency:'USD'}) — across fourteen locales and passed each result through pdf.js safe().",
-        "result": "13 of 14 pass through unchanged. fr-FR emits '1 235 $US' using U+202F narrow no-break space, which safe() strips: the PDF prints '1?235 $US'. Every locale prints US dollars regardless of the user: en-GB 'US$1,235', pt-BR 'US$ 1.235', fr-CA '1 235 $ US'. The edit dialog's label is hardcoded 'Value ($)' and there is no currency setting anywhere.",
-        "defect": "A French-locale user gets a question mark inside every money figure on their insurance document, and every non-US user gets an inventory denominated in US dollars with no way to change it.",
-        "severity": "minor"
-      },
-      {
-        "name": "Numeric edges on the value field, and what a typo does to a saved value",
-        "method": "Called parseValue() on eighteen inputs, then in the live app opened an item worth $503.79, typed '1,2OO' (letter O) into the dialog's Value field, pressed Save, and read the rendered row and the toast.",
-        "result": "parseValue: '0'→0, '-1'→null, '1e9'→null, '0.0001'→0, 'abc'→null, ''→null, '1/2'→null, 'Infinity'→null, '1,234.56'→123456, '1.234,56'→123456, '$5,000'→500000, '.5'→50, '0.005'→1, '99999999'→9999999900, '100000000'→null. Comma/format tolerance is genuinely good. But every null becomes 0 at app.js:266 and app.js:447 via `parseValue(...) || 0`. Live: the row went from 'Bedroom · $504 · SN SN-100011' to 'Bedroom · SN SN-100011'. Toast: empty string. No field error, no console error. The $503.79 is gone.",
-        "defect": "Any unparseable edit silently destroys the stored value and drops it out of the documented total, with no feedback at all. A value over $999,999.99 is also silently rejected to zero rather than capped or flagged.",
+        "name": "Restoring a hand-edited backup",
+        "method": "Seeded a 300-item inventory, then imported seven malformed backup files, each into a clean browser profile, and checked the home screen after each — including across two reloads.",
+        "result": "A file containing a bare null in items imports, routes into the inventory, and then throws 'TypeError: Cannot read properties of null (reading valueCents)' from totals() (model.js:59) on every home render. Measured home screen afterwards: 0 section.card elements, 1 heading (the hero), 0 inventory rows, no import control — and identical after two reloads. {valueCents:'lots'} renders '$NaN' on the header line. {items:['chair']} and {rooms:null} import without complaint. A truncated file and one with no items key are both refused cleanly with 'That file doesn't look like an inventory backup.' photo:'javascript:alert(1)' imports with an empty img src and no script nodes.",
+        "defect": "One malformed row permanently bricks the home screen, taking every other inventory on the device with it and removing the only control that could restore a good backup. The app explicitly invites hand-editing the backup and has no defence against the obvious result.",
         "severity": "blocker"
       },
       {
-        "name": "Destructive actions and undo",
-        "method": "Deleted an item from the dialog, then a whole inventory from the home row, auto-accepting the confirms; measured the home row's button geometry; checked for SWS.undo on window and for an undo control in the toast.",
-        "result": "Item delete: 12 rows → 11, toast text '', no #toast .undo. Inventory delete: 1 row → 0, toast text '', no undo, and every photo it held is gone from IndexedDB. Home row geometry: 'Open' 61×36 at x=267, '✕' 37×36 at x=340 — a 12px gap between the primary action and total destruction. window.SWS.undo exists (sws-ui.js is loaded) and app.js calls it zero times.",
-        "defect": "Three destructive paths, zero undo, and the whole-inventory delete sits 12px from Open at 36px with no toast even acknowledging it happened.",
+        "name": "Restoring an older backup over live work",
+        "method": "Seeded a 300-item inventory with id 'real', then imported a same-id backup containing one item, and read IndexedDB directly.",
+        "result": "Store afterwards: one record, id 'real', 1 item. Toast: 'Imported “Real house — six months of work”'. No warning, no merge prompt, no undo, no second copy retained.",
+        "defect": "importFile keeps the incoming id and writes straight over the existing record (app.js:173). Restoring an old backup — the most likely reason to press that button — silently destroys everything added since, and reports it as success.",
         "severity": "blocker"
       },
       {
-        "name": "Malformed, legacy and hostile records in the app's own IndexedDB store",
-        "method": "Wrote four records into 'sws-inventory' — rooms:null, a legacy record with no rooms key, a nameless empty record, and one with markup in every string plus valueCents:'lots' and photo:'javascript:alert(4)' — then navigated to each and to the home screen. Repeated cleanly with three known-good inventories plus one rooms:null record.",
-        "result": "rooms:null throws 'TypeError: inv.rooms is not iterable' from totals() (model.js:54 spreads ...inv over its defaults, so an explicit null beats []). Consequence on the home screen: three good inventories listed before corruption ('Storage unit 14', \"Mum's bungalow\", '42 Wallaby Way'); after adding one bad record the page rendered the hero and nothing else — 0 rows, no 'Your inventories' card, no 'Restore' card. All four records were still in IndexedDB and #/i/houseB still opened normally. The legacy record with no rooms key rendered fine. The hostile record rendered '<script>alert(2)</script>' as literal text with 0 script nodes, blocked the javascript: photo (0 non-data: image sources), and printed '1 items · 1 photographed · $NaN' on screen.",
-        "defect": "One malformed row makes every inventory invisible and removes the restore path, with an uncaught exception and no message; a non-numeric value puts '$NaN' in the UI; and a broken photo URL still counts as 'photographed'.",
+        "name": "Non-Latin names through both PDFs",
+        "method": "Built an inventory with Polish, Turkish, Cyrillic, Chinese, emoji and euro-sign content, generated both PDFs in-page with the real window.PDFLib while recording every drawText call, wrote the files out and inspected them with pdftotext and a rendered page image.",
+        "result": "Confirmed in the rendered PDF: 'Grandmother's 屏風 folding screen' → 'Grandmother's ?? folding screen'; 'Łukasz's Gdańsk crystal decanter set' → '?ukasz's Gda?sk…'; 'Обручальное кольцо' → '??????????? ??????'; 'Şişli el yapımı halı' → '?i?li el yap?m? hal?'; room '客厅' → '??'; serial 'SN-屏-001' → 'SN-?-001'; '€1,200' → '?1,200'; emoji → '????'. 18 of 75 recorded draw calls contained a substituted '?'. Both makeInventoryPdf and makeAdjusterPdf are affected. pdf.js:13 strips everything outside \\x20-\\x7E and \\xA0-\\xFF.",
+        "defect": "The document the product exists to produce corrupts the names of exactly the items that need description most, in every household that is not purely Latin-1. Helvetica's WinAnsi encoding is the cause; a subsetted Unicode font (fontkit) or at minimum an honest transliteration is the fix.",
         "severity": "blocker"
       },
       {
-        "name": "Twelve hostile strings through the item name field",
-        "method": "Typed each of the battery's hostile payloads into the Capture tab's name field and pressed Save & next, then inspected the rendered list for injected nodes, poison values, overflow and prototype pollution.",
-        "result": "11 accepted, whitespace-only correctly rejected. 0 script nodes, 0 non-data: image sources, document.title unchanged, page overflow 0px, no NaN/undefined/[object Object] in the view, longest rendered name 80 characters (the 500-char input truncates), and '__proto__' as a name polluted nothing. Emoji, RTL and combining marks all render without breaking a row.",
+        "name": "Long names against the page geometry",
+        "method": "Recorded every drawText with its measured width during PDF generation, for a 62-character and an 80-character inventory name and 80-character item names, then rendered the pages to PNG and looked at them.",
+        "result": "Cover title: 62 characters at 26pt is 804pt wide on a 612pt page, drawn at x = -96 — visibly clipped at both edges in the render ('itmore-Castellanos Family Residence at 1487 Old M'). At 80 characters, x = -676 and right = 1288. Room grid: item names are cut with .slice(0,48) by character count, so an all-caps 48-character name in the right column is drawn at x = 314 with right = 790, i.e. 178pt past the paper edge; in the left column it reaches x = 522 against a 298pt column boundary and overlaps the neighbouring cell. A 60-character room name at 16pt collides with the right-aligned item count on the same line ('…salle de bain1 items · $900'). Item captions also overlap the bottom edge of the photo box by ~1.5pt at every cell.",
+        "defect": "The adjuster PDF measures and truncates properly (pdf.js:120-125); the cover and the room grid do not. An address-style inventory name — which the app's own prompt recommends — is enough to mangle the front page.",
+        "severity": "major"
+      },
+      {
+        "name": "Serial plates and receipts through the real capture path",
+        "method": "Generated a 4032×3024, 4.4MB photo of an appliance with a realistic serial plate, drove it through the actual file input and compressImage, then cropped the plate 1:1 out of the stored image and compared it against the same source at 2400/0.92 and 1600/0.85. Repeated with the plate at 8.4% of frame width (a whole-appliance shot) and with a receipt filling 60% of the frame. Looked at every crop.",
+        "result": "Stored capture is 1280×960, 100.7KB. Plate filling 22% of frame: MODEL and SERIAL lines readable, the two smallest lines lost. Plate at 8.4% of frame — the realistic case — cap height 3.7px, the serial line is an unreadable smear; at 2400/0.92 the same plate gives 6.9px and the model number is legible (837KB). A receipt photographed on its own: 17.9px cap height, every line readable, 25.7KB.",
+        "defect": "compressImage forces 1280px / JPEG 0.8 on every capture (app.js:45), which is right for room and object shots and wrong for the evidence that proves the claim. The receipt path is fine; the serial-plate-inside-a-wide-shot path is not, and there is exactly one photo per item so the user cannot have both.",
+        "severity": "major"
+      },
+      {
+        "name": "Scale: 300 items on screen, 200 photographed items in the store",
+        "method": "Seeded inventories directly into IndexedDB, timed tab renders, measured document height, read navigator.storage.estimate(), and timed 10 input events on the inventory-name field with 200 photographed items loaded.",
+        "result": "300 items: Items tab renders in 43ms, 300 rows, document scrollHeight 26,078px, zero horizontal overflow, no search input present, 9 room chips. 200 photographed items: the single IndexedDB record is 146.5MB (origin usage 148.2MB of a 2.30GB quota); typing 10 characters into the inventory name took 5,142ms — 514ms of blocked main thread per keystroke, because touch() runs JSON.parse(JSON.stringify(inv)) over the whole inventory on every input event (app.js:100).",
+        "defect": "Rendering is fast; the write path is not. Renaming a photo-heavy inventory freezes the app for half a second per character, and the deep clone plus a 400ms debounce means a full-size write is queued on every keystroke.",
+        "severity": "major"
+      },
+      {
+        "name": "Is the Export tab reachable?",
+        "method": "Measured nav.tabs scrollWidth against its client width and each tab button's right edge, at 414 and 320px, at default text, at Largest text, and at Larger + Roomy.",
+        "result": "414 default: 382px of content in 382px, all four tabs visible. 414 Largest: 448px in 382px, 66px hidden, Export's right edge at 464px — invisible. 320 default: 344px in 288px, 56px hidden, Export invisible. 320 Largest: 448px in 288px, 160px hidden, Rooms and Export both invisible. 414 Larger + Roomy: 32px hidden, Export invisible. Tab height 39px at default, 49px at Largest. No scroll affordance of any kind.",
+        "defect": "The tab that produces the app's only artifact is off-screen on a 320px phone at default settings, and on a 414px phone for anyone who raises the text size. The strip does not look scrollable.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Keyboard and screen-reader path through the capture loop",
+        "method": "Tabbed from the top of a loaded editor to the name field, typed an item, pressed Enter, then measured where focus went and how many Tab presses returned to the field. Measured the live region's content on the Items tab with 300 items. Ran axe on all four tabs in dark mode.",
+        "result": "12 Tab presses to reach the name field from the top; after Enter, document.activeElement is BODY, and 9 more Tab presses to get back. main#view carries aria-live=\"polite\" and holds 10,904 characters / 2,521 words with 300 items — re-announced on every render. axe: one violation, 'label' (critical), the unlabelled inventory-name input, on all four tabs in both light and dark. No aria-current / aria-selected on the tabs, no aria-pressed on the room chips, both export buttons named 'PDF', no skip link in the body although .skip is styled at index.html:840.",
+        "defect": "45 items cost roughly 400 extra keystrokes and 45 full re-readings of the page. The two worst items — the app-wide live region and focus loss on render — are the same bug from two directions.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Comfort panel, in anger",
+        "method": "Opened #swsPrefsBtn from the header, ran axe with the panel open, set Text size Largest + Spacing Roomy + Warm tint High, closed it, then measured layout, tap targets and the item dialog at 320px.",
+        "result": "Panel opens from a 36×36px header button labelled 'Display and comfort settings'; axe returns zero violations with it open; the settings persist to localStorage as expected. Largest takes the root font 16px → 24px with zero horizontal page overflow at 414px and 320px. But targets do not grow with the text: ✎ buttons 49×36, ‹ Back 91×36, settings button 36×36, Tip jar 36px, export buttons 51×36, tabs 49px. The item dialog at 320px + Largest is 294×648px containing 1,166px of content, focus lands on 'Replace photo' rather than the Name field, the dialog has no aria-labelledby, and the bottom row stacks Delete / Cancel / Save as three identical 256×66px blocks with Delete first.",
+        "defect": "The panel scales type correctly and controls not at all, so the users who turn it on get bigger words on the same small targets — and a full-width Delete the same size and weight as Save, with no undo behind it.",
+        "severity": "major"
+      },
+      {
+        "name": "Destructive actions and orphaned items",
+        "method": "Deleted a room holding 10 items, then an item from the dialog, accepting each confirm(), and inspected the toast, the room chips and the item list.",
+        "result": "Confirms read 'Delete Living room? Its 10 items move to “Unsorted”.' and 'Delete Thing 29 and its photos?'. After each: no toast, no Undo control, no restore path. window.SWS.undo exists on the page and is never called by app.js. The 10 orphaned items still appear under 'All' but the chip row is All / Kitchen / Bedroom — there is no 'Unsorted' chip, so they cannot be filtered to.",
+        "defect": "No undo anywhere in an app whose research brief says 'the photo you just deleted may be the only one of an object that no longer exists', with the shared undo runtime already loaded and unused. Orphaned items become unfilterable.",
+        "severity": "major"
+      },
+      {
+        "name": "Money in, money out",
+        "method": "Typed twelve value strings through the real capture form and read the rendered row each time; then computed printed rows against the printed total for a 312-item inventory at $19.99.",
+        "result": "Correct: '1200' → $1,200; '1,234.56' → $1,235; '2 500' → $2,500; '$3,000' → $3,000; '1.234,56' → $1,235; '99999999' → $99,999,999. Silently dropped to no value at all, with no message: '100000000', '1e9', '-40', 'abc'. Everything is displayed rounded to whole dollars — '19.99' shows as $20, '0.50' shows as $1. Rounding at scale: 312 items at $19.99 print as $20 per row (sum $6,240) under a Total line reading $6,237, against a true $6,236.88.",
+        "defect": "Rejected values save as zero with no feedback, and the adjuster's own document has line items that do not sum to its own total — a $3 gap on 312 items.",
+        "severity": "major"
+      },
+      {
+        "name": "An unsaved photo when you get interrupted",
+        "method": "Took a photo through the real file input, confirmed the preview, pressed ‹ Back, then returned to the same inventory.",
+        "result": "Preview present before leaving; gone on return. No warning before leaving, no toast after, nothing in the capture panel to indicate a photo had been taken. captureDraft is reset whenever the editor reloads an inventory (app.js:199).",
+        "defect": "A captured but unnamed photo is discarded silently. On a phone, an incoming call or a knock at the door is enough.",
+        "severity": "major"
+      },
+      {
+        "name": "Rapid tapping, duplicates and burst input",
+        "method": "Five real mouse clicks in a row on Save & next with a name in the field, plus a dblclick, then read IndexedDB after the debounce had settled.",
+        "result": "Exactly one item stored ('Nespresso machine'); the remaining taps correctly toast 'Give it a name — that's the one required field'. dblclick likewise produced one item. No duplicates, no corruption, no errors.",
         "defect": null,
         "severity": "none"
       },
       {
-        "name": "Backup export, round-trip and a hostile import",
-        "method": "Exported the .json backup from a 25-item inventory and inspected it; then imported a file of malformed JSON and a crafted backup containing markup, a 'javascript:' photo and valueCents:'NaN'.",
-        "result": "Backup is 309,170 bytes for 25 items / 20 photos, keys v,id,name,rooms,items,updatedAt, photos stored as data:image/jpeg;base64 — human-readable and re-importable as promised. Malformed JSON is refused politely: 'That file doesn't look like an inventory backup.' The crafted backup imported successfully and dropped straight into #/i/imp with a header reading '1 items · 1 photographed · $NaN'; markup rendered as text, 0 script nodes, the javascript: photo blocked.",
-        "defect": "importFile() validates only that obj.items is an array — item shapes are never checked, so a hand-edited or corrupt backup imports cleanly and puts $NaN in the totals.",
-        "severity": "major"
-      },
-      {
-        "name": "An image the browser cannot decode",
-        "method": "Clicked 'Take photo', then fed the real #fileInput a .heic file and separately a .txt file, and followed each through to a saved item.",
-        "result": "Both behave identically and wrongly: createImageBitmap rejects, the FileReader fallback returns a data URL that safeSrc() refuses, so the preview <img> is un-hidden with src=\"\" (naturalWidth 0) and the button flips to 'Retake photo'. Toast: empty. Console errors: none. Saving produced an item with the 'no photo' placeholder and a counts line reading '0 photographed'.",
-        "defect": "Every visible signal says the photo was attached and nothing was stored. HEIC is the default iPhone camera format, so this fires on any photo shared out of an iPhone album into a browser that cannot decode it.",
+        "name": "Offline, service worker and storage durability",
+        "method": "Loaded the app, read the service worker registrations, set the context offline, reloaded, and inspected navigator.storage. Cross-checked by grepping the whole app for the relevant APIs.",
+        "result": "One service worker registered at the app scope. Offline reload boots the full app with window.PDFLib present, and PDF generation works. navigator.storage.persisted() returns false; navigator.storage.persist(), navigator.storage.estimate(), beforeinstallprompt and navigator.share appear nowhere in index.html, app.js, model.js, store.js, pdf.js or sw.js. The manifest is linked but the app never offers to install itself, and there is no last-exported date anywhere.",
+        "defect": "Offline is excellent; durability is unaddressed. For an app whose whole premise is 'make it now, need it in three years', not requesting persistent storage and not treating Add to Home Screen as a setup step leaves an iPhone user's 400-item inventory one quiet week away from deletion.",
         "severity": "blocker"
       },
       {
-        "name": "Rapid and duplicate interaction on the primary action",
-        "method": "Ran 30 fill-and-save cycles through Save & next, then fired three synchronous clicks on the button with a name in the field, then checked focus after each save.",
-        "result": "30 sequential saves: 2,049ms total, ~68ms per redraw, count line correct at each step, no corruption, no errors. Three synchronous clicks created 3 identical 'Double' items — the handler reads a closure reference to the old input, which still holds the value, and the button is never disabled. activeElement after every save: BODY.",
-        "defect": "No double-submit guard on the app's most-pressed button, and focus is thrown to the document body after every save, costing an extra tap per item in the flow whose entire purpose is minimising taps.",
-        "severity": "major"
-      },
-      {
-        "name": "Save failure under quota pressure",
-        "method": "Patched IDBObjectStore.prototype.put to fire a QuotaExceededError on the transaction, then saved an item from the Capture tab and watched the toast and the UI.",
-        "result": "The warning fires and is honest: '⚠ Couldn't save to this device — storage may be full. Export your backup NOW.', visible and still up at 3.5s (8-second duration, throttled to once a minute). But the item appears in the list as if it saved, and once the toast expires nothing on screen indicates that anything is unsaved.",
-        "defect": "The alarm is right and transient. After eight seconds the app looks normal while holding data that was never written, and there is no persistent 'unsaved' state, no quota readout and no read-back verification.",
-        "severity": "major"
-      },
-      {
-        "name": "Comfort panel driven for real",
-        "method": "Opened #swsPrefsBtn from the header, enumerated the groups, set Text size = Largest, then in a second run Contrast = High and Warm tint = High, closed the panel, and re-measured contrast, target sizes, overflow and axe across the editor.",
-        "result": "Seven groups (appearance, text, spacing, reading, warmth, contrast, motion) as real radio fieldsets. axe with the panel open: 0 violations. Largest sets data-text=xxl and the root font 16px → 24px; High contrast sets data-contrast=more and lifts secondary text to 15.97:1 and the input border to #998a73; warmth 3 paints the rgba(255,166,86,0.46) multiply overlay with no layout effect. Page overflow stayed 0px on every tab. But the targets do not move: at Largest the pencil buttons are 43×36, the room chips 37px, ‹ Back 36px, the tip pill 36px and #swsPrefsBtn 36px — .btn.small hard-codes min-height:36px and .chip has no min-height, so neither follows --tap. At default and roomy the chips are 28px and 30px. And Largest is what pushes 50px of the Export tab off screen.",
-        "defect": "The panel is well built and helps with type, but it cannot reach the controls: every row-level action stays under the 44px floor at the exact setting a user with poor vision or a tremor selects, and turning the text up clips the export tab.",
-        "severity": "major"
-      },
-      {
-        "name": "Keyboard reachability, naming and live-region volume",
-        "method": "Enumerated focusable elements on the Items tab of a 120-item inventory, checked names and ARIA state, pressed Enter on a filter chip and on an export button, and measured the #view live region.",
-        "result": "35 focusable elements, 0 with no discernible name at all, but 15 are pencil buttons whose only name is the glyph '✎'. Tabs carry no role, no aria-selected and no aria-current — the active tab is conveyed by colour alone. Filter chips carry no aria-pressed. No .skip link is rendered. Both export buttons have the accessible name 'PDF'. <main id=\"view\" aria-live=\"polite\"> with no aria-atomic holds 5,527 characters across 743 nodes and is replaced wholesale on every tab switch and filter tap (one chip tap re-rendered 879 chars in 233ms). Typing into the inventory-name field does NOT re-render (0 mutations for 4 characters) — that path is fine. activeElement after Enter on a chip: BODY. activeElement after a PDF export: BODY, with a focusable 'Tip jar ♥' link injected into the role=status toast for 7 seconds.",
-        "defect": "The whole application is a live region that re-announces itself on every interaction; fifteen edit buttons announce as 'pencil'; the current tab and current filter are invisible to assistive tech; and focus is destroyed on every action including the app's biggest success.",
-        "severity": "major"
-      },
-      {
-        "name": "Room deletion and the orphans it creates",
-        "method": "Deleted a room holding 25 items from a 300-item inventory and traced where those items went, on screen and in the PDF.",
-        "result": "Totals are preserved (300 items · $113,732 before and after) and the items correctly re-label as 'Unsorted' in their sub-line — 25 of them. The full report emits an 'Unsorted' page for them. But the Items tab's filter chips are built from inv.rooms plus 'All': 12 chips, none of them Unsorted.",
-        "defect": "Twenty-five items become findable only by scrolling the unfiltered 26,000px list reading sub-lines, in an app with no search. The PDF knows about Unsorted; the UI does not.",
-        "severity": "major"
-      },
-      {
-        "name": "Browser print",
-        "method": "Emulated print media on the Items tab of a 120-item inventory and inspected what survives.",
-        "result": "The base print block correctly hides header.app, #toast, #swsPrefsBtn and the warm-tint overlay, and ul.plain > li carries break-inside:avoid. But nav.tabs is VISIBLE (the base hides .seg and this app uses nav.tabs), the ‹ Back button is VISIBLE, and all 15 pencil edit buttons print, alongside 12 photo thumbnails.",
-        "defect": "Ctrl+P produces a sheet headed with a tab strip, a Back button and fifteen pencil icons. The app's real paper path is the PDF, but Ctrl+P is what a user who cannot find the Export tab reaches for.",
+        "name": "Print",
+        "method": "Loaded a 25-item inventory on the Items tab, emulated print media, and measured what remains visible.",
+        "result": "Correctly hidden: header.app, #toast, the tip link. Still printing: nav.tabs (the base print block hides .seg, and this app's strip is nav.tabs), the ‹ Back button, and all 25 per-row ✎ buttons. .wrap stays capped at its screen width (414px measured) rather than filling the paper. Body inverts to black on white correctly.",
+        "defect": "Browser print is a secondary path here — the real artifact is the pdf-lib PDF — but the app-specific chrome all prints, and the walk-the-house checklist that would justify browser printing does not exist.",
         "severity": "minor"
       },
       {
-        "name": "End-to-end PDF export from the UI",
-        "method": "Generated the full report from the Export tab of a 120-item, 96-photo inventory and captured the download; also inspected the export buttons on an empty inventory.",
-        "result": "Produced a valid 1,129,888-byte PDF named '<slug>-inventory.pdf'. Toast afterwards: 'Exported ✓ — email it to yourself.  Tip jar ♥' with a real focusable link inside a role=status region, for 7 seconds. activeElement afterwards: BODY. The page-size select is 110px wide and did not clip at any tested size. Both export buttons are enabled on an inventory with zero items and will generate a one-page cover with nothing in it.",
-        "defect": "Focus lost on the app's most important success; the tip ask is only reachable inside a timed live region; exports are offered on an empty inventory.",
+        "name": "Contrast and colour of the state signals",
+        "method": "Computed WCAG contrast ratios in-page for every state colour on a populated Items tab, light mode.",
+        "result": "Active tab 5.22:1 at 14.4px; inactive tab 5.85:1; selected chip 5.22:1; unselected chip 14.74:1; secondary item line 5.85:1 at 15px; 'no photo' placeholder 5.4:1. All pass AA. No colour-only state signal failed a contrast check.",
+        "defect": "No contrast defect. The remaining legibility problem is size, not contrast: 'no photo' is 10.4px inside a 52×52px box, and it is the only per-item completeness signal the app shows — there is no indication at all when an item has no value.",
         "severity": "minor"
       }
     ]
   },
   "fixes": [
     {
-      "title": "Stop one malformed record from hiding every inventory on the home screen",
-      "rationale": "Verified: three good inventories listed normally, then adding a single record with rooms:null rendered the hero and nothing else — 0 rows, no 'Your inventories' card, no 'Restore' card — with an uncaught 'TypeError: inv.rooms is not iterable'. All four records were still in IndexedDB and #/i/houseB still opened fine, but the user has no URL. Wanda's whole verdict is this bug. model.js:54 does `inv = {rooms:[],items:[],...inv}`, so an explicit null beats the default; renderHome() calls totals(r) inside the loop and appends the section only afterwards, so one throw takes the restore path down with it. Coerce rooms/items to arrays (Array.isArray(x) ? x : []) and valueCents to a finite number inside totals(), wrap the per-row build in try/catch, and render a repairable 'This inventory looks damaged — export it or delete it' row instead of nothing. This is the failure the app's own premise exists to prevent.",
-      "where": "apps/home-inventory/model.js:53-74 (totals), apps/home-inventory/app.js:130-148 (renderHome loop, v.append(sec) at :148)",
-      "severity": "blocker",
-      "effort": "S"
-    },
-    {
-      "title": "Never let a photo that failed to decode look like a photo that was attached",
-      "rationale": "Verified with both a .heic and a .txt: createImageBitmap rejects, the FileReader fallback returns a data URL safeSrc() refuses, so the preview <img> is un-hidden with src=\"\" and naturalWidth 0, the button flips to 'Retake photo', the toast stays empty, no console error is logged, and the saved item shows 'no photo' with a counts line of '0 photographed'. Hector believed he had documented the flat. This is verbatim the NAIC review the research names as the category's unforgivable bug ('I hit save… some of the items' pictures are missing'), and HEIC is the default iPhone camera format. Make pickImage() reject anything safeSrc() will not accept, toast the filename and the reason, leave captureDraft.photo null, and keep the button reading 'Take photo'.",
-      "where": "apps/home-inventory/app.js:56-74 (pickImage/compressImage fallback), app.js:247-254 (preview state), app.js:464-479 (dialog photo/receipt)",
-      "severity": "blocker",
-      "effort": "S"
-    },
-    {
-      "title": "Stop silently zeroing a value that does not parse",
-      "rationale": "Verified live: an item worth $503.79, retyped as '1,2OO' in the dialog, saved as $0 — the row went from 'Bedroom · $504 · SN SN-100011' to 'Bedroom · SN SN-100011' with an empty toast and no field error. parseValue returns null for '1,2OO', '-500', '1e9' and anything over $999,999.99, and both call sites do `parseValue(...) || 0`. Marguerite has a tremor and did not notice. On an insurance document a value that silently becomes zero is worse than one that fails to save, because the total still looks plausible. Distinguish null from 0: refuse the save, mark the field, keep the previous value, and say what was wrong.",
-      "where": "apps/home-inventory/app.js:447 (dialog save) and app.js:266 (fast capture), parser at apps/home-inventory/model.js:22-38",
-      "severity": "blocker",
-      "effort": "S"
-    },
-    {
-      "title": "Print item names as themselves — non-Latin names come out as '??????' in both PDFs",
-      "rationale": "Verified against real pdf-lib font metrics: '花子の茶箪笥 (tansu chest)' draws as '?????? (tansu chest)' and 'Диван из Москвы' as '????? ?? ??????' in both makeInventoryPdf and makeAdjusterPdf. pdf.js:13 replaces every codepoint outside WinAnsi with '?'. Accented Latin survives; CJK, Cyrillic, Greek, Arabic, Hebrew and Devanagari do not. Adaeze's claim document lists her own family's furniture as rows of question marks — on the one artifact a stranger uses to decide what she is paid, in a category where the research warns that vagueness is used to reduce claims. Embed a subsetted TrueType face with fontkit (pdf-lib is already vendored and fonts/space-grotesk-latin.woff2 already ships), or at minimum name the affected items in the Export tab before generating.",
-      "where": "apps/home-inventory/pdf.js:12-14 (safe()), applied at pdf.js:42, 67, 91, 95, 129-132, 135",
-      "severity": "blocker",
-      "effort": "L"
-    },
-    {
-      "title": "Add undo to all three delete paths and move the whole-inventory ✕ away from Open",
-      "rationale": "Measured: item delete 12→11 rows with an empty toast and no undo; inventory delete 1→0 with no toast at all and every photo destroyed; the ✕ is 37×36 sitting 12px from the 61×36 'Open' button in the same row. window.SWS.undo is already loaded by index.html and app.js calls it zero times — the same finding the seating-chart review made. The research is explicit that in this category 'the photo you just deleted may be the only one of an object that no longer exists', and Wanda is doing this for a parent who is losing her memory. Snapshot the mutated slice, mutate, then SWS.undo('Deleted 42 Wallaby Way', restore); move the inventory delete out of the row into the inventory's own screen.",
-      "where": "apps/home-inventory/app.js:141-146 (inventory ✕), app.js:339-343 (room), app.js:458-463 (item), runtime at apps/home-inventory/sws-ui.js",
+      "title": "Never say \"Saved\" when the write failed — and make the failure impossible to miss",
+      "rationale": "Measured: with writes failing, items 5–8 each reported 'Saved — next one' while the header counted to 8; three of eight survived a reload. The failure warning is throttled to one per 60 seconds (app.js:88) while the success toast is unconditional (app.js:261-272). The research calls losing work on save 'the unforgivable bug in this category' and it is the review that put the free NAIC app at 2.1 stars. Make persistSnap resolve/reject into the UI: only toast 'Saved' after the write resolves, and on failure raise a persistent, non-dismissable banner ('4 items are not saved to this device — export your backup now') plus a read-back check. Remove the throttle on the failure path entirely.",
+      "where": "apps/home-inventory/app.js:85-93 (persistSnap), app.js:261-272 (Save & next toast), app.js:95-103 (touch)",
       "severity": "blocker",
       "effort": "M"
     },
     {
-      "title": "Truncate full-report captions by measured width, not character count",
-      "rationale": "Verified: pdf.js:91 does safe(item.name).slice(0,48), and a 48-character wide name measures 375.4pt inside a 252pt grid cell. The left column's caption runs under the right column's photo; the right column's caption starts at x=314 and ends at x=689.4 on a 612pt page — 77pt off the paper. Ray sent the file back. The adjuster generator already has the correct helper: fit() at pdf.js:120 truncates by measured width with an ellipsis. Use it for the caption and the detail line, and wrap rather than truncate where there is room.",
-      "where": "apps/home-inventory/pdf.js:91 and :95 (grid caption and detail), helper already at pdf.js:120-125",
+      "title": "Stop one bad row in a backup from permanently bricking the home screen",
+      "rationale": "Measured: importing {\"items\":[null]} throws 'Cannot read properties of null (reading valueCents)' in totals() (model.js:59) on every home render, leaving 0 cards, 0 inventory rows and no Restore control — verified unchanged across two reloads. Every other inventory on the device becomes unreachable and there is no in-app way back, because the import button lives in the card that no longer renders. The app invites hand-editing ('boring on purpose', readable in a text editor), so this input is expected, not exotic. Sanitise on import (drop non-object items, coerce valueCents to a finite number, default missing fields), make totals() skip malformed rows, and wrap each home row in a try/catch so one bad record renders as 'This inventory could not be read — export or delete it' rather than taking the page down.",
+      "where": "apps/home-inventory/model.js:53-74 (totals), apps/home-inventory/app.js:167-183 (importFile), app.js:134-147 (home row loop)",
       "severity": "blocker",
       "effort": "S"
     },
     {
-      "title": "Give the Items tab a search field, a sort control, an 'Unsorted' chip and sticky controls",
-      "rationale": "Measured: a 300-item inventory is 26,556px of document — 29.5 screenfuls at 414×900 — rendered as [...items].reverse() with room chips as the only filter, no search input anywhere in the app, and nav.tabs and .chips both position:static so at the bottom of the list the navigation is off-screen. Deleting a room orphaned 25 items to 'Unsorted' and produced 12 chips, none of them Unsorted, so those 25 are reachable only by reading sub-lines while scrolling. Adaeze cannot check whether she has already entered something; the research calls this out as a verified gap and 'the thing that will make a 300-item inventory feel broken'.",
-      "where": "apps/home-inventory/app.js:287-301 (renderItems), chips built at app.js:293-294, tab strip styling at apps/home-inventory/index.html:1255-1260",
-      "severity": "major",
+      "title": "Do not let a restore silently overwrite live work",
+      "rationale": "Measured: importing a same-id backup containing 1 item over a live 300-item inventory left the store holding 1 item, under the toast 'Imported “Real house — six months of work”'. importFile keeps obj.id and writes straight over the record (app.js:173). Restoring an old backup is the main reason anyone opens that button. Always import under a fresh id and name it '<name> (restored 9 Aug)'; if an id collision is detected, say so and offer Keep both / Replace, with Replace routed through SWS.undo. Desmond destroyed six months of work twice in fifteen minutes through the door the app told him to use.",
+      "where": "apps/home-inventory/app.js:167-183 (importFile), specifically app.js:173",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Stop the PDF turning people's possessions into question marks",
+      "rationale": "Measured in the rendered PDF: 'Gdańsk' → 'Gda?sk', '屏風' → '??', 'Обручальное кольцо' → '??????????? ??????', 'Şişli' → '?i?li', room '客厅' → '??', '€1,200' → '?1,200'; 18 of 75 draw calls carried a substitution, across both makeInventoryPdf and makeAdjusterPdf. pdf.js:13 strips everything outside Latin-1 because the two standard Helvetica fonts are WinAnsi-encoded. This corrupts exactly the heirloom items that most need describing, in the one file that goes to the insurer. Register fontkit and embed a subsetted Unicode face (the app already ships fonts/space-grotesk-latin.woff2 — a wider subset is needed), or at minimum transliterate and flag rather than substituting '?' silently.",
+      "where": "apps/home-inventory/pdf.js:12-14 (safe), used at pdf.js:42, 67, 91, 95, 129-132",
+      "severity": "blocker",
       "effort": "M"
     },
     {
-      "title": "Keep focus in the capture loop and disarm the save button between presses",
-      "rationale": "Measured: activeElement is BODY after all 30 consecutive Save & next presses, and three synchronous clicks with 'Double' in the field created 3 identical items because the handler reads a closure reference to the pre-render input and the button is never disabled. Dev pays one extra tap per item on the one flow whose whole purpose is minimising taps — the research quotes a reviewer abandoning a competitor over data entry 'taking at least 25% longer per item'. After drawEditor(), return focus to the name field; guard the handler with an in-flight flag and clear nameIn.value synchronously before re-rendering.",
-      "where": "apps/home-inventory/app.js:261-272 (saveBtn handler), app.js:206-229 (drawEditor)",
+      "title": "Make the Export tab reachable at 320px and at Largest text",
+      "rationale": "Measured: at 320px with default text, nav.tabs holds 344px of content in 288px and Export is entirely off-screen; at 414px with Largest text, 448px in 382px and Export's right edge is at 464px; at 320px with Largest, Rooms and Export are both gone. There is no scroll affordance. Dee raised the text size because she needs to, and that hid the only path to the PDF — she concluded the feature was not available to her. The identical defect took a blocker in the seating-chart review. Wrap the tabs to two rows below ~26rem (they are only four), or make the strip a real segmented control that shrinks, and never let the artifact-producing tab be the one that falls off.",
+      "where": "apps/home-inventory/index.html:1254-1260 (nav.tabs, nav.tabs button), rendered by app.js:218-223",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Remove aria-live from <main> and keep focus through the render",
+      "rationale": "Measured: main#view carries aria-live=\"polite\" and holds 10,904 characters / 2,521 words with 300 items, re-announced on every save, tab switch and filter change; and document.activeElement is BODY after every Save & next, with the name field 9 Tab presses away (12 from the top of the page). Tomás's 45 items cost roughly 400 extra keystrokes and 45 full page readings. This is also Renata's attrition problem — the sighted and screen-reader failures are one bug. Drop aria-live from #view, announce discrete outcomes through #toast (already role=status), and after every drawEditor() restore focus by stable identity — for Save & next, straight back into the empty name field, which also re-arms the loop the research says decides completion.",
+      "where": "apps/home-inventory/index.html:1298 (main aria-live), apps/home-inventory/app.js:206-208 and 226 (drawEditor/replaceChildren), app.js:261-272 (Save & next)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Ask for durable storage and offer to install — the data has to survive being ignored",
+      "rationale": "Verified by grep and in the browser: navigator.storage.persist(), navigator.storage.estimate(), beforeinstallprompt and navigator.share appear nowhere in the app, and navigator.storage.persisted() returns false. WebKit deletes script-writable storage after seven days of Safari use without interacting with the site; home-screen-installed apps are exempt. Aiyana will not open this app again for two years. Call persist() on the first successful save, treat Add to Home Screen as a real setup step with the reason attached, show remaining quota from estimate() (measured: 146.5MB for 200 photographed items against a 2.30GB desktop quota — far tighter on a phone), and stamp an ageing last-exported date on the home screen.",
+      "where": "apps/home-inventory/app.js:85-93 (persistSnap — the natural place to request persistence), app.js:489-500 (init), app.js:350-394 (renderExport, for the last-exported stamp)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Ship the CSV, and stop claiming the PDF is what adjusters ask for",
+      "rationale": "app.js:367 tells the user the value-sorted PDF is 'the format insurance adjusters ask for'. Verisk's XactContents and ClaimXperience both ingest Excel, Xactware's guidance is that the spreadsheet goes to the insured to fill in, and State Farm publishes its Contents Inventory Aids in Excel. Marcus stalled at 90 items partly because the output cannot be imported by the system on the other side of the table. Add a CSV — Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo filename — with a photo ZIP whose filenames match the rows, keep the PDF as the human exhibit, and correct the copy.",
+      "where": "apps/home-inventory/app.js:365-368 (the exports table and its description), apps/home-inventory/model.js:9-19 (item shape needs quantity/condition/replacement cost first)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Fit PDF text by measured width on the cover and in the room grid",
+      "rationale": "Measured: a 62-character inventory name at 26pt is 804pt wide on a 612pt page and is drawn at x = -96, visibly clipped at both edges of the cover in the rendered file; an 80-character name gives x = -676, right = 1288. Item names are cut with .slice(0,48) by character count, so a wide 48-character name in the right column is drawn to x = 790 (178pt off the paper) and in the left column reaches 522pt against a 298pt column edge, overlapping the neighbouring cell. A 60-character room name collides with its right-aligned item count. The adjuster PDF already has the right helper — fit() at pdf.js:120-125 measures and ellipsises. Use it on the cover title, the room headings and the grid captions, and wrap the cover title to two lines rather than clipping it.",
+      "where": "apps/home-inventory/pdf.js:40-45 (center/cover title), pdf.js:67-70 (room heading vs count), pdf.js:91-95 (grid captions)",
       "severity": "major",
       "effort": "S"
     },
     {
-      "title": "Fix the accessibility of the rendered editor — the battery has never seen it",
-      "rationale": "Measured inside the editor at every viewport: one persistent axe-critical 'label' violation on the inventory-name input (app.js:214) on all four tabs at all five sizes; 15 pencil buttons whose only name is '✎'; both export buttons named 'PDF'; no role/aria-selected/aria-current on the tabs so the current view is colour-only; no aria-pressed on the filter chips; no .skip link rendered; the item dialog with no aria-labelledby and focus landing on 'Replace photo'; and <main id=\"view\" aria-live=\"polite\"> holding 5,527 characters across 743 nodes, replaced wholesale on every tab switch and filter tap. None of this is visible to design/stress.mjs because prompt() blocks it from ever entering an inventory.",
-      "where": "apps/home-inventory/index.html:1298 (aria-live on #view), index.html:1305-1306 (dialog), app.js:214 (name input), app.js:314 and :335 (✎ buttons), app.js:218-223 (tabs), app.js:290-292 (chips), app.js:372-381 (PDF buttons)",
+      "title": "Give the app a search field and a sort",
+      "rationale": "Measured: 300 items renders as one 26,078px list in reverse-insertion order with no search input anywhere in the app and no sort control; the room chips and tab strip are not sticky, so both scroll away. Marcus could not answer 'is the dresser already in?' and started duplicating. The stylesheet already styles input[type=search] — the feature was intended and never built. Add an always-visible search over name/serial/notes, sort by value / name / date added, and two saved filters ('missing a photo', 'over $500'), and make the chips and tabs sticky.",
+      "where": "apps/home-inventory/app.js:287-301 (renderItems), index.html:1254 (nav.tabs, no position:sticky)",
       "severity": "major",
       "effort": "M"
     },
     {
-      "title": "Make the comfort panel reach the controls: .btn.small, chips and tabs are pinned below 44px",
-      "rationale": "Measured at data-text=xxl: pencil buttons 43×36, room chips 37px, ‹ Back 36px, tip pill 36px, #swsPrefsBtn 36px, tab buttons 39px. At default the chips are 28px. .btn.small hard-codes min-height:36px (index.html:589) and .chip has no min-height at all, so neither follows --tap: max(44px, 44px * var(--ui-scale)). Marguerite turned the text up because of her eyes and her tremor and every target she has to hit stayed exactly the same size — the comfort panel visibly failing at its own job. Route the ✎/✕ glyph buttons through .btn.icon, and give the room chips and tab buttons min-height:var(--tap).",
-      "where": "apps/home-inventory/index.html:589 (.btn.small), index.html:645-653 (.chip), index.html:1255-1260 (nav.tabs button), used at app.js:290-294, 314, 335, 339",
+      "title": "Add a close-up capture that keeps the evidence readable",
+      "rationale": "Measured through the real capture path: a serial plate filling 8.4% of a 4032×3024 frame comes out of compressImage (app.js:45, 1280px/JPEG 0.8) at a 3.7px cap height and is unreadable; the same plate at 2400/0.92 gives 6.9px and the model number survives. A receipt shot on its own is fine at 17.9px, so the pipeline is only wrong for details inside wide shots — and with one photo plus one receipt per item, the user cannot have both the wide shot and the close-up. 'The small photos are so pixelated, the information on the product labels is unreadable' is the incumbent's real one-star review. Split the pipeline: room and object shots stay at 1280/0.8; a 'close-up' capture (serial, hallmark, appraisal, receipt) keeps 2400/0.92 and renders large in the PDF. Allow several photos per item while you are in there — one photo per item is a documented reason people abandoned Encircle.",
+      "where": "apps/home-inventory/app.js:44-54 (compressImage), app.js:56-74 (pickImage), model.js:15-16 (item shape: photo/receipt singular)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Wire up the undo that is already loaded",
+      "rationale": "Measured: deleting a room with 10 items, deleting an item, and deleting a whole inventory-with-photos all complete behind a single window.confirm() with no toast, no Undo and no restore path — while window.SWS.undo is present on the page (sws-ui.js is loaded at index.html:1288) and app.js never calls it. The research is blunt: 'the photo you just deleted may be the only one of an object that no longer exists.' Route all three deletes through SWS.undo with the record held in memory for the toast's lifetime. Also add an 'Unsorted' filter chip — deleting a room orphans its items and they currently cannot be filtered to at all.",
+      "where": "apps/home-inventory/app.js:141-146 (delete inventory), app.js:339-343 (delete room), app.js:458-463 (delete item), app.js:289-295 (chips, missing Unsorted)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Replace the two native prompts, and label the inventory-name field",
+      "rationale": "'Start an inventory' is a native prompt() (app.js:159): with dialogs suppressed the primary CTA does nothing at all — no navigation, no toast, no change — which is exactly how the standard stress battery came to report this app 'clean' on 534 characters of hero copy. Room rename is the same (app.js:336). And the inventory-name input that replaces the prompt's answer is unlabelled: axe reports 'label' (critical) on all four tabs in both schemes, the app's only violation. Use the existing #itemDlg pattern for both text prompts, and give the name field a real label.",
+      "where": "apps/home-inventory/app.js:158-165 (createInventory), app.js:335-338 (rename room), app.js:214-215 (unlabelled name input)",
       "severity": "major",
       "effort": "S"
     },
     {
-      "title": "Keep evidence-grade resolution for serials, receipts and appraisals",
-      "rationale": "Measured end to end: compressImage() forces every capture to 1280px / JPEG 0.8 (a 4032×3024 frame scales by 0.317) and the original is discarded at capture. The PDF then draws that image at 146.7 × 110pt — 2.04 inches — so a serial plate occupying 2% of the original frame height prints with a 2.2pt cap height. Inspected as images: legible at 1:1 in the stored file, an illegible smudge at PDF size. Ray marks these files 'reshoot serials'. Split the pipeline as the research proposes: overview shots stay at 1280, a dedicated close-up capture keeps 2400px at 0.92 and is rendered large in the report, and allow more than one photo per item — one photo per item is a documented reason people abandoned Encircle.",
-      "where": "apps/home-inventory/app.js:45-54 (compressImage), apps/home-inventory/pdf.js:73-84 (cell geometry and drawImage), item shape at apps/home-inventory/model.js:15-16",
+      "title": "Stop deep-cloning the whole inventory on every keystroke",
+      "rationale": "Measured with 200 photographed items (a 146.5MB record): typing 10 characters into the inventory-name field took 5,142ms — 514ms of blocked main thread per keystroke — because the oninput handler calls touch(), which runs JSON.parse(JSON.stringify(inv)) over everything including every base64 photo (app.js:100), then queues a full-record IndexedDB write 400ms later. Debounce the snapshot rather than taking it eagerly, or keep photos in a separate object store keyed by item id so the metadata record stays small. The pagehide handler (app.js:104-108) can keep its eager clone.",
+      "where": "apps/home-inventory/app.js:95-108 (touch/pagehide), app.js:214-215 (the oninput that triggers it), apps/home-inventory/store.js:28",
       "severity": "major",
       "effort": "M"
     },
     {
-      "title": "Emit a CSV, and stop calling the PDF 'the format insurance adjusters ask for'",
-      "rationale": "Verified: exactly three exports — full-report PDF, value-sorted PDF, .json backup — and the value-sorted card's own copy at app.js:367 claims it is 'the format insurance adjusters ask for'. The research's sources say otherwise: Xactimate/XactContents and ClaimXperience ingest Excel, and State Farm ships its inventory aids in Excel across 39 templates. Adaeze's adjuster had already emailed her a spreadsheet. Add a CSV with the columns carriers request (Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo filename), and fix the claim in the copy either way.",
-      "where": "apps/home-inventory/app.js:365-382 (exports list and its description strings), item shape at apps/home-inventory/model.js:15-16",
+      "title": "Grow the controls when the text grows, and stop putting Delete under the thumb",
+      "rationale": "Measured at 414px with Largest text and Roomy spacing: ✎ buttons 49×36, ‹ Back 91×36, #swsPrefsBtn 36×36, .tipbtn 36px, export PDF buttons 51×36, tabs 49px — the type scaled from 16px to 24px and none of the targets moved. In the item dialog at 320px + Largest the content is 1,166px inside a 648px box, so the user scrolls to the bottom to reach Save and meets Delete first, as an identical 256×66px block; .btn.danger changes only text colour. Give .btn a min-height of var(--tap) that .small cannot undercut, route the ✎/✕ glyphs through .btn.icon, give danger a tinted fill and border, and move Delete out of the Cancel/Save row.",
+      "where": "apps/home-inventory/index.html:1305-1328 (#itemDlg button row), the .btn/.btn.small/.btn.danger rules in the studio base, app.js:314 and 335-343 (glyph buttons)",
       "severity": "major",
       "effort": "M"
     },
     {
-      "title": "Let people attach photos they already have — capture=\"environment\" removes the gallery",
-      "rationale": "Verified on the element: <input type=\"file\" accept=\"image/*\" capture=\"environment\" multiple=false>. On Android Chrome and several mobile browsers `capture` forces the camera and removes the library option, and the same input backs 'Add receipt photo' in the item dialog. Hector was standing in an empty flat with the photographs already on his phone; receipts live in an email or a photo library and never in front of a camera. Drop the attribute (or offer both a 'Take photo' and a 'Choose photo' path) and set multiple on the receipt picker.",
-      "where": "apps/home-inventory/index.html:1330 (#fileInput), consumed by app.js:56-74, 250-254, 464-479",
+      "title": "Let people attach a receipt they already photographed, and stop discarding staged photos",
+      "rationale": "The single shared file input carries capture=\"environment\" (index.html:1330) and is reused for item photos, Replace photo and Add receipt photo. On iOS Safari and several Android browsers that forces the camera and removes the photo-library option, so Renata cannot attach receipts that are already in her camera roll. Separately, a photo taken in the Capture tab and not yet named is discarded silently when the user leaves the screen (captureDraft is reset at app.js:199) — no warning, no toast. Drop the capture attribute (or offer both a camera button and a choose-from-library button), and persist the capture draft with the inventory so an interruption does not cost the shot.",
+      "where": "apps/home-inventory/index.html:1330 (#fileInput capture attribute), apps/home-inventory/app.js:196-201 (captureDraft reset), app.js:250-254",
       "severity": "major",
       "effort": "S"
     },
     {
-      "title": "Make durability visible: persistent storage, install, quota, last-export date",
-      "rationale": "Verified absent: navigator.storage.persist, navigator.storage.estimate, beforeinstallprompt and navigator.share appear zero times across app.js, index.html and sw.js, and navigator.storage.persisted() returned false at runtime. WebKit clears script-writable storage after seven days of Safari use without returning to a site, and home-screen-installed apps are exempt — so for an app whose premise is 'make this now, need it in three years', installation is data integrity, not polish. Also: the quota warning is honest but transient (8s, throttled to once a minute) and the UI keeps showing the item as saved afterwards. Request persistence on first save, show remaining quota, offer Add to Home Screen with the reason attached, stamp an ageing last-exported date on the home screen, and add navigator.share() to both export paths with the current download as fallback.",
-      "where": "apps/home-inventory/app.js:85-108 (persistSnap/touch/pagehide), app.js:399-404 (downloadBytes), app.js:489-500 (init), apps/home-inventory/sw.js",
-      "severity": "major",
-      "effort": "M"
-    },
-    {
-      "title": "Validate imported and stored item shapes so '$NaN' can never reach the screen",
-      "rationale": "Verified twice: a stored record with valueCents:'lots' rendered '1 items · 1 photographed · $NaN', and a crafted backup with valueCents:'NaN' imported cleanly and dropped the user into an inventory whose header read the same. importFile() at app.js:172 checks only Array.isArray(obj.items). Wanda restores backups between two devices routinely; '$NaN' where the documented value belongs is where she stops believing any number in the app. Coerce valueCents with Number.isFinite on both read and import, and stop counting a photo that safeSrc() rejects as 'photographed'.",
-      "where": "apps/home-inventory/app.js:167-183 (importFile), apps/home-inventory/model.js:53-74 (totals, photos count at :63 and :71)",
-      "severity": "major",
-      "effort": "S"
-    },
-    {
-      "title": "Put the tab in the URL, hide the app chrome from the print path, and stop offering exports on an empty inventory",
-      "rationale": "Three cheap orientation and paper fixes with measured evidence. (1) `tab` is a module variable, so browser Back from the Items tab exits the whole inventory to the home screen (verified) and reload always lands on Capture. (2) Print media emulation leaves nav.tabs VISIBLE, the ‹ Back button VISIBLE and all 15 pencil buttons printing — the base print block hides .seg and this app uses nav.tabs. (3) Both PDF buttons are enabled with zero items and will generate a one-page cover with nothing on it. Also fold in the two paper nits Ray raised: currency is hardcoded USD with no setting (fr-FR additionally prints '1?235 $US' because U+202F is stripped by safe()), and the generated date is an ambiguous toLocaleDateString '8/9/2026'.",
-      "where": "apps/home-inventory/app.js:78 and :110-113 (tab/route), index.html:1255 (nav.tabs, add .no-print or rename to .seg), app.js:365-382 (export buttons), apps/home-inventory/model.js:40-45 (fmtCents currency), pdf.js:49 and :137 (toLocaleDateString)",
+      "title": "Say what a value is worth, to the cent, and say when one was rejected",
+      "rationale": "Measured: '100000000', '1e9', '-40' and 'abc' each save an item with no value at all and no message. And fmtCents rounds to whole dollars everywhere (model.js:42), so '19.99' displays and prints as $20 and '0.50' as $1 — on 312 items at $19.99, the adjuster PDF's rows print $6,240 under a Total line reading $6,237 against a true $6,236.88. An adjuster reading a document whose column does not sum to its own total has a reason to question everything else on it. Show cents in the PDF (and optionally on screen), and reject an unparseable value out loud instead of storing zero.",
+      "where": "apps/home-inventory/model.js:40-45 (fmtCents), model.js:22-38 (parseValue), apps/home-inventory/app.js:266 (silent `|| 0`), pdf.js:92-95 and 143",
       "severity": "minor",
-      "effort": "M"
+      "effort": "S"
     }
   ]
 }
