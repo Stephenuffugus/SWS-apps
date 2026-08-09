@@ -376,11 +376,20 @@ function renderBar() {
     : 'About ' + formatBytes(est) + ' — the exact size is shown once it is written.';
 }
 
+/* Publish the sticky bar's real height so the toast can sit above it instead
+   of on top of the Save button it is reporting on. */
+function measureBar() {
+  const bar = $('actionbar');
+  const h = bar.classList.contains('hidden') ? 0 : Math.round(bar.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--bar-h', h + 'px');
+}
+
 function renderAllButPages() {
   renderFiles();
   renderIssues();
   renderSplit();
   renderBar();
+  measureBar();
 }
 function renderAll() {
   renderPages();
@@ -452,6 +461,7 @@ function setBusy(state, label) {
   for (const id of ['addBtn', 'mergeBtn', 'splitBtn']) $(id).disabled = state;
   $('progressBox').classList.toggle('hidden', !state);
   if (label) $('progressText').textContent = label;
+  measureBar();
   if (!state) cancelRequested = false;
 }
 
@@ -614,6 +624,7 @@ function wire() {
 }
 
 function init() {
+  if (window.ResizeObserver) new ResizeObserver(measureBar).observe($('actionbar'));
   const modes = $('splitMode');
   for (const m of SPLIT_MODES) modes.append(el('option', { value: m.id, text: m.label }));
   wire();

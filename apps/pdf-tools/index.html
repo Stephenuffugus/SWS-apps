@@ -1304,6 +1304,9 @@ body{
    moment that floor is threatened. The filename never gets squeezed to 4px
    and set over twelve lines again. */
 #pageList > li{flex-wrap:wrap; row-gap:var(--s2); align-items:center}
+/* A content-sized basis (flex:1 1 auto) orphans the page number on its own
+   line as soon as the filename is long, so the basis is fixed in rem — it
+   tracks the text-size setting and keeps the tag and the label together. */
 #pageList .grow{flex:1 1 12rem; min-width:0}
 #pageList .pline{display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap}
 #pageList .pnum{font-weight:600}
@@ -1375,13 +1378,17 @@ body{
 }
 #progressText{flex:1 1 12rem; overflow-wrap:anywhere}
 
+/* The toast now carries Undo, and the bar now carries Save — so the toast must
+   not land on top of the bar. --bar-h is measured and published by app.js. */
+#toast{bottom:calc(var(--s4) + var(--bar-h, 0px) + env(safe-area-inset-bottom))}
+
 /* ── Print ─────────────────────────────────────────────────────────────── */
 /* This app makes a file, not a sheet of paper — so what it prints is the
    manifest: the assembled order, page by page, with its source and its final
    rotation. Everything you could press is gone. */
 @media print{
   .hero,.dropzone,#loadReport,#outCard,#emptyState,
-  .rowbtns,#progressBox,.negatives,.proof{display:none !important}
+  .rowbtns,#progressBox,.negatives,.proof,#fileList .btn{display:none !important}
   .printonly{display:block !important}
   #printHead{margin-bottom:8pt}
   #printHead h3{font-size:12pt; margin:0 0 2pt}
@@ -1472,11 +1479,11 @@ body{
   <section class="card" id="outCard">
     <h2>Save</h2>
     <label class="f" for="outName"><span>File name</span>
-      <span class="namewrap">
+      <div class="namewrap">
         <input type="text" id="outName" autocomplete="off" spellcheck="false"
                aria-describedby="sizeNote">
         <span class="suffix" aria-hidden="true">.pdf</span>
-      </span>
+      </div>
     </label>
     <p class="hint" id="sizeNote">Add a PDF and the size of the file you are about to write
       is shown here, before you press anything.</p>

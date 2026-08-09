@@ -614,14 +614,16 @@ function wire() {
   $('camBtn').addEventListener('click', () => $('camInput').click());
   $('libBtn').addEventListener('click', () => $('libInput').click());
   ['camInput', 'libInput'].forEach((id) => {
+    /* Copy the FileList BEFORE resetting the input: it is live, so clearing
+       the value empties the very list we are about to read. */
     $(id).addEventListener('change', async (ev) => {
-      const files = ev.target.files;
+      const files = [...(ev.target.files || [])];
       ev.target.value = '';
       await addFiles(files);
     });
   });
   $('retakeInput').addEventListener('change', async (ev) => {
-    const f = ev.target.files && ev.target.files[0];
+    const f = (ev.target.files || [])[0] || null;
     ev.target.value = '';
     await retake(f);
   });
