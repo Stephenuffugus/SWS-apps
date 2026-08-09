@@ -96,14 +96,19 @@ async function copyText(text, okMsg) {
 }
 
 /* ── Schema ─────────────────────────────────────────────────────────────────
-   Each field: [key, label, multiline, placeholder, opts].
+   Each field: [key, label, multiline, hint, opts].
 
-   The placeholders used to be fully-written fake answers — "Maya: peanuts
-   (EpiPen on the counter!)", "Dr. Chen — 555-0177". On a sitter's phone those
-   read as the family's own words, and at High contrast the base layer maps
-   --ink-3 onto --ink so they became pixel-identical to real text. They are now
-   short, non-actionable prompts: they say what shape the answer takes and
-   never state a fact.                                                       */
+   That fourth column used to be a `placeholder` holding a fully-written fake
+   answer — "Maya: peanuts (EpiPen on the counter!)", "Dr. Chen — 555-0177".
+   Inside the box, in the same typeface as real content, those read as the
+   family's own words on a stranger's phone; and at High contrast the base
+   layer maps --ink-3 onto --ink, so grey stopped distinguishing them at all.
+
+   So the app no longer puts anything inside an empty field, at any contrast
+   setting, in any view. The guidance is a short non-actionable hint rendered
+   underneath the control and wired up with aria-describedby, which is where a
+   hint belongs: it stays visible while you type, and an empty box is
+   unambiguously an empty box.                                               */
 export const SCHEMAS = {
   baby: {
     title: 'Babysitter Sheet',

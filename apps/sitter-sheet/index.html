@@ -1291,6 +1291,7 @@ label.f.is-filled > input,label.f.is-filled > textarea{border-color:var(--line-2
   color:var(--ink);
   margin:0;
 }
+.sitter .stitle + .sub{margin-top:var(--s1)}
 .sitter .scell{margin-bottom:var(--s5)}
 .sitter .scell:last-child{margin-bottom:0}
 .sitter .slabel{
@@ -1495,6 +1496,7 @@ label.f.is-filled > input,label.f.is-filled > textarea{border-color:var(--line-2
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#main">Skip to the sheet</a>
 <div class="wrap">
   <header class="app">
     <img src="icon.svg" alt="">
@@ -1506,39 +1508,88 @@ label.f.is-filled > input,label.f.is-filled > textarea{border-color:var(--line-2
   <main id="main">
 
   <div class="screenonly">
+
+    <!-- ── The parent's edit form ─────────────────────────────────────── -->
+    <div id="editView">
     <section class="card">
+      <h2>Which sheet?</h2>
       <div class="seg" role="group" aria-label="Sheet type">
         <button id="modeBaby" type="button" aria-pressed="true"><span aria-hidden="true">👶</span> Babysitter</button>
         <button id="modePet" type="button" aria-pressed="false"><span aria-hidden="true">🐾</span> Pet sitter</button>
       </div>
-      <p class="hint" style="margin:0">Fill in what matters, skip what doesn't — empty sections stay off the printed page. Everything saves to this device automatically.</p>
+      <p class="hint">Fill in what matters, skip what doesn't — empty fields stay off the printed page. Everything saves to this device as you type. <span data-saved-flag></span></p>
+      <p class="trust">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span><b>Your children's allergies, your address and your wifi password stay in this browser.</b>
+        Nothing is uploaded, there is no account and there are no ads. Share by link or QR and the whole sheet
+        travels inside the link itself — still never sent to a server. Someone who opens your link sees the
+        sheet without it being saved to their phone unless they choose to. Download it as a file whenever you
+        want, and clear it from this device in one tap.</span>
+      </p>
     </section>
-
-    <section class="card" id="form"></section>
 
     <section class="card">
-      <button class="btn primary" id="printBtn" type="button" style="width:100%">Print / Save as PDF</button>
-      <div class="row" style="margin-top:8px">
+      <h2>Fill in the sheet</h2>
+      <div id="form"></div>
+    </section>
+
+    <section class="card">
+      <h2>Print preview</h2>
+      <p class="sub">This is the page itself, at the size it will print.</p>
+      <div id="pvScroll">
+        <div id="pvStage"><div id="pvPaper" class="sheetdoc" aria-hidden="true"></div></div>
+      </div>
+      <p class="hint" id="pvCount"></p>
+    </section>
+
+    <section class="card">
+      <h2>Share &amp; print</h2>
+      <div class="warn hidden" id="gaps"></div>
+      <div class="row">
         <button class="btn" id="shareBtn" type="button">Copy link</button>
+        <button class="btn" id="textBtn" type="button">Copy as text</button>
         <button class="btn" id="qrBtn" type="button">Show QR</button>
       </div>
-      <p class="hint">Or hand it straight to their phone — the whole sheet travels inside the link. Nothing is uploaded anywhere.</p>
-      <p class="hint">Prints one clean page. Stick it on the fridge — sitters actually read these.</p>
+      <p class="hint">Three ways out and none of them need a printer. The link and the QR carry the whole
+      sheet inside them — nothing is uploaded anywhere. Plain text pastes cleanly into a message.</p>
+      <div class="row" style="margin-top:var(--s4)">
+        <button class="btn" id="sitterBtn" type="button">See the sitter's view</button>
+        <button class="btn" id="dlBtn" type="button">Download my sheet</button>
+        <button class="btn" id="importBtn" type="button">Open a saved file</button>
+        <button class="btn" id="clearBtn" type="button">Clear this sheet</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+      <p class="hint">The download is a plain JSON file you own. Nothing here is held hostage.</p>
+      <div class="well hidden" id="fallback" style="margin-top:var(--s4)">
+        <p class="hint" id="fallbackMsg"></p>
+        <textarea id="fallbackText" readonly aria-label="Copy this text by hand"></textarea>
+        <button class="btn" id="fallbackClose" type="button">Done</button>
+      </div>
     </section>
+
+    <div class="actionbar">
+      <button class="btn primary" id="printBtn" type="button" style="flex:1">Print / Save as PDF</button>
+    </div>
+    </div>
+
+    <!-- ── The sitter's read-only page, built by app.js ────────────────── -->
+    <div id="sitterView" class="sitter hidden"></div>
+
   </div>
 
   <!-- print-only rendering -->
-  <div id="sheet"></div>
+  <div id="sheet" class="sheetdoc"></div>
   </main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
 <footer class="colophon">Stays on your device — family details are nobody's business.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Sitter%20Sheet" style="color:inherit">Feedback</a></footer>
 
-<dialog id="qrDlg" style="border:none;border-radius:14px;padding:18px;text-align:center">
-  <h3 style="margin:0 0 10px;color:#111">Scan with the sitter’s phone</h3>
-  <canvas id="qrCanvas" width="300" height="300"></canvas>
-  <div style="margin-top:10px"><button class="btn" id="qrClose" type="button">Close</button></div>
+<dialog id="qrDlg" class="qrdlg" aria-labelledby="qrTitle">
+  <h2 id="qrTitle">Scan with the sitter’s phone</h2>
+  <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code that opens this sheet"></canvas>
+  <p class="hint" id="qrNote"></p>
+  <div class="qrfoot"><button class="btn" id="qrClose" type="button">Close</button></div>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
