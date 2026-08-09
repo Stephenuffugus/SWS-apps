@@ -1,7 +1,7 @@
 // Signup Sheets — Engine 1, skin A. UI layer.
 // All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
 import {
-  CODE_CHARS, normalizeCode, parseBulkSlotsReport, dateRangeSlotsReport,
+  normalizeCode, parseBulkSlotsReport, dateRangeSlotsReport,
   fillStats, nudgeMessage, shareUrl, stillNeededSentence, MAX_SLOTS,
 } from './helpers.js';
 import * as D from './data.js';
@@ -91,6 +91,9 @@ function friendly(e) {
   if (String(code).includes('unavailable')) return 'You look offline — the change is queued and will sync when you reconnect.';
   return 'Something went wrong. Try again?';
 }
+/* Some failures have already spoken for themselves in the exact words the
+   situation needs; do not talk over them with a generic apology. */
+function reportError(e, ms) { if (!(e && e.handled)) toast(friendly(e), ms || 4500); }
 
 /* ---------- state ---------- */
 let user = null;
@@ -141,7 +144,6 @@ function setGrowthFooter(participant) {
 async function renderHome() {
   setGrowthFooter(false);
   live.stop();
-  applyTheme(null);
   const v = $('view');
   v.replaceChildren();
 
@@ -151,6 +153,7 @@ async function renderHome() {
       el('strong', {}, 'No accounts for participants. No ads. Free.')),
     el('button', { class: 'btn primary', type: 'button', onclick: startCreate }, 'Create a sheet'),
   ));
+  v.append(trustBadge(false));
 
   const codeInput = el('input', {
     type: 'text', placeholder: 'ABC123', maxlength: '8', autocomplete: 'off',
@@ -179,13 +182,17 @@ async function renderHome() {
     try {
       const boards = await D.myBoards(user.uid);
       sec.lastChild.remove();
-      if (boards.length === 0) sec.append(el('p', { class: 'hint', text: 'No sheets yet — create your first one above.' }));
+      if (boards.length === 0) {
+        sec.append(el('div', { class: 'empty' },
+          el('div', { class: 'glyph', 'aria-hidden': 'true' }, '📋'),
+          el('p', {}, 'No sheets yet — create your first one above. It takes about fifteen seconds.')));
+      }
       for (const b of boards) {
         list.append(el('li', {},
           el('div', { class: 'grow' },
             el('div', { text: b.title }),
             el('div', { class: 'sub', text: 'Code ' + b.shareCode + (b.settings?.locked ? ' · locked' : '') })),
-          el('button', { class: 'btn small', type: 'button', onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open')));
+          el('button', { class: 'btn small', type: 'button', 'aria-label': 'Open ' + b.title, onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open')));
       }
     } catch (e) {
       sec.lastChild.textContent = 'Couldn’t load your sheets: ' + friendly(e);
@@ -201,6 +208,20 @@ function startCreate() {
   $('createTitle').focus();
 }
 
+/* One card for both dead ends. The old copy told a stranger who mistyped a code
+   that "the organizer may have rotated it", which explains nothing to someone
+   who has never met the organizer and has a typo. */
+function renderGone(badCode, code) {
+  setGrowthFooter(false);
+  const v = $('view');
+  v.replaceChildren(el('section', { class: 'card' },
+    el('h2', {}, badCode ? 'No sheet with that code' : 'This sheet is gone'),
+    el('p', {}, badCode
+      ? 'Nothing is here at code ' + (code || live.code || '') + '. Codes are six letters and numbers, and they never contain the letters O, I or L or the digits 0 and 1 — those get mistaken for each other. Check the link you were sent, or ask whoever sent it for a fresh one.'
+      : 'The organizer deleted this sheet, so there is nothing left to sign up for. If you had claimed a spot, that commitment no longer exists — check with whoever sent you the link.'),
+    el('p', {}, el('a', { class: 'btn', href: '#/' }, 'Go to the front page'))));
+}
+
 /* ---------- board ---------- */
 async function renderBoard(code) {
   const v = $('view');
@@ -210,12 +231,7 @@ async function renderBoard(code) {
     try { await D.ensureSignedIn(); }
     catch (e) { v.replaceChildren(el('p', { class: 'warn', text: 'Couldn’t connect. Check your internet and reload.' })); return; }
     const boardId = await D.resolveCode(code).catch(() => null);
-    if (!boardId) {
-      v.replaceChildren(el('section', { class: 'card' },
-        el('p', { class: 'warn', text: 'That sheet doesn’t exist — the code may have been rotated by the organizer.' }),
-        el('p', {}, el('a', { href: '#/' }, 'Go home'))));
-      return;
-    }
+    if (!boardId) { renderGone(true, code); return; }
     live.boardId = boardId; live.code = code;
     live.unsubs.push(D.watchBoard(boardId, (b) => {
       live.board = b;
@@ -672,7 +688,7 @@ function renderManage(b) {
           // label used to be deleted out from under the person who typed it.
           await addSlotsChecked([{ label, capacity: parseInt(cap.value, 10) || 1 }], null,
             (added) => { if (added > 0) lab.value = ''; });
-        } catch (e) { toast(friendly(e), 4500); }
+        } catch (e) { reportError(e); }
       } }, 'Add')));
   } else if (ui.addMode === 'bulk') {
     const ta = el('textarea', { 'data-keep': 'bulk', 'aria-label': 'Paste your list of spots',
@@ -697,7 +713,7 @@ function renderManage(b) {
               rep.remainder,
             ].filter(Boolean).join('\n');
           });
-        } catch (e) { toast(friendly(e), 6000); }
+        } catch (e) { reportError(e, 6000); }
       } }, 'Add all')));
   } else {
     const start = el('input', { type: 'date', 'data-keep': 'r-start' });
@@ -731,7 +747,7 @@ function renderManage(b) {
             const missed = rep.dropped + (rep.rows.length - added);
             return missed ? missed + ' later ' + (missed === 1 ? 'date' : 'dates') + ' did not fit — a sheet holds ' + MAX_SLOTS + ' spots.' : '';
           });
-        } catch (e) { toast(friendly(e), 6000); }
+        } catch (e) { reportError(e, 6000); }
       } }, 'Generate spots'));
   }
 
@@ -753,21 +769,39 @@ function renderManage(b) {
       el('span', { style: 'margin:0' }, 'Lock the sheet (read-only)')),
     el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
-        if (!confirm('Rotate the code? The old link stops working instantly — you’ll share a new one.')) return;
-        try { const code = await D.rotateCode(live.boardId, live.code);
-          live.code = code; location.hash = '#/b/' + code; toast('New link ready — old one is dead'); }
-        catch (e) { toast(friendly(e), 4500); }
+        const oldCode = live.code;
+        try {
+          const code = await D.rotateCode(live.boardId, oldCode);
+          live.code = code; location.hash = '#/b/' + code;
+          undoToast('New link ready — the old one is dead', async () => {
+            try {
+              await D.rotateCode(live.boardId, code, oldCode);
+              live.code = oldCode; location.hash = '#/b/' + oldCode;
+              toast('The old link works again');
+            } catch (e2) { toast('Couldn’t put the old link back — that code has been taken.', 5000); }
+          });
+        } catch (e) { toast(friendly(e), 4500); }
       } }, 'Rotate link'),
       el('button', { class: 'btn danger', type: 'button', onclick: async () => {
-        if (!confirm('Delete “' + b.title + '” for everyone? This can’t be undone.')) return;
-        try { await D.deleteBoard(live.boardId, live.code); location.hash = '#/'; toast('Sheet deleted'); }
-        catch (e) { toast(friendly(e), 4500); }
+        // Snapshot, delete, hand the snapshot back. Only the board and code
+        // documents are deleted — the slots, claims and notes survive orphaned,
+        // so restoring the board at the same id revives the whole sheet.
+        const gone = { ...b, id: live.boardId };
+        const code = live.code;
+        try {
+          await D.deleteBoard(live.boardId, code);
+          location.hash = '#/';
+          undoToast('Sheet “' + b.title + '” deleted', async () => {
+            try { await D.restoreBoard(gone, code); location.hash = '#/b/' + code; toast('Sheet restored'); }
+            catch (e2) { toast('Couldn’t restore the sheet: ' + friendly(e2), 6000); }
+          });
+        } catch (e) { toast(friendly(e), 4500); }
       } }, 'Delete sheet')));
 
   // board title/description edit
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Title & details'));
-  const ti = el('input', { type: 'text', value: b.title, maxlength: '100' });
-  const de = el('input', { type: 'text', value: b.description || '', maxlength: '1000', placeholder: 'When/where, drop-off details… (optional)' });
+  const ti = el('input', { type: 'text', value: b.title, maxlength: '100', 'data-keep': 'b-title' });
+  const de = el('input', { type: 'text', value: b.description || '', maxlength: '1000', placeholder: 'When/where, drop-off details… (optional)', 'data-keep': 'b-desc' });
   inner.append(
     el('label', { class: 'f' }, el('span', {}, 'Title'), ti),
     el('label', { class: 'f' }, el('span', {}, 'Details'), de),
@@ -775,20 +809,34 @@ function renderManage(b) {
       const title = ti.value.trim();
       if (!title) { toast('The sheet needs a title'); return; }
       D.updateBoard(live.boardId, { title: title.slice(0, 100), description: de.value.slice(0, 1000) })
-        .then(() => toast('Saved')).catch(e => toast(friendly(e)));
+        .then(() => saved()).catch(e => toast(friendly(e)));
     } }, 'Save'));
   return wrap;
 }
 
-async function addSlotsChecked(rows) {
-  if (live.slots.length + rows.length > 100) {
-    toast('Sheets max out at 100 spots — split into a second sheet if you need more.', 5000);
-    return;
+/* Adds what fits, says exactly what did not, and offers an Undo for the lot.
+   `noteFn(added)` supplies the honest tail of the message; `afterFn(added)`
+   is where the caller decides what — if anything — to clear. */
+async function addSlotsChecked(rows, noteFn, afterFn) {
+  const room = Math.max(0, MAX_SLOTS - live.slots.length);
+  if (room === 0) {
+    // Throwing, not returning: the callers used to clear their field either way.
+    toast('This sheet is full at ' + MAX_SLOTS + ' spots — nothing was added, and what you typed is still here. Start a second sheet for the rest.', 8000);
+    if (afterFn) afterFn(0);
+    const err = new Error('sheet-full'); err.handled = true; throw err;
   }
+  const take = rows.slice(0, room);
   let order = live.slots.reduce((m, s) => Math.max(m, s.order || 0), 0);
-  rows.forEach((r, i) => { r.order = order + i + 1; });
-  await D.addSlots(live.boardId, rows);
-  toast(rows.length === 1 ? 'Spot added' : rows.length + ' spots added');
+  take.forEach((r, i) => { r.order = order + i + 1; });
+  const ids = await D.addSlots(live.boardId, take);
+  if (afterFn) afterFn(take.length);
+  const head = take.length === 1 ? 'Spot added' : take.length + ' spots added';
+  const tail = noteFn ? noteFn(take.length) : '';
+  undoToast(tail ? head + ' — ' + tail : head, async () => {
+    try { await D.deleteSlots(live.boardId, ids); toast(take.length === 1 ? 'Spot removed' : 'Those ' + take.length + ' spots were removed'); }
+    catch (e) { toast(friendly(e), 4500); }
+  });
+  return { added: take.length };
 }
 
 /* ---------- slot edit dialog ---------- */
@@ -801,29 +849,53 @@ function openSlotDlg(s) {
 }
 
 /* ---------- QR ---------- */
-function showQR() {
-  const url = shareUrl(live.code, baseUrl());
+function drawQR(canvas, url, size) {
   try {
     const qr = qrcode(0, 'M');
     qr.addData(url); qr.make();
-    const canvas = $('qrCanvas'), size = 300, count = qr.getModuleCount();
+    const count = qr.getModuleCount();
     const cell = Math.floor(size / (count + 8));
+    if (cell < 1) return false;
     const off = Math.floor((size - cell * count) / 2);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
     ctx.fillStyle = '#000';
     for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)
       if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
-  } catch (e) { /* canvas unavailable — dialog still shows the hint text */ }
+    return true;
+  } catch (e) { return false; }
+}
+
+function showQR() {
+  const url = shareUrl(live.code, baseUrl());
+  const canvas = $('qrCanvas');
+  drawQR(canvas, url, 300);
+  // A QR that cannot leave the phone is useless for the one job it has: getting
+  // onto a flyer or a noticeboard. And the code itself is read out, so it is
+  // text under the picture rather than pixels a screen reader cannot see.
+  canvas.setAttribute('aria-label', 'QR code that opens this sheet at ' + url);
+  $('qrUrl').textContent = 'Code ' + live.code + ' · ' + url;
   showDlg($('qrDlg'));
+}
+
+function saveQR() {
+  const canvas = $('qrCanvas');
+  try {
+    canvas.toBlob((blob) => {
+      if (!blob) { toast('Couldn’t make the image — screenshot the code instead.'); return; }
+      const a = el('a', { href: URL.createObjectURL(blob), download: 'signup-sheet-' + live.code + '.png' });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      toast('QR saved as an image');
+    }, 'image/png');
+  } catch (e) { toast('Couldn’t make the image — screenshot the code instead.'); }
 }
 
 /* ---------- wiring ---------- */
 function wire() {
   $('authBtn').addEventListener('click', async () => {
-    if (user && !D.isAnon(user)) {
-      if (confirm('Sign out?')) { await D.signOutUser(); toast('Signed out'); }
-    } else showDlg($('authDlg'));
+    if (user && !D.isAnon(user)) { await D.signOutUser(); toast('Signed out — tap Sign in to come back'); }
+    else showDlg($('authDlg'));
   });
   $('googleBtn').addEventListener('click', async () => {
     try {
@@ -851,37 +923,95 @@ function wire() {
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
 
+  /* The dialog used to close 53ms after the tap and THEN await the write, so a
+     lost race stranded the typed note inside a closed dialog that blanked it on
+     next open — the most humiliating moment in the category, shipped. Now the
+     dialog stays put until the write settles, the button says what it is doing,
+     and a collision keeps every character and offers another spot in one tap. */
   $('nameOk').addEventListener('click', async () => {
+    const ok = $('nameOk');
+    if (ok.disabled) return;
     const name = $('nameInput').value.trim();
-    if (!name) { toast('Just your first name is fine'); return; }
+    if (!name) { toast('Just your first name is fine'); $('nameInput').focus(); return; }
     saveName(name);
-    closeDlg($('nameDlg'));
+    clearClaimError();
+    const target = claimTarget;
+    const wasLabel = ok.textContent;
+    ok.disabled = true; ok.textContent = 'Claiming…';
+    $('nameCancel').disabled = true;
     try {
-      const r = await D.claimSlot(live.boardId, claimTarget.id, name, $('noteInput').value);
+      const r = await D.claimSlot(live.boardId, target.id, name, $('noteInput').value);
+      closeDlg($('nameDlg'));
       toast(r === 'note-dropped'
         ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
-        : 'You’re in — ' + claimTarget.label, r === 'note-dropped' ? 6000 : 2400);
-    } catch (e) { toast(friendly(e), 4500); }
+        : 'You’re in — ' + target.label, r === 'note-dropped' ? 6000 : 3500);
+    } catch (e) {
+      const denied = String((e && (e.code || e.message)) || '').includes('permission-denied');
+      const locked = !!(live.board && live.board.settings && live.board.settings.locked);
+      const err = $('claimErr');
+      err.textContent = !denied ? friendly(e)
+        : locked ? 'The organizer has just locked this sheet, so nothing more can be claimed.'
+        : 'Someone else took “' + target.label + '” a moment before you. Nothing you typed is lost.';
+      err.classList.remove('hidden');
+      const alt = !locked && denied ? nearestOpenSlot(target.id) : null;
+      if (alt) {
+        const btn = $('claimAlt');
+        btn.textContent = 'Take “' + alt.label + '” instead';
+        btn.onclick = () => retargetClaim(alt);
+        $('claimAltRow').classList.remove('hidden');
+      }
+    } finally {
+      ok.disabled = false; ok.textContent = wasLabel;
+      $('nameCancel').disabled = false;
+    }
   });
   $('nameCancel').addEventListener('click', () => closeDlg($('nameDlg')));
   $('nameInput').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('nameOk').click(); });
+  $('noteInput').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('nameOk').click(); });
+
+  $('editClaimSave').addEventListener('click', async () => {
+    const name = $('editClaimName').value.trim();
+    if (!name) { toast('Your name can’t be blank'); return; }
+    saveName(name);
+    try { await D.renameClaim(live.boardId, editClaimTarget.id, name); closeDlg($('editClaimDlg')); saved('Name updated'); }
+    catch (e) { toast(friendly(e), 4500); }
+  });
+  $('editClaimCancel').addEventListener('click', () => closeDlg($('editClaimDlg')));
+  $('editClaimName').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('editClaimSave').click(); });
 
   $('slotSave').addEventListener('click', async () => {
     const label = $('slotLabel').value.trim();
-    const cap = Math.min(Math.max(parseInt($('slotCap').value, 10) || 1, 1), 999);
+    const typed = $('slotCap').value;
+    const cap = Math.min(Math.max(parseInt(typed, 10) || 1, 1), 999);
     if (!label) { toast('The spot needs a label'); return; }
     if (cap < (slotEditing.claimedCount || 0)) { toast('Capacity can’t go below the ' + slotEditing.claimedCount + ' people already signed up'); return; }
-    try { await D.updateSlot(live.boardId, slotEditing.id, { label: label.slice(0, 120), capacity: cap }); closeDlg($('slotDlg')); }
-    catch (e) { toast(friendly(e), 4500); }
+    try {
+      await D.updateSlot(live.boardId, slotEditing.id, { label: label.slice(0, 120), capacity: cap });
+      closeDlg($('slotDlg'));
+      // A number the organizer typed being silently replaced by a different one
+      // is how a sheet's capacity quietly stops meaning what they meant.
+      if (String(cap) !== String(typed).trim()) toast('Saved — “' + typed + '” isn’t a number of people, so this spot is set to ' + cap + '.', 6000);
+      else saved();
+    } catch (e) { toast(friendly(e), 4500); }
   });
   $('slotDelete').addEventListener('click', async () => {
-    const n = slotEditing.claimedCount || 0;
-    if (!confirm(n ? 'Delete this spot and its ' + n + ' signup(s)?' : 'Delete this spot?')) return;
-    try { await D.deleteSlot(live.boardId, slotEditing.id); closeDlg($('slotDlg')); }
-    catch (e) { toast(friendly(e), 4500); }
+    // Snapshot then delete then offer it back. Deleting the slot document does
+    // not touch its claims, so restoring the slot restores the signups with it.
+    const gone = { ...slotEditing };
+    const n = gone.claimedCount || 0;
+    try {
+      await D.deleteSlot(live.boardId, gone.id);
+      closeDlg($('slotDlg'));
+      undoToast('Deleted “' + gone.label + '”' + (n ? ' and its ' + n + ' signup' + (n === 1 ? '' : 's') : ''), async () => {
+        try { await D.restoreSlot(live.boardId, gone); toast('“' + gone.label + '” is back' + (n ? ', signups and all' : '')); }
+        catch (e2) { toast('Couldn’t restore that spot: ' + friendly(e2), 6000); }
+      });
+    } catch (e) { toast(friendly(e), 4500); }
   });
   $('slotCancel').addEventListener('click', () => closeDlg($('slotDlg')));
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
+  $('qrSave').addEventListener('click', saveQR);
+  $('qrCopy').addEventListener('click', () => copyText(shareUrl(live.code, baseUrl()), 'Link copied'));
 
   $('createOk').addEventListener('click', async () => {
     const title = $('createTitle').value.trim();

@@ -162,6 +162,51 @@ await T('locked sheet rejects participant claims', async () => {
 await signOut(auth);
 await signInWithEmailAndPassword(auth, OWNER_EMAIL, PW);
 
+/* ---- the undo paths that replaced four native confirm() dialogs ---- */
+
+await T('addSlots hands back the ids it created, and deleteSlots takes them away', async () => {
+  const before = (await once((cb, err) => D.watchSlots(boardId, cb, err))).length;
+  const ids = await D.addSlots(boardId, [
+    { label: 'Undo me A', capacity: 1, order: 90 },
+    { label: 'Undo me B', capacity: 2, order: 91 },
+  ]);
+  assert.equal(ids.length, 2);
+  await waitFor((cb, err) => D.watchSlots(boardId, cb, err), (s) => s.length === before + 2);
+  await D.deleteSlots(boardId, ids);
+  const after = await waitFor((cb, err) => D.watchSlots(boardId, cb, err), (s) => s.length === before);
+  assert.ok(!after.some(s => ids.includes(s.id)), 'undo removed exactly the added slots');
+});
+
+await T('undoing a slot delete brings the signups back with it', async () => {
+  // Unlock so a participant can claim, then take a spot as a participant.
+  await D.setLocked(boardId, { approvalRequired: false, locked: false }, false);
+  const ids = await D.addSlots(boardId, [{ label: 'Week 1 snack', capacity: 2, order: 95 }]);
+  const slotId = ids[0];
+  await signOut(auth);
+  await D.ensureSignedIn();
+  const anonUid = auth.currentUser.uid;
+  await D.claimSlot(boardId, slotId, 'Dolores', 'gluten-free');
+  await signOut(auth);
+  await signInWithEmailAndPassword(auth, OWNER_EMAIL, PW);
+
+  const live = await waitFor((cb, err) => D.watchSlots(boardId, cb, err), (s) => s.some(x => x.id === slotId && x.claimedCount === 1));
+  const gone = live.find(s => s.id === slotId);
+  await D.deleteSlot(boardId, slotId);
+  await waitFor((cb, err) => D.watchSlots(boardId, cb, err), (s) => !s.some(x => x.id === slotId));
+
+  await D.restoreSlot(boardId, gone);
+  const back = await waitFor((cb, err) => D.watchSlots(boardId, cb, err), (s) => s.some(x => x.id === slotId));
+  const row = back.find(s => s.id === slotId);
+  assert.equal(row.label, 'Week 1 snack');
+  assert.equal(row.capacity, 2);
+  assert.equal(row.claimedCount, 1, 'the counter is restored, not reset');
+  const claims = await once((cb, err) => D.watchClaims(boardId, slotId, cb, err));
+  assert.equal(claims.length, 1);
+  assert.equal(claims[0].uid, anonUid);
+  assert.equal(claims[0].name, 'Dolores', 'the participant is still signed up');
+  await D.deleteSlot(boardId, slotId);
+});
+
 await T('owner rotates the share code — old link dies instantly', async () => {
   const newCode = await D.rotateCode(boardId, code);
   assert.notEqual(newCode, code);
@@ -170,9 +215,40 @@ await T('owner rotates the share code — old link dies instantly', async () => 
   code = newCode;
 });
 
+await T('undoing a rotation puts the previous link back', async () => {
+  const previous = code;
+  const rotated = await D.rotateCode(boardId, previous);
+  assert.equal(await D.resolveCode(previous), null);
+  await D.rotateCode(boardId, rotated, previous);   // the Undo
+  assert.equal(await D.resolveCode(previous), boardId);
+  assert.equal(await D.resolveCode(rotated), null);
+  code = previous;
+});
+
 await T('owner deletes the board', async () => {
   await D.deleteBoard(boardId, code);
   assert.equal(await D.resolveCode(code), null);
+});
+
+await T('undoing a sheet delete revives the sheet, its spots and its notes', async () => {
+  const r = await D.createBoard({ title: 'Meal train', description: 'Two weeks' });
+  const bId = r.boardId, bCode = r.code;
+  const slotIds = await D.addSlots(bId, [{ label: 'Tuesday dinner', capacity: 1, order: 1 }]);
+  const board = await once((cb, err) => D.watchBoard(bId, cb, err));
+
+  await D.deleteBoard(bId, bCode);
+  assert.equal(await D.resolveCode(bCode), null);
+
+  await D.restoreBoard(board, bCode);
+  assert.equal(await D.resolveCode(bCode), bId);
+  const revived = await once((cb, err) => D.watchBoard(bId, cb, err));
+  assert.equal(revived.title, 'Meal train');
+  assert.equal(revived.description, 'Two weeks');
+  const revivedSlots = await once((cb, err) => D.watchSlots(bId, cb, err));
+  assert.equal(revivedSlots.length, 1);
+  assert.equal(revivedSlots[0].id, slotIds[0]);
+  assert.equal(revivedSlots[0].label, 'Tuesday dinner');
+  await D.deleteBoard(bId, bCode);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

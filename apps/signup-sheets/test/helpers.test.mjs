@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   CODE_CHARS, genCode, normalizeCode, parseBulkSlots, dateRangeSlots,
+  parseBulkSlotsReport, dateRangeSlotsReport, stillNeededSentence, MAX_SLOTS,
   fillStats, nudgeMessage, shareUrl,
 } from '../helpers.js';
 
@@ -43,6 +44,42 @@ ok('parseBulkSlots handles capacities and junk', () => {
   ]);
   assert.equal(parseBulkSlots('x3').length, 0); // capacity with no label
   assert.equal(parseBulkSlots(Array(300).fill('row').join('\n')).length, 100); // capped
+});
+ok('parseBulkSlotsReport accounts for every line it did not import', () => {
+  // 150 lines used to become 100 slots and the toast "100 spots added".
+  const text = Array.from({ length: 150 }, (_, i) => 'row ' + (i + 1)).join('\n');
+  const rep = parseBulkSlotsReport(text);
+  assert.equal(rep.rows.length, MAX_SLOTS);
+  assert.equal(rep.dropped, 50);
+  // The refused lines come back verbatim so they can be pasted elsewhere.
+  assert.equal(rep.remainder.split('\n').length, 50);
+  assert.equal(rep.remainder.split('\n')[0], 'row 101');
+  assert.equal(rep.remainder.split('\n')[49], 'row 150');
+  // Lines that carry a multiplier but no label are reported, not vanished.
+  const junk = parseBulkSlotsReport('Salad x2\nx5\n   \n(3)');
+  assert.deepEqual(junk.rows, [{ label: 'Salad', capacity: 2 }]);
+  assert.deepEqual(junk.skipped, ['x5', '(3)']);
+  assert.equal(junk.dropped, 0);
+  assert.equal(junk.remainder, '');
+});
+ok('dateRangeSlotsReport reports the dates that did not fit', () => {
+  const rep = dateRangeSlotsReport({ start: '2026-01-01', end: '2026-12-31', weekdays: [1, 2, 3, 4, 5], capacity: 1 });
+  assert.equal(rep.rows.length, MAX_SLOTS);
+  assert.ok(rep.dropped > 100, 'expected the rest of the year reported as dropped, got ' + rep.dropped);
+  assert.equal(dateRangeSlotsReport({ start: 'junk', end: 'junk', weekdays: [1] }).dropped, 0);
+});
+ok('stillNeededSentence says what is left in one line', () => {
+  const slots = [
+    { label: 'Main dish', capacity: 3, claimedCount: 3 },
+    { label: 'Side or salad', capacity: 4, claimedCount: 1 },
+    { label: 'Dessert', capacity: 2, claimedCount: 0 },
+    { label: 'Ice', capacity: 1, claimedCount: 0 },
+  ];
+  assert.equal(stillNeededSentence(slots), 'Still needed: Side or salad (3 more), Dessert (2 more), and Ice.');
+  assert.equal(stillNeededSentence([{ label: 'Ice', capacity: 1, claimedCount: 1 }]), '');
+  assert.equal(stillNeededSentence([]), '');
+  const many = Array.from({ length: 10 }, (_, i) => ({ label: 'S' + i, capacity: 1, claimedCount: 0 }));
+  assert.match(stillNeededSentence(many), /and 4 more\.$/);
 });
 ok('dateRangeSlots: every Tuesday Sept–Nov 2026', () => {
   const rows = dateRangeSlots({
