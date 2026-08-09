@@ -126,20 +126,26 @@ export function dateKey(dateStr, timeStr) {
   return ((y * 100 + mo) * 100 + d) * 10000 + hh * 100 + mi;
 }
 
+/* A number can sit inside the dated band and still not be a real date (a
+   hand-edited document, a future field, an off-by-one). "Dated" therefore
+   means "decodes to a real calendar date", so a malformed value degrades to an
+   undated row instead of throwing halfway through painting the board. */
 export function isDated(order) {
-  const n = Number(order);
-  return Number.isFinite(n) && n >= DATED_MIN && n <= DATED_MAX;
+  return keyParts(order) !== null;
 }
 
 /** 202609120900 → {y,m,d,hh,mm,hasTime}, or null when the slot has no date. */
 export function keyParts(order) {
-  if (!isDated(order)) return null;
-  const n = Math.floor(Number(order));
+  const num = Number(order);
+  if (!Number.isFinite(num) || num < DATED_MIN || num > DATED_MAX) return null;
+  const n = Math.floor(num);
   const mm = n % 100, hh = Math.floor(n / 100) % 100;
   const d = Math.floor(n / 10000) % 100;
   const m = Math.floor(n / 1000000) % 100;
   const y = Math.floor(n / 100000000);
   if (m < 1 || m > 12 || d < 1 || d > 31 || hh > 23 || mm > 59) return null;
+  const probe = new Date(y, m - 1, d);
+  if (probe.getMonth() !== m - 1 || probe.getDate() !== d) return null; // Feb 31
   return { y, m, d, hh, mm, hasTime: hh !== 0 || mm !== 0 };
 }
 

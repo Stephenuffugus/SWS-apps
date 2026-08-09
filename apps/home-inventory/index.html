@@ -1250,7 +1250,7 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-header.app h1 a{color:inherit; text-decoration:none}
+header.app h1 a{color:inherit; text-decoration:none; display:inline-flex; align-items:center; min-height:var(--tap)}
 
 /* The tab strip WRAPS. It used to be a silent horizontal scroller: at 320px
    with default text, Export's right edge sat at 344px in a 288px box, and at
@@ -1288,13 +1288,21 @@ a.tipbtn{min-height:var(--tap); display:inline-flex; align-items:center}
    needed reading, so it read as "still loading". */
 .thumb.empty{display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-2); font-size:var(--t-xs); line-height:1.1; padding:2px; border:1px dashed var(--line)}
 
+/* A full-width primary button must be allowed to wrap: at 320px with Largest
+   text its one-line label was 304px of content in a 244px box, and that was
+   the entire 22px of sideways scroll on the page. */
+.btn.big.block,.btn.block{white-space:normal; height:auto; padding-top:var(--s3); padding-bottom:var(--s3); line-height:var(--lh-snug)}
+
 .checkline{display:flex; align-items:center; gap:var(--s3); min-height:var(--tap); margin:var(--s2) 0; font-size:var(--t-sm); color:var(--ink-2)}
 .checkline input{width:22px; height:22px; flex:none}
 
 details.more{margin:var(--s3) 0; border-top:1px solid var(--line); padding-top:var(--s2)}
 details.more summary{min-height:var(--tap); display:flex; align-items:center; cursor:pointer; font-size:var(--t-sm); font-weight:600}
 
-.dlgactions{margin-top:var(--s4)}
+/* Save stays on screen. At 320px with Largest text the dialog holds ~1,300px
+   of content in a 630px box, so the row you need most must not be something
+   you have to scroll past a Delete button to find. */
+.dlgactions{margin-top:var(--s4); position:sticky; bottom:0; background:var(--surface); padding:var(--s3) 0; border-top:1px solid var(--line)}
 .dangerrow{margin-top:var(--s4); padding-top:var(--s3); border-top:1px solid var(--line)}
 
 .warntext{color:var(--neg); font-size:var(--t-sm); line-height:var(--lh-snug)}

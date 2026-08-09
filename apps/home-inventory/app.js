@@ -585,14 +585,14 @@ function renderCapture() {
       touch();
       drawEditor('cap-name');
       flush();
-    } }, captureDraft.photo ? 'Retake photo' : '📷 Take a photo or choose one'));
+    } }, captureDraft.photo ? 'Retake photo' : '📷 Take a photo'));
 
   const closeBox = el('input', { type: 'checkbox', id: 'closeUp', 'data-fk': 'cap-close',
     onchange: (ev) => { closeUp = ev.target.checked; } });
   closeBox.checked = closeUp;
   card.append(el('label', { class: 'checkline' }, closeBox,
     el('span', {}, 'Close-up (serial plate, hallmark, receipt) — keeps 2400px detail')));
-  card.append(el('p', { class: 'hint', text: 'Photos are resized to ' + WIDE.maxSide + 'px, about 100 KB each, so a whole house fits on the device. A serial plate inside a wide shot will not survive that — tick Close-up and fill the frame with the plate, and it is kept at ' + CLOSE.maxSide + 'px (roughly 8× the storage).' }));
+  card.append(el('p', { class: 'hint', text: 'That button opens the camera AND the photo library — receipts you already photographed can be attached from there. Photos are resized to ' + WIDE.maxSide + 'px, about 100 KB each, so a whole house fits on the device. A serial plate inside a wide shot will not survive that — tick Close-up and fill the frame with the plate, and it is kept at ' + CLOSE.maxSide + 'px (roughly 8× the storage).' }));
 
   const nameIn = el('input', { type: 'text', id: 'capName', maxlength: String(LIMITS.name),
     placeholder: 'e.g. “65-inch TV”', 'data-fk': 'cap-name',

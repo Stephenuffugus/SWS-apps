@@ -245,12 +245,15 @@ function syncClaimWatchers() {
    a stylesheet does not, and a stylesheet can carry a dark-mode variant.
    Fills sit at L .42 so ink-on-fill clears the 7:1 this app is read at (sun on
    a phone in a parked car), not the 4.5:1 floor. */
+// The five KEYS are fixed by firestore.rules (`s.theme in ['blue','green',
+// 'plum','slate','amber']`), which is shared with signup-sheets — so the keys
+// stay and only what they paint changes.
 const THEMES = {
-  clay:   { name: 'Clay',   h: 38,  C: 0.13, L: 0.62 },
-  amber:  { name: 'Amber',  h: 78,  C: 0.13, L: 0.66 },
-  green:  { name: 'Green',  h: 150, C: 0.11, L: 0.62 },
-  teal:   { name: 'Teal',   h: 205, C: 0.10, L: 0.62 },
-  plum:   { name: 'Plum',   h: 330, C: 0.11, L: 0.60 },
+  blue:  { name: 'Blue',  h: 250, C: 0.115 },
+  green: { name: 'Green', h: 152, C: 0.105 },
+  plum:  { name: 'Plum',  h: 322, C: 0.110 },
+  slate: { name: 'Slate', h: 250, C: 0.028 },
+  amber: { name: 'Amber', h: 70,  C: 0.125 },
 };
 let themeStyleEl = null;
 function themeVars(t, dark) {
@@ -620,6 +623,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
     return card;
   }
   const p0 = keyParts(upcoming[0].order);
+  if (!p0) { card.append(el('h2', {}, 'Next up'), el('p', { class: 'nu-none', text: 'Nothing on the calendar yet.' })); return card; }
   const dayOf = (s) => { const p = keyParts(s.order); return p ? p.y * 10000 + p.m * 100 + p.d : 0; };
   const firstDay = dayOf(upcoming[0]);
   const today = new Date();
@@ -955,7 +959,7 @@ function renderManage(b) {
     el('div', { class: 'f' }, el('span', { id: 'themeLabel' }, 'Team color')),
     el('div', { class: 'themedots', role: 'group', 'aria-labelledby': 'themeLabel' },
       ...Object.entries(THEMES).map(([key, t]) => {
-        const on = (s.theme || 'clay') === key;
+        const on = s.theme === key;
         return el('button', {
           type: 'button', 'aria-label': t.name, 'aria-pressed': String(on),
           class: 'themedot' + (on ? ' sel' : ''),

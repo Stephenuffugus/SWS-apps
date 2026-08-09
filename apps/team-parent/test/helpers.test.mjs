@@ -45,6 +45,20 @@ t('every real date lands inside the dated band, undated rows outside it', () => 
   assert.equal(isDated(undefined), false);
 });
 
+t('a number in the dated band that is not a real date degrades to undated', () => {
+  // an off-by-one or a hand-edited document must not take the board down:
+  // isDated() and keyParts() have to agree, always
+  for (const bad of [202609120899, 202602300900, 202613010900, 202609000900]) {
+    assert.equal(keyParts(bad), null, String(bad));
+    assert.equal(isDated(bad), false, String(bad));
+    assert.equal(formatKey(bad), '');
+    assert.equal(isPast(bad, new Date()), false);
+  }
+  // and such a row still sorts, at the end, rather than throwing
+  const sorted = sortSlots([{ id: 'bad', order: 202609120899 }, { id: 'good', order: dateKey('2026-09-12', '09:00') }]);
+  assert.deepEqual(sorted.map(s => s.id), ['good', 'bad']);
+});
+
 t('a key round-trips back to the form fields it came from', () => {
   assert.deepEqual(keyToInputs(dateKey('2026-09-12', '09:05')), { date: '2026-09-12', time: '09:05' });
   assert.deepEqual(keyToInputs(dateKey('2026-11-01', '')), { date: '2026-11-01', time: '' });
