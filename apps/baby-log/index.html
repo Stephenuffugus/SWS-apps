@@ -1311,7 +1311,12 @@ body{
   margin:0 0 var(--s2);
 }
 
-.bigbtns{display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s2)}
+/* minmax(0,1fr), not 1fr: a plain 1fr track floors at its min-content width,
+   and at Largest text plus Roomy spacing on a 320px phone a 22.5px "Bottle"
+   plus padding exceeded a third of the screen — pushing the third tile in each
+   row physically off the right edge for the one user the comfort panel exists
+   for. The track may now shrink and the label wraps instead. */
+.bigbtns{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s2)}
 /* Was an inline style="grid-template-columns:1fr" on the sleep row. */
 .bigbtns.single{grid-template-columns:1fr}
 
@@ -1320,7 +1325,9 @@ body{
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:var(--s1);
   min-height:calc(var(--tap) + var(--s6));
-  padding:var(--s4) var(--s3);
+  min-width:0;
+  overflow-wrap:anywhere;
+  padding:var(--s4) var(--s1);
   font-family:inherit;
   font-size:var(--t-sm);
   font-weight:600;
@@ -1350,8 +1357,12 @@ body{
 /* Which side comes next. Ringed *and* labelled — the ring alone would be
    colour-only signalling, and the word rides along in the accessible name. */
 .bigbtns button.suggest{box-shadow:0 0 0 3px var(--accent-soft)}
+/* In flow, not absolutely positioned: at Largest text the pill used to land on
+   top of the emoji. It keeps its space when it is not the suggested side —
+   visibility, not display — because the tiles are in the thumb zone and
+   nothing there is allowed to change size under a finger. */
 .nextmark{
-  position:absolute; top:var(--s1); right:var(--s1);
+  align-self:center;
   padding:0 var(--s2);
   font-size:var(--t-xs); font-weight:700; line-height:1.5;
   letter-spacing:0.02em;
@@ -1359,47 +1370,106 @@ body{
   background:var(--accent-fill);
   border-radius:var(--r-pill);
 }
+.nextmark.off{visibility:hidden}
 
 @media (prefers-reduced-motion:reduce){
   .bigbtns button:active{transform:none}
 }
 
+/* ── 2b. The forgotten timer ────────────────────────────────────────────
+   Not an error state. A timer left running all night is the single most
+   common thing that happens to this category, so it gets a plain question and
+   a one-tap answer, inline, never a modal. */
+.stillgoing{
+  margin-top:var(--s3);
+  padding:var(--s3) var(--s4);
+  background:var(--warn-soft);
+  border:1px solid var(--warn-line);
+  border-radius:var(--r-ctl);
+}
+.stillgoing .sg-q{margin:0 0 var(--s3); font-size:var(--t-base); line-height:var(--lh-body)}
+.stillgoing .sg-acts{display:flex; flex-wrap:wrap; gap:var(--s2)}
+.stillgoing .btn.small{min-height:var(--tap); font-size:var(--t-sm)}
+
+/* The summary window switch. The base seg button is 38px; the people who use
+   this app at 3am with a tremor get the full 44. */
+.winseg{margin-bottom:var(--s3)}
+.winseg button{min-height:var(--tap); flex:1 1 9rem}
+.winnote{margin-top:var(--s2)}
+
 /* ── 3. The timeline ────────────────────────────────────────────────────
    The app's main reading surface. It was the smallest type on the page. */
-#timeline > li{
+#timeline li{
+  flex-wrap:wrap;
   gap:var(--s2);
   padding:var(--s3) 0;
   font-size:var(--t-base);
   line-height:var(--lh-snug);
 }
-.when{
+/* The timestamp is the edit affordance, so it is a real button — but it has to
+   keep reading as a timestamp, not as a control competing with the row. */
+button.when{
   flex:0 0 auto;            /* was flex:0 0 70px — overflows once type grows */
+  justify-content:flex-start;
   min-width:4.75rem;
+  min-height:var(--tap);
+  padding:0 var(--s1);
   color:var(--ink-2);
   font-size:var(--t-sm);
+  font-weight:550;
   font-variant-numeric:tabular-nums;
+  white-space:nowrap;
 }
+button.when:hover:not(:disabled){color:var(--ink)}
+button.when[aria-expanded="true"]{color:var(--ink); background:var(--accent-soft)}
 .rowglyph{flex:none; font-size:var(--t-lg); line-height:1}
 .rowdel{flex:none; font-size:var(--t-base); line-height:1}
 .rowdel:hover:not(:disabled){color:var(--neg); background:var(--neg-soft)}
 
-/* Day separators outrank the rows they group. Emitted as <li role=presentation>
-   holding a real <h3>; they used to be bare <div>s inside the <ul>. */
-#timeline > li.dayhead{
-  display:block;
-  min-height:0;
-  margin:var(--s6) 0 var(--s1);
-  padding:0 0 var(--s2);
-  border-bottom:1px solid var(--line);
-}
-#timeline > li.dayhead:first-child{margin-top:0}
-.dayhead h3{
+/* Each day is a heading beside its own list, so the <ul> holds nothing but
+   list items — the previous shape used <li role="presentation"> for the
+   separator, which axe reports as a serious 'list' violation and which left
+   VoiceOver announcing the wrong item count. */
+.dayblock + .dayblock{margin-top:var(--s6)}
+.dayhead{
   font-family:var(--font-text);
   font-size:var(--t-sm);
   font-weight:700;
   color:var(--ink);
   letter-spacing:0.01em;
+  margin:0;
 }
+/* Paper that adds itself up. The four numbers a pediatrician or an IBCLC
+   actually asks for, on every day, so nobody counts rows. */
+.daytotals{
+  margin:var(--s1) 0 var(--s2);
+  padding:0 0 var(--s2);
+  border-bottom:1px solid var(--line);
+  font-size:var(--t-sm);
+  color:var(--ink-2);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── 3b. Fixing a time, inline ──────────────────────────────────────────
+   A feed logged 97 minutes late used to be uncorrectable: one control per row
+   and no time input in the document. This is a sheet inside the row, never a
+   modal over the log. */
+.tedit{
+  flex:1 0 100%;
+  margin:var(--s2) 0 var(--s1);
+  padding:var(--s3) var(--s4);
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-ctl);
+}
+.tedit .tedit-when{
+  margin:var(--s2) 0 0;
+  font-size:var(--t-base);
+  font-weight:650;
+  color:var(--ink);
+}
+.tedit .hint{margin:var(--s1) 0 var(--s3)}
+.tedit .row{display:flex; flex-wrap:wrap; gap:var(--s2)}
 
 /* ── 4. "Your work is saved" ───────────────────────────────────────────── */
 .savedline{
@@ -1416,7 +1486,19 @@ body{
 .savedline.bad{color:var(--warn)}
 .savedline.bad .dot{background:var(--warn)}
 
-/* ── 5. Undo, carried by the toast ─────────────────────────────────────── */
+/* ── 5. Undo, carried by the toast ───────────────────────────────────────
+   The base transitions `visibility`, so for the whole 180ms after .show lands
+   the toast is still visibility:hidden — and focus() on a hidden subtree is
+   silently rejected. That is why keyboard delete left focus on <body> for
+   every returning user. Show instantly, fade out on a delay instead. */
+#toast{
+  transition:opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease),
+             visibility 0s linear var(--dur-2);
+}
+#toast.show{
+  transition:opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease),
+             visibility 0s linear 0s;
+}
 #toast.act{
   display:inline-flex; align-items:center; gap:var(--s3);
   /* The base pins the toast with left:50% and lets it shrink to fit, so its
@@ -1452,13 +1534,39 @@ body{
   #printHead h2{font-size:16pt; margin:0}
   #printHead .sub{font-size:10pt; color:#333; margin-top:2pt}
   .status{font-size:11pt}
-  #timeline > li{font-size:10.5pt; padding:2pt 0}
-  #timeline > li.dayhead{
-    margin:10pt 0 2pt; padding-bottom:1pt;
+
+  /* Anything this app layer colours explicitly has to be restated for paper.
+     `body{color:#000}` loses to a specific rule, so a parent printing from a
+     phone in dark mode got white day headings on white paper — with background
+     graphics off, which is every browser's default, the day boundaries simply
+     were not there. */
+  section.card,.card{background:#fff !important}
+  .dayhead,.daytotals,.status,.status .sleeping,.status .sub,
+  #timeline li,button.when,.winnote,#printTotals,#printTotals *{
+    color:#000 !important;
+    background:transparent !important;
+  }
+  .stillgoing{border:1pt solid #888; background:transparent !important}
+
+  #timeline li{font-size:10.5pt; padding:2pt 0}
+  .dayblock + .dayblock{margin-top:10pt}
+  .dayhead{font-size:12pt; break-after:avoid; page-break-after:avoid}
+  .daytotals{
+    font-size:10pt; margin:1pt 0 3pt; padding-bottom:1pt;
+    border-bottom:0.5pt solid #888;
     break-after:avoid; page-break-after:avoid;
   }
-  .dayhead h3{font-size:11pt}
-  .when{min-width:16mm; color:#333}
+  button.when{min-width:16mm; min-height:0; padding:0; border:0 !important; font-size:10.5pt}
+
+  /* The forty-second artifact: one line a day, above the detail rows. */
+  #printTotals{margin:0 0 10pt; break-inside:avoid; page-break-inside:avoid}
+  #printTotals h3{font-size:12pt; margin:0 0 4pt}
+  #printTotals .sub{font-size:9pt; margin-top:3pt}
+  table.totals{width:100%; border-collapse:collapse; font-size:10pt}
+  table.totals th,table.totals td{
+    border:0.5pt solid #888; padding:2pt 4pt; text-align:right;
+  }
+  table.totals th:first-child,table.totals td:first-child{text-align:left}
 }
 </style>
 <script src="sws-prefs.js"></script>
@@ -1509,8 +1617,8 @@ body{
     <div class="loggroup">
       <h3 id="g-feed">Feed</h3>
       <div class="bigbtns" role="group" aria-labelledby="g-feed">
-        <button type="button" class="feed" data-kind="feed" data-detail="left"><span class="em" aria-hidden="true">🤱</span>Left<span class="nextmark" hidden>next</span></button>
-        <button type="button" class="feed" data-kind="feed" data-detail="right"><span class="em" aria-hidden="true">🤱</span>Right<span class="nextmark" hidden>next</span></button>
+        <button type="button" class="feed" data-kind="feed" data-detail="left"><span class="em" aria-hidden="true">🤱</span>Left<span class="nextmark off">next</span></button>
+        <button type="button" class="feed" data-kind="feed" data-detail="right"><span class="em" aria-hidden="true">🤱</span>Right<span class="nextmark off">next</span></button>
         <button type="button" class="feed" data-kind="feed" data-detail="bottle"><span class="em" aria-hidden="true">🍼</span>Bottle</button>
       </div>
     </div>

@@ -451,7 +451,7 @@ function renderStatus() {
     const mark = b.querySelector('.nextmark');
     const isNext = !!nextSide && b.dataset.detail === nextSide;
     b.classList.toggle('suggest', isNext);
-    if (mark) mark.hidden = !isNext;
+    if (mark) mark.classList.toggle('off', !isNext);
   }
 
   statusSaid = said.join('. ');
