@@ -1,6 +1,6 @@
 /* Seating Chart service worker — the app is local-first; cache everything,
    including the vendored pdf-lib, so exports work fully offline. */
-const VERSION = 'seating-v12';
+const VERSION = 'seating-v13';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const ASSETS = [
   './vendor-pdf-lib.js',
   './manifest.webmanifest',
   './icon.svg',
-  './apple-touch-icon.png', "./fonts/fraunces-latin.woff2", "./sws-prefs.js"];
+  './apple-touch-icon.png', "./fonts/fraunces-latin.woff2", "./sws-prefs.js", "./sws-ui.js"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

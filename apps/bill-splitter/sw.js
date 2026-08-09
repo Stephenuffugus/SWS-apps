@@ -1,13 +1,13 @@
 /* Bill Splitter service worker — cache-first so the app works fully offline.
    Bump VERSION on any deploy to invalidate old caches. */
-const VERSION = 'billsplit-v11';
+const VERSION = 'billsplit-v12';
 const ASSETS = [
   './',
   './index.html',
   './vendor-qrcode.js',
   './manifest.webmanifest',
   './icon.svg',
-  './apple-touch-icon.png', "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js"];
+  './apple-touch-icon.png', "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js", "./sws-ui.js"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

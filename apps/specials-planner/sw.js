@@ -1,9 +1,9 @@
 /* Specials Planner service worker — cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'specials-planner-v12';
+const CACHE = 'specials-planner-v13';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
-  'fonts/fraunces-latin.woff2', 'fonts/spline-sans-latin.woff2', "./sws-prefs.js"];
+  'fonts/fraunces-latin.woff2', 'fonts/spline-sans-latin.woff2', "./sws-prefs.js", "./sws-ui.js"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });

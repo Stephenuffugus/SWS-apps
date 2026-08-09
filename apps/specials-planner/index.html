@@ -654,6 +654,19 @@ label:has(> input[type=checkbox]),label:has(> input[type=radio]){
 .chip.on{color:var(--accent-ink); background:var(--accent-fill); border-color:var(--accent-fill)}
 .chips{display:flex; flex-wrap:wrap; gap:var(--s2)}
 
+/* "Saved" said out loud, quietly. The audits found that saving is
+   fire-and-forget across the portfolio — the app only speaks when it FAILS, so
+   the user's only evidence that their list survived is that nothing happened.
+   SWS.saved() drives this. */
+[data-saved-flag]{
+  font-size:var(--t-xs);
+  font-weight:600;
+  color:var(--pos);
+  opacity:0;
+  transition:opacity var(--dur-2) var(--ease);
+}
+[data-saved-flag].show{opacity:1}
+
 .warn{
   padding:var(--s3) var(--s4);
   font-size:var(--t-sm);
@@ -758,6 +771,35 @@ tr:last-child td{border-bottom:0}
   transition:opacity var(--dur-2) var(--ease), transform var(--dur-2) var(--ease), visibility var(--dur-2);
 }
 #toast.show{opacity:1; visibility:visible; transform:translate(-50%, 0)}
+
+/* An undo lives inside the toast, so the toast has to stop being decoration
+   and become clickable.
+ *
+ * This is the portfolio's answer to the single most repeated finding in the
+ * audits: destructive actions with no way back. A confirm dialog on every tap
+ * is the wrong fix — it taxes the 99 correct taps to catch the one mistake,
+ * and at 3am it is just another thing to dismiss. Undo taxes nothing.
+ *
+ * Promoted here from Pill Schedule and Caregiver Log, which had it first. */
+#toast.act{
+  display:flex; align-items:center; justify-content:center; gap:var(--s3);
+  pointer-events:auto;
+  text-align:left;
+}
+#toast .undo{
+  flex:none;
+  min-height:var(--tap);
+  margin-left:var(--s1);
+  padding:0 var(--s4);
+  font:inherit;
+  font-weight:700;
+  color:var(--toast-bg);
+  background:var(--toast-ink);
+  border:0;
+  border-radius:var(--r-pill);
+  cursor:pointer;
+}
+#toast .undo:focus-visible{outline:2px solid var(--toast-ink); outline-offset:3px}
 
 /* ── 12. Sticky action bar ──────────────────────────────────────────────── */
 .actionbar{
@@ -1365,6 +1407,7 @@ body{
   }
 </style>
 <script src="sws-prefs.js"></script>
+<script src="sws-ui.js"></script>
 </head>
 <body>
 

@@ -226,10 +226,19 @@ function installFont(slug, file){
   return { path: rel, changed: copyIfChanged(join(HERE, 'fonts', file), join(APPS, slug, rel)) };
 }
 
-/** The comfort-preferences runtime, one copy per app so the SW can cache it. */
-function installPrefs(slug){
-  const rel = 'sws-prefs.js';
-  return { path: rel, changed: copyIfChanged(join(HERE, 'prefs.js'), join(APPS, slug, rel)) };
+/* The shared runtime, one copy per app so each service worker can cache it
+   inside its own scope. Order is load order, and it matters: prefs must run
+   first because it is the anti-flash pass. */
+const RUNTIME = [
+  { src: 'prefs.js', dest: 'sws-prefs.js' },
+  { src: 'ui.js', dest: 'sws-ui.js' },
+];
+
+function installRuntime(slug){
+  return RUNTIME.map((r) => ({
+    path: r.dest,
+    changed: copyIfChanged(join(HERE, r.src), join(APPS, slug, r.dest)),
+  }));
 }
 
 /**
@@ -244,22 +253,30 @@ function installPrefs(slug){
  * External rather than inline because the strictest app here ships
  * `script-src 'self'`, which refuses an inline block outright.
  */
-function addPrefsTag(slug, html){
-  const tag = '<script src="sws-prefs.js"></script>';
+function addRuntimeTags(slug, html){
+  let out = html;
 
-  /* Match the src attribute, not the bare filename. The base layer's own
-     comments mention sws-prefs.js, so a substring test finds a "tag" that is
-     not there and silently skips every app. */
-  if (/<script[^>]+src=["']\.?\/?sws-prefs\.js["']/.test(html)) return html;
+  for (const r of RUNTIME){
+    /* Match the src attribute, not the bare filename. The base layer's own
+       comments mention these filenames, so a substring test finds a "tag" that
+       is not there and silently skips every app. */
+    const already = new RegExp(`<script[^>]+src=["']\\.?/?${r.dest.replace(/\./g, '\\.')}["']`);
+    if (already.test(out)) continue;
 
-  if (html.includes('</head>')) return html.replace('</head>', `${tag}\n</head>`);
+    const tag = `<script src="${r.dest}"></script>`;
 
-  // A missing </head> is malformed but recoverable — the parser closes it
-  // implicitly at <body>, so landing just before that is the same position.
-  if (/<body[^>]*>/.test(html)) return html.replace(/<body[^>]*>/, (m) => `${tag}\n${m}`);
+    if (out.includes('</head>')){
+      out = out.replace('</head>', `${tag}\n</head>`);
+    } else if (/<body[^>]*>/.test(out)){
+      // A missing </head> is malformed but recoverable — the parser closes it
+      // implicitly at <body>, so landing just before that is the same position.
+      out = out.replace(/<body[^>]*>/, (m) => `${tag}\n${m}`);
+    } else {
+      console.log(`  !! ${slug}: nowhere to put ${r.dest}`);
+    }
+  }
 
-  console.log(`  !! ${slug}: nowhere to put the prefs script`);
-  return html;
+  return out;
 }
 
 function updateServiceWorker(slug, assets){
@@ -392,7 +409,7 @@ for (const slug of Object.keys(SKINS)){
   }
 
   if (PALETTE[slug]) next = repaintChrome(slug, next, PALETTE[slug]);
-  next = addPrefsTag(slug, next);
+  next = addRuntimeTags(slug, next);
 
   const htmlChanged = next !== html;
 
@@ -403,18 +420,19 @@ for (const slug of Object.keys(SKINS)){
     continue;
   }
 
-  /* Assets are written before the skip test on purpose. Once the script tag is
-     in place the HTML compares equal on every later run, so a change to
-     prefs.js or to a font would never reach the apps if this waited behind
+  /* Assets are written before the skip test on purpose. Once the script tags
+     are in place the HTML compares equal on every later run, so a change to
+     prefs.js, ui.js or a font would never reach the apps if this waited behind
      `htmlChanged`. Their own changed-flags then feed the version bump. */
   const font = installFont(slug, FONTS[slug]);
-  const prefs = installPrefs(slug);
+  const runtime = installRuntime(slug);
 
-  if (!htmlChanged && !font.changed && !prefs.changed){ skipped++; continue; }
+  if (!htmlChanged && !font.changed && !runtime.some((r) => r.changed)){ skipped++; continue; }
 
   if (htmlChanged) writeFileSync(htmlPath, next);
   swNotes.push(
-    `${slug.padEnd(20)} ${(font.path ?? 'no font').padEnd(28)}  ${updateServiceWorker(slug, [font.path, prefs.path])}`);
+    `${slug.padEnd(20)} ${(font.path ?? 'no font').padEnd(28)}  ` +
+    `${updateServiceWorker(slug, [font.path, ...runtime.map((r) => r.path)])}`);
 
   changed++;
   console.log(`  updated  ${slug}`);
