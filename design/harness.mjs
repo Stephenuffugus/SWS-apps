@@ -122,7 +122,15 @@ export async function withApp(slug, fn, opts = {}) {
       return out.slice(0, 20);
     });
 
-    /** Interactive elements whose hit area is under the 44px comfort floor. */
+    /**
+     * Interactive elements whose hit area is under the 44px comfort floor.
+     *
+     * Skips links sitting inline inside a sentence. WCAG 2.2 Target Size
+     * exempts those explicitly, and it is the right call — a link inside a
+     * paragraph is as tall as its line and cannot be made 44px without
+     * wrecking the prose. Counting them buries the real findings under the
+     * colophon's "Privacy" link on all 23 apps.
+     */
     const smallTargets = () => page.evaluate(() => {
       const out = [];
       document.querySelectorAll('a,button,input,select,textarea,[role=button],[tabindex]').forEach((el) => {
@@ -131,6 +139,11 @@ export async function withApp(slug, fn, opts = {}) {
         if (r.width === 0 || r.height === 0) return;
         const cs = getComputedStyle(el);
         if (cs.visibility === 'hidden' || cs.display === 'none') return;
+
+        const inlineInProse = cs.display.startsWith('inline') &&
+          el.closest('p,li,footer,.hint,.footnote,.small,.sub');
+        if (inlineInProse) return;
+
         if (r.height < 44 || r.width < 24) {
           out.push({
             sel: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') +
