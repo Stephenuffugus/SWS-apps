@@ -1,0 +1,506 @@
+{
+  "slug": "bill-splitter",
+  "focusGroup": {
+    "personas": [
+      {
+        "name": "Dee Amankwah",
+        "who": "29, project coordinator, the one in her friend group who always ends up holding the card and chasing everyone afterwards. Comfortable with software, deeply uncomfortable with the ask. She is in the Zelle survey's 47% who have gone into debt covering group expenses, and the 82% who feel anxiety about money owed. Came from a Splitwise review saying 'Tried to add a third expense mid-trip and they started demanding money.'",
+        "context": "The research's first moment, exactly: a dim, loud Italian place at 21:40, the check has landed, six people half-standing with coats on. iPhone at 414px in one hand, the other holding the folded bill under the table light. Two people are reading her screen over her shoulder.",
+        "task": "Split an eight-item bill where one person had the steak, two shared the Negronis, tax is $10.72 and the tip is 20% — then tell five people what they owe her before anyone leaves.",
+        "verdict": "She got a correct number in about two minutes and the copied summary was genuinely good in the group chat. But the actual assignment step — the reason she chose an itemizer — was a grid of 48 identical 28px pills in a dark restaurant, and the pay buttons she needed at the end were the smallest, faintest things on the screen.",
+        "delights": [
+          "The arithmetic is exactly right and it is right in the way that matters: 6 shares of an itemized $158.32 bill summed to $158.32 with no lost or invented penny (measured: sumShares === total, 15832 === 15832). Tax and tip were apportioned by what each person actually ordered, not split flat.",
+          "Nothing interrupted her. No ad, no counter, no upsell, no 'add your card'. The add controls never moved and nothing ever appeared over them — the one thing the research says the whole category gets wrong.",
+          "'Copy summary' produced text that reads correctly pasted raw into a group chat: 'Total $158.32 (bill $123.00 + tax $10.72 + tip $24.60)' then a line per person with '→ pay Marisol'. That is the artifact she actually sends."
+        ],
+        "frictions": [
+          {
+            "what": "The per-item 'who shared this' chips are 28px tall (measured 28×46–70px, 48 of them for 6 people × 8 items), and selected vs not is carried by fill colour alone — no tick, no border weight, no aria-pressed. The size comes from a JS-authored inline style at index.html:2181 ('padding:4px 10px;font-size:.8rem') that overrides any class rule.",
+            "severity": "blocker",
+            "whyItMatters": "This is the core interaction of the mode she came for, performed one-handed in a dim room with people watching. A mis-tap silently moves money between two friends and there is no undo. The research's own colour note is explicit: 'every selected item-chip needs a checkmark as well as a fill.'"
+          },
+          {
+            "what": "The payment row is the smallest and lowest-contrast control in the app: 76×29px at 12.48px, colour #2290a9 on #fcfeff = 3.69:1 (axe: serious color-contrast, 3 nodes in dinner, 10 in a trip). Same measurements at 320px and at 414px.",
+            "severity": "blocker",
+            "whyItMatters": "This is the terminal action of every flow — the moment the app either produces money or doesn't. It is rendered as the app's afterthought. The research names it as a VERIFIED DEFECT and asks for 44px minimum; measured, it is 29px and fails WCAG 1.4.3 on top."
+          },
+          {
+            "what": "She tapped 'Copy link' and the confirmation toast landed on top of the share bar. Measured at 414×900 scrolled to the bottom: toast occupies y 790–884 at z-index 60, the share buttons occupy y 850–890 — the toast covers the buttons it is reporting on. Two hardcoded offsets disagree: #toast sits 24px off the bottom (base layer line 756) while .sharebar is 61px tall (index.html:1293).",
+            "severity": "major",
+            "whyItMatters": "The one moment the app speaks, it speaks over the controls. She tapped 'QR code' through the toast and nothing happened, because the toast is pointer-transparent only until it is not — and either way she could not read the button labels she was aiming at."
+          },
+          {
+            "what": "Tip is always computed on the pre-tax subtotal. Measured: bill $100.00, tax $8.75, tip 20% → the app says $20.00; the card machine on the table offered $21.75. There is no 'on subtotal / on total' choice anywhere (index.html:1619-1621).",
+            "severity": "major",
+            "whyItMatters": "Etiquette-correct is not the point — reconcilable is. She could not make the app's total match the receipt in front of five people, and in a category whose top 1-star theme is 'the calculations are just very basically wrong', an unexplained $1.75 gap is the exact moment trust dies."
+          },
+          {
+            "what": "After each item is added, focus is moved to #itemLabel — the text field — not to the next amount (index.html:2640). On a phone the numeric keypad closes and reopens for every single item.",
+            "severity": "minor",
+            "whyItMatters": "The research sets the target explicitly: 'eight items in under thirty seconds, one-handed', as the answer to broken OCR. A keyboard swap per item is the difference between beating a receipt scanner and losing to one."
+          },
+          {
+            "what": "Typing an unparseable amount is silently counted as zero and the wrong text stays in the field. Measured on #billAmt: '-5' → $0.00, '1e9' → $0.00, 'abc' → $0.00, '99999999999999999999' → $0.00, with no message and the original text still visible (index.html:2611-2616).",
+            "severity": "major",
+            "whyItMatters": "The field says -5 and the total says $0.00. Nothing tells her which one the app believes. On a screen two other people are reading, a number that quietly does not count is worse than a rejection."
+          }
+        ]
+      },
+      {
+        "name": "Ruth Feldman",
+        "who": "71, retired bookkeeper, macular degeneration plus varifocals. Spent thirty years being the person who checked other people's arithmetic and is not about to stop. Uses an old iPhone SE (320 CSS px) because it fits her hand. This is the comfort-panel persona.",
+        "context": "Her kitchen the morning after a family birthday dinner, 320px phone held close, bright window behind her, reading glasses on. No time pressure at all, and a very low tolerance for being unable to read something.",
+        "task": "Check the split her nephew sent, satisfy herself the numbers add up, and print a copy for the folder she keeps.",
+        "verdict": "The comfort panel did real work for her and she could read the amounts afterwards. Then the page started scrolling sideways, and printing gave her a sheet with an empty 'Add a name…' box at the top and no indication which dinner it was.",
+        "delights": [
+          "She found the gear in the header without prompting, opened it, and set Text size = Largest and Contrast = High. It worked as designed: root font 16px → 24px, the whole layout scaled in proportion, and axe with the panel open returned zero violations. The permanent tick slot meant she could see which option was on without relying on colour.",
+          "The per-person amount is the largest thing on the results card (26.4px at default, 41px tall) and every share is a real, checkable figure. She verified $100 ÷ 3 by hand and got the app's answer: 33.34 / 33.33 / 33.33.",
+          "Nothing on the page moves or animates, and there is no advertising to squint past. She said it looked like a receipt, which is the intended register."
+        ],
+        "frictions": [
+          {
+            "what": "At 320px with Largest text the page scrolls sideways by 14px. Measured offender: a#tipLink.tipbtn, left 224, right 334 against a 320px viewport. The base layer's header.app is flex-wrap:wrap for exactly this reason, but this app wraps its contents in .brandrow (index.html:1253) which has no wrap, so the tip pill is pushed off the edge instead of dropping to a second line.",
+            "severity": "major",
+            "whyItMatters": "The comfort setting meant to help her is what breaks the layout, and it breaks it on the smallest common phone. Horizontal scroll is the one failure the design system explicitly promises the comfort panel will never introduce."
+          },
+          {
+            "what": "Largest text does not reach the controls that need it most. Measured at data-text=\"xxl\": item chips 37px, person chips 37px, payment buttons 37px, .btn.small delete buttons 37px, segmented control 38px — 23 controls still under the system's --tap floor of 44px, versus 28–29px at default.",
+            "severity": "major",
+            "whyItMatters": "Turning the text up is usually a request from eyesight or tremor. The system's own comment says targets must not shrink at that moment; here they grow but never arrive, so the smallest, most consequential taps stay too small for her."
+          },
+          {
+            "what": "There is no Print button anywhere. The share bar (index.html:1480-1486) offers Copy link, QR code and Copy summary only. She used the browser's own print, and got: no title (the base print rule hides header.app, taking the only <h1> with it), then the People editor with an empty 'Add a name…' input and a ✎ beside every name, then the Bill form with empty tax/tip fields, and only then the results. Measured print media: #peopleBox VISIBLE, #personInput VISIBLE, the Bill card VISIBLE, section.card .personcard break-inside:auto.",
+            "severity": "major",
+            "whyItMatters": "The printed settle-up sheet is the artifact the research says people put in the middle of a table, and the app already renders it. What comes out instead is a screenshot of a form with no name on it — a page she cannot file, because nothing on it says which dinner it was."
+          },
+          {
+            "what": "On paper the item assignments vanish. Selected chips are distinguished by fill only, and the base print stylesheet correctly strips fills — measured in print media, a .chip.sel computes to background rgba(0,0,0,0) with black text, identical to an unselected chip.",
+            "severity": "major",
+            "whyItMatters": "The one thing itemized mode knows — who shared what — is destroyed by printing it. She was checking her nephew's arithmetic and could not see which dishes were assigned to whom."
+          },
+          {
+            "what": "The last 21px of the footer sits underneath the fixed share bar when scrolled to the bottom (measured: footer bottom 860, bar top 839, body padding-bottom 40px against a 61px bar).",
+            "severity": "minor",
+            "whyItMatters": "The privacy line and the feedback link are the two sentences the studio most wants read, and they are the two clipped by the bar."
+          },
+          {
+            "what": "The comfort panel's footer puts Reset immediately before Done. She hit Reset when reaching for Done and all four of her settings went back to default in one tap, with no undo and no confirmation.",
+            "severity": "minor",
+            "whyItMatters": "Shared chrome, not this app's code — but it is the panel this app depends on to serve her, and losing Largest text with one mis-tap is the same failure class as everything else on this list."
+          }
+        ]
+      },
+      {
+        "name": "Callum Byrne",
+        "who": "34, the friend who organises the ski trip and then spends a Sunday reconstructing it. Eight people, a week in the Alps, a folder of receipts, one expense in euros. The research's second moment: alone on the sofa, dreading the group-chat message.",
+        "context": "Sunday afternoon, laptop at 1280px with the phone beside it for photos of receipts. Two hours available, no interruptions, and a very strong wish to send one message and never mention it again.",
+        "task": "Enter 30 expenses across 8 people, handle the one euro-denominated ski hire, record that Priya already paid him back €80 in cash, and send everyone a number they will not argue with.",
+        "verdict": "The engine underneath is the best in the category — balances net to zero, the settle-up is minimal and correct. Then he changed the trip currency to EUR and watched $216.00 become €216.00, and there is nowhere at all to record the money Priya already handed him.",
+        "delights": [
+          "Correctness at real size: 8 people, 30 expenses, built and rendered in 18ms; net balances sum to exactly 0; the settle-up produced 7 transfers for 8 people (the n−1 ceiling) and applying them left a residual of 0 cents. This is what tricount and Splid reviewers say they cannot get.",
+          "Weighted 'Uneven shares' is free here and works — 0 shares genuinely removes a person from an expense, and the largest-remainder allocation still sums exactly to the expense.",
+          "Per-expense currency conversion with a rate he types himself, no network call, no Pro tier. Splitwise charges for this and Kittysplit gates it behind its upgrade."
+        ],
+        "frictions": [
+          {
+            "what": "Changing the trip currency relabels every stored amount without converting it. Measured: a €200 ski hire entered at rate 1.08 displays correctly as 'Ski hire — $216.00 (€200.00 @ 1.08)'; after setting the trip currency to EUR the same row reads 'Ski hire — €216.00' and the trip total reads '€1,981.95' — the same integer cents, a different currency symbol (index.html:2648-2652, display at :2404-2406 and :2435).",
+            "severity": "blocker",
+            "whyItMatters": "The app invented €16 on one line and re-denominated an entire trip on another. This is literally the complaint the research quotes against Tab — 'hallucinating money' — and against tricount — 'the total is correct but every other amount is wrong'. In the one app in the portfolio whose entire pitch is auditable arithmetic, a currency control that silently mislabels every figure is the worst possible defect."
+          },
+          {
+            "what": "There is no way to record a repayment. The state shape has no settlement type at all — sanitizeState (index.html:1781-1854) accepts people, dinner and trip.expenses and nothing else — so after Priya hands him €80 the app keeps instructing her to pay him.",
+            "severity": "blocker",
+            "whyItMatters": "The research calls this 'the single most important functional gap in the app', and the category's own failure mode is Splitwise's 'if someone settles up too early, it always messes things up'. His workaround was to invent a negative expense, which is exactly how ledgers get wrong."
+          },
+          {
+            "what": "He deleted the wrong expense with a 37×36px ✕ that sits 12px from an identical-sized ✎. It went instantly: measured 31 expenses → 30, toast text empty, no confirm, no undo. window.SWS.undo is loaded on the page (typeof 'function') and this app never calls it.",
+            "severity": "blocker",
+            "whyItMatters": "Thirty rows of reconstructed receipts and one silent, irreversible tap. Deleting a saved split does get a confirm() (index.html:2492) — so the app is inconsistent as well as unforgiving, and the shared undo runtime it ships is sitting unused."
+          },
+          {
+            "what": "Settle-up offers only the netted view, under a heading that asserts it is the right answer: 'Settle up — fewest possible payments' (index.html:2449). Measured on a real case: Sam → Alex $240.00 and Priya → Alex $120.00 for a trip where Sam never shared an expense with Alex directly. There is no pairwise 'pay who you actually owe' view.",
+            "severity": "major",
+            "whyItMatters": "The research quotes users asking for exactly this: 'I wish there was an option to see all debts without them being combined into the least amount of transfers.' Minimised settlement is elegant and socially baffling, and he had to explain it in the group chat, which is the message he was trying to avoid writing."
+          },
+          {
+            "what": "Nothing carries the reason. The copied summary is 'Sam → Alex: $240.00'; the Venmo deep link's note is the trip name plus the word 'settle-up' (Pay.targets, index.html:1899-1918, measured href note='Osteria split'). An expense has no date, no note and no category (index.html:1842-1851).",
+            "severity": "major",
+            "whyItMatters": "The most-quoted structural complaint in the research file is a tricount review titled 'Missing most important feature': 'It's impossible to ask for repayment without being able to answer \"What for?\"'. He has to reconstruct the answer by hand in the chat, from an app that already knows it."
+          },
+          {
+            "what": "The trip view is one enormous scroll with no navigation. Measured with 200 expenses: document height 22,283px (roughly 25 phone screens), nav.tabs is static and scrolls away, and the only fixed element is the share bar, which does not navigate. After adding an expense the page stays parked at the form while the balances change off-screen.",
+            "severity": "major",
+            "whyItMatters": "The payoff — who owes whom — is at the bottom of a 25-screen page and the app never takes him there. Editing an expense does smooth-scroll him up to the form (index.html:2391), so the app moves him only in the unhelpful direction."
+          }
+        ]
+      },
+      {
+        "name": "Jonah Reyes",
+        "who": "38, blind since his twenties, VoiceOver on iOS and NVDA on Windows, an expert keyboard driver who is faster than most sighted users when an app lets him be. Splits rent-adjacent costs with two housemates monthly and has stopped trying group apps because they are 'a bag of unlabelled buttons'.",
+        "context": "Home desk, NVDA in Chrome at 1280px, keyboard only, no time pressure. He explores by button list and by heading first, then by Tab.",
+        "task": "Enter an itemized takeaway order for six people, mark who had what, and read out the totals.",
+        "verdict": "He could complete the job — which already puts this ahead of the category — but the assignment step is invisible to him and getting from the item list to the tax field cost 60 tab stops.",
+        "delights": [
+          "The view tabs and the split-method segmented control both carry aria-pressed and keep it in sync with the visual state (setPressed, index.html:1928-1932). He always knew which view he was in, which the previous audit says was not true of an earlier build.",
+          "Every row's action button has a real accessible name — 'Remove item', 'Edit expense', 'Delete expense', 'Delete saved split' — and the toast is a proper role=status live region.",
+          "The person dialog moves focus into the Name field on open and Escape closes it, and the base focus ring is genuinely visible (2px --focus plus a 4px halo)."
+        ],
+        "frictions": [
+          {
+            "what": "The item-assignment chips expose no state. Measured: after clicking, className is 'chip sel', aria-pressed is null, role is null, and the text is just the person's name. Same for the trip 'Split between' chips (index.html:2272).",
+            "severity": "blocker",
+            "whyItMatters": "He can hear 'Marisol, button' and press it, and nothing tells him whether Marisol is now on or off the calamari. The primary interaction of itemized mode is write-only for a screen reader — WCAG 4.1.2 and 1.4.1 both, and it is the feature the research says is Pro-only at Splitwise and therefore the headline."
+          },
+          {
+            "what": "Four inputs have no accessible name — #itemLabel, #itemAmt, #expLabel and #expAmt (verified: aria-label null, no associated label, placeholder only). Two are amount fields whose placeholder is '0.00', so NVDA announces 'zero point zero zero, edit text'. #expAmt is the primary field of the entire trip flow.",
+            "severity": "blocker",
+            "whyItMatters": "He typed a price into what he believed was the item name twice. The battery's own keyboard check misses this because those fields are inside a hidden panel at load."
+          },
+          {
+            "what": "With 6 people and 8 items there are 60 tab stops between the 'By items' button and the Tax field (measured; 48 chips + 8 remove buttons + the add row), out of 85 focusable elements on the page. There is no skip link — the .skip class exists in the base stylesheet but no element in the markup uses it.",
+            "severity": "major",
+            "whyItMatters": "Every trip back to the tax field is a 60-key journey through pills he cannot read the state of. The design system ships a skip link precisely so keyboard users do not tab the header on every app; this app dropped the element."
+          },
+          {
+            "what": "The expense validation message is silent. #expWarn is a plain <p class=\"warn hidden\"> (index.html:1438) with role null and aria-live null; readExpenseForm sets its text and unhides it, focus does not move (measured), #expAdd has no aria-describedby, and the message renders below the button he just pressed.",
+            "severity": "major",
+            "whyItMatters": "He pressed 'Add expense', heard nothing, and pressed it again. Because the node is only class-toggled, repeating the same error produces no new announcement either — the app appears to have stopped responding."
+          },
+          {
+            "what": "Neither dialog has an accessible name (aria-labelledby null on #personDlg and #qrDlg) and the QR canvas is an unlabelled graphic — role null, aria-label null, no text alternative for the URL it encodes (index.html:1504).",
+            "severity": "major",
+            "whyItMatters": "'Dialog' with no name, containing a canvas with no name, is a dead end. The QR is the share mechanism the research wants promoted to primary, and it currently has no non-visual equivalent at all."
+          },
+          {
+            "what": "Closing the person dialog with Escape leaves editingPersonId set (measured: still 'c18c4f15' after close) — there is no close listener (index.html:2588-2606).",
+            "severity": "minor",
+            "whyItMatters": "State that outlives its dialog is how a later Save writes to the wrong person. No path reaches it today, but it is one refactor away from doing so."
+          }
+        ]
+      },
+      {
+        "name": "Nadia Haddad",
+        "who": "26, junior nurse, on a locked-down work Android she cannot install apps onto and a pay-as-you-go data plan. She is the friend everyone's group tool fails on — the reason the research calls 'no install, no account' the app's strongest structural advantage.",
+        "context": "Bus home at 23:10, one thumb, screen brightness low, three bars of signal. She has been sent a link in a WhatsApp group and wants to pay her share before she forgets.",
+        "task": "Open the link, see what she owes and why, and pay it.",
+        "verdict": "The link worked — genuinely, first try, no install, no account, and that is the whole product thesis proven. Then she could not tell what she was paying for, and the pay button was a 12px tinted word she had to try twice.",
+        "delights": [
+          "Opening a pasted link cold restored everything: 3 people, the name 'Curry night', bill $84.60, tax $6.20, tip 18% — computed and rendered before she could read the toast, with no account and nothing downloaded (measured on a fresh page load from the hash alone).",
+          "It kept working with the mobile data off, and the split is now on her phone in Saved without her doing anything.",
+          "A comma decimal is accepted: '12,50' parses to $12.50 and even '1.234,56' parses to $1,234.56 (measured), which matters on a keyboard that only offers a comma."
+        ],
+        "frictions": [
+          {
+            "what": "The link she was sent carries every payment handle saved against every person, straight into the group chat. Measured: Venmo, Cash App and PayPal handles survive the round trip inside the hash, and the Copy-link toast says only 'Link copied — the whole split travels inside it' (index.html:2517) with no mention of handles.",
+            "severity": "major",
+            "whyItMatters": "The research is explicit that this is the one real leak and that overclaiming here 'would be worse than the competitors' underclaiming'. The person who copies the link is not the person whose handle is in it, and nobody is told at the moment it happens."
+          },
+          {
+            "what": "There is no 'what do I owe' view for a recipient. The results card shows everyone's amount at equal weight; a recipient sees six tiles and has to find their own name, and the derivation behind their figure is nowhere — no expansion, no per-person working, no reconciliation line (measured: the results card contains no '÷', no 'share of tax', no 'adds up to' text).",
+            "severity": "major",
+            "whyItMatters": "The research's number-one differentiator is 'show the working', because the category's number-one complaint is 'the math is wrong'. She is being asked for £31.99 on a bus at 23:10 and the app gives her a number and a Venmo link, which is precisely the position that produces the tricount review 'don't rely on it to do the math, because someone will get ripped off'."
+          },
+          {
+            "what": "The pay control is a 76×29px, 12.48px link at 3.69:1 contrast, at low brightness, under a thumb. Measured identically at 320px and 414px; still only 37px at Largest text.",
+            "severity": "blocker",
+            "whyItMatters": "This is the transaction. Everything the app did well up to this point is spent on a control smaller than the delete button next to it."
+          },
+          {
+            "what": "Opening the link silently saved a stranger's split to her device and made it her current one. The toast says 'Opened from link — saved to this device' and it is already persisted before she has read it (index.html:2714-2730).",
+            "severity": "minor",
+            "whyItMatters": "It is the honest behaviour and the toast does say so, but her own half-finished dinner is now one tab away in Saved with no indication that it was displaced."
+          },
+          {
+            "what": "On a large trip the 'this link is long' warning is destroyed by the success toast. Measured with a 20-person, 150-expense trip (URL 4,964 chars): both toasts fire — 'Big split — link works but is long. Consider Export file instead.' then, milliseconds later, 'Link copied — the whole split travels inside it'. Only the second is ever visible (index.html:2511-2517).",
+            "severity": "minor",
+            "whyItMatters": "The warning exists, was written thoughtfully, and cannot be read by anyone. Chat apps and QR both fail before the link does, so this is the only notice the sender gets."
+          }
+        ]
+      }
+    ],
+    "consensus": {
+      "worksWell": [
+        "The arithmetic, which is the thing the category cannot get right. Integer cents end to end: an itemized 6-person, 8-item bill with tax and 20% tip summed to exactly the total (15,832 cents = 15,832 cents); $100 across 3 people came out 33.34 / 33.33 / 33.33; an 8-person, 30-expense trip netted to exactly zero and settled in 7 transfers (the n−1 ceiling) with a residual of 0 cents after applying them.",
+        "No monetisation surface anywhere on the working path. No counter, no interstitial, no upsell, nothing ever appears over the add controls, and the tip jar stays a header pill and a footer line. Against a category whose leader meters expenses and whose rivals fire a fullscreen ad every third add, this is the product.",
+        "The link is real and it is the whole thesis. A pasted URL restored people, name, bill, tax and tip on a cold page with no account and no install; the state also survives a plain reload from IndexedDB; caps and shapes are enforced on decode; truncated, garbage and non-conforming hashes all fail closed and say so.",
+        "Input safety. Nine hostile payloads committed as real person names produced zero injected nodes, no title hijack and no prototype pollution; '__proto__' and 'constructor' as ids are regenerated by safeId with references remapped; 10,000 people in a crafted link are clamped to 50; no NaN, Infinity, undefined or [object Object] reached the screen under any input tested.",
+        "Comma-decimal tolerance ('12,50' → $12.50, '1.234,56' → $1,234.56) and inputmode=decimal on every money field — small, correct, and rare.",
+        "Performance is a non-issue. 200 expenses × 20 people renders in 22ms; 200 items × 50 people renders 10,000 chips in 53ms; encoding a 6.8KB share URL takes 33ms; persist takes 29ms. Zero console errors across every run in this review.",
+        "The comfort panel does its job: opens from the header, real radios in real fieldsets, permanent tick slot, axe-clean with the panel open, root font 16px → 24px at Largest with the whole layout scaling in proportion.",
+        "aria-pressed is correctly maintained on both the view tabs and the split-method control, and every row action button carries a real accessible name — both were defects in the previous audit and are fixed."
+      ],
+      "hurts": [
+        "Changing the trip currency relabels every amount without converting it: $216.00 becomes €216.00 and a $1,981.95 trip total becomes €1,981.95. An app that exists to be trusted with money invents some.",
+        "Nothing is reversible. Deleting an item, deleting an expense and removing a person are all instant and silent (measured: no toast, no confirm, no undo), while deleting a saved split gets a confirm() — inconsistent as well as unforgiving. window.SWS.undo is loaded on the page and called zero times.",
+        "The payment handoff — the terminal action of every flow — is the smallest (76×29px), faintest (3.69:1) and lowest-weight control in the app, and axe flags it as a serious contrast violation on every screen that renders it.",
+        "Item assignment is a wall of 28px chips whose selection is fill-colour only: no tick, no aria-pressed, invisible to a screen reader and erased entirely when printed.",
+        "The app never shows its working. No derivation behind a person's figure, no reconciliation line proving the shares sum to the bill, no reason attached to a transfer or to a payment link — in a category whose defining complaint is 'the math is wrong', the one app that could open the box keeps it shut.",
+        "There is no way to record a repayment, so any group that settles mid-trip is immediately wrong, and no pairwise 'pay who you actually owe' alternative to the netted settle-up that users explicitly ask for.",
+        "Print is unfinished and unreachable: no Print button anywhere, the printed sheet leads with the People editor and an empty 'Add a name…' box, carries no title at all (the base rule hides the header and the only <h1> with it), and drops the chip fills that encode who shared what.",
+        "The bottom of the screen is contested: the toast lands on top of the share bar (measured overlap, toast y790–884 over buttons y850–890) and the last 21px of the footer sits under it.",
+        "At 320px with Largest text the page scrolls sideways by 14px, because .brandrow re-implements the header row without the base layer's flex-wrap.",
+        "Four inputs — including both primary amount fields — have no accessible name and announce as 'zero point zero zero, edit text'; the expense validation message has no role=alert and never moves focus; both dialogs and the QR canvas are unnamed.",
+        "Unparseable amounts are silently treated as zero with the wrong text left in the field, and a 20% tip is computed only on the pre-tax subtotal with no way to match the card machine.",
+        "Opening the Trip tab silently converts a dinner into a trip in the Saved list (measured: saved record's mode flips to 'trip' with the dinner data intact but relabelled), and 'New dinner' replaces the current split with no confirmation and no toast — edits made in the 400ms debounce window before it are lost."
+      ],
+      "mostWantedNext": [
+        "Convert, don't relabel: changing the trip currency should either convert every stored amount at a rate the user supplies, or refuse and explain — never re-denominate the same integer cents.",
+        "Undo on every destructive path, using the SWS.undo runtime already loaded on the page, and drop the lone confirm() so the four delete paths behave identically.",
+        "Promote the payment row to a real control: 44px minimum, 15px text, an accent that passes 4.5:1, Copy-amount always present and never styled as the poor relation.",
+        "Show the working: a per-person expansion ('Steak 34.00, half the calamari 6.25, share of tax 2.41, share of tip 4.02 → 46.68') and a reconciliation line under every total ('6 shares · $158.32 · exactly the bill').",
+        "Record a repayment as a first-class event, and offer 'pay who you actually owe' beside 'fewest payments' with one line explaining each.",
+        "Make the reason travel: date and note on an expense, the derivation inside the copied summary, and the real 'what for' in the Venmo/Cash App note instead of the trip name.",
+        "A Print / Save-as-PDF action, and a print stylesheet that hides the editors, prints the split's name as a heading, and renders chip selection with a glyph rather than a fill.",
+        "44px targets and a non-colour selected state (tick plus aria-pressed) on every chip, plus accessible names on #itemLabel, #itemAmt, #expLabel and #expAmt and role=alert on #expWarn.",
+        "A CSV export beside the JSON one — Kittysplit gives it away free and Settle Up charges for it, and a spreadsheet is what a normal person calls a receipt.",
+        "Say what a shared link contains at the moment it is copied, including the payment handles, rather than only in the privacy line."
+      ]
+    }
+  },
+  "stressTest": {
+    "ranInBrowser": true,
+    "batteryClean": true,
+    "scenarios": [
+      {
+        "name": "Standard battery (node design/stress.mjs bill-splitter)",
+        "method": "Ran the shared battery unmodified: layout at 320/414/1280 and at text:xxl and density:roomy, touch targets, hostile text into every text field, numeric edges, 30 rapid clicks on the primary action, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console.",
+        "result": "0 hard failures. Layout clean at all five configurations; keyboard reachability 20 focusable, 0 unreachable, 0 unnamed; axe clean; console silent. BUT three of its probes did not reach this app: the rapid-click and bulk-add probes both selected '.btn.primary', whose first match here is #expAdd inside the hidden Trip view, so 200 adds produced 0 nodes and 635→635 characters; and the corrupt-storage probe found no key to corrupt because all app state lives in IndexedDB, not localStorage. Its 'touch targets under 32px' result of [] is measured on the cold empty page, where none of the app's real controls exist yet.",
+        "defect": "Not an app defect — a coverage gap. Every finding below comes from app-specific runs, because the battery's generic probes cannot exercise a three-view app whose primary button lives in a hidden view and whose storage is IndexedDB.",
+        "severity": "none"
+      },
+      {
+        "name": "Itemized dinner end to end, driven through the real UI",
+        "method": "At 414×900: typed 6 people into #personInput, switched to By items, added 8 real items, set tax 10.72 and tip 20%, chose a payer, assigned the steak to one person and two Negronis to two others, then read dinnerCompute() and every rendered element.",
+        "result": "Subtotal 12,300¢, tax 1,072¢, tip 2,460¢, total 15,832¢; the six shares summed to exactly 15,832¢ (56.44 / 31.99 / 31.97 / 12.64 / 12.64 / 12.64). Page overflow 0px, no offenders, zero console errors. Measured controls: 48 item-assignment chips at 28px tall, 6 person chips at 28px, 8 remove buttons at 37×36px, 5 pay controls at 76×29px, per-person amount 26.4px with font-variant-numeric 'normal'.",
+        "defect": "The arithmetic is exact and the layout holds; every interactive control in the flow is below the 44px --tap floor, and the money figures are not tabular-lining despite being columns of numbers.",
+        "severity": "major"
+      },
+      {
+        "name": "Trip currency change after a foreign-currency expense",
+        "method": "Built an 8-person, 30-expense trip, added a €200 ski hire at rate 1.08 (baseCents 21,600), read the rendered expense row and trip total, then set state.currency to EUR through the app's own path and re-read both.",
+        "result": "Before: 'Ski hire — $216.00 (€200.00 @ 1.08)', trip total $1,981.95. After: 'Ski hire — €216.00', trip total €1,981.95. No amount was converted; only the symbol changed. Nothing warns, nothing recomputes.",
+        "defect": "Changing the trip currency re-denominates every stored figure at 1:1. A €200 expense becomes €216, and an entire trip's total is silently restated in a currency it was never in.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Destructive actions: item, expense, person, saved split",
+        "method": "Deleted an expense from #expList via its ✕, removed a person via the dialog's Remove, and compared with the saved-split delete path. Checked toast content, DOM for an Undo control, and window.SWS.",
+        "result": "Expense: 31 → 30 instantly, toast text empty, no confirm, no undo control. Person: 4 → 3 instantly, toast empty, no undo. Item delete is the same code shape (index.html:2194-2200). Saved split: confirm() dialog (index.html:2492). window.SWS.undo is present and is typeof 'function'; the app never calls it. Edit ✎ and Delete ✕ in an expense row are both 37×36px, 12px apart.",
+        "defect": "Three of four destructive paths are silent and irreversible, the fourth uses a native confirm, and the shared undo runtime the studio ships for exactly this is loaded and unused.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Money-field edges (all amount inputs are type=text, so the battery skipped them)",
+        "method": "Typed 11 values into #billAmt and 5 into #tipAmt with a real input event each, reading state and the rendered grand total after every one; then scanned the page for NaN/undefined/Infinity/[object Object].",
+        "result": "'-5' → 0¢ ($0.00), '1e9' → 0¢, '0.0001' → 0¢, 'abc' → 0¢, '1/2' → 0¢, '99999999999999999999' → 0¢, all with the typed text still in the field and no message. '12,50' → 1,250¢, '1.234,56' → 123,456¢, '$45' → 4,500¢, '1 000' → 100,000¢, '100.999' → 10,100¢ (rounds up). Tip: '20' → 20%, '1000' → 1000%, '99999' → clamped to 1000 silently, '-10' → 0, 'abc' → 0. No poison values reached the screen.",
+        "defect": "Unparseable and out-of-range amounts are silently counted as zero (or silently clamped) while the rejected text stays visible in the field — the app and the user disagree about the number with nothing on screen to reveal it.",
+        "severity": "major"
+      },
+      {
+        "name": "Tip base versus the card machine",
+        "method": "Set bill 100.00, tax 8.75, tip 20% and read dinnerCompute(); searched the UI for any control selecting the tip base.",
+        "result": "Tip $20.00 (20% of the pre-tax subtotal), total $128.75. A tip on the tax-inclusive total would be $21.75. No 'on subtotal / on total' control exists anywhere (index.html:1619-1621).",
+        "defect": "The app's total cannot be reconciled with a receipt that tips on the total, and it never explains which base it used.",
+        "severity": "major"
+      },
+      {
+        "name": "Hostile text committed as real data",
+        "method": "Called addPerson() with 10 payloads — script and img-onerror injection, 500×'A', ZWJ emoji, RTL Arabic+Hebrew, '__proto__', 'constructor', a 35-character unbroken word, whitespace-only and '=1+1' — then inspected the DOM, the document title, Object.prototype, and the rendered chips.",
+        "result": "9 accepted, whitespace-only correctly rejected. Zero injected img nodes, one inline script (the app's own), title not hijacked, Object.prototype clean. Names truncate at 60 characters. The 35-character name renders in a 180px chip needing 261px, clipped by ellipsis with no title attribute. In the results card the name plus the ' (paid)' marker is one truncated string: only 21 of 42 characters visible, so who paid is invisible.",
+        "defect": "Text handling is safe. Truncation destroys information rather than shortening it: a clipped chip cannot be read at all (no title/tooltip) and the '(paid)' marker is hidden inside the truncated span.",
+        "severity": "minor"
+      },
+      {
+        "name": "Tampered, truncated and oversized share links",
+        "method": "Encoded states through the app's own encodeShare, then fed decodeShare a 20-character-truncated hash, '#1.zzzzzz', '#hello', a crafted payload with '__proto__' ids / negative and string amounts / 1,000 items / 1e12 cents, and a 10,000-person state. Separately decoded a 60-person trip whose expenses were paid by people 51–60.",
+        "result": "Truncated, garbage and dot-less hashes all return null and the app toasts 'Couldn't open that link — it may be cut off…'. The hostile payload is normalised: 1,000 items → 200, negative bill → 0, 'abc' tax → 0, tipValue 1e9 → 0, prototype untouched. 10,000 people → 50 in 35ms. The 60-person trip decoded to 50 people and 0 of 20 expenses, with no warning of any kind.",
+        "defect": "Sanitisation is genuinely strong, but the caps are silent: people past the 50th are dropped and every expense that referenced them disappears with them, while the app toasts 'Opened from link — saved to this device'. Success wording for a total loss (index.html:1789, :1830-1831).",
+        "severity": "major"
+      },
+      {
+        "name": "Share link at scale, QR, and the long-link warning",
+        "method": "Built 20 people × 150 expenses and 20 × 200, measured URL length and encode time, attempted QR generation directly and through showQR(), and wrapped window.toast to capture every message fired by shareLink().",
+        "result": "150 expenses → 4,964-char URL; 200 → 6,846 chars, encoded in 33ms. QR generation throws 'code length overflow (54788>18672)' and showQR() correctly degrades to 'This split is too big for a scannable code — use Copy link or Export file instead.' shareLink() fires two toasts in immediate succession: the 'Big split — link works but is long' warning, then 'Link copied…', which replaces it. Only the second is ever visible. At a normal 6-person dinner the URL is 634 chars and the QR is 97 modules drawn at 2px per cell — 194px of ink inside a 300px canvas.",
+        "defect": "The long-link warning is written, fired, and instantly destroyed by the success toast (index.html:2511-2517). The QR degrades honestly but its drawn size is left to integer rounding — a 97-module code uses 194 of 300 available pixels.",
+        "severity": "minor"
+      },
+      {
+        "name": "Address-bar freshness and cold open from a pasted link",
+        "method": "Filled name, three people, bill, tax and tip through the UI, decoded location.hash immediately and again after 700ms, then loaded that URL on a blank page and finally loaded the same URL with the hash stripped.",
+        "result": "Immediately after typing, the hash decodes to an EMPTY dinner (name '', bill 0, tip 0) — persist() is on a 400ms debounce (index.html:1993-1997). After 700ms it decodes correctly. Cold open of the settled URL restored 'Curry night', Ann/Bo/Cy, 84.60 / 6.20 / 18% and rendered the split before the toast finished. Loading with no hash restored the same split from IndexedDB and rewrote a 337-character hash.",
+        "defect": "Anyone who copies the URL out of the address bar (rather than pressing Copy link, which recomputes) within 400ms of their last keystroke shares a stale or empty split.",
+        "severity": "minor"
+      },
+      {
+        "name": "Layout across widths and comfort settings",
+        "method": "Five separate withApp runs over the same seeded 6-person, 6-item dinner: 320 and 414 at default, 414 and 320 at text:xxl, and 414 at density:roomy + contrast:more. Measured page overflow, offenders and the size of every key control in each.",
+        "result": "Overflow 0px at 320, 414, 1280, 414+xxl and 414+roomy+contrast. At 320 + text:xxl overflow is 14px, offender a#tipLink.tipbtn (left 224, right 334 against 320). Control sizes at Largest: item chips 28→37px, person chips 28→37px, pay buttons 29→37px, share-bar buttons 40→76px, tip input 48→66px. The #tipMode select stays pinned at 74px at every size (inline flex:0 0 74px, index.html:1385).",
+        "defect": "One real horizontal-scroll case: .brandrow (index.html:1253) re-implements the header row without the base layer's flex-wrap, so the tip pill overflows instead of wrapping. And Largest text still leaves 23 controls under the 44px floor.",
+        "severity": "major"
+      },
+      {
+        "name": "Comfort panel driven by hand",
+        "method": "Clicked #swsPrefsBtn in the header, ran axe on the open panel, selected Largest text, High contrast and Warm tint = Medium by clicking the option labels, then read the root attributes and re-measured.",
+        "result": "Panel opens as a 736px modal with seven labelled groups; axe with it open: 0 violations. Choices applied immediately — data-text xxl / data-contrast more / data-warmth 2, root font 24px. Page overflow stayed 0 at 414 afterwards. Note: the footer's first button is Reset, sitting immediately before Done; clicking it wiped all four settings in one tap with no undo.",
+        "defect": "The panel itself is sound. What it cannot fix is in the app layer: 28px chips, 29px pay buttons and 3.69:1 payment links are unaffected by High contrast, and Largest text is what triggers the 320px overflow.",
+        "severity": "minor"
+      },
+      {
+        "name": "axe after interaction, with real results on screen",
+        "method": "Seeded a 4-person itemized dinner with a payer so the pay buttons render, ran axe (wcag2a/2aa/21a/21aa/22aa), then computed contrast by hand for eight representative elements; repeated on a trip with settle-up rendered.",
+        "result": "Dinner: 1 violation, serious color-contrast, 3 nodes. Trip: same rule, 10 nodes, sample '<button type=\"button\">Copy amt</button>'. Measured: pay link and Copy-amt #2290a9 on #fcfeff = 3.69:1 at 12.48px/400. Everything else passes — active tab 5.21:1 at 15px/600, hint 5.87:1 at 15px, totline 5.87:1, person name 5.58:1, share-bar button 15.19:1, unselected item chip 14.78:1.",
+        "defect": "One contrast failure, and it is on the payment controls specifically — the app's terminal action, at its smallest size.",
+        "severity": "major"
+      },
+      {
+        "name": "Keyboard and screen-reader path through the core job",
+        "method": "Tabbed 26 stops from a cold load logging activeElement; counted focusable elements and the distance from #segItems to #taxAmt with 6 people and 8 items; clicked an item chip and read its ARIA; computed the accessible name of every input; opened and Escaped the person dialog; inspected both dialogs and the QR canvas.",
+        "result": "Tab order is orderly and untrapped: prefs → tip jar → 3 view tabs → person chips → add row → name → segmented control → item chips… There is no skip link element. 85 focusable elements; 60 stops between 'By items' and the Tax field. Item chip after clicking: class 'chip sel', aria-pressed null, role null, no glyph. Accessible names: #itemLabel null, #itemAmt null, #expLabel null, #expAmt null (placeholder only); all other fields correctly labelled. #expWarn: role null, aria-live null, rendered below #expAdd, no aria-describedby, focus unmoved. #personDlg and #qrDlg: aria-labelledby null; #qrCanvas: role null, aria-label null. Dialog focus lands on #pdName and Escape closes it, but leaves editingPersonId set.",
+        "defect": "Selection state on the app's core interaction is invisible to assistive tech, both amount fields announce as '0.00', validation is never announced, and the two dialogs plus the QR image are unnamed.",
+        "severity": "blocker"
+      },
+      {
+        "name": "Print, at print media and as a real PDF",
+        "method": "Seeded a 6-person itemized dinner with results, called page.emulateMedia({media:'print'}), inspected computed styles for every major block, then generated an A4 PDF with printBackground:false and inspected it.",
+        "result": "Correctly hidden: header.app, nav.tabs, .sharebar, #swsPrefsBtn, #toast, the warm-tint overlay. Still printed: #peopleBox with its live 'Add a name…' input and a ✎ beside every name, the whole Bill card with empty tax/tip fields and the payer select, and the item-assignment chips. The first six lines of the printed page are 'PEOPLE / Marisol / ✎ / Dev / ✎ / Kenji'. A selected chip computes to background rgba(0,0,0,0) with black text — identical to an unselected one. .personcard break-inside is 'auto'. No <h1> survives, because the app's title lives in the hidden header. PDF generated: 79,794 bytes.",
+        "defect": "The printed sheet leads with editing chrome, carries no title identifying the split, destroys the who-shared-what information it exists to convey, and can break a person's tile across a page. There is also no Print button in the UI at all.",
+        "severity": "major"
+      },
+      {
+        "name": "Bottom-of-screen geometry: toast, share bar, footer",
+        "method": "With a 3-person split, disabled smooth scrolling, jumped to the document bottom, fired a toast and measured the bounding rects of the toast, the share bar, a share button and the footer.",
+        "result": "Share bar 61px tall at y839; body padding-bottom 40px; footer bottom at y860 — 21px of it under the bar. Toast at y790–884, z-index 60; the first share button at y850–890. The toast overlaps the share buttons by 45px and paints above them (the bar has no z-index).",
+        "defect": "Two hardcoded offsets that no longer agree with the bar they were tuned to: the confirmation covers the controls, and the footer's privacy and feedback lines are clipped.",
+        "severity": "major"
+      },
+      {
+        "name": "Caps, bulk data and rapid clicking on the real controls",
+        "method": "Added 55 people and 205 items through the app's own paths; rendered 200 items × 50 people and measured; clicked #expAdd 30 times in a row with a valid amount; measured render, encode and persist at 20 people × 200 expenses.",
+        "result": "People cap 50, announced ('That's plenty of people for one bill'); item cap 200, announced. 200 items × 50 people renders 10,000 chips in 53ms into an 83,934px page (~93 phone screens). 30 rapid clicks on Add expense produced exactly 1 expense — the form clears on success and the rest fail validation. 20 people × 200 expenses: renderTrip 22ms, share URL 6,846 chars encoded in 33ms, persist 29ms, 200 rows, page 22,283px tall, overflow 0.",
+        "defect": "No performance or double-submit defect. The caps are announced on the app's own paths (unlike the decode path). The page simply becomes enormous with no navigation: 25 screens for a real trip, 93 for a pathological dinner, with a static tab bar and no jump-to-balances.",
+        "severity": "major"
+      },
+      {
+        "name": "State-lifecycle traps: mode flip, New dinner, saved list",
+        "method": "Built a dinner, opened the Trip tab, persisted and re-read the record from IndexedDB; separately made edits and clicked 'New dinner' inside the 400ms debounce window, then listed the saved rows; then inspected the Saved view.",
+        "result": "Merely opening the Trip tab flips the saved record's mode to 'trip' (dinner data intact but the row now reads 'Trip'). 'New dinner' replaces the current split with no confirm and no toast, and the edits made in the preceding debounce window were never written — the stored row still held the older values. Saved rows read 'Saved test (current) | Dinner · 1 people · 8/9/2026' with 61×36px Open and 37×36px ✕ buttons and a confirm() on delete.",
+        "defect": "Looking at a tab changes what your split is called; starting a new one destroys unsaved edits with no warning; and the saved row says '1 people'.",
+        "severity": "major"
+      },
+      {
+        "name": "Privacy of the shared link",
+        "method": "Saved Venmo, Cash App and PayPal handles against a person, generated the share URL, decoded it back, and captured the toast text shown at the moment of copying.",
+        "result": "All three handles survive the round trip inside the hash ('sam-wu/samwu/samwu'). The toast reads 'Link copied — the whole split travels inside it' and never mentions handles. Nothing is uploaded anywhere — localStorage holds 0 bytes for the app and no network request is made.",
+        "defect": "The no-server promise is kept exactly, but the one genuine leak — payment handles travelling into whatever chat the link is pasted into — is never named at the moment it happens.",
+        "severity": "minor"
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "title": "Convert money when the trip currency changes — today it just relabels it",
+      "rationale": "Measured: a €200 ski hire entered at rate 1.08 renders correctly as '$216.00 (€200.00 @ 1.08)'; after switching the trip currency to EUR the same row reads '€216.00' and the trip total reads '€1,981.95' — identical integer cents, new symbol, €16 invented on one line and a whole trip re-denominated on another. Callum lost confidence in the app on the spot. The research names 'nobody trusts the arithmetic' as the deepest wound in the category ('hallucinating money', 'the total is correct but every other amount is wrong'), and this is the one place our otherwise exact engine actually produces a wrong number. Either convert every stored baseCents at a rate the user supplies (and restate the per-expense rate against the new base), or refuse the change with an explanation. Never restate the same cents in a different currency.",
+      "where": "apps/bill-splitter/index.html:2648-2652 (#tripCurrency change handler), display at :2404-2406 (renderExpenseList) and :2435 (renderTripResults total)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Promote the payment handoff to a real control: 44px, 15px, 4.5:1",
+      "rationale": "Measured at every width: .paybtns links and the Copy-amt button are 76×29px at 12.48px, colour #2290a9 on #fcfeff = 3.69:1 — axe reports it as a serious color-contrast violation, 3 nodes on a dinner and 10 on a trip, and it is still only 37px at Largest text. This is the terminal action of every flow and the app's entire reason to exist; Dee could not hit it in a dim restaurant and Nadia could not read it on a bus. The research flags it as a VERIFIED DEFECT and asks for 44px minimum with Copy-amount as an equal-weight option, never a default.",
+      "where": "apps/bill-splitter/index.html:1287-1290 (.paybtns a, .paybtns button), built at :2204-2215 (payButtons)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Make every delete reversible with the SWS.undo runtime already loaded on the page",
+      "rationale": "Measured: deleting an expense goes 31 → 30 with an empty toast, no confirm and no undo; removing a person from the dialog goes 4 → 3 the same way; the item ✕ is the same code shape; only the saved-split delete gets a confirm(). window.SWS.undo is present on the page as a function and is called zero times. Callum deleted the wrong row out of thirty reconstructed receipts, and Dee's item-assignment taps are 28px in a dark room. The design system's own note says a confirm taxes the 99 correct taps to catch the one mistake; snapshot the mutated slice and call SWS.undo('Expense deleted', restore) on all four paths.",
+      "where": "apps/bill-splitter/index.html:2412-2419 (expense delete), :2194-2200 (item delete), :2601-2606 with :2064-2076 (person remove), :2489-2496 (saved split confirm)",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Fix the item-assignment chips: 44px, a tick, and aria-pressed",
+      "rationale": "This is the interaction the whole itemized mode exists for and it fails on three axes at once. Measured: 28px tall (a JS-authored inline 'padding:4px 10px;font-size:.8rem' at index.html:2181 that will override any new class rule), selection carried by fill colour alone with aria-pressed null and role null, and in print media a selected chip computes to a transparent background — identical to an unselected one, so the assignments disappear on paper. Jonah cannot tell whether a person is on an item; Ruth cannot see it on her printout; Dee mis-taps in a dim restaurant with no undo. The research's colour note asks for a checkmark as well as a fill, in these exact words.",
+      "where": "apps/bill-splitter/index.html:2173-2202 (renderItems, inline style at :2181), :2260-2300 (renderExpenseForm split chips at :2272), .chip.sel at :1278",
+      "severity": "blocker",
+      "effort": "M"
+    },
+    {
+      "title": "Give the amount fields, the validation message and the dialogs real accessible names",
+      "rationale": "Verified by computing accessible names: #itemLabel, #itemAmt, #expLabel and #expAmt have none — placeholder only, so both primary amount fields announce as 'zero point zero zero, edit text'. #expWarn (index.html:1438) has role null and aria-live null, renders below the button that triggered it, has no aria-describedby and never moves focus, so Jonah pressed Add twice and heard nothing. #personDlg and #qrDlg have no aria-labelledby and #qrCanvas has no role or aria-label. The battery misses all of this because those fields sit inside hidden panels at load.",
+      "where": "apps/bill-splitter/index.html:1373-1374 (#itemLabel/#itemAmt), :1411-1412 (#expLabel/#expAmt), :1438 with :2316 (#expWarn), :1488-1489 and :1502-1504 (dialogs and QR canvas)",
+      "severity": "blocker",
+      "effort": "S"
+    },
+    {
+      "title": "Show the working, and prove the shares sum to the bill",
+      "rationale": "The app's maths is the best in the category — an itemized 6-person bill summed to exactly 15,832¢, an 8-person trip netted to 0 with a residual of 0 after settling — and none of it is visible. Measured: the results card contains no derivation, no '÷', no 'share of tax', and no reconciliation line. Nadia is asked for £31.99 with no way to see where it came from; Ruth had to check by hand. The research calls this the single biggest opening in the category ('SHOW THE WORKING… we are the only app that can afford to open the box') and prescribes both the per-person expansion and the 'exactly the bill total' line.",
+      "where": "apps/bill-splitter/index.html:2217-2245 (renderDinnerResults), :2423-2465 (renderTripResults), computation already available from :1605-1642 (dinnerCompute) and :1653-1668 (tripCompute)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Record repayments, and offer 'pay who you actually owe' beside 'fewest payments'",
+      "rationale": "sanitizeState accepts people, dinner and trip.expenses and nothing else (index.html:1781-1854) — there is no settlement record, so once Priya hands Callum €80 the app keeps telling her to pay him, and his workaround was a fake negative expense. Separately, renderTripResults renders only the netted transfer set under a heading asserting it is right ('Settle up — fewest possible payments', :2449); measured output routes Sam → Alex $240 for a trip where they never shared an expense. The research documents both: 'record a repayment' is listed as the most important functional gap, and users explicitly ask to 'see all debts without them being combined into the least amount of transfers'.",
+      "where": "apps/bill-splitter/index.html:1781-1854 (state shape), :1671-1691 (settleUp), :2423-2465 (renderTripResults, heading at :2449)",
+      "severity": "major",
+      "effort": "L"
+    },
+    {
+      "title": "Finish print and give it a button",
+      "rationale": "Measured in print media: the People editor prints with a live 'Add a name…' box and a ✎ beside every name, the Bill card prints with empty tax/tip fields, the printed page carries no title at all (the base rule hides header.app and the only <h1> with it), selected chips lose their fill so the assignments vanish, and .personcard has break-inside:auto so a person's tile can split across pages. There is no Print action anywhere — the share bar offers Copy link, QR and Copy summary only. Ruth gave up. The research calls the printed settle-up sheet 'exactly the artifact people put in the middle of a table, and we already render it; we just never offer it'.",
+      "where": "apps/bill-splitter/index.html:1311-1315 (app print block), :1480-1486 (share bar markup), :1284-1285 (.personcard)",
+      "severity": "major",
+      "effort": "M"
+    },
+    {
+      "title": "Stop the toast landing on the share bar, and stop the footer hiding under it",
+      "rationale": "Measured at 414×900 scrolled to the bottom: the share bar is 61px tall at y839, the toast occupies y790–884 at z-index 60 and the first share button y850–890 — the confirmation covers the controls it is confirming, and the footer's last 21px sits under the bar because body padding-bottom is 40px. Two hardcoded offsets (base layer #toast bottom, and this app's 61px .sharebar) were tuned against different bars. Replace both with one --bar-h token or measure the bar at runtime, and give .sharebar a z-index above the toast's resting position.",
+      "where": "apps/bill-splitter/index.html:1293-1298 (.sharebar), base layer #toast at :753-773 and body padding at :292-305",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Let the header row wrap — 320px at Largest text scrolls sideways",
+      "rationale": "Measured: at 320px with data-text=\"xxl\" the page overflows by 14px, offender a#tipLink.tipbtn with a right edge at 334 against a 320px viewport. The base layer's header.app is flex-wrap:wrap with an explicit comment that this is the one layout failure the comfort settings could introduce on their own; this app re-implements the row as .brandrow (index.html:1253) without the wrap, so the tip pill is pushed off the edge instead of dropping a line. Ruth is on a 320px phone and Largest text is exactly why she opened the panel.",
+      "where": "apps/bill-splitter/index.html:1253-1257 (.brandrow), markup at :1322-1330",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Say when a number was not understood, instead of counting it as zero",
+      "rationale": "Measured on #billAmt: '-5', '1e9', 'abc', '1/2' and '99999999999999999999' all produce 0¢ and a $0.00 total while the typed text stays in the field with no message; a 99999% tip is silently clamped to 1000%. Dee had a field reading -5 and a total reading $0.00 in front of five people. The fix is small — parseAmount already returns null for exactly these cases (index.html:1548-1556), so the input handlers only need to distinguish null from 0 and show an inline note rather than substituting a value.",
+      "where": "apps/bill-splitter/index.html:2611-2624 (#billAmt/#taxAmt/#tipAmt input handlers), parse at :1548-1566",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Warn once, in the right place, about what a shared link carries — and let the long-link warning be seen",
+      "rationale": "Two measured facts about the same button. First, the hash carries every saved Venmo, Cash App and PayPal handle into whatever chat it is pasted into (verified round-trip), and the copy toast never says so; the research insists this is the one real leak and that overclaiming here 'would be worse than the competitors' underclaiming'. Second, on a 20-person/150-expense trip (4,964-char URL) shareLink() fires the 'Big split — link works but is long' warning and then overwrites it milliseconds later with 'Link copied' — captured both toasts firing, only the second visible. Merge them into one message and put the handle note beside the Copy link control, not only in the toast.",
+      "where": "apps/bill-splitter/index.html:2509-2518 (shareLink), share bar markup at :1480-1486, handles stored at :1490-1494 and encoded via :1712-1724",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Warn before oversized links silently discard people and their expenses",
+      "rationale": "Measured: a 60-person trip whose expenses were paid by people 51–60 decodes to 50 people and 0 of 20 expenses, while the app toasts 'Opened from link — saved to this device'. sanitizeState slices people at 50 (index.html:1789) and then drops any expense whose payer no longer resolves (:1830-1831). The app's own add paths announce their caps ('That's plenty of people for one bill'), so only the import path betrays silently — and this is precisely the pattern the seating-chart review found and the research calls the category's defining betrayal. Count what was dropped and say so.",
+      "where": "apps/bill-splitter/index.html:1781-1854 (sanitizeState; people slice :1789, item slice :1814, expense slice :1827, payer drop :1830-1831), reported at :2714-2718 and :2557-2570",
+      "severity": "major",
+      "effort": "S"
+    },
+    {
+      "title": "Expose the tip base, and stop the Trip tab renaming a dinner",
+      "rationale": "Two small trust leaks with the same shape — the app quietly deciding something and not saying so. Tip is always computed on the pre-tax subtotal (index.html:1619-1621): measured, a $100 bill with $8.75 tax and 20% gives $20.00 where the card machine offers $21.75, with no control to choose and no note explaining. And merely opening the Trip tab flips the current split's stored mode to 'trip' (index.html:2131), so a dinner appears in Saved labelled 'Trip · 1 people' — which also reads as a grammar bug at :2484. Add an 'on subtotal / on total' toggle beside the %/$ selector, and only change mode when the user actually enters trip data.",
+      "where": "apps/bill-splitter/index.html:1619-1621 (dinnerCompute tip), :1380-1389 (tax/tip row), :2131 (setTab mode flip), :2484 (saved row copy)",
+      "severity": "minor",
+      "effort": "S"
+    },
+    {
+      "title": "Small ergonomics on the fast path: keypad focus, tabular numerals, truncation, and a skip link",
+      "rationale": "Four measured papercuts on the flow the research wants to beat receipt OCR with. (1) After adding an item, focus moves to #itemLabel — the text field — so the numeric keypad closes for every item (index.html:2640); target the amount field instead. (2) The per-person amount is 26.4px with font-variant-numeric 'normal'; the research asks for tabular-lining figures on every money value and notes almost nothing in the category does it. (3) Truncation destroys information: a 35-character name needs 261px in a 180px chip with no title attribute, and in the results card the ' (paid)' marker is inside the truncated span, so only 21 of 42 characters show and who paid is invisible. (4) There is no skip link element, and with 6 people and 8 items there are 60 tab stops between 'By items' and the Tax field.",
+      "where": "apps/bill-splitter/index.html:2634-2642 (itemAdd focus), :1285 (.personcard .amt), :1276 (.chip .nm) with :2236 (name + '(paid)'), markup head at :1321-1332 (no .skip element)",
+      "severity": "minor",
+      "effort": "S"
+    }
+  ]
+}
