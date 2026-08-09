@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   sortedEvents, lastOfKind, activeSleep, sleepMinutes, daySummary, agoText, durText, summaryText,
+  ROLL_HOUR, dayStart, dayEnd, dayIndexDiff, tsOk, nearestPast, openSleepMinutes,
 } from '../model.js';
 
 let passed = 0;

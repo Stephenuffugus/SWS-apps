@@ -521,17 +521,24 @@ function preparePrint() {
   const inner = $('bracketInner');
   const style = $('bmPageStyle');
   if (!inner || !style) return;
-  const w = Math.max(inner.scrollWidth, inner.offsetWidth);
-  const h = inner.offsetHeight;
-  // US Letter at 96dpi, less the base layer's 14mm margins.
+  const prev = inner.style.zoom;
+  inner.style.zoom = '';
+  const w = Math.max(inner.scrollWidth, Math.ceil(inner.getBoundingClientRect().width));
+  inner.style.zoom = prev;
+  const h = Math.max(1, Math.ceil(inner.getBoundingClientRect().height));
+  // US Letter at 96dpi, less the base layer's 14mm margins. Portrait first —
+  // landscape only when the bracket genuinely needs it.
   const PORTRAIT = 710, LANDSCAPE = 950;
   const landscape = w > PORTRAIT;
   style.textContent = '@media print{@page{size:' + (landscape ? 'landscape' : 'portrait') + '; margin:14mm}}';
-  const avail = landscape ? LANDSCAPE : PORTRAIT;
-  const scale = Math.min(1, avail / Math.max(w, 1));
-  const root = document.documentElement;
-  root.style.setProperty('--bm-print-scale', String(Math.round(scale * 1e4) / 1e4));
-  root.style.setProperty('--bm-print-h', Math.ceil(h * scale) + 'px');
+  const availW = landscape ? LANDSCAPE : PORTRAIT;
+  const availH = (landscape ? PORTRAIT : 950)
+    - 100 - $('eventTitle').offsetHeight - $('champ').offsetHeight;
+  // Fit the height too where that still leaves the names readable — a bracket
+  // on one sheet is the whole point of taping it to a wall. Below 0.7 the
+  // names stop being readable across a room, so take the extra page instead.
+  const scale = Math.min(1, availW / w, Math.max(availH / h, 0.7));
+  document.documentElement.style.setProperty('--bm-print-scale', String(Math.round(scale * 1e4) / 1e4));
 }
 
 /* ── QR ──────────────────────────────────────────────────────────────────── */

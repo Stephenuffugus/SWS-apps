@@ -1454,16 +1454,16 @@ button.slot{cursor:pointer}
 
   #champ{color:#000}
   .bracketwrap::before,.bracketwrap::after{display:none}
-  .bracket{
-    overflow:visible;
-    height:var(--bm-print-h, auto);
-    padding:0;
-  }
-  .bracketinner{
-    transform:scale(var(--bm-print-scale, 1));
-    transform-origin:top left;
-  }
-  .round,.match{break-inside:avoid; page-break-inside:avoid}
+  .bracket{overflow:visible; padding:0}
+  /* zoom, not transform: a transform leaves the box its full size, so the
+     paginator saw a page-tall column, honoured break-inside on it, and threw
+     a blank first sheet. zoom scales the layout, so the page breaks land
+     where the print actually is. */
+  .bracketinner{zoom:var(--bm-print-scale, 1)}
+  /* Only the pairing is unbreakable. A round column is routinely taller than
+     a sheet, and break-inside:avoid on something that cannot fit is what
+     produces an empty page. */
+  .match{break-inside:avoid; page-break-inside:avoid}
   .roundhead{color:#000}
   /* Background graphics are OFF by default in every browser's print dialog,
      so the winner cannot be marked by a fill. Mark it structurally. */
