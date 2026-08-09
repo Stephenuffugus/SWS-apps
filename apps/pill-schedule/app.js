@@ -93,6 +93,27 @@ function coerceMed(x) {
     max: str(x.max, 24),
   };
 }
+/* A drug name may only break where a separator already exists. "Carbidopa/
+   Levodopa" rendered as "Carbidopa/Levo" / "dopa" at Largest text, and a name
+   split mid-syllable is an identification hazard on a medication list. <wbr>
+   gives the line breaker somewhere legitimate to go, so the anywhere-break
+   fallback never fires. Built from text nodes, never innerHTML. */
+function nameNodes(text) {
+  const s = String(text || '');
+  const out = [];
+  let buf = '';
+  for (const ch of s) {
+    buf += ch;
+    if ('/-–—+·'.indexOf(ch) >= 0) {
+      out.push(document.createTextNode(buf));
+      out.push(document.createElement('wbr'));
+      buf = '';
+    }
+  }
+  if (buf) out.push(document.createTextNode(buf));
+  return out.length ? out : [document.createTextNode(s)];
+}
+
 const rowsOf = (m) => (m.prn ? 1 : Math.max(1, m.times.length));
 const rowCount = (meds) => meds.reduce((a, m) => a + rowsOf(m), 0);
 
@@ -253,8 +274,8 @@ function renderList() {
     list.append(el('li', { class: editingId === m.id ? 'editing' : '' },
       el('div', { class: 'grow' },
         el('div', {},
-          el('strong', {}, m.name),
-          m.alias ? ' (' + m.alias + ')' : '',
+          el('strong', {}, nameNodes(m.name)),
+          m.alias ? [' (', nameNodes(m.alias), ')'] : '',
           m.dose ? ' — ' + m.dose : ''),
         el('div', { class: 'sub', text: when + (m.notes ? '  ·  ' + m.notes : '') }),
         flagged.has(m.id) ? el('span', { class: 'flag' }, 'check for a duplicate') : null),
@@ -325,7 +346,11 @@ function prnTable() {
   t.append(el('tbody'));
   return t;
 }
-const nameLine = (m) => m.name + (m.alias ? ' (' + m.alias + ')' : '') + (m.dose ? ' · ' + m.dose : '');
+const nameLine = (m) => [
+  nameNodes(m.name),
+  m.alias ? [' (', nameNodes(m.alias), ')'] : null,
+  m.dose ? ' · ' + m.dose : null,
+];
 
 function renderSheet() {
   const sheet = $('sheet');
@@ -453,7 +478,10 @@ function renderSheet() {
 function fitPreview() {
   const frame = $('previewFrame'), scaler = $('sheetScale'), sheet = $('sheet');
   if (!frame || !scaler) return;
-  const avail = frame.clientWidth;
+  // clientWidth still counts the frame's padding, which would over-scale the
+  // sheet and clip the Sunday column off the right of the preview
+  const cs = getComputedStyle(frame);
+  const avail = frame.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
   const w = SHEET_W_MM * PX_PER_MM;
   const k = avail > 0 ? Math.min(1, avail / w) : 1;
   scaler.style.width = w + 'px';

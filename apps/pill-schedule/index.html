@@ -1273,6 +1273,10 @@ a.tipbtn,.btn.small,.seg button,.seg .tab{min-height:var(--tap)}
    text. A drug name split mid-syllable is an identification hazard on a
    medication list, so names break only where a separator already exists. */
 ul.plain .grow{overflow-wrap:break-word; hyphens:none}
+/* …and the row gives the name the whole width rather than squeezing it beside
+   two buttons, which is what forced the break in the first place. */
+ul.plain > li{flex-wrap:wrap}
+ul.plain > li > .grow{flex:1 1 11rem}
 
 /* ---------- time-of-day picker ----------
    Four checkboxes drawn as pressable tiles. The input is visually hidden but
@@ -1507,7 +1511,10 @@ details.card[open] > summary{margin-bottom:var(--s4)}
   color:#111; background:#eceae6;
   border-bottom-width:1.5pt;
 }
-#sheet th.day,#sheet td.day{text-align:center}
+#sheet th.day,#sheet td.day{text-align:center; padding-left:1.5pt; padding-right:1.5pt}
+/* The weekday label has to sit inside a 10.9mm column without colliding with
+   its neighbour, so it is capped rather than tracking the print size. */
+#sheet th.day{font-size:min(var(--ptl), 10pt); letter-spacing:0}
 #sheet .box{display:inline-block; width:var(--box); height:var(--box); border:1pt solid #333; border-radius:1pt}
 #sheet .med{font-size:var(--pt); font-weight:700}
 #sheet .when{font-size:var(--pt2); color:#222}
@@ -1560,7 +1567,7 @@ details.card[open] > summary{margin-bottom:var(--s4)}
       <p class="disclaimer">A memory aid, not medical advice — confirm doses and times with the pharmacist.</p>
       <p class="trust">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
-        <span><b>The medication list stays on this device.</b> Names, doses, allergies and phone numbers are saved only in this browser — no account, no ads, no server. A shared link carries the card inside the link itself, so it is never uploaded either. The printed card keeps working even if this site disappears.</span>
+        <span><b>The medication list stays on this device.</b> Names, doses, allergies and phone numbers are saved only in this browser — no account, no ads, nothing sent anywhere. Share by link and the card rides inside the link itself; it is still never uploaded. The printed card keeps working even if this site disappears.</span>
       </p>
     </section>
 
