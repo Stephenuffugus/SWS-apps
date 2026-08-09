@@ -526,14 +526,15 @@ function preparePrint() {
   const w = Math.max(inner.scrollWidth, Math.ceil(inner.getBoundingClientRect().width));
   inner.style.zoom = prev;
   const h = Math.max(1, Math.ceil(inner.getBoundingClientRect().height));
-  // US Letter at 96dpi, less the base layer's 14mm margins. Portrait first —
+  // The printable box of US Letter at 96dpi, less the base layer's 14mm
+  // margins: 710 × 950 portrait, 950 × 710 landscape. Portrait first —
   // landscape only when the bracket genuinely needs it.
-  const PORTRAIT = 710, LANDSCAPE = 950;
-  const landscape = w > PORTRAIT;
+  const SHORT = 710, LONG = 950;
+  const landscape = w > SHORT;
   style.textContent = '@media print{@page{size:' + (landscape ? 'landscape' : 'portrait') + '; margin:14mm}}';
-  const availW = landscape ? LANDSCAPE : PORTRAIT;
-  const availH = (landscape ? PORTRAIT : 950)
-    - 100 - $('eventTitle').offsetHeight - $('champ').offsetHeight;
+  const availW = landscape ? LONG : SHORT;
+  const availH = (landscape ? SHORT : LONG)
+    - 100 - $('eventTitle').offsetHeight - $('champ').offsetHeight;   // header, title, champion line
   // Fit the height too where that still leaves the names readable — a bracket
   // on one sheet is the whole point of taping it to a wall. Below 0.65 the
   // names stop being readable across a room, so take the extra page instead.
@@ -574,8 +575,12 @@ function showQr(url) {
     $('qrDense').hidden = true;
   }
   $('qrUrl').value = url;
+  $('qrUrl').scrollTop = 0;
   const d = $('qrDlg');
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+  // Focus the action, not the link box — a textarea taking focus scrolls
+  // itself to the end and reads as an edit field the user is expected to fix.
+  try { $('qrCopy').focus(); } catch (e) {}
 }
 
 function init() {
