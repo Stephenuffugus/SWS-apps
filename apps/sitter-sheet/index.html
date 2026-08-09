@@ -1250,28 +1250,245 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
-/* ---------- the printed sheet ---------- */
+
+/* ── The mode toggle ────────────────────────────────────────────────────────
+   .seg button ships at a flat 38px, which does not move when someone raises
+   the text size — and this is the one control that appears to wipe the whole
+   sheet. --tap is floored at 44px and grows with --ui-scale precisely so that
+   turning the type up does not shrink the target. */
+.seg button{min-height:var(--tap)}
+
+/* The filled/empty cue is a glyph, not a colour. At data-contrast="more" the
+   base layer maps --ink-3 onto --ink, so a grey placeholder and a real answer
+   become the same ink; a tick survives that. */
+label.f .fmark{font-weight:700; color:var(--pos)}
+label.f .cnt{display:block; margin-top:var(--s1); font-size:var(--t-xs); color:var(--ink-2)}
+label.f.is-filled > input,label.f.is-filled > textarea{border-color:var(--line-2); border-width:2px}
+
+#form h3{
+  font-size:var(--t-micro);
+  font-weight:700;
+  letter-spacing:0.07em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+  margin:var(--s6) 0 var(--s3);
+}
+#form h3:first-child{margin-top:0}
+
+#gaps{margin-bottom:var(--s4)}
+#fallback textarea{font-size:var(--t-sm); min-height:7rem}
+
+/* ── The sitter's page ──────────────────────────────────────────────────────
+   A different document from the parent's form: bigger type because it is read
+   standing up in a dim hallway, and every phone number is a target rather than
+   a string to copy out by hand. */
+.sitter .stitle{
+  font-family:var(--font-display);
+  font-weight:var(--display-weight);
+  letter-spacing:var(--display-tracking);
+  font-size:var(--t-2xl);
+  text-transform:none;
+  color:var(--ink);
+  margin:0;
+}
+.sitter .scell{margin-bottom:var(--s5)}
+.sitter .scell:last-child{margin-bottom:0}
+.sitter .slabel{
+  font-size:var(--t-micro);
+  font-weight:700;
+  letter-spacing:0.07em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+  margin-bottom:var(--s2);
+}
+.sitter .sval{
+  font-size:var(--t-xl);
+  line-height:var(--lh-body);
+  color:var(--ink);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.sitter .sbig{
+  font-size:var(--t-2xl);
+  font-weight:650;
+  line-height:var(--lh-snug);
+  color:var(--ink);
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.sitter .s3{border:2px solid var(--line-2)}
+.sitter .scell.alert .sbig{color:var(--ink)}
+.sitter .rchip{
+  display:inline-block;
+  padding:0 var(--s2);
+  margin-right:var(--s2);
+  border-radius:var(--r-pill);
+  background:var(--neg);
+  color:var(--surface);
+  font-size:var(--t-micro);
+  letter-spacing:0.06em;
+}
+.sitter .scell.alert{
+  padding:var(--s3) var(--s4);
+  background:var(--neg-soft);
+  border:1px solid var(--neg-line);
+  border-left:4px solid var(--neg);
+  border-radius:var(--r-sm);
+}
+
+/* Tap-to-call. 48px is the floor the research asks for and --tap may exceed it
+   once the text size is raised, so take whichever is larger. */
+.sitter a.tel{
+  display:inline-block;
+  min-height:max(48px, var(--tap));
+  padding:var(--s2) var(--s3);
+  margin:var(--s1) var(--s1) var(--s1) 0;
+  font-size:var(--t-xl);
+  font-weight:650;
+  color:var(--accent-deep);
+  background:var(--accent-soft);
+  border:1px solid var(--line-2);
+  border-radius:var(--r-ctl);
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.sitter a.tel.big{
+  display:flex;
+  align-items:baseline;
+  gap:var(--s3);
+  flex-wrap:wrap;
+  margin:0 0 var(--s2);
+  padding:var(--s3) var(--s4);
+  background:var(--neg-soft);
+  border:2px solid var(--neg);
+  color:var(--ink);
+  text-decoration:none;
+}
+.sitter a.tel.big .tellbl{font-size:var(--t-base); font-weight:700; text-transform:uppercase; letter-spacing:0.06em}
+.sitter a.tel.big .telnum{font-size:var(--t-2xl); font-weight:700; text-decoration:underline; text-underline-offset:3px}
+
+/* ── The print preview ──────────────────────────────────────────────────────
+   The paper is laid out at true Letter geometry (816 × 1056 CSS px, 14mm
+   margins) and then scaled down to fit, so what is on screen is the same
+   fragmentation the printer will do — and the page count under it is a
+   measurement of that layout, not an estimate. */
+#pvScroll{
+  max-height:70vh;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+}
+#pvStage{position:relative; overflow:hidden}
+#pvPaper{
+  position:absolute; top:0; left:0;
+  width:816px;
+  padding:53px 76px 0;
+  background:#fff;
+  transform-origin:top left;
+}
+#pvPaper .pgline{
+  position:absolute; left:0; right:0;
+  border-top:2px dashed #b91c1c;
+}
+#pvPaper .pgline span{
+  position:absolute; right:8px; top:4px;
+  font:600 13px/1 var(--font-text);
+  color:#b91c1c; background:#fff; padding:0 4px;
+}
+#pvCount{margin-top:var(--s3)}
+
+/* ── The QR dialog ──────────────────────────────────────────────────────────
+   This was the one part of the app outside the token system: an inline
+   color:#111 heading against a dialog that resolves to near-black under a dark
+   colour-scheme, so its only instruction was invisible at 06:20. */
+.qrdlg{
+  max-width:min(92vw, 30rem);
+  padding:var(--s5);
+  text-align:center;
+  color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  box-shadow:var(--shadow-2);
+}
+.qrdlg::backdrop{background:rgba(0,0,0,0.45)}
+.qrdlg h2{
+  margin:0 0 var(--s3);
+  font-size:var(--t-lg);
+  font-weight:650;
+  letter-spacing:normal;
+  text-transform:none;
+  color:var(--ink);
+}
+.qrdlg canvas{
+  display:block;
+  margin:0 auto;
+  max-width:100%;
+  height:auto;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+}
+.qrdlg .hint{margin-top:var(--s3)}
+.qrfoot{margin-top:var(--s4)}
+
+/* ── The printed sheet ──────────────────────────────────────────────────────
+   One set of rules, used both on paper and inside the on-screen preview, so
+   the preview is literally the printed page rather than an impression of it.
+   The colour literals here are deliberate and are the only ones in this layer:
+   this element depicts a sheet of white paper, in both themes and in print. */
 #sheet{display:none}
+
+.sheetdoc{color:#111; font-size:11pt; line-height:1.35}
+.sheetdoc .shead{text-align:center; border-bottom:2.5pt solid #111; padding-bottom:8pt; margin-bottom:10pt}
+.sheetdoc .shead h1{margin:0; font-size:20pt; letter-spacing:-.01em}
+.sheetdoc .shead .sub{color:#555; font-size:10pt; margin-top:2pt}
+.sheetdoc .shead .stamp{color:#555; font-size:9pt; margin-top:1pt}
+.sheetdoc .nothing{font-size:11pt; color:#555; text-align:center; padding:12pt 0}
+
+/* The 3-second panel: address, allergies, and the numbers, pinned above
+   everything else at the top of page one whether or not they were filled in.
+   Stacked blocks rather than a flex row on purpose — a flex row cannot
+   fragment across a page, which is the defect this whole layer exists to fix,
+   and an address reads better across the full measure anyway. */
+.sheetdoc .top3{margin-bottom:9pt}
+.sheetdoc .t3{
+  border:1pt solid #111; border-radius:4pt;
+  padding:4pt 6pt; margin-bottom:5pt;
+}
+.sheetdoc .t3.alert{border:2pt solid #b91c1c}
+.sheetdoc .t3.call{border:2pt solid #b91c1c; text-align:center}
+.sheetdoc .t3l{
+  font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:#555; margin-bottom:1pt;
+}
+.sheetdoc .t3.alert .t3l,.sheetdoc .t3.call .t3l{color:#b91c1c}
+.sheetdoc .t3v{font-size:13pt; font-weight:700; line-height:1.25; white-space:pre-wrap; overflow-wrap:anywhere}
+.sheetdoc .t3.call .t3v{font-size:12pt; color:#b91c1c}
+.sheetdoc .t3v2{font-size:10.5pt; margin-top:1pt; white-space:pre-wrap; overflow-wrap:anywhere}
+
+/* CSS multi-column, not two flex children: multicol is the only two-column
+   mechanism that fragments across pages, so nothing overflows into nowhere. */
+.sheetdoc .cols{columns:2; column-gap:14pt}
+.sheetdoc .block{margin:0 0 9pt; break-inside:auto}
+.sheetdoc .block h2{
+  font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666;
+  margin:0 0 3pt; border-bottom:.75pt solid #ccc; padding-bottom:2pt;
+  break-after:avoid; page-break-after:avoid;
+}
+.sheetdoc .block .v{white-space:pre-wrap; overflow-wrap:anywhere; orphans:2; widows:2}
+.sheetdoc .em{
+  border:1.5pt solid #b91c1c; border-radius:6pt; padding:6pt 8pt; margin-top:6pt;
+  font-size:10pt; break-inside:avoid;
+}
+.sheetdoc .em b{color:#b91c1c}
+
 @media print{
   body{background:#fff; padding:0}
   .screenonly, header.app, footer.colophon, #toast{display:none !important}
-  #sheet{display:block; color:#111; font-size:11pt; padding:0 6mm}
-  #sheet .shead{text-align:center; border-bottom:2.5pt solid #111; padding-bottom:8pt; margin-bottom:10pt}
-  #sheet .shead h1{margin:0; font-size:20pt; letter-spacing:-.01em}
-  #sheet .shead .sub{color:#555; font-size:10pt; margin-top:2pt}
-  #sheet .cols{display:flex; gap:14pt}
-  #sheet .col{flex:1}
-  #sheet .block{margin-bottom:9pt; break-inside:avoid}
-  #sheet .block h2{
-    font-size:8.5pt; text-transform:uppercase; letter-spacing:.08em; color:#666;
-    margin:0 0 3pt; border-bottom:.75pt solid #ccc; padding-bottom:2pt;
-  }
-  #sheet .block .v{white-space:pre-wrap; overflow-wrap:anywhere}
-  #sheet .em{
-    border:1.5pt solid #b91c1c; border-radius:6pt; padding:6pt 8pt; margin-top:6pt;
-    font-size:10pt;
-  }
-  #sheet .em b{color:#b91c1c}
+  #sheet{display:block; padding:0 6mm}
 }
 </style>
 <script src="sws-prefs.js"></script>
