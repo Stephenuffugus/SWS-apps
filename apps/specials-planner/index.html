@@ -1564,6 +1564,19 @@ body{
 const CLIENT_ID = "";   // Google OAuth Web Client ID → enables Drive save/load (scope: drive.file). Empty = feature hidden.
 const TIP_URL   = "https://buy.stripe.com/7sY7sM6PD91l3fn45P7EQ0l";   // Stripe Payment Link URL → shows a quiet tip-jar link in Setup. Empty = hidden.
 
+/* ------------------ shared runtime --------------------------------- */
+/* sws-ui.js (loaded in <head>) supplies SWS.toast / SWS.undo / SWS.saved and is
+   in the service worker's shell list, so in a real browser it is always there.
+   This fallback exists so the app degrades to "still works, still announces"
+   rather than throwing if it is ever missing — a headless test rig, or a first
+   paint where the file 404s. The fallback keeps the undo callback reachable
+   instead of silently dropping it. */
+const SWS = (window.SWS && window.SWS.toast) ? window.SWS : {
+  toast(msg,opts){ announce(msg); if(opts&&opts.action) SWS._undo=opts.action.onAction; },
+  undo(msg,fn){ SWS._undo=fn; announce(msg); },
+  saved(o){ const el=document.getElementById('saved'); if(el){ el.textContent=(o&&o.text)||'Saved'; el.classList.add('show'); } }
+};
+
 /* ------------------ storage shim ------------------------------------
    Two rules learned the hard way:
    1. A write is only a save if you can read it back. A school Chromebook with
@@ -1608,7 +1621,7 @@ function defaultConfig(){
     workDays:[1,2,3,4,5],
     periods:6, lunchAfter:2,
     letters:['A','B','C'],
-    teacher:'', driveFileId:''
+    teacher:'', driveFileId:'', printMode:'compact'
   };
 }
 const MAX_LETTERS=12, MAX_LETTER_LEN=4, MAX_PERIODS=10, MAX_WEEKS=300;
@@ -1702,11 +1715,7 @@ function queueSave(){ clearTimeout(saveT); saveT=setTimeout(()=>{saveT=null;pers
    lose the line. */
 function flushSave(){ if(saveT){ clearTimeout(saveT); saveT=null; persist(true); } }
 function hhmm(d){ return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; }
-function flashSaved(){
-  const text=`Saved ${hhmm(new Date())}`;
-  if(window.SWS&&SWS.saved) SWS.saved({text,ms:36e5});
-  else { const el=document.getElementById('saved'); if(el){el.textContent=text;el.classList.add('show');} }
-}
+function flashSaved(){ SWS.saved({text:`Saved ${hhmm(new Date())}`,ms:36e5}); }
 function showSaveAlert(on){
   const wrap=document.getElementById('alert-wrap');
   if(!wrap) return;
@@ -1716,7 +1725,7 @@ function showSaveAlert(on){
     'This browser refused to save. Your plans are only in this tab right now — if you close it they are gone. Download a backup, then try a different browser or ask for storage to be allowed on this device.';
   wrap.hidden=false;
   const el=document.getElementById('saved'); if(el){ el.textContent=''; el.classList.remove('show'); }
-  if(window.SWS&&SWS.toast) SWS.toast('Could not save on this device — download a backup.',{assertive:true,ms:9000});
+  SWS.toast('Could not save on this device — download a backup.',{assertive:true,ms:9000});
 }
 
 /* ------------------ dates ------------------------------------------- */
@@ -1811,6 +1820,7 @@ function announce(msg){
 const view=document.getElementById('view');
 function render(){
   hideBar(); closeModal();
+  applyPrintMode();
   const tabs=document.querySelector('.tabs');
   if(!S){ tabs.style.display='none'; renderWelcome(); return; }
   tabs.style.display='flex';
@@ -1880,10 +1890,23 @@ function clearSample(){
 function keepSample(){ delete S.sample; persist(); render(); }
 
 /* ------------------ week view --------------------------------------- */
+/* "No weeks yet — check your year dates" was shown whenever the year came out
+   empty, including when the dates were perfect and the teaching days were the
+   problem. An error that names the wrong field is the complaint this app was
+   built to avoid, quoted verbatim in the research. */
+function yearProblem(){
+  const c=S.config, st=parseISO(c.yearStart), en=parseISO(c.yearEnd);
+  if(!st) return `The first day of the year (“${c.yearStart}”) is not a date this app can read. Set it in Setup.`;
+  if(!en) return `The last day of the year (“${c.yearEnd}”) is not a date this app can read. Set it in Setup.`;
+  if(en<st) return `The last day (${niceDate(c.yearEnd)}) comes before the first day (${niceDate(c.yearStart)}). Swap them in Setup.`;
+  if(!c.workDays.length) return 'No teaching days are selected. Pick at least one in Setup.';
+  const names=c.workDays.slice().sort().map(d=>DAYNAMES[d]).join(', ');
+  return `Your year runs ${niceDate(c.yearStart)} to ${niceDate(c.yearEnd)}, and no ${names} falls inside it. Widen the dates or add another teaching day in Setup.`;
+}
 function renderWeek(){
   buildYearIfStale();
   if(!YEAR.length){
-    view.innerHTML=`<div class="card"><h2>No weeks yet</h2><p class="sub">Check your year dates in Setup — the end date has to come after the start date, and at least one weekday has to be selected.</p><button class="btn primary" id="go-setup">Open Setup</button></div>`;
+    view.innerHTML=`<div class="card"><h2>No weeks yet</h2><p class="sub">${esc(yearProblem())}</p><button class="btn primary" id="go-setup">Open Setup</button></div>`;
     document.getElementById('go-setup').onclick=()=>{curView='setup';render();};
     return;
   }
@@ -1899,27 +1922,36 @@ function renderWeek(){
   if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch">🍎</th>`;
   head+=`<th class="notes-h" scope="col">Notes</th></tr>`;
 
+  const ce=PLAINTEXT_OK?'plaintext-only':'true';
+  const lunchCell=`<td class="lunch"><span aria-hidden="true">lunch</span></td>`;
   let rows='';
   for(const d of w.days){
     const li=d.letter?c.letters.indexOf(d.letter):-1;
-    const chip=d.letter?`<span class="chip l${li%6}">${esc(d.letter)}</span>`:'';
+    const chip=d.letter?`<span class="chip l${(li<0?0:li)%6}"><span class="sr-only">Rotation day </span>${esc(d.letter)}</span>`:'';
     const banner=d.special?`<span class="sp-banner">${esc(d.special)}</span>`:'';
+    const dayName=`${DAYNAMES[d.dow]} ${niceDate(d.iso)}`;
+    const rot=d.letter?`, rotation day ${esc(d.letter)}`:(d.special?`, ${esc(d.special)}`:'');
     rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
-      <td><div class="day-cell">
-        <button class="day-gear no-print" data-gear="${d.iso}" aria-label="Day settings for ${DAYNAMES[d.dow]} ${niceDate(d.iso)}">⚙</button>
-        <div class="day-name">${DAYNAMES[d.dow]}</div>
-        <div class="day-date">${niceDate(d.iso)}${d.iso===todayISO?'<span class="sr-only">, today</span>':''}</div>
-        ${chip}${banner}
+      <td class="day-td"><div class="day-cell">
+        <div>
+          <div class="day-name">${DAYNAMES[d.dow]}</div>
+          <div class="day-date">${niceDate(d.iso)}${d.iso===todayISO?'<span class="sr-only">, today</span>':''}</div>
+        </div>
+        <div class="day-foot">${chip}<button class="day-gear no-print" data-gear="${d.iso}" aria-label="Day settings for ${dayName}">⚙</button></div>
+        ${banner}
       </div></td>`;
     for(let p=1;p<=c.periods;p++){
-      if(p===preL+1) rows+=`<td class="lunch"><span>lunch</span></td>`;
-      rows+=`<td><div class="box" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${DAYNAMES[d.dow]} ${niceDate(d.iso)}, period ${p}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}"></div></td>`;
+      if(p===preL+1) rows+=lunchCell;
+      rows+=`<td data-label="Period ${p}"><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, period ${p}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div></td>`;
     }
-    if(preL===c.periods) rows+=`<td class="lunch"><span>lunch</span></td>`;
-    rows+=`<td><div class="box" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notes for ${DAYNAMES[d.dow]} ${niceDate(d.iso)}" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
+    if(preL===c.periods) rows+=lunchCell;
+    rows+=`<td data-label="Notes"><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
   }
 
   const opts=YEAR.map((wk,i)=>`<option value="${i}" ${i===curWeek?'selected':''}>Wk ${i+1} · ${weekLabel(wk)}</option>`).join('');
+  const sampleBar=S.sample?`<div class="sample-bar no-print"><span class="warn">You are looking at a sample week — this text is not yours.</span>
+      <button class="btn" id="s-clear">Clear the sample</button><button class="btn ghost" id="s-keep">Keep it, it's mine now</button></div>`:'';
+  const truncated=yearTruncated?`<p class="warn no-print">That is a very long span, so the grid stops after ${YEAR.length} weeks. Shorten the year in Setup if you need the end of it.</p>`:'';
   view.innerHTML=`
     <div class="weeknav no-print">
       <button class="btn" id="wk-prev" aria-label="Previous week" ${curWeek===0?'disabled':''}>‹</button>
@@ -1929,35 +1961,80 @@ function renderWeek(){
       <span class="spacer"></span>
       <button class="btn" id="wk-print">Print</button>
     </div>
+    ${trustHTML(false)}
+    ${sampleBar}${truncated}
+    <h2 class="sr-only">Week ${curWeek+1} of ${YEAR.length}: ${weekLabel(w)}</h2>
+    <p class="scroll-hint no-print" id="scroll-hint" hidden>The periods run off to the right — scroll the grid sideways to reach them. The day column stays put.</p>
     <div class="print-title">Specials Planner · Week of ${weekLabel(w)}${teacher}</div>
-    <div class="grid-scroll"><table class="week" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
-    <div class="footnote no-print">Tap a box to type. While a box is selected, the bar below can copy it across the day or across matching rotation days.</div>`;
+    <div class="grid-scroll"><table class="week" style="--cols:${c.periods}" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+    <div class="footnote no-print">Tap a box to type — Enter starts a new line. While a box is selected, the bar at the top of the screen can copy it across the day, or onto the same period of every matching rotation day in the year.</div>`;
 
-  // fill saved text via textContent (never innerHTML) — user text stays inert
+  paintCells();
   view.querySelectorAll('.box').forEach(b=>{
-    const k=b.dataset.p==='notes'?null:`${b.dataset.iso}|${b.dataset.p}`;
-    b.textContent = k ? (S.cells[k]||'') : (S.notes[b.dataset.iso]||'');
     b.addEventListener('input',onBoxInput);
     b.addEventListener('focus',()=>onBoxFocus(b));
     b.addEventListener('paste',plainPaste);
     b.addEventListener('keydown',onBoxKey);
   });
   view.querySelectorAll('[data-gear]').forEach(g=>g.onclick=()=>openSpecial(g.dataset.gear));
+  if(S.sample){
+    document.getElementById('s-clear').onclick=clearSample;
+    document.getElementById('s-keep').onclick=keepSample;
+  }
   document.getElementById('wk-prev').onclick=()=>{curWeek--;render();refocus('wk-prev','wk-next');};
   document.getElementById('wk-next').onclick=()=>{curWeek++;render();refocus('wk-next','wk-prev');};
   document.getElementById('wk-jump').onchange=e=>{curWeek=+e.target.value;render();refocus('wk-jump');};
   document.getElementById('wk-today').onclick=()=>{curWeek=weekIndexFor(todayISO);render();refocus('wk-today');};
   document.getElementById('wk-print').onclick=()=>window.print();
+  updateScrollHint();
   announce(`Week ${curWeek+1} of ${YEAR.length}: ${weekLabel(w)}`);
 }
+/* Saved text reaches the DOM through textContent and nothing else — this second
+   pass is the app's only defence for lesson content and must never be folded
+   back into the template above. */
+function paintCells(){
+  const byIso={};
+  for(const d of (YEAR[curWeek]||{days:[]}).days) byIso[d.iso]=d;
+  view.querySelectorAll('.box').forEach(b=>{
+    const d=byIso[b.dataset.iso]; if(!d) return;
+    b.textContent = b.dataset.p==='notes' ? (S.notes[d.iso]||'') : cellText(d,+b.dataset.p);
+  });
+}
+/* On a phone the grid is stacked and there is nothing to scroll; between tablet
+   and laptop widths it scrolls, and it used to do so with no affordance at all,
+   so the app looked like it had three columns. */
+function updateScrollHint(){
+  const gs=view.querySelector('.grid-scroll'), hint=document.getElementById('scroll-hint');
+  if(!gs||!hint) return;
+  hint.hidden = gs.scrollWidth <= gs.clientWidth+2;
+}
+addEventListener('resize',()=>{ if(curView==='week'&&S) updateScrollHint(); });
 let yearStale=true;
 function buildYearIfStale(){ if(yearStale){buildYear();yearStale=false;} }
 function markStale(){ yearStale=true; }
 
+/* Enter used to build <div> children inside the contenteditable, and textContent
+   glued them into one run-on string — "Warm-up: djembesCall and responseCool
+   down" — which is what came back after a reload. plaintext-only makes Enter a
+   real newline; the keydown fallback does the same where it is unsupported. */
+const PLAINTEXT_OK=(()=>{
+  try{ const d=document.createElement('div'); d.setAttribute('contenteditable','plaintext-only'); return d.contentEditable==='plaintext-only'; }
+  catch(e){ return false; }
+})();
+function boxValue(b){
+  const raw = (typeof b.innerText==='string' && b.innerText!=='') ? b.innerText : b.textContent;
+  return String(raw||'').replace(/\r\n?/g,'\n').replace(/\u00a0/g,' ').replace(/\n$/,'');
+}
 function onBoxInput(e){
-  const b=e.target, v=b.textContent;
+  const b=e.target, v=boxValue(b);
   if(b.dataset.p==='notes'){ if(v)S.notes[b.dataset.iso]=v; else delete S.notes[b.dataset.iso]; }
-  else { const k=`${b.dataset.iso}|${b.dataset.p}`; if(v)S.cells[k]=v; else delete S.cells[k]; }
+  else {
+    const k=b.dataset.key;
+    if(v)S.cells[k]=v; else delete S.cells[k];
+    // any pre-migration leftover shown by cellText() is now superseded
+    delete S.cells[`${b.dataset.iso}|${b.dataset.p}`];
+    if(k[0]==='c') delete S.cells[`d${b.dataset.iso}|${b.dataset.p}`];
+  }
   queueSave();
 }
 function plainPaste(e){
@@ -1967,7 +2044,11 @@ function plainPaste(e){
 }
 function onBoxKey(e){
   if(e.key==='Escape'){ hideBar(); return; }
-  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&barCtx){ e.preventDefault(); document.getElementById('bar-day').focus(); }
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&barCtx){ e.preventDefault(); document.getElementById('bar-day').focus(); return; }
+  if(e.key==='Enter'&&!PLAINTEXT_OK&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    e.preventDefault();
+    document.execCommand('insertText',false,'\n');
+  }
 }
 
 /* ------------------ copy bar ---------------------------------------- */
@@ -1976,9 +2057,9 @@ let barCtx=null;
 function onBoxFocus(b){
   if(b.dataset.p==='notes'){ hideBar(); return; }
   barCtx={iso:b.dataset.iso,p:+b.dataset.p,letter:b.dataset.letter||''};
-  document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · Period ${barCtx.p} — Ctrl+Enter for these buttons`;
+  document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · Period ${barCtx.p} — Ctrl+Enter reaches these buttons`;
   const lb=document.getElementById('bar-letter');
-  if(barCtx.letter){ lb.style.display=''; lb.textContent=`Fill all ${barCtx.letter}-days`; }
+  if(barCtx.letter){ lb.style.display=''; lb.textContent=`Fill all ${barCtx.letter}-days (period ${barCtx.p}, all year)`; }
   else lb.style.display='none';
   bar.classList.add('show'); bar.setAttribute('aria-hidden','false');
 }
@@ -1986,30 +2067,58 @@ function hideBar(){ bar.classList.remove('show'); bar.setAttribute('aria-hidden'
 document.getElementById('bar-close').onclick=hideBar;
 document.getElementById('bar-day').onclick=()=>doCopy('day');
 document.getElementById('bar-letter').onclick=()=>doCopy('letter');
-function doCopy(mode){
-  if(!barCtx) return;
-  const src=S.cells[`${barCtx.iso}|${barCtx.p}`]||'';
-  const w=YEAR[curWeek], c=S.config;
-  const targets=[];
+/* The two fill buttons used to be the most destructive thing in the app.
+   Measured before this change: "Fill all A-days" reached 11 boxes across 2
+   days of the current week while its label promised the year (a real 6-letter
+   year has 33-34 A-days), and it overwrote five periods on the source day that
+   the teacher never selected. "Fill whole day" from a box you had just cleared
+   took a Tuesday from six filled cells to zero and announced "Copied to 5
+   boxes". Now: the letter fill covers the whole year and only the period you
+   are standing in; an empty source copies nothing; and every write is one tap
+   from being undone, which is what the research asked for instead of a confirm
+   dialog. */
+function copyTargets(mode){
+  const out=[], c=S.config;
   if(mode==='day'){
-    for(let p=1;p<=c.periods;p++) if(p!==barCtx.p) targets.push([barCtx.iso,p]);
-  } else {
-    for(const d of w.days){
+    const d=(YEAR[curWeek]||{days:[]}).days.find(x=>x.iso===barCtx.iso);
+    if(!d) return out;
+    for(let p=1;p<=c.periods;p++) if(p!==barCtx.p) out.push(cellKey(d,p));
+  }else{
+    for(const wk of YEAR) for(const d of wk.days){
       if(d.special||d.letter!==barCtx.letter) continue;
-      for(let p=1;p<=c.periods;p++){
-        if(d.iso===barCtx.iso&&p===barCtx.p) continue;
-        targets.push([d.iso,p]);
-      }
+      if(d.iso===barCtx.iso) continue;
+      out.push(cellKey(d,barCtx.p));
     }
   }
-  for(const [iso,p] of targets){
-    const k=`${iso}|${p}`;
-    if(src) S.cells[k]=src; else delete S.cells[k];
-    const el=view.querySelector(`.box[data-iso="${iso}"][data-p="${p}"]`);
-    if(el) el.textContent=src;
+  return [...new Set(out)];
+}
+function doCopy(mode){
+  if(!barCtx) return;
+  const srcKey=cellKeyForFocus();
+  const src=srcKey?S.cells[srcKey]:'';
+  if(!src){
+    SWS.toast('This box is empty, so there is nothing to copy. Type the lesson first.');
+    focusSource(); return;
   }
-  persist();
-  announce(`Copied to ${targets.length} boxes`);
+  const targets=copyTargets(mode);
+  if(!targets.length){ SWS.toast(mode==='day'?'There is only one period on this day.':`This is the only ${barCtx.letter}-day in the year.`); focusSource(); return; }
+  const before=targets.map(k=>[k,S.cells[k]]);   // a snapshot cannot forget a side effect
+  for(const k of targets) S.cells[k]=src;
+  persist(); paintCells();
+  const n=targets.length, noun=n===1?'box':'boxes';
+  const what=mode==='day'?`the rest of ${DAYNAMES[parseISO(barCtx.iso).getDay()]}`:`period ${barCtx.p} of every ${barCtx.letter}-day this year`;
+  announce(`Copied to ${n} ${noun}: ${what}`);
+  SWS.undo(`Copied to ${n} ${noun} — ${what}.`,()=>{
+    for(const [k,v] of before){ if(v===undefined) delete S.cells[k]; else S.cells[k]=v; }
+    persist(); paintCells(); announce('Copy undone');
+  });
+  focusSource();
+}
+function cellKeyForFocus(){
+  const d=(YEAR[curWeek]||{days:[]}).days.find(x=>x.iso===barCtx.iso);
+  return d?cellKey(d,barCtx.p):null;
+}
+function focusSource(){
   const back=view.querySelector(`.box[data-iso="${barCtx.iso}"][data-p="${barCtx.p}"]`);
   if(back&&back.focus) back.focus();
 }
@@ -2021,7 +2130,7 @@ function openSpecial(iso){
   modalReturn=document.activeElement;
   const cur=S.special[iso]||'';
   sheet.innerHTML=`<h3 id="modal-title">${DAYNAMES[parseISO(iso).getDay()]}, ${niceDate(iso)}</h3>
-    <p class="sub">Mark this a no-class day. It keeps its boxes but skips the rotation letter, so the cycle stays correct after breaks.</p>
+    <p class="sub">Mark this a no-class day. It keeps its own boxes but takes no rotation letter — so the letter <em>and the lesson you planned for it</em> both move to your next teaching day, and the rest of the year follows. One tap, and you can undo it.</p>
     <div class="opts">
       <button class="btn" data-sp="Teacher work day">Teacher work day</button>
       <button class="btn" data-sp="No school">No school</button>
@@ -2042,9 +2151,20 @@ function openSpecial(iso){
   const first=sheet.querySelector('button,input'); if(first) first.focus();
 }
 function setSpecial(iso,label){
-  if(label) S.special[iso]=label; else delete S.special[iso];
+  const before={...S.special};
+  if(label) S.special[iso]=String(label).slice(0,60); else delete S.special[iso];
   markStale(); persist(); closeModal(); render();
   const g=view.querySelector(`[data-gear="${iso}"]`); if(g) g.focus();
+  const when=`${DAYNAMES[parseISO(iso).getDay()]} ${niceDate(iso)}`;
+  const msg=label
+    ? `${when} is now “${label}”. Every lesson after it moved forward one rotation day.`
+    : `${when} is a normal teaching day again. The lessons after it moved back.`;
+  announce(msg);
+  SWS.undo(msg,()=>{
+    S.special=before; markStale(); persist(); render();
+    announce('Undone');
+    const g2=view.querySelector(`[data-gear="${iso}"]`); if(g2) g2.focus();
+  });
 }
 function closeModal(){
   modal.classList.remove('show');
@@ -2083,8 +2203,8 @@ function renderSetup(){
       <div class="field"><label for="f-lunch">Lunch falls</label><select id="f-lunch">${lunchOpts}</select></div>
     </div>
     <div class="frow">
-      <div class="field"><label for="f-letters">Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C"></div>
-      <div class="field"><label for="f-teacher">Your name <span style="text-transform:none;font-weight:400">(shows on printouts)</span></label><input id="f-teacher" value="${esc(c.teacher)}" placeholder="Ms. Rivera"></div>
+      <div class="field"><label for="f-letters">Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C" aria-describedby="letters-hint"><span class="hint" id="letters-hint">Separated by commas — up to ${MAX_LETTERS}. A six-day cycle is 1, 2, 3, 4, 5, 6.</span></div>
+      <div class="field"><label for="f-teacher">Your name (shows on printouts)</label><input id="f-teacher" value="${esc(c.teacher)}" placeholder="Ms. Rivera" maxlength="80"></div>
     </div>
     <div class="setup-actions">
       <button class="btn primary" id="f-apply">Apply & build my year</button>
@@ -2093,7 +2213,14 @@ function renderSetup(){
 
   <div class="card">
     <h2>Your data</h2>
-    <p class="sub">Plans live on this device. Download a backup any time — it restores on any phone or computer. On a shared or school computer, download a backup before you leave — some school machines erase browser data between sign-ins.</p>
+    ${trustHTML(true)}
+    <p class="sub">Download a backup any time — it restores on any phone or computer. On a shared or school computer, download a backup before you leave: some school machines erase browser data between sign-ins.</p>
+    <div class="frow">
+      <div class="field"><label for="f-print">Printing</label><select id="f-print">
+        <option value="compact" ${c.printMode!=='full'?'selected':''}>Fit one week on one page</option>
+        <option value="full" ${c.printMode==='full'?'selected':''}>Full detail (larger text, may run to 2–3 pages)</option>
+      </select></div>
+    </div>
     <div class="setup-actions">
       <button class="btn" id="d-backup">Download backup</button>
       <button class="btn" id="d-import">Restore backup</button>
@@ -2116,6 +2243,7 @@ function renderSetup(){
     const l=document.getElementById('f-lunch'), cur=Math.min(+l.value,n);
     l.innerHTML=Array.from({length:n+1},(_,i)=>`<option value="${i}" ${i===cur?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
   };
+  document.getElementById('f-print').onchange=e=>{ S.config.printMode=e.target.value==='full'?'full':'compact'; applyPrintMode(); persist(); };
   document.getElementById('f-apply').onclick=applySetup;
   document.getElementById('d-backup').onclick=exportBackup;
   document.getElementById('d-import').onclick=importBackup;
@@ -2123,23 +2251,51 @@ function renderSetup(){
   document.getElementById('d-reset').onclick=resetAll;
   mountDrive();
 }
+/* Every rejection names the field it is about and puts the cursor in it. The
+   research's phantom-validation complaint ("an error telling me to pick a valid
+   start time, but nothing is wrong with the time I pick") is the thing to
+   avoid; a generic alert about "your dates" when the teaching days are the
+   problem is the same defect. */
+function setupError(id,msg){
+  SWS.toast(msg,{assertive:true,ms:8000});
+  announce(msg);
+  const el=document.getElementById(id); if(el&&el.focus) el.focus();
+  return false;
+}
 function applySetup(){
+  const startEl=document.getElementById('f-start');
+  if(!startEl) return;                    // re-entrancy guard: the view is gone
   const c=S.config;
-  const st=document.getElementById('f-start').value, en=document.getElementById('f-end').value;
-  if(!parseISO(st)||!parseISO(en)||en<st){ alert('Check your dates — the last day has to come after the first day.'); return; }
-  c.yearStart=st; c.yearEnd=en;
-  c.workDays=[...document.querySelectorAll('#f-days .dp.on')].map(b=>+b.dataset.d);
-  if(!c.workDays.length){ alert('Pick at least one teaching day.'); return; }
-  c.periods=Math.max(1,Math.min(10,+document.getElementById('f-periods').value||6));
-  c.lunchAfter=Math.max(0,Math.min(c.periods,+document.getElementById('f-lunch').value));
-  const letters=document.getElementById('f-letters').value.split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
+  const st=startEl.value, en=document.getElementById('f-end').value;
+  if(!parseISO(st)) return setupError('f-start','Pick a first day of the school year.');
+  if(!parseISO(en)) return setupError('f-end','Pick a last day of the school year.');
+  if(en<st) return setupError('f-end',`The last day has to come after ${niceDate(st)}. Pick a later date.`);
+  const days=[...document.querySelectorAll('#f-days .dp.on')].map(b=>+b.dataset.d);
+  if(!days.length) return setupError('f-days','Pick at least one day of the week that you teach.');
+  const rawLetters=document.getElementById('f-letters').value.split(',').map(x=>x.trim()).filter(Boolean);
+  const letters=rawLetters.map(x=>x.slice(0,MAX_LETTER_LEN)).slice(0,MAX_LETTERS);
+  /* Nine letters used to be sliced to six in silence, which generated a whole
+     year on the wrong cycle length. */
+  if(rawLetters.length>MAX_LETTERS) return setupError('f-letters',`That is ${rawLetters.length} rotation letters and this planner handles ${MAX_LETTERS}. Remove ${rawLetters.length-MAX_LETTERS} and apply again.`);
+  const tooLong=rawLetters.find(x=>x.length>MAX_LETTER_LEN);
+  if(tooLong) return setupError('f-letters',`“${tooLong}” is too long for a rotation label — keep each one to ${MAX_LETTER_LEN} characters or fewer.`);
+
+  c.yearStart=st; c.yearEnd=en; c.workDays=days;
+  const per=Math.round(Number(document.getElementById('f-periods').value));
+  c.periods=Number.isFinite(per)&&per>0?Math.min(MAX_PERIODS,per):6;
+  document.getElementById('f-periods').value=c.periods;
+  const la=Math.round(Number(document.getElementById('f-lunch').value));
+  c.lunchAfter=Number.isFinite(la)?Math.max(0,Math.min(c.periods,la)):Math.min(2,c.periods);
   c.letters=letters.length?letters:['A'];
-  c.teacher=document.getElementById('f-teacher').value.trim();
+  c.teacher=document.getElementById('f-teacher').value.trim().slice(0,80);
   markStale(); persist();
   buildYearIfStale();
+  if(!YEAR.length) return setupError('f-start',yearProblem());
+  if(yearTruncated) SWS.toast(`That span is longer than this planner builds in one go — it stops after ${YEAR.length} weeks.`,{ms:8000});
   curWeek=weekIndexFor(fmtISO(new Date()));
   curView='week'; render(); refocus('wk-jump');
 }
+function applyPrintMode(){ document.body.dataset.print = (S&&S.config.printMode==='full')?'full':'compact'; }
 
 /* ------------------ backup / csv / reset ---------------------------- */
 function download(name,text,type){
@@ -2160,15 +2316,41 @@ function importBackup(){
   };
   inp.click();
 }
+/* Restoring used to replace a 1,200-lesson year with one tap: no description of
+   what was in the file, no confirm, no way back. It is one click from the front
+   door and it is the single most destructive action in the app. */
+function describeBackup(st){
+  const n=Object.keys(st.cells).length;
+  const c=st.config;
+  return `${n} ${n===1?'lesson':'lessons'}, ${niceDate(c.yearStart)} ${parseISO(c.yearStart).getFullYear()} to ${niceDate(c.yearEnd)} ${parseISO(c.yearEnd).getFullYear()}`;
+}
 function applyImportedText(text){
+  let st;
   try{
     const j=JSON.parse(text);
-    const st=migrate(j.state||j);          // tolerate raw-state or wrapped backups
+    st=migrate(j.state||j);                // tolerate raw-state or wrapped backups
     if(!st) throw 0;
-    S=st; markStale(); persist(); return true;
   }catch(e){ alert("That file doesn't look like a Specials Planner backup."); return false; }
+  const before=S?JSON.stringify(S):null;
+  if(before){
+    const mine=Object.keys(S.cells).length;
+    if(!confirm(`This backup holds ${describeBackup(st)}.\n\nIt will replace the year on this device (${mine} ${mine===1?'lesson':'lessons'}). Continue?`)) return false;
+  }
+  S=st; markStale(); persist();
+  if(before) SWS.undo(`Restored ${describeBackup(st)}.`,()=>{
+    S=JSON.parse(before); markStale(); persist(); render(); announce('Restore undone');
+  });
+  return true;
 }
-function csvField(v){ v=String(v??''); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v; }
+/* Two things Excel does to an honest export: it mojibakes UTF-8 without a BOM
+   ("Señor Nguyễn · 音楽"), and it executes any cell that starts with = + - or @.
+   A lesson line pasted off a website should not become a live formula in a
+   teacher's spreadsheet. */
+function csvField(v){
+  v=String(v??'');
+  if(/^[=+\-@\t\r]/.test(v)) v="'"+v;
+  return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;
+}
 function exportCSV(){
   buildYearIfStale();
   const c=S.config;
@@ -2176,15 +2358,20 @@ function exportCSV(){
   const lines=[head.join(',')];
   for(const w of YEAR) for(const d of w.days){
     const row=[d.iso,DAYNAMES[d.dow],d.special?d.special:(d.letter||'')];
-    for(let p=1;p<=c.periods;p++) row.push(S.cells[`${d.iso}|${p}`]||'');
+    for(let p=1;p<=c.periods;p++) row.push(cellText(d,p));
     row.push(S.notes[d.iso]||'');
     lines.push(row.map(csvField).join(','));
   }
-  download(`specials-planner-${c.yearStart.slice(0,4)}.csv`,lines.join('\n'),'text/csv');
+  download(`specials-planner-${c.yearStart.slice(0,4)}.csv`,'\uFEFF'+lines.join('\r\n'),'text/csv;charset=utf-8');
 }
 function resetAll(){
   if(!confirm('Erase everything on this device? Download a backup first if you want to keep it.')) return;
-  S=null; store.del(KEY); curWeek=0; render();
+  const before=S?JSON.stringify(S):null;
+  S=null; store.del(KEY); curWeek=0; markStale(); render();
+  if(before) SWS.undo('Everything erased.',()=>{
+    S=migrate(JSON.parse(before)); markStale(); persist();
+    curWeek=weekIndexFor(fmtISO(new Date())); curView='week'; render(); announce('Restored');
+  });
 }
 
 /* ------------------ GOOGLE DRIVE (optional) --------------------------
@@ -2263,6 +2450,13 @@ document.querySelector('.tabs').addEventListener('keydown',e=>{
   const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];
   n.focus(); n.click();
 });
+document.getElementById('save-alert-backup').onclick=exportBackup;
+/* The last 400ms of typing used to die with the tab. Both hooks matter: iOS
+   Safari often never fires beforeunload, and a phone locking mid-sentence
+   fires visibilitychange and nothing else. */
+addEventListener('pagehide',flushSave);
+addEventListener('beforeunload',flushSave);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flushSave(); });
 loadState();
 if(S){ buildYearIfStale(); curWeek=weekIndexFor(fmtISO(new Date())); }
 render();

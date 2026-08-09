@@ -162,7 +162,9 @@ let writes = Promise.resolve();
 function queue(fn) {
   if (!persistOK) return writes;
   writes = writes.then(fn).then(
-    () => { store.writeOrder(pages); },
+    () => {
+      if (!store.writeOrder(pages)) noPersist(new Error('quota exceeded writing the page order'));
+    },
     (e) => { noPersist(e); },
   );
   return writes;
