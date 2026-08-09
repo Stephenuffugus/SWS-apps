@@ -3,10 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- The privacy promise, made machine-checkable rather than merely written:
+<!-- The privacy promise, made machine-checkable rather than merely written.
      connect-src 'none' means this page cannot open a network connection to
-     anywhere, for anything, even if a future edit tried to. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; img-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'none'">
+     anywhere, for anything: no fetch, no XHR, no WebSocket, no beacon — even
+     if a future edit tried to. With img-src holding no remote host,
+     form-action 'none' and base-uri 'none' alongside it, there is no channel
+     out of the tab at all, which is exactly the claim the page makes.
+     script-src keeps 'unsafe-inline' only so the studio's own accessibility
+     harness can inject axe-core; it still admits no remote script, and no
+     user data ever reaches the DOM as markup in this app. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; connect-src 'none'; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'none'">
 <title>Scan to PDF Free — No Watermark, No Upload</title>
 <meta name="description" content="Photograph pages and get one clean PDF. Everything happens on your device — your documents never touch a server. Free, no watermark.">
 <meta property="og:title" content="Scan to PDF Free — No Watermark, No Upload">

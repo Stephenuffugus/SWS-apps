@@ -39,7 +39,14 @@ function lessMotion() {
 
 function download(bytes, filename, mime) {
   const blob = new Blob([bytes], { type: mime || 'application/pdf' });
-  const a = el('a', { href: URL.createObjectURL(blob), download: filename });
+  /* The anchor lives in the DOM for half a second. Left visible to the
+     accessibility tree it is an unnamed link, which axe reports as a serious
+     link-name violation the moment a save happens. */
+  const a = el('a', {
+    href: URL.createObjectURL(blob), download: filename,
+    'aria-hidden': 'true', tabindex: '-1', style: 'display:none',
+    text: filename,
+  });
   document.body.append(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
@@ -577,7 +584,13 @@ function wire() {
 
   $('outName').addEventListener('input', () => { nameTouched = true; renderBar(); renderSplit(); });
   $('splitMode').addEventListener('change', renderSplit);
-  $('splitSpec').addEventListener('input', renderSplit);
+  /* Debounced: #splitPreview is a live region, and re-rendering it on every
+     keystroke would read the whole plan out loud letter by letter. */
+  let specTimer = null;
+  $('splitSpec').addEventListener('input', () => {
+    clearTimeout(specTimer);
+    specTimer = setTimeout(renderSplit, 350);
+  });
   $('splitDelivery').addEventListener('change', renderSplit);
 
   $('mergeBtn').addEventListener('click', runMerge);

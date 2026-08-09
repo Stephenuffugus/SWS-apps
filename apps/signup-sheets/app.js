@@ -1,8 +1,8 @@
 // Signup Sheets — Engine 1, skin A. UI layer.
 // All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
 import {
-  CODE_CHARS, normalizeCode, parseBulkSlots, dateRangeSlots,
-  fillStats, nudgeMessage, shareUrl,
+  CODE_CHARS, normalizeCode, parseBulkSlotsReport, dateRangeSlotsReport,
+  fillStats, nudgeMessage, shareUrl, stillNeededSentence, MAX_SLOTS,
 } from './helpers.js';
 import * as D from './data.js';
 import { firebaseConfig } from './firebase-config.js';
@@ -31,16 +31,50 @@ function el(tag, attrs, ...kids) {
   }
   return n;
 }
-let toastTimer = null;
+/* Status goes through the shared runtime: it holds the toast open while the
+   pointer or the focus is inside it (so an Undo button cannot evaporate before
+   it is reached) and it is the app's only live region now that <main> is not. */
 function toast(msg, ms) {
+  if (window.SWS && SWS.toast) return SWS.toast(msg, { ms: ms || 2400 });
   const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
+  return t;
 }
-function showDlg(d) { try { d.showModal(); } catch (e) { d.setAttribute('open', ''); } }
-function closeDlg(d) { try { d.close(); } catch (e) { d.removeAttribute('open'); } }
+/* Destructive actions are undone, not confirmed. A confirm() taxes the 99
+   deliberate taps to catch the one mistake and catches nothing that a tired
+   organizer waves through at 9:40pm; an undo taxes nothing and is strictly
+   more forgiving. Snapshot first, mutate, then hand back the snapshot. */
+function undoToast(msg, restore) {
+  if (window.SWS && SWS.undo) return SWS.undo(msg, restore, { ms: 9000 });
+  return toast(msg, 9000);
+}
+function saved(text) {
+  if (window.SWS && SWS.saved) return SWS.saved({ text: text || 'Saved', announce: true });
+  return toast(text || 'Saved');
+}
+
+/* Focus went to <body> after every dialog close, so taking two spots on a
+   60-slot sheet meant tabbing from the top of the document twice. */
+const dlgOpener = new WeakMap();
+function showDlg(d) {
+  const opener = document.activeElement;
+  if (opener && opener !== document.body) {
+    // The board redraws while a dialog is open, so remember WHAT the opener was
+    // (a stable key) as well as which node it was — the node may be gone.
+    dlgOpener.set(d, { node: opener, key: opener.getAttribute && opener.getAttribute('data-fk') });
+  }
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+}
+function closeDlg(d) {
+  try { d.close(); } catch (e) { d.removeAttribute('open'); }
+  const rec = dlgOpener.get(d);
+  dlgOpener.delete(d);
+  if (!rec) return;
+  let target = rec.key ? document.querySelector('[data-fk="' + CSS.escape(rec.key) + '"]') : null;
+  if (!target && rec.node && document.contains(rec.node)) target = rec.node;
+  if (target && typeof target.focus === 'function') { try { target.focus(); } catch (e) {} }
+}
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
   catch (e) {
@@ -73,10 +107,13 @@ const live = {           // active board subscriptions
     this.unsubs.forEach(u => u && u());
     this.claimUnsubs.forEach(u => u && u());
     this.unsubs = []; this.claimUnsubs = new Map();
-    this.boardId = null; this.code = null; this.board = null;
+    this.boardId = null; this.code = null; this.board = null; this.boardMissing = false;
     this.slots = []; this.entries = []; this.claims = new Map();
   },
 };
+// Owner console state that must survive a redraw — it used to be thrown away
+// on every Firestore snapshot, i.e. whenever anyone anywhere claimed anything.
+const ui = { manageOpen: false, addMode: 'single', openOnly: false };
 
 /* ---------- router ---------- */
 function route() {
@@ -180,8 +217,11 @@ async function renderBoard(code) {
       return;
     }
     live.boardId = boardId; live.code = code;
-    live.unsubs.push(D.watchBoard(boardId, (b) => { live.board = b; drawBoard(); },
-      (e) => toast(friendly(e), 5000)));
+    live.unsubs.push(D.watchBoard(boardId, (b) => {
+      live.board = b;
+      live.boardMissing = (b === null);
+      drawBoard();
+    }, (e) => toast(friendly(e), 5000)));
     live.unsubs.push(D.watchSlots(boardId, (slots) => { live.slots = slots; syncClaimWatchers(); drawBoard(); },
       (e) => toast(friendly(e), 5000)));
     // entries watcher needs uid + owner flag; (re)attached in drawBoard when board known
@@ -215,37 +255,96 @@ function syncClaimWatchers() {
   }
 }
 
-const THEMES = { blue: '#2563eb', green: '#0f766e', plum: '#7c3aed', slate: '#475569', amber: '#b45309' };
-function applyTheme(themeKey) {
-  const c = THEMES[themeKey];
-  if (c) document.documentElement.style.setProperty('--accent', c);
-  else document.documentElement.style.removeProperty('--accent');
+/* ---------- redraw: coalesced, and it does not eat what you are typing ----------
+   Every slot opens its own Firestore listener and every listener called
+   drawBoard(), which called replaceChildren() on <main>. Measured on a 60-slot
+   sheet: 73 full rebuilds in six seconds, 102 during one bulk add. That
+   collapsed the owner's Manage panel on every keystroke-adjacent action, wiped
+   any half-typed note, and threw focus to <body>. Three defences:
+     1. coalesce — at most one rebuild per DRAW_MS, trailing edge;
+     2. remember — every field that can hold typed text carries data-keep, and
+        its value, selection and focus survive the rebuild;
+     3. remember open state — details.manage and the add-mode segment too. */
+const DRAW_MS = 60;
+let drawTimer = null, drawLast = 0;
+function drawBoard() {
+  if (drawTimer) return;
+  const wait = Math.max(0, DRAW_MS - (Date.now() - drawLast));
+  drawTimer = setTimeout(() => { drawTimer = null; drawLast = Date.now(); drawBoardNow(); }, wait);
 }
 
-function drawBoard() {
-  if (route().view !== 'board' || !live.board) return;
+function snapshotUI(root) {
+  const vals = new Map();
+  for (const f of root.querySelectorAll('[data-keep]')) {
+    vals.set(f.getAttribute('data-keep'), f.type === 'checkbox' ? f.checked : f.value);
+  }
+  const a = document.activeElement;
+  const inside = a && root.contains(a);
+  return {
+    vals,
+    focusKey: inside ? (a.getAttribute('data-keep') || a.getAttribute('data-fk')) : null,
+    selStart: inside && 'selectionStart' in a ? a.selectionStart : null,
+    selEnd: inside && 'selectionEnd' in a ? a.selectionEnd : null,
+    scrollY: window.scrollY,
+  };
+}
+
+function restoreUI(root, snap) {
+  for (const f of root.querySelectorAll('[data-keep]')) {
+    const k = f.getAttribute('data-keep');
+    if (!snap.vals.has(k)) continue;
+    const v = snap.vals.get(k);
+    if (f.type === 'checkbox') f.checked = v; else f.value = v;
+  }
+  if (!snap.focusKey) return;
+  const sel = '[data-keep="' + CSS.escape(snap.focusKey) + '"],[data-fk="' + CSS.escape(snap.focusKey) + '"]';
+  const target = root.querySelector(sel);
+  if (!target) return;
+  try {
+    target.focus({ preventScroll: true });
+    if (snap.selStart !== null && 'setSelectionRange' in target) {
+      target.setSelectionRange(snap.selStart, snap.selEnd);
+    }
+    if (window.scrollY !== snap.scrollY) window.scrollTo({ top: snap.scrollY });
+  } catch (e) {}
+}
+
+function drawBoardNow() {
+  if (route().view !== 'board') return;
+  // A deleted sheet used to keep rendering forever: watchBoard passes null,
+  // drawBoard early-returned, and the participant sat looking at a live-looking
+  // board whose Claim button answered "the spot may have just filled".
+  if (live.boardMissing) return renderGone();
+  if (!live.board) return;
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
   setGrowthFooter(!own);
   const locked = !!b.settings?.locked;
-  applyTheme(b.settings?.theme);
   const v = $('view');
+  const snap = snapshotUI(v);
   v.replaceChildren();
 
   // --- title block ---
   const head = el('section', { class: 'card' });
-  head.append(el('div', { style: 'display:flex;align-items:baseline;gap:8px' },
-    el('h2', { style: 'all:unset;font-size:1.3rem;font-weight:700;flex:1;overflow-wrap:anywhere', text: b.title }),
-    own ? el('span', { class: 'badge', text: 'you run this' }) : null));
-  if (b.description) head.append(el('p', { class: 'sub', style: 'margin:6px 0 0', text: b.description }));
+  head.append(el('div', { class: 'titlerow' },
+    el('h2', { class: 'boardtitle', text: b.title }),
+    // .printhide: an owner badge is chrome, and it read as content in ink.
+    own ? el('span', { class: 'badge printhide', text: 'you run this' }) : null));
+  if (b.description) head.append(el('p', { class: 'sub subtight', text: b.description }));
   const stats = fillStats(live.slots);
   if (stats.total > 0) {
     head.append(
       el('div', { class: 'fillbar' }, el('div', { style: 'width:' + Math.round(100 * stats.taken / stats.total) + '%' })),
       el('div', { class: 'sub', text: stats.taken + ' of ' + stats.total + ' spots filled' }));
+    // The one question a participant opened the link to answer, answered above
+    // the fold instead of seven screenfuls down.
+    const need = stillNeededSentence(live.slots);
+    if (need) head.append(el('p', { class: 'stillneeded', text: need }));
+    else head.append(el('p', { class: 'stillneeded', text: 'Every spot is taken — thank you.' }));
   }
   v.append(head);
+  v.append(trustBadge(true));
 
   // Owners get sharing front and center — it's the whole point of the product.
   if (own) {
@@ -267,11 +366,35 @@ function drawBoard() {
   // --- slots ---
   const slotsCard = el('section', { class: 'card' }, el('h2', {}, 'Spots'));
   if (live.slots.length === 0) {
-    slotsCard.append(el('p', { class: 'hint', text: own
-      ? 'No spots yet — open Manage below to add them (paste a whole list at once if you like).'
-      : 'The organizer hasn’t added spots yet.' }));
+    slotsCard.append(el('div', { class: 'empty' },
+      el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🗒'),
+      el('p', {}, own
+        ? 'No spots yet — open Manage below to add them. You can paste a whole list at once.'
+        : 'The organizer hasn’t added spots yet.')));
   }
-  for (const s of live.slots) slotsCard.append(renderSlot(s, own, locked));
+  const openSlots = live.slots.filter(s => (s.claimedCount || 0) < (s.capacity || 1));
+  const hidden = live.slots.length - openSlots.length;
+  // A 60-slot sheet was 6,980px of identical rows with no way to skip the taken
+  // ones. One checkbox answers "what's left" without scrolling.
+  if (live.slots.length > 4 && hidden > 0) {
+    const box = el('input', {
+      type: 'checkbox', 'data-keep': 'openonly', id: 'openOnly',
+      ...(ui.openOnly ? { checked: '' } : {}),
+      onchange: (ev) => { ui.openOnly = ev.target.checked; drawBoardNow(); },
+    });
+    slotsCard.append(el('div', { class: 'filterrow noprint' },
+      el('label', {}, box, el('span', {}, 'Show only the ' + openSlots.length + ' open ' + (openSlots.length === 1 ? 'spot' : 'spots')))));
+  }
+  const filtering = ui.openOnly && hidden > 0;
+  for (const s of live.slots) {
+    const row = renderSlot(s, own, locked);
+    // Filtered out on screen only — the printed sheet is always the whole sheet.
+    if (filtering && (s.claimedCount || 0) >= (s.capacity || 1)) row.classList.add('filtered');
+    slotsCard.append(row);
+  }
+  if (filtering) {
+    slotsCard.append(el('p', { class: 'hint noprint', text: hidden + ' filled ' + (hidden === 1 ? 'spot is' : 'spots are') + ' hidden.' }));
+  }
   v.append(slotsCard);
 
   // --- entries ---
@@ -288,6 +411,52 @@ function drawBoard() {
         el('button', { class: 'btn', type: 'button', onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied') }, 'Copy link'),
         el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'))));
   }
+
+  // --- the way back from paper ---
+  v.append(printFooter());
+
+  restoreUI(v, snap);
+}
+
+/* The printed sheet was a dead end: no date, no code, no URL, no QR, so nobody
+   reading it on the church noticeboard could reach the live sheet. */
+function printFooter() {
+  const url = shareUrl(live.code, baseUrl());
+  const foot = el('div', { class: 'printonly printfoot' });
+  const row = el('div', { class: 'pf-row' });
+  const canvas = el('canvas', { width: '150', height: '150', role: 'img', 'aria-label': 'QR code for this sheet' });
+  if (drawQR(canvas, url, 150)) row.append(canvas);
+  row.append(el('div', {},
+    el('div', { class: 'pf-code', text: live.code }),
+    el('div', {}, 'Sign up online, or write your name on a blank line above.'),
+    el('div', { class: 'pf-url', text: url })));
+  foot.append(row);
+  foot.append(el('div', { class: 'pf-url', text: 'Printed ' + new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) + ' — spots may have been taken since.' }));
+  return foot;
+}
+
+/* The privacy promise as a visible object, not grey footer prose. Every word of
+   it has to be literally true: this app DOES have a server. */
+function trustBadge(onBoard) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M12 3l7 3v5c0 4.4-3 8.3-7 10-4-1.7-7-5.6-7-10V6z');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.append(path);
+  const p = el('p', { class: 'trust noprint' }, svg);
+  if (onBoard) {
+    p.append(el('b', {}, 'No account, no email, no ads.'),
+      ' The name and note you type are saved to this sheet so everyone with the link can see them — that is the whole point. Nothing else is taken: no email address, no phone number, no contacts, no trackers, and nothing is ever sold or advertised against.');
+  } else {
+    p.append(el('b', {}, 'No ads, ever. No email addresses collected.'),
+      ' Only organizers sign in, and only to find their own sheets again. People claiming a spot type a first name and nothing else — no account, no verification, no reminder emails. There are no trackers and no third-party scripts on any sheet.');
+  }
+  return p;
 }
 
 function baseUrl() {
@@ -304,43 +473,102 @@ function renderSlot(s, own, locked) {
   const top = el('div', { class: 'top' },
     el('span', { class: 'label', text: s.label }),
     el('span', { class: 'count' + (left === 0 ? ' full' : ''), text: left === 0 ? 'Full' : (s.claimedCount || 0) + ' of ' + s.capacity }));
-  if (own) top.append(el('button', { class: 'btn small noprint', type: 'button', 'aria-label': 'Edit slot', onclick: () => openSlotDlg(s) }, '✎'));
+  if (own) top.append(el('button', { class: 'btn small noprint', type: 'button', 'data-fk': 'edit:' + s.id, 'aria-label': 'Edit spot: ' + s.label, onclick: () => openSlotDlg(s) }, '✎'));
   box.append(top);
   const chips = el('div', { class: 'chips' });
   for (const c of claims) {
     const isMine = user && c.uid === user.uid;
     const chip = el('span', { class: 'chip' + (isMine ? ' mine' : '') },
       c.name + (isMine ? ' (you)' : '') + (c.note ? ' · ' + c.note : ''));
+    // Table stakes the research names: change your own entry from the same
+    // link, days later, with no login. renameClaim() was written and tested at
+    // the data layer and nothing called it.
+    if (isMine && !locked) chip.append(el('button', {
+      type: 'button', class: 'release noprint', 'data-fk': 'editclaim:' + s.id,
+      'aria-label': 'Change your name on ' + s.label,
+      onclick: () => openEditClaim(s, c),
+    }, 'Edit'));
     if ((isMine && !locked) || own) chip.append(el('button', {
-      type: 'button', 'aria-label': 'Remove ' + c.name + ' from this spot', class: 'noprint',
-      onclick: async () => {
+      type: 'button', class: 'release noprint',
+      // All eight remove buttons used to read "Remove Greedy Greg from this
+      // spot" with no way to tell which spot.
+      'aria-label': (isMine ? 'Give back your spot: ' : 'Remove ' + c.name + ' from ') + s.label,
+      onclick: async (ev) => {
+        const btn = ev.currentTarget;
+        btn.disabled = true;
+        const snapshot = { name: c.name, note: c.note || '' };
         try {
           if (isMine) await D.releaseClaim(live.boardId, s.id);
           else await D.ownerRemoveClaim(live.boardId, s.id, c.uid);
-          toast(isMine ? 'Spot released' : 'Removed');
-        } catch (e) { toast(friendly(e), 4500); }
+          if (isMine) {
+            undoToast('You gave back “' + s.label + '”', async () => {
+              try { await D.claimSlot(live.boardId, s.id, snapshot.name, snapshot.note); toast('Back in — ' + s.label); }
+              catch (e2) { toast('Couldn’t take it back — someone else has it now.', 5000); }
+            });
+          } else {
+            toast('Removed ' + c.name + ' from ' + s.label);
+          }
+        } catch (e) { btn.disabled = false; toast(friendly(e), 4500); }
       },
-    }, '✕'));
+    }, isMine ? 'Give it back' : 'Remove'));
     chips.append(chip);
   }
   // print-only blanks for open seats
   for (let i = 0; i < left; i++) chips.append(el('span', { class: 'chip printonly', text: '________________' }));
   if (claims.length || left) box.append(chips);
   if (!mine && left > 0 && !locked) {
-    box.append(el('div', { class: 'noprint', style: 'margin-top:8px' },
-      el('button', { class: 'btn primary small', type: 'button', onclick: () => openClaim(s) }, 'Claim this spot')));
+    // .btn.primary, not .btn.primary.small: .small pins 36px at every comfort
+    // setting, and this is the one button 95% of sessions exist to press.
+    box.append(el('div', { class: 'noprint claimrow' },
+      el('button', { class: 'btn primary', type: 'button', 'data-fk': 'claim:' + s.id, onclick: () => openClaim(s) }, 'Claim this spot')));
   }
   return box;
 }
 
 let claimTarget = null;
+function clearClaimError() {
+  $('claimErr').classList.add('hidden');
+  $('claimErr').textContent = '';
+  $('claimAltRow').classList.add('hidden');
+  $('claimAlt').textContent = '';
+}
 function openClaim(slot) {
   claimTarget = slot;
   $('nameDlgSlot').textContent = slot.label;
   $('nameInput').value = myName();
   $('noteInput').value = '';
+  clearClaimError();
   showDlg($('nameDlg'));
   $('nameInput').focus();
+}
+
+/* Retarget the open dialog at another spot without losing a character of what
+   was typed — this is the one-tap recovery from a lost race. */
+function retargetClaim(slot) {
+  claimTarget = slot;
+  $('nameDlgSlot').textContent = slot.label;
+  clearClaimError();
+  $('nameOk').focus();
+}
+
+function nearestOpenSlot(fromId) {
+  const i = live.slots.findIndex(s => s.id === fromId);
+  const open = (s) => (s.claimedCount || 0) < (s.capacity || 1) && !(live.claims.get(s.id) || []).some(c => user && c.uid === user.uid);
+  for (let d = 1; d < live.slots.length; d++) {
+    const a = live.slots[i + d], b = live.slots[i - d];
+    if (a && open(a)) return a;
+    if (b && open(b)) return b;
+  }
+  return null;
+}
+
+let editClaimTarget = null;
+function openEditClaim(slot, claim) {
+  editClaimTarget = slot;
+  $('editClaimSlot').textContent = slot.label;
+  $('editClaimName').value = claim.name || '';
+  showDlg($('editClaimDlg'));
+  $('editClaimName').focus();
 }
 
 function renderEntries(b, own, locked) {
@@ -348,36 +576,54 @@ function renderEntries(b, own, locked) {
   const list = el('ul', { class: 'plain' });
   for (const e of live.entries) {
     const mineE = user && e.creatorUid === user.uid;
+    // The badge used to be glued to the sentence with a CSS margin, so a screen
+    // reader heard "...and cupsawaiting approval". It gets its own line.
     const li = el('li', {},
       el('div', { class: 'grow' },
-        el('div', {}, el('strong', {}, e.authorName), ': ' + e.body,
-          e.status === 'pending' ? el('span', { class: 'badge pending', style: 'margin-left:6px', text: 'awaiting approval' }) : null)));
+        el('div', {}, el('strong', {}, e.authorName), ': ' + e.body),
+        e.status === 'pending' ? el('div', { class: 'subtight' }, el('span', { class: 'badge pending', text: 'awaiting approval' })) : null));
     if (own && e.status === 'pending') li.append(el('button', {
-      class: 'btn small noprint', type: 'button',
+      class: 'btn small noprint', type: 'button', 'aria-label': 'Approve the note from ' + e.authorName,
       onclick: () => D.updateEntry(live.boardId, e.id, { status: 'ok' }).then(() => toast('Approved')).catch(err => toast(friendly(err))),
     }, '✓'));
     if (own || mineE) li.append(el('button', {
-      class: 'btn small danger noprint', type: 'button', 'aria-label': 'Delete note',
-      onclick: () => D.deleteEntry(live.boardId, e.id).catch(err => toast(friendly(err))),
+      class: 'btn small danger noprint', type: 'button', 'aria-label': 'Delete the note from ' + e.authorName,
+      onclick: async () => {
+        const gone = { authorName: e.authorName, body: e.body };
+        try {
+          await D.deleteEntry(live.boardId, e.id);
+          undoToast('Note deleted', async () => {
+            try { await D.addEntry(live.boardId, b, gone); toast('Note restored'); }
+            catch (err) { toast(friendly(err), 4500); }
+          });
+        } catch (err) { toast(friendly(err), 4500); }
+      },
     }, '✕'));
     list.append(li);
   }
-  if (live.entries.length === 0) card.append(el('p', { class: 'hint', text: '“I’ll also bring lemonade!” — anything that isn’t a listed spot goes here.' }));
+  // The lemonade line is a placeholder, and it printed in ink on a bereavement
+  // meal train as if it were content. Screen only, and quieter.
+  if (live.entries.length === 0) {
+    card.append(el('div', { class: 'empty printhide' },
+      el('p', {}, 'Anything that isn’t a listed spot goes here — what you’re bringing, when you’ll arrive, a dietary note.')));
+  }
   card.append(list);
   if (!locked) {
-    const nameIn = el('input', { type: 'text', placeholder: 'Your name', maxlength: '60', value: myName(), 'aria-label': 'Your name' });
-    const bodyIn = el('input', { type: 'text', placeholder: 'I’ll bring…', maxlength: '2000', 'aria-label': 'Your note',
+    const nameIn = el('input', { type: 'text', placeholder: 'Your name', maxlength: '60', value: myName(), 'aria-label': 'Your name', 'data-keep': 'entryname' });
+    const bodyIn = el('input', { type: 'text', placeholder: 'I’ll bring…', maxlength: '2000', 'aria-label': 'Your note', 'data-keep': 'entrybody',
       onkeydown: (ev) => { if (ev.key === 'Enter') addBtn.click(); } });
     const addBtn = el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
       onclick: async () => {
         const name = nameIn.value.trim(), body = bodyIn.value.trim();
         if (!name || !body) { toast('Add your name and the note'); return; }
         saveName(name);
+        addBtn.disabled = true;
         try {
           const status = await D.addEntry(live.boardId, b, { authorName: name, body });
           bodyIn.value = '';
           toast(status === 'pending' ? 'Added — the organizer will approve it shortly' : 'Added');
         } catch (e) { toast(friendly(e), 4500); }
+        finally { addBtn.disabled = false; }
       } }, 'Add');
     card.append(el('div', { class: 'row noprint', style: 'margin-top:10px' }, nameIn, bodyIn, addBtn));
   }
@@ -385,10 +631,15 @@ function renderEntries(b, own, locked) {
 }
 
 /* ---------- owner manage panel ---------- */
-let addMode = 'single';
 function renderManage(b) {
   const url = shareUrl(live.code, baseUrl());
-  const wrap = el('details', { class: 'manage noprint' }, el('summary', {}, 'Manage this sheet'));
+  // The open state lives in `ui`, not in the element — the element is thrown
+  // away and rebuilt every time anyone, anywhere, claims a spot.
+  const wrap = el('details', {
+    class: 'manage noprint',
+    ...(ui.manageOpen ? { open: '' } : {}),
+    ontoggle: (ev) => { ui.manageOpen = ev.target.open; },
+  }, el('summary', {}, 'Manage this sheet'));
   const inner = el('div', { class: 'inner' });
   wrap.append(inner);
 
@@ -405,75 +656,88 @@ function renderManage(b) {
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Add spots'));
   const seg = el('div', { class: 'seg' },
     ...[['single', 'One at a time'], ['bulk', 'Paste a list'], ['range', 'Repeating dates']].map(([k, label]) =>
-      el('button', { type: 'button', class: k === addMode ? 'active' : '', onclick: () => { addMode = k; drawBoard(); } }, label)));
+      el('button', { type: 'button', class: k === ui.addMode ? 'active' : '', 'aria-pressed': k === ui.addMode ? 'true' : 'false',
+        'data-fk': 'mode:' + k, onclick: () => { ui.addMode = k; drawBoardNow(); } }, label)));
   inner.append(seg);
 
-  if (addMode === 'single') {
-    const lab = el('input', { type: 'text', placeholder: 'Main dish', maxlength: '120' });
-    const cap = el('input', { type: 'number', value: '1', min: '1', max: '999', 'aria-label': 'How many needed', style: 'flex:0 0 84px' });
+  if (ui.addMode === 'single') {
+    const lab = el('input', { type: 'text', placeholder: 'Main dish', maxlength: '120', 'aria-label': 'What the spot is for', 'data-keep': 'single-label' });
+    const cap = el('input', { type: 'number', value: '1', min: '1', max: '999', 'aria-label': 'How many needed', style: 'flex:0 0 84px', 'data-keep': 'single-cap' });
     inner.append(el('div', { class: 'row' }, lab, cap,
       el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto', onclick: async () => {
         const label = lab.value.trim();
         if (!label) { toast('Give the spot a label'); return; }
-        try { await addSlotsChecked([{ label, capacity: parseInt(cap.value, 10) || 1 }]); lab.value = ''; }
-        catch (e) { toast(friendly(e), 4500); }
+        try {
+          // Only clear the field if the spot was actually accepted — a rejected
+          // label used to be deleted out from under the person who typed it.
+          await addSlotsChecked([{ label, capacity: parseInt(cap.value, 10) || 1 }], null,
+            (added) => { if (added > 0) lab.value = ''; });
+        } catch (e) { toast(friendly(e), 4500); }
       } }, 'Add')));
-  } else if (addMode === 'bulk') {
-    const ta = el('textarea', { placeholder: 'One spot per line — add ×N for multiples:\nMain dish x3\nSide or salad x4\nDessert x2\nDrinks & ice' });
+  } else if (ui.addMode === 'bulk') {
+    const ta = el('textarea', { 'data-keep': 'bulk', 'aria-label': 'Paste your list of spots',
+      placeholder: 'One spot per line — add ×N for multiples:\nMain dish x3\nSide or salad x4\nDessert x2\nDrinks & ice' });
     inner.append(ta, el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
-        const rows = parseBulkSlots(ta.value);
-        if (rows.length === 0) { toast('Paste one spot per line first'); return; }
-        try { await addSlotsChecked(rows); ta.value = ''; }
-        catch (e) { toast(friendly(e), 4500); }
+        const rep = parseBulkSlotsReport(ta.value);
+        if (rep.rows.length === 0) { toast('Paste one spot per line first'); return; }
+        try {
+          await addSlotsChecked(rep.rows, (added) => {
+            const missed = rep.dropped + (rep.rows.length - added);
+            const notes = [];
+            if (missed > 0) notes.push(missed + ' more ' + (missed === 1 ? 'line is' : 'lines are') +
+              ' still in the box — a sheet holds ' + MAX_SLOTS + ' spots, so they were not imported.');
+            if (rep.skipped.length) notes.push(rep.skipped.length + ' ' + (rep.skipped.length === 1 ? 'line' : 'lines') + ' had no label and ' + (rep.skipped.length === 1 ? 'was' : 'were') + ' skipped.');
+            return notes.join(' ');
+          }, (added) => {
+            // Whatever was NOT imported stays in the box, verbatim, so it can be
+            // pasted into a second sheet. The old code cleared it regardless.
+            ta.value = [
+              rep.rows.slice(added).map(x => x.capacity > 1 ? x.label + ' x' + x.capacity : x.label).join('\n'),
+              rep.remainder,
+            ].filter(Boolean).join('\n');
+          });
+        } catch (e) { toast(friendly(e), 6000); }
       } }, 'Add all')));
   } else {
-    const start = el('input', { type: 'date' });
-    const end = el('input', { type: 'date' });
-    const time = el('input', { type: 'text', placeholder: '3–5pm (optional)', maxlength: '40' });
-    const prefix = el('input', { type: 'text', placeholder: 'Label, e.g. “Concession stand” (optional)', maxlength: '60' });
-    const cap = el('input', { type: 'number', value: '1', min: '1', max: '999', 'aria-label': 'People needed per date' });
+    const start = el('input', { type: 'date', 'data-keep': 'r-start' });
+    const end = el('input', { type: 'date', 'data-keep': 'r-end' });
+    const time = el('input', { type: 'text', placeholder: '3–5pm (optional)', maxlength: '40', 'data-keep': 'r-time' });
+    const prefix = el('input', { type: 'text', placeholder: 'Label, e.g. “Concession stand” (optional)', maxlength: '60', 'data-keep': 'r-prefix' });
+    const cap = el('input', { type: 'number', value: '1', min: '1', max: '999', 'aria-label': 'People needed per date', 'data-keep': 'r-cap' });
+    // A <fieldset> with a real <legend>, not a <label> wrapping seven controls.
     const days = el('div', { class: 'wkdays' },
-      ...['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) =>
-        el('label', {}, el('input', { type: 'checkbox', value: String(i) }), d)));
+      ...['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) =>
+        el('label', {}, el('input', { type: 'checkbox', value: String(i), 'aria-label': d, 'data-keep': 'wk' + i }), d.slice(0, 3))));
     inner.append(
       el('div', { class: 'row' },
         el('label', { class: 'f' }, el('span', {}, 'From'), start),
         el('label', { class: 'f' }, el('span', {}, 'To'), end)),
-      el('label', { class: 'f' }, el('span', {}, 'On these days'), days),
+      el('fieldset', { class: 'wkdayset' }, el('legend', {}, 'On these days'), days),
       el('div', { class: 'row' },
         el('label', { class: 'f' }, el('span', {}, 'Time (optional)'), time),
         el('label', { class: 'f' }, el('span', {}, 'People per date'), cap)),
       el('label', { class: 'f' }, el('span', {}, 'Label (optional)'), prefix),
       el('button', { class: 'btn', type: 'button', onclick: async () => {
         const weekdays = [...days.querySelectorAll('input:checked')].map(c => parseInt(c.value, 10));
-        const rows = dateRangeSlots({
+        const rep = dateRangeSlotsReport({
           start: start.value, end: end.value, weekdays,
           timeText: time.value, prefix: prefix.value, capacity: parseInt(cap.value, 10) || 1,
         });
-        if (rows.length === 0) { toast('Pick a date range and at least one weekday'); return; }
-        if (!confirm('Add ' + rows.length + ' dated spots?')) return;
-        try { await addSlotsChecked(rows); } catch (e) { toast(friendly(e), 4500); }
+        if (rep.rows.length === 0) { toast('Pick a date range and at least one weekday'); return; }
+        // No confirm(): add them and offer the way back.
+        try {
+          await addSlotsChecked(rep.rows, (added) => {
+            const missed = rep.dropped + (rep.rows.length - added);
+            return missed ? missed + ' later ' + (missed === 1 ? 'date' : 'dates') + ' did not fit — a sheet holds ' + MAX_SLOTS + ' spots.' : '';
+          });
+        } catch (e) { toast(friendly(e), 6000); }
       } }, 'Generate spots'));
   }
 
   // settings
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Settings'));
   const s = b.settings || {};
-  inner.append(
-    el('label', { class: 'f' }, el('span', {}, 'Color')),
-    el('div', { class: 'themedots' },
-      ...Object.entries(THEMES).map(([key, color]) =>
-        el('button', {
-          type: 'button', 'aria-label': key + ' theme',
-          class: (s.theme || 'blue') === key ? 'sel' : '',
-          style: 'background:' + color,
-          onclick: () => D.setTheme(live.boardId, s, key)
-            .then(() => toast('Color updated'))
-            .catch(e => toast(String((e && e.code) || '').includes('permission-denied')
-              ? 'Colors need the updated rules — re-publish them from the latest version.'
-              : friendly(e), 5000)),
-        }))));
   inner.append(
     el('label', { class: 'f', style: 'display:flex;align-items:center;gap:8px' },
       el('input', { type: 'checkbox', style: 'width:auto', ...(s.approvalRequired ? { checked: '' } : {}),

@@ -40,11 +40,12 @@ export function formatBytes(n) {
   return (mb < 10 ? mb.toFixed(1) : String(Math.round(mb))) + ' MB';
 }
 
-/* The images are ~99% of a scan PDF; the rest is one object table plus a page
-   object each. Measured against real exports: within a few KB at any length. */
+/* The images are ~99.9% of a scan PDF; the rest is a page object, an XObject
+   entry and a small content stream each, plus the trailer. Fitted against real
+   pdf-lib exports at 1/2/12/50 pages: 340 per page over a 700-byte base. */
 export function estimatePdfBytes(imageBytes, pageCount) {
   if (!pageCount) return 0;
-  return Math.round(imageBytes + pageCount * 1100 + 1400);
+  return Math.round(imageBytes + pageCount * 340 + 700);
 }
 
 /* Local date, not UTC — someone scanning at 9pm on the 8th should not get the
