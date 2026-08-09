@@ -1,7 +1,7 @@
 // Run: node test/helpers.test.mjs
 import assert from 'node:assert/strict';
 import {
-  parseNames, parseRoster, drawNames, drawPossible, blamePair, validAssignment,
+  parseNames, parseRoster, drawNames, redrawKeeping, drawPossible, blamePair, validAssignment,
   encodeReveal, decodeReveal, isRevealHash, ROSTER_MAX,
 } from '../helpers.js';
 
@@ -70,6 +70,20 @@ ok('a tight-but-solvable draw is solved, not reported impossible', () => {
   }
   const d = drawNames(six, ring, rng);
   assert.ok(validAssignment(six, ring, d), 'the one surviving cycle must be found');
+});
+ok('adding a latecomer changes as few links as the rules allow', () => {
+  const before = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+  const first = drawNames(before, [], rng);
+  const after = before.concat('LATE');
+  const keep = after.map((n) => {
+    const i = before.indexOf(n);
+    return i < 0 ? -1 : after.indexOf(before[first[i]]);
+  });
+  const next = redrawKeeping(after.length, [], keep, rng);
+  assert.ok(validAssignment(after, [], next), 'still a valid draw');
+  const changed = before.filter((n, i) => after[next[after.indexOf(n)]] !== before[first[i]]);
+  assert.ok(changed.length <= 2, `only ${changed.length} of 9 existing links move`);
+  assert.ok(next[after.indexOf('LATE')] >= 0, 'the latecomer gives to somebody');
 });
 ok('drawPossible and blamePair name the rule that broke the draw', () => {
   assert.equal(drawPossible(3, [[0, 1]]), false);

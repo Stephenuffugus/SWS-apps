@@ -1,6 +1,6 @@
 // Secret Santa — draw with exclusions, per-person private reveal links.
 import {
-  parseRoster, drawNames, blamePair, validAssignment,
+  parseRoster, drawNames, redrawKeeping, blamePair, validAssignment,
   encodeReveal, decodeReveal, isRevealHash, ROSTER_MAX,
 } from './helpers.js';
 
@@ -240,7 +240,21 @@ function runDraw() {
         : 'There ' + (names.length === 1 ? 'is 1 name' : 'are ' + names.length + ' names') + ' in the box.'));
     return;
   }
-  const assignment = drawNames(names, pairs, undefined);
+  /* Adding a latecomer must not blow up the exchange. When the roster has
+     changed under an existing draw, keep every match the rules still allow and
+     re-route only what has to move — usually one or two links, not all nine. */
+  const patching = !!drawn && rosterChangedSinceDraw();
+  let assignment = null;
+  if (patching) {
+    const was = new Map();
+    drawn.names.forEach((n, i) => was.set(n, drawn.names[drawn.assignment[i]]));
+    const keep = names.map((santa) => {
+      const had = was.get(santa);
+      return had === undefined ? -1 : names.indexOf(had);
+    });
+    assignment = redrawKeeping(names.length, pairs, keep, undefined);
+  }
+  if (!assignment) assignment = drawNames(names, pairs, undefined);
   if (!assignment) {
     const blame = blamePair(names.length, pairs);
     warn(blame
@@ -280,7 +294,10 @@ function runDraw() {
   $('resultsHeading').focus();
 
   if (previous) {
-    sayUndo(changed.length + ' of ' + names.length + ' links changed — those people need the new one.',
+    sayUndo(changed.length + ' of ' + names.length + ' links changed' +
+      (patching && changed.length < names.length
+        ? ' — everyone else keeps the link you already sent.'
+        : ' — those people all need a new one.'),
       () => { drawn = previous; renderResults(); save(true); },
       { label: 'Undo re-draw' });
   } else {
@@ -437,10 +454,19 @@ function showOrganizer() {
 }
 
 function route() {
-  if (!isRevealHash(location.hash)) { showOrganizer(); return; }
-  const data = decodeReveal(location.hash);
-  if (data) showReveal(data);
-  else showLinkError();
+  const hash = location.hash;
+  if (isRevealHash(hash)) {
+    const data = decodeReveal(hash);
+    if (data) showReveal(data);
+    else showLinkError();
+    return;
+  }
+  /* A hash we do not recognise is far more likely to be somebody's reveal
+     link with its head chopped off than a deliberate visit, and handing a
+     participant the organizer's tool is how Priya ended up asking what she
+     was supposed to type. The error screen has a way back to the tool. */
+  if (hash.replace(/^#/, '').length > 1) { showLinkError(); return; }
+  showOrganizer();
 }
 
 /* ───────────────────────── boot ───────────────────────── */

@@ -61,6 +61,19 @@ export function drawNames(names, exclusions, rng) {
   return matchAssignment(n, ok, rnd);
 }
 
+/**
+ * Re-draw while keeping as many of yesterday's matches as the rules allow.
+ *
+ * `keep[i]` is the receiver person i had in the previous draw, or -1 if they
+ * are new or their old match has left. Adding one latecomer to a nine-person
+ * exchange then changes one or two links instead of all nine, which is the
+ * whole difference between "add a name" and "re-run the exchange".
+ */
+export function redrawKeeping(n, exclusions, keep, rng) {
+  if (n < 2) return null;
+  return matchAssignment(n, allowed(n, exclusions), rng || Math.random, keep);
+}
+
 /** true when a valid draw exists at all — exact, not a guess. */
 export function drawPossible(n, exclusions) {
   if (n < 2) return false;
@@ -92,8 +105,10 @@ function allowed(n, exclusions) {
 }
 
 /* Kuhn's algorithm. Receiver order is shuffled when an rng is supplied so two
-   runs of the same tight roster do not produce the same list every time. */
-function matchAssignment(n, ok, rnd) {
+   runs of the same tight roster do not produce the same list every time.
+   `keep` seeds the matching with the pairs a previous draw already had, and
+   augmenting only disturbs them where it has no choice. */
+function matchAssignment(n, ok, rnd, keep) {
   const order = [...Array(n).keys()];
   if (rnd) {
     for (let i = order.length - 1; i > 0; i--) {
@@ -102,6 +117,16 @@ function matchAssignment(n, ok, rnd) {
     }
   }
   const giverOf = new Array(n).fill(-1);   // receiver → giver
+  const settled = new Set();
+  if (Array.isArray(keep)) {
+    for (let g = 0; g < n; g++) {
+      const r = keep[g];
+      if (Number.isInteger(r) && r >= 0 && r < n && giverOf[r] === -1 && ok(g, r)) {
+        giverOf[r] = g;
+        settled.add(g);
+      }
+    }
+  }
   const augment = (giver, seen) => {
     for (const r of order) {
       if (seen[r] || !ok(giver, r)) continue;
@@ -111,6 +136,7 @@ function matchAssignment(n, ok, rnd) {
     return false;
   };
   for (let g = 0; g < n; g++) {
+    if (settled.has(g)) continue;
     if (!augment(g, new Array(n).fill(false))) return null;
   }
   const out = new Array(n);
