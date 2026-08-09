@@ -637,7 +637,10 @@ function offerShared(shared) {
     history.replaceState(null, '', location.pathname);
     box.remove();
     let msg = 'Schedule loaded from the link';
-    if (shared.trimmed) msg += ' — ' + shared.trimmed + ' medication(s) over the ' + ROW_CAP + '-row limit were left off';
+    if (shared.trimmed) {
+      msg += ' — ' + shared.trimmed + (shared.trimmed === 1 ? ' medication' : ' medications')
+        + ' past the ' + ROW_CAP + '-row limit had to be left off';
+    }
     toast(msg, { ms: shared.trimmed ? 6000 : 4000 });
     $('whoInput').focus();
   };
