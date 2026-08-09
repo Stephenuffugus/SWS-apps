@@ -1340,19 +1340,6 @@ body{
      the text-size setting instead of freezing at 840px while the chrome around
      it inflates. 6 periods = 63rem, which still fits inside --wrap on a laptop. */
   .grid-scroll{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);background:var(--surface);border:1px solid var(--line)}
-  /* The page's reading column is 42rem, which is right for the setup form and
-     far too narrow for a week grid — at 1280px it hid 202px of the week. The
-     grid alone breaks out of it, centred, never wider than the viewport. */
-  @media screen and (min-width:52rem){
-    #view{--gw:min(64rem, 100vw - 3rem)}
-    .grid-scroll,.weeknav,#bar,.scroll-hint,.sample-bar{
-      width:var(--gw);
-      margin-inline:calc((100% - var(--gw)) / 2);
-    }
-    /* the stamp sits at the grid's left edge, not centred on the narrower
-       reading column, or the week view reads as two misaligned pages */
-    #view > .trust{margin-left:calc((100% - var(--gw)) / 2)}
-  }
   table.week{border-collapse:separate;border-spacing:0;width:100%;min-width:calc(19.5rem + var(--cols,6) * 7.25rem);table-layout:fixed}
   table.week th{font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;padding:var(--s2) var(--s3);background:var(--surface-2);border-bottom:1.5px solid var(--line-2);border-right:1px solid var(--line);text-align:left}
   table.week th.day-h{width:8rem}
@@ -1474,6 +1461,23 @@ body{
   #modal .sub{font-size:var(--t-sm);color:var(--ink-2);margin:0 0 var(--s4)}
   #modal .opts{display:flex;flex-direction:column;gap:var(--s2)}
   #modal input{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);width:100%;background:var(--field);color:var(--ink)}
+
+  /* The page's reading column is 42rem, which is right for the setup form and
+     far too narrow for a week grid — at 1280px it hid 202px of the week. The
+     grid alone breaks out of it, centred, never wider than the viewport. */
+  @media screen and (min-width:52rem){
+    :root{--gw:min(64rem, 100vw - 4rem)}
+    /* the header rides the same column so the app name lines up with the grid
+       rather than floating over the middle of it */
+    header .wrap{max-width:calc(var(--gw) + 2 * var(--s4))}
+    .grid-scroll,.weeknav,#bar,.scroll-hint,.sample-bar{
+      width:var(--gw);
+      margin-inline:calc((100% - var(--gw)) / 2);
+    }
+    /* the stamp sits at the grid's left edge, not centred on the narrower
+       reading column, or the week view reads as two misaligned pages */
+    #view > .trust{margin-left:calc((100% - var(--gw)) / 2)}
+  }
 
   /* ---------- print ----------
      One week, one page, is the ritual this app exists to serve: the AP collects
@@ -2344,9 +2348,10 @@ function importBackup(){
    what was in the file, no confirm, no way back. It is one click from the front
    door and it is the single most destructive action in the app. */
 function describeBackup(st){
-  const n=Object.keys(st.cells).length;
-  const c=st.config;
-  return `${n} ${n===1?'lesson':'lessons'}, ${niceDate(c.yearStart)} ${parseISO(c.yearStart).getFullYear()} to ${niceDate(c.yearEnd)} ${parseISO(c.yearEnd).getFullYear()}`;
+  const n=Object.keys(st.cells).length, c=st.config;
+  const a=parseISO(c.yearStart), b=parseISO(c.yearEnd);   // a hand-edited file can carry anything
+  const span=(a&&b)?`, ${niceDate(c.yearStart)} ${a.getFullYear()} to ${niceDate(c.yearEnd)} ${b.getFullYear()}`:'';
+  return `${n} ${n===1?'lesson':'lessons'}${span}`;
 }
 function applyImportedText(text){
   let st;
