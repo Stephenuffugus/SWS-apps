@@ -1252,17 +1252,59 @@ body{
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 header.app h1 a{color:inherit; text-decoration:none}
 
-nav.tabs{display:flex; gap:5px; margin:0 0 12px; overflow-x:auto}
+/* The tab strip WRAPS. It used to be a silent horizontal scroller: at 320px
+   with default text, Export's right edge sat at 344px in a 288px box, and at
+   414px with Largest text at 464px in 382px — so the tab that produces the
+   only artifact the app makes was invisible to anyone who turned the text up,
+   with no arrow, no fade and no scrollbar to suggest it was there. Four
+   buttons wrap to two rows and cost nothing. Sticky keeps them reachable at
+   the bottom of a 26,000px item list. */
+nav.tabs{
+  display:flex; flex-wrap:wrap; gap:var(--s2); margin:0 0 var(--s4);
+  position:sticky; top:0; z-index:5;
+  padding:var(--s2) 0; background:var(--bg);
+}
 nav.tabs button{
-  flex:1 0 auto; padding:9px 14px; font-size:.9rem; border:1px solid var(--line); background:var(--card);
-  color:var(--muted); border-radius:10px; cursor:pointer; white-space:nowrap;
+  flex:1 1 auto; min-width:7rem; min-height:var(--tap); padding:0 var(--s4);
+  font-size:var(--t-sm); border:1px solid var(--line); background:var(--card);
+  color:var(--ink-2); border-radius:var(--r-ctl); cursor:pointer; white-space:nowrap;
 }
 nav.tabs button.active{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink); font-weight:600}
 
 .chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
 
-.thumb{width:52px; height:52px; border-radius:8px; object-fit:cover; background:var(--chip); flex:0 0 auto}
-.thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:.65rem}
+/* Type scaled with the comfort panel; targets did not. A 36px pencil with a
+   tremor, ten pixels from a delete, is a coin toss — and the base .small rule
+   is the thing undercutting the floor, so the app layer puts it back. */
+.btn.small{min-height:var(--tap); padding:0 var(--s4)}
+.btn.small.icon{width:var(--tap); min-width:var(--tap); padding:0}
+.btn.danger{background:var(--neg-soft); border-color:var(--neg)}
+.chip{min-height:var(--tap)}
+#swsPrefsBtn{min-width:var(--tap); min-height:var(--tap)}
+a.tipbtn{min-height:var(--tap); display:inline-flex; align-items:center}
+
+.thumb{width:calc(52px * var(--ui-scale)); height:calc(52px * var(--ui-scale)); border-radius:8px; object-fit:cover; background:var(--chip); flex:0 0 auto}
+/* 'no photo' was 10.4px — the smallest type in the app, on the rows that most
+   needed reading, so it read as "still loading". */
+.thumb.empty{display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-2); font-size:var(--t-xs); line-height:1.1; padding:2px; border:1px dashed var(--line)}
+
+.checkline{display:flex; align-items:center; gap:var(--s3); min-height:var(--tap); margin:var(--s2) 0; font-size:var(--t-sm); color:var(--ink-2)}
+.checkline input{width:22px; height:22px; flex:none}
+
+details.more{margin:var(--s3) 0; border-top:1px solid var(--line); padding-top:var(--s2)}
+details.more summary{min-height:var(--tap); display:flex; align-items:center; cursor:pointer; font-size:var(--t-sm); font-weight:600}
+
+.dlgactions{margin-top:var(--s4)}
+.dangerrow{margin-top:var(--s4); padding-top:var(--s3); border-top:1px solid var(--line)}
+
+.warntext{color:var(--neg); font-size:var(--t-sm); line-height:var(--lh-snug)}
+
+/* The unsaved banner does not fade, does not dismiss and does not throttle. */
+.warnbanner.unsaved{
+  background:var(--neg-soft); border-width:2px; margin-top:var(--s3);
+  display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center;
+}
+.warnbanner.unsaved .bannerbtns{display:flex; gap:var(--s2); flex-wrap:wrap}
 
 .warnbanner{
   border:1px solid var(--neg); color:var(--neg); border-radius:12px; padding:10px 14px;
@@ -1288,46 +1330,96 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#view">Skip to the inventory</a>
 <div class="wrap">
-  <header class="app">
+  <header class="app noprint">
     <img src="icon.svg" alt="">
     <h1><a href="#/" id="brandLink">Home Inventory</a></h1>
     <span class="spacer"></span>
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
   </header>
-  <main id="view" aria-live="polite"></main>
+  <!-- Never a live region: the whole view is rebuilt on every save, and with
+       300 items that meant 10,904 characters re-read to a screen reader every
+       time. Discrete announcements go through #toast, which is role=status. -->
+  <div id="unsavedBanner" class="warnbanner unsaved hidden" role="alert" aria-live="assertive"></div>
+  <main id="view" tabindex="-1"></main>
   <footer class="colophon">
     Nothing leaves your device — which means the backup is your job. Export often.<br>
     <span id="orgLine">A free tool by <a href="../" style="color:inherit">Sky Wolf Studios</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Home%20Inventory" style="color:inherit">Feedback</a></span>
   </footer>
 </div>
 
-<dialog id="itemDlg">
-  <h3>Edit item</h3>
-  <img id="iPhoto" class="capturephoto hidden" alt="Item photo">
-  <div class="row" style="margin-bottom:10px">
-    <button class="btn small" id="iRephoto" type="button">Replace photo</button>
-    <button class="btn small" id="iReceipt" type="button">Add receipt photo</button>
-  </div>
-  <img id="iReceiptImg" class="capturephoto hidden" alt="Receipt photo">
+<dialog id="itemDlg" aria-labelledby="itemDlgTitle">
+  <h3 id="itemDlgTitle">Edit item</h3>
   <label class="f"><span>Name</span><input type="text" id="iName" maxlength="80"></label>
   <div class="row">
-    <label class="f"><span>Room</span><select id="iRoom"></select></label>
-    <label class="f"><span>Value ($)</span><input type="text" id="iValue" inputmode="decimal" placeholder="0"></label>
+    <label class="f" style="flex:0 0 5.5rem"><span>Qty</span><input type="text" id="iQty" inputmode="numeric" value="1"></label>
+    <label class="f grow"><span>Room</span><select id="iRoom"></select></label>
   </div>
   <div class="row">
-    <label class="f"><span>Serial number</span><input type="text" id="iSerial" maxlength="60"></label>
-    <label class="f"><span>Purchased</span><input type="date" id="iDate"></label>
+    <label class="f"><span>What it cost ($)</span><input type="text" id="iValue" inputmode="decimal" placeholder="0"></label>
+    <label class="f"><span>Cost to replace ($)</span><input type="text" id="iReplace" inputmode="decimal" placeholder="0"></label>
   </div>
-  <label class="f"><span>Notes</span><input type="text" id="iNotes" maxlength="300" placeholder="Condition, where bought…"></label>
-  <div class="row">
-    <button class="btn danger" id="iDelete" type="button">Delete</button>
+  <img id="iPhoto" class="capturephoto hidden" alt="Item photo">
+  <img id="iReceiptImg" class="capturephoto hidden" alt="Receipt photo">
+  <div class="row" style="margin-bottom:6px">
+    <button class="btn small" id="iRephoto" type="button">Replace photo</button>
+    <button class="btn small" id="iReceipt" type="button">Add receipt / close-up</button>
+  </div>
+  <label class="checkline"><input type="checkbox" id="iCloseUp"><span>Replace with a close-up (keeps 2400px for serial plates)</span></label>
+  <details class="more">
+    <summary>More detail for the insurer (optional)</summary>
+    <div class="row">
+      <label class="f"><span>Brand / make</span><input type="text" id="iBrand" maxlength="40"></label>
+      <label class="f"><span>Model</span><input type="text" id="iModel" maxlength="40"></label>
+    </div>
+    <div class="row">
+      <label class="f"><span>Serial number</span><input type="text" id="iSerial" maxlength="60"></label>
+      <label class="f"><span>Purchased</span><input type="date" id="iDate"></label>
+    </div>
+    <label class="f"><span>Condition</span><select id="iCondition">
+      <option value="">Not stated</option>
+      <option value="New">New</option>
+      <option value="Excellent">Excellent</option>
+      <option value="Good">Good</option>
+      <option value="Fair">Fair</option>
+      <option value="Poor">Poor</option>
+      <option value="Salvage">Salvage</option>
+    </select></label>
+    <label class="f"><span>Notes</span><input type="text" id="iNotes" maxlength="300" placeholder="Where bought, damage, provenance…"></label>
+  </details>
+  <div class="row dlgactions">
     <button class="btn" id="iCancel" type="button">Cancel</button>
     <button class="btn primary" id="iSave" type="button">Save</button>
   </div>
+  <!-- Delete lives below the save row, on its own, because at 320px with
+       Largest text the button row stacks and whatever is first ends up under
+       the thumb. Undo is behind it either way. -->
+  <div class="dangerrow">
+    <button class="btn danger" id="iDelete" type="button">Delete this item</button>
+  </div>
 </dialog>
 
-<input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden">
+<dialog id="askDlg" aria-labelledby="askTitle">
+  <h3 id="askTitle"></h3>
+  <div id="askBody"></div>
+  <label class="f" id="askFieldWrap"><span id="askLabel"></span><input type="text" id="askField" maxlength="80"></label>
+  <div class="row dlgactions" id="askBtns"></div>
+</dialog>
+
+<template id="trustTpl">
+  <p class="trust">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+    <span><b>The photographs of your home, the serial numbers and what everything is worth stay in this browser.</b>
+    They are written to this device's own database and nowhere else — no account, no server, no ads, and no upload
+    when you export: the PDF, the spreadsheet and the backup file are written straight to your downloads. The one
+    outbound link in the app is the tip jar in the header, and it only goes anywhere if you tap it. The other side of
+    that promise is that nobody can recover this for you, which is why the app keeps telling you to email yourself a
+    copy.</span>
+  </p>
+</template>
+
+<input type="file" id="fileInput" accept="image/*" class="hidden">
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="vendor-pdf-lib.js"></script>

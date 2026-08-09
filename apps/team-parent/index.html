@@ -1273,14 +1273,58 @@ header.app h1 a{color:inherit; text-decoration:none}
 .btn[disabled]{opacity:.5; cursor:default}
 
 .chip.mine{background:var(--mine); border-color:var(--accent)}
-.chip button{border:0; background:none; color:inherit; cursor:pointer; padding:0 2px; font-size:.9rem}
-.slot{border-bottom:1px solid var(--line); padding:12px 0}
+/* Giving up your own duty is the most destructive thing a parent can do here
+   and it used to be a 16x19px target. It is now a real one. */
+.chip{display:inline-flex; align-items:center; gap:var(--s1)}
+.chip .chiptext{overflow-wrap:anywhere}
+.chip button.chipx{
+  border:0; background:none; color:inherit; cursor:pointer; padding:0;
+  min-width:var(--tap); min-height:var(--tap);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:var(--t-base); line-height:1; border-radius:var(--r-sm);
+}
+.chip button.chipx:hover{background:var(--surface-2)}
+.slot{border-bottom:1px solid var(--line); padding:var(--s4) 0; scroll-margin-top:var(--s6)}
 .slot:last-child{border-bottom:0}
-.slot .top{display:flex; align-items:baseline; gap:8px}
+.slot .top{display:flex; align-items:baseline; gap:var(--s2)}
 .slot .label{flex:1; min-width:0; overflow-wrap:anywhere; font-weight:600}
-.slot .count{color:var(--muted); font-size:.82rem; white-space:nowrap}
+.slot .label .when{display:inline-block; margin-right:var(--s2); font-variant-numeric:tabular-nums}
+/* "Covered" / "2 of 3" is the field that answers the question this page
+   exists for; it was --ink-2 at .82rem (5.6:1) and is read in direct sun. */
+.slot .count{color:var(--ink); font-size:var(--t-sm); white-space:nowrap}
 .slot .count.full{color:var(--pos); font-weight:600}
-.slot .chips{margin-top:6px}
+.slot .slotmeta{display:flex; flex-wrap:wrap; gap:var(--s2) var(--s4); margin-top:var(--s2); font-size:var(--t-sm); color:var(--ink-2)}
+.slot .slotmeta a{overflow-wrap:anywhere}
+.slot .chips{margin-top:var(--s2); display:flex; flex-wrap:wrap; gap:var(--s2)}
+.slot.past{opacity:.72}
+.slot.flash{background:var(--accent-soft); border-radius:var(--r-sm)}
+h3.dayhead{
+  margin:var(--s5) 0 0; font-size:var(--t-sm); font-weight:700;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--ink-2);
+}
+h3.dayhead:first-of-type{margin-top:var(--s2)}
+details.pastwrap{margin-top:var(--s4)}
+details.pastwrap>summary{cursor:pointer; padding:var(--s3) 0; min-height:var(--tap); display:flex; align-items:center}
+
+/* ── the answer, above the list ───────────────────────────────────────────
+   Four seconds in a supermarket aisle. Three questions. */
+.nextup{border:2px solid var(--accent-fill)}
+.nextup .nu-when{margin:0 0 var(--s2); font-size:var(--t-xl); font-weight:700; line-height:var(--lh-tight)}
+.nextup .nu-none{margin:0; color:var(--ink-2)}
+.nextup .nu-item{padding-top:var(--s3)}
+.nextup .nu-item + .nu-item{margin-top:var(--s3); border-top:1px solid var(--line)}
+.nextup .nu-what{margin:0; font-size:var(--t-lg); font-weight:600; line-height:var(--lh-snug); overflow-wrap:anywhere}
+.nextup .nu-time{margin-right:var(--s2); font-variant-numeric:tabular-nums}
+.nextup .nu-line{margin:var(--s2) 0 0; font-size:var(--t-base); overflow-wrap:anywhere}
+.nextup .nu-need{font-weight:600}
+.nextup .nu-ok{color:var(--pos); font-weight:600}
+.nextup .nu-yours{
+  display:inline-block; margin-left:var(--s2); padding:2px var(--s3);
+  border-radius:var(--r-pill); background:var(--accent-fill); color:var(--accent-ink);
+  font-size:var(--t-xs); font-weight:700; letter-spacing:.06em; vertical-align:middle;
+}
+.nextup .btn{margin-top:var(--s3)}
+.nextup .nu-mine{display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2); padding-top:var(--s4)}
 .badge{display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:999px; background:var(--chip); color:var(--muted)}
 .badge.pending{color:var(--neg)}
 .banner{background:var(--chip); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:.88rem; color:var(--muted); margin-bottom:12px}
@@ -1290,11 +1334,20 @@ header.app h1 a{color:inherit; text-decoration:none}
 }
 .announce .who{font-size:.78rem; color:var(--muted); margin-top:6px}
 
-.warn{color:var(--neg); font-size:.85rem; margin-top:6px}
+.warn{color:var(--neg); font-size:var(--t-sm); margin-top:6px}
+/* A pasted Maps URL in Details used to scroll the whole page sideways by
+   387px for every family; the title beside it already guarded against it. */
+.sub.desc{overflow-wrap:anywhere; word-break:break-word}
+.trust{margin:var(--s4) 0 0}
 .sharecode{font-size:1.7rem; font-weight:700; letter-spacing:.3em; text-align:center; margin:2px 0 10px; padding-left:.3em}
-.themedots{display:flex; gap:10px; margin:4px 0 10px}
-.themedots button{width:34px; height:34px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0}
-.themedots button.sel{border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink)}
+.themedots{display:flex; flex-wrap:wrap; gap:var(--s3); margin:var(--s2) 0 var(--s4)}
+.themedots button.themedot{
+  width:var(--tap); height:var(--tap); border-radius:50%; border:2px solid var(--line);
+  cursor:pointer; padding:0; background:var(--dot);
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.themedots button.themedot .tick{color:#fff; font-size:var(--t-base); font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.themedots button.themedot.sel{border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink)}
 details.manage{margin-bottom:12px}
 details.manage>summary{
   cursor:pointer; background:var(--card); border:1px solid var(--line); border-radius:14px;
@@ -1306,25 +1359,56 @@ details.manage[open]>summary{border-radius:14px 14px 0 0}
 details.manage[open]>summary::after{content:'▾'}
 details.manage>.inner{border:1px solid var(--line); border-top:0; border-radius:0 0 14px 14px; background:var(--card); padding:14px}
 
-.wkdays{display:flex; gap:4px; flex-wrap:wrap}
+.wkdays{display:flex; gap:var(--s1); flex-wrap:wrap}
 .wkdays label{
-  flex:1; text-align:center; font-size:.8rem; padding:8px 2px; border:1px solid var(--line);
-  border-radius:8px; cursor:pointer; color:var(--muted); min-width:38px;
+  flex:1; display:flex; align-items:center; justify-content:center;
+  text-align:center; font-size:var(--t-sm); padding:var(--s2) 2px;
+  min-height:var(--tap); min-width:44px;
+  border:1px solid var(--line-2); border-radius:var(--r-sm);
+  cursor:pointer; color:var(--ink-2);
 }
-.wkdays input{display:none}
-.wkdays label:has(input:checked){background:var(--accent-fill); color:var(--accent-ink); border-color:var(--accent-fill)}
+/* CLIPPED, NOT display:none. display:none takes the seven checkboxes out of
+   the tab order AND the accessibility tree, which made the repeating-schedule
+   generator — the app's biggest time-saver — pointer-only. axe cannot see
+   that, because display:none is out of its scope. */
+.wkdays input{
+  position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;
+}
+.wkdays label:has(input:checked){background:var(--accent-fill); color:var(--accent-ink); border-color:var(--accent-fill); font-weight:600}
+.wkdays label:has(input:focus-visible){outline:3px solid var(--focus); outline-offset:2px}
 dialog{border:1px solid var(--line); border-radius:14px; background:var(--card); color:var(--ink); padding:18px; max-width:min(92vw,420px); width:100%}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog h3{margin:0 0 12px; font-size:1.05rem}
+/* The destructive action leaves the primary row and the reading order: this
+   is a rename dialog, and "Delete" was the first thing announced in it. */
+.dlgdanger{margin-top:var(--s5); padding-top:var(--s4); border-top:1px solid var(--line); text-align:right}
 #qrBox{display:flex; justify-content:center; padding:10px; background:#fff; border-radius:10px}
 
 .printonly{display:none}
+.printhead{display:none}
 @media print{
   header.app,details.manage,.btn,.noprint,#toast,footer.colophon{display:none !important}
   body{background:#fff; color:#000}
   section.card{border:0; padding:4px 0; margin:0}
   .printonly{display:block}
   .slot{break-inside:avoid}
+  .nextup{border:2px solid #000; padding:8px; margin-bottom:8px}
+  h3.dayhead{color:#000}
+  .slot .count{color:#000}
+  details.pastwrap{display:none !important}
+  /* The paper artifact has to lead back to the live page — that is the whole
+     reason it beats paper. Code + QR at the top of page one. */
+  .printhead{
+    display:flex !important; gap:16px; align-items:flex-start;
+    border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;
+  }
+  .printhead .ph-text{flex:1; min-width:0}
+  .printhead .ph-title{font-size:1.35rem; font-weight:700; overflow-wrap:anywhere}
+  .printhead .ph-sub{font-size:.8rem}
+  .printhead .ph-url{font-size:.85rem; overflow-wrap:anywhere}
+  .printhead .ph-code{font-size:1rem; letter-spacing:.12em; margin-top:4px}
+  .printhead .ph-qr canvas{width:108px; height:108px; display:block}
 }
 </style>
 <script src="sws-prefs.js"></script>
@@ -1391,12 +1475,27 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 
 <dialog id="slotDlg">
   <h3>Edit event</h3>
-  <label class="f"><span>Event</span><input type="text" id="slotLabel" maxlength="120"></label>
-  <label class="f"><span>Spots needed (999 = open RSVP)</span><input type="number" id="slotCap" min="1" max="999"></label>
+  <label class="f"><span>Event</span><input type="text" id="slotLabel" maxlength="70"></label>
   <div class="row">
-    <button class="btn danger" id="slotDelete" type="button">Delete</button>
+    <label class="f"><span>Date</span><input type="date" id="slotDate"></label>
+    <label class="f"><span>Start time</span><input type="time" id="slotTime"></label>
+  </div>
+  <label class="f"><span>Where</span><input type="text" id="slotWhere" maxlength="44" placeholder="Kestrel Park, Field 4"></label>
+  <div class="row">
+    <label class="f"><span>Wear</span><input type="text" id="slotWear" maxlength="24" placeholder="blue"></label>
+    <label class="f"><span>Who is this for?</span>
+      <select id="slotKind">
+        <option value="rsvp">Everyone RSVPs</option>
+        <option value="duty">Volunteers needed</option>
+      </select></label>
+  </div>
+  <label class="f hidden" id="slotCapWrap"><span>How many volunteers?</span><input type="number" id="slotCap" min="1" max="998"></label>
+  <div class="row">
     <button class="btn" id="slotCancel" type="button">Cancel</button>
     <button class="btn primary" id="slotSave" type="button">Save</button>
+  </div>
+  <div class="dlgdanger">
+    <button class="btn danger small" id="slotDelete" type="button">Delete this event</button>
   </div>
 </dialog>
 

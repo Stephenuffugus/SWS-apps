@@ -125,7 +125,9 @@ export function sanitizeInventory(raw) {
     seen[id] = 1;
     rooms.push({ id, name: cleanStr(r.name, LIMITS.room) || 'Room' });
   }
-  const items = (Array.isArray(o.items) ? o.items : []).map(sanitizeItem);
+  // A bare `null` left behind by a sloppy text-editor delete is dropped, not
+  // resurrected as a ghost row — and the caller counts and reports how many.
+  const items = (Array.isArray(o.items) ? o.items : []).filter(i => i && typeof i === 'object').map(sanitizeItem);
   const draftPhoto = cleanImg(o.draft && o.draft.photo);
   return {
     v: 2,

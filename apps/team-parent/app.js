@@ -567,7 +567,17 @@ function paintBoard() {
 
   focusRestore(keepFocus);
   scrollRestore(keepY);
+
+  /* One short sentence when something actually changed, instead of the whole
+     page re-announced on every snapshot. */
+  const stats = fillStats(live.slots.filter(s => s.capacity < RSVP_CAP));
+  const summary = live.slots.length + '|' + stats.taken + '|' + stats.total + '|' + locked;
+  if (lastSummary && summary !== lastSummary) {
+    announce('Team page updated — ' + live.slots.length + ' events, ' + stats.taken + ' of ' + stats.total + ' duty spots filled.');
+  }
+  lastSummary = summary;
 }
+let lastSummary = '';
 
 /* Firestore stamps `createdAt` server-side; it is briefly null on a local
    write, which is exactly when "Just now" is true. */

@@ -750,15 +750,18 @@ function showQr() {
   const quiet = 4;
   const total = count + quiet * 2;
 
-  /* The canvas was hardcoded at 300px, squeezed to 246 CSS px on a 320px phone
-     — 1.49px per module. Size it from the viewport instead, and keep the
-     backing store an exact whole number of device pixels per module so nothing
-     is resampled. */
+  /* The canvas was hardcoded at 300px and squeezed to 246 CSS px on a 320px
+     phone — 1.49px per module. Size it from the viewport instead, fill the
+     whole box the dialog can give it, and render into a backing store at the
+     device's real pixel density. Module edges are snapped with Math.round so
+     the squares tile exactly however the scale falls: a rounded-up cell would
+     leave the code a fraction of the space it could have had, and a rounded-
+     down one leaves hairline gaps a camera reads as noise. */
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   const avail = Math.max(180, Math.min(420,
     Math.min(window.innerWidth * 0.92 - 44, window.innerHeight - 220)));
-  const cell = Math.max(1, Math.floor(avail * dpr / total));
-  const px = cell * total;
+  const scale = avail * dpr / total;
+  const px = Math.round(scale * total);
 
   canvas.classList.remove('hidden');
   canvas.width = px;
@@ -767,17 +770,22 @@ function showQr() {
      viewport too small for the computed size shrinks it without distorting. */
   canvas.style.width = (px / dpr) + 'px';
 
+  const at = (i) => Math.round(i * scale);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, px, px);
   ctx.fillStyle = '#000';
   for (let r = 0; r < count; r++) {
+    const y = at(quiet + r);
+    const h = at(quiet + r + 1) - y;
     for (let col = 0; col < count; col++) {
-      if (qr.isDark(r, col)) ctx.fillRect((quiet + col) * cell, (quiet + r) * cell, cell, cell);
+      if (!qr.isDark(r, col)) continue;
+      const x = at(quiet + col);
+      ctx.fillRect(x, y, at(quiet + col + 1) - x, h);
     }
   }
 
-  const cssPerModule = cell / dpr;
+  const cssPerModule = scale / dpr;
   note.className = 'hint';
   note.textContent = cssPerModule < 2
     ? 'Dense code: ' + count + '×' + count + ' squares for ' + c.items.length
