@@ -1,194 +1,130 @@
 # Studio overhaul — where things stand
 
-Written during the overnight run. Read `DESIGN-SYSTEM.md` for the system
-itself; this is the progress log and the list of what is left.
+Read `DESIGN-SYSTEM.md` for the system itself and
+`findings/PORTFOLIO-SYNTHESIS.md` for what is wrong and where the leverage is.
+This is the progress log.
 
-## Done
+## Everything is committed
 
-### The design system
-- `design/studio.css` — shared skeleton: spacing scale, type scale, component
-  CSS, focus, motion, print, `prefers-reduced-motion` / `prefers-contrast`.
-  Zero colour literals.
-- `design/skins.mjs` — 23 rows, one per app: hue, chroma, paper warmth,
-  typographic voice, texture, radius, container width.
-- `design/color.mjs` — OKLCH↔sRGB, WCAG contrast, and a solver that walks a
-  colour along the lightness axis until it clears its target.
-- `design/build.mjs` — compiles skins + studio.css into per-app CSS and runs
-  the contrast audit. **1542/1542 checks pass.**
-- `design/apply.mjs` — splices the base into each app's inline `<style>`,
-  strips the old palette, prunes template rules the base now owns, installs the
-  display font, precaches it in the service worker, bumps the SW cache version,
-  and repaints `theme-color` + the web manifest.
-- `design/preview.mjs` — renders every skin side by side and screenshots them.
-- `design/shoot-apps.mjs` — screenshots the real apps, and fails loudly on
-  console errors or horizontal overflow.
-- `design/icons.mjs` — re-hues all 23 app icons by decomposing each colour to
-  OKLCH and swapping only the hue, then regenerates the PNGs.
-- `design/hub.mjs` — generates `apps/index.html`.
+The overnight design-system work — 20k lines across the toolchain and all 23
+apps — is committed and pushed. So is everything since. A long agent run now
+checkpoints itself: `design/autosave-findings.sh` commits findings and in-flight
+app edits every four minutes, on separate scoped commits, so an interrupted
+session cannot cost hours of results.
 
-### Applied to all 23 apps
-- New base layer in place; old `:root` palettes removed; each app's *own*
-  custom properties preserved.
-- Between 18 and 41 duplicated template rules removed per app.
-- Display fonts installed and precached (Fraunces for the 8 editorial apps,
-  Space Grotesk for the 11 technical ones; the 4 "plain" apps use the system
-  stack deliberately).
-- Service worker cache versions bumped so returning users get the new shell.
-- `theme-color` and manifest colours repainted per app.
-- All 23 icons re-hued; 47 PNGs regenerated.
+## The design system
 
-### The hub
-Rebuilt as a generated page: studio-dark background, each card carrying its
-app's own accent as a spine plus the re-hued icon, six categories, and a live
-search box (matching names, taglines and a keyword list, so "insurance" finds
-Home Inventory and "teacher" finds both school apps).
+`design/studio.css` is the shared skeleton — spacing, type, components, focus,
+motion, print — with **zero colour literals**. Every colour arrives from a
+per-app skin compiled from OKLCH by `design/build.mjs`, which solves each text,
+control-boundary, focus and semantic colour against a WCAG target and **fails
+the build** rather than shipping something unreadable. 1542/1542 checks pass.
 
-### Test suite
-Was 14 passing with 11 failures. Now **25 passing, 0 failing, 5 skipped**
-(the skipped five need the Firebase emulator). Most of those failures were
-missing dev dependencies masking real coverage — `jsdom`, `pdf-lib` and
-`qrcode-generator` are now declared in the root `package.json`.
+`design/apply.mjs` splices the base into each app, prunes template rules the
+base now owns, installs the display font and shared runtime, precaches both,
+bumps the service-worker cache, and repaints `theme-color` and the manifest.
 
-## Verified
-- No console errors and no horizontal overflow in any of the 23 apps, light or
-  dark, at 414px.
-- Contrast is enforced by the build, not by eye. Every text, control-boundary,
-  focus and semantic colour is solved against the hardest background it
-  actually appears on.
+## Comfort — the display panel
 
-### Verification tooling
-- `design/test-all.mjs` — every app's tests in one run, with the emulator-only
-  ones listed as skipped rather than buried as permanent reds.
-- `design/a11y.mjs` — axe-core against all 23 apps in both themes, in a real
-  browser, grouped by rule so a repeated defect reads as "fix this once".
-- `design/finish.mjs` (`npm run finish`) — build → apply → hub → tests → a11y →
-  brief → screenshots → report, in order, continuing past non-blocking failures.
+Every app carries the same settings panel, from the sliders button in the
+header: appearance (auto/light/dark), text size (0.9–1.5×), spacing, easier
+reading, warm night tint, contrast and motion. `DESIGN-SYSTEM.md` documents the
+rules it follows; the ones worth knowing here:
 
-### What the accessibility audit found
-Running axe across the portfolio surfaced three things worth knowing:
+- **One key for the whole origin.** A setting made in Baby Log at 3am is
+  already in force the first time Grocery List opens. Someone who needs larger
+  text needs it in all 23, and making them set it 23 times would be its own
+  accessibility bug.
+- **Applied before first paint**, from a classic blocking script — a deferred
+  theme switch is a white flash in a dark room.
+- **`--tap` is floored at 44px and scales UP with text size.** Enlarging text
+  is often about eyesight or tremor; shrinking targets would undo the help.
 
-- **`footer.colophon` failed 4.5:1 on six apps.** It was set in `--ink-3`, which
-  the system reserves for placeholders — but the colophon carries the privacy
-  promise and the feedback link, which are sentences people read. Fixed in the
-  base; it now uses `--ink-2`.
-- **16 of 23 apps have no `<main>` landmark**, and 15 have content sitting
-  outside any landmark at all. The base ships a skip link that targets `#main`,
-  so this is both a landmark fix and a keyboard fix.
-- **Three apps put `role="tablist"` on `.seg` with plain `<button>` children** —
-  a critical violation, because a tablist whose children are not tabs actively
-  lies to a screen reader. The design system now documents both correct
-  options.
+## The shared runtime
 
-### A print bug worth noting
-Most browsers print with "background graphics" **off** by default, which drops
-every fill but keeps the text colour — so a primary button came out as
-near-white text on white paper. The base now restates buttons, chips and the
-trust badge as ink-on-white with a border, so they survive either setting.
+`design/ui.js` → `sws-ui.js` in every app:
 
-## Accessibility: 0 violations
+- `SWS.undo(msg, restoreFn)` — an Undo button inside the toast. Undo rather
+  than a confirm dialog: a confirm taxes the 99 deliberate taps to catch the
+  one mistake, and at 3am is dismissed without reading.
+- `SWS.saved()` — because saving is fire-and-forget across the portfolio; the
+  apps only speak when it **fails**.
 
-axe-core, all 23 apps, light and dark, in a real browser:
+The toast's dismiss clock stops while the pointer or focus is inside it. An
+undo that vanishes is worse than no undo.
 
-| | violation instances | serious or critical |
-|---|---|---|
-| Before | 72 | 10 |
-| After | **0** | **0** |
+## Verification
 
-What that took, beyond the palette work:
+| Command | What it proves |
+|---|---|
+| `npm test` | every app's suite — 25 passing, 0 failing, 5 emulator-only skips |
+| `npm run design:check` | 1542/1542 contrast checks, plus the accent-token guard |
+| `npm run a11y` | axe over 23 apps × light/dark, **including the comfort panel open** |
+| `npm run prefs` | drives all 23 comfort panels in a real browser |
+| `node design/stress.mjs` | the hostile battery, all 23 apps |
+| `npm run synth` | regenerates the portfolio synthesis from the findings |
 
-- `<main id="main">` added to the 14 apps that had none — which also gave the
-  base's skip link something to point at. `design/add-main.mjs` did this by
-  counting div depth from the `.wrap` open, not by regex.
-- Bill Splitter and Sitter Sheet had `role="tablist"` on a two-button toggle
-  group with plain `<button>` children. Both are now `role="group"` with
-  `aria-pressed` kept in step with `.active` through a shared `setPressed()`
-  helper, so the look and the announced state cannot drift apart.
-- Bill Splitter's view tabs filled with `--accent` while taking their label
-  colour from `--accent-ink`, which is contrast-solved against `--accent-fill`.
-  That mismatch was the portfolio's last contrast failure.
-- The colophon moved from `--ink-3` to `--ink-2`, and hints from 13px to 15px.
+### Why axe alone was not enough
 
-## Where each app got to
+axe reports **zero violations** across all 23 apps and the contrast build
+passes 1542/1542. Both are true. Both missed most of the real defects, for the
+same reason: **they scan the page as it loads.** Nearly every genuine failure
+lives in a state that does not exist yet — `.active`, `.sel`, `.winner`, a list
+with 200 rows, a canvas repainted after a preference change, a PDF not yet
+generated.
 
-Every app got the new palette, type scale, spacing, fonts, icons, chrome and
-landmark work. Four went further, through a per-app pass driven by their audit
-and research:
+`design/stress.mjs` exists for that. It drives each app through the same
+battery — layout at 320/414/1280 and at largest text and roomy spacing, hostile
+text and injection, numeric edges, rapid clicking, 200 bulk adds, reload
+persistence, deliberately corrupt localStorage, keyboard reachability, **axe
+after interacting**, and print — so results are comparable across the
+portfolio. `design/harness.mjs` is the rig underneath it.
+
+## Research and review
+
+**23/23 apps researched** — 287 sourced competitor complaints, written up in
+`findings/COMPETITIVE-BRIEF.md`.
+
+**14/23 apps reviewed** so far, each with a persona focus group and a real
+browser stress run: **217 fixes, 80 of them blockers**. Remaining reviews are
+running.
+
+## Done, per app
 
 | App | State |
 |---|---|
-| Baby Log | full pass — trust badge, teaching empty states, one-thumb targets, undo on the destructive import, contrast-solved feed/sleep/diaper fills |
-| Caregiver Log | full pass — radiogroup semantics, draft persistence, save confirmation, empty states |
-| Pill Schedule | full pass — 11 defects fixed, including checkboxes that were `display:none` (keyboard-unreachable), state carried by colour alone, a `<label>` with no control, and one-tap delete with no undo |
-| Grocery List | partial — landmark, skip link and undo landed before the pass was stopped |
+| Wheel Picker | full pass — reduced motion honoured (4,273ms → 742ms), focus kept on spin, elimination announces the last person, caps disclosed, wedge contrast 1.04:1 → 2.53:1, spin history, QR overflow explained |
+| Seating Chart | full pass — keyboard seating, floor plan no longer clips past table 12, 1,000-guest cap disclosed, tab bar reachable, non-Latin names print correctly, all five confirms replaced with undo |
+| Baby Log · Caregiver Log · Pill Schedule | earlier full pass; now re-reviewed |
+| The other 19 | base-layer quality; implementation in flight |
 
-The other 19 sit at base-layer quality: new palette, type, spacing, fonts,
-icons, landmarks, zero a11y violations — but their own CSS still carries
-hardcoded sizes and legacy aliases.
+## Sweeps done portfolio-wide
+
+- **`--accent-ink` painted onto `--accent`** in 7 apps. Measured 3.64–4.04:1 in
+  light mode on five of them; all clear 5.2:1 on `--accent-fill`. axe reported
+  zero violations on every one, because each is an `.active`/`.sel`/`.winner`
+  state that does not exist until the user interacts.
+  `npm run design:check` now fails if it returns.
 
 ## Still to do
 
-1. **Finish the per-app pass for the remaining 19.** This is the biggest
-   remaining comfort win. Each app's own rules still use hardcoded sizes
-   (`.92rem`, `12.8px`) and legacy token aliases instead of the scales.
+1. **Finish the 9 outstanding reviews**, then implement them.
+2. **Print.** The largest single cluster — 14 apps, 62 fixes. The base ships
+   real print rules and survives "background graphics off", but each app's own
+   print layout still wants a proof: literally print one and look at it.
+3. **Silent caps**, the second largest cluster. Every limit must say its own
+   name at the moment it bites.
+4. **The privacy promise as an object.** Only 2 of 23 apps show it as a badge;
+   the rest bury it in grey footer copy, which the research says plainly that
+   nobody believes. Being folded into the implementation pass, with copy true
+   and specific to each app.
+5. **Bracket Maker's gold** still reads more olive than trophy.
 
-   The workflow that does this is saved and can be resumed:
-   `design/../.claude/.../workflows/scripts/sws-app-layer-2-wf_a840a3d4-146.js`
-   — re-run it with the `resumeFromRunId` shown in that file's header and the
-   completed apps return from cache. Budget roughly 40 minutes per app on this
-   two-core box; it is worth running against a bigger machine.
+## Note on editing
 
-2. **Competitor research for the last 8 apps.** 15 of 23 are done and written up
-   in `findings/COMPETITIVE-BRIEF.md` (179 complaints). Outstanding: Wedding
-   Timeline, Image Compressor, Signature Maker, QR Maker, Moving Boxes, Packing
-   List, Home Inventory, Bill Splitter.
+Never hand-edit anything between the `SWS STUDIO BASE` sentinels in an app's
+`index.html` — it is generated, and `apply.mjs` will overwrite it. Edit
+`design/studio.css` or `design/skins.mjs` and re-run `npm run design:apply`.
 
-3. **Print review.** The base now ships real print rules and survives
-   "background graphics off", but each app's own print layout still wants a
-   proof — literally print one and look at it.
-
-4. **Two skins want a second look** now they can be seen in the real app rather
-   than the preview: Bracket Maker's gold reads more olive than trophy, and
-   Specials Planner's app layer hardcodes a light `header` background that stays
-   light in dark mode.
-
-5. **Nothing is committed.** The whole overhaul is one working-tree diff on
-   `main`. `git diff` shows everything; `git checkout apps/` reverts the apps
-   and leaves `design/` intact.
-
-## Known findings worth acting on
-
-From the completed research and audits:
-
-- **Focus indicators failed WCAG 1.4.11 in both themes across the portfolio.**
-  Fixed by construction in the new system.
-- **Baby Log's active sleep button was white-on-#60a5fa in dark mode — 2.54:1**,
-  unreadable in exactly the condition the app exists for. The skin now emits
-  contrast-solved ink for every app-specific fill.
-- **Destructive actions have no undo.** Baby Log deletes a timeline entry on one
-  tap with no confirm; Import silently replaces the entire log. This pattern
-  repeats across apps and is the single most valuable UX fix available.
-- **Nobody is ever told their work is saved.** Save is fire-and-forget and only
-  speaks on failure.
-- **Competitors' free tiers are sales funnels** — greyed-out locked features,
-  promo popups inside the logging list, features moved behind a paywall after
-  launch. Our promise is the differentiator, and research says users do not
-  believe it as grey body copy; it has to look like a stamp.
-
-## Commands
-
-```bash
-npm run design:apply     # rebuild tokens and splice into all 23 apps
-npm run design:check     # contrast audit, non-zero exit on failure
-npm run design:preview   # all 23 skins, screenshotted, both themes
-npm run shots -- after   # screenshot the real apps
-npm test                 # every app's test suite
-node design/icons.mjs    # re-hue icons and regenerate PNGs
-node design/hub.mjs      # regenerate apps/index.html
-```
-
-## Note on version control
-
-Nothing has been committed. The whole overhaul is one reviewable working-tree
-diff on `main`, which seemed the right call for changes made while you were
-asleep — `git diff` shows everything, and `git checkout apps/` reverts the
-app changes while leaving `design/` in place.
+Do not run `apply.mjs` while implementation agents are editing apps: it
+rewrites all 23 `index.html` files and will collide with them.
