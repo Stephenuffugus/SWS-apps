@@ -1259,29 +1259,219 @@ body{
 /* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
+
+/* The event name, rendered where the organiser can see it — it used to be
+   captured, stored, shared and shown nowhere. */
+#eventTitle{
+  font-family:inherit;
+  font-size:var(--t-xl);
+  font-weight:700;
+  letter-spacing:0;
+  text-transform:none;
+  color:var(--ink);
+  text-align:center;
+  margin:0 0 var(--s3);
+  overflow-wrap:anywhere;
+}
 #champ{
-  text-align:center; font-size:1.35rem; font-weight:800; margin:6px 0 10px; min-height:1.8rem;
+  text-align:center; font-size:var(--t-2xl); font-weight:800;
+  margin:0 0 var(--s4); min-height:calc(var(--t-2xl) * 1.3);
   color:var(--win); overflow-wrap:anywhere;
 }
-.bracket{display:flex; gap:18px; overflow-x:auto; padding:4px 2px 12px; -webkit-overflow-scrolling:touch}
-.round{display:flex; flex-direction:column; justify-content:space-around; gap:10px; min-width:160px}
-.roundhead{font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); text-align:center}
-.match{border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--bg)}
-.match button{
-  display:block; width:100%; text-align:left; padding:9px 11px; border:0; background:none;
-  color:var(--ink); font-size:.9rem; cursor:pointer; overflow-wrap:anywhere;
-}
-.match button + button{border-top:1px solid var(--line)}
-.match button.winner{background:var(--accent-fill); color:var(--accent-ink); font-weight:700}
-.match button.tbd{color:var(--muted); font-style:italic; cursor:default}
-.match button.bye{color:var(--muted); cursor:default}
 
+/* ── The bracket ───────────────────────────────────────────────────────── */
+/* Brackets are wider than a phone. The scroller therefore has to SAY so:
+   an edge fade, scroll-snap on the columns and a line of text under it. */
+.bracketwrap{position:relative}
+.bracketwrap::before,
+.bracketwrap::after{
+  content:''; position:absolute; top:0; bottom:var(--s4); width:var(--s7);
+  pointer-events:none; opacity:0; transition:opacity var(--dur-1) var(--ease);
+}
+.bracketwrap::before{left:0;  background:linear-gradient(to right, var(--surface), transparent)}
+.bracketwrap::after{ right:0; background:linear-gradient(to left,  var(--surface), transparent)}
+.bracketwrap.less::before{opacity:1}
+.bracketwrap.more::after{opacity:1}
+
+.bracket{
+  overflow-x:auto; overflow-y:hidden;
+  padding:var(--s1) var(--s1) var(--s4);
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;
+  scroll-padding-left:var(--s1);
+  scrollbar-width:thin;
+}
+.bracketinner{
+  position:relative;
+  display:flex; gap:var(--s6);
+  width:max-content; min-width:100%;
+}
+/* Connectors. Drawn from the real box positions after layout, so they stay
+   right at any text size — the diagram's whole job is showing which two
+   matches feed the next one. */
+.bracketinner > svg.links{position:absolute; left:0; top:0; pointer-events:none}
+.bracketinner > svg.links path{fill:none; stroke:var(--line-2); stroke-width:2.5; stroke-linejoin:round}
+
+.round{
+  display:flex; flex-direction:column; gap:var(--s3);
+  min-width:10rem;                 /* rem, so Largest text widens the column */
+  scroll-snap-align:start;
+}
+.roundhead{
+  flex:none;
+  font-family:inherit;
+  font-size:var(--t-micro); text-transform:uppercase; letter-spacing:.06em;
+  color:var(--ink-2); text-align:center; margin:0;
+}
+/* The label is pinned to the top of its own column; only the matches are
+   distributed. It used to be just another flex child under space-around,
+   which put the word FINAL 1,252px above the final match. */
+.matches{
+  flex:1 1 auto;
+  display:flex; flex-direction:column; justify-content:space-around;
+  gap:var(--s3);
+}
+
+.match{
+  border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  background:var(--surface-2);
+}
+.match .slot{
+  display:flex; align-items:center; gap:var(--s2);
+  width:100%; min-height:var(--tap);
+  text-align:left; padding:var(--s2) var(--s3);
+  border:0; background:none;
+  color:var(--ink); font:inherit; font-size:var(--t-base);
+  line-height:var(--lh-snug);
+  overflow-wrap:anywhere;
+  border-radius:calc(var(--r-sm) - 1px);
+}
+button.slot{cursor:pointer}
+.match .slot + .slot{border-top:1px solid var(--line-2); border-radius:0 0 calc(var(--r-sm) - 1px) calc(var(--r-sm) - 1px)}
+.match .slot:first-child{border-radius:calc(var(--r-sm) - 1px) calc(var(--r-sm) - 1px) 0 0}
+/* overflow:hidden used to live on .match and clipped BOTH halves of the
+   shared focus ring — the outline sits at offset 2px and the halo is a 4px
+   box-shadow, on a button inset 1px from the edge. Rounding the children
+   individually gets the same shape and lets the ring out. */
+.match .slot:focus-visible{position:relative; z-index:2}
+
+.match .seed{
+  flex:none; min-width:2ch; text-align:right;
+  font-size:var(--t-xs); font-variant-numeric:tabular-nums;
+  color:var(--ink-2);
+}
+.match .nm{flex:1 1 auto; min-width:0}
+.match .slot.winner{background:var(--accent-fill); color:var(--accent-ink); font-weight:700}
+.match .slot.winner .seed{color:var(--accent-ink)}
+/* Bye and "winner of earlier game" were `disabled` buttons, so the base
+   layer's button:disabled{opacity:.5} put them at 2.10:1 and no contrast
+   preference could reach them. They are text now, at a real ink token. */
+.match span.slot{color:var(--ink-2); cursor:default}
+.match span.slot.tbd{font-style:italic}
+
+.scrollcue{margin-top:var(--s2)}
+#entrantCount{font-size:var(--t-sm); color:var(--ink-2); margin-top:var(--s2)}
+#entrantCount .over{color:var(--warn); font-weight:600}
+#capWarn{margin-top:var(--s3)}
+#visitNotice{margin-bottom:var(--s4)}
+#visitNotice p{margin:0 0 var(--s3)}
+#visitNotice .row{gap:var(--s2)}
+#visitNotice .row > *{flex:0 0 auto}
+.savedrow{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s2)}
+
+/* ── QR dialog ─────────────────────────────────────────────────────────── */
+/* Was an inline-styled white box with a color:#111 heading — 1.01:1 against
+   the UA dialog background in dark mode. */
+.qrdlg{
+  border:1px solid var(--line);
+  border-radius:var(--r-card);
+  padding:var(--s5);
+  max-width:min(26rem, 92vw);
+  background:var(--surface);
+  color:var(--ink);
+  box-shadow:var(--shadow-2);
+}
+.qrdlg::backdrop{background:rgba(0,0,0,.45)}
+.qrdlg h2{
+  font-size:var(--t-lg); text-transform:none; letter-spacing:0;
+  color:var(--ink); margin:0 0 var(--s4); text-align:center;
+}
+#qrCanvas{
+  display:block; margin:0 auto;
+  max-width:100%; height:auto;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+}
+.qrdlg .warn{margin-top:var(--s4); text-align:left}
+.qrurl{
+  margin:var(--s2) 0 var(--s4);
+  padding:var(--s3);
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  font-size:var(--t-sm);
+  line-height:var(--lh-snug);
+  overflow-wrap:anywhere;
+  max-height:7.5em; overflow-y:auto;
+  text-align:left;
+  user-select:all;
+}
+.qrdlg .row{gap:var(--s2)}
+
+/* ── Paper ─────────────────────────────────────────────────────────────── */
 @media print{
+  /* THE fix that matters here: the base print block redefines the palette on
+     a bare `:root`, which the dark-mode selectors outrank — so printing from
+     a phone in dark mode produced eliminated names at 1.20:1 on white paper.
+     Restate the tokens at the same specificity as the dark palette. */
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]){
+    --canvas:#fff; --canvas-2:#fff; --surface:#fff; --surface-2:#fff; --field:#fff;
+    --ink:#000; --ink-2:#333; --ink-3:#555;
+    --line:#bbb; --line-2:#777;
+    --muted:#333;
+    --win:#000;
+    --accent:#000; --accent-fill:#fff; --accent-ink:#000;
+    --accent-deep:#000; --accent-soft:#fff;
+    --shadow-0:none; --shadow-1:none; --shadow-2:none;
+  }
   header.app, footer.colophon, #toast, .noprint{display:none !important}
-  body{background:#fff; color:#000}
-  section.card{border:0; padding:4px 0}
-  .bracket{overflow:visible}
-  .match button.winner{background:#eee; color:#000}
+  body{background:#fff !important; color:#000}
+  section.card{border:0; padding:4px 0; box-shadow:none}
+
+  .printhead{margin-bottom:8pt; text-align:left}
+  .printhead h2{
+    font-size:16pt; text-transform:none; letter-spacing:0; color:#000; margin:0;
+  }
+  .printhead p{font-size:9pt; color:#333; margin:2pt 0 0}
+
+  #champ{color:#000}
+  .bracketwrap::before,.bracketwrap::after{display:none}
+  .bracket{
+    overflow:visible;
+    height:var(--bm-print-h, auto);
+    padding:0;
+  }
+  .bracketinner{
+    transform:scale(var(--bm-print-scale, 1));
+    transform-origin:top left;
+  }
+  .round,.match{break-inside:avoid; page-break-inside:avoid}
+  .roundhead{color:#000}
+  /* Background graphics are OFF by default in every browser's print dialog,
+     so the winner cannot be marked by a fill. Mark it structurally. */
+  .match .slot.winner{
+    background:transparent !important;
+    color:#000 !important;
+    font-weight:700;
+    box-shadow:inset 3px 0 0 #000;
+  }
+  .match .slot.winner .nm::after{content:' \2713'}
+  .match .slot.winner .seed{color:#000}
+  .match span.slot{color:#333}
 }
 </style>
 <script src="sws-prefs.js"></script>

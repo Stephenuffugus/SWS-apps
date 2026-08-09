@@ -21,10 +21,26 @@ export function seedOrder(size) {
   return order;
 }
 
+export const MAX_ENTRANTS = 32;
+export const MAX_NAME = 40;
+
+/* Parse, but also report what the caps threw away. The app has to be able to
+   SAY "you pasted 40, I kept 32" — a cap discovered after the work is done is
+   the single angriest thing in this category's reviews. */
+export function entrantInfo(text) {
+  if (typeof text !== 'string') return { names: [], total: 0, dropped: 0, truncated: 0 };
+  const raw = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const kept = raw.slice(0, MAX_ENTRANTS);
+  return {
+    names: kept.map(s => s.slice(0, MAX_NAME)),
+    total: raw.length,
+    dropped: Math.max(0, raw.length - MAX_ENTRANTS),
+    truncated: kept.filter(s => s.length > MAX_NAME).length,
+  };
+}
+
 export function parseEntrants(text) {
-  if (typeof text !== 'string') return [];
-  return text.split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(0, 32)
-    .map(s => s.slice(0, 40));
+  return entrantInfo(text).names;
 }
 
 export function roundCount(n) {
@@ -88,6 +104,107 @@ export function setPick(state, r, m, entrant) {
 export function champion(state) {
   const rounds = roundCount(state.names.length);
   return winnerOf(state, rounds - 1, 0);
+}
+
+/* ── Editing the entrant list without deleting the tournament ─────────────
+   The old behaviour reset picks:{} whenever the parsed list differed by one
+   character, so fixing a typo wiped every result. Instead: work out who is
+   who across the edit, express the recorded results as (winner, loser) pairs
+   of PEOPLE rather than bracket coordinates, then replay those pairs onto the
+   new bracket. A rename in place keeps everything; a reorder keeps every
+   result where the same two people still meet; only a genuinely different
+   pairing is dropped, and the caller offers an undo for that. */
+
+/** oldIndex → newIndex. Same name in the same slot first, then same name
+    anywhere, then leftovers paired in order — which is what a rename is. */
+export function mapEntrants(oldNames, newNames) {
+  const map = new Array(oldNames.length).fill(-1);
+  const takenNew = new Array(newNames.length).fill(false);
+  for (let i = 0; i < oldNames.length; i++) {
+    if (i < newNames.length && newNames[i] === oldNames[i]) { map[i] = i; takenNew[i] = true; }
+  }
+  for (let i = 0; i < oldNames.length; i++) {
+    if (map[i] !== -1) continue;
+    for (let j = 0; j < newNames.length; j++) {
+      if (!takenNew[j] && newNames[j] === oldNames[i]) { map[i] = j; takenNew[j] = true; break; }
+    }
+  }
+  const restOld = [];
+  for (let i = 0; i < oldNames.length; i++) if (map[i] === -1) restOld.push(i);
+  const restNew = [];
+  for (let j = 0; j < newNames.length; j++) if (!takenNew[j]) restNew.push(j);
+  for (let k = 0; k < Math.min(restOld.length, restNew.length); k++) {
+    map[restOld[k]] = restNew[k];
+    takenNew[restNew[k]] = true;
+  }
+  return map;
+}
+
+/** Every decided head-to-head in `state`, as [winnerIndex, loserIndex]. */
+export function resultPairs(state) {
+  const out = [];
+  const n = state.names.length;
+  if (n < 2) return out;
+  const rounds = roundCount(n);
+  const size = nextPow2(Math.max(n, 2));
+  for (let r = 0; r < rounds; r++) {
+    for (let m = 0; m < size / Math.pow(2, r + 1); m++) {
+      const p = state.picks[r + '-' + m];
+      if (p === undefined) continue;
+      const a = contender(state, r, m, 0);
+      const b = contender(state, r, m, 1);
+      if (a === null || b === null) continue;
+      if (p !== a && p !== b) continue;
+      out.push([p, p === a ? b : a]);
+    }
+  }
+  return out;
+}
+
+/** Carry results across an edit of the entrant list.
+    Returns { state, kept, lost }. */
+export function carryPicks(oldState, newNames) {
+  const map = mapEntrants(oldState.names, newNames);
+  const had = resultPairs(oldState);
+  const pairs = [];
+  for (const [w, l] of had) {
+    if (map[w] >= 0 && map[l] >= 0) pairs.push([map[w], map[l]]);
+  }
+  let next = { names: newNames, picks: {}, title: oldState.title || '' };
+  if (newNames.length >= 2 && pairs.length) {
+    const rounds = roundCount(newNames.length);
+    const size = nextPow2(Math.max(newNames.length, 2));
+    for (let pass = 0; pass <= rounds; pass++) {
+      let changed = false;
+      for (let r = 0; r < rounds; r++) {
+        for (let m = 0; m < size / Math.pow(2, r + 1); m++) {
+          if (next.picks[r + '-' + m] !== undefined) continue;
+          const a = contender(next, r, m, 0);
+          const b = contender(next, r, m, 1);
+          if (a === null || b === null) continue;
+          for (const [w, l] of pairs) {
+            if ((w === a && l === b) || (w === b && l === a)) {
+              next = setPick(next, r, m, w);
+              changed = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!changed) break;
+    }
+  }
+  const kept = Object.keys(next.picks).length;
+  return { state: next, kept, lost: Math.max(0, had.length - kept) };
+}
+
+/** Two brackets are "the same tournament" when the line-up and the name match;
+    results are allowed to differ (that is what a stale shared link is). */
+export function sameBracket(a, b) {
+  if (!a || !b) return false;
+  return (a.title || '') === (b.title || '')
+    && a.names.length === b.names.length
+    && a.names.every((x, i) => x === b.names[i]);
 }
 
 /* URL-hash codec. */
