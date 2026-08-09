@@ -107,7 +107,7 @@ console.log('\n— copy bar —');
   box.dispatchEvent(new w.Event('focus'));
   ok(w.document.getElementById('bar').classList.contains('show'), 'bar shows on focus');
   ok(/Fill every B-day/.test(w.document.getElementById('bar-letter').textContent), 'letter button labeled for the day (Tue = B)');
-  ok(/this year · period 1/.test(w.document.getElementById('bar-letter').textContent), 'letter button states its real scope');
+  ok(/this year \(period 1\)/.test(w.document.getElementById('bar-letter').textContent), 'letter button states its real scope');
   w.document.getElementById('bar-day').click();
   ok(textAt(w, '2026-08-25', 6) === 'Clay pinch pots', 'Fill whole day copies to period 6');
   box.dispatchEvent(new w.Event('focus'));

@@ -4,6 +4,8 @@
 > **Renamed 2026-08-08**: the product is now **Specials Planner** (Stephen's call — the name has to say what it is). "Palette" below is the same app. Internal identifiers kept for backup compatibility: localStorage key `palette2`, backup marker `app:'palette'`.
 > **School-safety round 2026-08-08**: WCAG 2.1 AA pass (contrast-corrected chips/primary buttons/links, aria names on grid boxes, modal focus trap + Escape, labeled setup fields, tab keyboard nav; second review round added a dedicated #live region instead of a live main view, refocus() after every re-render, a Ctrl+Enter keyboard path to the copy bar, and focus-return after saving a special day — suite is now 52 assertions), `privacy.html` added (linked from both footnotes, in the SW shell), CSP + security headers scoped to this app in root `firebase.json`. If you wire Drive later, smoke-test against the CSP — allowed origins are accounts.google.com, www.googleapis.com, oauth2.googleapis.com.
 
+> **Design-review round 2026-08-09 (READ THIS FIRST — the storage format changed):** lessons are no longer keyed to the calendar date. They are keyed to **cycle position** — `cells["c<n>|<period>"]`, where `n` is the nth teaching day of the year — so cancelling a day now slides the lessons forward with the rotation letters instead of leaving every plan attached to the wrong letter for the rest of the year. No-class days keep their own boxes under `cells["d<ISO>|<period>"]`. `migrate()` rewrites old date-keyed backups on import, and `cellText()` still falls back to a date key so nothing a migration cannot place is ever lost. Same round: dark mode fixed (the grid was `#fff` under near-white ink), every grid size moved onto `--t-*` tokens so the comfort panel reaches it, `contenteditable="plaintext-only"` so typed line breaks survive, the copy bar became an in-flow toolbar with real scope and `SWS.undo`, a verified save with a `pagehide` flush and a loud failure warning, a stacked day-card layout under 52rem, a sticky Day column above it, one-week-on-one-page print, and a `.trust` stamp. Suite is now **79 assertions**.
+
 **To the Claude Code instance picking this up:** the app is **built, tested, and working**. Your job is verification, wiring two credentials, and deployment into the Lucid Winds apps collection — **not a rebuild**. If you find yourself restructuring `index.html`, stop and re-read this file.
 
 ## What this is
@@ -16,7 +18,7 @@ A lesson planner for specials teachers (art, music, PE, library). They plan one 
 |---|---|
 | `index.html` | the entire app — inline CSS + JS, no build step, no framework |
 | `manifest.webmanifest`, `sw.js`, `icon.svg`, `icon-192.png`, `icon-512.png` | PWA shell |
-| `palette.test.mjs` | jsdom regression harness — **40 assertions, currently green** |
+| `test/specials-planner.test.mjs` | jsdom regression harness — **79 assertions, currently green** |
 | `package.json` | dev-only: jsdom + `npm test` |
 | `README.md` | player-facing + deploy steps |
 
@@ -27,7 +29,7 @@ python3 -m http.server 8000       # service worker needs http/localhost, not fil
 npm install && npm test           # runs palette.test.mjs against index.html
 ```
 
-**Run `npm test` after ANY change. All 40 must be green before you commit.** The harness boots the real app in jsdom and covers: welcome flow, year generation, rotation math, special-day letter skipping, cell/notes persistence, the copy bar, backup round-trip with old/partial files, CSV shape and quoting, XSS inertness, setup reflow, and reset.
+**Run `npm test` after ANY change. All 79 must be green before you commit.** The harness boots the real app in jsdom and covers: welcome flow, year generation, rotation math, special-day letter skipping, cell/notes persistence, the copy bar, backup round-trip with old/partial files, CSV shape and quoting, XSS inertness, setup reflow, and reset.
 
 ## Architecture — do not break
 
@@ -37,13 +39,15 @@ npm install && npm test           # runs palette.test.mjs against index.html
   S = {
     config: { yearStart, yearEnd, workDays:[0-6], periods:1-10, lunchAfter:0-periods,
               letters:["A","B","C"], teacher:"", driveFileId:"" },
-    cells:  { "YYYY-MM-DD|<period>": "<text>" },
-    notes:  { "YYYY-MM-DD": "<text>" },
+    cells:  { "c<cyclePosition>|<period>": "<text>",   // a normal teaching day
+              "d<YYYY-MM-DD>|<period>": "<text>" },   // a no-class day's own boxes
+    notes:  { "YYYY-MM-DD": "<text>" },               // notes stay on the DATE
     special:{ "YYYY-MM-DD": "<banner label>" }   // no-class day; skips rotation letter
   }
   ```
 - **Schema changes must be additive.** `migrate()` fills missing keys with defaults and clamps ranges — old backups must always import. There's a test for this.
-- **Rotation rule (the heart of the app):** letters cycle continuously over school days across the whole year; a `special` day does not consume a letter, so the cycle stays true after breaks. Implemented in `buildYear()`. Tests pin this behavior.
+- **Rotation rule (the heart of the app):** letters cycle continuously over school days across the whole year; a `special` day does not consume a letter, so the cycle stays true after breaks. Implemented in `computeYear()`. Tests pin this behavior.
+- **Cycle-position storage (the other half of that rule):** a lesson belongs to a position in the cycle, not to a date. `computeYear()` stamps each teaching day with `idx`, `cellKey()` turns that into `c<idx>|<period>`, and the calendar is a rendered projection. This is what makes the snow-day bump free: remove a day from the sequence and every later day inherits the plan that used to sit one place ahead. Do not "simplify" this back to a date key — that bug shipped once and it silently desynchronised a whole year.
 - **User text is inert.** Cell/notes content is written via `.textContent`, never innerHTML. Labels interpolated into HTML go through `esc()`. Tests pin this too.
 - **Key functions:** `buildYear` / `markStale` / `buildYearIfStale`, `render` → `renderWelcome | renderWeek | renderSetup`, `onBoxInput` + `queueSave` (400 ms debounce), `plainPaste`, copy bar (`onBoxFocus / doCopy`), `openSpecial / setSpecial`, `exportBackup / applyImportedText`, `exportCSV / csvField`, `mountDrive / withDriveToken / driveSave / driveLoad`.
 - **Config seams**, top of the `<script>`: `CLIENT_ID` (Google OAuth) and `TIP_URL` (Stripe Payment Link). Both empty = feature hidden. This is the only wiring the code needs.
