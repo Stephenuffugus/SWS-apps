@@ -245,6 +245,8 @@ function removeEvent(id) {
   const before = snapshot();
   state.events = state.events.filter(x => x.id !== id);
   if (editingId === id) editingId = null;
+  $('dupWarn').textContent = '';
+  $('dupWarn').classList.add('hidden');
   commit();
   say('Removed ' + ev.what + '. ' + state.events.length + ' moments left.');
   undoToast('Removed “' + ev.what + '”', () => restore(before));
@@ -285,7 +287,7 @@ function applyShift(dir) {
   commit();
   let msg = 'Moved ' + moving.length + ' moment' + (moving.length === 1 ? '' : 's')
     + ' ' + Math.abs(by) + ' min ' + (dir > 0 ? 'later' : 'earlier');
-  if (clamped) msg += ' — ' + clamped + ' hit the end of the day and stopped';
+  if (clamped) msg += ' (' + clamped + ' stopped at 11:59 PM)';
   say(msg + '.');
   undoToast(msg, () => restore(before));
 }
@@ -337,9 +339,9 @@ function buildTemplate(ceremony) {
   }));
   editingId = null;
   commit();
-  const msg = 'Laid out ' + state.events.length + ' moments around a ' + fmtTime(ceremony) + ' ceremony';
-  say(msg + '. Change anything that is wrong — tap Edit on any row.');
-  undoToast(msg + ' — change anything that is wrong', () => restore(before));
+  const msg = state.events.length + ' moments laid out from a ' + fmtTime(ceremony) + ' ceremony';
+  say(msg + '. Tap any moment to change it.');
+  undoToast(msg, () => restore(before));
 }
 
 /* ---------- the printed sheet ---------- */
@@ -465,15 +467,14 @@ async function copyLink() {
     await navigator.clipboard.writeText(url);
     toast('Link copied — send it to the whole wedding party');
   } catch (e) {
-    openShare('This browser wouldn’t let us reach the clipboard — the link is here to select and copy by hand.');
+    openShare('Clipboard blocked here — the link is below, ready to copy by hand.');
   }
 }
 
 /* ---------- backup ---------- */
 function backupName() {
-  const slug = (state.title || 'wedding-timeline').toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '').slice(0, 40) || 'wedding-timeline';
-  return slug + '-timeline.json';
+  const slug = state.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  return (slug ? slug + '-timeline' : 'wedding-timeline') + '.json';
 }
 function saveBackup() {
   if (state.events.length === 0) { toast('Add the day’s moments first', { assertive: true }); return; }
@@ -485,7 +486,7 @@ function saveBackup() {
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(href), 8000);
-    toast('Backup saved to your downloads — it never left this device');
+    toast('Backup saved to your downloads');
   } catch (e) { toast('Could not write the backup file', { assertive: true }); }
 }
 async function openBackup(file) {
@@ -523,11 +524,14 @@ function finishAdd(minutes) {
   const sorted = sortEvents(state.events);
   const pos = sorted.findIndex(x => x.id === ev.id) + 1;
   const when = minutes === null ? 'with no time yet' : 'at ' + fmtTime(minutes);
-  say('Added ' + ev.what + ' ' + when + ' — ' + pos + ' of ' + sorted.length + '.');
   const note = $('dupWarn');
+  const dupMsg = dup
+    ? '“' + ev.what + '” is now on the day twice'
+      + (minutes === null ? '' : ' at ' + fmtTime(minutes)) + '. Remove one if that was a slip.'
+    : '';
+  say('Added ' + ev.what + ' ' + when + ' — ' + pos + ' of ' + sorted.length + '. ' + dupMsg);
   if (dup) {
-    note.textContent = '“' + ev.what + '” is now on the day twice'
-      + (minutes === null ? '' : ' at ' + fmtTime(minutes)) + '. Remove one if that was a slip.';
+    note.textContent = dupMsg;
     note.classList.remove('hidden');
   } else {
     note.textContent = '';
@@ -599,7 +603,7 @@ function wire() {
       toast('Link copied — send it to the whole wedding party');
     } catch (e) {
       box.focus(); box.select();
-      toast('Clipboard is blocked here — the link is selected, copy it by hand', { assertive: true });
+      toast('Clipboard blocked — the link is selected, copy it by hand', { assertive: true });
     }
   });
 
@@ -632,9 +636,9 @@ function init() {
       // only now is the payload spent; declining used to strip it anyway and
       // left the cautious answer with no link and no way back
       history.replaceState(null, '', location.pathname);
-      toast('Timeline loaded from the link — it is a snapshot, saved on this device');
+      toast('Timeline loaded from the link');
     } else {
-      toast('Kept your own timeline. The shared link is still in the address bar.', { ms: 6000 });
+      toast('Kept your own timeline — the link is still in the address bar.', { ms: 6000 });
     }
   } else if (shared) {
     history.replaceState(null, '', location.pathname);

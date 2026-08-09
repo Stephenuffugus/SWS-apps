@@ -1,6 +1,6 @@
 // Run: node test/helpers.test.mjs
 import assert from 'node:assert/strict';
-import { parseTime, fmtTime, sortEvents, encodeTimeline, decodeTimeline } from '../helpers.js';
+import { parseTime, readTime, fmtTime, sortEvents, encodeTimeline, decodeTimeline, normalizeState } from '../helpers.js';
 
 let passed = 0;
 function ok(name, fn) {
@@ -21,11 +21,61 @@ ok('parseTime handles the ways people write times', () => {
   assert.equal(parseTime('2:75'), null);
   assert.equal(parseTime('soonish'), null);
 });
+ok('a bare hour is reported as ambiguous, never silently read as 24-hour', () => {
+  // The defect this replaces: "7" for a 7pm reception was recorded as 7:00 AM.
+  for (const [s, am, pm] of [['7', 420, 1140], ['07', 420, 1140], ['4', 240, 960],
+                             ['730', 450, 1170], ['12:00', 0, 720], ['2:5', 125, 845]]) {
+    const r = readTime(s);
+    assert.equal(r.ambiguous, true, s + ' should ask');
+    assert.equal(r.am, am);
+    assert.equal(r.pm, pm);
+    assert.equal(r.minutes, undefined);
+  }
+  // Unambiguous readings stay unambiguous.
+  for (const [s, mins] of [['19', 1140], ['0:00', 0], ['14:30', 870], ['0730', 450],
+                           ['2pm', 840], ['9:05am', 545]]) {
+    assert.deepEqual(readTime(s), { minutes: mins }, s);
+  }
+});
+ok('the parser accepts the spellings people actually type', () => {
+  const same = (mins, ...spellings) => {
+    for (const s of spellings) assert.equal(parseTime(s), mins, JSON.stringify(s));
+  };
+  same(870, '2:30 pm', '2.30pm', '2 30 pm', '2-30pm', '2:30p.m.', '14:30', '1430', '２:30pm');
+  same(720, 'noon', 'midday', '12 noon');
+  same(0, 'midnight');
+  for (const bad of ['2:60', '24:00', '13pm', 'sevenish', '', 'nope']) {
+    assert.equal(parseTime(bad), null, JSON.stringify(bad));
+  }
+});
+ok('a wrong-shaped stored record degrades instead of printing NaN', () => {
+  const s = normalizeState({
+    title: 7, date: null, rev: 'x',
+    events: [null, { minutes: 'abc', what: 'Cake' }, { minutes: -600, what: 'Toasts' },
+             { minutes: 99999, what: 'Exit' }, { minutes: 600, what: { a: 1 } },
+             { minutes: 600 }, { minutes: 600, what: 'Vows', who: 42 }],
+  });
+  assert.equal(s.title, '');
+  assert.equal(s.rev, 1);
+  assert.deepEqual(s.events.map(e => [e.minutes, e.what, e.who]),
+    [[null, 'Cake', ''], [null, 'Toasts', ''], [null, 'Exit', ''], [600, 'Vows', '']]);
+  assert.equal(s.events.every(e => typeof e.id === 'string' && e.id), true);
+  assert.equal(normalizeState({ events: { a: 1 } }).events.length, 0);
+  assert.equal(normalizeState(null).events.length, 0);
+  assert.equal(normalizeState({ events: Array.from({ length: 5000 }, () => ({ minutes: 0, what: 'x' })) }).events.length, 100);
+  // and nothing it produces can render as NaN on screen or on paper
+  for (const e of s.events) assert.equal(e.minutes === null || fmtTime(e.minutes) !== '—', true);
+});
+ok('sortEvents survives a null element', () => {
+  assert.deepEqual(sortEvents([null, { minutes: 60, what: 'b' }, undefined]).map(e => e.what), ['b']);
+  assert.deepEqual(sortEvents(null), []);
+});
 ok('fmtTime round-trips nicely', () => {
   assert.equal(fmtTime(0), '12:00 AM');
   assert.equal(fmtTime(14 * 60 + 30), '2:30 PM');
   assert.equal(fmtTime(12 * 60), '12:00 PM');
   assert.equal(fmtTime(23 * 60 + 59), '11:59 PM');
+  for (const junk of [NaN, Infinity, -600, 99999, undefined, '12']) assert.equal(fmtTime(junk), '—');
 });
 ok('sortEvents: time order, untimed last, stable', () => {
   const evs = [

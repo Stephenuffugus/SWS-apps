@@ -1286,6 +1286,17 @@ nav.tabs button.active{
   min-height:var(--tap); padding:0 var(--s3);
   font-size:var(--t-sm); cursor:pointer;
 }
+/* Row buttons are the destructive controls of this app — a ✎ and a ✕ beside
+   every item, expense and repayment. .btn.small is 36px in the base and does
+   not grow with the text setting; these have to clear --tap like everything
+   else that moves money. */
+ul.plain > li > .btn.small{min-height:var(--tap); min-width:var(--tap)}
+/* The segmented controls (Split evenly / By items, and the two settle-up
+   views) measure 38px from the base. Same floor applies. The base sets
+   white-space:nowrap, which at 320px + Largest + Roomy pushed "Fewest
+   payments (2)" 2px past the edge of the screen. */
+.seg button{min-height:var(--tap); white-space:normal; min-width:0}
+
 .chip .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px}
 .chip.ghost{background:transparent; border-style:dashed; color:var(--ink-2)}
 .chip.sel{background:var(--accent-fill); border-color:var(--accent-fill); color:var(--accent-ink)}
@@ -1384,6 +1395,10 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
   .paybtns,details.working > summary{display:none !important}
   body{background:#fff; color:#000; padding-bottom:0}
   section.card{border:0; padding:4px 0; margin-bottom:6pt}
+  /* The sheet leads with the answer. The expense list is the supporting
+     detail underneath it, not the first 600px of the page. */
+  #viewDinner,#viewTrip{display:flex; flex-direction:column}
+  #dinnerResults,#tripResults{order:-1}
   .printhead{border-bottom:1.5pt solid #000; margin-bottom:8pt; padding-bottom:4pt}
   .printhead h2{font-size:16pt; margin:0}
   .printhead p{font-size:9pt; color:#333; margin:2pt 0 0}
@@ -3314,10 +3329,15 @@ function readAmountField(input, noteId, what){
   if (!raw) { fieldNote(noteId, ''); return 0; }
   const v = parseAmount(raw);
   if (v === null) {
-    const looksNumeric = /^[\d.,\s$]+$/.test(raw);
-    fieldNote(noteId, looksNumeric
-      ? what + ' “' + raw + '” is either over the ' + LIMITS.amount.toLocaleString() +
-        ' limit or has more than one decimal point — counting it as 0 until it is fixed.'
+    /* Three different failures, three different sentences: too big, too many
+       separators, or not a number at all. */
+    const bare = raw.replace(/[$\s,]/g, '');
+    const overCap = /^\d+(\.\d*)?$/.test(bare) && parseFloat(bare) > LIMITS.amount;
+    const tooManyDots = (raw.match(/[.,]/g) || []).length > 1 && /^[\d.,\s$]+$/.test(raw);
+    fieldNote(noteId,
+      overCap ? what + ' “' + raw + '” is over the ' + LIMITS.amount.toLocaleString() +
+                ' this app can handle — counting it as 0 until it is smaller.'
+      : tooManyDots ? what + ' “' + raw + '” has more than one decimal point, so it could not be read — counting it as 0.'
       : 'Couldn’t read “' + raw + '” as an amount — counting ' + what.toLowerCase() +
         ' as 0. Digits and one decimal point, please.');
     return 0;
