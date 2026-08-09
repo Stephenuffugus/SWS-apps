@@ -535,9 +535,9 @@ function preparePrint() {
   const availH = (landscape ? PORTRAIT : 950)
     - 100 - $('eventTitle').offsetHeight - $('champ').offsetHeight;
   // Fit the height too where that still leaves the names readable — a bracket
-  // on one sheet is the whole point of taping it to a wall. Below 0.7 the
+  // on one sheet is the whole point of taping it to a wall. Below 0.65 the
   // names stop being readable across a room, so take the extra page instead.
-  const scale = Math.min(1, availW / w, Math.max(availH / h, 0.7));
+  const scale = Math.min(1, availW / w, Math.max(availH / h, 0.65));
   document.documentElement.style.setProperty('--bm-print-scale', String(Math.round(scale * 1e4) / 1e4));
 }
 
@@ -573,7 +573,7 @@ function showQr(url) {
     toast('Could not draw the QR — use the link in the box instead.', { assertive: true });
     $('qrDense').hidden = true;
   }
-  $('qrUrl').textContent = url;
+  $('qrUrl').value = url;
   const d = $('qrDlg');
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
 }
@@ -598,7 +598,7 @@ $('qrClose').addEventListener('click', () => {
   const d = $('qrDlg');
   try { d.close(); } catch (e) { d.removeAttribute('open'); }
 });
-$('qrCopy').addEventListener('click', () => copyLink($('qrUrl').textContent, 'Link copied — paste it into the group chat'));
+$('qrCopy').addEventListener('click', () => copyLink($('qrUrl').value, 'Link copied — paste it into the group chat'));
 $('qrBtn').addEventListener('click', () => {
   if (state.names.length < 2) { toast('Add the entrants first'); return; }
   save();

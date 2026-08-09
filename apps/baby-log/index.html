@@ -1311,14 +1311,27 @@ body{
   margin:0 0 var(--s2);
 }
 
-/* minmax(0,1fr), not 1fr: a plain 1fr track floors at its min-content width,
-   and at Largest text plus Roomy spacing on a 320px phone a 22.5px "Bottle"
-   plus padding exceeded a third of the screen — pushing the third tile in each
-   row physically off the right edge for the one user the comfort panel exists
-   for. The track may now shrink and the label wraps instead. */
+/* Largest text plus Roomy spacing on a 320px phone used to push the third tile
+   in each row — "Bottle" and "Both" — physically off the right edge, because a
+   plain 1fr track floors at its min-content width and a 22.5px label plus
+   padding exceeds a third of the screen. Two defences:
+     minmax(0,1fr)  the track may shrink below min-content, so nothing ever
+                    lands outside the viewport even where the query below is
+                    unsupported;
+     @container     and rather than merely not overflowing, the row drops to
+                    two tiles and then one, so the labels still read as whole
+                    words. The thresholds are in rem, which scales with the
+                    comfort setting exactly as the labels do. */
+.loggroup{container-type:inline-size}
 .bigbtns{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:var(--s2)}
 /* Was an inline style="grid-template-columns:1fr" on the sleep row. */
 .bigbtns.single{grid-template-columns:1fr}
+@container (max-width: 13rem){
+  .bigbtns{grid-template-columns:repeat(2, minmax(0, 1fr))}
+}
+@container (max-width: 8.5rem){
+  .bigbtns{grid-template-columns:minmax(0, 1fr)}
+}
 
 .bigbtns button{
   position:relative;
@@ -1327,7 +1340,7 @@ body{
   min-height:calc(var(--tap) + var(--s6));
   min-width:0;
   overflow-wrap:anywhere;
-  padding:var(--s4) var(--s1);
+  padding:var(--s4) var(--s2);
   font-family:inherit;
   font-size:var(--t-sm);
   font-weight:600;
@@ -1422,8 +1435,12 @@ button.when{
 }
 button.when:hover:not(:disabled){color:var(--ink)}
 button.when[aria-expanded="true"]{color:var(--ink); background:var(--accent-soft)}
+/* The base lets a row label shrink to one character wide, which at Largest
+   text turned "Woke up" into "Wok / e up". Give it a floor and let the row
+   wrap instead of the word. */
+#timeline .grow{min-width:8rem; overflow-wrap:break-word}
 .rowglyph{flex:none; font-size:var(--t-lg); line-height:1}
-.rowdel{flex:none; font-size:var(--t-base); line-height:1}
+.rowdel{flex:none; margin-left:auto; font-size:var(--t-base); line-height:1}
 .rowdel:hover:not(:disabled){color:var(--neg); background:var(--neg-soft)}
 
 /* Each day is a heading beside its own list, so the <ul> holds nothing but

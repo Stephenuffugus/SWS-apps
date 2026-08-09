@@ -1374,6 +1374,9 @@ button.slot{cursor:pointer}
 .match span.slot{color:var(--ink-2); cursor:default}
 .match span.slot.tbd{font-style:italic}
 
+/* The base only makes .printonly visible inside @media print; it never hides
+   it on screen. */
+.printhead{display:none}
 .scrollcue{margin-top:var(--s2)}
 #entrantCount{font-size:var(--t-sm); color:var(--ink-2); margin-top:var(--s2)}
 #entrantCount .over{color:var(--warn); font-weight:600}
@@ -1409,18 +1412,14 @@ button.slot{cursor:pointer}
   border-radius:var(--r-sm);
 }
 .qrdlg .warn{margin-top:var(--s4); text-align:left}
-.qrurl{
-  margin:var(--s2) 0 var(--s4);
-  padding:var(--s3);
-  background:var(--surface-2);
-  border:1px solid var(--line);
-  border-radius:var(--r-sm);
+/* A readonly textarea rather than a styled <p>: it is focusable, so a
+   keyboard can scroll it, it selects with one gesture, and it has a label. */
+.qrurl{margin-top:var(--s4); text-align:left}
+.qrurl textarea{
   font-size:var(--t-sm);
   line-height:var(--lh-snug);
+  resize:vertical;
   overflow-wrap:anywhere;
-  max-height:7.5em; overflow-y:auto;
-  text-align:left;
-  user-select:all;
 }
 .qrdlg .row{gap:var(--s2)}
 
@@ -1566,8 +1565,8 @@ The Vegan Dark Horse"></textarea></label>
   <h2 id="qrTitle">Scan to open this bracket</h2>
   <canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code holding the bracket link"></canvas>
   <p class="warn" id="qrDense" hidden>This bracket is big, so the code is dense. If a camera will not read it, copy the link below instead.</p>
-  <p class="hint" id="qrUrlLabel">Or read the link out — it works the same:</p>
-  <p class="qrurl" id="qrUrl"></p>
+  <label class="f qrurl"><span>Or use the link — it works the same</span>
+    <textarea id="qrUrl" rows="3" readonly spellcheck="false"></textarea></label>
   <div class="row">
     <button class="btn primary" id="qrCopy" type="button">Copy link</button>
     <button class="btn" id="qrClose" type="button">Close</button>
