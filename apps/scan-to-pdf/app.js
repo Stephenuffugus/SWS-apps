@@ -71,6 +71,7 @@ let idSeq = 0;
 let persistOK = true;
 let busy = false;
 let viewing = null;    // page id currently open in the viewer
+let pendingRetakeUndo = null;
 
 const byId = (id) => pages.find((p) => p.id === id) || null;
 const indexOf = (id) => pages.findIndex((p) => p.id === id);
@@ -152,27 +153,31 @@ function noPersist(e) {
   say(msg, { ms: 10000, assertive: true });
 }
 
-async function persistPage(p) {
-  if (!persistOK) return;
-  try { await store.putPage(p); store.writeOrder(pages); }
-  catch (e) { noPersist(e); }
+/* One queue for every write. Undo is one tap and can land while the delete
+   it is undoing is still in flight — unserialised, the delete finishes last
+   and the page comes back on screen but not in storage, so the next reload
+   loses it. A chain costs nothing and makes that impossible. */
+let writes = Promise.resolve();
+
+function queue(fn) {
+  if (!persistOK) return writes;
+  writes = writes.then(fn).then(
+    () => { store.writeOrder(pages); },
+    (e) => { noPersist(e); },
+  );
+  return writes;
 }
 
-async function persistOrder() {
-  if (!persistOK) return;
-  if (!store.writeOrder(pages)) noPersist(null);
-}
+const persistPage = (p) => queue(() => store.putPage(p));
+const persistRemoval = (id) => queue(() => store.deletePage(id));
+const persistRestore = (snapshot) => queue(() => store.putMany(snapshot));
+const persistClear = () => queue(() => store.clearPages());
 
-async function persistRemoval(id) {
+function persistOrder() {
   if (!persistOK) return;
-  try { await store.deletePage(id); store.writeOrder(pages); }
-  catch (e) { noPersist(e); }
-}
-
-async function persistRestore(snapshot) {
-  if (!persistOK) return;
-  try { await store.putMany(snapshot); store.writeOrder(pages); }
-  catch (e) { noPersist(e); }
+  /* Order and rotation are the small record; they still go through the queue
+     so they can never be written before the blob they describe. */
+  queue(() => {});
 }
 
 /* ── rendering ────────────────────────────────────────────────────────────
@@ -327,7 +332,7 @@ function clearAll() {
   const snapshot = pages.slice();
   const n = snapshot.length;
   pages = [];
-  if (persistOK) store.clearPages().catch((e) => noPersist(e));
+  persistClear();
   closeViewer(false);
   hideRestoreBar();
   render();
@@ -427,8 +432,9 @@ async function retake(file) {
   render();
   if (viewing === id) paintViewer();
   updateEstimate();
+
   const n = indexOf(id) + 1;
-  sayUndo('Page ' + n + ' retaken', () => {
+  const undo = () => {
     const q = byId(id);
     if (!q) return;
     Object.assign(q, before);
@@ -437,7 +443,25 @@ async function retake(file) {
     if (viewing === id) paintViewer();
     updateEstimate();
     announce('Page ' + n + ' put back to the earlier photo.');
-  });
+  };
+
+  if (viewing === id) {
+    /* The viewer is a modal, so a toast Undo behind it cannot be clicked. */
+    pendingRetakeUndo = undo;
+    const b = $('viewUndo');
+    b.classList.remove('hidden');
+    b.focus();
+    announce('Page ' + n + ' retaken. Undo the retake is available.');
+  } else {
+    sayUndo('Page ' + n + ' retaken', undo);
+  }
+}
+
+function takeRetakeUndo() {
+  const fn = pendingRetakeUndo;
+  pendingRetakeUndo = null;
+  $('viewUndo').classList.add('hidden');
+  return fn;
 }
 
 /* ── the full-size view ───────────────────────────────────────────────────
@@ -465,6 +489,7 @@ function paintViewer() {
 function openViewer(id) {
   const dlg = $('viewer');
   if (!byId(id)) return;
+  if (id !== viewing) takeRetakeUndo();
   viewing = id;
   paintViewer();
   if (!dlg.open) {
@@ -478,6 +503,9 @@ function closeViewer(refocus) {
   const id = viewing;
   viewing = null;
   if (dlg.open) { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
+  /* The way back does not expire just because the dialog did. */
+  const carried = takeRetakeUndo();
+  if (carried) sayUndo('Page retaken', carried);
   if (refocus === false || !id) return;
   let node = null;
   try { node = document.querySelector('[data-pid="' + CSS.escape(id) + '"][data-act="open"]'); }
@@ -639,6 +667,11 @@ function wire() {
   $('viewRotR').addEventListener('click', () => rotate(viewing, +90));
   $('viewRetake').addEventListener('click', () => $('retakeInput').click());
   $('viewDelete').addEventListener('click', () => del(viewing));
+  $('viewUndo').addEventListener('click', () => {
+    const fn = takeRetakeUndo();
+    if (fn) fn();
+    $('viewRetake').focus();
+  });
   $('viewer').addEventListener('close', () => { if (viewing) closeViewer(true); });
   $('viewer').addEventListener('cancel', () => { /* Esc — the close handler refocuses */ });
 

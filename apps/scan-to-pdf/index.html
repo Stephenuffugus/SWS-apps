@@ -1489,7 +1489,8 @@ body{
     <h2>Make the PDF</h2>
     <label class="f"><span>File name</span>
       <input type="text" id="fileName" maxlength="60" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="2026-08-09-scan"></label>
-    <p class="hint" id="chipHint">Or name it in one tap:</p>
+    <p class="hint" id="chipHint">Up to 60 characters; <code>\ / : * ? " &lt; &gt; |</code> become
+      hyphens so the name survives every filesystem. Or name it in one tap:</p>
     <div class="chips namechips" id="labelChips" role="group" aria-labelledby="chipHint">
       <button class="chip" type="button" data-label="receipt" aria-pressed="false">Receipt</button>
       <button class="chip" type="button" data-label="id" aria-pressed="false">ID</button>
@@ -1543,6 +1544,10 @@ body{
     <button class="btn" id="viewRotR" type="button"><span aria-hidden="true">↻</span> Rotate right</button>
     <button class="btn" id="viewRetake" type="button"><span aria-hidden="true">📷</span> Retake this page</button>
     <button class="btn danger" id="viewDelete" type="button"><span aria-hidden="true">✕</span> Delete this page</button>
+    <!-- A modal dialog sits in the top layer, so the Undo inside a toast is
+         literally unclickable while this is open. The way back has to live in
+         here; it moves to the toast when the dialog closes. -->
+    <button class="btn hidden" id="viewUndo" type="button">↩ Undo the retake</button>
   </div>
   <p class="hint" id="viewMeta"></p>
 </dialog>

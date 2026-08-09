@@ -1261,27 +1261,41 @@ body{
     src:url(fonts/spline-sans-latin.woff2) format('woff2');
     unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
   }
+  /* ── app-local colour ──────────────────────────────────────────────────
+     Everything that used to be a light-mode hex literal now resolves through
+     a studio token, so the theme switch reaches the grid. What stays local is
+     the one thing no token can supply: six categorical rotation-letter fills.
+     Those are a data encoding (which cycle day is this), not decoration, so
+     they are declared once per theme and each is contrast-solved against the
+     ink that sits on it — light fills clear 6.4:1 against white ink, dark
+     fills clear 9.6:1 against near-black. Verified, not eyeballed. */
   :root{
-  /* This app's own tokens, carried over. Remap them onto the studio
-     palette (--accent, --support…) when migrating this app layer. */
-  --terra:#C65D3B;
-  --terra-d:#A8482B;
-  --sage:#6F8E6A;
-  --teal:#4F8A86;
-  --mustard:#CC9A3F;
-  --plum:#8A5A7A;
-  --slate:#5E748C;
-  --lunch:#EFE6D2;
-  --block:#E9E2D2;
-}
-  
-  
-  
+    --rl-ink:#ffffff;
+    --rl0:#9C4224;   /* clay    */
+    --rl1:#1C605D;   /* teal    */
+    --rl2:#3E6338;   /* sage    */
+    --rl3:#78406A;   /* plum    */
+    --rl4:#3C5A79;   /* slate   */
+    --rl5:#6B5310;   /* ochre   */
+    --lunch:var(--surface-2);
+    --block:var(--warn-soft);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --rl-ink:#17110E;
+      --rl0:#F6A88C; --rl1:#8FD3CD; --rl2:#A9D39B;
+      --rl3:#E2A9D4; --rl4:#A8C6E8; --rl5:#DCBE6A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --rl-ink:#17110E;
+    --rl0:#F6A88C; --rl1:#8FD3CD; --rl2:#A9D39B;
+    --rl3:#E2A9D4; --rl4:#A8C6E8; --rl5:#DCBE6A;
+  }
+
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;margin:0;letter-spacing:-.01em}
-  
-  input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
-  
-  
+
+  input,select,textarea{font-family:inherit;font-size:max(1rem,var(--t-base));color:var(--ink)}
 
   /* ---------- header ---------- */
   /* --veil, not a hardcoded cream. The literal stayed light in dark mode, so
@@ -1289,127 +1303,213 @@ body{
      the app name simply disappeared. --veil is the translucent canvas and
      follows the theme. */
   header{position:sticky;top:0;z-index:40;background:var(--veil);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .head-row{display:flex;align-items:center;gap:12px;padding:12px 0 10px}
-  .logo{display:flex;align-items:center;gap:9px;user-select:none}
-  .logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--terra),var(--mustard));position:relative;flex:none}
+  .head-row{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0 var(--s2)}
+  .logo{display:flex;align-items:center;gap:var(--s2);user-select:none}
+  .logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--rl5));position:relative;flex:none}
   .logo .mark::before,.logo .mark::after{content:'';position:absolute;border-radius:50%}
   .logo .mark::before{width:7px;height:7px;background:#FBF6EC;top:6px;left:6px;box-shadow:11px 0 0 rgba(251,246,236,.75), 0 11px 0 rgba(251,246,236,.75), 11px 11px 0 rgba(251,246,236,.55)}
-  .logo h1{font-size:21px}
-  .logo .tag{font-size:11.5px;color:var(--ink-soft);margin-top:-2px}
-  .saved{margin-left:auto;font-size:12px;color:#55704F;opacity:0;transition:opacity .3s;font-weight:500}
-  .saved.show{opacity:1}
-  .tabs{display:flex;gap:4px;padding-bottom:10px}
-  .tab{padding:7px 14px;border-radius:999px;font-weight:500;color:var(--ink-soft);border:1px solid transparent}
-  .tab.active{background:var(--ink);color:var(--paper)}
+  .logo h1{font-size:var(--t-xl)}
+  .logo .tag{font-size:var(--t-xs);color:var(--ink-2);margin-top:-2px}
+  /* The saved flag is evidence, not decoration: it carries a clock time, it
+     does not fade back out, and it is a role=status so a screen reader hears
+     it. [data-saved-flag] in the base supplies the colour and the fade-in. */
+  .saved{margin-left:auto;text-align:right;line-height:var(--lh-snug)}
+  .tabs{display:flex;gap:var(--s1);padding-bottom:var(--s2)}
+  .tab{min-height:var(--tap);padding:var(--s2) var(--s4);border-radius:var(--r-pill);font-weight:500;color:var(--ink-2);background:var(--surface);border:1px solid var(--line)}
+  .tab.active{background:var(--ink);color:var(--canvas);border-color:var(--ink)}
   .tab:not(.active):hover{border-color:var(--line-2)}
 
-  /* ---------- buttons ---------- */
-  
-  
-  
-  .btn.primary:hover{background:#8F3B22}
-  
-  
-  
+  .btn.primary:hover{background:var(--accent-press)}
+
+  /* The privacy promise as a stamp, not grey footer prose. */
+  .trust{margin:var(--s4) 0 0;max-width:var(--measure)}
 
   /* ---------- week nav ---------- */
-  .weeknav{display:flex;align-items:center;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
-  .weeknav .btn{padding:8px 13px}
-  .weeknav select{padding:9px 10px;border-radius:11px;border:1px solid var(--line-2);background:#fff;max-width:60vw}
+  .weeknav{display:flex;align-items:center;gap:var(--s2);margin:var(--s4) 0 var(--s3);flex-wrap:wrap}
+  .weeknav .btn{padding:var(--s2) var(--s3)}
+  .weeknav select{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field);color:var(--ink);max-width:60vw}
   .weeknav .spacer{flex:1}
-  .wk-title{font-family:'Fraunces',serif;font-size:19px;font-weight:600}
+  .wk-h{font-family:'Fraunces',Georgia,serif;font-size:var(--t-lg);font-weight:600;margin:0 0 var(--s2)}
+  .scroll-hint{font-size:var(--t-sm);color:var(--ink-2);margin:0 0 var(--s2)}
 
   /* ---------- the grid ---------- */
-  .grid-scroll{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);background:#fff;border:1px solid var(--line)}
-  table.week{border-collapse:collapse;width:100%;min-width:840px;table-layout:fixed}
-  table.week th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;padding:9px 8px;background:var(--paper-2);border-bottom:1.5px solid var(--line-2);border-right:1px solid var(--line);text-align:left}
-  table.week th.day-h{width:118px}
-  table.week th.lunch-h{width:44px;text-align:center;background:var(--lunch)}
-  table.week th.notes-h{width:150px}
+  /* min-width is in rem and driven by the period count, so the grid grows with
+     the text-size setting instead of freezing at 840px while the chrome around
+     it inflates. 6 periods = 63rem, which still fits inside --wrap on a laptop. */
+  .grid-scroll{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);background:var(--surface);border:1px solid var(--line)}
+  /* The page's reading column is 42rem, which is right for the setup form and
+     far too narrow for a week grid — at 1280px it hid 202px of the week. The
+     grid alone breaks out of it, centred, never wider than the viewport. */
+  @media screen and (min-width:52rem){
+    .grid-scroll{
+      --gw:min(64rem, 100vw - 3rem);
+      width:var(--gw);
+      margin-inline:calc((100% - var(--gw)) / 2);
+    }
+  }
+  table.week{border-collapse:separate;border-spacing:0;width:100%;min-width:calc(19.5rem + var(--cols,6) * 7.25rem);table-layout:fixed}
+  table.week th{font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600;padding:var(--s2) var(--s3);background:var(--surface-2);border-bottom:1.5px solid var(--line-2);border-right:1px solid var(--line);text-align:left}
+  table.week th.day-h{width:8rem}
+  table.week th.lunch-h{width:2.5rem;text-align:center;background:var(--lunch)}
+  table.week th.notes-h{width:9rem}
   table.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top;padding:0}
   table.week tr:last-child td{border-bottom:none}
   table.week th:last-child,table.week td:last-child{border-right:none}
 
-  .day-cell{padding:9px 8px}
-  .day-name{font-weight:600;font-size:14px}
-  .day-date{font-size:12px;color:var(--ink-soft)}
-  
-  /* chip tones sit darker than the base palette so white 12.5px text clears 4.5:1 (WCAG AA) */
-  .chip.l0{background:#A8482B} .chip.l1{background:#3E6E6B} .chip.l2{background:#55704F}
-  .chip.l3{background:var(--plum)} .chip.l4{background:var(--slate)} .chip.l5{background:#8F6A20}
-  .day-gear{float:right;font-size:14px;opacity:.7;padding:2px 4px;border-radius:6px}
-  
-  .sp-banner{display:block;margin-top:5px;font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--block);border-radius:7px;padding:3px 7px;letter-spacing:.03em;text-transform:uppercase}
+  /* The Day column stays put while the periods scroll under it — without this
+     you scroll to Period 6 and can no longer tell which day you are reading. */
+  table.week th.day-h,table.week td.day-td{position:sticky;left:0;z-index:2;background:var(--surface)}
+  table.week th.day-h{z-index:3;background:var(--surface-2)}
+  table.week td.day-td{box-shadow:1px 0 0 var(--line)}
 
-  .box{min-height:74px;padding:8px 9px;font-size:13.5px;line-height:1.4;outline:none;white-space:pre-wrap;word-wrap:break-word}
-  .box:empty::before{content:'—';color:var(--line-2)}
-  .box:focus{background:#FFFDF7;box-shadow:inset 0 0 0 2px var(--terra)}
+  .day-cell{padding:var(--s3);display:flex;flex-direction:column;gap:var(--s2)}
+  .day-name{font-weight:600;font-size:var(--t-base)}
+  .day-date{font-size:var(--t-sm);color:var(--ink-2)}
+  .day-foot{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+  .chip.l0{background:var(--rl0)} .chip.l1{background:var(--rl1)} .chip.l2{background:var(--rl2)}
+  .chip.l3{background:var(--rl3)} .chip.l4{background:var(--rl4)} .chip.l5{background:var(--rl5)}
+  .chip.l0,.chip.l1,.chip.l2,.chip.l3,.chip.l4,.chip.l5{
+    color:var(--rl-ink);border-color:transparent;font-size:var(--t-base);font-weight:700;
+    min-width:1.9em;justify-content:center;padding:var(--s1) var(--s2)
+  }
+  /* The only route to the app's headline feature. It gets a real target. */
+  .day-gear{margin-left:auto;min-width:var(--tap);min-height:var(--tap);display:inline-flex;align-items:center;justify-content:center;
+    font-size:var(--t-base);border:1px solid var(--line-2);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink-2)}
+  .day-gear:hover{color:var(--ink);border-color:var(--ink-2)}
+
+  .sp-banner{display:block;font-size:var(--t-micro);font-weight:600;color:var(--ink);background:var(--block);border:1px solid var(--warn-line);border-radius:var(--r-sm);padding:var(--s1) var(--s2);letter-spacing:.03em;text-transform:uppercase}
+
+  .box{min-height:4.6rem;padding:var(--s2) var(--s3);font-size:var(--t-base);line-height:var(--lh-snug);outline:none;white-space:pre-wrap;overflow-wrap:break-word}
+  .box:empty::before{content:'—';color:var(--ink-3)}
+  .box:focus{background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--focus)}
   td.lunch{background:var(--lunch);text-align:center;vertical-align:middle !important}
-  td.lunch span{writing-mode:vertical-rl;font-size:10.5px;letter-spacing:.22em;color:var(--ink-soft);text-transform:uppercase;font-weight:600}
-  tr.sp-row .box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(43,38,32,.025) 7px,rgba(43,38,32,.025) 14px)}
-  tr.today-row td:first-child{box-shadow:inset 3px 0 0 var(--terra)}
+  td.lunch span{writing-mode:vertical-rl;font-size:var(--t-micro);letter-spacing:.22em;color:var(--ink-2);text-transform:uppercase;font-weight:600}
+  tr.sp-row .box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,var(--surface-2) 7px,var(--surface-2) 14px)}
+  tr.today-row td.day-td{box-shadow:inset 3px 0 0 var(--accent),1px 0 0 var(--line)}
 
-  /* ---------- copy bar ---------- */
-  #bar{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(110%);visibility:hidden;transition:transform .22s var(--ease),visibility .22s;background:var(--toast-bg);color:var(--toast-ink);padding:var(--s3) var(--s4) calc(var(--s3) + env(safe-area-inset-bottom))}
+  /* ---------- the grid, stacked, on a phone ----------
+     Below 52rem the week stops being an 840px desktop table read two columns
+     at a time and becomes one card per day, in reading order, no sideways
+     scroll at all. Same DOM, same print path — CSS only. */
+  @media screen and (max-width:52rem){
+    .grid-scroll{overflow-x:visible;background:transparent;border:0;box-shadow:none;border-radius:0}
+    table.week,table.week tbody,table.week tr,table.week td{display:block;width:auto;min-width:0}
+    table.week thead{display:none}
+    table.week tr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow);margin:0 0 var(--s4);overflow:hidden}
+    table.week td{border-right:0;border-bottom:1px solid var(--line);position:static!important;box-shadow:none!important}
+    table.week tr td:last-child{border-bottom:0}
+    table.week td.day-td{background:var(--surface-2);border-bottom:1px solid var(--line-2)}
+    table.week td[data-label]::before{
+      content:attr(data-label);display:block;
+      font-size:var(--t-micro);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--ink-2);font-weight:600;padding:var(--s2) var(--s3) 0
+    }
+    table.week td[data-label] .box{padding-top:var(--s1)}
+    td.lunch{display:flex!important;align-items:center;justify-content:center;padding:var(--s1) 0}
+    td.lunch span{writing-mode:horizontal-tb}
+    tr.today-row{outline:2px solid var(--accent);outline-offset:-2px}
+    tr.today-row td.day-td{box-shadow:none}
+  }
+
+  /* ---------- copy bar ----------
+     It used to be a 101px panel that animated up into the thumb zone over the
+     plans on every focus. It now docks at the TOP, where it covers the header
+     chrome and nothing the teacher is reading. The design system's hard
+     invariant: nothing in the thumb zone moves, grows, or animates. */
+  #bar{position:fixed;left:0;right:0;top:0;z-index:50;transform:translateY(-110%);visibility:hidden;
+    transition:transform var(--dur-2) var(--ease),visibility var(--dur-2);
+    background:var(--toast-bg);color:var(--toast-ink);padding:var(--s3) var(--s4);
+    box-shadow:var(--shadow-2)}
   #bar.show{transform:none;visibility:visible}
-  #bar .inner{max-width:1060px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  #bar .hint{font-size:var(--t-sm);opacity:.8;margin-right:auto;color:inherit}
+  #bar .inner{max-width:var(--wrap);margin:0 auto;display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+  #bar .hint{font-size:var(--t-sm);margin-right:auto;color:inherit}
   /* The bar inverts the page, so its buttons key off currentColor rather than
      a fixed cream — otherwise they vanish when the bar flips in dark mode. */
   #bar .btn{background:transparent;border-color:currentColor;color:var(--toast-ink);
-    opacity:.85;padding:var(--s2) var(--s3);font-size:var(--t-sm);min-height:38px}
-  #bar .btn:hover{opacity:1}
+    padding:var(--s2) var(--s3);font-size:var(--t-sm);min-height:var(--tap)}
+  #bar .btn:hover{background:color-mix(in srgb,var(--toast-ink) 12%,transparent)}
 
-  /* ---------- setup / welcome ---------- */
-  
-  
-  
-  .frow{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-  .field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}
-  .field label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
-  .field input,.field select{padding:10px;border-radius:10px;border:1px solid var(--line-2);background:var(--paper)}
-  .days-pick{display:flex;gap:6px;flex-wrap:wrap}
-  .dp{width:44px;height:38px;border-radius:10px;border:1px solid var(--line-2);background:var(--paper);font-weight:600;font-size:13px;color:var(--ink-soft)}
-  .dp.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  
-  .footnote a{color:var(--terra-d)}
-  .setup-actions{display:flex;gap:9px;flex-wrap:wrap}
+  /* ---------- welcome ---------- */
+  .hero-w{text-align:center;padding:var(--s6) var(--s2) var(--s2)}
+  .hero-w h2{font-size:var(--t-3xl);letter-spacing:-.02em;line-height:var(--lh-tight)}
+  .hero-w p{color:var(--ink-2);font-size:var(--t-base);max-width:var(--measure);margin:var(--s3) auto var(--s6);line-height:var(--lh-body)}
+  .hero-w .trust{text-align:left;margin:0 auto var(--s5);display:flex}
+  .hero-w .choices{display:flex;flex-direction:column;gap:var(--s3);max-width:22rem;margin:0 auto}
+  .hero-w .choices .btn{min-height:calc(var(--tap) + var(--s3))}
+
+  /* ---------- setup ---------- */
+  .frow{display:flex;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+  .field{display:flex;flex-direction:column;gap:var(--s1);flex:1;min-width:8.5rem}
+  .field label{font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
+  .field input,.field select{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field)}
+  .days-pick{display:flex;gap:var(--s2);flex-wrap:wrap}
+  .dp{min-width:var(--tap);min-height:var(--tap);padding:0 var(--s2);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field);font-weight:600;font-size:var(--t-base);color:var(--ink-2)}
+  .dp.on{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
+  .footnote a{color:var(--accent-deep)}
+  .setup-actions{display:flex;gap:var(--s2);flex-wrap:wrap}
+  .sample-bar{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin:0 0 var(--s3)}
+  .sample-bar .btn{min-height:var(--tap)}
+  #alert-wrap{margin-top:var(--s3)}
+  #save-alert{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
 
   /* ---------- modal ---------- */
-  #modal{position:fixed;inset:0;z-index:60;background:rgba(43,38,32,.4);display:none;align-items:center;justify-content:center;padding:18px}
+  /* Same scrim the base uses behind the comfort dialog: a scrim has to darken
+     the page in both themes, so it is deliberately theme-independent. */
+  #modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:var(--s4)}
   #modal.show{display:flex}
-  #modal .sheet{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);max-width:380px;width:100%;padding:18px}
-  #modal h3{font-size:17px;margin-bottom:2px}
-  #modal .sub{font-size:13px;color:var(--ink-soft);margin:0 0 13px}
-  #modal .opts{display:flex;flex-direction:column;gap:8px}
-  #modal input{padding:10px;border-radius:10px;border:1px solid var(--line-2);width:100%;background:#fff}
+  #modal .sheet{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow-2);max-width:24rem;width:100%;padding:var(--s5);max-height:90vh;overflow:auto}
+  #modal h3{font-size:var(--t-lg);margin-bottom:var(--s1)}
+  #modal .sub{font-size:var(--t-sm);color:var(--ink-2);margin:0 0 var(--s4)}
+  #modal .opts{display:flex;flex-direction:column;gap:var(--s2)}
+  #modal input{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);width:100%;background:var(--field);color:var(--ink)}
 
-  /* ---------- print ---------- */
+  /* ---------- print ----------
+     One week, one page, is the ritual this app exists to serve: the AP collects
+     a printed week every Monday and a copy goes in the sub folder. Compact is
+     the default and fits a realistic 6-period week on one landscape sheet;
+     "Full detail" sets larger and may run over. Paper size stays the user's
+     own choice in the print dialog — we only force the orientation. */
   @media print{
     @page{size:landscape;margin:9mm}
     body{background:#fff;padding:0}
-    header,.weeknav,#bar,.footnote,.no-print{display:none !important}
+    header,.weeknav,#bar,.footnote,.trust,.scroll-hint,.sample-bar,#alert-wrap,.no-print{display:none !important}
     .grid-scroll{overflow:visible;box-shadow:none;border:1px solid #999;border-radius:0}
-    table.week{min-width:0}
+    table.week{min-width:0;width:100%;table-layout:fixed}
+    table.week th.day-h,table.week td.day-td{position:static;box-shadow:none;background:transparent}
     table.week thead{display:table-header-group}
     table.week tr{break-inside:avoid}
-    .box{min-height:52px;font-size:11px}
-    .box:empty::before{content:''}
+    table.week th{font-size:7pt;padding:2px 3px;background:transparent}
+    table.week th.day-h{width:11%}
+    table.week th.notes-h{width:13%}
+    th.lunch-h,td.lunch{display:none}
+    .day-cell{padding:3px 4px;gap:2px}
+    .day-name{font-size:8.5pt}
+    .day-date{font-size:7.5pt}
+    .sp-banner{font-size:7pt;padding:0 2px}
     .day-gear{display:none}
-    .print-title{display:block !important;font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 6px}
+    /* mid-word breaks ("Sketchboo / k covers") read as broken to a sub at
+       8:05am. Hyphenate properly; break inside a word only as a last resort. */
+    .box{min-height:0;font-size:7.6pt;line-height:1.2;padding:2px 4px;
+      overflow-wrap:normal;word-break:normal;hyphens:auto;-webkit-hyphens:auto}
+    .box:empty::before{content:''}
+    .chip{font-size:8pt;font-weight:700;padding:0 3px}
+    body[data-print="full"] .box{font-size:10pt;line-height:1.35;padding:4px 5px}
+    body[data-print="full"] table.week th{font-size:8pt}
+    .print-title{display:block !important;font-family:'Fraunces',Georgia,serif;font-size:12pt;font-weight:600;margin:0 0 4px}
   }
   .print-title{display:none}
 
   @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+  :root[data-motion="less"] *{transition:none !important;animation:none !important}
   @media (max-width:640px){
-    .logo h1{font-size:18px} .logo .tag{display:none}
-    .wk-title{font-size:16px}
+    .logo h1{font-size:var(--t-lg)}
   }
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
 </head>
 <body>
+<a class="skip" href="#view">Skip to the planner</a>
 
 <header>
   <div class="wrap">
@@ -1418,7 +1518,7 @@ body{
         <div class="mark" aria-hidden="true"></div>
         <div><h1>Specials Planner</h1><div class="tag">art · music · PE · library</div></div>
       </div>
-      <span class="saved" id="saved" aria-hidden="true">Saved</span>
+      <span class="saved" id="saved" data-saved-flag role="status"></span>
     </div>
     <nav class="tabs" aria-label="Views">
       <button class="tab" data-view="week">This week</button>
@@ -1427,12 +1527,22 @@ body{
   </div>
 </header>
 
+<!-- A failed write used to be silent while the green "Saved" pill still ran.
+     This is the loud, actionable version, and it lives outside #view so a
+     re-render cannot wipe it. -->
+<div class="wrap" id="alert-wrap" hidden>
+  <p class="warn" id="save-alert" role="alert">
+    <span id="save-alert-text"></span>
+    <button class="btn" id="save-alert-backup">Download a backup now</button>
+  </p>
+</div>
+
 <main class="wrap" id="view"></main>
 <div id="live" class="sr-only" aria-live="polite"></div>
 
 <div id="bar" aria-hidden="true">
   <div class="inner">
-    <span class="hint" id="bar-hint" aria-live="polite"></span>
+    <span class="hint" id="bar-hint"></span>
     <button class="btn" id="bar-day">Fill whole day</button>
     <button class="btn" id="bar-letter">Fill all —-days</button>
     <button class="btn" id="bar-close" aria-label="Close">✕</button>
@@ -1454,13 +1564,30 @@ body{
 const CLIENT_ID = "";   // Google OAuth Web Client ID → enables Drive save/load (scope: drive.file). Empty = feature hidden.
 const TIP_URL   = "https://buy.stripe.com/7sY7sM6PD91l3fn45P7EQ0l";   // Stripe Payment Link URL → shows a quiet tip-jar link in Setup. Empty = hidden.
 
-/* ------------------ storage shim ------------------------------------ */
+/* ------------------ storage shim ------------------------------------
+   Two rules learned the hard way:
+   1. A write is only a save if you can read it back. A school Chromebook with
+      storage restrictions throws QuotaExceededError, and the old shim swallowed
+      it into an in-memory object that get() could never return — so the app
+      said "Saved", held nothing, and dropped the whole year on the next load.
+      set() now verifies and reports, and get() prefers the in-memory copy so a
+      session keeps working after a failed write instead of reading back stale.
+   2. Nothing here ever leaves the device.                                   */
 const KEY='palette2';
 const store={
   ok:(()=>{try{localStorage.setItem('__pt','1');localStorage.removeItem('__pt');return true}catch(e){return false}})(),
   mem:{},
-  get(k){ if(this.ok){try{return localStorage.getItem(k)}catch(e){}} return (k in this.mem)?this.mem[k]:null },
-  set(k,v){ if(this.ok){try{localStorage.setItem(k,v);return}catch(e){}} this.mem[k]=v },
+  get(k){ if(k in this.mem) return this.mem[k]; if(this.ok){try{return localStorage.getItem(k)}catch(e){}} return null },
+  set(k,v){
+    if(this.ok){
+      try{
+        localStorage.setItem(k,v);
+        if(localStorage.getItem(k)===v){ delete this.mem[k]; return true; }
+      }catch(e){}
+    }
+    this.mem[k]=v;            // keep the session usable, but do not claim a save
+    return false;
+  },
   del(k){ if(this.ok){try{localStorage.removeItem(k)}catch(e){}} delete this.mem[k] }
 };
 
@@ -1484,23 +1611,113 @@ function defaultConfig(){
     teacher:'', driveFileId:''
   };
 }
-function migrate(s){
-  if(!s||typeof s!=='object'||!s.config) return null;
-  s.cells=s.cells||{}; s.notes=s.notes||{}; s.special=s.special||{};
-  const d=defaultConfig(), c=s.config;
+const MAX_LETTERS=12, MAX_LETTER_LEN=4, MAX_PERIODS=10, MAX_WEEKS=300;
+/* A hand-edited or legacy backup is the one file a teacher carries between
+   devices, so every shape that arrives through it is coerced rather than
+   trusted. `cells:[]` used to survive as an array and then serialise back as
+   "[]" — a whole year of lessons discarded on the next write. */
+const plainObj=v=>(v&&typeof v==='object'&&!Array.isArray(v))?v:{};
+function normalizeConfig(c){
+  const d=defaultConfig();
   for(const k in d) if(c[k]===undefined) c[k]=d[k];
-  c.periods=Math.max(1,Math.min(10,+c.periods||6));
-  c.lunchAfter=Math.max(0,Math.min(c.periods,+c.lunchAfter??2));
-  if(!Array.isArray(c.letters)||!c.letters.length) c.letters=['A','B','C'];
-  c.letters=c.letters.map(x=>String(x).trim()).filter(Boolean).slice(0,6);
+  const per=Math.round(Number(c.periods));
+  c.periods=Number.isFinite(per)?Math.max(1,Math.min(MAX_PERIODS,per)):6;
+  /* `+c.lunchAfter??2` bound the unary plus tighter than ??, so a non-numeric
+     value became NaN and survived both clamps — the lunch column vanished with
+     no error at all. */
+  const la=Math.round(Number(c.lunchAfter));
+  c.lunchAfter=Number.isFinite(la)?Math.max(0,Math.min(c.periods,la)):Math.min(2,c.periods);
+  if(!Array.isArray(c.letters)) c.letters=['A','B','C'];
+  c.letters=c.letters.map(x=>String(x).trim().slice(0,MAX_LETTER_LEN)).filter(Boolean).slice(0,MAX_LETTERS);
   if(!c.letters.length) c.letters=['A'];
-  if(!Array.isArray(c.workDays)||!c.workDays.length) c.workDays=[1,2,3,4,5];
+  if(!Array.isArray(c.workDays)) c.workDays=[1,2,3,4,5];
+  /* workDays holding 'Mon' instead of 1 used to dead-end the whole app on
+     "No weeks yet — check your year dates", which was the wrong diagnosis. */
+  c.workDays=[...new Set(c.workDays.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<=6))];
+  if(!c.workDays.length) c.workDays=[1,2,3,4,5];
+  c.teacher=String(c.teacher??'').slice(0,80);
+  return c;
+}
+function migrate(s){
+  if(!s||typeof s!=='object'||!s.config||typeof s.config!=='object'||Array.isArray(s.config)) return null;
+  s.cells=plainObj(s.cells); s.notes=plainObj(s.notes); s.special=plainObj(s.special);
+  normalizeConfig(s.config);
+  migrateCellKeys(s);
   return s;
 }
+
+/* ------------------ cycle-position keys ------------------------------
+   THE central correction in this app. Lessons used to be stored against the
+   calendar date ("2026-09-17|3"). Cancel one Wednesday and the rotation letters
+   all slide forward correctly while the lessons stay nailed to their dates —
+   Thursday becomes letter C and still holds the lesson written for D, for the
+   rest of the year. The label was right and the plan underneath it was wrong.
+
+   Lessons are now keyed to the position in the teaching cycle instead:
+     c<n>|<period>   the nth teaching day of the year (the letter is derived
+                     from n, so plan and letter can never drift apart)
+     d<iso>|<period> a no-class day, which has no cycle position but keeps its
+                     boxes ("sub covering", "field trip packing list")
+   Marking a day "no school" removes it from the sequence, so every later day
+   inherits the position — and therefore the plan — that used to belong to the
+   day before it. That IS the bump. Notes stay keyed to the date, because
+   "picture day" belongs to Thursday, not to cycle day C.                    */
+function migrateCellKeys(s){
+  const legacy=/^(\d{4}-\d{2}-\d{2})\|(.+)$/;
+  if(!Object.keys(s.cells).some(k=>legacy.test(k))) return;
+  const idxByIso=isoIndexMap(s.config,s.special);
+  const out={};
+  for(const k of Object.keys(s.cells)){
+    const m=legacy.exec(k);
+    if(!m){ out[k]=s.cells[k]; continue; }
+    const iso=m[1], p=m[2], idx=idxByIso[iso];
+    out[(idx===undefined||s.special[iso])?`d${iso}|${p}`:`c${idx}|${p}`]=s.cells[k];
+  }
+  s.cells=out;
+}
+function isoIndexMap(config,special){
+  const map={};
+  for(const w of computeYear(config,special||{})) for(const d of w.days) if(d.idx!=null) map[d.iso]=d.idx;
+  return map;
+}
 function loadState(){ try{const r=store.get(KEY); S=r?migrate(JSON.parse(r)):null}catch(e){S=null} }
-function persist(){ store.set(KEY,JSON.stringify(S)); flashSaved(); }
-function queueSave(){ clearTimeout(saveT); saveT=setTimeout(persist,400); }
-function flashSaved(){ const el=document.getElementById('saved'); el.classList.add('show'); clearTimeout(flashSaved.t); flashSaved.t=setTimeout(()=>el.classList.remove('show'),1200); }
+
+/* Saving, said honestly.
+   - persist() writes, verifies, and only then shows the flag.
+   - the flag carries a clock time and stays put, because "did it save?" is the
+     one question a local-first planner has to be able to answer at a glance.
+   - it is a role=status carrying real text, so a screen reader hears it too;
+     the time only changes once a minute, so typing does not become chatter. */
+let saveFailed=false;
+function persist(quiet){
+  const wrote=store.set(KEY,JSON.stringify(S));
+  saveFailed=!wrote;
+  showSaveAlert(!wrote);
+  if(wrote&&!quiet) flashSaved();
+  return wrote;
+}
+function queueSave(){ clearTimeout(saveT); saveT=setTimeout(()=>{saveT=null;persist();},400); }
+/* The last 400ms of typing used to die with the tab: no pagehide, no
+   visibilitychange, no beforeunload anywhere. Type a line, lock the phone,
+   lose the line. */
+function flushSave(){ if(saveT){ clearTimeout(saveT); saveT=null; persist(true); } }
+function hhmm(d){ return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function flashSaved(){
+  const text=`Saved ${hhmm(new Date())}`;
+  if(window.SWS&&SWS.saved) SWS.saved({text,ms:36e5});
+  else { const el=document.getElementById('saved'); if(el){el.textContent=text;el.classList.add('show');} }
+}
+function showSaveAlert(on){
+  const wrap=document.getElementById('alert-wrap');
+  if(!wrap) return;
+  if(!on){ wrap.hidden=true; return; }
+  if(!wrap.hidden) return;                       // already shouting; do not re-announce per keystroke
+  document.getElementById('save-alert-text').textContent =
+    'This browser refused to save. Your plans are only in this tab right now — if you close it they are gone. Download a backup, then try a different browser or ask for storage to be allowed on this device.';
+  wrap.hidden=false;
+  const el=document.getElementById('saved'); if(el){ el.textContent=''; el.classList.remove('show'); }
+  if(window.SWS&&SWS.toast) SWS.toast('Could not save on this device — download a backup.',{assertive:true,ms:9000});
+}
 
 /* ------------------ dates ------------------------------------------- */
 const DAYNAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1522,27 +1739,47 @@ function weekLabel(w){
 /* Rotation letters cycle continuously over school days across the whole
    year. Days marked "special" (no school / work day) show a banner and do
    NOT consume a letter — so the rotation stays true after breaks.        */
-function buildYear(){
-  YEAR=[]; if(!S) return;
-  const c=S.config, start=parseISO(c.yearStart), end=parseISO(c.yearEnd);
-  if(!start||!end||end<start) return;
+let yearTruncated=false;
+function computeYear(c,special){
+  const out=[], start=parseISO(c.yearStart), end=parseISO(c.yearEnd);
+  yearTruncated=false;
+  if(!start||!end||end<start) return out;
   let li=0;
   let cur=addDays(start,-((start.getDay()+6)%7));   // back to that week's Monday
   let guard=0;
-  while(cur<=end && guard++<80){
+  while(cur<=end){
+    /* The old cap was `guard++<80`, so a two-year span silently stopped in
+       March of the second year while Setup still showed the date the teacher
+       typed. The bound is the end date now; the guard is only a runaway stop
+       and it says so out loud when it fires. */
+    if(guard++>=MAX_WEEKS){ yearTruncated=true; break; }
     const days=[];
     for(let i=0;i<7;i++){
       const d=addDays(cur,i), dow=d.getDay();
       if(!c.workDays.includes(dow)) continue;
       if(d<start||d>end) continue;
-      const iso=fmtISO(d), sp=S.special[iso]||null;
-      let letter=null;
-      if(!sp){ letter=c.letters[li%c.letters.length]; li++; }
-      days.push({iso,dow,letter,special:sp});
+      const iso=fmtISO(d), sp=special[iso]||null;
+      let letter=null, idx=null;
+      if(!sp){ idx=li; letter=c.letters[li%c.letters.length]; li++; }
+      days.push({iso,dow,letter,idx,special:sp});
     }
-    if(days.length) YEAR.push({monday:fmtISO(cur),days});
+    if(days.length) out.push({monday:fmtISO(cur),days});
     cur=addDays(cur,7);
   }
+  return out;
+}
+function buildYear(){ YEAR = S ? computeYear(S.config,S.special) : []; }
+
+/* Where a day's lesson lives. See migrateCellKeys for why. */
+function cellKey(d,p){ return d.special?`d${d.iso}|${p}`:`c${d.idx}|${p}`; }
+function cellText(d,p){
+  const v=S.cells[cellKey(d,p)];
+  if(v!==undefined) return v;
+  /* Safety net for anything a migration could not place (a lesson written on a
+     date that later fell outside the year): show it on its date rather than
+     lose it. */
+  const legacy=S.cells[`d${d.iso}|${p}`] ?? S.cells[`${d.iso}|${p}`];
+  return legacy===undefined?'':legacy;
 }
 function weekIndexFor(iso){
   for(let i=0;i<YEAR.length;i++){
@@ -1581,15 +1818,31 @@ function render(){
   if(curView==='week') renderWeek(); else renderSetup();
 }
 
+/* ------------------ the promise, as a stamp -------------------------
+   Research finding across the portfolio: nobody believes a privacy claim
+   written as grey footer prose. It has to look like a stamp on the thing, and
+   it has to say what THIS app holds. Everything below is literally true of
+   this file: no network call exists anywhere in it unless CLIENT_ID is filled
+   in, and the state object is only config, cells, notes and special. */
+const TRUST_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>';
+function trustHTML(full){
+  const drive=CLIENT_ID?' The one exception is the Google Drive button, which uploads that same backup file to your own Drive when you press it.':'';
+  const body=full
+    ? `<b>No account, no upload, and no student names anywhere.</b> This planner only ever knows dates, periods and rotation letters — there is no roster in it, so there is no student data for anyone to vet. Your schedule, lessons and notes are saved in this browser, on this device. They leave only in a backup or CSV file that you download yourself.${drive}`
+    : `<b>Nothing leaves this device.</b> No account, and no student names — just your dates, periods and rotation letters, saved in this browser.`;
+  return `<p class="trust">${TRUST_SVG}<span>${body}</span></p>`;
+}
+
 /* ------------------ welcome ----------------------------------------- */
 function renderWelcome(){
-  view.innerHTML=`<div style="text-align:center;padding:30px 6px 8px">
-    <h2 style="font-size:30px;letter-spacing:-.02em;line-height:1.12">Plan your whole year once.</h2>
-    <p style="color:var(--ink-soft);font-size:15px;max-width:440px;margin:12px auto 26px;line-height:1.55">A lesson planner built for specials teachers — art, music, PE, library. Set up your schedule one time and every week of the year is ready to fill in. Free, no account, your plans stay on your device.</p>
-    <div style="display:flex;flex-direction:column;gap:11px;max-width:340px;margin:0 auto">
-      <button class="btn primary" id="w-fresh" style="padding:15px">Start fresh →</button>
-      <button class="btn" id="w-sample" style="padding:15px">See a sample first</button>
-      <button class="btn ghost" id="w-import" style="font-size:13px">Restore from a backup file</button>
+  view.innerHTML=`<div class="hero-w">
+    <h2>Plan your whole year once.</h2>
+    <p>A lesson planner built for specials teachers — art, music, PE, library. Set up your schedule one time and every week of the year is ready to fill in. Lessons follow your rotation, so a snow day moves the plans along with the letters.</p>
+    ${trustHTML(true)}
+    <div class="choices">
+      <button class="btn primary" id="w-fresh">Start fresh →</button>
+      <button class="btn" id="w-sample">See a sample first</button>
+      <button class="btn ghost" id="w-import">Restore from a backup file</button>
     </div></div>
     <div class="footnote">Works on your phone or laptop · print a week for subs · export to a spreadsheet anytime.<br>A free tool by <a href="../">Sky Wolf Studios</a> · <a href="privacy.html">Privacy &amp; accessibility</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Specials%20Planner">Feedback</a></div>`;
   document.getElementById('w-fresh').onclick=startFresh;
@@ -1598,25 +1851,33 @@ function renderWelcome(){
 }
 function startFresh(){ S={config:defaultConfig(),cells:{},notes:{},special:{}}; buildYear(); persist(); curView='setup'; render(); }
 function loadSample(){
-  S={config:defaultConfig(),cells:{},notes:{},special:{}};
+  S={config:defaultConfig(),cells:{},notes:{},special:{},sample:true};
   buildYear();
   if(YEAR.length){
-    const w=YEAR[0];
-    const first=w.days[0];
+    const first=YEAR[0].days[0];
     S.special[first.iso]='Teacher work day';
     buildYear();                                   // rebuild so letters shift
-    const wk=YEAR[0];
-    for(const d of wk.days){
+    for(const d of YEAR[0].days){
       if(d.special) { S.notes[d.iso]='Set up room · hang welcome board'; continue; }
       for(let p=1;p<=S.config.periods;p++){
-        if(p===3||p===4){ S.cells[`${d.iso}|${p}`]='No kindergarten yet'; continue; }
-        S.cells[`${d.iso}|${p}`]='Welcome + rules\nName-tag design\nSketchbook covers';
+        if(p===3||p===4){ S.cells[cellKey(d,p)]='No kindergarten yet'; continue; }
+        S.cells[cellKey(d,p)]='Welcome + rules\nName-tag design\nSketchbook covers';
       }
       S.notes[d.iso]='Collect supply forms';
     }
   }
   persist(); curWeek=0; curView='week'; render();
 }
+/* The sample used to be written straight into the real store with no banner
+   and no way back, so a teacher who "just looked" ended up typing over
+   somebody else's sketchbook covers all year. */
+function clearSample(){
+  const before=JSON.stringify(S);
+  S={config:S.config,cells:{},notes:{},special:{}};
+  markStale(); persist(); render();
+  SWS.undo('Sample cleared — the year is empty and yours.',()=>{ S=JSON.parse(before); markStale(); persist(); render(); });
+}
+function keepSample(){ delete S.sample; persist(); render(); }
 
 /* ------------------ week view --------------------------------------- */
 function renderWeek(){
