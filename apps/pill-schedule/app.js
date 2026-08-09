@@ -480,7 +480,7 @@ function fitPreview() {
   if (!frame || !scaler) return;
   // clientWidth still counts the frame's padding, which would over-scale the
   // sheet and clip the Sunday column off the right of the preview
-  const cs = getComputedStyle(frame);
+  const cs = window.getComputedStyle(frame);
   const avail = frame.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
   const w = SHEET_W_MM * PX_PER_MM;
   const k = avail > 0 ? Math.min(1, avail / w) : 1;
@@ -699,7 +699,7 @@ function showQr(url) {
   $('qrUrl').value = url;
   let qr = null, count = 0;
   try {
-    qr = qrcode(0, 'L');           // L holds the most data; this is a link, not a label
+    qr = window.qrcode(0, 'L');           // L holds the most data; this is a link, not a label
     qr.addData(url); qr.make();
     count = qr.getModuleCount();
   } catch (e) { qr = null; }
