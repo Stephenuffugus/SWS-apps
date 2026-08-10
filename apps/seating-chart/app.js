@@ -93,6 +93,23 @@ async function renderHome() {
       el('strong', {}, 'Free, no watermark, and nothing ever leaves your device.')),
     el('button', { class: 'btn primary', type: 'button', onclick: createProject }, 'New event')));
 
+  /* The promise as an object, not a sentence in grey at the bottom. The
+     research is blunt that nobody believes it as body copy — and for this app
+     the claim is unusually concrete, because a guest list with dietary and
+     accessibility notes on it is genuinely sensitive. */
+  const lock = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  lock.setAttribute('viewBox', '0 0 24 24');
+  lock.setAttribute('fill', 'none');
+  lock.setAttribute('stroke', 'currentColor');
+  lock.setAttribute('stroke-width', '2');
+  lock.setAttribute('aria-hidden', 'true');
+  lock.setAttribute('focusable', 'false');
+  lock.innerHTML = '<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>';
+  v.append(el('p', { class: 'trust noprint' }, lock,
+    el('span', {}, el('b', {}, 'Your guest list stays on this device.'),
+      ' Names, meals, allergies and who cannot sit near whom are stored in this ' +
+      'browser only — no account, no upload, and the PDFs are made here too.')));
+
   const sec = el('section', { class: 'card' }, el('h2', {}, 'Your events'));
   const list = el('ul', { class: 'plain' });
   sec.append(list);
