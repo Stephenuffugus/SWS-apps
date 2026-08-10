@@ -417,3 +417,71 @@ npm run a11y           # axe, now including the panel while it is open
 bigger, the page really got darker, the choice survived a reload, and it
 carried into the next app. An attribute that lands on `<html>` while the
 stylesheet ignores it is the bug it exists to catch.
+
+
+---
+
+## Undo, and saying it saved
+
+`design/ui.js` ships as `sws-ui.js` in every app.
+
+```js
+SWS.undo('Milk deleted', () => restore(snapshot))   // Undo inside the toast
+SWS.toast('Copied', { ms: 2000 })
+SWS.saved()                                          // quiet [data-saved-flag]
+```
+
+**Undo, not a confirm dialog.** A confirm taxes the 99 deliberate taps to catch
+the one mistake, and at 3am it is one more thing dismissed without reading.
+Undo taxes nothing and also catches the mistakes a confirm waves through.
+Snapshot the state before the change and restore it in the callback — a
+snapshot cannot forget a side effect the way a hand-written inverse can.
+
+**Ctrl/Cmd+Z fires the pending undo.** `#toast` is the last element in `<body>`,
+which measured 18 focus stops away on Packing List — longer than the toast
+lasts. Undo is the one action people already have a key for, so it gets that
+key. It is deliberately ignored while focus is in a field, where the browser's
+own undo is the better answer, and the offer expires with the toast so a later
+Ctrl+Z cannot resurrect something forgotten.
+
+**The dismiss clock stops while the pointer or focus is inside the toast.** An
+undo that vanishes is worse than no undo: it promises a way back and withdraws
+it.
+
+**Some destructive actions should still confirm.** Ten in the portfolio do, and
+they are correct: rotating a share link cannot be undone for the people who
+already lost access. Undo is the right default, not a rule to apply blind.
+
+## `.notint` — exempting content from the warm tint
+
+The warm tint is a full-document `multiply` overlay. That is right for UI and
+wrong for anything whose colour **is** the content:
+
+```html
+<canvas id="qrCanvas" class="notint">   <!-- a tinted QR may not scan -->
+<div class="padwrap notint">            <!-- ink preview must be true -->
+```
+
+Layering is handled by the base — tint `9000`, `.notint` `9001`, `#toast`
+`9002`, `.skip` `9003`. Do not build a per-app z-index ladder; Signature Maker
+did before this existed and had to lift the action bar, toast and skip link in
+turn to stay above its own pad.
+
+Currently applied to 14 QR canvases and the signature pad. A photo or preview
+whose colour is being judged wants it too.
+
+## Reading the comfort panel from JavaScript
+
+CSS gets these settings through the cascade. A `<canvas>` does not — it is a
+bitmap — and neither does a `requestAnimationFrame` loop.
+
+```js
+SWS.uiScale()            // root font size as a multiplier; scale canvas type by it
+SWS.prefersLessMotion()  // the panel's precedence, already correct
+SWS.onComfortChange(fn)  // repaint on any setting change, or an OS theme flip
+```
+
+`prefersLessMotion` is the one that is easy to get subtly wrong: `full` has to
+beat an OS *reduce* as surely as `less` beats an OS default. Get it backwards
+and an app looks like it honours the setting while still animating — which is
+exactly how Wheel Picker spun for 4,273ms with reduced motion set in two places.
