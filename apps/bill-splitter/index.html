@@ -1557,7 +1557,7 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
         <button class="btn primary" id="expAdd" type="button">Add expense</button>
         <button class="btn hidden" id="expCancel" type="button">Cancel</button>
       </div>
-      <p class="warn hidden" id="expWarn"></p>
+      <p class="warn hidden" id="expWarn" role="alert"></p>
     </section>
     <section class="card">
       <h2>Expenses</h2>
@@ -1577,7 +1577,7 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
       <div class="row" style="margin-top:6px">
         <button class="btn" id="payAdd" type="button">Record repayment</button>
       </div>
-      <p class="warn hidden" id="payWarn"></p>
+      <p class="warn hidden" id="payWarn" role="alert"></p>
       <ul class="plain" id="payList"></ul>
     </section>
     <section class="card" id="tripResults"></section>
@@ -2858,7 +2858,7 @@ function updateConvHint(){
 }
 
 function readExpenseForm(){
-  const warn = msg => { const w = $('expWarn'); w.textContent = msg; w.classList.remove('hidden'); return null; };
+  const warn = msg => { const w = $('expWarn'); w.classList.remove('hidden'); w.textContent = msg; return null; };
   $('expWarn').classList.add('hidden');
   if (state.people.length === 0) return warn('Add the people first, then log who paid.');
   const amt = parseAmount($('expAmt').value);
@@ -3422,8 +3422,8 @@ function applyCurrency(convert){
     rate = parseDecimal($('curRate').value);
     if (rate === null || !(rate > 0)) {
       const w = $('curWarn');
-      w.textContent = 'Enter what 1 ' + old + ' is worth in ' + code + ' — for example 150 if 1 ' + old + ' buys 150 ' + code + '.';
       w.classList.remove('hidden');
+      w.textContent = 'Enter what 1 ' + old + ' is worth in ' + code + ' — for example 150 if 1 ' + old + ' buys 150 ' + code + '.';
       return;
     }
   }
@@ -3509,8 +3509,8 @@ function wire(){
       /* Inline, inside the dialog that is covering the page. The old refusal
          was a bottom-of-page polite toast fired from behind a modal. */
       const w = $('pdWarn');
-      w.textContent = refusal;
       w.classList.remove('hidden');
+      w.textContent = refusal;
       return;
     }
     closeDlg($('personDlg'));
@@ -3627,7 +3627,7 @@ function wire(){
 
   $('payAdd').addEventListener('click', () => {
     const w = $('payWarn');
-    const fail = msg => { w.textContent = msg; w.classList.remove('hidden'); };
+    const fail = msg => { w.classList.remove('hidden'); w.textContent = msg; };
     w.classList.add('hidden');
     if (state.people.length < 2) return fail('Add at least two people first.');
     const from = $('payFrom').value, to = $('payTo').value;
