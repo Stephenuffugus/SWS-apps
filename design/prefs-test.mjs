@@ -133,9 +133,12 @@ for (const slug of slugs) {
     const btn = page.getByRole('button', { name: /display and comfort/i });
     if (await btn.count() === 0) { fail(slug, 'no settings button in the header'); throw new Error('stop'); }
 
+    /* 44, not 32. This control exists for people with access needs; holding it
+       to a lower bar than the rest of the system was indefensible, and two
+       independent review agents said so. */
     const box = await btn.boundingBox();
-    if (!box || box.width < 32 || box.height < 32) {
-      fail(slug, `settings button is ${box ? `${Math.round(box.width)}x${Math.round(box.height)}` : 'unmeasurable'}, under the 32px floor`);
+    if (!box || box.width < 44 || box.height < 44) {
+      fail(slug, `settings button is ${box ? `${Math.round(box.width)}x${Math.round(box.height)}` : 'unmeasurable'}, under the 44px floor`);
     }
 
     /* It has to sit on the title's line. Landing anywhere inside the header is

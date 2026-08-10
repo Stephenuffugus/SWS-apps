@@ -1381,6 +1381,13 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all;
 }
 
+/* The ambient "Saved" flag sits in the tagline paragraph, so it takes the
+   tagline's solved ink rather than --pos — measured failing 4.5:1 in dark mode
+   with the warm tint at High. visibility, not opacity alone, so a flag nobody
+   can see is not a contrast finding either. */
+#savedFlag{color:var(--ink-2); font-weight:600; visibility:hidden}
+#savedFlag.show{visibility:visible}
+
 .hero strong{color:var(--ink); display:block; font-size:var(--t-lg); margin-bottom:var(--s1)}
 .trust{margin:0 0 var(--s4)}
 .printonly{display:none}
