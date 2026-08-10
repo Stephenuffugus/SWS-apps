@@ -1379,6 +1379,19 @@ ul.plain li.done label{color:var(--ink-2); text-decoration:line-through}
    thumb zone may change colour, it may never change size or position. */
 ul.plain li.flash{background:var(--accent-soft)}
 .incart{margin:var(--s2) 0 0}
+
+/* A .btn is white-space:nowrap, which is right for a toolbar row and wrong for
+   a sentence-length label centred in an empty state. Measured at Largest text
+   on a 320px phone: "Copy the link to share" rendered 302px wide in a 288px
+   column and pushed the page 39px sideways — 65px with roomy spacing and high
+   contrast on top. This is the very first screen a new list shows. */
+.empty .btn{
+  max-width:100%;
+  white-space:normal;
+  line-height:var(--lh-snug);
+  padding-top:var(--s2);
+  padding-bottom:var(--s2);
+}
 .listfoot{margin-top:var(--s4)}
 
 /* "5 to get" is the most-scanned string in the whole app, so it is a real
@@ -1465,7 +1478,10 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
     <h1><a href="#/">Grocery List</a></h1>
     <span class="spacer"></span>
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
-    <button class="btn small" id="authBtn" type="button">Sign in</button>
+    <!-- Not .btn.small: that class pins 36px, and this was the last control in
+         the app under the 44px floor the rest of it meets. Measured cost —
+         header 120px → 128px at 414, and 0px at 320, where it already wrapped. -->
+    <button class="btn" id="authBtn" type="button">Sign in</button>
   </header>
   <main id="view" tabindex="-1"></main>
   <p id="listStatus" class="sr-only" role="status" aria-live="polite"></p>

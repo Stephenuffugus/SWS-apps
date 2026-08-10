@@ -43,6 +43,11 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 let toastTimer = null;
+/* The undo the toast is currently offering, so Ctrl/Cmd+Z can reach it too.
+   SWS.undo keeps its own copy of this for the apps that use it; this app's
+   toast predates that helper and adds focus-taking on top of it, so it carries
+   the shortcut itself rather than losing the focus behaviour to gain the key. */
+let pendingUndoAction = null;
 /* `action` turns the toast into the app's undo affordance: {label, onAction}.
    Destructive things in a caregiver log are never worth a one-tap regret.
    The toast also TAKES focus when the control that triggered it has just been
@@ -53,6 +58,7 @@ function toast(msg, ms, action) {
   t.replaceChildren(document.createTextNode(msg));
   t.classList.toggle('act', !!action);
   let undoBtn = null;
+  pendingUndoAction = action ? action.onAction : null;
   if (action) {
     undoBtn = el('button', {
       class: 'undo', type: 'button',
@@ -69,7 +75,23 @@ function toast(msg, ms, action) {
     undoBtn.focus();
   }
 }
-function hideToast() { $('toast').classList.remove('show'); }
+function hideToast() { $('toast').classList.remove('show'); pendingUndoAction = null; }
+
+/* The offer expires with the toast, so a Ctrl+Z ten minutes later can never
+   resurrect something the family has forgotten about. Inside a field the key
+   still means "undo my last keystroke" — the browser does that better than we
+   can, and taking it from someone mid-sentence would be its own bug. */
+document.addEventListener('keydown', (ev) => {
+  if (!pendingUndoAction) return;
+  if (ev.key !== 'z' && ev.key !== 'Z') return;
+  if (!(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+  ev.preventDefault();
+  const run = pendingUndoAction;
+  hideToast();
+  run();
+});
 
 /* A small, permanent live region. `<main>` used to carry aria-live, which made
    every remote snapshot re-announce the whole page. */
@@ -564,6 +586,11 @@ function ensureShell(v) {
 }
 
 function drawBoard() {
+  // A restore writes hundreds of entries, each of which lands as its own
+  // snapshot. Redrawing a growing timeline on every one of them turns a
+  // thirty-second job into minutes of teardown; the run reports its own
+  // progress and draws once when it finishes.
+  if (importing) return;
   if (route().view !== 'board' || !live.board) return;
   syncEntriesWatcher();
   const b = live.board;
@@ -663,6 +690,43 @@ function fillBanners(u, own, locked) {
 }
 
 /* --- coverage --- */
+/* Days that have gone by fold themselves away instead of being deleted. A log
+   that runs for a year puts eleven months of rota above today, and the answer
+   to that is NOT an "archive" button that guesses which rows are finished and
+   throws away a day somebody had claimed — coverage labels are free text, and
+   "Thursday night" or "school run" cannot be dated at all. Only the exact shape
+   "Add the next 7 days" writes is recognised; anything typed by a human is
+   never hidden, and nothing is ever removed. */
+const SLOT_MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const SLOT_DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const SLOT_DATE_RE = /^([a-z]+day),\s+([a-z]{3})[a-z]*\.?\s+(\d{1,2})$/;
+/* The generated label carries no year, so the weekday supplies it: a given
+   month and day only falls on a given weekday once in several years, so the
+   nearest year whose weekday agrees is the year that was meant. When nothing
+   agrees the row is treated as undatable and stays on screen. */
+function slotDate(label) {
+  const m = String(label || '').trim().toLowerCase().match(SLOT_DATE_RE);
+  if (!m) return null;
+  const wd = SLOT_DAYS.indexOf(m[1]);
+  const mo = SLOT_MONTHS.indexOf(m[2]);
+  const day = Number(m[3]);
+  if (wd < 0 || mo < 0 || day < 1 || day > 31) return null;
+  const y0 = new Date().getFullYear();
+  for (const y of [y0, y0 - 1, y0 + 1]) {
+    const d = new Date(y, mo, day);
+    if (d.getMonth() === mo && d.getDate() === day && d.getDay() === wd) return d;
+  }
+  return null;
+}
+function isPastSlot(s) {
+  const d = slotDate(s && s.label);
+  if (!d) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d.getTime() < today.getTime();
+}
+let pastOpen = false;   // must not slam shut on every remote snapshot
+
 function fillCoverage(u, own, locked) {
   const covCard = u.cov;
   covCard.replaceChildren(el('h2', {}, 'Who’s there, and when'));
@@ -678,7 +742,26 @@ function fillCoverage(u, own, locked) {
         el('h3', {}, 'No coverage days yet'),
         el('p', {}, 'Ask whoever started this log to add the week — the days will show up here as soon as they do.')));
   }
-  for (const s of live.slots) covCard.append(renderCoverageDay(s, own, locked));
+  const past = [], ahead = [];
+  for (const s of live.slots) (isPastSlot(s) ? past : ahead).push(s);
+  if (past.length) {
+    const box = el('details', {
+      class: 'pastdays',
+      ...(pastOpen ? { open: '' } : {}),
+      ontoggle: (ev) => { pastOpen = ev.target.open; },
+    }, el('summary', { 'data-fk': 'pastdays' },
+      past.length === 1 ? '1 earlier day — still here, just folded away'
+        : past.length + ' earlier days — still here, just folded away'));
+    for (const s of past) box.append(renderCoverageDay(s, own, locked));
+    covCard.append(box);
+  }
+  for (const s of ahead) covCard.append(renderCoverageDay(s, own, locked));
+  if (live.slots.length && !ahead.length) {
+    covCard.append(el('div', { class: 'empty' },
+      el('h3', {}, 'Nothing on the list from today onwards'),
+      own ? el('p', {}, 'Every day on the list has gone by. Add the coming week so nobody has to ask again.')
+        : el('p', {}, 'Every day on the list has gone by — whoever started this log can add the coming week.')));
+  }
   if (own && live.slots.length) {
     covCard.append(el('div', { class: 'row noprint actions' },
       el('button', { class: 'btn', type: 'button', 'data-fk': 'addweek', onclick: addWeek }, 'Add the next 7 days'),
@@ -975,7 +1058,22 @@ async function saveEntry(name, body, type) {
     toast(status === 'pending'
       ? 'Saved — it will appear for the family once the log’s owner approves it'
       : 'Saved to the log', 4000);
-  } catch (e) { toast(friendly(e), 4500); }
+  } catch (e) { toast(capMessage(e) || friendly(e), 6000); }
+}
+
+/* The shared database rules cap a board at 500 entries ever created, and a
+   refusal arrives as a bare permission-denied — which friendly() reads as "the
+   log may be locked". Telling someone their note did not save for a reason
+   that is not the reason is worse than saying nothing. No counter appears
+   anywhere until the write actually fails: this app's users are fleeing
+   products that count their days at them. */
+const ENTRY_CAP = 500;
+const capReached = () => Number((live.board && live.board.entryCount) || 0) >= ENTRY_CAP;
+function capMessage(e) {
+  const code = String((e && (e.code || e.message)) || '');
+  if (!code.includes('permission-denied') || !capReached()) return null;
+  return 'This log is full — it has held ' + ENTRY_CAP + ' entries, including any that were'
+    + ' removed. Download a copy in “Invite family & settings”, then start a fresh log.';
 }
 
 let doseCtx = null;
@@ -1379,8 +1477,10 @@ function renderManage(b) {
 
   inner.append(el('h3', {}, 'Keep your own copy'));
   inner.append(
-    el('p', { class: 'sub', text: 'A year of a family’s log should never be one tap away from gone. This downloads everything written here as a file on your device.' }),
-    el('button', { class: 'btn', type: 'button', 'data-fk': 'export', onclick: exportLog }, 'Download a copy'));
+    el('p', { class: 'sub', text: 'A year of a family’s log should never be one tap away from gone. This downloads everything written here as a file on your device — and puts it back if you ever need it.' }),
+    el('div', { class: 'row' },
+      el('button', { class: 'btn', type: 'button', 'data-fk': 'export', onclick: exportLog }, 'Download a copy'),
+      el('button', { class: 'btn', type: 'button', 'data-fk': 'import', onclick: openImport }, 'Put a copy back')));
 
   // The ask lives here — on the owner's own device, in a panel only they can
   // open — and never on the page a grieving family opened from a text message.
@@ -1437,6 +1537,186 @@ function exportLog() {
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     toast('Downloaded — keep it somewhere you will find it', 4500);
   } catch (e) { toast('Could not build the file on this device', 4500); }
+}
+
+/* ---------- putting a copy back ----------
+   "Download a copy" on its own is half a backup: a file you cannot put back is
+   a souvenir. This was held over once because the database rules stamp every
+   entry with the server's own clock, so a restore could not keep the original
+   times — and a year of log silently re-dated to the moment of restore is
+   precisely the harm this app exists to prevent.
+
+   The [when] token removes that objection. The time a thing HAPPENED already
+   rides in the body, and that is what the timeline groups by, what it sorts by
+   and what the doctor's page prints; only "logged", the secondary stamp, is the
+   server's clock. So a restored log reads at its real times, and the one thing
+   the page says about today is the truth: it was put back today.
+
+   What cannot come back is who had claimed which coverage day — a claim
+   document is keyed to the claimer's own account and only they can write it.
+   The dialog says so rather than dropping it quietly. */
+const NORM = (s) => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+/* Minute resolution: a file that has been through a round trip must recognise
+   itself, and nothing in this app records a time finer than a minute. */
+const fingerprint = (author, text, when) =>
+  NORM(author) + '|' + NORM(text) + '|' + (when ? Math.round(when.getTime() / 60000) : 0);
+
+function parseISO(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/* Everything here mirrors a rule the database will apply anyway — length caps,
+   the type list, the capacity range. Better to drop one malformed row on this
+   side than to have the whole restore stop halfway with a permission error. */
+function planImport(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return { fatal: 'That file is not a care log copy.' };
+  if (data.app !== 'caregiver-log') return { fatal: 'That file did not come from Caregiver Log.' };
+
+  const haveLabels = new Set(live.slots.map(s => NORM(s.label)));
+  const slots = [];
+  let daysAlready = 0, people = 0;
+  for (const c of (Array.isArray(data.coverage) ? data.coverage : [])) {
+    const label = String((c && c.label) || '').trim().slice(0, 120);
+    if (!label) continue;
+    people += Array.isArray(c.people) ? c.people.length : 0;
+    if (haveLabels.has(NORM(label))) { daysAlready++; continue; }
+    haveLabels.add(NORM(label));
+    let cap = Math.round(Number(c.capacity));
+    if (!Number.isFinite(cap) || cap < 1) cap = 1;
+    slots.push({ label, capacity: Math.min(999, cap) });
+  }
+
+  const seen = new Set(visibleEntries().map(e => {
+    const p = parseBody(e);
+    return fingerprint(e.authorName, p.text, p.when || entryDate(e));
+  }));
+  const entries = [];
+  let entriesAlready = 0, dropped = 0;
+  for (const r of (Array.isArray(data.entries) ? data.entries : [])) {
+    if (!r || typeof r !== 'object') { dropped++; continue; }
+    const text = String(r.text == null ? '' : r.text).trim().slice(0, 1900);
+    if (!text) { dropped++; continue; }
+    const author = (String(r.author == null ? '' : r.author).trim() || 'Someone').slice(0, 60);
+    const when = parseISO(r.happenedAt) || parseISO(r.writtenAt);
+    const fp = fingerprint(author, text, when);
+    if (seen.has(fp)) { entriesAlready++; continue; }
+    seen.add(fp);
+    entries.push({
+      author, when,
+      // hasOwnProperty, not truthiness: a file claiming type "constructor"
+      // must not walk out of the four types the rules accept.
+      type: Object.prototype.hasOwnProperty.call(TYPE_LABEL, r.type) ? r.type : 'note',
+      body: composeBody(text, when, parseISO(r.editedAt)),
+      ms: when ? when.getTime() : 0,
+    });
+  }
+  // Oldest first, so what the server stamps as "logged" runs in the same order
+  // the family wrote it.
+  entries.sort((a, b) => a.ms - b.ms);
+
+  const room = Math.max(0, ENTRY_CAP - Number((live.board && live.board.entryCount) || 0));
+  return { slots, entries, daysAlready, entriesAlready, dropped, people, room };
+}
+
+let importPlan = null;
+let importing = false;   // drawBoard is a no-op while a restore runs
+
+function openImport() {
+  const f = $('importFile');
+  f.value = '';   // re-picking the same file after a cancel must still fire change
+  f.click();
+}
+
+async function readImportFile(file) {
+  if (!file) return;
+  let data = null;
+  try {
+    data = JSON.parse(await file.text());
+  } catch (e) { toast('That file could not be read as a care log copy.', 5000); return; }
+  const plan = planImport(data);
+  if (plan.fatal) { toast(plan.fatal, 5000); return; }
+
+  const bits = [];
+  if (plan.entries.length) bits.push(plan.entries.length === 1 ? '1 note' : plan.entries.length + ' notes');
+  if (plan.slots.length) bits.push(plan.slots.length === 1 ? '1 coverage day' : plan.slots.length + ' coverage days');
+  const tail = [];
+  if (plan.entriesAlready) tail.push(plan.entriesAlready + ' already here');
+  if (plan.daysAlready) tail.push(plan.daysAlready + ' of the days already here');
+  if (plan.dropped) tail.push(plan.dropped + ' unreadable and skipped');
+
+  if (!bits.length) {
+    toast(tail.length ? 'Nothing new in that copy — it is all already in the log.' : 'That copy has nothing in it.', 5000);
+    return;
+  }
+  importPlan = plan;
+  $('importSummary').textContent = 'Put ' + bits.join(' and ') + ' back into “'
+    + ((live.board && live.board.title) || 'this log') + '”?'
+    + (tail.length ? ' (' + tail.join(', ') + '.)' : '');
+
+  const warn = $('importWarn');
+  const notes = [];
+  if (plan.people) {
+    notes.push('Who had claimed which day cannot come back — each person puts their own'
+      + ' name down, so the days arrive empty for the family to claim again.');
+  }
+  const overBy = plan.entries.length - plan.room;
+  const tooMany = overBy > 0;
+  if (tooMany) {
+    notes.length = 0;
+    notes.push('This log has room for ' + plan.room + ' more '
+      + (plan.room === 1 ? 'entry' : 'entries') + ' and the copy holds ' + plan.entries.length
+      + '. Start a fresh log and put the copy into that one instead — half a log is worse than none.');
+  }
+  warn.textContent = notes.join(' ');
+  warn.classList.toggle('hidden', !notes.length);
+  $('importGo').disabled = tooMany;
+
+  showDlg($('importDlg'));
+  // A disabled button cannot take focus, so the dialog would open on <body>.
+  (tooMany ? $('importCancel') : $('importGo')).focus();
+}
+
+async function runImport() {
+  const plan = importPlan;
+  if (!plan || importing) return;
+  importing = true;
+  $('importGo').disabled = true;
+  $('importCancel').disabled = true;
+  const total = plan.entries.length;
+  let done = 0;
+  const say = (t) => { $('importSummary').textContent = t; };
+  try {
+    if (plan.slots.length) {
+      say('Putting the coverage days back…');
+      let order = live.slots.reduce((m, s) => Math.max(m, s.order || 0), 0);
+      await D.addSlots(live.boardId, plan.slots.map((r, i) => ({ ...r, order: order + i + 1 })));
+    }
+    for (const e of plan.entries) {
+      await D.addEntry(live.boardId, live.board, { authorName: e.author, body: e.body, type: e.type });
+      done++;
+      if (done === 1 || done % 10 === 0) say('Put back ' + done + ' of ' + total + ' notes…');
+    }
+    closeDlg($('importDlg'));
+    toast('Back in the log — ' + done + (done === 1 ? ' note' : ' notes')
+      + (plan.slots.length ? ' and ' + plan.slots.length + ' coverage '
+        + (plan.slots.length === 1 ? 'day' : 'days') : '')
+      + ', at the times they happened.', 6000);
+  } catch (err) {
+    closeDlg($('importDlg'));
+    toast(done
+      ? done + ' of ' + total + ' notes went back, then it stopped: ' + (capMessage(err) || friendly(err))
+      : (capMessage(err) || friendly(err)), 7000);
+  } finally {
+    importing = false;
+    importPlan = null;
+    $('importGo').disabled = false;
+    $('importCancel').disabled = false;
+    invalidateEntries();
+    drawBoard();
+    restoreFocus($('view'), 'import');
+  }
 }
 
 let slotEditing = null;   // null = the dialog is adding a new day
@@ -1572,6 +1852,19 @@ function wire() {
     buildPrintPage();
     window.print();
   });
+  $('importFile').addEventListener('change', (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    readImportFile(f);
+  });
+  $('importCancel').addEventListener('click', () => {
+    if (importing) return;
+    importPlan = null;
+    closeDlg($('importDlg'));
+    restoreFocus($('view'), 'import');
+  });
+  $('importGo').addEventListener('click', runImport);
+
   // Ctrl+P and the browser menu have to produce the same page as the button.
   window.addEventListener('beforeprint', () => { if (live.board && shell && !shell.printBox.firstChild) buildPrintPage(); });
   window.addEventListener('afterprint', () => { if (shell) shell.printBox.replaceChildren(); });
