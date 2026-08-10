@@ -118,6 +118,8 @@ const inFlight = new Set(); // normalized names being written right now
 let flashId = null;     // the row a duplicate add pointed at
 let flashTimer = null;
 let shareOpen = false;  // survive live-snapshot redraws
+let renaming = false;   // the owner is editing the list's name
+let renameDraft = '';   // …and what they have typed so far, kept across redraws
 const live = {
   boardId: null, code: null, board: null, entries: [],
   unsubs: [],
@@ -126,6 +128,7 @@ const live = {
     this.unsubs = [];
     this.boardId = null; this.code = null; this.board = null; this.entries = [];
     shareOpen = false; addError = ''; flashId = null;
+    renaming = false; renameDraft = '';
     clearTimeout(flashTimer);
   },
 };
@@ -464,6 +467,83 @@ async function clearChecked(doneList) {
   });
 }
 
+/* ---------- naming the list ---------- */
+/* Tomasz could not tell whether the link he had been sent was his household's
+   list or a stranger's, because nothing on the page named it. The name is on
+   the board, the print and the share text now — and the one person who can
+   change it is the one the rules let: firestore.rules allows the owner to touch
+   `title` and holds it to 1–100 characters, so those are the only limits here.
+   No new field, no migration; every board already has a title. */
+function focusKey(k) {
+  const n = document.querySelector('#view [data-fkey="' + k + '"]');
+  if (n) n.focus();
+  return n;
+}
+
+function startRename(title) {
+  renaming = true;
+  renameDraft = title;
+  drawBoard();
+  const i = focusKey('renameinput');
+  if (i && i.select) i.select();
+}
+function cancelRename() {
+  renaming = false;
+  renameDraft = '';
+  drawBoard();
+  focusKey('rename');
+}
+
+async function applyTitle(name) {
+  const c = commit(D.updateBoard(live.boardId, { title: name }));
+  const r = await c.settled;
+  if (r === 'failed') { toast(friendly(c.error()), 4500); return false; }
+  if (r === 'queued') c.p.then((x) => { if (x === 'failed') toast(friendly(c.error()), 4500); });
+  savedFlag();
+  return true;
+}
+
+async function commitRename(was) {
+  const name = String(renameDraft || '').trim().slice(0, 100);
+  // The rules reject an empty title outright; refusing here keeps the user's
+  // text in the box instead of trading it for a permission error.
+  if (!name) { toast('The list needs a name'); focusKey('renameinput'); return; }
+  renaming = false;
+  renameDraft = '';
+  drawBoard();
+  focusKey('rename');
+  if (name === was) return;
+  if (!(await applyTitle(name))) return;
+  // Renaming is not destructive, but it is the kind of thing that gets done by
+  // accident on a phone, and putting it back is one write.
+  if (was) undoToast('List renamed to “' + name + '”', () => applyTitle(was));
+  else toast('List renamed to “' + name + '”');
+}
+
+function nameLine(own, title) {
+  const line = el('p', { class: 'boardname' }, el('b', {}, title));
+  if (own && !renaming) {
+    line.append(el('button', { class: 'btn ghost noprint', type: 'button',
+      'data-fkey': 'rename', 'aria-label': 'Rename this list, currently ' + title,
+      onclick: () => startRename(title) }, 'Rename'));
+  }
+  if (!own || !renaming) return [line];
+  const input = el('input', {
+    type: 'text', maxlength: '100', value: renameDraft,
+    'aria-label': 'List name', 'data-fkey': 'renameinput', autocomplete: 'off',
+    oninput: (ev) => { renameDraft = ev.target.value; },
+    onkeydown: (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); commitRename(title); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); cancelRename(); }
+    },
+  });
+  return [line, el('div', { class: 'renamerow noprint' }, input,
+    el('button', { class: 'btn primary', type: 'button', 'data-fkey': 'renamesave',
+      onclick: () => commitRename(title) }, 'Save'),
+    el('button', { class: 'btn', type: 'button', 'data-fkey': 'renamecancel',
+      onclick: cancelRename }, 'Cancel'))];
+}
+
 /* ---------- the board ---------- */
 function listAsText(b, items) {
   const lines = [b.title || 'Grocery list'];
@@ -508,7 +588,7 @@ function drawBoard() {
   const done = items.filter(e => e.done);
 
   const title = b.title || 'Grocery list';
-  v.append(el('p', { class: 'boardname' }, el('b', {}, title)));
+  v.append(...nameLine(own, title));
   // On paper: which list this is, and when it was printed.
   v.append(el('p', { class: 'printonly printhead' },
     'Share code ' + (live.code || '') + ' · printed ' + new Date().toLocaleDateString()));

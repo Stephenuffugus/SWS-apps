@@ -1299,28 +1299,23 @@ body{
 
 /* ═══ APP LAYER — rules specific to this app live below ═══ */
 
-/* studio.css sets footer.colophon to --ink-3, which is a 3:1 token — at --t-xs
-   that is a real 4.5:1 text-contrast failure (axe confirms it on every app whose
-   texture is `none`, where the missing background-image stops axe from
-   abstaining). Correcting it here until studio.css moves the colophon to
-   --ink-2; delete this rule when it does. */
-footer.colophon{color:var(--ink-2)}
-
-/* The app title is also the route home. It keeps header ink so the bar reads as
-   one object, but it has to announce itself as a link under a cursor or a
-   keyboard — it was previously indistinguishable from plain text. */
-header.app h1 a{color:inherit; text-decoration:none}
+/* The app title is also the route home, and on the board it is the only route
+   back. It keeps header ink so the bar reads as one object, but it has to
+   announce itself as a link under a cursor or a keyboard — it was previously
+   indistinguishable from plain text — and it has to meet the same 44px floor
+   as every other control here. It was measured at 114x27. */
+header.app h1 a{
+  display:inline-flex; align-items:center;
+  min-height:var(--tap);
+  color:inherit; text-decoration:none;
+}
 header.app h1 a:hover,
 header.app h1 a:focus-visible{text-decoration:underline; text-underline-offset:.18em}
 
-/* The comfort button is the one control that makes this app usable for a
-   low-vision shopper, and it was the smallest thing on the page: 36x36 at every
-   text size, the only header control that does not grow with --ui-scale. The
-   studio rule pins width/height, so both have to be restated here. */
-#swsPrefsBtn{
-  width:auto; height:auto;
-  min-width:var(--tap); min-height:var(--tap);
-}
+/* studio.css now sizes #swsPrefsBtn itself at var(--tap), so the box is no
+   longer restated here. The glyph inside it is still a flat 18px in the base;
+   px does not follow --ui-scale, so at Largest text the one control a
+   low-vision shopper needs would hold a default-sized icon in a 66px button. */
 #swsPrefsBtn svg{width:calc(18px * var(--ui-scale)); height:calc(18px * var(--ui-scale))}
 
 /* ── The add row ─────────────────────────────────────────────────────────── */
@@ -1353,8 +1348,22 @@ header.app h1 a:focus-visible{text-decoration:underline; text-underline-offset:.
 /* ── Naming the list ─────────────────────────────────────────────────────── */
 /* A shared link that opens an anonymous list is one mis-forwarded message away
    from someone editing a stranger's groceries. */
-.boardname{margin:0 0 var(--s3); font-size:var(--t-base); color:var(--ink-2)}
-.boardname b{color:var(--ink)}
+.boardname{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--s3);
+  margin:0 0 var(--s3);
+  font-size:var(--t-base);
+  color:var(--ink-2);
+}
+.boardname b{color:var(--ink); min-width:0; overflow-wrap:anywhere}
+/* Renaming happens BELOW the name, never in place of it: the owner can still
+   read what the list is called while typing what it should be called, and the
+   printed page keeps its heading whatever the screen is doing. */
+.renamerow{
+  display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center;
+  margin:0 0 var(--s4);
+}
+.renamerow > input{flex:1 1 16ch; min-width:16ch}
+.renamerow > .btn{flex:1 0 auto}
 .boardtrust{margin:var(--s4) 0}
 .printonly{display:none}
 .printhead{font-size:var(--t-sm); color:var(--ink-2)}
