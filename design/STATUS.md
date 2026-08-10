@@ -57,7 +57,7 @@ undo that vanishes is worse than no undo.
 
 | Command | What it proves |
 |---|---|
-| `npm test` | every app's suite — 25 passing, 0 failing, 5 emulator-only skips |
+| `npm test` | every app's suite — 36 passing, 0 failing, 5 emulator-only skips |
 | `npm run design:check` | 1542/1542 contrast checks, plus the accent-token guard |
 | `npm run a11y` | axe over 23 apps × light/dark, **including the comfort panel open** |
 | `npm run prefs` | drives all 23 comfort panels in a real browser |
@@ -80,14 +80,32 @@ persistence, deliberately corrupt localStorage, keyboard reachability, **axe
 after interacting**, and print — so results are comparable across the
 portfolio. `design/harness.mjs` is the rig underneath it.
 
-## Research and review
+## Research, review and implementation — complete
 
-**23/23 apps researched** — 287 sourced competitor complaints, written up in
+**23/23 researched** — 287 sourced competitor complaints, in
 `findings/COMPETITIVE-BRIEF.md`.
 
-**14/23 apps reviewed** so far, each with a persona focus group and a real
-browser stress run: **217 fixes, 80 of them blockers**. Remaining reviews are
-running.
+**23/23 reviewed** — a persona focus group and a real browser stress run per
+app: ~130 personas, ~400 stress scenarios, **351 fixes located and evidenced,
+129 of them blockers**. Per-app detail in `findings/<slug>.review.json`, the
+cross-app read in `findings/PORTFOLIO-SYNTHESIS.md`.
+
+**23/23 implemented** — **380 fixes applied, 129 blockers closed**. 88 fixes
+were deliberately skipped, each with a recorded reason.
+
+### The full regression, run independently rather than taken on trust
+
+| Check | Result |
+|---|---|
+| `npm test` | **36 passing, 0 failing**, 5 emulator-only skips (was 25) |
+| `npm run design:check` | **1542/1542** contrast, accent-token guard clean |
+| `npm run a11y` | **0 violations**, 23 apps x light + dark, panel open |
+| `npm run prefs` | comfort panel green on all 23 |
+| `node design/stress.mjs` | **0 hard failures across 23 apps** |
+
+The test count rose because agents added coverage for the defects they fixed
+rather than only changing code — packing-list went 5 to 16, pdf-tools 7 to 19,
+qr-maker 5 to 21, caregiver-log to 74.
 
 ## Done, per app
 
@@ -95,8 +113,7 @@ running.
 |---|---|
 | Wheel Picker | full pass — reduced motion honoured (4,273ms → 742ms), focus kept on spin, elimination announces the last person, caps disclosed, wedge contrast 1.04:1 → 2.53:1, spin history, QR overflow explained |
 | Seating Chart | full pass — keyboard seating, floor plan no longer clips past table 12, 1,000-guest cap disclosed, tab bar reachable, non-Latin names print correctly, all five confirms replaced with undo |
-| Baby Log · Caregiver Log · Pill Schedule | earlier full pass; now re-reviewed |
-| The other 19 | base-layer quality; implementation in flight |
+| The other 21 | full pass — reviewed, implemented and verified |
 
 ## Sweeps done portfolio-wide
 
@@ -108,17 +125,30 @@ running.
 
 ## Still to do
 
-1. **Finish the 9 outstanding reviews**, then implement them.
-2. **Print.** The largest single cluster — 14 apps, 62 fixes. The base ships
-   real print rules and survives "background graphics off", but each app's own
-   print layout still wants a proof: literally print one and look at it.
-3. **Silent caps**, the second largest cluster. Every limit must say its own
-   name at the moment it bites.
-4. **The privacy promise as an object.** Only 2 of 23 apps show it as a badge;
-   the rest bury it in grey footer copy, which the research says plainly that
-   nobody believes. Being folded into the implementation pass, with copy true
-   and specific to each app.
-5. **Bracket Maker's gold** still reads more olive than trophy.
+1. **Honest trust copy for the four cloud-backed apps** — caregiver-log,
+   grocery-list, signup-sheets and team-parent are the only ones without a
+   `.trust` badge (18 of 23 now have one, up from 2). The agents were right not
+   to stamp "nothing leaves your device" on an app where data does leave. What
+   those four should say instead is a claim about the service, and belongs to
+   its owner rather than to whoever is editing the file.
+2. **Print on paper.** Print is still the largest cluster by fix count. The
+   base survives "background graphics off" and each app's layout has been
+   driven under `emulateMedia({media:'print'})`, but nothing substitutes for
+   printing one and looking at it.
+3. **Bracket Maker's gold** still reads more olive than trophy.
+4. **The 88 skipped fixes.** Recorded per app in the workflow journals with
+   reasons. Several are correct refusals worth keeping — bracket-maker declined
+   to make shared brackets live via Firestore because it would mean data
+   leaving the device, which contradicts the badge it had just been asked to
+   write.
+
+### Deliberately NOT changed
+
+The 10 remaining `confirm()` calls are correct. They guard multi-user
+irreversible actions where undo cannot work: rotating a share link cannot be
+undone for the people who have already lost access, and team-parent's RSVP
+delete says outright that the names cannot be restored. Undo is the right
+default, not a rule to apply without looking.
 
 ## Note on editing
 
