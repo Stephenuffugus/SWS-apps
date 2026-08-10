@@ -932,9 +932,21 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
    Beyond darkening the greys: the frosted action bar becomes opaque. A blurred
    translucent strip with text behind it is the single worst thing on the page
    for anyone who needed high contrast in the first place. */
+/* --ink-3 is resolved on :root and --ink-2 is overridden on BODY, and the
+   split is the whole point.
+ *
+ * Written as one block — body{--ink-2:var(--ink); --ink-3:var(--ink-2)} — the
+ * second declaration reads the value the first one just set, so all three inks
+ * collapsed to the same colour. Measured on Sitter Sheet: --ink, --ink-2 and
+ * --ink-3 all #262013, a 1.00:1 ratio between a placeholder and real typed
+ * text. High contrast made it IMPOSSIBLE to tell an empty field from a filled
+ * one — worse, for the people who turn it on, than leaving it off.
+ *
+ * Resolving --ink-3 one element up means it picks up the ORIGINAL --ink-2, so
+ * placeholders darken to full secondary strength and still read as secondary. */
 @media (prefers-contrast:more){
-  :root:not([data-contrast="normal"]){--line:var(--line-2)}
-  :root:not([data-contrast="normal"]) body{--ink-2:var(--ink); --ink-3:var(--ink-2)}
+  :root:not([data-contrast="normal"]){--line:var(--line-2); --ink-3:var(--ink-2)}
+  :root:not([data-contrast="normal"]) body{--ink-2:var(--ink)}
   :root:not([data-contrast="normal"]) .btn{border-width:2px}
   :root:not([data-contrast="normal"]) :focus-visible{outline-width:3px}
   :root:not([data-contrast="normal"]) .actionbar{
@@ -944,8 +956,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
     border-top-width:2px;
   }
 }
-:root[data-contrast="more"]{--line:var(--line-2)}
-:root[data-contrast="more"] body{--ink-2:var(--ink); --ink-3:var(--ink-2)}
+:root[data-contrast="more"]{--line:var(--line-2); --ink-3:var(--ink-2)}
+:root[data-contrast="more"] body{--ink-2:var(--ink)}
 :root[data-contrast="more"] .btn{border-width:2px}
 :root[data-contrast="more"] :focus-visible{outline-width:3px}
 :root[data-contrast="more"] .actionbar{
@@ -996,12 +1008,30 @@ body::after{
   content:"";
   position:fixed;
   inset:0;
-  z-index:9999;
+  z-index:9000;
   display:none;
   pointer-events:none;
   background:var(--warm-tint);
   mix-blend-mode:multiply;
 }
+
+/* Things the tint must NOT touch.
+ *
+ * The overlay multiplies over the entire document, which is right for UI and
+ * wrong for anything whose colour IS the content: a QR code that has to scan,
+ * a photo being judged for compression artefacts, a signature pad previewing
+ * the ink that will be exported. Signature Maker hit this and had to lift its
+ * pad above z-index 9999 by hand, then lift the action bar, toast and skip
+ * link over that in turn — a fragile local ladder that every app with a canvas
+ * would have had to rebuild.
+ *
+ * One class instead. Put .notint on the element whose colour must be true. */
+.notint{position:relative; z-index:9001}
+
+/* Chrome that has to stay above exempted content. Kept above .notint so a
+   toast is never hidden behind a canvas someone exempted. */
+#toast{z-index:9002}
+.skip{z-index:9003}
 :root[data-warmth="1"],:root[data-warmth="2"],:root[data-warmth="3"]{
   --warm-tint:rgba(255,203,145,0.18);
 }
@@ -1484,7 +1514,7 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 
 <dialog id="qrDlg" aria-labelledby="qrDlgTitle">
   <h3 id="qrDlgTitle">Scan to open this sheet</h3>
-  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code for this sheet"></canvas></div>
+  <div id="qrBox"><canvas id="qrCanvas" width="300" height="300" role="img" aria-label="QR code for this sheet" class="notint"></canvas></div>
   <p class="sub" id="qrUrl"></p>
   <p class="hint">Anyone with the link can claim a spot — no app, no account.</p>
   <div class="row" style="margin-top:10px">

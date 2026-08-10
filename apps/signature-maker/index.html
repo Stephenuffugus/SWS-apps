@@ -914,9 +914,21 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
    Beyond darkening the greys: the frosted action bar becomes opaque. A blurred
    translucent strip with text behind it is the single worst thing on the page
    for anyone who needed high contrast in the first place. */
+/* --ink-3 is resolved on :root and --ink-2 is overridden on BODY, and the
+   split is the whole point.
+ *
+ * Written as one block — body{--ink-2:var(--ink); --ink-3:var(--ink-2)} — the
+ * second declaration reads the value the first one just set, so all three inks
+ * collapsed to the same colour. Measured on Sitter Sheet: --ink, --ink-2 and
+ * --ink-3 all #262013, a 1.00:1 ratio between a placeholder and real typed
+ * text. High contrast made it IMPOSSIBLE to tell an empty field from a filled
+ * one — worse, for the people who turn it on, than leaving it off.
+ *
+ * Resolving --ink-3 one element up means it picks up the ORIGINAL --ink-2, so
+ * placeholders darken to full secondary strength and still read as secondary. */
 @media (prefers-contrast:more){
-  :root:not([data-contrast="normal"]){--line:var(--line-2)}
-  :root:not([data-contrast="normal"]) body{--ink-2:var(--ink); --ink-3:var(--ink-2)}
+  :root:not([data-contrast="normal"]){--line:var(--line-2); --ink-3:var(--ink-2)}
+  :root:not([data-contrast="normal"]) body{--ink-2:var(--ink)}
   :root:not([data-contrast="normal"]) .btn{border-width:2px}
   :root:not([data-contrast="normal"]) :focus-visible{outline-width:3px}
   :root:not([data-contrast="normal"]) .actionbar{
@@ -926,8 +938,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
     border-top-width:2px;
   }
 }
-:root[data-contrast="more"]{--line:var(--line-2)}
-:root[data-contrast="more"] body{--ink-2:var(--ink); --ink-3:var(--ink-2)}
+:root[data-contrast="more"]{--line:var(--line-2); --ink-3:var(--ink-2)}
+:root[data-contrast="more"] body{--ink-2:var(--ink)}
 :root[data-contrast="more"] .btn{border-width:2px}
 :root[data-contrast="more"] :focus-visible{outline-width:3px}
 :root[data-contrast="more"] .actionbar{
@@ -978,12 +990,30 @@ body::after{
   content:"";
   position:fixed;
   inset:0;
-  z-index:9999;
+  z-index:9000;
   display:none;
   pointer-events:none;
   background:var(--warm-tint);
   mix-blend-mode:multiply;
 }
+
+/* Things the tint must NOT touch.
+ *
+ * The overlay multiplies over the entire document, which is right for UI and
+ * wrong for anything whose colour IS the content: a QR code that has to scan,
+ * a photo being judged for compression artefacts, a signature pad previewing
+ * the ink that will be exported. Signature Maker hit this and had to lift its
+ * pad above z-index 9999 by hand, then lift the action bar, toast and skip
+ * link over that in turn — a fragile local ladder that every app with a canvas
+ * would have had to rebuild.
+ *
+ * One class instead. Put .notint on the element whose colour must be true. */
+.notint{position:relative; z-index:9001}
+
+/* Chrome that has to stay above exempted content. Kept above .notint so a
+   toast is never hidden behind a canvas someone exempted. */
+#toast{z-index:9002}
+.skip{z-index:9003}
 :root[data-warmth="1"],:root[data-warmth="2"],:root[data-warmth="3"]{
   --warm-tint:rgba(255,203,145,0.18);
 }
@@ -1281,17 +1311,18 @@ body{
 /* ── The signing surface ─────────────────────────────────────────────────────
    The pad is a WYSIWYG preview of ink on paper, so it must be a true white
    rectangle in every theme — otherwise the ink colour the user picks is a
-   guess about what the exported file will look like. Dark mode already got
-   this right; the warm-tint overlay did not, because the base paints it as a
-   fixed multiply layer at z-index 9999 over the whole document, which rendered
-   the pad rgb(255,214,177). Lifting the pad above that layer is the only way
-   to exempt it. Everything that legitimately sits over the pad — the sticky
-   action bar, the toast, the skip link — is lifted in turn, in that order, so
-   nothing ends up underneath it. (The comfort panel is a modal <dialog>: it
-   lives in the top layer and is unaffected by any of this.) */
+   guess about what the exported file will look like. The warm-tint overlay
+   used to multiply over it and render it rgb(255,214,177).
+
+   This app solved that first, with a hand-built z-index ladder that also had
+   to lift the action bar, toast and skip link over the pad in turn. That is
+   now the base layer's `.notint` — the class carries the exemption and the
+   base keeps the chrome above it, so the ladder is gone and every other app
+   with a canvas gets the same fix for free. `.padwrap` carries .notint in the
+   markup. (The comfort panel is a modal <dialog>: it lives in the top layer
+   and is unaffected by any of this.) */
 .padwrap{
   position:relative;
-  z-index:10000;
   background:#ffffff;
   border:1px dashed var(--line-2);
   border-radius:var(--r-card);
@@ -1299,9 +1330,6 @@ body{
   touch-action:none;
   overflow:hidden;
 }
-.actionbar{z-index:10001}
-#toast{z-index:10002}
-.skip{z-index:10003}
 
 /* The pad was the one element on the page that ignored every comfort dial:
    hardcoded 260px at Default and at Largest alike, so turning the text up made
@@ -1500,7 +1528,7 @@ input[type=range]{width:100%; min-height:var(--tap); accent-color:var(--accent-d
       <button type="button" data-mode="photo" aria-pressed="false">Photo</button>
     </div>
 
-    <div class="padwrap" id="padwrap">
+    <div class="padwrap notint" id="padwrap">
       <canvas id="pad" role="img" aria-label="Signature pad — empty"></canvas>
       <div class="padline" aria-hidden="true"></div>
       <div class="padx" aria-hidden="true">✕</div>

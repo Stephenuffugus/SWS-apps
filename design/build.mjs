@@ -309,7 +309,23 @@ function buildApp(slug, skin){
   const texD = textureFor(skin, dark, true);
   const attach = { wash: 'fixed', grid: 'fixed', grain: 'scroll', band: 'scroll', rule: 'scroll', none: 'scroll' }[skin.texture ?? 'none'];
 
-  const scale = skin.scale ? `\n  --t-base:${(1 * skin.scale).toFixed(3)}rem;\n  --t-lg:${(1.0625 * skin.scale).toFixed(3)}rem;\n  --t-sm:${(0.9375 * skin.scale).toFixed(3)}rem;` : '';
+  /* A skin's type scale has to be emitted AFTER studio.css, not with the rest
+     of the tokens before it.
+   *
+   * studio.css declares --t-base/--t-lg/--t-sm on :root as well. Same
+   * specificity, and it came later in the file, so it won. Every app that set
+   * a `scale` silently got 1rem anyway: Grocery List asked for 1.060 and
+   * Pill Schedule for 1.140, and both shipped at 1. Two review agents found it
+   * independently and neither could fix it from an app layer, which is exactly
+   * right — it is a build-order bug, not an app bug. */
+  const scale = skin.scale ? `
+/* ── ${slug} type scale — after the base so the skin actually wins ─────── */
+:root{
+  --t-base:${(1 * skin.scale).toFixed(3)}rem;
+  --t-lg:${(1.0625 * skin.scale).toFixed(3)}rem;
+  --t-sm:${(0.9375 * skin.scale).toFixed(3)}rem;
+}
+` : '';
 
   const fontKey = voice.font;
   const face = fontKey ? FONT_FILES[fontKey] : null;
@@ -338,7 +354,7 @@ ${fontFace}:root{
   --font-text:${SYSTEM_STACK};
   --font-display:${voice.display};
   --display-weight:${voice.weight};
-  --display-tracking:${voice.tracking};${scale}
+  --display-tracking:${voice.tracking};
 ${tokenBlock(light)}
 
   /* Legacy aliases. Every app shipped against the old token names; these keep
@@ -384,7 +400,7 @@ ${tokenBlock(dark)}
 
 
 ${readFileSync(join(HERE, 'studio.css'), 'utf8')}
-
+${scale}
 /* ── ${slug} texture — must follow the base layer to win the cascade ───── */
 body{
   background-image:${texL.image};

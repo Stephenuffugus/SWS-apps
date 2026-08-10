@@ -1,7 +1,7 @@
 /* Signup Sheets service worker — offline-first shell so sheets stay readable
    with no signal (Firestore's local cache supplies the data). Bump VERSION
    on each deploy. */
-const VERSION = 'signup-v18';
+const VERSION = 'signup-v19';
 const ASSETS = [
   './',
   './index.html',

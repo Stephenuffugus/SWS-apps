@@ -126,11 +126,47 @@
     return t;
   };
 
+  /* The pending undo, so a keyboard can reach it without tabbing to the toast.
+   *
+   * #toast is the last element in <body>, which measured 18 focus stops away
+   * on Packing List — by the time you tab there the toast has long gone. Undo
+   * is the one action people already have a key for, so it gets that key. */
+  var pendingUndo = null;
+
+  document.addEventListener('keydown', function (e) {
+    if (!pendingUndo) return;
+    if (e.key !== 'z' && e.key !== 'Z') return;
+    if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+
+    // Never steal Ctrl+Z from someone typing — inside a field it means
+    // "undo my last keystroke", which the browser handles better than we can.
+    var el = document.activeElement;
+    if (el && (el.isContentEditable ||
+      /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+
+    e.preventDefault();
+    var run = pendingUndo;
+    pendingUndo = null;
+    hide();
+    try { run(); } catch (err) {
+      if (window.console && console.error) console.error('undo failed', err);
+    }
+  });
+
   /** The common case, spelled the short way. */
   SWS.undo = function (msg, onUndo, opts) {
     opts = opts || {};
     opts.action = { label: opts.label || 'Undo', onAction: onUndo };
-    return SWS.toast(msg, opts);
+
+    pendingUndo = onUndo;
+    var node = SWS.toast(msg, opts);
+
+    // The offer expires with the toast; a Ctrl+Z ten minutes later must not
+    // silently resurrect something the user has forgotten about.
+    var clear = function () { pendingUndo = null; };
+    setTimeout(clear, (opts.ms || 7000) + 500);
+
+    return node;
   };
 
   SWS.hideToast = hide;
