@@ -1,0 +1,20 @@
+{
+ "slug": "signup-sheets",
+ "remaining": [
+  {
+   "slug": "signup-sheets",
+   "title": "Per-person claim cap ('anyone may take up to N')",
+   "why": "The cap has to be enforced in firestore.rules or it is theatre \u2014 any link-holder can drive data.js directly, and the review says so itself ('the rules layer can enforce the cap the same way it enforces capacity'). Firestore rules cannot count documents across sibling subcollections, so a real cap needs a per-board-per-uid counter document written in the same batch as every claim and release, mirrored in claimSlot/releaseClaim/ownerRemoveClaim, and re-derived through the 77-case rules matrix. That is a data-model change, not a fix, and a half-enforced cap would be a new lie in an app whose pitch is that it does not lie. The other half of that fix item \u2014 editing a claim rather than only deleting it \u2014 is done."
+  },
+  {
+   "slug": "signup-sheets",
+   "title": "'Your sheets': fill counts, dates, duplicate, delete, archive",
+   "why": "Named as a major friction in the focus group but not carried into the ordered fixes array, and 'duplicate for next month' is a feature build (new data-layer copy path plus an archive rule) rather than a repair. I did make the row's Open button name the sheet it opens, and deleting a sheet is now undoable rather than permanent, which were the two safety-relevant parts."
+  },
+  {
+   "slug": "signup-sheets",
+   "title": "The prompt() fallback in completeEmailLink",
+   "why": "Listed under the audit's navigation defects, not in the work order. Replacing it means adding an email-confirmation field and a second state to #authDlg, and I could not exercise the failure it guards (a browser that suppresses dialogs) in this environment, so I would have been shipping an untested sign-in path on the one flow that gates the entire owner side."
+  }
+ ]
+}

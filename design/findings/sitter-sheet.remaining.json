@@ -1,0 +1,20 @@
+{
+ "slug": "sitter-sheet",
+ "remaining": [
+  {
+   "slug": "sitter-sheet",
+   "title": "Per-child and per-pet repeatable blocks",
+   "why": "The only remaining item on the fix list, and it is the one marked effort L. Doing it properly means a repeatable sub-record inside a schema whose keys are the share format's wire protocol \u2014 app.js:667 filters incoming links against the current key set and drops what it does not recognise, so every link already sent would silently lose the children. That needs a versioned payload and a migration path, which is more than can be verified in this pass. A half-done version that adds child2/child3 flat keys would be worse than the honest omission, because it would look like the feature and break sharing."
+  },
+  {
+   "slug": "sitter-sheet",
+   "title": "The optional consent-to-treat + insurance block",
+   "why": "Named in the research differentiators and in one persona's minor friction, but not on the review's fix list. It is a new collapsed section with a signature line, insurer, member ID and preferred hospital \u2014 new schema keys with the same share-format compatibility problem as per-child blocks, and it wants the signature-maker pattern from elsewhere in the portfolio. Better done together with the schema versioning that per-child needs."
+  },
+  {
+   "slug": "sitter-sheet",
+   "title": "type=tel / autocomplete=tel on the contact fields",
+   "why": "The a11y audit asked for it, and I only added autocomplete=street-address to the address field. 'Backup person' and 'Doctor / after-hours' hold a name and a number in one line \u2014 'Grandma Pat next door: 555-0333' \u2014 so type=tel would put a numeric keypad in front of someone typing a name, which is a worse defect than the one it fixes. Splitting them into name + number fields is the real fix and it belongs with the schema work above."
+  }
+ ]
+}

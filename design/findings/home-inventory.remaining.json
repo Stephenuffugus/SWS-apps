@@ -1,0 +1,30 @@
+{
+ "slug": "home-inventory",
+ "remaining": [
+  {
+   "slug": "home-inventory",
+   "title": "Embedding a subsetted Unicode font (fontkit) so CJK, Hebrew, Arabic and emoji print properly",
+   "why": "It cannot be done properly under the no-new-dependency rule. pdf-lib needs fontkit to embed anything but the 14 standard faces, the font the app already ships is .woff2 (fontkit cannot read woff2 without a Brotli decoder), and a CJK-capable face is several megabytes of vendored binary in an offline-first app. I took the fix list's stated minimum instead \u2014 transliterate everything transliterable and report the rest loudly, in the app before export and on the PDF itself \u2014 and left the CSV/.json as the lossless path. Polish, Czech, Turkish, Baltic, Cyrillic and Greek now print correctly; CJK/Hebrew/Arabic/emoji still render '?' but are counted and named."
+  },
+  {
+   "slug": "home-inventory",
+   "title": "Several photos per item",
+   "why": "Named as an aside inside the close-up fix. It is a model, capture-UI, dialog, PDF-layout and ZIP-naming change all at once, and doing it badly would have put half a feature into the record shape that the CSV columns are now built on. The close-up pipeline plus the receipt/close-up slot (two full-resolution images per item) shipped; a real gallery is the next round's work."
+  },
+  {
+   "slug": "home-inventory",
+   "title": "A full 'After a loss' mode",
+   "why": "It is in mostWantedNext rather than the ordered fix list, and a proper version is a second product mode (recall prompts, camera hidden, no photo-completeness grading, CSV-first export). I did the cheap parts of Marcus's complaint instead: the app reopens on whichever tab you left it on rather than presenting a camera every time, the tab no longer carries a \ud83d\udcf7, the PDF placeholder reads 'photo not taken' rather than grading the row, and the CSV/quantity/condition/replacement-cost fields he actually needs now exist."
+  },
+  {
+   "slug": "home-inventory",
+   "title": "Moving photos into a separate IndexedDB object store",
+   "why": "The measured problem \u2014 514ms of blocked main thread per keystroke \u2014 is entirely fixed by taking the snapshot inside the debounce (now 0\u20131ms for 10 keystrokes with 200 photographed items). Splitting the store is a data-migration change to every existing user's record and would have to be reversible; it is not worth that risk for a cost that is now unmeasurable."
+  },
+  {
+   "slug": "home-inventory",
+   "title": "Making the room-filter chips sticky as well as the tab strip",
+   "why": "Only nav.tabs is sticky. Two stacked sticky strips at 320px with Largest text would eat roughly 200px of a 568px screen, which costs Dee more than it gains her. The tab strip \u2014 the one that was scrolling away and the one that reaches Export \u2014 is pinned."
+  }
+ ]
+}

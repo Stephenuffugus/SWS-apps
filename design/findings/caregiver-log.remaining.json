@@ -1,0 +1,35 @@
+{
+ "slug": "caregiver-log",
+ "remaining": [
+  {
+   "slug": "caregiver-log",
+   "title": "Import (the other half of fix 13's export/import)",
+   "why": "The shared firestore.rules require `createdAt == request.time` on every entry create. An import could not preserve original timestamps, so re-importing a year of log would silently re-date all of it to the moment of import \u2014 in an app whose whole point is that a wrong time is worse than no entry. Export ships and is the backup story; import needs a rules change first."
+  },
+  {
+   "slug": "caregiver-log",
+   "title": "Letting the owner edit other people's entries (half of fix 2)",
+   "why": "The rules allow body/authorName edits only to `resource.data.creatorUid == request.auth.uid`; the owner branch permits `status` alone. Shipping an Edit button for the owner on someone else's note would fail with permission-denied at 2am. Edit is offered to the author of the entry, which is who the rules allow and who the quoted complaint is about; the owner keeps approve and remove."
+  },
+  {
+   "slug": "caregiver-log",
+   "title": "Structured drug/dose/occurred-at columns in Firestore (shape of fixes 1 and 2)",
+   "why": "`request.resource.data.keys().hasOnly([...])` on entry create pins the document to seven fields, and firestore.rules lives in apps/signup-sheets/ and is shared by four apps \u2014 outside the one directory I may edit. The data is stored in the body in a canonical, parseable, human-readable form instead, and the stub in test/ mirrors the rules so a change that production would reject fails a test here."
+  },
+  {
+   "slug": "caregiver-log",
+   "title": "Page numbers on the printout (last part of fix 5)",
+   "why": "Chromium supports no @page margin boxes and no `counter(page)` in generated content, so there is no way to number pages from CSS. I verified a position:fixed running header repeats but overlaps the body (page 2's header and first line both landed at y=57), so the identity is carried by a repeating table <thead> instead \u2014 measured on 3 of 3 pages \u2014 and numbering is left to the browser's own print footer."
+  },
+  {
+   "slug": "caregiver-log",
+   "title": "An 'archive past days' action (last clause of fix 9)",
+   "why": "Coverage labels are free text \u2014 'Add one day/shift' lets a family write 'Thursday night' or 'school run' \u2014 so there is no reliable way to decide which rows are in the past, and guessing wrong would delete a day somebody had claimed. The harmful half is gone: no cap, no counter, and no instruction to remove old weeks."
+  },
+  {
+   "slug": "caregiver-log",
+   "title": "The 112px two-row header, the two 'High' options in the comfort panel, and dictation",
+   "why": "The first two live in design/studio.css and design/prefs.js, which I must not touch and which are shared by all 23 apps; neither appears in the fixes array. Dictation is a persona minor, also absent from the work order, and adding a microphone path deserves its own round rather than being bolted onto a release that already changes the write model."
+  }
+ ]
+}

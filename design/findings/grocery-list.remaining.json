@@ -1,0 +1,30 @@
+{
+ "slug": "grocery-list",
+ "remaining": [
+  {
+   "slug": "grocery-list",
+   "title": "Let link-holders clear checked items and delete rows (fix #7, the rules half)",
+   "why": "The controls are gated by apps/signup-sheets/firestore.rules \u2014 the entries delete rule allows only the author or the owner, and the board update rule allows only owners to move entryCount downward, for a documented anti-abuse reason ('a hostile client could drain the counter and bypass the 500-entry cap'). That file is outside apps/grocery-list/. I shipped the review's stated minimum instead: the UI now explains the limit rather than silently omitting the controls."
+  },
+  {
+   "slug": "grocery-list",
+   "title": "Refund the entry quota when a participant deletes their own row",
+   "why": "Same rules constraint: participant board updates are increment-only by design. The owner path is fixed and clearChecked() still resets the counter for everybody's rows, so a household is no longer on a one-way trip to the cap \u2014 but a participant's \u2715 still costs a slot until the owner clears."
+  },
+  {
+   "slug": "grocery-list",
+   "title": "Quantity, notes and aisle sections",
+   "why": "Named in Dee's frictions and in mostWantedNext, but deliberately not in the ordered `fixes` array \u2014 it is a data-model change (entry shape, rules `hasOnly` key list, migration for existing rows) rather than a fix, and half of it would be worse than none."
+  },
+  {
+   "slug": "grocery-list",
+   "title": "Owner rename of the list title",
+   "why": "b.title is now shown on the board, in print and in the share panel, which is what fix #12 was actually about. Renaming needs an editing affordance and a rules-shaped updateBoard call; it is additive and did not fit the round without rushing it."
+  },
+  {
+   "slug": "grocery-list",
+   "title": "A collapsed 'In the cart (n)' group below a divider",
+   "why": "Fix #2 offered this as the better of two options, but any automatic regroup reintroduces the exact blocker: the row moves out from under the finger. I took the option that cannot regress \u2014 one list, one stable order, done rows styled in place \u2014 and put an 'N items in the cart' summary below the rows where a change cannot push them around. Measured 0px row movement per tick; a grouped variant measured 28px before I moved the summary below the list."
+  }
+ ]
+}

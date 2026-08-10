@@ -1,0 +1,10 @@
+{
+ "slug": "moving-boxes",
+ "remaining": [
+  {
+   "slug": "moving-boxes",
+   "title": "Auto-clearing editingBoxId when 'the user starts what looks like a new box' (part of blocker #3)",
+   "why": "I could not find a heuristic that is right more often than it is wrong \u2014 'they replaced the whole textarea' is exactly what a real edit looks like, and guessing wrong silently forks a box instead of updating it, which is the same class of surprise the fix exists to remove. I shipped the deterministic half of the fix plus something strictly stronger than the heuristic: Update now carries an Undo, so the mis-tap the review reproduced ('BRAND NEW BOX CONTENTS' overwriting box 2) is fully recoverable, and the edit state is now impossible to miss (heading changes, card gets an accent ring, Cancel button, Escape). Verified reversible above."
+  }
+ ]
+}

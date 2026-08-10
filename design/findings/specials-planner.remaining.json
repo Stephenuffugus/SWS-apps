@@ -1,0 +1,25 @@
+{
+ "slug": "specials-planner",
+ "remaining": [
+  {
+   "slug": "specials-planner",
+   "title": "Letter/legal paper choice as an in-app control",
+   "why": "Partial by design. @page cannot be scoped by selector, so offering paper sizes means injecting a style element per choice. The stylesheet now forces only `size: landscape`, leaving paper size to the print dialog the teacher is already standing in \u2014 Letter and Legal both work and the compact layout fits either. What is missing versus the fix text is the in-app toggle, not the capability."
+  },
+  {
+   "slug": "specials-planner",
+   "title": "Rotation-letter colour surviving to paper",
+   "why": "Not in the fix list (it was one of Tomasz's minor frictions). The base print block sets `.chip{background:transparent !important}` to save ink; beating it means overriding a base rule from the app layer, and most browsers print with background graphics off anyway, so the fill would still vanish. The letter glyph prints, so no information is lost \u2014 distinguishing the six on paper needs a non-colour encoding, which is a design change beyond this pass."
+  },
+  {
+   "slug": "specials-planner",
+   "title": "The class/section layer and the Now/Next hallway card",
+   "why": "Both are in mostWantedNext, not in the fixes array, and both are new product surfaces rather than repairs \u2014 a section model changes the data shape again and the hallway card is a third view. The stacked phone layout and the 'Today' jump close part of the same gap; the rest needs its own round."
+  },
+  {
+   "slug": "specials-planner",
+   "title": "Arrow-key navigation between grid cells, <dialog> for the day modal, hash routing",
+   "why": "All three are in the audit's navigation/a11y lists but not in the fix list. The modal already passes axe with a working trap, Escape and focus return; converting it to <dialog> means deleting that trap rather than layering on it, which I did not want to do unverified in the same pass as a storage-format migration."
+  }
+ ]
+}

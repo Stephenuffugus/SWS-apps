@@ -1,0 +1,20 @@
+{
+ "slug": "sub-plans",
+ "remaining": [
+  {
+   "slug": "sub-plans",
+   "title": "Repeatable per-period blocks and per-period rosters for secondary",
+   "why": "The real half of that fix is a schema change from fixed keys to a repeatable group, which also rewrites renderSheet, the printed section order and decodeSheet's allowlist \u2014 and that allowlist is what every share link already in circulation validates against. That is a versioned data-model migration, not a pass over a fix list, and doing it badly would break links people have already texted. I did the cheap half honestly: labels and worked examples switch to a secondary shape, so Marcus is no longer told the tool was built for his wife's school, but he still has one plan box."
+  },
+  {
+   "slug": "sub-plans",
+   "title": "Seating chart, and the must-do / if-time split with time estimates",
+   "why": "Both are named as table stakes in the research and both are real gaps, but neither appears in the review's `fixes` array \u2014 they are persona frictions. Each is a new interactive surface (a grid editor; a repeatable activity list with durations) rather than a fix, and shipping either half-built into a print pipeline I had just rebuilt would have put the parts that are now measured at risk."
+  },
+  {
+   "slug": "sub-plans",
+   "title": "'Page n of m' on every printed sheet",
+   "why": "Chrome supports neither CSS paged-media margin boxes nor counter(page) in printed content, so a true per-sheet page number is not reachable from a web app. The <thead> repeat gives a running header on every page, and I put the packet length in it instead \u2014 '\u2026 \u00b7 2 pages in this packet' \u2014 which answers Gwen's actual question (how many sheets should I be holding) without faking a per-page number."
+  }
+ ]
+}

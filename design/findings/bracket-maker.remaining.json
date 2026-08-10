@@ -1,0 +1,25 @@
+{
+ "slug": "bracket-maker",
+ "remaining": [
+  {
+   "slug": "bracket-maker",
+   "title": "Make the shared link genuinely live via the portfolio's Firestore share-doc pattern",
+   "why": "It is the fix list's stated 'right fix' but it means a network dependency and data leaving the device, which contradicts the trust badge I was asked to write and the offline-first hard rule in this brief. I took the fix list's explicit cheap alternative instead \u2014 relabel honestly and re-offer the copy after a result makes the sent link stale \u2014 and the app now says plainly that the link is a snapshot. A live link needs a product decision about what leaves the device, not a unilateral one from me."
+  },
+  {
+   "slug": "bracket-maker",
+   "title": "Fit-to-screen / pinch-zoom overview of the whole bracket",
+   "why": "The fix list offers it as an alternative to the edge fade + scroll-snap, and I shipped the alternative. A real overview means a zoom transform with its own hit-testing, focus and print interactions, and getting it wrong on the app's only control is worse than a scroller that now announces itself. The print path does have fit-to-page, so the wall-chart case is covered."
+  },
+  {
+   "slug": "bracket-maker",
+   "title": "Shorten the URL payload so the QR stays scannable at 32 long names",
+   "why": "The code is now 2 CSS px per module minimum instead of 1, warns when it is dense, and always shows the link as copyable text \u2014 but at 32 forty-character names the payload is ~1,780 characters and no arithmetic fixes that. The only real fix is compressing the hash (CompressionStream) or a short-link service; the first needs a backward-compatible decoder for links already in the wild and the second is a network call. Both are bigger than this pass and neither should be decided inside one app."
+  },
+  {
+   "slug": "bracket-maker",
+   "title": "Raise the .match background above 1.09:1 against the card",
+   "why": "The pairing box uses --surface-2, the token that exists for exactly this (an inset well inside a card), and its contrast with --surface is a property of the palette. I fixed the part that is a real SC 1.4.11 failure instead \u2014 the boundary \u2014 by moving the .match border from --line to --line-2: 3.32:1 light and 3.59:1 dark, up from 1.34:1, plus 2.5px connectors. Deepening the fill would need a hex literal, which the app-layer rules forbid."
+  }
+ ]
+}

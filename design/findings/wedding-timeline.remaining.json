@@ -1,0 +1,25 @@
+{
+ "slug": "wedding-timeline",
+ "remaining": [
+  {
+   "slug": "wedding-timeline",
+   "title": "Page numbers on the printed sheet (\"page 3 of 9\")",
+   "why": "The running header is delivered via <thead display:table-header-group>, which is the only mechanism Chrome actually repeats. Chrome supports neither @page margin boxes nor counter(page)/counter(pages) in generated content, and a <thead> renders identical text on every page by definition, so a page number cannot come from CSS. The alternative \u2014 measuring page breaks in JS and injecting numbered markers before printing \u2014 is fragile against font fallback, paper size and the user's own margins, and a wrong page number is worse than none. Rui's two stated needs (whose wedding it is, and when this copy was printed) are both on every page now."
+  },
+  {
+   "slug": "wedding-timeline",
+   "title": "Durations with automatic downstream recalculation, and anchor-and-solve",
+   "why": "The fix entry named the minimum honest version as \"tap-a-row-to-edit plus 'everything from here, later by 15 minutes'\", and both of those shipped. A real duration model is a different data shape (each moment gains a length, the sort becomes a solve, and every existing stored record and share link has to migrate), and doing half of it \u2014 durations that do not actually push anything \u2014 would be worse than the shift control that demonstrably moves 20 rows in one tap."
+  },
+  {
+   "slug": "wedding-timeline",
+   "title": "Per-person cards and a structured people field",
+   "why": "The research's biggest unclaimed differentiator, and it is genuinely out of reach here: it needs who/where to stop being prose, a person picker on every row, a filtered view, and a batch print of one card per person. It is not in the fix list (it sits under mostWantedNext) and attempting it would have put the blockers at risk. Who/where is still one free-text line."
+  },
+  {
+   "slug": "wedding-timeline",
+   "title": "A true read-only mode for an adopted shared copy",
+   "why": "Half of this landed: the copy now stamps its origin, its version and the time it was opened, so a stale copy announces itself. I did not build a locked read-only state with an explicit 'make this mine', because a recipient who genuinely needs to fix a typo on the morning of the wedding should not be blocked by a mode they have to discover how to leave, and the version stamp on screen and on paper is what actually solves the drift complaint."
+  }
+ ]
+}

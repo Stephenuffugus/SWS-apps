@@ -1,0 +1,25 @@
+{
+ "slug": "team-parent",
+ "remaining": [
+  {
+   "slug": "team-parent",
+   "title": "Arrive-by time, a team-wide allergy note, and per-family opt-in contacts as first-class fields",
+   "why": "All three need new fields on the slot or board document, and firestore.rules pins the slot to hasOnly(['label','capacity','order','claimedCount']) and the board settings to hasOnly(['approvalRequired','locked','theme']). Those rules live in apps/signup-sheets/firestore.rules, which is outside apps/team-parent/ and shared with signup-sheets, so I could not change them. The date, location and jersey colour were delivered by encoding into `order` and `label`, which needed no rules change; arrive-by and allergies have no honest home in those two fields and I would rather leave them missing than fake them. Ship the rules change with the next batch and they become a small follow-up."
+  },
+  {
+   "slug": "team-parent",
+   "title": "Renaming the five board colours to the research's clay/teal palette",
+   "why": "firestore.rules validates `s.theme in ['blue','green','plum','slate','amber']`, so any new key would be rejected on write. I kept the five keys and rebuilt what each one paints instead. Likewise the research's recommendation to move the app's own skin from hue 258 to ~22 terracotta is a change to design/skins.mjs, which I am not permitted to touch."
+  },
+  {
+   "slug": "team-parent",
+   "title": "Reconciling slot rows in place rather than replaceChildren()",
+   "why": "The review offered this as the better version of the redraw fix. I did the minimum-viable one \u2014 coalesce, and carry open state, scroll, focus and drafts across the rebuild \u2014 which took the measured teardowns from 108-in-3.14s to 6-in-4s and fixed every symptom the personas hit. A real reconciler is a larger rewrite of paintBoard with its own regression surface, and I would rather hand over a measured, verified improvement than a half-finished diffing layer."
+  },
+  {
+   "slug": "team-parent",
+   "title": "An in-page search box over the schedule",
+   "why": "Listed under mostWantedNext rather than in the fix list. With date ordering, day headings, a 'Next up' block, a 'Your turn next \u2026 Show me' jump and past events collapsed away, the 2.61-viewport scroll it was meant to solve is gone. Adding a filter now would be speculative."
+  }
+ ]
+}

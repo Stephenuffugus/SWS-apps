@@ -1,0 +1,20 @@
+{
+ "slug": "pdf-tools",
+ "remaining": [
+  {
+   "slug": "pdf-tools",
+   "title": "Rendered page thumbnails (the other half of blocker 5)",
+   "why": "Rasterising a PDF page needs pdf.js. It is not vendored in this app, not present anywhere in the repo (the files named pdf.js in scan-to-pdf/home-inventory/seating-chart are those apps' own PDF-writing modules), not in node_modules, and there is no network here to fetch it. Adding a ~1 MB vendor library is a new dependency, which hard rule 3 forbids. A page-shaped placeholder would be worse than nothing, because the whole point is telling the signed letter from the payslip. I did ship the separable half of that blocker in full - the badge now shows the angle the page will actually come out at, which was the part that was lying about the written file. Real thumbnails should be their own task with an approved pdf.js vendoring, including the SW asset list and a lazy viewport window."
+  },
+  {
+   "slug": "pdf-tools",
+   "title": "Heading sizes: hero h2 at 24px vs card-label h2 at 12px",
+   "why": "Both are genuinely level-2 sections; the size difference is the base's hero-versus-card-label convention, applied identically in all 23 apps by studio.css, which I am told not to edit. Fixing it in this app layer alone would mean restating `.card > h3` with the base's micro-label rules - duplicating a shared component to solve a cosmetic inconsistency and making pdf-tools the odd one out. The actionable part of that finding, card 3 having no heading at all, is fixed, and heading order is not skipped anywhere (h1 -> h2 -> h3 only)."
+  },
+  {
+   "slug": "pdf-tools",
+   "title": "A source-code link in the colophon",
+   "why": "The review asks for one alongside the privacy link. There is no public repository referenced anywhere in this repo, and inventing a URL would be exactly the unverifiable claim the trust work exists to remove. The falsifiable part shipped instead - 'turn your Wi-Fi off and reload' in the hero, and a privacy page section explaining how to confirm it in the network tab."
+  }
+ ]
+}

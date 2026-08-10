@@ -138,7 +138,13 @@ export const SKINS = {
   },
 
   'bracket-maker': {
-    hue: 104, chroma: 0.14, paper: 'cool', voice: 'technical', texture: 'band',
+    // Was hue 104, which is where yellow has already turned toward green — it
+    // read olive rather than trophy, and had done since the palette landed.
+    // 86 is the yellow-gold band, and `fill: bright` keeps the button a
+    // saturated gold with dark ink on it instead of dragging the hue down to
+    // a dark enough value to carry white text, which is what muddies a gold.
+    hue: 86, chroma: 0.155, paper: 'warm', voice: 'technical', texture: 'band',
+    fill: 'bright',
     r: 8, wrap: '64rem',
     extra: { win: { role: 'fill', l: 0.48, c: 0.12, h: 152, dl: 0.72 } },
     note: 'trophy gold, hard corners — a bracket is a diagram, so it should look drawn',
@@ -165,9 +171,19 @@ export const SKINS = {
   },
 
   'image-compressor': {
-    hue: 322, chroma: 0.145, paper: 'cool', voice: 'technical', texture: 'wash',
+    /* Was magenta at chroma 0.145 behind a `wash` texture. The research called
+       it and the review agent agreed: this is the one app whose entire job is
+       judging whether a photograph still looks right, and a saturated coloured
+       wash behind the photograph corrupts exactly that judgement — simultaneous
+       contrast shifts the apparent colour of anything sitting on it.
+
+       Cool graphite at very low chroma instead. It stays distinct in the
+       portfolio by VALUE and NEUTRALITY rather than hue, which is the correct
+       axis here: no other app is this desaturated. Texture off for the same
+       reason — a photo needs a plain ground. */
+    hue: 258, chroma: 0.038, paper: 'cool', voice: 'technical', texture: 'none',
     r: 12, wrap: '44rem', support: 158,
-    note: 'magenta-violet — the before/after app; saturation is the subject matter',
+    note: 'cool graphite, no texture — a photo can only be judged against a neutral ground',
   },
 
   'signature-maker': {

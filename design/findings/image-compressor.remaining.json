@@ -1,0 +1,30 @@
+{
+ "slug": "image-compressor",
+ "remaining": [
+  {
+   "slug": "image-compressor",
+   "title": "Colour-managed output \u2014 getContext('2d', { colorSpace: 'display-p3' })",
+   "why": "Not in the fix list (it is a 'minor' stress finding and a mostWantedNext), and the review itself records that gamut clipping could NOT be reproduced in this environment \u2014 headless Chromium in this container flattened the P3 fixture before the app ever saw it. I can add the context option but I cannot verify the output is actually wide-gamut here, and toBlob's ICC tagging differs by format. Shipping an unverifiable colour claim on the one app whose subject is colour fidelity is worse than not shipping it. It needs a run on real hardware with a real iPhone photo."
+  },
+  {
+   "slug": "image-compressor",
+   "title": "Re-skinning the app from magenta wash to cool graphite",
+   "why": "The research's colorRecommendation is right \u2014 a saturated wash behind a photograph corrupts the judgement this app exists to support \u2014 but hue, chroma, paper, voice and texture live in design/skins.mjs and the base CSS block, both off-limits. I did the functional half that is mine to do: every image preview sits on a fixed #8c8c8c field that is identical in light and dark and does not flip with the theme."
+  },
+  {
+   "slug": "image-compressor",
+   "title": "The remaining print darkFills: 1",
+   "why": "It is the base #toast, which the base print stylesheet already sets to display:none \u2014 the battery's scan reads computed background regardless of display, so it is a false positive on a base component. Belongs in design/studio.css, not here."
+  },
+  {
+   "slug": "image-compressor",
+   "title": "Moving the tip jar out of second place in the tab order",
+   "why": "The header order (settings, then tip pill) is mandated by the design system and identical across 23 apps. Mitigated instead by adding the skip link the base already styled but no app shipped, so a keyboard user reaches the images in one stop."
+  },
+  {
+   "slug": "image-compressor",
+   "title": "AVIF output, Web Worker / OffscreenCanvas, manifest share_target and file_handlers",
+   "why": "All in mostWantedNext, none in the fix list. The main-thread loop was measured as no slower than before (2971-3622 ms for 20 full-size photos vs 3081-7652 ms for the old code on the same machine and fixtures), so a worker is an optimisation, not a defect fix."
+  }
+ ]
+}
