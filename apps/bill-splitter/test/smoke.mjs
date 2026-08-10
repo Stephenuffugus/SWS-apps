@@ -6,7 +6,12 @@ import { JSDOM } from 'jsdom';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 // Drop the external vendor script tag — QR isn't exercised here and jsdom
 // file-loading is flaky; everything else runs as-is.
-const patched = html.replace('<script src="vendor-qrcode.js"></script>', '');
+const patched = html
+  .replace('<script src="vendor-qrcode.js"></script>', '')
+  // jsdom does not fetch external scripts, and the undo runtime is the thing
+  // half these assertions are about — inline it so the page under test is real.
+  .replace('<script src="sws-ui.js"></script>',
+    '<script>' + readFileSync(new URL('../sws-ui.js', import.meta.url), 'utf8') + '</script>');
 
 const dom = new JSDOM(patched, {
   url: 'http://localhost:8080/',
@@ -108,6 +113,52 @@ $('peopleChips').querySelector('button').click(); // open Alice's edit dialog
 $('pdRemove').click();                            // blocked: she paid for Gas
 check('payer on expense cannot be removed', $('peopleChips').children.length === 2);
 $('pdCancelBtn').click();
+
+// --- fixes from the review round ---------------------------------------
+// chips carry state, not just a colour (WCAG 1.4.1 / 4.1.2)
+const splitChip = $('expSplitChips').querySelector('button');
+check('split chip exposes aria-pressed', splitChip.getAttribute('aria-pressed') === 'true',
+  splitChip.outerHTML.slice(0, 120));
+check('split chip has a tick slot, not colour alone', splitChip.querySelector('.tick').textContent === '\u2713');
+check('split chip is named beyond the bare name',
+  /in this expense/.test(splitChip.getAttribute('aria-label')), splitChip.getAttribute('aria-label'));
+const itemChip = $('itemList').querySelector('.chips button');
+check('item chip exposes aria-pressed', itemChip.hasAttribute('aria-pressed'));
+
+// tapping Trip must not reclassify a dinner that has real data in it
+check('a dinner with data stays a dinner after visiting Trip', window.eval('state.mode') === 'dinner', window.eval('state.mode'));
+check('saved label names both halves honestly', window.eval('kindLabel(state)') === 'Dinner + Trip',
+  window.eval('kindLabel(state)'));
+
+// undo on a destructive action
+const expBefore = window.eval('state.trip.expenses.length');
+$('expList').querySelector('button[aria-label^="Delete "]').click();
+check('expense deleted', window.eval('state.trip.expenses.length') === expBefore - 1);
+const undoBtn = $('toast').querySelector('button.undo');
+check('delete offers Undo in the toast', undoBtn !== null, $('toast').textContent);
+undoBtn.click();
+check('undo restores the expense', window.eval('state.trip.expenses.length') === expBefore);
+
+// the promise is a stamp, and it is specific and true
+const trust = doc.querySelector('.trust');
+check('trust badge present', trust !== null);
+check('trust badge names what is held and where',
+  /Nothing is uploaded/.test(trust.textContent) && /web address/.test(trust.textContent),
+  trust && trust.textContent.slice(0, 120));
+
+// caps say their own number
+check('people count states the cap', /of 50 people/.test($('peopleCount').textContent),
+  $('peopleCount').textContent);
+
+// unreadable amounts say so instead of silently reading as zero
+$('tabDinner').click();
+type('billAmt', '12.5.5');
+check('unreadable amount is explained, not silently zeroed',
+  !$('billNote').classList.contains('hidden') && /decimal point/.test($('billNote').textContent),
+  $('billNote').textContent);
+type('billAmt', '50.00');
+check('a good amount clears the note', $('billNote').classList.contains('hidden'));
+$('tabTrip').click();
 
 // --- share hash + summary (decode the real hash back into a state) ---
 await sleep(700); // debounced persist

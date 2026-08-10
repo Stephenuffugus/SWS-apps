@@ -1293,6 +1293,14 @@ ul.plain > li.editing{display:block; padding:var(--s4) 0}
 .ampm .q{flex:1 1 100%; font-size:var(--t-sm); color:var(--ink); margin:0}
 .f-time{flex:0 0 7rem}
 
+/* The base toast is a shrink-to-fit box anchored with left:50%, so the width
+   available to it is only half the viewport — on a 414px phone any message
+   past about a dozen characters folds into a narrow lens, and the Undo button
+   folds with it. Geometry only; nothing about how it looks changes. Worth
+   promoting into studio.css, where it would fix all 23. */
+#toast{left:0; right:0; margin-inline:auto; width:max-content; transform:translateY(8px)}
+#toast.show{transform:translateY(0)}
+
 .card > .trust{margin:0 0 var(--s5); display:flex; align-items:flex-start}
 .card > .trust svg{margin-top:2px}
 

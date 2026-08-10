@@ -3021,8 +3021,10 @@ function renderTripResults(){
     const n = r.net[p.id];
     ul.append(el('li', {},
       el('span', { class: 'grow', text: p.name }),
-      el('span', { class: 'bal ' + (n >= 0 ? 'pos' : 'neg') },
-        (n >= 0 ? '+' : '−') + fmtCents(Math.abs(n), cur))));
+      n === 0
+        ? el('span', { class: 'sub', text: 'square — nothing owed either way' })
+        : el('span', { class: 'bal ' + (n > 0 ? 'pos' : 'neg') },
+            (n > 0 ? '+' : '−') + fmtCents(Math.abs(n), cur))));
   }
   box.append(ul);
 
