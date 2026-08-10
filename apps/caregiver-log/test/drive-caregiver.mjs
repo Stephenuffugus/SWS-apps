@@ -70,9 +70,17 @@ export const ownerRemoveClaim = async () => {};
 export const renameClaim = async () => {};
 export const addEntry = async (id, board, { authorName, body, type }) => {
   if (body.length > 2000) throw new Error('body too long — rules cap is 2000');
+  if (authorName.length < 1 || authorName.length > 60) throw new Error('rules reject authorName of ' + authorName.length);
+  if (!['note','appointment','medication','question','announcement'].includes(type)) throw new Error('rules reject type ' + type);
+  // The deployed rules cap a board at 500 entries ever created, batch-coupled
+  // to boards/{id}.entryCount. Without this the stub let a restore write past
+  // a wall that production has.
+  if ((S.board.entryCount || 0) + 1 > 500) { const e = new Error('permission-denied'); e.code = 'permission-denied'; throw e; }
+  S.board.entryCount = (S.board.entryCount || 0) + 1;
   const status = S.uid === S.board.ownerUid ? 'ok' : (S.board.settings.approvalRequired ? 'pending' : 'ok');
-  S.entries.push({ id: 'e' + S.entries.length, authorName, body, type, status, creatorUid: S.uid, createdAt: ts(now()) });
+  S.entries.push({ id: 'e' + S.entries.length + '-' + Math.random().toString(36).slice(2, 7), authorName, body, type, status, creatorUid: S.uid, createdAt: ts(now()) });
   emitEntries();
+  emitBoard();
   return status;
 };
 export const updateEntry = async (id, eid, fields) => {

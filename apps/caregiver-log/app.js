@@ -1588,10 +1588,19 @@ function planImport(data) {
     slots.push({ label, capacity: Math.min(999, cap) });
   }
 
-  const seen = new Set(visibleEntries().map(e => {
+  /* Two keys, because a row may arrive without a usable time. A dated row has
+     to match the same note at the same minute — two doses of the same drug on
+     different evenings are two doses. A row with no time at all can only be
+     matched on its words, and must be, or every restore would add another copy
+     of it. Both directions matter: putting the same file back twice must not
+     double a year of somebody's log. */
+  const loose = (author, text) => NORM(author) + '|' + NORM(text);
+  const seenExact = new Set(), seenLoose = new Set();
+  for (const e of visibleEntries()) {
     const p = parseBody(e);
-    return fingerprint(e.authorName, p.text, p.when || entryDate(e));
-  }));
+    seenExact.add(fingerprint(e.authorName, p.text, effDate(e)));
+    seenLoose.add(loose(e.authorName, p.text));
+  }
   const entries = [];
   let entriesAlready = 0, dropped = 0;
   for (const r of (Array.isArray(data.entries) ? data.entries : [])) {
@@ -1600,9 +1609,15 @@ function planImport(data) {
     if (!text) { dropped++; continue; }
     const author = (String(r.author == null ? '' : r.author).trim() || 'Someone').slice(0, 60);
     const when = parseISO(r.happenedAt) || parseISO(r.writtenAt);
-    const fp = fingerprint(author, text, when);
-    if (seen.has(fp)) { entriesAlready++; continue; }
-    seen.add(fp);
+    if (when) {
+      const fp = fingerprint(author, text, when);
+      if (seenExact.has(fp)) { entriesAlready++; continue; }
+      seenExact.add(fp);
+    } else {
+      const fp = loose(author, text);
+      if (seenLoose.has(fp)) { entriesAlready++; continue; }
+      seenLoose.add(fp);
+    }
     entries.push({
       author, when,
       // hasOwnProperty, not truthiness: a file claiming type "constructor"
