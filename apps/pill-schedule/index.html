@@ -388,7 +388,11 @@ header.app .spacer{flex:1}
    it is an offer, not a nag. */
 a.tipbtn{
   display:inline-flex; align-items:center; gap:var(--s1);
-  min-height:36px; padding:0 var(--s3);
+  /* --tap like everything else. It was 36px on the reasoning that chrome is
+     not a primary action, but the rule this system states is that anything you
+     have to hit gets 44px, and an exception nobody can see is just an
+     inconsistency. The header wraps, so the extra height costs no layout. */
+  min-height:var(--tap); padding:0 var(--s3);
   font-family:var(--font-text);
   font-size:var(--t-xs); font-weight:550;
   color:var(--ink-2);
@@ -998,9 +1002,15 @@ body::after{
 
 /* The trigger, sitting next to the tip jar. Icon-only, so the accessible name
    has to come from the markup — apply.mjs writes the aria-label. */
+/* Full --tap, not the 36px pill it started as.
+   Two review agents flagged this independently and both correctly refused to
+   patch it locally, because it is emitted from here into all 23 apps. They
+   were right: this is the one control in the portfolio specifically for people
+   with access needs, and shipping it below the floor we set for everything
+   else — to the user with a tremor who needs it most — could not be defended. */
 #swsPrefsBtn{
   display:inline-flex; align-items:center; justify-content:center;
-  width:36px; height:36px; flex:none;
+  width:var(--tap); height:var(--tap); flex:none;
   padding:0;
   color:var(--ink-2);
   background:var(--surface);

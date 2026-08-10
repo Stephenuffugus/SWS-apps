@@ -1,5 +1,5 @@
 /* Sitter Sheet service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'sitter-v15';
+const VERSION = 'sitter-v16';
 const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js", "./fonts/fraunces-latin.woff2", "./sws-prefs.js", "./sws-ui.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

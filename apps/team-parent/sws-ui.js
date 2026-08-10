@@ -135,6 +135,71 @@
 
   SWS.hideToast = hide;
 
+  /* ── Reading the comfort panel from JavaScript ──────────────────────────
+   *
+   * CSS gets the comfort settings through the cascade. A <canvas> does not —
+   * it is a bitmap, and it hears nothing about a root font-size change or a
+   * theme switch. Neither does a requestAnimationFrame loop.
+   *
+   * The portfolio review found this in 12 of 14 apps: text set to Largest
+   * scaled the body copy to 24px and left the canvas labels at 12, and a spin
+   * animation ran its full four seconds with Motion set to Reduced. These three
+   * helpers are the whole fix, so no app has to re-derive the precedence rules.
+   */
+
+  /** Root font size as a multiplier of the 16px default. Multiply canvas type by this. */
+  SWS.uiScale = function () {
+    var px = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return px / 16;
+  };
+
+  /**
+   * Whether to suppress motion, using the panel's precedence: an explicit
+   * choice beats the OS, in BOTH directions, and the OS decides otherwise.
+   * Getting this backwards is why an app can look like it honours the setting
+   * and still spin for four seconds.
+   */
+  SWS.prefersLessMotion = function () {
+    var attr = document.documentElement.getAttribute('data-motion');
+    if (attr === 'less') return true;
+    if (attr === 'full') return false;
+    return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  };
+
+  /**
+   * Call `fn` whenever anything the user can change about the display changes —
+   * a panel setting, or the OS flipping to dark while the app is open.
+   *
+   * Pass your repaint function. Returns an unsubscribe.
+   */
+  SWS.onComfortChange = function (fn) {
+    var obs = new MutationObserver(fn);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-text', 'data-density', 'data-contrast', 'data-motion', 'data-reading', 'data-warmth'],
+    });
+
+    var mqs = [];
+    if (window.matchMedia) {
+      ['(prefers-color-scheme: dark)', '(prefers-reduced-motion: reduce)', '(prefers-contrast: more)']
+        .forEach(function (q) {
+          var mq = matchMedia(q);
+          // addEventListener is not available on MediaQueryList in older WebKit.
+          if (mq.addEventListener) mq.addEventListener('change', fn);
+          else if (mq.addListener) mq.addListener(fn);
+          mqs.push(mq);
+        });
+    }
+
+    return function off() {
+      obs.disconnect();
+      mqs.forEach(function (mq) {
+        if (mq.removeEventListener) mq.removeEventListener('change', fn);
+        else if (mq.removeListener) mq.removeListener(fn);
+      });
+    };
+  };
+
   /**
    * Say that the work is safe.
    *
