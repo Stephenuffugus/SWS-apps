@@ -1776,6 +1776,25 @@ section.card.printonly h2{
   .refblock{border:1px solid #bbb; padding:6pt; border-radius:0}
   .printq,.printmeds{margin:0; padding:0; list-style:none}
   .printq li,.printmeds li{border-bottom:1px solid #ddd; padding-bottom:4pt}
+
+  /* Fifty-six loose Letter pages go onto a clipboard with three other
+     patients' paperwork, and a dropped stack has to be re-orderable. The
+     <thead> above says whose log it is on every page; this says which page.
+     Measured, not assumed: Chromium renders @page margin boxes and resolves
+     both counters — verified as "Page 2 of 3" on page 2 of a three-page log.
+     Centre, because the browser's own optional print footer takes the left
+     and right slots of the same margin and would sit on top of ours.
+     Literal units and colour: a margin box lives outside the document tree,
+     so it inherits no token and no font from :root. The base layer sets only
+     `@page{margin:14mm}`; this adds to it rather than restating it. */
+  @page{
+    @bottom-center{
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 8pt;
+      color: #555;
+    }
+  }
 }
 </style>
 <script src="sws-prefs.js"></script>

@@ -537,10 +537,13 @@ function nameLine(own, title) {
       else if (ev.key === 'Escape') { ev.preventDefault(); cancelRename(); }
     },
   });
+  // Save is NOT .primary: Add is the board's only primary, and a second accent
+  // fill at the top of the screen is exactly what that rule exists to prevent.
+  // The hierarchy here is solid-vs-ghost, and Enter commits anyway.
   return [line, el('div', { class: 'renamerow noprint' }, input,
-    el('button', { class: 'btn primary', type: 'button', 'data-fkey': 'renamesave',
+    el('button', { class: 'btn', type: 'button', 'data-fkey': 'renamesave',
       onclick: () => commitRename(title) }, 'Save'),
-    el('button', { class: 'btn', type: 'button', 'data-fkey': 'renamecancel',
+    el('button', { class: 'btn ghost', type: 'button', 'data-fkey': 'renamecancel',
       onclick: cancelRename }, 'Cancel'))];
 }
 
