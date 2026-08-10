@@ -24,12 +24,38 @@ Schemes change; update them there and nowhere else.
 - **IndexedDB** caches your own splits locally ("Saved" tab) plus recent names
   and payment handles for quick re-adds.
 - **Money math** is integer cents everywhere, with largest-remainder allocation
-  so per-person shares always sum exactly to the total.
-- **Settle-up minimization** (trip mode): greedy matching over net balances,
-  guaranteed ≤ n−1 transfers.
+  so per-person shares always sum exactly to the total. Allocation happens in
+  the *displayed* unit of the currency (`moneyUnit()` reads the minor-unit
+  digits out of `Intl`), so a ¥1,000 bill split three ways shows three whole
+  yen figures that add up — not ¥667 / ¥333 / ¥333. The spare unit rotates on
+  a per-item seed rather than always landing on the first person added.
+- **Reconciliation is shown, not assumed.** Every result card prints a line
+  that states whether the parts add up to the total, and each person's figure
+  expands into the arithmetic that produced it.
+- **Settle-up** offers two views: minimized (greedy matching over net balances,
+  ≤ n−1 transfers) and direct ("pay who you actually owe", netted per pair).
+  Repayments are first-class events in `trip.payments`, so a trip that settles
+  mid-week stays correct.
+- **Currency changes convert.** Changing the code asks for a rate and shows the
+  before/after total, or explicitly relabels without touching the numbers.
 - **QR sharing** uses a vendored copy of
   [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)
   (MIT, Kazuhiko Arase) in `vendor-qrcode.js` — bundled locally so it works offline.
+  The canvas is cleared **before** generation and the box is hidden entirely if
+  the payload will not fit, so an oversized split can never display the
+  previous split's code. The link is always shown as selectable text beside it.
+- **Print** emits the settle-up sheet, not the editor: every form card is
+  `display:none` in `@media print`, the results card is ordered first, and a
+  `.printonly` header carries the split name, kind, currency and print time.
+
+## The one honest leak
+
+The whole split — names, amounts, and any saved Venmo / Cash App / PayPal
+handles — is compressed into the page's own address on every change. That is
+what makes the no-install, no-account promise work, and it also means a browser
+with history sync uploads the ledger to its vendor. The app says so: in the
+`.trust` badge, in the colophon, and in the toast at the moment a link is
+copied. Overclaiming here would be worse than the competitors' underclaiming.
 
 ## Run locally
 
