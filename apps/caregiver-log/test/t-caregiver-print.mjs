@@ -68,11 +68,17 @@ await board(async ({ page, errors }) => {
   ok('the disclaimer is still there', /Not a medical record/.test(txt));
   const pageText = execFileSync('pdftotext', ['-layout', '-f', String(pages), '-l', String(pages), f, '-']).toString();
   let allPagesNamed = true;
+  const numbered = [];
   for (let i = 1; i <= pages; i++) {
     const t = execFileSync('pdftotext', ['-layout', '-f', String(i), '-l', String(i), f, '-']).toString();
     if (!/FAMILY-KEPT CARE LOG/i.test(t)) allPagesNamed = false;
+    if (new RegExp('Page ' + i + ' of ' + pages).test(t)) numbered.push(i);
   }
   ok('every page says whose log it is', allPagesNamed, pages + ' pages checked');
+  // Deferred once on the belief that Chromium renders no @page margin boxes.
+  // It does, and it resolves both counters — measured here, page by page.
+  ok('every page is numbered, and knows how many there are',
+    numbered.length === pages, numbered.length + ' of ' + pages + ' pages carry "Page n of ' + pages + '"');
   ok('no console errors in the print path', errors.length === 0, errors.join('|'));
 
   // everything

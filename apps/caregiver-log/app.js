@@ -1327,11 +1327,17 @@ function buildPrintPage() {
     + ' · printed ' + new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' })
     + (withheld ? ' · ' + withheld + ' entr' + (withheld === 1 ? 'y is' : 'ies are') + ' still awaiting approval and not shown' : '') }));
 
-  // 1. The standing reference block every paper caregiver binder has.
-  if (b.description) {
-    page.append(el('h3', { class: 'printsec' }, 'Standing details'));
-    page.append(el('p', { class: 'refblock', text: b.description }));
-  }
+  // 1. The standing reference block every paper caregiver binder has. It is
+  //    the first thing the medical assistant reaches for, so when it is empty
+  //    the page says so rather than quietly leaving the section out — a
+  //    missing heading reads as "this page has no medication list", which is
+  //    a different and worse claim than "nobody has filled it in yet".
+  page.append(el('h3', { class: 'printsec' }, 'Standing details'));
+  page.append(b.description
+    ? el('p', { class: 'refblock', text: b.description })
+    : el('p', { class: 'refblock', text: 'Not filled in. Current medicines and doses, allergies, '
+      + 'doctors and phone numbers go here — the family can add them in the app under '
+      + '“Invite family & settings”.' }));
 
   // 2. The running "ask at the next appointment" list, at the top where the
   //    guides tell families to put it — open questions from the whole log, not
