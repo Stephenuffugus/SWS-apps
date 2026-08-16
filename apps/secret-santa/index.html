@@ -1423,6 +1423,7 @@ body{
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1522,7 +1523,15 @@ Stephen"></textarea></label>
       <button class="btn" id="linkErrBtn" type="button">I'm running the exchange — set up a draw</button>
     </section>
   </div>
-  </main>
+  
+<section class="card noprint" id="backupCard">
+  <h2>Keep a copy</h2>
+  <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
+  That also means a cleared browser or a lost phone takes it with them. Save a backup file
+  now and again; it lands in your downloads and restores everything exactly as it was.</p>
+  <div id="backupControls"></div>
+</section>
+</main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1535,5 +1544,17 @@ Stephen"></textarea></label>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var host = document.getElementById('backupControls');
+  if (!host || !window.SWS || !SWS.backup) return;
+  host.appendChild(SWS.backup.wire({
+    app: "secret-santa",
+    name: "Secret Santa",
+    keys: ["sws.secret-santa.v1"]
+  }).el);
+});
+</script>
 </body>
 </html>

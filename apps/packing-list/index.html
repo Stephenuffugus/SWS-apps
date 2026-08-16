@@ -1423,6 +1423,7 @@ ul.plain li.done > label{color:var(--ink-2); text-decoration:line-through}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to your list</a>
@@ -1509,7 +1510,15 @@ ul.plain li.done > label{color:var(--ink-2); text-decoration:line-through}
     </div>
     <p class="hint">The link carries the whole list — send it to whoever's packing the kids' bags, and their checkboxes start fresh. A link holds up to 300 items; a QR holds far fewer, and will say so.</p>
   </section>
-  </main>
+  
+<section class="card noprint" id="backupCard">
+  <h2>Keep a copy</h2>
+  <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
+  That also means a cleared browser or a lost phone takes it with them. Save a backup file
+  now and again; it lands in your downloads and restores everything exactly as it was.</p>
+  <div id="backupControls"></div>
+</section>
+</main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1526,5 +1535,17 @@ ul.plain li.done > label{color:var(--ink-2); text-decoration:line-through}
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var host = document.getElementById('backupControls');
+  if (!host || !window.SWS || !SWS.backup) return;
+  host.appendChild(SWS.backup.wire({
+    app: "packing-list",
+    name: "Packing List",
+    keys: ["packing-list","packing-list.trips"]
+  }).el);
+});
+</script>
 </body>
 </html>

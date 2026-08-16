@@ -39,6 +39,8 @@ can derive is derived, from the same source of truth the design system uses —
 `icon.svg`. Nothing about a listing is assembled by hand twice.
 
 ```bash
+npm run backup:add       # install the shared backup runtime where it is missing
+npm run backup:check     # non-zero exit if a data-holding app has no backup
 npm run play             # icons, manifests, twa-manifests, assetlinks, feature graphics
 npm run play:check       # non-zero exit on any remaining Play gap
 npm run play:privacy     # regenerate 23 privacy pages + the in-app link Play requires
@@ -63,6 +65,16 @@ it removes the 12-testers/14-days gate from all 23 apps. And read Play's
 repetitive-content policy before submitting the second app: 23 small single-purpose
 utilities from one developer is the fact pattern it describes, so ship one at a
 time, roughly one a week, leading with the apps that genuinely differ.
+
+### Backups
+
+Every app keeps its data on the device and nowhere else, which makes the backup problem the
+user's. [`design/backup.js`](design/backup.js) is one shared implementation of that button so it
+behaves identically everywhere: it reads only the keys an app declares, writes a stamped JSON
+file to the user's own downloads, and refuses to restore another app's file into the wrong app.
+There is no upload and there will not be one — a server would make the sentence at the bottom of
+every app false, turn the Play Data Safety answer from *no data collected* into a disclosure, and
+require an account to get your own data back.
 
 ## Product docs
 

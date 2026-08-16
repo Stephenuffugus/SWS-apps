@@ -232,6 +232,7 @@ function installFont(slug, file){
 const RUNTIME = [
   { src: 'prefs.js', dest: 'sws-prefs.js' },
   { src: 'ui.js', dest: 'sws-ui.js' },
+  { src: 'backup.js', dest: 'sws-backup.js' },
 ];
 
 function installRuntime(slug){

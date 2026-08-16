@@ -1521,6 +1521,7 @@ button.slot{cursor:pointer}
 <style id="bmPageStyle"></style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1595,7 +1596,15 @@ The Vegan Dark Horse"></textarea></label>
     </div>
     <p class="hint">The whole bracket travels inside the link, which is why it needs no account — but that also makes it a <b>snapshot</b>. Results you record after copying will not appear for anyone holding the old link, so send a fresh one when the games are done.</p>
   </section>
-  </main>
+  
+<section class="card noprint" id="backupCard">
+  <h2>Keep a copy</h2>
+  <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
+  That also means a cleared browser or a lost phone takes it with them. Save a backup file
+  now and again; it lands in your downloads and restores everything exactly as it was.</p>
+  <div id="backupControls"></div>
+</section>
+</main>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1614,5 +1623,17 @@ The Vegan Dark Horse"></textarea></label>
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var host = document.getElementById('backupControls');
+  if (!host || !window.SWS || !SWS.backup) return;
+  host.appendChild(SWS.backup.wire({
+    app: "bracket-maker",
+    name: "Bracket Maker",
+    keys: ["bracket-maker","bracket-maker.visiting"]
+  }).el);
+});
+</script>
 </body>
 </html>

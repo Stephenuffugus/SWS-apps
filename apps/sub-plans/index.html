@@ -1533,6 +1533,7 @@ section.card h2:first-child{margin-top:0}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to the folder</a>
@@ -1593,7 +1594,15 @@ section.card h2:first-child{margin-top:0}
       <span>Print / Save as PDF</span> <span class="pgs" id="pageCount"></span>
     </button>
   </div>
-  </main>
+  
+<section class="card noprint" id="backupCard">
+  <h2>Keep a copy</h2>
+  <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
+  That also means a cleared browser or a lost phone takes it with them. Save a backup file
+  now and again; it lands in your downloads and restores everything exactly as it was.</p>
+  <div id="backupControls"></div>
+</section>
+</main>
 </div>
 
 <div id="measurebox" aria-hidden="true"><div id="measure" class="paper"></div></div>
@@ -1608,5 +1617,17 @@ section.card h2:first-child{margin-top:0}
 </dialog>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var host = document.getElementById('backupControls');
+  if (!host || !window.SWS || !SWS.backup) return;
+  host.appendChild(SWS.backup.wire({
+    app: "sub-plans",
+    name: "Sub Plans",
+    keys: ["subplans"]
+  }).el);
+});
+</script>
 </body>
 </html>
