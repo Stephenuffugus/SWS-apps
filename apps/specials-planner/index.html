@@ -1215,6 +1215,76 @@ body::after{
 #swsPrefs .sws-sample p{margin:0; font-size:var(--t-base); color:var(--ink)}
 #swsPrefs .sws-sample .sub{margin-top:var(--s2)}
 
+
+/* ── colour, legend, merge, fit-to-screen ─────────────────────────── */
+.week td.filled, .week th.filled{ background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
+.week td.filled .box{ color:var(--cell-ink) !important; }
+.week td.merged{ text-align:left; }
+
+/* The paint handle. Deliberately faint until the row is hovered or the
+   cell has focus — a grid with a coloured dot in every one of sixty
+   cells is noise, and she is here to write lessons, not to decorate. */
+.paint{ position:absolute; top:2px; right:2px; width:22px; height:22px; border-radius:6px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2);
+  font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .12s; cursor:pointer; padding:0; z-index:2 }
+td:hover > .paint, th:hover > .paint, .paint:focus-visible, td:focus-within > .paint{ opacity:1 }
+.paint:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+.week td, .week th{ position:relative }
+
+.mergebar{ position:absolute; bottom:2px; right:2px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s; z-index:2 }
+td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
+.mergebar button{ width:20px; height:20px; border-radius:5px; border:1px solid var(--line-2);
+  background:var(--surface); color:var(--ink-2); font-size:11px; line-height:1; padding:0; cursor:pointer }
+.mergebar button:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+
+/* ── the key ── */
+.legend{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:10px 0 4px;
+  padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface) }
+.legend-t{ font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:700 }
+.legend-i{ display:inline-flex; align-items:center; gap:6px; font-size:.86rem }
+.legend-sw{ width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.25); flex:none }
+
+/* ── the picker ── */
+.cpick{ position:fixed; z-index:120; width:min(21rem,calc(100vw - 16px));
+  background:var(--surface); border:1px solid var(--line-2); border-radius:12px;
+  box-shadow:0 16px 40px rgba(0,0,0,.22); padding:14px }
+.cpick-t{ margin:0 0 8px; font-weight:650; font-size:.92rem }
+.cpick-sw{ display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:10px }
+.cs{ aspect-ratio:1; border-radius:6px; border:1px solid rgba(0,0,0,.25); cursor:pointer; padding:0 }
+.cs.on{ outline:3px solid var(--focus); outline-offset:1px }
+.cs:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+.cpick-name{ display:block; font-size:.8rem; color:var(--ink-2); margin-bottom:10px }
+.cpick-name input{ width:100%; min-height:40px; margin-top:4px; padding:0 10px;
+  border:1px solid var(--line-2); border-radius:8px; background:var(--field); color:var(--ink); font-size:.95rem }
+.cpick-scope{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin:0 0 10px }
+.cpick-scope legend{ font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); padding:0 4px }
+.cpick-scope label{ display:flex; align-items:center; gap:7px; font-size:.9rem; min-height:32px }
+.cpick-note{ margin:0 0 10px; font-size:.8rem; color:var(--ink-2) }
+.cpick-act{ display:flex; gap:8px; justify-content:flex-end }
+
+/* ── fit to screen ──
+   Chrome out of the way, grid scaled by a factor measured in JS so the
+   whole week lands inside the viewport without a scrollbar. */
+body.fitscreen header.app, body.fitscreen .weeknav, body.fitscreen .trust,
+body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar{ display:none }
+body.fitscreen{ overflow:hidden }
+body.fitscreen .wrap, body.fitscreen main{ max-width:none; padding:0; margin:0 }
+body.fitscreen .grid-scroll{ overflow:visible }
+body.fitscreen table.week{ transform:scale(var(--fit,1)); transform-origin:top left; width:max-content }
+body.fitscreen .legend{ margin:4px 8px }
+.fitbar{ position:fixed; top:8px; right:8px; z-index:60; display:none; gap:6px }
+body.fitscreen .fitbar{ display:flex }
+
+@media print{
+  .paint, .mergebar, .cpick, .fitbar{ display:none !important }
+  .legend{ break-inside:avoid; border:1px solid #999 }
+  .week td.filled, .week th.filled{
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
+}
+
 /* ── 16. Print ──────────────────────────────────────────────────────────── */
 /* Half these apps exist to produce a piece of paper. Printing is a feature
    here, not an afterthought. */
@@ -1959,6 +2029,397 @@ function yearProblem(){
   const names=c.workDays.slice().sort().map(d=>DAYNAMES[d]).join(', ');
   return `Your year runs ${niceDate(c.yearStart)} to ${niceDate(c.yearEnd)}, and no ${names} falls inside it. Widen the dates or add another teaching day in Setup.`;
 }
+/* ═══════════════════════════════════════════════════════════════════
+   COLOUR, NAMES, MERGES — the layer that makes this Jessie's book
+
+   Her real plan book is a Google Sheet, and the colours in it are not
+   decoration: they are a language. Red means no school or a sub. Lime
+   means a reward day. Orange means a drill. Pink down the left edge is
+   just "this is the weekday column". Nobody else can read that book,
+   because the key lives in her head.
+
+   So every fill here carries a NAME, and the names print as a legend.
+   That is the whole difference between a coloured spreadsheet and a
+   plan somebody else can pick up when she is out sick — which is
+   exactly the day it matters.
+
+   Two scopes, asked every time rather than guessed:
+     · this box only            — a one-off, "SUB on Tuesday"
+     · every week               — the standing pattern, "period 3 is
+                                  always kindergarten green"
+   Stored separately so a one-off never silently becomes a rule, and
+   clearing the rule does not wipe the one-offs.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Seeded from her own book: the sixteen fills actually used across the
+   41 weeks, with the meaning each one already carries. She can rename,
+   recolour or delete any of them — this is a starting vocabulary, not
+   a fixed set. */
+const SEED_LEGEND = [
+  { id: 'k1',  hex: '#FF0000', name: 'No school / sub / sick' },
+  { id: 'k2',  hex: '#B8FB32', name: 'Reward day' },
+  { id: 'k3',  hex: '#FF9900', name: 'Fire drill' },
+  { id: 'k4',  hex: '#999999', name: 'Tornado drill' },
+  { id: 'k5',  hex: '#3CF0FF', name: 'Staff meeting / school event' },
+  { id: 'k6',  hex: '#FF6CC2', name: 'Meeting' },
+  { id: 'k7',  hex: '#00FF00', name: 'Family / personal' },
+  { id: 'k8',  hex: '#FF00FF', name: 'Prep to do' },
+  { id: 'k9',  hex: '#FFF2CC', name: 'PD / work day' },
+  { id: 'k10', hex: '#F3F3F3', name: 'Studio time' },
+  { id: 'k11', hex: '#FFD3ED', name: 'Weekday label' },
+  { id: 'k12', hex: '#FFFF00', name: 'Week heading' },
+  { id: 'k13', hex: '#B0F9FF', name: 'Notes heading' },
+  { id: 'k14', hex: '#FEA4A4', name: 'Baby shower' },
+  { id: 'k15', hex: '#0000FF', name: 'Jury duty' },
+];
+
+/* Extra swatches offered in the picker beyond whatever is already in the
+   legend, so adding a new category does not mean typing a hex code. */
+const SWATCHES = ['#FF0000', '#FF9900', '#FFFF00', '#B8FB32', '#00FF00', '#3CF0FF',
+  '#B0F9FF', '#0000FF', '#FF00FF', '#FF6CC2', '#FFD3ED', '#FEA4A4',
+  '#FFF2CC', '#F3F3F3', '#999999', '#FFFFFF'];
+
+function ensureColourState() {
+  if (!Array.isArray(S.legend) || !S.legend.length) S.legend = SEED_LEGEND.map(x => ({ ...x }));
+  S.fill = S.fill || {};        // cellKey -> colour id            (one box)
+  S.fillDow = S.fillDow || {};  // "dow|period" -> colour id       (every week)
+  S.fillCol = S.fillCol || {};  // "period" -> colour id           (column heading)
+  S.fillDay = S.fillDay || {};  // "dow" -> colour id              (weekday label)
+  S.merge = S.merge || {};      // cellKey -> columns spanned      (one box)
+  S.mergeDow = S.mergeDow || {};// "dow|period" -> columns spanned (every week)
+}
+
+const colourById = (id) => (S.legend || []).find(c => c.id === id) || null;
+
+/* A one-off beats the standing rule: if she painted this particular
+   Tuesday red for a sub, that wins over "period 3 is always green". */
+function fillFor(d, p) {
+  ensureColourState();
+  const k = cellKey(d, p);
+  if (k in S.fill) return colourById(S.fill[k]);
+  const dk = `${d.dow}|${p}`;
+  if (dk in S.fillDow) return colourById(S.fillDow[dk]);
+  return null;
+}
+function spanFor(d, p) {
+  ensureColourState();
+  const k = cellKey(d, p);
+  if (k in S.merge) return Math.max(1, S.merge[k] | 0);
+  const dk = `${d.dow}|${p}`;
+  if (dk in S.mergeDow) return Math.max(1, S.mergeDow[dk] | 0);
+  return 1;
+}
+/* A cell swallowed by a merge to its left must not be rendered at all,
+   or the row grows a phantom column and every heading shifts. */
+function coveredBy(d, p) {
+  for (let q = 1; q < p; q++) {
+    const s = spanFor(d, q);
+    if (s > 1 && q + s - 1 >= p) return q;
+  }
+  return 0;
+}
+
+/* Readable ink for any fill, so a dark swatch does not eat the text.
+   The same relative-luminance test the rest of the studio uses. */
+function inkOn(hex) {
+  const h = (hex || '#FFFFFF').replace('#', '');
+  const c = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return L > 0.45 ? '#1b2430' : '#ffffff';
+}
+
+/* ── the picker ─────────────────────────────────────────────────────
+   One popover for every colourable thing. `target` says what is being
+   painted and therefore which scopes make sense: a single box can be
+   "just here" or "every week"; a column heading or a weekday label is
+   inherently every-week, so it does not ask. */
+let pickerEl = null;
+
+function closePicker() {
+  if (pickerEl) { pickerEl.remove(); pickerEl = null; }
+  document.removeEventListener('keydown', pickerKey, true);
+}
+function pickerKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closePicker(); } }
+
+function openPicker(anchor, target) {
+  ensureColourState();
+  closePicker();
+  const asksScope = target.kind === 'cell';
+  const current = target.currentId || '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cpick';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-label', 'Colour and name');
+
+  const swatchRow = (S.legend.map(c => `
+      <button type="button" class="cs${c.id === current ? ' on' : ''}" data-id="${esc(c.id)}"
+        style="background:${esc(c.hex)}" title="${esc(c.name)}"
+        aria-label="${esc(c.name)}"></button>`).join(''))
+    + SWATCHES.filter(h => !S.legend.some(c => c.hex.toLowerCase() === h.toLowerCase()))
+      .map(h => `<button type="button" class="cs new" data-hex="${h}" style="background:${h}"
+        aria-label="New colour ${h}"></button>`).join('');
+
+  wrap.innerHTML = `
+    <p class="cpick-t">${esc(target.label)}</p>
+    <div class="cpick-sw">${swatchRow}</div>
+    <label class="cpick-name">What does this colour mean?
+      <input type="text" id="cp-name" maxlength="40" placeholder="e.g. No school / sub">
+    </label>
+    ${asksScope ? `
+    <fieldset class="cpick-scope">
+      <legend>Apply it to</legend>
+      <label><input type="radio" name="cp-scope" value="one" checked> Just this box</label>
+      <label><input type="radio" name="cp-scope" value="all"> ${esc(target.everyLabel || 'Every week')}</label>
+    </fieldset>` : `<p class="cpick-note">Applies to every week.</p>`}
+    <div class="cpick-act">
+      <button type="button" class="btn ghost" id="cp-clear">Remove colour</button>
+      <button type="button" class="btn primary" id="cp-ok">Apply</button>
+    </div>`;
+
+  document.body.appendChild(wrap);
+  pickerEl = wrap;
+
+  /* Keep it on screen: anchored under the thing you clicked, nudged back
+     inside if that would push it off the right edge or the bottom. */
+  const r = anchor.getBoundingClientRect();
+  const w = wrap.getBoundingClientRect();
+  let left = Math.min(r.left, window.innerWidth - w.width - 10);
+  let top = r.bottom + 6;
+  if (top + w.height > window.innerHeight - 8) top = Math.max(8, r.top - w.height - 6);
+  wrap.style.left = Math.max(8, left) + 'px';
+  wrap.style.top = top + 'px';
+
+  let chosenId = current, chosenHex = current ? (colourById(current) || {}).hex : null;
+  const nameIn = wrap.querySelector('#cp-name');
+  if (current) nameIn.value = (colourById(current) || {}).name || '';
+
+  wrap.querySelectorAll('.cs').forEach(b => b.addEventListener('click', () => {
+    wrap.querySelectorAll('.cs').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    if (b.dataset.id) {
+      chosenId = b.dataset.id; chosenHex = null;
+      nameIn.value = (colourById(chosenId) || {}).name || '';
+    } else {
+      chosenId = null; chosenHex = b.dataset.hex;
+      if (!nameIn.value) nameIn.focus();
+    }
+  }));
+
+  wrap.querySelector('#cp-clear').onclick = () => { target.apply(null, 'one'); closePicker(); };
+  wrap.querySelector('#cp-ok').onclick = () => {
+    const name = nameIn.value.trim();
+    let id = chosenId;
+    if (!id && chosenHex) {
+      /* A brand-new colour joins the legend, named. Unnamed is allowed —
+         it just shows as the colour — because forcing a name before you
+         can highlight one box would be the kind of friction that stops
+         people using it at all. */
+      id = 'u' + Date.now().toString(36);
+      S.legend.push({ id, hex: chosenHex, name: name || '' });
+    } else if (id && name && name !== (colourById(id) || {}).name) {
+      colourById(id).name = name;      // renaming here renames it everywhere
+    }
+    if (!id) { closePicker(); return; }
+    const scope = asksScope
+      ? (wrap.querySelector('input[name="cp-scope"]:checked') || {}).value || 'one'
+      : 'all';
+    target.apply(id, scope);
+    closePicker();
+  };
+
+  setTimeout(() => document.addEventListener('keydown', pickerKey, true), 0);
+  setTimeout(() => {
+    const off = (e) => {
+      if (pickerEl && !pickerEl.contains(e.target)) { closePicker(); document.removeEventListener('mousedown', off, true); }
+    };
+    document.addEventListener('mousedown', off, true);
+  }, 0);
+}
+
+/* ── merging ────────────────────────────────────────────────────────
+   Her book merges constantly: "Work Day" across all six periods,
+   "NO KINDERGARTEN" across 3 and 4, lunch running down the whole week.
+   Merging asks the same scope question colouring does, because
+   "kindergarten is always a double period" and "we merged Tuesday for
+   the assembly" are different facts. */
+function mergeRun(d, p, delta) {
+  ensureColourState();
+  const c = S.config, k = cellKey(d, p), dk = `${d.dow}|${p}`;
+  const cur = spanFor(d, p);
+  let next = Math.max(1, cur + delta);
+  /* Never run past the last period, and never swallow a cell that is
+     itself the head of another merge — that would orphan its content. */
+  next = Math.min(next, c.periods - p + 1);
+  for (let q = p + 1; q < p + next; q++) {
+    if (spanFor(d, q) > 1) { next = q - p; break; }
+  }
+  return { k, dk, next, changed: next !== cur };
+}
+
+function applyMerge(d, p, span, scope) {
+  ensureColourState();
+  const k = cellKey(d, p), dk = `${d.dow}|${p}`;
+  if (scope === 'all') {
+    if (span > 1) S.mergeDow[dk] = span; else delete S.mergeDow[dk];
+    delete S.merge[k];
+  } else {
+    if (span > 1) S.merge[k] = span; else delete S.merge[k];
+  }
+  persist();
+  render();
+}
+
+/* ── the legend, printed ────────────────────────────────────────────
+   The reason the whole feature exists: a sub picks this up and can read
+   it. Only colours actually in use are listed, so the key stays short
+   and honest rather than showing fifteen categories she never used. */
+function usedColourIds() {
+  ensureColourState();
+  const used = new Set();
+  for (const v of Object.values(S.fill)) used.add(v);
+  for (const v of Object.values(S.fillDow)) used.add(v);
+  for (const v of Object.values(S.fillCol)) used.add(v);
+  for (const v of Object.values(S.fillDay)) used.add(v);
+  return used;
+}
+
+function legendHTML() {
+  const used = usedColourIds();
+  const items = S.legend.filter(c => used.has(c.id));
+  if (!items.length) return '';
+  return `<div class="legend" aria-label="Colour key">
+      <span class="legend-t">Colour key</span>
+      ${items.map(c => `<span class="legend-i">
+        <span class="legend-sw" style="background:${esc(c.hex)}"></span>
+        <span>${esc(c.name || 'unnamed')}</span></span>`).join('')}
+      <button type="button" class="btn ghost no-print" id="legend-edit">Edit key</button>
+    </div>`;
+}
+
+/* ── fit to screen ──────────────────────────────────────────────────
+   "I want to see it all at once." A whole week is ten columns wide and
+   six rows deep, which on a laptop only fits if the chrome gets out of
+   the way and the type scales down with the grid. This is a view mode,
+   not a zoom: the grid keeps its own proportions and the browser keeps
+   its own text-size setting for everything else. */
+function toggleFit() {
+  const on = !document.body.classList.contains('fitscreen');
+  document.body.classList.toggle('fitscreen', on);
+  S.fit = on;
+  persist(true);
+  if (on) fitGrid(); else document.documentElement.style.removeProperty('--fit');
+  const b = document.getElementById('wk-fit');
+  if (b) { b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Exit full screen' : 'Fit to screen'; }
+}
+
+function fitGrid() {
+  if (!document.body.classList.contains('fitscreen')) return;
+  const tbl = view.querySelector('table.week');
+  const box = view.querySelector('.grid-scroll');
+  if (!tbl || !box) return;
+  document.documentElement.style.setProperty('--fit', '1');
+  /* Measure at full size, then scale down only if it does not fit. Never
+     scale up — a five-period week blown up to fill a monitor looks like
+     a mistake. */
+  const availW = box.clientWidth || window.innerWidth;
+  const availH = window.innerHeight - box.getBoundingClientRect().top - 16;
+  const need = tbl.scrollWidth, needH = tbl.scrollHeight;
+  const k = Math.min(1, availW / Math.max(1, need), availH / Math.max(1, needH));
+  document.documentElement.style.setProperty('--fit', k.toFixed(3));
+}
+
+
+/* ── wiring the handles ─────────────────────────────────────────────
+   One delegated pass over the grid. Each paint handle knows what it
+   paints from its data-paint token, and hands openPicker an `apply`
+   that writes to the right store — which is where the "just this box
+   or every week" answer actually lands. */
+function wireColourHandles(){
+  ensureColourState();
+  const days=(YEAR[curWeek]||{days:[]}).days;
+  const byIso={}; for(const d of days) byIso[d.iso]=d;
+
+  view.querySelectorAll('[data-paint]').forEach(btn=>{
+    btn.onclick=(ev)=>{
+      ev.stopPropagation(); ev.preventDefault();
+      const tok=btn.dataset.paint, [kind,a,b]=tok.split(':');
+      if(kind==='col'){
+        openPicker(btn,{ kind:'col', label:a==='lunch'?'Lunch column':a==='notes'?'Notes column':'Period '+a+' column',
+          currentId:S.fillCol[a==='lunch'||a==='notes'?a:+a]||'',
+          apply:(id)=>{ const key=(a==='lunch'||a==='notes')?a:+a;
+            if(id) S.fillCol[key]=id; else delete S.fillCol[key]; persist(); render(); } });
+      } else if(kind==='day'){
+        openPicker(btn,{ kind:'day', label:DAYNAMES[+a]+' label, every week',
+          currentId:S.fillDay[+a]||'',
+          apply:(id)=>{ if(id) S.fillDay[+a]=id; else delete S.fillDay[+a]; persist(); render(); } });
+      } else if(kind==='note'){
+        const d=byIso[a]; if(!d) return;
+        openPicker(btn,{ kind:'cell', label:'Notes · '+DAYNAMES[d.dow]+' '+niceDate(d.iso),
+          everyLabel:'Every '+DAYNAMES[d.dow]+'’s notes',
+          currentId:S.fill['n'+d.iso]||S.fillDow['n'+d.dow]||'',
+          apply:(id,scope)=>{
+            if(scope==='all'){ if(id) S.fillDow['n'+d.dow]=id; else delete S.fillDow['n'+d.dow]; delete S.fill['n'+d.iso]; }
+            else { if(id) S.fill['n'+d.iso]=id; else delete S.fill['n'+d.iso]; }
+            persist(); render(); } });
+      } else if(kind==='cell'){
+        const d=byIso[a]; if(!d) return; const p=+b;
+        openPicker(btn,{ kind:'cell', label:DAYNAMES[d.dow]+' '+niceDate(d.iso)+' · period '+p,
+          everyLabel:'Every '+DAYNAMES[d.dow]+' period '+p,
+          currentId:(()=>{const k=cellKey(d,p);return (k in S.fill)?S.fill[k]:(S.fillDow[d.dow+'|'+p]||'');})(),
+          apply:(id,scope)=>{
+            const k=cellKey(d,p), dk=d.dow+'|'+p;
+            if(scope==='all'){ if(id) S.fillDow[dk]=id; else delete S.fillDow[dk]; delete S.fill[k]; }
+            else { if(id) S.fill[k]=id; else delete S.fill[k]; }
+            persist(); render(); } });
+      }
+    };
+  });
+
+  view.querySelectorAll('[data-merge]').forEach(btn=>{
+    btn.onclick=(ev)=>{
+      ev.stopPropagation(); ev.preventDefault();
+      const [iso,ps,ds]=btn.dataset.merge.split(':');
+      const d=byIso[iso]; if(!d) return;
+      const p=+ps, delta=+ds;
+      const r=mergeRun(d,p,delta);
+      if(!r.changed){ toast(delta>0?'Nothing to merge into':'Not merged'); return; }
+      /* Ask the same question colouring asks. A standing double period
+         and a one-off assembly are different facts about the year. */
+      openMergeScope(btn,d,p,r.next);
+    };
+  });
+}
+
+/* A two-button sheet rather than a confirm(): the choice is not
+   yes/no, and a confirm cannot say what either answer means. */
+function openMergeScope(anchor,d,p,span){
+  closePicker();
+  const wrap=document.createElement('div');
+  wrap.className='cpick';
+  wrap.setAttribute('role','dialog');
+  wrap.setAttribute('aria-label','Merge scope');
+  wrap.innerHTML=`
+    <p class="cpick-t">${span>1?'Merge':'Unmerge'} ${esc(DAYNAMES[d.dow])} period ${p}</p>
+    <p class="cpick-note">${span>1?'It will span '+span+' periods.':'It will go back to one period.'}</p>
+    <div class="cpick-act" style="flex-direction:column;align-items:stretch;gap:6px">
+      <button type="button" class="btn primary" id="mg-one">Just this week</button>
+      <button type="button" class="btn" id="mg-all">Every ${esc(DAYNAMES[d.dow])}</button>
+      <button type="button" class="btn ghost" id="mg-x">Cancel</button>
+    </div>`;
+  document.body.appendChild(wrap); pickerEl=wrap;
+  const r=anchor.getBoundingClientRect(), w=wrap.getBoundingClientRect();
+  wrap.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w.width-10))+'px';
+  wrap.style.top=(r.bottom+w.height>window.innerHeight-8?Math.max(8,r.top-w.height-6):r.bottom+6)+'px';
+  wrap.querySelector('#mg-one').onclick=()=>{ closePicker(); applyMerge(d,p,span,'one'); };
+  wrap.querySelector('#mg-all').onclick=()=>{ closePicker(); applyMerge(d,p,span,'all'); };
+  wrap.querySelector('#mg-x').onclick=closePicker;
+  setTimeout(()=>document.addEventListener('keydown',pickerKey,true),0);
+}
+
+window.addEventListener('resize',()=>{ if(document.body.classList.contains('fitscreen')) fitGrid(); });
+
 function renderWeek(){
   buildYearIfStale();
   if(!YEAR.length){
@@ -1970,13 +2431,18 @@ function renderWeek(){
   const w=YEAR[curWeek], c=S.config, todayISO=fmtISO(new Date());
   const preL=c.lunchAfter, teacher=c.teacher?` · ${esc(c.teacher)}`:'';
 
+  ensureColourState();
+  const hStyle=(id)=>{ const col=colourById(id); return col
+      ? ` class="filled" style="--cell-fill:${col.hex};--cell-ink:${inkOn(col.hex)}"` : ''; };
+  const paintBtn=(what,label)=>`<button type="button" class="paint no-print" data-paint="${what}" aria-label="Colour ${label}">◧</button>`;
+
   let head=`<tr><th class="day-h" scope="col">Day</th>`;
   for(let p=1;p<=c.periods;p++){
-    if(p===preL+1) head+=`<th class="lunch-h" scope="col" aria-label="Lunch">🍎</th>`;
-    head+=`<th scope="col">Period ${p}</th>`;
+    if(p===preL+1) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(S.fillCol.lunch)}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
+    head+=`<th scope="col"${hStyle(S.fillCol[p])}>Period ${p}${paintBtn('col:'+p,'the Period '+p+' column')}</th>`;
   }
-  if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch">🍎</th>`;
-  head+=`<th class="notes-h" scope="col">Notes</th></tr>`;
+  if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(S.fillCol.lunch)}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
+  head+=`<th class="notes-h" scope="col"${hStyle(S.fillCol.notes)}>Notes${paintBtn('col:notes','the Notes column')}</th></tr>`;
 
   const ce=PLAINTEXT_OK?'plaintext-only':'true';
   const lunchCell=`<td class="lunch"><span aria-hidden="true">lunch</span></td>`;
@@ -1988,7 +2454,7 @@ function renderWeek(){
     const dayName=`${DAYNAMES[d.dow]} ${niceDate(d.iso)}`;
     const rot=d.letter?`, rotation day ${esc(d.letter)}`:(d.special?`, ${esc(d.special)}`:'');
     rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
-      <td class="day-td"><div class="day-cell">
+      <td class="day-td"${(()=>{const df=colourById(S.fillDay[d.dow]);return df?` class="day-td filled" style="--cell-fill:${df.hex};--cell-ink:${inkOn(df.hex)}"`:'';})()}>${paintBtn('day:'+d.dow,DAYNAMES[d.dow]+' label')}<div class="day-cell">
         <div>
           <div class="day-name">${DAYNAMES[d.dow]}</div>
           <div class="day-date">${niceDate(d.iso)}${d.iso===todayISO?'<span class="sr-only">, today</span>':''}</div>
@@ -1998,10 +2464,18 @@ function renderWeek(){
       </div></td>`;
     for(let p=1;p<=c.periods;p++){
       if(p===preL+1) rows+=lunchCell;
-      rows+=`<td data-label="Period ${p}"><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, period ${p}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div></td>`;
+      if(coveredBy(d,p)) continue;                 // swallowed by a merge to its left
+      const f=fillFor(d,p), span=spanFor(d,p);
+      const fs=f?` class="filled${span>1?' merged':''}" style="--cell-fill:${f.hex};--cell-ink:${inkOn(f.hex)}"`
+                :(span>1?' class="merged"':'');
+      const sp=span>1?` colspan="${span}"`:'';
+      const spanNote=span>1?`, spanning ${span} periods`:'';
+      rows+=`<td data-label="Period ${p}"${sp}${fs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, period ${p}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' period '+p)}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} period ${p}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} period ${p} with the next">▶</button></span></td>`;
     }
     if(preL===c.periods) rows+=lunchCell;
-    rows+=`<td data-label="Notes"><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div></td></tr>`;
+    const nf=colourById(S.fill['n'+d.iso]!==undefined?S.fill['n'+d.iso]:S.fillDow['n'+d.dow]);
+    const nfs=nf?` class="filled" style="--cell-fill:${nf.hex};--cell-ink:${inkOn(nf.hex)}"`:'';
+    rows+=`<td data-label="Notes"${nfs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div>${paintBtn('note:'+d.iso,'notes for '+dayName)}</td></tr>`;
   }
 
   const opts=YEAR.map((wk,i)=>`<option value="${i}" ${i===curWeek?'selected':''}>Wk ${i+1} · ${weekLabel(wk)}</option>`).join('');
@@ -2015,6 +2489,7 @@ function renderWeek(){
       <select id="wk-jump" aria-label="Jump to week">${opts}</select>
       <button class="btn" id="wk-today">Today</button>
       <span class="spacer"></span>
+      <button class="btn" id="wk-fit" aria-pressed="false">Fit to screen</button>
       <button class="btn" id="wk-print">Print</button>
     </div>
     ${trustHTML(false)}
@@ -2022,6 +2497,7 @@ function renderWeek(){
     <h2 class="sr-only">Week ${curWeek+1} of ${YEAR.length}: ${weekLabel(w)}</h2>
     <p class="scroll-hint no-print" id="scroll-hint" hidden>The periods run off to the right — scroll the grid sideways to reach them. The day column stays put.</p>
     <div class="print-title">Specials Planner · Week of ${weekLabel(w)}${teacher}</div>
+    ${legendHTML()}
     <div class="grid-scroll"><table class="week" style="--cols:${c.periods}" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
     <div class="footnote no-print">Tap a box to type — Enter starts a new line. Everything saves as you go.</div>`;
 
@@ -2047,6 +2523,14 @@ function renderWeek(){
     const row=view.querySelector('.today-row'); if(row&&row.scrollIntoView) row.scrollIntoView({block:'center'});
   };
   document.getElementById('wk-print').onclick=()=>window.print();
+  const fitBtn=document.getElementById('wk-fit');
+  if(fitBtn){ fitBtn.onclick=toggleFit;
+    fitBtn.setAttribute('aria-pressed',String(!!S.fit));
+    fitBtn.textContent = S.fit?'Exit full screen':'Fit to screen'; }
+  if(S.fit){ document.body.classList.add('fitscreen'); requestAnimationFrame(fitGrid); }
+  wireColourHandles();
+  const le=document.getElementById('legend-edit');
+  if(le) le.onclick=()=>{ curView='setup'; render(); };
   updateScrollHint();
   announce(`Week ${curWeek+1} of ${YEAR.length}: ${weekLabel(w)}`);
 }

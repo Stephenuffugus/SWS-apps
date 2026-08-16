@@ -64,7 +64,14 @@ console.log('\n— year build & rotation —');
   const letters = [...boxes].map(b => b.dataset.letter).join('');
   ok(letters === 'ABCAB', 'rotation cycles A,B,C,A,B across Mon–Fri');
   ok(w.document.getElementById('wk-jump').options.length === 5, 'Aug 24 – Sep 25 generates 5 weeks');
-  const ths = [...w.document.querySelectorAll('table.week th')].map(t => t.textContent.trim());
+  /* Header cells now carry a paint control, so read the heading's own text
+     rather than the cell's — textContent would include the button glyph. */
+  const headText = (t) => {
+    const c = t.cloneNode(true);
+    c.querySelectorAll('button').forEach(b => b.remove());
+    return c.textContent.trim();
+  };
+  const ths = [...w.document.querySelectorAll('table.week th')].map(headText);
   ok(ths[3] === '🍎', 'lunch column sits after period 2');
   ok(ths.length === 9, 'header = Day + 6 periods + lunch + Notes');
 }
@@ -249,7 +256,14 @@ console.log('\n— setup apply reflows the grid —');
   w.document.getElementById('f-lunch').value = '3';
   w.document.getElementById('f-letters').value = 'A, B';
   w.document.getElementById('f-apply').click();
-  const ths = [...w.document.querySelectorAll('table.week th')].map(t => t.textContent.trim());
+  /* Header cells now carry a paint control, so read the heading's own text
+     rather than the cell's — textContent would include the button glyph. */
+  const headText = (t) => {
+    const c = t.cloneNode(true);
+    c.querySelectorAll('button').forEach(b => b.remove());
+    return c.textContent.trim();
+  };
+  const ths = [...w.document.querySelectorAll('table.week th')].map(headText);
   ok(ths.length === 10, '7 periods + lunch + day + notes = 10 headers');
   ok(ths[4] === '🍎', 'lunch moved to after period 3');
   const letters = [...w.document.querySelectorAll('.box[data-p="1"]')].map(b => b.dataset.letter).join('');
