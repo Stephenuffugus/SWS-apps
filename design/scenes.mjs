@@ -214,6 +214,92 @@ const pdfLoad = async (p, files) => {
 };
 
 export const SCENES = {
+  'bill-splitter': {
+    panels: [
+      {
+        slug: 'even',
+        caption: 'Split it evenly, to the cent',
+        sub: 'Tax and tip included, and the rounding is shown rather than quietly given to one person.',
+        act: async (p) => {
+          for (const name of ['Alex', 'Bea', 'Chris', 'Dana']) {
+            await p.fill('#personInput', name).catch(() => {});
+            await p.click('#personAdd').catch(() => {});
+            await p.waitForTimeout(160);
+          }
+          await p.fill('#billAmt', '186.40').catch(() => {});
+          await p.fill('#taxAmt', '16.32').catch(() => {});
+          await p.fill('#tipAmt', '20').catch(() => {});
+          await p.waitForTimeout(600);
+          await toTop(p, '#dinnerResults', 240);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'items',
+        caption: 'Or by what each person actually ate',
+        sub: 'Assign the steak to the person who ordered it. Tax and tip follow the same shares.',
+        act: async (p) => {
+          for (const name of ['Alex', 'Bea', 'Chris', 'Dana']) {
+            await p.fill('#personInput', name).catch(() => {});
+            await p.click('#personAdd').catch(() => {});
+            await p.waitForTimeout(160);
+          }
+          await p.click('#segItems').catch(() => {});
+          await p.waitForTimeout(300);
+          for (const [label, amt] of [['Ribeye', '42'], ['Sea bass', '34'], ['Mushroom risotto', '26'],
+            ['Bottle of malbec', '48'], ['Two desserts', '18']]) {
+            await p.fill('#itemLabel', label).catch(() => {});
+            await p.fill('#itemAmt', amt).catch(() => {});
+            await p.click('#itemAdd').catch(() => {});
+            await p.waitForTimeout(200);
+          }
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'whopays',
+        caption: 'Who owes whom, settled',
+        sub: 'Say who paid and it works out the transfers — no app to install, no account to join.',
+        act: async (p) => {
+          for (const name of ['Alex', 'Bea', 'Chris', 'Dana']) {
+            await p.fill('#personInput', name).catch(() => {});
+            await p.click('#personAdd').catch(() => {});
+            await p.waitForTimeout(160);
+          }
+          await p.fill('#billAmt', '186.40').catch(() => {});
+          await p.fill('#taxAmt', '16.32').catch(() => {});
+          await p.fill('#tipAmt', '20').catch(() => {});
+          await p.waitForTimeout(500);
+          const paidBy = p.locator('#paidBy');
+          const opts = await paidBy.locator('option').count().catch(() => 0);
+          if (opts > 1) await paidBy.selectOption({ index: 1 }).catch(() => {});
+          await p.waitForTimeout(500);
+          await toTop(p, '#dinnerResults', 200);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'No account, no ads, no sign-up',
+        sub: 'Splitwise wants everyone at the table to install it. This is a web page you both open.',
+        dark: true,
+        act: async (p) => {
+          for (const name of ['Alex', 'Bea', 'Chris', 'Dana']) {
+            await p.fill('#personInput', name).catch(() => {});
+            await p.click('#personAdd').catch(() => {});
+            await p.waitForTimeout(160);
+          }
+          await p.fill('#billAmt', '186.40').catch(() => {});
+          await p.fill('#taxAmt', '16.32').catch(() => {});
+          await p.fill('#tipAmt', '20').catch(() => {});
+          await p.waitForTimeout(600);
+          await toTop(p, '#dinnerResults', 240);
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
   'pdf-tools': {
     panels: [
       {
