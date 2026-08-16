@@ -418,5 +418,128 @@
     ],
     "seasonality": "Evergreen with a community-event bump in spring and fall; back-to-school nights and fall festivals in September–October are the natural first seeding ground.",
     "tipMoment": "Weak. The organiser's relief is real but diffuse, and the value only becomes obvious later when the list is still legible. Treat this as a portfolio-completeness and word-of-mouth play, not a tip earner."
+  },
+  {
+    "name": "Passport Photo Sheet",
+    "pitch": "Crop your own phone photo to the official 2×2 with the head-size guide drawn on screen, then get a 4×6 sheet of six ready for a home printer or a 40¢ drugstore kiosk print — and your face never leaves the phone.",
+    "whoAsks": "A parent at the kitchen table the night before a passport appointment, doing four family photos at once — the moment 4 × $17.99 becomes real. Also visa applicants who need 35×45mm and cannot get it at a US counter.",
+    "evidence": "Retail 2026, from multiple price-comparison guides: CVS $17.99, Walgreens $16.99, Walmart $7.64 — each for two 2×2 prints. The print-at-home route is documented in the same guides: \"approximately $0.42 for a 4×6 print and cut out four passport photos, providing four photos for less than fifty cents compared with $17.99 for two photos.\" And the paywall sits exactly on the layout step: \"format two 2×2 photos onto a single 4×6 sheet — with a print-ready sheet as a $2.99 one-time unlock.\" IDPhotoDIY, the best-known free tool, markets \"print it at $0.20 per 4R photo (4x6 print)\" and leads with \"Auto Crop with Face Detection\" and \"Auto Background Removal\" — server-side processing of a face photo destined for a government identity document.",
+    "incumbent": "Drugstore counters at $7.64–$17.99 for two prints. Online: free to preview, $2.99 to unlock the print-ready sheet; or ad-supported sites that upload your face so a server can do face detection and background removal.",
+    "whyWeWin": "The step they charge $2.99 for is arithmetic, and 90% of it is already written: apps/image-compressor/app.js already does exact-size source-rect cropping (`coverRect()` → `planDims()` → `encode()`, the `ctx.drawImage(bmp, plan.sx, plan.sy, plan.sw, plan.sh, 0, 0, plan.dw, plan.dh)` at line 264) with quality control and a Safari fallback; apps/scan-to-pdf/pdf.js already lays images onto a fixed-size sheet. Genuinely new code is two things: the crop overlay drawing the State Department's published head-height band (head 1\"–1⅜\", eyes 1⅛\"–1⅜\" from the bottom), and a 6-up 4×6 imposition, which is seating-chart's escort-card grid with the cell size fixed at 2in and cut marks instead of dashes. Same argument pdf-tools already shipped on — the popular sites route your sensitive document through their servers — applied to the one photo that is literally your identity.",
+    "engine": "4-file-transform",
+    "size": "S",
+    "artifact": "A 4×6 JPEG and PDF holding six exact 2×2 photos with cut marks at 300dpi, plus 35×45mm (most visas) and 50×50mm (India/other) sheet presets, and a single-photo file for online applications.",
+    "risk": "We cannot do background removal or an AI compliance verdict — the two things the paid tools actually sell. A rejected application is a bad memory attached to our name, so the app must be loudly a layout tool and honest that lighting and background are on the user. Secondary: mid-August is the wrong end of the passport-season curve, so this indexes toward winter rather than paying off immediately.",
+    "searchTerms": [
+      "passport photo template 4x6",
+      "print passport photo at home free",
+      "2x2 photo maker no watermark",
+      "passport photo without uploading",
+      "visa photo 35x45 printable sheet"
+    ],
+    "seasonality": "Applications peak January–June ahead of summer travel; steady underneath all year. Build now, indexed by the winter wave.",
+    "tipMoment": "Strong and quantifiable — the results screen can honestly say \"six photos for about 40¢ instead of $71.96 at CVS for a family of four.\" That is the Mileage Log psychology with a smaller number and a shorter wait."
+  },
+  {
+    "name": "Fair Shares — estate division board",
+    "pitch": "Photograph what is in your parents' house, share one link with your siblings, everybody marks what they want; the app settles the uncontested things instantly, takes turns on the rest, and prints each person's list.",
+    "whoAsks": "Three adult siblings — two of them out of state — standing in a house that has to be emptied before it sells, six weeks after a funeral. The one who is \"handling it\" starts the board.",
+    "evidence": "FairSplit — whose tagline is literally \"Divide Things, Not Families\" — publishes: \"Basic Estate: $350, Up to 3 divisees and 300 items\"; \"Plus Estate: $600, Up to 5 divisees and 750 assets\"; \"Premium Estate: $995, Up to 12 divisees and 2,500 assets\" — with optional admin services at $300 / $500 / $750 on top, and estates over $250,000 in personal property pushed to a separate high-value tier. Their own retention line: data \"stored indefinitely, until not accessed for a year.\"",
+    "incumbent": "FairSplit at $350–$995 per estate plus admin fees; otherwise the default toolkit — a shared Google Sheet, coloured stickers on furniture, and an argument. Estate attorneys bill hourly to referee the same conversation.",
+    "whyWeWin": "$350 for what is mechanically a shared list of photographed objects with a turn order is the single clearest overcharge found in this research, and a database of every object in a dead parent's house, held indefinitely by a vendor, is exactly the category the brand promise was written for. It is also the cheapest large build in the portfolio: home-inventory supplies the item model, the IndexedDB photo store (store.js) and the printed report (pdf.js photo grid + the value-descending table); signup-sheets supplies the whole shared-link primitive — the Firestore board, the collision-checked share code in data.js, and the 17KB firestore.rules that already governs counter-coupled entry writes. Genuinely new code is one function: the allocation pass over \"wants\" (uncontested → auto-assign; contested → alternating picks in a snake order). No money, no appraisals, no real estate — objects only.",
+    "engine": "1-shared-link",
+    "size": "M",
+    "artifact": "A shared photo board of the household's contents, then a printed division report per sibling: who took what, what is still contested, what goes to donation or the estate sale.",
+    "risk": "Nobody types a tool query here — they type \"how to divide parents belongings between siblings fairly,\" which is informational and blog-dominated. Like the backlogged After-Loss Checklist, this lands by cross-link from the hardest-week cluster, not by ranking on its own. It is also the most emotionally loaded coordination in the portfolio; the scope discipline (no values, no appraisals, no house, no money) is load-bearing rather than optional.",
+    "searchTerms": [
+      "how to divide parents belongings between siblings",
+      "fairsplit alternative free",
+      "estate division app",
+      "dividing personal property after death",
+      "sibling estate inventory list"
+    ],
+    "seasonality": "Evergreen, with a January bump when families are together and finally decide to deal with it.",
+    "tipMoment": "The strongest on this list. The family got through it without a fight and without $350, at the moment they feel they did right by a parent — and every sibling who opens the link sees the studio."
+  },
+  {
+    "name": "Lost Pet Poster",
+    "pitch": "The dog just got out: on your phone, pick the photo, type the block you lost him on, and get a print-ready poster with tear-off tabs — plus a QR the finder can scan for three more photos and \"he's shy, don't chase him.\"",
+    "whoAsks": "Someone at 10pm who found the gate open and is about to drive to a 24-hour print shop. Secondarily shelter volunteers and neighbourhood searchers who make posters for other people's pets.",
+    "evidence": "This lane is genuinely well served free, and the search results say so plainly: Canva \"Free and customizable lost dog templates\" and \"Free printable, customizable lost dog poster templates,\" Adobe Express \"editable free lost dog poster templates,\" PosterMyWall's free lost-pet flyer template, WordLayouts' \"Free Lost Pet Flyers — Download or Edit Online,\" and printablesigns.net, where \"the PDF version is available for free\" for a missing-pet flyer with tear-off tabs. That is the honest incumbent picture and it is the reason this idea ranks third rather than first.",
+    "incumbent": "Free Canva and Adobe Express templates — which cost an account, a heavy mobile editor and a photo upload — plus PawBoost-style services that wrap a free listing in paid alert boosts.",
+    "whyWeWin": "Not on template quality; on the path. It is a phone, at night, in a panic: no account, no app install, no upload, one screen, PDF in under sixty seconds. The one genuinely new capability is the QR, and moving-boxes already proved the exact pattern — `encodeBoxForLabel()` in helpers.js writes the payload INSIDE the code and binary-searches the content to fit the real module count, because \"a character cap cannot see that: the old 900-char ceiling produced 101-module codes that printed at 0.278mm per module, which no phone camera reads off cardboard in a garage.\" That same machinery lets a torn-off tab carry the dog's other photos, medication and \"do not chase\" instructions to a finder with no signal and no server behind it.",
+    "engine": "2-print-pdf",
+    "size": "S",
+    "artifact": "A one-page poster — photo, large-type headline, tear-off tabs with the number and a QR — plus a half-page windshield version and a 4-up neighbourhood card for mailboxes.",
+    "risk": "The weakest moat here. Free templates already exist, already rank, and already do tear-off tabs. If the 60-second phone path and the QR payload are not visibly better than opening Canva, do not build it. Demand is also spiky rather than steady.",
+    "searchTerms": [
+      "lost dog poster template free",
+      "missing cat flyer with tear off tabs",
+      "lost pet flyer maker on phone",
+      "make a lost dog poster now"
+    ],
+    "seasonality": "Evergreen with hard spikes around July 4 and New Year's Eve fireworks, and thunderstorm season.",
+    "tipMoment": "Strong when the pet comes home — and that is a perfect Reddit testimonial — but delayed, and it never arrives at all in the cases that end badly."
+  },
+  {
+    "name": "Recipe Box — family cookbook & recipe cards",
+    "pitch": "Type in the recipes that only exist in your grandmother's handwriting and print them two ways: a box of 4×6 cards for the kitchen, or a fold-and-staple cookbook to hand out at Christmas.",
+    "whoAsks": "A daughter transcribing a shoebox of index cards after a parent dies or moves into care; a family assembling a reunion cookbook; someone making Christmas gifts in October.",
+    "evidence": "Heritage Cookbook lets you \"build cookbooks at no cost until ordering\" but charges \"$29.95/year\" for Premium design features, prices books purely \"based on your cookbook page count and binding options,\" and ships \"within 3 weeks of your order\" — meaning there is no path to a print-ready PDF for your own printer or the copy shop down the street. The rest of the lane is Canva templates and Etsy Word files.",
+    "incumbent": "Cookbook-printing services (a $29.95/yr membership plus per-book printing plus a three-week wait, and they must do the printing), Canva templates behind an account, Etsy .docx files you still have to fight.",
+    "whyWeWin": "The technical pain is the same one that puts Funeral Program Maker at the top of the existing backlog — bifold imposition, the reason a folded booklet prints in scrambled page order from Word. Build that math once and it serves both apps, which is the real argument for this idea: it makes the flagship cheaper rather than competing with it. Everything else already exists: seating-chart's pdf.js escort-card grid (cols=2, rows=5, dashed cut lines drawn with `page.drawLine({ dashArray: [4,4] })`) is a 4×6 recipe-card sheet with the cell arithmetic changed, home-inventory's pdf.js already embeds photos into a captioned page grid, and both already carry the WinAnsi transliteration work so \"Kateřina's kolache\" prints as a name rather than a redaction. Zero content licensing risk — these are the user's own recipes, not a database.",
+    "engine": "2-print-pdf",
+    "size": "M",
+    "artifact": "(a) a sheet of 4×6 recipe cards with cut lines that fits a standard recipe box, and (b) a fold-ready booklet PDF with a table of contents and printing instructions.",
+    "risk": "Sentiment-driven, not urgent, which means it has to be genuinely pretty — and \"pretty\" is template design time, the same moat problem already flagged against Certificate Maker. It also does not justify writing the imposition math on its own; it is only cheap as the second app out of that code, not the first.",
+    "searchTerms": [
+      "family cookbook template free",
+      "printable recipe cards 4x6 template",
+      "make a cookbook from family recipes",
+      "recipe book pdf maker no account",
+      "funeral memorial recipe keepsake"
+    ],
+    "seasonality": "October–December gift season is the whole game — build in September or wait a year.",
+    "tipMoment": "Moderate. Real gratitude and a keepsake, but no dollar figure on screen the way the passport sheet and the estate board both have."
+  },
+  {
+    "name": "Job Photo Report — before & after",
+    "pitch": "Photograph a job start to finish on your phone and hand the customer a dated before-and-after PDF with a sign-off line — no crew software, no monthly fee.",
+    "whoAsks": "A solo painter, cleaner, roofer, mobile detailer or handyman who has just finished and needs proof of condition, because the customer is going to say the stain was already there.",
+    "evidence": "CompanyCam's own pricing page: \"Core — $63/month, 1 User Included; Additional Users: $29 each,\" then \"Crew — $129/month\" and \"Scale — $199/month,\" both with three users included. That is $756 a year for one person to photograph their own jobs.",
+    "incumbent": "CompanyCam at $63/mo for a single user; Jobber and Housecall Pro bundle something similar into larger subscriptions. The realistic default is 200 photos lost in a camera roll and an argument about a scratch.",
+    "whyWeWin": "A solo operator is paying $756/yr for cloud sync and team permissions they have no team for; the artifact they actually need is one dated PDF. home-inventory's pdf.js already lays photos into a captioned page grid with a paginating cover and per-section totals, image-compressor already downsizes on intake — which is the memory ceiling that otherwise kills an 80-photo job on a phone — and signature-maker already produces the customer sign-off. New code is the before/after pairing and the job header.",
+    "engine": "2-print-pdf",
+    "size": "M",
+    "artifact": "A dated, paginated PDF: job address, per-area before/after photo pairs with captions, notes, and a customer sign-off line.",
+    "risk": "Be honest — this is the backlogged Move-In Report with a different cover page and a different audience, and building both is building one app twice. The right call is to build Move-In Report first and ship this as its second mode, not as a separate product. It also pushes further into the solo-business wing that the portfolio brief explicitly says should stay a wing, not a direction — and tradespeople are the least loyal audience to a free tool.",
+    "searchTerms": [
+      "before and after photo report pdf",
+      "companycam alternative free",
+      "contractor job photo documentation no subscription",
+      "proof of work photo report for customer"
+    ],
+    "seasonality": "Evergreen with a spring–summer trade season peak; storm-damage work drives an autumn bump.",
+    "tipMoment": "Strong in principle — a tradesperson who just avoided a $400 dispute — but it lands weeks after the build, and this audience expects tools to cost money rather than to deserve a tip."
+  },
+  {
+    "name": "Clue Hunt — printable QR scavenger hunt",
+    "pitch": "Type your clues, print the QR posters, hide them. Each code carries the next clue inside itself, so the hunt works with no signal, no app install, and no account for anyone scanning.",
+    "whoAsks": "A parent the night before a nine-year-old's birthday; a teacher running a first-week campus hunt; a youth leader at a fall festival; a bride who needs the kids occupied for forty minutes.",
+    "evidence": "GooseChase, the category leader, is \"free to use for up to 3 participants\" and \"Single events start from $99, plus subscriptions and special pricing for educators and non-profits.\" Scavify and Actionbound occupy the same subscription shape.",
+    "incumbent": "GooseChase ($99 per event past three participants), Actionbound, Scavify — all account-based photo-submission platforms that require every participant to install an app and stay online.",
+    "whyWeWin": "The payload lives inside the QR, not on a server, and moving-boxes has already proved that works on printed paper: `encodeBoxForLabel()` fits the encoded content to the real module count so a phone camera can read it off cardboard in a garage. qr-maker's helpers.js already ships `buildPayload`, `qrToSvg`, `drawQrToCanvas`, `sizePlan` and the UTF-8 install shim; moving-boxes' print CSS already does the two-up label grid. So the hunt runs in a church basement with no bars, costs the organiser nothing, and no child installs anything or hands over a name.",
+    "engine": "2-print-pdf",
+    "size": "S",
+    "artifact": "A printable set of numbered QR clue posters plus an organiser's answer sheet showing where each one is hidden and what it reveals.",
+    "risk": "The weakest tip psychology on this list — a one-off party favour, not a rescue — and the GooseChase comparison is partly apples-to-oranges, since they sell live photo submissions and scoring while we sell paper. Search volume for \"diy qr scavenger hunt\" is modest. Build it only as a cheap filler between groups, the way Allergy Cards sits on the bench.",
+    "searchTerms": [
+      "qr code scavenger hunt free",
+      "diy treasure hunt clues printable",
+      "classroom qr code hunt generator",
+      "scavenger hunt maker no app download"
+    ],
+    "seasonality": "Back-to-school September, fall festivals and Halloween in October, Easter egg hunts in spring.",
+    "tipMoment": "weak"
   }
 ]
