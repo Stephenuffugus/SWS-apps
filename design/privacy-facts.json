@@ -365,5 +365,20 @@
       "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
     ],
     "verifyTip": "Turn off Wi-Fi and mobile data, reload and spin — it works, because the whole wheel is in the address bar in front of you. Watch the URL change as you add names: that is the entire storage and sharing mechanism, and there is nothing else. Open DevTools → Network while you spin and you will see no requests at all."
+  },
+  "grade-sheet": {
+    "slug": "grade-sheet",
+    "oneLine": "a private gradebook a teacher keeps on her own computer — rosters, marks, averages and printouts.",
+    "storesWhat": "Your class names and periods, every student name (or initials, or ID) you paste or type, every assignment and its points, every mark, missing/excused flag, absence flag and note you record, and your grading settings",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-gradesheet` — an object store `classes` holding one record per class with that class's whole roster, assignments and marks; `meta` holding a single `book` record with your settings and a class index; and `files` for a backup file handle. The only localStorage key it writes is `sws.gradesheet.seen`, which holds a date and is used to notice that this browser has erased your data",
+    "leavesDevice": "Nothing. There is no network code of any kind in the app — no fetch, no upload, no analytics endpoint, no update check, no font fetched from anywhere. The only copies that ever exist elsewhere are the backup file and CSV you save yourself, and anything you print.",
+    "thirdParties": [
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything you enter, because nothing you enter is ever sent to it."
+    ],
+    "permissions": [
+      "No camera, microphone or location. Saving a backup uses an ordinary browser download."
+    ],
+    "verifyTip": "Turn off Wi-Fi, reload the page and keep marking — entry, averages, printing and export all still work, because the whole app is cached on your device by its service worker. An app that runs with the network off is an app that cannot be sending your students' grades anywhere. To look directly, open DevTools → Application → IndexedDB → sws-gradesheet and read every record the app holds; or press Ctrl+U and search the source for the word fetch. There is not one.",
+    "leaves": false
   }
 }

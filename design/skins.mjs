@@ -44,6 +44,20 @@ export const SKINS = {
     note: 'muted pine on cream — a binder left on a desk for someone else to pick up',
   },
 
+  'grade-sheet': {
+    hue: 226, chroma: 0.08, paper: 'warm', voice: 'editorial', texture: 'grid',
+    r: 10, wrap: '72rem', support: 86,
+    // Blue-black ink on cream ledger paper, which is literally the artifact.
+    // Chroma is deliberately the lowest in School: this app gets projected in
+    // front of children and opened in front of principals, and something
+    // saturated holding other people's children's marks reads wrong.
+    // `support` is pinned to honey rather than the default complement, which
+    // for hue 226 would compute to ~16 — a red. Red must never turn up as
+    // ambient decoration on a screen full of grades; --neg is solved
+    // separately and is what carries the Missing marker.
+    note: 'deep blue-black ink on cream ledger paper — quiet enough to project, adult enough for a principal',
+  },
+
   /* ── Family & Home ────────────────────────────────────────────────────── */
 
   'sitter-sheet': {

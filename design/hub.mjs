@@ -2,7 +2,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SWS STUDIO — the hub page
 
-   Generates apps/index.html: the front door to all 23 apps.
+   Generates apps/index.html: the front door to every app in the studio.
 
    The hub deliberately does NOT wear an app skin. The apps are the pictures;
    this is the wall they hang on, so it stays in the studio's own dark palette
@@ -42,6 +42,7 @@ const CATALOGUE = [
   ['School', [
     ['specials-planner', 'Specials Planner', 'Art, music, PE, library — plan the year once', 'teacher lesson plan rotation schedule elementary'],
     ['sub-plans', 'Sub Plans', 'Your substitute folder, ready before you are sick', 'teacher substitute emergency plans binder classroom'],
+    ['grade-sheet', 'Grade Sheet', 'Grades for every class you teach, on this device only', 'gradebook grades teacher marks roster rubric report card averages specials elementary substitute homeschool'],
   ]],
   ['Events &amp; Groups', [
     /* "no account, ever" was false for the one person who makes the sheet —
