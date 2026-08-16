@@ -1721,12 +1721,14 @@ details.card[open] > summary{margin-bottom:var(--s4)}
      <button class="btn primary block" id="printBtn" type="button">Print the weekly card</button>
    </div>
   
+
 <section class="card noprint" id="backupCard">
   <h2>Keep a copy</h2>
   <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
   now and again; it lands in your downloads and restores everything exactly as it was.</p>
-  <div id="backupControls"></div>
+  <div id="backupControls" data-sws-backup data-app="pill-schedule" data-name="Pill Schedule"
+       data-keys="pill-schedule"></div>
 </section>
 </main>
 </div>
@@ -1748,16 +1750,5 @@ details.card[open] > summary{margin-bottom:var(--s4)}
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var host = document.getElementById('backupControls');
-  if (!host || !window.SWS || !SWS.backup) return;
-  host.appendChild(SWS.backup.wire({
-    app: "pill-schedule",
-    name: "Pill Schedule",
-    keys: ["pill-schedule"]
-  }).el);
-});
-</script>
 </body>
 </html>

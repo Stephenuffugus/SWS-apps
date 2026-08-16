@@ -44,7 +44,7 @@ for (const [slug, cfg] of Object.entries(TARGETS)) {
   if (!existsSync(page)) { problems.push(`${slug}: no index.html`); continue; }
 
   let html = readFileSync(page, 'utf8');
-  const wired = html.includes('sws-backup.js') && html.includes('SWS.backup.wire');
+  const wired = html.includes('sws-backup.js') && html.includes('data-sws-backup');
 
   if (check) {
     if (!wired) problems.push(`${slug}: no backup`);
@@ -64,39 +64,25 @@ for (const [slug, cfg] of Object.entries(TARGETS)) {
   /* The card goes just before the closing </main>: every one of these apps
      ends with its own content, and backup is a footer concern, not a step in
      the task. */
+  /* The config rides on the element as data attributes and sws-backup.js
+     wires itself. There is deliberately NO inline <script> here: Sub Plans
+     ships `script-src 'self'` with no unsafe-inline, so an inline wiring
+     script was silently blocked and its card rendered with no buttons at all.
+     Data attributes work under every CSP in the portfolio. */
   const card = `
 <section class="card noprint" id="backupCard">
   <h2>Keep a copy</h2>
   <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
   now and again; it lands in your downloads and restores everything exactly as it was.</p>
-  <div id="backupControls"></div>
+  <div id="backupControls" data-sws-backup data-app="${slug}" data-name="${cfg.name}"
+       data-keys="${cfg.keys.join(',')}"></div>
 </section>
 `;
   if (!html.includes('id="backupCard"')) {
     const i = html.lastIndexOf('</main>');
     if (i === -1) { problems.push(`${slug}: no </main> to anchor the card`); continue; }
     html = html.slice(0, i) + card + html.slice(i);
-  }
-
-  /* Wire on load. Deferred to DOMContentLoaded because these apps run their
-     own module scripts and the host element must exist first. */
-  const boot = `
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var host = document.getElementById('backupControls');
-  if (!host || !window.SWS || !SWS.backup) return;
-  host.appendChild(SWS.backup.wire({
-    app: ${JSON.stringify(slug)},
-    name: ${JSON.stringify(cfg.name)},
-    keys: ${JSON.stringify(cfg.keys)}
-  }).el);
-});
-</script>
-`;
-  if (!html.includes('SWS.backup.wire')) {
-    const j = html.lastIndexOf('</body>');
-    html = html.slice(0, j) + boot + html.slice(j);
   }
 
   writeFileSync(page, html);

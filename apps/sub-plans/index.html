@@ -1595,12 +1595,14 @@ section.card h2:first-child{margin-top:0}
     </button>
   </div>
   
+
 <section class="card noprint" id="backupCard">
   <h2>Keep a copy</h2>
   <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
   now and again; it lands in your downloads and restores everything exactly as it was.</p>
-  <div id="backupControls"></div>
+  <div id="backupControls" data-sws-backup data-app="sub-plans" data-name="Sub Plans"
+       data-keys="subplans"></div>
 </section>
 </main>
 </div>
@@ -1618,16 +1620,5 @@ section.card h2:first-child{margin-top:0}
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var host = document.getElementById('backupControls');
-  if (!host || !window.SWS || !SWS.backup) return;
-  host.appendChild(SWS.backup.wire({
-    app: "sub-plans",
-    name: "Sub Plans",
-    keys: ["subplans"]
-  }).el);
-});
-</script>
 </body>
 </html>

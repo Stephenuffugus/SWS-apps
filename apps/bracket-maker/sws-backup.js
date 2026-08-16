@@ -166,4 +166,40 @@
     wrap.appendChild(input);
     return { el: wrap, save: save, open: open, input: input };
   };
+
+  /* ── self-wiring, because an inline <script> is not always allowed ────────
+     The first version had the installer inject a small inline script per app
+     to call wire(). Sub Plans ships a strict CSP — `script-src 'self'`, no
+     unsafe-inline — so that script was silently blocked and its backup card
+     rendered as a heading, a paragraph and no buttons. Nothing threw; the
+     card just quietly did nothing, which is the worst way for a backup
+     feature to fail.
+
+     So the config travels on the element instead, and this file wires it. No
+     inline script anywhere, which works under any CSP the portfolio has or
+     might add later. */
+  function autowire() {
+    var hosts = document.querySelectorAll('[data-sws-backup]');
+    for (var i = 0; i < hosts.length; i++) {
+      var h = hosts[i];
+      if (h.dataset.swsBackupDone) continue;
+      var keys = (h.getAttribute('data-keys') || '').split(',')
+        .map(function (k) { return k.trim(); })
+        .filter(Boolean);
+      if (!keys.length) continue;
+      h.dataset.swsBackupDone = '1';
+      h.appendChild(backup.wire({
+        app: h.getAttribute('data-app') || '',
+        name: h.getAttribute('data-name') || h.getAttribute('data-app') || '',
+        keys: keys
+      }).el);
+    }
+  }
+  backup.autowire = autowire;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autowire);
+  } else {
+    autowire();
+  }
 }(typeof window !== 'undefined' ? window : globalThis));

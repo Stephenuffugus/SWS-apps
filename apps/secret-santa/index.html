@@ -1524,12 +1524,14 @@ Stephen"></textarea></label>
     </section>
   </div>
   
+
 <section class="card noprint" id="backupCard">
   <h2>Keep a copy</h2>
   <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
   now and again; it lands in your downloads and restores everything exactly as it was.</p>
-  <div id="backupControls"></div>
+  <div id="backupControls" data-sws-backup data-app="secret-santa" data-name="Secret Santa"
+       data-keys="sws.secret-santa.v1"></div>
 </section>
 </main>
 </div>
@@ -1545,16 +1547,5 @@ Stephen"></textarea></label>
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  var host = document.getElementById('backupControls');
-  if (!host || !window.SWS || !SWS.backup) return;
-  host.appendChild(SWS.backup.wire({
-    app: "secret-santa",
-    name: "Secret Santa",
-    keys: ["sws.secret-santa.v1"]
-  }).el);
-});
-</script>
 </body>
 </html>
