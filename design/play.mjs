@@ -508,6 +508,14 @@ if (check) {
         fail(slug, 'manifest declares no 512x512 "any" icon — Bubblewrap refuses to build');
       }
       if (!mf.id) fail(slug, 'manifest has no id');
+      /* Play caps the store title at 30 characters, and Bubblewrap seeds the
+         Android app label from manifest `name`. Two apps carry a deliberately
+         longer, search-friendly name — that is fine on the web and fine as a
+         listing subtitle, but it cannot be the title, so it has to be a
+         conscious choice rather than something discovered in Play Console. */
+      if (mf.name && mf.name.length > 30) {
+        fail(slug, `manifest name is ${mf.name.length} chars; Play titles cap at 30 — pick a shorter Play title`);
+      }
     }
     if (!existsSync(join(APPS, slug, 'privacy.html'))) {
       fail(slug, 'no privacy.html — Play requires a reachable privacy policy URL');

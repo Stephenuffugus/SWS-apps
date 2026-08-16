@@ -1,5 +1,5 @@
 /* Scan to PDF service worker — fully offline. Bump VERSION on deploy. */
-const VERSION = 'scan-v17';
+const VERSION = 'scan-v18';
 const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./pdf.js","./store.js","./vendor-pdf-lib.js", "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js", "./sws-ui.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

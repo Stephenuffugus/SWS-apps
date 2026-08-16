@@ -28,7 +28,7 @@
    cold, and --list names it so the gap is visible rather than silent.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createServer } from 'node:http';
@@ -155,7 +155,16 @@ let made = 0;
 
 for (const slug of slugs) {
   const scene = SCENES[slug];
-  mkdirSync(join(OUT, slug, 'screenshots'), { recursive: true });
+  const dir = join(OUT, slug, 'screenshots');
+  mkdirSync(dir, { recursive: true });
+
+  /* Panels are named <index>-<slug>.png, so renaming or removing a panel
+     leaves the old file sitting in the directory looking exactly as current as
+     the new one. For a directory whose whole purpose is "upload these to Play",
+     a stale panel is worse than a missing one — clear it and re-render. */
+  for (const f of readdirSync(dir)) {
+    if (f.endsWith('.png')) rmSync(join(dir, f));
+  }
 
   for (const [i, panel] of scene.panels.entries()) {
     const page = await browser.newPage({

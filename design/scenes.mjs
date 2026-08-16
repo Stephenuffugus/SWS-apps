@@ -233,14 +233,20 @@ export const SCENES = {
         },
       },
       {
-        slug: 'seat',
-        caption: 'Seat the room',
-        sub: 'Drag or use the keyboard — every seat is reachable without a mouse.',
+        slug: 'floor',
+        caption: 'Lay the room out',
+        sub: 'Round, rectangle or head table. Drag them where they really are, or use the keyboard.',
         act: async (p) => {
           await scStart(p);
           await scAddGuests(p);
           await scAddTables(p);
-          await scSeatSome(p);
+          /* The floor plan lives under the add-table row on the Tables tab, so
+             framing the top of the tab shows the form and not the room. */
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /floor plan/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 150, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
         },
       },
       {
