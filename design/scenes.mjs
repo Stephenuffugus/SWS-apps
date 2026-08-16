@@ -119,7 +119,157 @@ const hiTab = async (p, name) => {
   await p.waitForTimeout(600);
 };
 
+/* Seating Chart opens on a list of events, so every panel names one first
+   through #nameDlg. Guests go in through the bulk-paste box, which lives
+   inside a <details> that must be opened first. Paste format is:
+   Name, party, meal, dietary flags. */
+const SC_GUESTS = [
+  'Ann Alvarez, Alvarez family, Beef',
+  'Ben Alvarez, Alvarez family, Fish, nut allergy',
+  'Cara Chen, Chen party, Veg',
+  'Dev Patel, Patel family, Beef',
+  'Elena Rossi, Rossi party, Fish, gluten-free',
+  'Frank Moore, College friends, Beef',
+  'Grace Kim, College friends, Veg',
+  'Henry Osei, College friends, Beef',
+  'Iris Chen, Chen party, Fish',
+  'Jon Baker, Work, Beef',
+  'Kira Novak, Work, Veg, gluten-free',
+  'Liam Walsh, Work, Beef',
+  'Maya Roy, Roy family, Fish',
+  'Noah Park, Roy family, Beef, shellfish allergy',
+  'Olive Grant, Neighbours, Veg',
+  'Pia Sandhu, Neighbours, Beef',
+  'Quinn Reilly, Cousins, Fish',
+  'Rosa Bianchi, Cousins, Veg',
+  'Sam Okafor, Cousins, Beef',
+  'Tess Lindqvist, Work, Fish, nut allergy',
+].join('\n');
+
+const scStart = async (p) => {
+  await p.getByRole('button', { name: /new event/i }).click();
+  await p.waitForTimeout(400);
+  await p.fill('#nameField', 'Jessie & Sam — 14 June');
+  await p.getByRole('button', { name: /^create$/i }).click();
+  await p.waitForTimeout(600);
+};
+
+const scAddGuests = async (p) => {
+  await p.locator('details summary').first().click().catch(() => {});
+  await p.waitForTimeout(250);
+  await p.locator('textarea').first().fill(SC_GUESTS);
+  await p.waitForTimeout(250);
+  await p.getByRole('button', { name: /add them all/i }).click().catch(() => {});
+  await p.waitForTimeout(700);
+};
+
+const scTab = async (p, name) => {
+  await p.getByRole('button', { name: new RegExp(`^${name}$`, 'i') }).click().catch(() => {});
+  await p.waitForTimeout(700);
+};
+
+/* The Tables tab carries an inline label/shape/seats row rather than a dialog,
+   so tables go in the same way a user would add them. Without this the floor
+   plan is empty and "Seat the room" shows nothing but an unseated pile. */
+const scAddTables = async (p) => {
+  await scTab(p, 'Tables');
+  const rows = [['Head table', 'head', '6'], ['Table 1', 'round', '8'], ['Table 2', 'round', '8'],
+    ['Table 3', 'round', '8'], ['Table 4', 'round', '8']];
+  for (const [label, shape, seats] of rows) {
+    const card = p.locator('section.card').filter({ hasText: 'Add a table' }).first();
+    await card.locator('input[type="text"]').fill(label).catch(() => {});
+    await card.locator('select').selectOption(shape).catch(() => {});
+    await card.locator('input[type="number"]').fill(seats).catch(() => {});
+    await card.getByRole('button', { name: /^add$/i }).click().catch(() => {});
+    await p.waitForTimeout(260);
+  }
+};
+
+/* Seating is tap-a-party then tap-a-table. Seat most of the room but leave a
+   couple of parties out — a finished chart with nothing left to do hides the
+   thing the app is actually for. */
+const scSeatSome = async (p) => {
+  await scTab(p, 'Seat people');
+  for (let i = 0; i < 4; i++) {
+    const chip = p.getByRole('button', { name: /whole party/i }).first();
+    if (!(await chip.count())) break;
+    await chip.click().catch(() => {});
+    await p.waitForTimeout(220);
+    const table = p.locator('.floor .table, .floor [data-table], .tablechip').nth(i);
+    if (await table.count()) await table.click().catch(() => {});
+    else await p.getByRole('button', { name: new RegExp(`^Table ${i + 1}$`, 'i') }).click().catch(() => {});
+    await p.waitForTimeout(320);
+  }
+};
+
 export const SCENES = {
+  'seating-chart': {
+    panels: [
+      {
+        slug: 'paste',
+        caption: 'Nobody retypes 140 names',
+        sub: 'Paste the list straight out of your spreadsheet — parties, meals and allergies with it.',
+        act: async (p) => {
+          await scStart(p);
+          await scAddGuests(p);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /guests?\s*·|guests \u00b7|expected/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 150, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'rules',
+        caption: 'Say who cannot sit together',
+        sub: 'Declare the rules once. Change the guest list later and it shows you exactly what broke.',
+        act: async (p) => {
+          await scStart(p);
+          await scAddGuests(p);
+          await scAddTables(p);
+          await scTab(p, 'Rules');
+          await p.getByRole('button', { name: /add a rule/i }).click().catch(() => {});
+          await p.waitForTimeout(700);
+        },
+      },
+      {
+        slug: 'seat',
+        caption: 'Seat the room',
+        sub: 'Drag or use the keyboard — every seat is reachable without a mouse.',
+        act: async (p) => {
+          await scStart(p);
+          await scAddGuests(p);
+          await scAddTables(p);
+          await scSeatSome(p);
+        },
+      },
+      {
+        slug: 'print',
+        caption: 'PDFs that look like you hired someone',
+        sub: 'Escort cards, a table-by-table plan and a caterer’s meal count. No watermark, ever.',
+        act: async (p) => {
+          await scStart(p);
+          await scAddGuests(p);
+          await scAddTables(p);
+          await scSeatSome(p);
+          await scTab(p, 'Print & export');
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'Your guest list is nobody else’s business',
+        sub: 'Allergies and who is not speaking to whom stay on your phone. No account, no upload.',
+        dark: true,
+        act: async (p) => {
+          await scStart(p);
+          await scAddGuests(p);
+          await toTop(p, 'section.card', 60);
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
   'home-inventory': {
     panels: [
       {

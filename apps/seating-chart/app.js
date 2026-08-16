@@ -150,10 +150,20 @@ async function renderHome() {
     el('p', { class: 'hint', text: 'Local-only means you own the backup problem — every event can be exported as one .json file from its Print tab.' })));
 }
 
+/* The name dialog, not a native prompt(): a system prompt ignores the comfort
+   panel entirely — text size, light/dark and the warm night tint all stop at
+   its edge — and this is the first thing anyone sees in the app. */
 function createProject() {
-  const name = prompt('What’s the event?', '');
-  if (name === null) return;
-  project = newProject(name.trim() || 'Untitled event');
+  const field = $('nameField');
+  field.value = '';
+  showDlg($('nameDlg'));
+  field.focus();
+}
+
+function commitNewProject() {
+  const name = $('nameField').value.trim();
+  closeDlg($('nameDlg'));
+  project = newProject(name || 'Untitled event');
   touch();
   location.hash = '#/p/' + project.id;
 }
@@ -788,6 +798,14 @@ function wire() {
     closeDlg($('tableDlg'));
   });
   $('tCancel').addEventListener('click', () => closeDlg($('tableDlg')));
+
+  $('nameSave').addEventListener('click', commitNewProject);
+  $('nameCancel').addEventListener('click', () => closeDlg($('nameDlg')));
+  /* Enter commits, same as the guest-name field on the Guests tab. Typing a
+     name and pressing return is what a prompt() taught everyone to expect. */
+  $('nameField').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commitNewProject(); }
+  });
   $('tDelete').addEventListener('click', () => {
     const label = tableEditing.label;
     const n = Object.values(project.assignments).filter(tid => tid === tableEditing.id).length;

@@ -1446,6 +1446,22 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
   </div>
 </dialog>
 
+<!-- Naming an event used to go through a native prompt(). A system prompt is
+     the one surface in the app the design system cannot reach: it ignores the
+     comfort panel's text size, the light/dark choice and the warm-night tint,
+     and it is the very first thing a new user sees. Same dialog machinery as
+     every other one here instead. -->
+<dialog id="nameDlg" aria-labelledby="nameDlgTitle">
+  <h3 id="nameDlgTitle">What’s the event?</h3>
+  <label class="f" for="nameField"><span>Event name</span>
+    <input type="text" id="nameField" maxlength="80" autocomplete="off"
+           placeholder="Jessie &amp; Sam — 14 June"></label>
+  <div class="row">
+    <button class="btn" id="nameCancel" type="button">Cancel</button>
+    <button class="btn primary" id="nameSave" type="button">Create</button>
+  </div>
+</dialog>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="vendor-pdf-lib.js"></script>

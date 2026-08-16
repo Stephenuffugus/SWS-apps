@@ -44,9 +44,16 @@ const clickText = (root, tag, text) => {
 
 check('home renders hero', $('view').textContent.includes('Seating charts without the 2am panic'));
 
-// create event (prompt stubbed)
+// Naming an event goes through #nameDlg, not a native prompt() — a system
+// prompt is the one surface the comfort panel cannot reach.
 clickText($('view'), 'button', 'New event');
 await sleep(50);
+check('name dialog opens', $('nameDlg') && $('nameDlg').hasAttribute('open'));
+check('the name field takes focus', document.activeElement === $('nameField'));
+type($('nameField'), 'Rivera Wedding');
+clickText($('nameDlg'), 'button', 'Create');
+await sleep(50);
+check('name dialog closes', !$('nameDlg').hasAttribute('open'));
 check('editor opens with project name', [...$('view').querySelectorAll('input')].some(i => i.value === 'Rivera Wedding'));
 
 // guests: bulk paste
