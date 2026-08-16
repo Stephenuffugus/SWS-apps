@@ -8,7 +8,7 @@ with a tip jar — the brand promise across every app here:
 
 ## Design
 
-All 23 apps share one design system: identical geometry, spacing, components,
+All 23 public apps share one design system: identical geometry, spacing, components,
 focus behaviour and print rules — and a palette, display face and background
 texture that are different for every app. One studio, twenty-three products.
 
@@ -101,7 +101,23 @@ time, roughly one a week, leading with the apps that genuinely differ.
 | Moving boxes | 🔨 built — tip jar wired | [`apps/moving-boxes/`](apps/moving-boxes/) |
 | Specials Planner | 🔨 built — 52 tests passing, thumbnail filed, tip jar wired, WCAG AA pass | [`apps/specials-planner/`](apps/specials-planner/) |
 | Sub Plans | 🔨 built — 23 tests passing, tip jar + thumbnail pending | [`apps/sub-plans/`](apps/sub-plans/) |
+| Float (rockhounding field log) | 🔒 **in development** — passphrase-gated, 50 assertions passing | [`apps/float/`](apps/float/) |
 | Print-and-play (Engine 2C) | gated behind the manual one-game experiment | — |
+
+### Float — app 24, in development
+
+[`apps/float/`](apps/float/) is a rockhounding field log built for Stephen and Jessie, and the
+first app here that is **not public**: a passphrase gate sits in front of it while it is
+finished. It is deliberately outside the studio design system, the Play pipeline and
+`design/skins.mjs` — it has its own identity (limestone/basalt/serpentine, strata strips drawn
+from each specimen's own photo) and should not be swept into a store build by `npm run play`.
+Its own doc is [`apps/float/HANDOFF.md`](apps/float/HANDOFF.md).
+
+One decision in it is worth knowing about even if you never touch the app: **its map has no
+basemap tiles, on purpose.** A tile map requests images for the rectangle you are looking at, so
+it would hand a third-party server the precise coordinates of every spot the user has found
+anything at — which is the one thing a rockhounding app must never do. The map is drawn from the
+user's own points instead.
 
 ## Workflow rule
 

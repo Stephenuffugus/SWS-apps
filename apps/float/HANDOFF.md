@@ -1,4 +1,4 @@
-# FLOAT — HANDOFF v2.0.0
+# FLOAT — HANDOFF v2.1.0
 Rockhounding field log · single-file vanilla HTML/CSS/JS PWA · local-first
 Owner: Stephen (SWS Strategic Media LLC / Lucid Winds). Co-user: Jessie.
 Target deploy: GitHub Pages or Firebase Hosting → lucidwinds.com portfolio → app store wrap.
@@ -6,7 +6,16 @@ Target deploy: GitHub Pages or Firebase Hosting → lucidwinds.com portfolio →
 ## WHAT THIS IS
 `index.html` is the complete, working app. One file, zero dependencies, zero network calls.
 Open it in a mobile browser and it runs. All data in IndexedDB (in-memory fallback with a
-visible warning if IDB is unavailable). 54/54 logic assertions passing (see TEST HARNESS).
+visible warning if IDB is unavailable). Logic assertions run from this repo — see TEST HARNESS.
+
+Lives at `apps/float/` in the SWS-apps repo and is served at `/float/`. It is **app 24 and in
+development**: a passphrase gate (`wolfden`, same as the arcade) sits in front of it. The gate is
+a curtain, not security — the passphrase is in the source of a file anyone can read — and its own
+copy says so. It does not need to be security: nothing is behind it but this device's own
+IndexedDB. Delete `devgate` and the one line in `app.boot()` on the day it goes public.
+
+Siblings now: `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-{192,512}.png`,
+`icon-maskable-512.png`, `test/float.test.mjs`.
 
 ## CURRENT STATE — WHAT WORKS
 - **Field mode** (`#/field`, dark UI): live camera viewfinder (getUserMedia, environment cam),
@@ -28,8 +37,46 @@ visible warning if IDB is unavailable). 54/54 logic assertions passing (see TEST
   fingerprint of the whole collection.
 - **Backup** (`#/more`): full JSON export/import including photos as base64. Merge on import,
   replace mode exists in code (`backup.deserialize(data,'replace')`). Foreign files rejected.
-- **PWA**: inline data-URI manifest + SVG icon, installable, standalone display, safe-area
-  padding throughout, reduced-motion respected, focus-visible styles.
+- **Map** (`#/map`): every site and every un-sited find plotted in real Web Mercator on a
+  canvas — pan, pinch/wheel zoom, fit-all, a true scale bar and a graticule. Tap a pin for the
+  site sheet (name, find count, coordinates, photo strip) and through to `#/site/:id` for
+  everything found there. **Deliberately no basemap tiles** — see MAP below.
+- **Site detail** (`#/site/:id`): every find from one place, as a grid.
+- **Trip detail** (`#/trip/:id`): the trip as a timeline in the order things were found, with
+  time, thumbnail, label, material and zone. Tap any trip-log row to reach it.
+- **Sites carry coordinates and zones**: set a site's position from GPS or by typing it, and
+  name zones (north wall, tailings, creek bend). Zone chips appear in field mode when the
+  active trip's site has any, and the picked zone sticks between shots.
+- **Provenance on matches**: "similar colors in your collection" names the *site* each match
+  came from. This is the point of the feature — standing in the garden holding a rock, the
+  question is where you picked it up, not which photo it resembles.
+- **CSV export** (`#/more`): labels, materials, sites, zones, dates, coordinates. No photos.
+  Formula-injection prefixed, UTF-8 BOM.
+- **Share a find** (detail view): Web Share with the photo, falling back to text, falling back
+  to clipboard. **Never includes coordinates** — a share sheet is exactly where a location
+  would leak without anyone deciding to.
+- **PWA**: real `manifest.webmanifest` (TWA/PWABuilder-ready), real icons including a maskable
+  one, `sw.js` cache-first over the shell so it genuinely runs with no signal, and
+  `navigator.storage.persist()` requested once after the first find. Installable, standalone,
+  safe-area padding, reduced-motion respected, focus-visible styles.
+- **Collection paging**: 60 per page with an IntersectionObserver sentinel, and ObjectURLs
+  tracked and revoked. The old hard 120-card cap silently hid the rest of the collection.
+
+## MAP — WHY THERE ARE NO TILES
+The obvious build is Leaflet over OpenStreetMap. It is the one thing this app must not do: a
+tile map requests images for the rectangle you are looking at, so opening your map hands a
+third-party server your IP alongside the precise coordinates of every spot you have found
+anything at. Rockhounding locations are the thing people guard hardest, and "your spots never
+leave your device" would stop being true at the exact moment you looked at them. It would also
+break this file's own rule about network calls.
+
+So the map is drawn from the user's own points. What it gives up is roads and terrain; what it
+keeps is that the map of your spots exists only on your phone. If a basemap is ever wanted, the
+honest shape is an explicit opt-in stating what it sends and to whom, defaulting off.
+
+Sites are created before you know where the middle of them is, so a site with no coordinates
+takes the centroid of its finds — usually a truer centre than wherever you parked. Finds with no
+site still plot, as amber dots, because seeing them is generally how a place gets named.
 
 ## MATCH PIPELINE — IMPLEMENTED VS SEAM
 Stage 1 (SHIPPED): CIELAB 8×8×8 histogram (512 bins), center-weighted sampling (~20k px),
@@ -37,8 +84,10 @@ sqrt-compressed Uint8 storage (linear byte scale clips peaked histograms — thi
 caught and fixed in v1, regression test exists), Bhattacharyya similarity, margin-based
 confidence (top>0.55 AND margin>0.06 → "Likely match", else "Similar colors").
 
-Stage 0 (SEAM): zone narrowing. `site.zones[]` and `find.zoneId` exist in the data model
-but no UI. v1 testing showed zone-scoped top-1 = 12/12 vs whole-collection 9/12.
+Stage 0 (SHIPPED): zone narrowing. Zones are created on the site editor, picked in field mode,
+stored on `find.zoneId`, and the queue ranks inside the zone when it holds at least 3 labeled
+finds — falling back to the whole collection below that, and labelling which pool the answer
+came from. v1 testing showed zone-scoped top-1 = 12/12 vs whole-collection 9/12.
 
 Stage 2 (SEAM): DINOv2-small embeddings via transformers.js. `find.embedding` field exists
 (intended: Int8Array values + per-vector float scale). Load transformers.js lazily from CDN
@@ -69,9 +118,21 @@ strata strip (dominant-color bands from the actual photo) on cards, detail, sess
 stats. Field mode is dark; everything else limestone light. Tap targets ≥46px.
 
 ## TEST HARNESS
-Repo layout during dev: `p1_core.js p2_color.js p3_field.js p4_collection.js p5_more.js`
-concatenated → `all.js` → injected into `shell.html` at `//APPJS`.
-`cat all.js t_post.js > runtest.js && node runtest.js` → 54 assertions: Lab math, bin edges,
+`node apps/float/test/float.test.mjs` — 50 assertions, and `npm test` from the repo root picks
+it up automatically. It loads the real shipped `index.html` in jsdom and appends one extra
+`<script>` that hands the top-level bindings out to `window.__float`, because a classic script's
+`const` never lands on `window`. Nothing is exported into production to make this work.
+
+Covers: Lab maths (tuple return, not an object), bin range, histogram normalisation and
+centre-weighted sampling, sqrt pack/unpack round-trip and the peaked-histogram regression,
+similarity ordering, ranking, the deliberate not-confident case, strata clustering and CSS,
+the persisted-record contract (`db.put` stamps createdAt/updatedAt; createdAt survives an edit),
+the Mercator projection including the pole clamp, great-circle distance against the 111 km/degree
+check, `siteCoord` centroid fallback and its flags, and the dev gate.
+
+The original harness — `p1_core.js p2_color.js p3_field.js p4_collection.js p5_more.js`
+concatenated → `all.js` → injected into `shell.html` at `//APPJS`, then
+`cat all.js t_post.js > runtest.js` → 54 assertions: Lab math, bin edges,
 histogram normalization, sqrt pack/unpack round-trip (L1 < 0.02), quantization regression,
 similarity ordering, ranking + margin confidence, strata clustering, memory-store CRUD,
 settings persistence, full backup serialize→clear→restore round-trip with hist re-match.
@@ -79,28 +140,23 @@ KEEP THIS GREEN. Add assertions when touching color math or backup format.
 Note: exact-color candidates land in the same Lab bin → zero margin → not confident. That
 is correct behavior; don't "fix" it.
 
-## BUILD-OUT PLAN (priority order)
-1. **Service worker** — single-file constraint means SW ships as a second file at deploy
-   time (`sw.js`: cache-first for `index.html`). Register conditionally:
-   `if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{})`.
-   Without it the PWA still installs but needs one online load per session on some platforms.
-2. **Stage 2 DINOv2** — as specced above. Settings toggle "Better matching (downloads ~90MB
-   model once)". Web Worker for embedding compute; never block the queue UI.
-3. **Zone UI (Stage 0)** — zone chips on site edit, zone picker in field mode when the active
-   trip's site has zones, scope match ranking to zone first with whole-collection fallback.
-4. **Collection virtualization** — the 120-card cap is a stopgap. IntersectionObserver
-   pagination. Also revoke ObjectURLs on card removal (currently leaked per render; fine at
-   this scale, fix before 1k finds).
-5. **Share/export a find** — Web Share API with photo file (`navigator.share({files})`),
-   Android share-target in manifest (needs real manifest file at deploy, not data URI —
-   convert then).
-6. **ID assist seam** — "What is this?" button on detail → Anthropic vision API. Keep it a
-   seam: one `identifyFind(find)` function, feature-flagged, graceful offline. Results stored
-   as IdentificationAttempt-shaped notes, never overwriting the user's label.
-7. **Enrollment coach** — first-run flow: shoot 3 angles of a known specimen to seed the
-   match catalog. v1 spec point 9.
-8. **Trip detail view** — tap a trip log row → finds from that trip on a timeline.
-9. **CSV export** (labels/materials/coords, no photos) for spreadsheet people.
+## BUILD-OUT PLAN
+DONE: service worker · real manifest + icons · `storage.persist()` · zone UI (Stage 0) ·
+collection pagination + ObjectURL revoke · share a find · trip detail timeline · CSV export ·
+map + site detail · provenance on matches · dev gate · runnable test harness.
+
+REMAINING, priority order:
+1. **Stage 2 DINOv2** — transformers.js embeddings behind a settings flag,
+   "Better matching (downloads ~90MB model once)". Web Worker; never block the queue UI.
+   Fuse `0.35*colorScore + 0.65*cosine(embedding)`; keep the margin confidence logic.
+   MUST degrade gracefully offline — colour-only is the floor.
+2. **ID assist seam** — "What is this?" on detail → vision API. One `identifyFind(find)`
+   function, feature-flagged, graceful offline. Stored as IdentificationAttempt-shaped notes,
+   never overwriting the user's label.
+3. **Enrollment coach** — first-run: shoot 3 angles of a known specimen to seed the catalog.
+4. **Android share-target** in the manifest, now that it is a real file.
+5. **Zone-aware map** — draw zone sub-pins once a site has several and enough finds to place them.
+6. **Trip GPS track** — the walked line, not just the finds. Needs a positions store.
 
 ## DEPLOY NOTES
 - GitHub Pages: drop `index.html` (+ `sw.js` when built) in repo root. HTTPS required for

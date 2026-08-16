@@ -6,7 +6,9 @@
 <title>Float — field log</title>
 <meta name="description" content="A private field log for rockhounding, fossils and sea glass. Local-first — no account, no server.">
 <meta name="theme-color" content="#161B19">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Float%20%5Cu2014%20field%20log%22%2C%22short_name%22%3A%22Float%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23161B19%22%2C%22theme_color%22%3A%22%23161B19%22%2C%22description%22%3A%22A%20private%20field%20log%20for%20rockhounding%2C%20fossils%20and%20sea%20glass.%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A//www.w3.org/2000/svg%2527%2520viewBox%253D%25270%25200%2520512%2520512%2527%253E%253Crect%2520width%253D%2527512%2527%2520height%253D%2527512%2527%2520fill%253D%2527%2523161B19%2527/%253E%253Ccircle%2520cx%253D%2527256%2527%2520cy%253D%2527290%2527%2520r%253D%2527140%2527%2520fill%253D%2527%25233E7A6B%2527/%253E%253Ccircle%2520cx%253D%2527210%2527%2520cy%253D%2527245%2527%2520r%253D%252740%2527%2520fill%253D%2527%2523EDEEEA%2527/%253E%253Ccircle%2520cx%253D%2527300%2527%2520cy%253D%2527330%2527%2520r%253D%252722%2527%2520fill%253D%2527%2523EDEEEA%2527%2520opacity%253D%2527.6%2527/%253E%253Crect%2520x%253D%2527116%2527%2520y%253D%252796%2527%2520width%253D%2527280%2527%2520height%253D%252714%2527%2520rx%253D%25277%2527%2520fill%253D%2527%2523C9873B%2527/%253E%253C/svg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="mobile-web-app-capable" content="yes">
@@ -200,6 +202,39 @@ textarea.text-input{resize:vertical}
 .back{margin-bottom:6px}
 .from-site{display:block;font-family:var(--ff-mono);font-size:.62rem;color:var(--agate);
   letter-spacing:.03em;margin-top:1px}
+
+/* ── trip timeline ── */
+.timeline{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+.tl-row{display:flex;align-items:center;gap:10px;padding:8px 4px;background:none;border:none;
+  text-align:left;width:100%;min-height:56px;border-bottom:1px solid var(--line)}
+.tl-row:focus-visible{outline:2px solid var(--serpentine);outline-offset:-2px}
+.tl-time{flex:0 0 auto;width:58px;font-size:.72rem;color:var(--mist)}
+.tl-dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--serpentine)}
+.tl-thumb{flex:0 0 auto;width:44px;height:44px;border-radius:8px;overflow:hidden;
+  background:var(--limestone);border:1px solid var(--line);display:flex;align-items:center;
+  justify-content:center;color:var(--mist)}
+.tl-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.tl-main{display:flex;flex-direction:column;min-width:0}
+.tl-main strong{color:var(--ink)}
+.tl-main .mono{font-size:.72rem}
+
+/* ── collection paging ── */
+.grid-more{grid-column:1/-1;text-align:center;padding:18px 0;color:var(--mist);font-size:.78rem;
+  letter-spacing:.06em}
+
+/* ── zones & coordinates ── */
+.coord-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.coord-in{flex:1;min-width:0}
+.zone-chips{gap:6px;margin-bottom:8px}
+.chip-zone{display:inline-flex;align-items:center;gap:6px;background:var(--limestone);
+  border:1px solid var(--line);color:var(--ink)}
+.chip-x{background:none;border:none;color:var(--mist);font-size:1.05rem;line-height:1;
+  padding:0 2px;min-width:24px;min-height:24px}
+.chip-x:focus-visible{outline:2px solid var(--serpentine);outline-offset:2px}
+.zone-row{align-items:center;gap:6px;padding:0 12px 6px}
+.zone-lead{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mist);flex:0 0 auto}
+.chip-zone-pick{background:var(--basalt2);border:1px solid #33403a;color:var(--limestone)}
+.chip-zone-pick.sel{background:var(--agate);border-color:var(--agate);color:#fff}
 
 /* ── development gate ── */
 body.gated #tabbar{display:none}
@@ -710,6 +745,7 @@ const field = {
     const trip = app.state.activeTrip;
     const find = newFind({
       tripId: trip?.id || null, siteId: trip?.siteId || null,
+      zoneId: app.state.fieldZone || null,
       material,
       lat: this.pos?.lat ?? null, lon: this.pos?.lon ?? null, gpsAccuracy: this.pos?.acc ?? null
     });
@@ -775,6 +811,34 @@ const field = {
       }, m));
     }
     host.appendChild(chips);
+
+    /* Zone picker — only when the active trip's site actually has zones, so
+       nobody who has not set any ever sees a control that does nothing. The
+       zone sticks between shots: you work one part of a site at a time, and
+       re-picking it for every rock is exactly the tax that would stop anyone
+       using it. */
+    const trip = app.state.activeTrip;
+    if (trip && trip.siteId) {
+      const site = await db.get('sites', trip.siteId);
+      if (site && site.zones && site.zones.length) {
+        if (app.state.fieldZone && !site.zones.some(z => z.id === app.state.fieldZone)) {
+          app.state.fieldZone = null;      // zone deleted since the trip started
+        }
+        const zchips = el('div', { class: 'chips zone-row', id: 'zone-chips' });
+        zchips.appendChild(el('span', { class: 'zone-lead mono' }, 'zone'));
+        for (const z of site.zones) {
+          zchips.appendChild(el('button', {
+            class: 'chip chip-zone-pick' + (app.state.fieldZone === z.id ? ' sel' : ''),
+            onclick: (e) => {
+              app.state.fieldZone = app.state.fieldZone === z.id ? null : z.id;
+              $$('.chip-zone-pick', zchips).forEach(c => c.classList.remove('sel'));
+              if (app.state.fieldZone) e.currentTarget.classList.add('sel');
+            }
+          }, z.name));
+        }
+        host.appendChild(zchips);
+      }
+    }
 
     host.appendChild(el('div', { class: 'field-bottom' },
       el('div', { class: 'sess-wrap' },
@@ -848,14 +912,32 @@ const queue = {
     imgWrap.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(f.strata)}` }));
     host.appendChild(imgWrap);
 
-    /* color-match suggestions from already-labeled finds */
+    /* color-match suggestions from already-labeled finds.
+
+       Stage 0: if this find carries a zone, rank inside that zone first.
+       Most wrong matches are between rocks from different places that happen
+       to share a colour, so narrowing the field before comparing beats any
+       amount of tuning on the comparison itself — measured at 12/12 against
+       9/12. Fall back to the whole collection when the zone is too thin to
+       say anything, and label which pool the answer came from so a suggestion
+       is never mistaken for more evidence than it is. */
     if (f.hist) {
       const labeled = (await db.all('finds')).filter(x => !x.deleted && x.label && x.id !== f.id);
-      const { results, confident } = rankByColor(unpackHist(f.hist), labeled);
+      const inZone = f.zoneId ? labeled.filter(x => x.zoneId === f.zoneId) : [];
+      const scoped = inZone.length >= 3;
+      const pool = scoped ? inZone : labeled;
+      const { results, confident } = rankByColor(unpackHist(f.hist), pool);
       const top = results.slice(0, 3).filter(r => r.score > 0.4);
       if (top.length) {
+        let zoneName = '';
+        if (scoped) {
+          const site = f.siteId ? await db.get('sites', f.siteId) : null;
+          zoneName = site?.zones?.find(z => z.id === f.zoneId)?.name || '';
+        }
         const sug = el('div', { class: 'suggest' },
-          el('span', { class: 'eyebrow' }, confident ? 'Likely match' : 'Similar colors'));
+          el('span', { class: 'eyebrow' },
+            (confident ? 'Likely match' : 'Similar colors')
+            + (scoped && zoneName ? ` · in ${zoneName}` : '')));
         const row = el('div', { class: 'chips' });
         const seen = new Set();
         for (const r of top) {
@@ -967,9 +1049,24 @@ const collection = {
     await this.paintGrid(finds, siteName);
   },
 
+  /* Every thumbnail is an ObjectURL, and an ObjectURL is a reference the
+     browser holds until it is explicitly revoked — not when the <img> is
+     removed. Re-rendering the grid on every keystroke of the search box used
+     to leak one per card per render, which at 120 cards is a few hundred
+     megabytes of pinned Blobs in a minute of typing. Track them and revoke
+     on the next paint. */
+  urls: [],
+  releaseURLs() {
+    for (const u of this.urls) URL.revokeObjectURL(u);
+    this.urls = [];
+  },
+
   async paintGrid(finds, siteName) {
     const grid = $('#grid'); if (!grid) return;
+    this.releaseURLs();
     grid.innerHTML = '';
+    if (this.io) { this.io.disconnect(); this.io = null; }
+
     const q = this.filter.q.trim().toLowerCase();
     const shown = finds.filter(f =>
       (!q || (f.label + ' ' + f.notes + ' ' + f.material).toLowerCase().includes(q)) &&
@@ -980,23 +1077,96 @@ const collection = {
         el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet — Field mode is where it starts.')));
       return;
     }
-    for (const f of shown.slice(0, 120)) {
-      const card = el('button', { class: 'card', onclick: () => router.go('find/' + f.id) });
-      const ph = f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
-      const imgBox = el('div', { class: 'card-img' });
-      if (ph) imgBox.appendChild(el('img', { src: photoURL(ph, true), loading: 'lazy', alt: '' }));
-      card.appendChild(imgBox);
-      card.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(f.strata)}` }));
-      card.appendChild(el('div', { class: 'card-body' },
-        el('span', { class: 'card-title' }, (f.favorite ? '★ ' : '') + (f.label || 'unnamed')),
-        el('span', { class: 'card-sub mono' }, [f.material, siteName[f.siteId]].filter(Boolean).join(' · ') || fmtDate(f.createdAt))));
-      grid.appendChild(card);
+
+    /* Paged rather than capped. The old hard 120 silently hid everything past
+       it, which for an app whose whole promise is "your collection" is the
+       wrong failure — you would think finds had been lost. A sentinel at the
+       end of the grid pulls the next page as it comes into view, so the
+       collection is complete however large it gets. */
+    const PAGE = 60;
+    let drawn = 0;
+
+    const drawPage = async () => {
+      const slice = shown.slice(drawn, drawn + PAGE);
+      for (const f of slice) {
+        const card = el('button', { class: 'card', onclick: () => router.go('find/' + f.id) });
+        const ph = f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+        const imgBox = el('div', { class: 'card-img' });
+        if (ph) {
+          const u = photoURL(ph, true);
+          this.urls.push(u);
+          imgBox.appendChild(el('img', { src: u, loading: 'lazy', alt: '' }));
+        }
+        card.appendChild(imgBox);
+        card.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(f.strata)}` }));
+        card.appendChild(el('div', { class: 'card-body' },
+          el('span', { class: 'card-title' }, (f.favorite ? '★ ' : '') + (f.label || 'unnamed')),
+          el('span', { class: 'card-sub mono' }, [f.material, siteName[f.siteId]].filter(Boolean).join(' · ') || fmtDate(f.createdAt))));
+        grid.appendChild(card);
+      }
+      drawn += slice.length;
+      if (drawn >= shown.length && this.sentinel) {
+        this.sentinel.remove();
+        this.sentinel = null;
+        if (this.io) { this.io.disconnect(); this.io = null; }
+      }
+    };
+
+    await drawPage();
+
+    if (drawn < shown.length) {
+      this.sentinel = el('div', { class: 'grid-more mono' }, `${shown.length - drawn} more`);
+      grid.appendChild(this.sentinel);
+      if ('IntersectionObserver' in window) {
+        this.io = new IntersectionObserver(async (entries) => {
+          if (!entries.some(e => e.isIntersecting)) return;
+          const remaining = shown.length - drawn;
+          if (this.sentinel) this.sentinel.textContent = remaining > PAGE ? `${remaining} more` : 'loading…';
+          await drawPage();
+          if (this.sentinel) {
+            grid.appendChild(this.sentinel);       // keep it last
+            this.sentinel.textContent = `${shown.length - drawn} more`;
+          }
+        }, { rootMargin: '400px' });
+        this.io.observe(this.sentinel);
+      } else {
+        /* No IntersectionObserver: a button still reaches every find. */
+        this.sentinel.onclick = () => drawPage();
+      }
     }
-  }
+  },
+
+  leave() { this.releaseURLs(); if (this.io) { this.io.disconnect(); this.io = null; } }
 };
 
 /* ── specimen detail ────────────────────────────────────────────── */
 const detail = {
+  /* Share one specimen — the photo plus what you called it. Deliberately does
+     NOT include coordinates: sharing a rock with a friend should never quietly
+     hand over the location it came from. That is the one piece of data this
+     whole app exists to keep, and a share sheet is exactly where it would leak
+     without anyone deciding to. */
+  async share(f) {
+    const label = f.label || 'Unnamed find';
+    const text = [label, f.material, f.notes].filter(Boolean).join(' · ');
+    try {
+      const ph = f.photoIds && f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+      if (ph && navigator.canShare) {
+        const file = new File([ph.full], `${label.replace(/[^\w -]/g, '') || 'find'}.jpg`,
+          { type: ph.full.type || 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], text });
+          return;
+        }
+      }
+      if (navigator.share) { await navigator.share({ text, title: label }); return; }
+      await navigator.clipboard.writeText(text);
+      toast('Copied');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;      // user closed the sheet; not an error
+      toast('Could not share');
+    }
+  },
   async render(host, [id]) {
     const f = await db.get('finds', id);
     host.className = 'view light';
@@ -1097,6 +1267,7 @@ const detail = {
 
     host.appendChild(el('div', { class: 'q-actions' },
       el('button', { class: 'btn btn-ghost', onclick: () => addPhoto.click() }, '+ Photo'),
+      el('button', { class: 'btn btn-ghost', onclick: () => detail.share(f) }, 'Share'),
       el('button', {
         class: 'btn btn-danger', onclick: async () => {
           if (!confirm('Delete this find?')) return;
@@ -1161,7 +1332,7 @@ const trips = {
     const tl = el('div', { class: 'list' });
     for (const t of allTrips.slice(0, 30)) {
       const tf = perTrip[t.id] || [];
-      const row = el('div', { class: 'list-row' },
+      const row = el('button', { class: 'list-row tap', onclick: () => router.go('trip/' + t.id) },
         el('div', { class: 'list-main' },
           el('strong', {}, siteName[t.siteId] || 'No site'),
           el('span', { class: 'mono dim-t' }, `${fmtDate(t.startedAt)} · ${tf.length} finds${t.endedAt ? '' : ' · active'}`)),
@@ -1202,6 +1373,7 @@ const trips = {
 
   editSite(site, host) {
     const s = site || newSite('');
+    s.zones = Array.isArray(s.zones) ? s.zones.slice() : [];
     host.innerHTML = '';
     host.appendChild(el('h2', { class: 'display' }, site ? 'Edit site' : 'New site'));
     const name = el('input', { class: 'text-input', value: s.name === 'Unnamed site' ? '' : s.name, placeholder: 'Site name' });
@@ -1209,6 +1381,88 @@ const trips = {
     const stat = el('select', { class: 'select' }, ...COLLECT_STATUS.map(c => el('option', { value: c, selected: s.collectStatus === c ? '' : null }, c)));
     const notes = el('textarea', { class: 'text-input', rows: 2, placeholder: 'Access notes, parking, who to ask…' }, s.notes || '');
     host.appendChild(name); host.appendChild(land); host.appendChild(stat); host.appendChild(notes);
+
+    /* ── coordinates ──────────────────────────────────────────────
+       A site could always derive a centre from its finds, but that only
+       works once you have logged something. Setting it explicitly is what
+       lets you pin the pullout, the gate, or the spot you have not worked
+       yet — and it is the difference between planning a trip and recording
+       one. Captured from GPS on the spot, or typed in from a map at home. */
+    const coordRow = el('div', { class: 'coord-row' });
+    const latIn = el('input', {
+      class: 'text-input coord-in', inputmode: 'decimal', placeholder: 'latitude',
+      value: s.lat != null ? String(s.lat) : ''
+    });
+    const lonIn = el('input', {
+      class: 'text-input coord-in', inputmode: 'decimal', placeholder: 'longitude',
+      value: s.lon != null ? String(s.lon) : ''
+    });
+    const gpsBtn = el('button', {
+      class: 'btn btn-ghost', onclick: () => {
+        if (!navigator.geolocation) { toast('No GPS on this device'); return; }
+        gpsBtn.disabled = true; gpsBtn.textContent = 'Locating…';
+        navigator.geolocation.getCurrentPosition(
+          (p) => {
+            latIn.value = p.coords.latitude.toFixed(6);
+            lonIn.value = p.coords.longitude.toFixed(6);
+            gpsBtn.disabled = false; gpsBtn.textContent = '◎ Use my location';
+            toast(`Set · ±${Math.round(p.coords.accuracy)}m`);
+          },
+          () => {
+            gpsBtn.disabled = false; gpsBtn.textContent = '◎ Use my location';
+            toast('Could not get a fix');
+          },
+          { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+      }
+    }, '◎ Use my location');
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Where it is'));
+    coordRow.appendChild(latIn); coordRow.appendChild(lonIn);
+    host.appendChild(coordRow);
+    host.appendChild(gpsBtn);
+    host.appendChild(el('p', { class: 'dim-t small' },
+      'Optional. Left blank, the map places this site at the centre of everything '
+      + 'you have found here. Coordinates never leave this device.'));
+
+    /* ── zones ────────────────────────────────────────────────────
+       Stage 0 of the match pipeline. A zone is a part of a site you can
+       tell apart on the ground — the north wall, the tailings, the creek
+       bend. Testing showed matching scoped to a zone got 12 of 12 against
+       9 of 12 across the whole collection, because most look-alike errors
+       are between rocks from different places that happen to share a
+       colour. It is the cheapest accuracy in the app. */
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Zones'));
+    const zoneWrap = el('div', { class: 'chips zone-chips' });
+    const paintZones = () => {
+      zoneWrap.innerHTML = '';
+      for (const z of s.zones) {
+        zoneWrap.appendChild(el('span', { class: 'chip chip-zone' },
+          el('span', {}, z.name),
+          el('button', {
+            class: 'chip-x', 'aria-label': `Remove zone ${z.name}`,
+            onclick: () => { s.zones = s.zones.filter(x => x.id !== z.id); paintZones(); }
+          }, '×')));
+      }
+      if (!s.zones.length) zoneWrap.appendChild(el('span', { class: 'dim-t small' }, 'No zones yet.'));
+    };
+    paintZones();
+    host.appendChild(zoneWrap);
+    const zoneIn = el('input', {
+      class: 'text-input', placeholder: 'north wall, tailings, creek bend…',
+      onkeydown: (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); addZone(); } }
+    });
+    const addZone = () => {
+      const v = zoneIn.value.trim();
+      if (!v) return;
+      s.zones.push({ id: uid(), name: v.slice(0, 40) });
+      zoneIn.value = ''; paintZones(); zoneIn.focus();
+    };
+    host.appendChild(el('div', { class: 'coord-row' }, zoneIn,
+      el('button', { class: 'btn btn-ghost', onclick: addZone }, 'Add')));
+    host.appendChild(el('p', { class: 'dim-t small' },
+      'Parts of the site you can tell apart on the ground. When a zone is picked in '
+      + 'field mode, colour matching looks there first — which is where most of its '
+      + 'accuracy comes from.'));
+
     host.appendChild(el('p', { class: 'dim-t small' }, 'Land type and collecting status are your own notes — always confirm the rules for a site yourself.'));
     host.appendChild(el('div', { class: 'q-actions' },
       el('button', { class: 'btn btn-ghost', onclick: () => this.render(host) }, 'Cancel'),
@@ -1216,6 +1470,14 @@ const trips = {
         class: 'btn btn-primary', onclick: async () => {
           s.name = name.value.trim() || 'Unnamed site';
           s.landType = land.value; s.collectStatus = stat.value; s.notes = notes.value;
+          const la = parseFloat(latIn.value), lo = parseFloat(lonIn.value);
+          /* Reject out-of-range rather than storing a number that would throw the
+             whole map's fit off by a continent. */
+          s.lat = Number.isFinite(la) && Math.abs(la) <= 90 ? la : null;
+          s.lon = Number.isFinite(lo) && Math.abs(lo) <= 180 ? lo : null;
+          if ((latIn.value.trim() || lonIn.value.trim()) && (s.lat === null || s.lon === null)) {
+            toast('Coordinates look wrong — saved without them');
+          }
           await db.put('sites', s);
           toast('Saved'); this.render(host);
         }
@@ -1293,6 +1555,13 @@ const more = {
     ri.addEventListener('change', e => { if (e.target.files[0]) backup.importAll(e.target.files[0]); e.target.value = ''; });
     host.appendChild(ri);
 
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Spreadsheet export'));
+    host.appendChild(el('p', { class: 'dim-t small' },
+      'A CSV of labels, materials, sites, zones, dates and coordinates — no photos. '
+      + 'For anyone who would rather work in a spreadsheet, and a second copy of the '
+      + 'catalogue that will still open in fifty years.'));
+    host.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => backup.exportCSV() }, 'Export CSV'));
+
     host.appendChild(el('h3', { class: 'eyebrow' }, 'About'));
     host.appendChild(el('p', { class: 'dim-t small' },
       `Float ${FLOAT_VERSION} — a private field log for rockhounding, fossils and sea glass. Local-first: no account, no server, no tracking.`));
@@ -1329,6 +1598,45 @@ const backup = {
       });
     }
     return out;
+  },
+
+  /* CSV of the catalogue, no photos. Deliberately a separate thing from the
+     JSON backup: the backup is for restoring this app, the CSV is for leaving
+     it — a copy of the record that outlives the format and opens anywhere. */
+  async exportCSV() {
+    const [finds, sites] = await Promise.all([db.all('finds'), db.all('sites')]);
+    const live = finds.filter(f => !f.deleted)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    if (!live.length) { toast('Nothing to export yet'); return; }
+
+    const siteById = Object.fromEntries(sites.map(s => [s.id, s]));
+    /* Excel and Sheets both treat a leading = + - @ as a formula, so a note
+       beginning with one becomes executable on open. Prefix with an apostrophe
+       — the same defence home-inventory uses on its CSV. */
+    const cell = (v) => {
+      let s = v == null ? '' : String(v);
+      if (/^[=+\-@]/.test(s)) s = "'" + s;
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const head = ['label', 'material', 'site', 'zone', 'found', 'latitude', 'longitude',
+      'gps_accuracy_m', 'favorite', 'notes'];
+    const rows = live.map(f => {
+      const site = f.siteId ? siteById[f.siteId] : null;
+      const zone = site && f.zoneId ? (site.zones || []).find(z => z.id === f.zoneId) : null;
+      return [f.label, f.material, site ? site.name : '', zone ? zone.name : '',
+        f.createdAt, f.lat ?? '', f.lon ?? '', f.gpsAccuracy != null ? Math.round(f.gpsAccuracy) : '',
+        f.favorite ? 'yes' : '', f.notes].map(cell).join(',');
+    });
+    /* BOM so Excel reads the degree signs and any non-ASCII place name as UTF-8. */
+    const blob = new Blob(['﻿' + head.join(',') + '\n' + rows.join('\n')],
+      { type: 'text/csv;charset=utf-8' });
+    const a = el('a', {
+      href: URL.createObjectURL(blob),
+      download: `float-catalogue-${new Date().toISOString().slice(0, 10)}.csv`
+    });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast(`${live.length} finds exported`);
   },
 
   async exportAll() {
@@ -1760,6 +2068,65 @@ const mapview = {
   }
 };
 
+/* ── one trip, on a timeline ────────────────────────────────────── */
+const tripdetail = {
+  async render(host, args) {
+    const id = args && args[0];
+    host.className = 'view light';
+    host.innerHTML = '';
+    const trip = await db.get('trips', id);
+    if (!trip || trip.deleted) {
+      host.appendChild(el('p', { class: 'empty' }, 'That trip is gone.'));
+      return;
+    }
+    const site = trip.siteId ? await db.get('sites', trip.siteId) : null;
+    const mine = (await db.all('finds'))
+      .filter(f => !f.deleted && f.tripId === trip.id)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));   // the order you found them
+
+    host.appendChild(el('button', { class: 'btn btn-ghost back', onclick: () => router.go('trips') }, '‹ Sites & trips'));
+    host.appendChild(el('h2', { class: 'view-title' }, site ? site.name : 'Trip'));
+    const ended = trip.endedAt ? fmtTime(trip.endedAt) : 'still open';
+    host.appendChild(el('p', { class: 'sheet-sub mono' },
+      `${fmtDate(trip.startedAt)} · ${fmtTime(trip.startedAt)} → ${ended} · ${mine.length} ${mine.length === 1 ? 'find' : 'finds'}`));
+
+    if (mine.length) {
+      host.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(mine.flatMap(f => f.strata || []).slice(0, 8))}` }));
+    }
+    if (site && trip.siteId) {
+      host.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => router.go('site/' + site.id) },
+        `Everything from ${site.name}`));
+    }
+
+    if (!mine.length) {
+      host.appendChild(el('p', { class: 'empty sub' }, 'Nothing was logged on this trip.'));
+      return;
+    }
+
+    /* A timeline rather than a grid: the interesting thing about a trip is the
+       order and the gaps — where you slowed down is usually where the good
+       material was. */
+    const zoneName = {};
+    for (const z of (site?.zones || [])) zoneName[z.id] = z.name;
+    const line = el('div', { class: 'timeline' });
+    for (const f of mine) {
+      const ph = f.photoIds && f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+      line.appendChild(el('button', {
+        class: 'tl-row', onclick: () => router.go('find/' + f.id)
+      },
+        el('span', { class: 'tl-time mono' }, fmtTime(f.createdAt)),
+        el('span', { class: 'tl-dot' }),
+        el('span', { class: 'tl-thumb' },
+          ph ? el('img', { src: photoURL(ph, true), alt: '', loading: 'lazy' }) : el('span', {}, '·')),
+        el('span', { class: 'tl-main' },
+          el('strong', {}, f.label || 'unnamed'),
+          el('span', { class: 'mono dim-t' },
+            [f.material, f.zoneId ? zoneName[f.zoneId] : null].filter(Boolean).join(' · ')))));
+    }
+    host.appendChild(line);
+  }
+};
+
 /* ── one site, and everything found there ───────────────────────── */
 const sitedetail = {
   async render(host, args) {
@@ -1871,7 +2238,7 @@ const devgate = {
 
 /* ── app shell ──────────────────────────────────────────────────── */
 const app = {
-  state: { fieldMaterial: '', activeTrip: null },
+  state: { fieldMaterial: '', fieldZone: null, activeTrip: null },
   current: null,
 
   tabs: [
@@ -1908,13 +2275,14 @@ const app = {
   async route(name, args) {
     if (this.current === 'field' && name !== 'field') field.leave();
     if (this.current === 'map' && name !== 'map') mapview.leave();
+    if (this.current === 'collection' && name !== 'collection') collection.leave();
     this.current = name;
     const main = $('#main');
     window.scrollTo(0, 0);
-    const tabName = ['find', 'trips', 'stats', 'site'].includes(name)
+    const tabName = ['find', 'trips', 'stats', 'site', 'trip'].includes(name)
       ? (name === 'find' ? 'collection' : name === 'site' ? 'map' : 'more') : name;
     this.paintTabs(tabName);
-    const views = { field, queue, collection, find: detail, trips, stats, more, map: mapview, site: sitedetail };
+    const views = { field, queue, collection, find: detail, trips, stats, more, map: mapview, site: sitedetail, trip: tripdetail };
     await (views[name] || field).render(main, args);
   },
 
@@ -1922,10 +2290,41 @@ const app = {
 
   /* Everything after the gate. Split out of boot() so the gate can call it
      without a reload — and so deleting the gate later is one line, not surgery. */
+  /* Offline is not a nicety here — the app is used in places with no bars, and
+     without a service worker some platforms need one online load per session
+     before they will open an installed PWA at all. */
+  registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost'
+        && location.hostname !== '127.0.0.1') return;
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  },
+
+  /* Ask the browser to stop treating this origin as evictable. Photos are the
+     bulk of the data and the browser will clear "best effort" storage under
+     pressure without asking — losing a season of finds. Asked once, on the
+     first find, because a permission prompt before anything exists reads as a
+     shakedown and gets denied. */
+  async askPersist() {
+    if (!navigator.storage || !navigator.storage.persist) return;
+    if (await settings.get('persistAsked')) return;
+    const finds = (await db.all('finds')).filter(f => !f.deleted);
+    if (!finds.length) return;
+    await settings.set('persistAsked', true);
+    try {
+      const already = navigator.storage.persisted && await navigator.storage.persisted();
+      if (already) return;
+      const ok = await navigator.storage.persist();
+      if (ok) toast('This device will keep your finds');
+    } catch (e) { /* not supported: nothing to do, and nothing to say about it */ }
+  },
+
   async start() {
     await dbOpen();
     await settings.load();
-    for (const name of ['field', 'queue', 'collection', 'find', 'trips', 'stats', 'map', 'site'])
+    this.registerSW();
+    bus.on('finds-changed', () => this.askPersist());
+    for (const name of ['field', 'queue', 'collection', 'find', 'trips', 'stats', 'map', 'site', 'trip'])
       router.add(name, args => this.route(name, args));
     bus.on('finds-changed', () => this.updateBadge());
     router.add('more', args => this.route('more', args));
