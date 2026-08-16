@@ -213,7 +213,71 @@ const pdfLoad = async (p, files) => {
   await p.waitForTimeout(1200);
 };
 
+const ssDraw = async (p) => {
+  await p.fill('#eventInput', 'Family Christmas 2026').catch(() => {});
+  await p.fill('#budgetInput', '$25').catch(() => {});
+  await p.fill('#names', ['Mom', 'Dad', 'Jessie', 'Stephen', 'Aunt Rae', 'Uncle Pete',
+    'Cousin Mia', 'Cousin Theo'].join('\n')).catch(() => {});
+  await p.waitForTimeout(400);
+};
+
 export const SCENES = {
+  'secret-santa': {
+    panels: [
+      {
+        slug: 'names',
+        caption: 'Draw names without anyone seeing the hat',
+        sub: 'Type everyone in, set the budget, and nobody has to sign up for anything.',
+        act: async (p) => {
+          await ssDraw(p);
+          await toTop(p, '#names', 220);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'rules',
+        caption: 'Keep couples from drawing each other',
+        sub: 'Set the no-match rules first. The draw respects them, or tells you it cannot.',
+        act: async (p) => {
+          await ssDraw(p);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /no-match/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'links',
+        caption: 'Everyone gets their own private link',
+        sub: 'Send one each. The organiser can run it and still be surprised on the day.',
+        act: async (p) => {
+          await ssDraw(p);
+          await p.click('#drawBtn').catch(() => {});
+          await p.waitForTimeout(1000);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /private l/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'print',
+        caption: 'Or print fold-over slips and use a hat',
+        sub: 'For the family that would rather do it at the table. Free, no account, no ads.',
+        dark: true,
+        act: async (p) => {
+          await ssDraw(p);
+          await p.click('#drawBtn').catch(() => {});
+          await p.waitForTimeout(1000);
+          await toTop(p, '#printBtn', 300);
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
   'scan-to-pdf': {
     panels: [
       {
