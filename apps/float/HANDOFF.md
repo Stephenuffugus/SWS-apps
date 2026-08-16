@@ -44,6 +44,13 @@ Siblings now: `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-{192,512}.png`,
 - **Site detail** (`#/site/:id`): every find from one place, as a grid.
 - **Trip detail** (`#/trip/:id`): the trip as a timeline in the order things were found, with
   time, thumbnail, label, material and zone. Tap any trip-log row to reach it.
+- **Walked track**: while Field mode is open on an active trip, positions are appended to
+  `trip.track` as `[lat, lon, isoTime]`. Throttled to 15m of movement (a stationary phone would
+  otherwise write a fix every few seconds), fixes worse than 50m accuracy are dropped rather than
+  drawn as a spike, capped at 2000 points with the oldest dropped, and the debounced write is
+  flushed when Field mode is left so the last stretch is never lost. Drawn under the pins on the
+  map; trip detail totals it by summing legs, not start-to-end, because rockhounding is a walk
+  back and forth along a bar.
 - **Sites carry coordinates and zones**: set a site's position from GPS or by typing it, and
   name zones (north wall, tailings, creek bend). Zone chips appear in field mode when the
   active trip's site has any, and the picked zone sticks between shots.
@@ -121,12 +128,22 @@ strata strip (dominant-color bands from the actual photo) on cards, detail, sess
 stats. Field mode is dark; everything else limestone light. Tap targets ≥46px.
 
 ## TEST HARNESS
-`node apps/float/test/float.test.mjs` — 50 assertions, and `npm test` from the repo root picks
-it up automatically. It loads the real shipped `index.html` in jsdom and appends one extra
+Two suites, both picked up by `npm test` from the repo root.
+
+`test/float.browser.mjs` — 19 assertions in a real browser, via `design/harness.mjs`. Everything
+here needs a real engine: canvas layout, IndexedDB, Blobs. Every assertion exists because
+something actually broke — `fit()` keyed its scale off `pins.length === 1` rather than the
+extent, so a site with one pin and a kilometre of walked track drew the track straight off the
+top of the map; `fit()` also ran before the canvas had layout; and the backup had to keep zones,
+site coordinates, `zoneId` and packed histograms across a wipe and restore, none of which
+existed when the format was written. It also asserts the app makes **no failed requests at
+all**, which matters more here than anywhere else in the portfolio.
+
+`test/float.test.mjs` — 56 assertions in jsdom for the pure functions. It loads the real shipped `index.html` in jsdom and appends one extra
 `<script>` that hands the top-level bindings out to `window.__float`, because a classic script's
 `const` never lands on `window`. Nothing is exported into production to make this work.
 
-Covers: Lab maths (tuple return, not an object), bin range, histogram normalisation and
+Covers: palette contrast against both grounds, Lab maths (tuple return, not an object), bin range, histogram normalisation and
 centre-weighted sampling, sqrt pack/unpack round-trip and the peaked-histogram regression,
 similarity ordering, ranking, the deliberate not-confident case, strata clustering and CSS,
 the persisted-record contract (`db.put` stamps createdAt/updatedAt; createdAt survives an edit),
@@ -146,16 +163,20 @@ is correct behavior; don't "fix" it.
 ## BUILD-OUT PLAN
 DONE: service worker · real manifest + icons · `storage.persist()` · zone UI (Stage 0) ·
 collection pagination + ObjectURL revoke · share a find · trip detail timeline · CSV export ·
-map + site detail · provenance on matches · dev gate · runnable test harness.
+map + site detail · provenance on matches · dev gate · first-run welcome · walked track ·
+privacy page · contrast fix + guard · jsdom and browser test suites.
 
 REMAINING, priority order:
 1. **Stage 2 DINOv2** — transformers.js embeddings behind a settings flag,
    "Better matching (downloads ~90MB model once)". Web Worker; never block the queue UI.
    Fuse `0.35*colorScore + 0.65*cosine(embedding)`; keep the margin confidence logic.
-   MUST degrade gracefully offline — colour-only is the floor.
+   MUST degrade gracefully offline — colour-only is the floor. **Weigh this honestly before
+   building**: 90MB over a phone connection for a field app is a real cost, and the flag has to
+   state it plainly. Colour matching plus zone narrowing is already good enough that this may
+   never earn its download.
 2. **Android share-target** in the manifest, now that it is a real file.
 3. **Zone-aware map** — draw zone sub-pins once a site has several and enough finds to place them.
-4. **Trip GPS track** — the walked line, not just the finds. Needs a positions store.
+4. **Enrollment coach** — first-run: shoot 3 angles of a known specimen to seed the catalog.
 
 ## CUT: ID ASSIST — decided 2026-08-16, do not revisit without new information
 "What is this?" → a vision API was on the plan and is now cut. Honest mineral ID is not

@@ -467,7 +467,12 @@ const newSite = (name) => ({
   lat: null, lon: null, notes: '', zones: [], deleted: false
 });
 const newTrip = (siteId) => ({
-  id: uid(), siteId: siteId || null, startedAt: nowISO(), endedAt: null, notes: '', deleted: false
+  id: uid(), siteId: siteId || null, startedAt: nowISO(), endedAt: null, notes: '',
+  /* [[lat, lon, isoTime], …] — where you actually walked, recorded only while
+     Field mode is open on an active trip. Local like everything else, and the
+     single most sensitive array in the app: it is the route to your spots, not
+     just the spots. */
+  track: [], deleted: false
 });
 const newFind = (o = {}) => ({
   id: uid(), tripId: o.tripId || null, siteId: o.siteId || null, zoneId: o.zoneId || null,
@@ -693,13 +698,52 @@ const field = {
   async gpsStart() {
     if (!navigator.geolocation || this.watchId !== null) return;
     this.watchId = navigator.geolocation.watchPosition(
-      p => { this.pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; this.paintGPS(); },
+      p => {
+        this.pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+        this.paintGPS();
+        this.recordTrack(p.coords);
+      },
       () => { this.pos = null; this.paintGPS(); },
       { enableHighAccuracy: true, maximumAge: 5000 }
     );
   },
+
+  /* Append to the active trip's track, but only when the walk has actually
+     moved. A stationary phone emits a fix every few seconds and would other-
+     wise fill the record with a thousand copies of the same spot — noise in
+     storage, noise on the map, and a slower backup for nothing.
+
+     A wild fix is worse than a missing one, so anything with accuracy over
+     50m is dropped rather than drawn: a bad point puts a spike across the map
+     and makes the walked distance a lie. Writes are debounced because this
+     fires while the user is holding a camera. */
+  recordTrack(coords) {
+    const trip = app.state.activeTrip;
+    if (!trip || trip.endedAt) return;
+    if (coords.accuracy != null && coords.accuracy > 50) return;
+    if (!Array.isArray(trip.track)) trip.track = [];
+
+    const last = trip.track[trip.track.length - 1];
+    if (last && geo.dist({ lat: last[0], lon: last[1] },
+                         { lat: coords.latitude, lon: coords.longitude }) < 15) return;
+
+    /* ~30km of walking at 15m spacing. Past that, drop the oldest rather than
+       refuse to record — a long day should not silently stop being logged. */
+    trip.track.push([+coords.latitude.toFixed(6), +coords.longitude.toFixed(6), nowISO()]);
+    if (trip.track.length > 2000) trip.track.splice(0, trip.track.length - 2000);
+
+    clearTimeout(this._trackSave);
+    this._trackSave = setTimeout(() => db.put('trips', trip).catch(() => {}), 4000);
+  },
   gpsStop() {
     if (this.watchId !== null) { navigator.geolocation.clearWatch(this.watchId); this.watchId = null; }
+    /* Do not let a debounced write die with the view — that would lose the
+       last stretch of every walk. */
+    if (this._trackSave) {
+      clearTimeout(this._trackSave); this._trackSave = null;
+      const trip = app.state.activeTrip;
+      if (trip && Array.isArray(trip.track) && trip.track.length) db.put('trips', trip).catch(() => {});
+    }
   },
   paintGPS() {
     const g = $('#gps-pill'); if (!g) return;
@@ -1784,8 +1828,10 @@ const mapview = {
     host.innerHTML = '';
     host.appendChild(el('h2', { class: 'view-title' }, 'Map'));
 
-    const [sites, finds] = await Promise.all([db.all('sites'), db.all('finds')]);
+    const [sites, finds, trips] = await Promise.all([db.all('sites'), db.all('finds'), db.all('trips')]);
     const live = finds.filter(f => !f.deleted);
+    this.tracks = trips.filter(t => !t.deleted && Array.isArray(t.track) && t.track.length > 1)
+      .map(t => t.track);
 
     this.pins = sites.filter(s => !s.deleted).map(s => {
       const c = siteCoord(s, live);
@@ -1801,7 +1847,7 @@ const mapview = {
       .map(f => ({ kind: 'find', find: f, lat: f.lat, lon: f.lon, count: 1 }));
     this.pins = this.pins.concat(loose);
 
-    if (!this.pins.length) {
+    if (!this.pins.length && !this.tracks.length) {
       host.appendChild(el('div', { class: 'empty' },
         el('p', {}, 'No coordinates yet.'),
         el('p', { class: 'sub' },
@@ -1831,9 +1877,12 @@ const mapview = {
 
     this.cv = cv;
     this.sheet = sheet;
-    this.fit();
     this.bind(cv);
-    requestAnimationFrame(() => { this.resize(); this.draw(); });
+    /* fit() AFTER resize(), never before: the canvas has no layout at the
+       moment it is appended, so clientWidth/clientHeight are 0 and fit() would
+       scale the view against a guessed viewport. The walk then runs off the
+       top of the map on first paint, which is what it did. */
+    requestAnimationFrame(() => { this.resize(); this.fit(); this.draw(); });
 
     this._onResize = () => { this.resize(); this.draw(); };
     window.addEventListener('resize', this._onResize);
@@ -1857,17 +1906,28 @@ const mapview = {
   },
 
   fit() {
-    const ms = this.pins.map(p => geo.merc(p.lat, p.lon));
+    /* Fit the walks as well as the pins — a track that runs off the edge on
+       first paint reads as a bug, and the walk is often wider than the finds. */
+    const pts = this.pins.map(p => ({ lat: p.lat, lon: p.lon }))
+      .concat((this.tracks || []).flat().map(([lat, lon]) => ({ lat, lon })));
+    const ms = (pts.length ? pts : this.pins).map(p => geo.merc(p.lat, p.lon));
     const xs = ms.map(m => m.x), ys = ms.map(m => m.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     const cv = this.cv;
     const w = (cv?.clientWidth || 360), h = (cv?.clientHeight || 340);
-    /* A single pin has no extent, so give it a sensible neighbourhood
-       (about 400m across) rather than dividing by zero. */
-    const spanX = Math.max(maxX - minX, 1), spanY = Math.max(maxY - minY, 1);
-    const mpp = this.pins.length === 1 ? 1.6 : Math.max(spanX / (w * 0.72), spanY / (h * 0.72));
+    const spanX = maxX - minX, spanY = maxY - minY;
+
+    /* Decide on the EXTENT, not on the number of pins. The first version keyed
+       this off `pins.length === 1` and pinned the scale to a fixed
+       neighbourhood — so a site with one pin and a kilometre of walked track
+       drew the track straight off the top of the map, because the track was
+       never in the calculation. One pin does not mean nothing to fit. */
+    const degenerate = spanX < 1 && spanY < 1;
+    const mpp = degenerate
+      ? 1.6                                   // a single point: ~400m across, not a divide by zero
+      : Math.max(spanX / (w * 0.72), spanY / (h * 0.72));
     this.view = { cx, cy, mpp: Math.max(mpp, 0.15) };
   },
 
@@ -2031,6 +2091,22 @@ const mapview = {
     for (let y = originY; y < h; y += px) { ctx.moveTo(0, Math.round(y) + .5); ctx.lineTo(w, Math.round(y) + .5); }
     ctx.stroke();
 
+    /* Walks first, so pins always sit on top of the line rather than under it. */
+    for (const track of (this.tracks || [])) {
+      ctx.beginPath();
+      let started = false;
+      for (const [lat, lon] of track) {
+        const m = geo.merc(lat, lon);
+        const p = this.toScreen(m.x, m.y);
+        if (!started) { ctx.moveTo(p.sx, p.sy); started = true; }
+        else ctx.lineTo(p.sx, p.sy);
+      }
+      ctx.strokeStyle = 'rgba(62,122,107,.45)';
+      ctx.lineWidth = 3;
+      ctx.lineJoin = ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
     if (this.here) {
       const m = geo.merc(this.here.lat, this.here.lon);
       const s = this.toScreen(m.x, m.y);
@@ -2115,8 +2191,19 @@ const tripdetail = {
     host.appendChild(el('button', { class: 'btn btn-ghost back', onclick: () => router.go('trips') }, '‹ Sites & trips'));
     host.appendChild(el('h2', { class: 'view-title' }, site ? site.name : 'Trip'));
     const ended = trip.endedAt ? fmtTime(trip.endedAt) : 'still open';
+    /* Sum the legs rather than measuring start-to-end: rockhounding is a walk
+       back and forth along a bar, and straight-line distance would report
+       almost nothing for a long day. */
+    let walked = 0;
+    const track = Array.isArray(trip.track) ? trip.track : [];
+    for (let i = 1; i < track.length; i++) {
+      walked += geo.dist({ lat: track[i - 1][0], lon: track[i - 1][1] },
+                         { lat: track[i][0], lon: track[i][1] });
+    }
     host.appendChild(el('p', { class: 'sheet-sub mono' },
-      `${fmtDate(trip.startedAt)} · ${fmtTime(trip.startedAt)} → ${ended} · ${mine.length} ${mine.length === 1 ? 'find' : 'finds'}`));
+      `${fmtDate(trip.startedAt)} · ${fmtTime(trip.startedAt)} → ${ended} · `
+      + `${mine.length} ${mine.length === 1 ? 'find' : 'finds'}`
+      + (walked > 20 ? ` · walked ${geo.fmtDist(walked)}` : '')));
 
     if (mine.length) {
       host.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(mine.flatMap(f => f.strata || []).slice(0, 8))}` }));
