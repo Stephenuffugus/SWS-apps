@@ -18,10 +18,9 @@
      node design/bump-sw.mjs --dry       show what would change
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { SKINS } from './skins.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APPS = join(HERE, '..', 'apps');
@@ -29,7 +28,18 @@ const APPS = join(HERE, '..', 'apps');
 const argv = process.argv.slice(2);
 const dry = argv.includes('--dry');
 const only = argv.filter((a) => !a.startsWith('--'));
-const slugs = Object.keys(SKINS).filter((s) => !only.length || only.includes(s));
+/* Discovered from the filesystem, not from skins.mjs. Keying this off the
+   design system meant an app outside it — Float — was silently skipped, which
+   is the one failure this script exists to prevent: an un-bumped worker keeps
+   serving the old page to everyone who has already opened it. Any directory
+   under apps/ with a service worker counts. */
+const slugs = readdirSync(APPS)
+  .filter((d) => {
+    try { return statSync(join(APPS, d)).isDirectory() && existsSync(join(APPS, d, 'sw.js')); }
+    catch (e) { return false; }
+  })
+  .sort()
+  .filter((s) => !only.length || only.includes(s));
 
 let n = 0;
 for (const slug of slugs) {
