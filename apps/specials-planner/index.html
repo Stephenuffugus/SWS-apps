@@ -1270,6 +1270,10 @@ td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
 body.fitscreen header.app, body.fitscreen .weeknav, body.fitscreen .trust,
 body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar{ display:none }
 body.fitscreen{ overflow:hidden }
+/* Too narrow to fit honestly: chrome still hidden for the extra room, but
+   the grid keeps a readable size and scrolls like normal. */
+body.fitscreen.fit-scroll{ overflow:auto }
+body.fitscreen.fit-scroll .grid-scroll{ overflow:auto }
 body.fitscreen .wrap, body.fitscreen main{ max-width:none; padding:0; margin:0 }
 body.fitscreen .grid-scroll{ overflow:visible }
 body.fitscreen table.week{ transform:scale(var(--fit,1)); transform-origin:top left; width:max-content }
@@ -2303,31 +2307,77 @@ function legendHTML() {
    six rows deep, which on a laptop only fits if the chrome gets out of
    the way and the type scales down with the grid. This is a view mode,
    not a zoom: the grid keeps its own proportions and the browser keeps
-   its own text-size setting for everything else. */
-function toggleFit() {
-  const on = !document.body.classList.contains('fitscreen');
+   its own text-size setting for everything else.
+
+   It is a LAPTOP feature and says so by disappearing. On a narrow screen
+   the grid is not a grid at all — the responsive rules stack every row
+   into its own card, so a "week" is a 3500px column. Scaling that to fit
+   a phone gave 3px type: technically the whole week on one screen, and
+   completely useless. The button is only offered where the answer is
+   honest. */
+const MIN_FIT = 0.55;   // below this it is a smear, not a plan
+
+/* Is the grid rendering as an actual table right now? The stacked-card
+   breakpoint is the thing that makes fitting meaningless, and asking the
+   computed style is more honest than guessing at a pixel width. */
+function gridIsTable() {
+  const td = view.querySelector('table.week td');
+  return !!td && getComputedStyle(td).display.startsWith('table');
+}
+
+function canFit() {
+  return gridIsTable() && fitScale() >= MIN_FIT;
+}
+
+/* What scale would it take, measured without committing to the mode, so
+   the button can decide whether to exist. */
+function fitScale() {
+  const tbl = view.querySelector('table.week');
+  const box = view.querySelector('.grid-scroll');
+  if (!tbl || !box) return 0;
+  const root = document.documentElement;
+  const inFit = document.body.classList.contains('fitscreen');
+  const prev = root.style.getPropertyValue('--fit');
+  root.style.setProperty('--fit', '1');
+  /* When the chrome is already hidden, measure where the grid really sits.
+     When it is not, assume roughly what hiding it will free up. */
+  const top = inFit ? box.getBoundingClientRect().top : 96;
+  const availW = (inFit ? (box.clientWidth || window.innerWidth) : window.innerWidth) - 16;
+  const availH = window.innerHeight - top - 16;
+  const k = Math.min(1, availW / Math.max(1, tbl.scrollWidth), availH / Math.max(1, tbl.scrollHeight));
+  if (!inFit) { if (prev) root.style.setProperty('--fit', prev); else root.style.removeProperty('--fit'); }
+  return k;
+}
+
+function toggleFit(force) {
+  const on = force !== undefined ? force : !document.body.classList.contains('fitscreen');
   document.body.classList.toggle('fitscreen', on);
   S.fit = on;
   persist(true);
   if (on) fitGrid(); else document.documentElement.style.removeProperty('--fit');
+  syncFitBtn();
+}
+
+function syncFitBtn() {
   const b = document.getElementById('wk-fit');
-  if (b) { b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Exit full screen' : 'Fit to screen'; }
+  if (!b) return;
+  const on = document.body.classList.contains('fitscreen');
+  /* Hidden rather than disabled: a control you cannot use and cannot be
+     told why is worse than one that is not there. */
+  b.hidden = !on && !canFit();
+  b.setAttribute('aria-pressed', String(on));
+  b.textContent = on ? 'Exit full screen' : 'Fit to screen';
 }
 
 function fitGrid() {
   if (!document.body.classList.contains('fitscreen')) return;
-  const tbl = view.querySelector('table.week');
-  const box = view.querySelector('.grid-scroll');
-  if (!tbl || !box) return;
-  document.documentElement.style.setProperty('--fit', '1');
-  /* Measure at full size, then scale down only if it does not fit. Never
-     scale up — a five-period week blown up to fill a monitor looks like
-     a mistake. */
-  const availW = box.clientWidth || window.innerWidth;
-  const availH = window.innerHeight - box.getBoundingClientRect().top - 16;
-  const need = tbl.scrollWidth, needH = tbl.scrollHeight;
-  const k = Math.min(1, availW / Math.max(1, need), availH / Math.max(1, needH));
-  document.documentElement.style.setProperty('--fit', k.toFixed(3));
+  const k = fitScale();
+  /* If the honest answer is below the floor, stop pretending: keep the
+     chrome hidden, because the extra room is still worth having, but
+     render at a readable size and let it scroll. */
+  const tooSmall = k < MIN_FIT;
+  document.body.classList.toggle('fit-scroll', tooSmall);
+  document.documentElement.style.setProperty('--fit', (tooSmall ? 1 : k).toFixed(3));
 }
 
 
@@ -2418,7 +2468,17 @@ function openMergeScope(anchor,d,p,span){
   setTimeout(()=>document.addEventListener('keydown',pickerKey,true),0);
 }
 
-window.addEventListener('resize',()=>{ if(document.body.classList.contains('fitscreen')) fitGrid(); });
+/* Rotating a tablet crosses the stacked-card breakpoint in both directions,
+   so the mode has to be able to let go as well as take hold. */
+window.addEventListener('resize',()=>{
+  if(curView!=='week'||!S) return;
+  if(document.body.classList.contains('fitscreen')){
+    if(gridIsTable()) fitGrid();
+    else document.body.classList.remove('fitscreen','fit-scroll'),
+         document.documentElement.style.removeProperty('--fit');
+  }
+  syncFitBtn();
+});
 
 function renderWeek(){
   buildYearIfStale();
@@ -2524,10 +2584,16 @@ function renderWeek(){
   };
   document.getElementById('wk-print').onclick=()=>window.print();
   const fitBtn=document.getElementById('wk-fit');
-  if(fitBtn){ fitBtn.onclick=toggleFit;
-    fitBtn.setAttribute('aria-pressed',String(!!S.fit));
-    fitBtn.textContent = S.fit?'Exit full screen':'Fit to screen'; }
-  if(S.fit){ document.body.classList.add('fitscreen'); requestAnimationFrame(fitGrid); }
+  if(fitBtn) fitBtn.onclick=()=>toggleFit();
+  /* The preference is saved per browser, not per screen. Someone who left
+     it on at their desk and opened the same plan on a phone should get a
+     readable week, not an inherited setting the phone cannot honour. */
+  if(S.fit) requestAnimationFrame(()=>{
+    if(gridIsTable()){ document.body.classList.add('fitscreen'); fitGrid(); }
+    else document.body.classList.remove('fitscreen');
+    syncFitBtn();
+  });
+  else requestAnimationFrame(syncFitBtn);
   wireColourHandles();
   const le=document.getElementById('legend-edit');
   if(le) le.onclick=()=>{ curView='setup'; render(); };
