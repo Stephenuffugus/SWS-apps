@@ -23,22 +23,31 @@ const palette = JSON.parse(readFileSync(join(HERE, 'out', 'palette.json'), 'utf8
 
 /* The catalogue. `find` holds the words someone would actually type looking
    for this — the filter matches against it, so "insurance" finds Home
-   Inventory and "teacher" finds both school apps. */
+   Inventory and "teacher" finds both school apps.
+
+   A fifth field, 'shared', marks the apps whose whole point is that two
+   phones see the same thing — which means the data lives on a server and
+   the person who creates the board signs in. Those two facts are true and
+   unavoidable, so the hub states them on the card rather than printing a
+   blanket on-device promise it cannot keep. See findings/TRUST-COPY-CLOUD-APPS.md;
+   the in-app copy was fixed there and this page was the half left behind. */
 const CATALOGUE = [
   ['Family &amp; Home', [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
     ['baby-log', 'Baby Log', 'Feeds, sleep and nappies — one thumb, 3am', 'newborn infant feeding nursing diaper tracker night'],
     ['pill-schedule', 'Pill Schedule', 'A large-print medication card for the fridge', 'medication meds prescription elderly dosage reminder'],
-    ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care'],
-    ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share'],
+    ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
+    ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
   ]],
   ['School', [
     ['specials-planner', 'Specials Planner', 'Art, music, PE, library — plan the year once', 'teacher lesson plan rotation schedule elementary'],
     ['sub-plans', 'Sub Plans', 'Your substitute folder, ready before you are sick', 'teacher substitute emergency plans binder classroom'],
   ]],
   ['Events &amp; Groups', [
-    ['signup-sheets', 'Signup Sheets', 'Claim a spot in seconds — no account, ever', 'volunteer potluck conference slots roster shifts'],
-    ['team-parent', 'Team Parent', 'One link for the whole season', 'youth sports snack schedule roster coach league'],
+    /* "no account, ever" was false for the one person who makes the sheet —
+       they sign in. True for everyone who signs up, which is the many. */
+    ['signup-sheets', 'Signup Sheets', 'Claim a spot in seconds — signing up needs no account', 'volunteer potluck conference slots roster shifts', 'shared'],
+    ['team-parent', 'Team Parent', 'One link for the whole season', 'youth sports snack schedule roster coach league', 'shared'],
     ['secret-santa', 'Secret Santa', 'Draw names without the group-chat chaos', 'gift exchange christmas holiday office party'],
     ['wedding-timeline', 'Wedding Day Timeline', 'So nobody asks &ldquo;when is hair again?&rdquo;', 'wedding schedule vendors bridal party run of show'],
     ['seating-chart', 'Seating Chart', 'Tables, seats and who must not sit together', 'wedding reception banquet place cards floor plan'],
@@ -62,12 +71,19 @@ const CATALOGUE = [
   ]],
 ];
 
-const card = ([slug, name, line, find]) => {
+const card = ([slug, name, line, find, kind]) => {
   const p = palette[slug];
-  return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}"
+  /* "shared online" is searchable too — someone deciding whether to trust a
+     list with the school run should be able to find the ones that leave the
+     device by typing the thing they are worried about. */
+  const tag = kind === 'shared'
+    ? `<span class="tag">Shared online</span>`
+    : '';
+  const extra = kind === 'shared' ? ' shared online cloud server link' : '';
+  return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
         <img class="swatch" src="./${slug}/icon.svg" alt="" width="38" height="38" loading="lazy" decoding="async">
-        <span class="meta"><b>${name}</b><span>${line}</span></span>
+        <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
       </a>`;
 };
 
@@ -81,16 +97,25 @@ ${apps.map(card).join('\n')}
 
 const count = CATALOGUE.reduce((n, [, a]) => n + a.length, 0);
 
+/* Counted, never typed. The moment someone adds a shared app and hand-edits
+   "nineteen" the page starts lying again, which is exactly how it got into
+   this state the first time. */
+const sharedCount = CATALOGUE.reduce((n, [, a]) => n + a.filter(x => x[4] === 'shared').length, 0);
+const localCount = count - sharedCount;
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const word = (n) => WORDS[n] || String(n);
+const Word = (n) => { const w = word(n); return w[0].toUpperCase() + w.slice(1); };
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sky Wolf Studios — ${count} free apps that keep your data on your device</title>
-<meta name="description" content="${count} free, ad-free utility apps from Sky Wolf Studios. Nothing leaves your device. No account. No ads. No subscription.">
+<title>Sky Wolf Studios — ${count} free, ad-free apps</title>
+<meta name="description" content="${count} free utility apps from Sky Wolf Studios. No ads, no subscription, no tracking. ${localCount} keep everything on your device; the ${word(sharedCount)} shared ones say so.">
 <meta name="theme-color" content="#16171c">
 <meta property="og:title" content="Sky Wolf Studios — ${count} free apps">
-<meta property="og:description" content="${count} free, ad-free utilities: signup sheets, lesson planner, sub plans, PDF tools and more. Nothing leaves your device.">
+<meta property="og:description" content="${count} free, ad-free utilities: signup sheets, lesson planner, sub plans, PDF tools and more. ${localCount} keep everything on your device.">
 <meta property="og:image" content="https://sws-apps-9646d.web.app/signup-sheets/marketing/stripe-thumbnail.png">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="./qr-maker/icon.svg" type="image/svg+xml">
@@ -185,6 +210,14 @@ a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
 .meta{display:block; min-width:0}
 .meta b{display:block; font-size:1.0625rem; font-weight:600; letter-spacing:-.01em; margin-bottom:2px}
 .meta span{display:block; color:var(--ink-2); font-size:.875rem; line-height:1.4}
+/* Two classes deep on purpose: '.meta span' above is (0,1,1) and would
+   otherwise win and force this back to a full-width block. */
+.meta .tag{
+  display:inline-block; margin-top:var(--s2); padding:2px var(--s2);
+  background:var(--bg-2); border:1px solid var(--line-2); border-radius:999px;
+  color:var(--ink-2); font-size:.6875rem; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase; line-height:1.5;
+}
 
 .empty{display:none; text-align:center; color:var(--ink-2); padding:var(--s8) var(--s4)}
 .empty.show{display:block}
@@ -211,7 +244,7 @@ footer .tip{color:var(--ink-2)}
     <h1>Sky Wolf Studios</h1>
     <p class="promise">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span><b>Nothing leaves your device.</b> No account. No ads. No subscription.</span>
+      <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device &mdash; the ${word(sharedCount)} shared ones are marked.</span>
     </p>
   </header>
 
