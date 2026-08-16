@@ -234,6 +234,21 @@ function updateProgress() {
   stampPrintMeta();
 }
 
+/* Ticking a row deliberately does NOT call renderList(): rebuilding the list on
+   every tap would throw away focus and scroll position, which is exactly what
+   toggling in place exists to avoid. But the group heading carries its own
+   count, and skipping the redraw left it behind — a section read
+   "Toiletries & health · 0 of 5 packed" above five ticked boxes until something
+   else forced a redraw, so the only correct number on screen was the one at the
+   top. Recount just the group that changed, from the DOM that is already there. */
+function recountGroup(li) {
+  const grp = li.closest('.grp');
+  const cnt = grp && grp.querySelector('h3 .cnt');
+  if (!cnt) return;                       // ungrouped view has no per-group count
+  const boxes = [...grp.querySelectorAll('input[type=checkbox]')];
+  cnt.textContent = boxes.filter((b) => b.checked).length + ' of ' + boxes.length + ' packed';
+}
+
 function rowFor(item) {
   const id = idOf(item);
   const cb = el('input', { type: 'checkbox', 'data-fk': 'cb:' + id });
@@ -245,6 +260,7 @@ function rowFor(item) {
     li.classList.toggle('done', item.done);
     save();
     updateProgress();               // #fillText is the polite live region
+    recountGroup(li);
     if (hidePacked && item.done) {
       /* The row the user is standing on is about to disappear. Move to the
          next one rather than dropping focus on the floor. */
