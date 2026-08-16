@@ -1503,7 +1503,16 @@ body{
     table.week,table.week tbody,table.week tr,table.week td{display:block;width:auto;min-width:0}
     table.week thead{display:none}
     table.week tr{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow);margin:0 0 var(--s4);overflow:hidden}
-    table.week td{border-right:0;border-bottom:1px solid var(--line);position:static!important;box-shadow:none!important}
+    /* `position:static` was blanket-applied here to cancel the sticky day
+       column, but it also removed the containing block every cell control
+       positions against — so in card layout all thirty merge arrows and all
+       forty-eight paint handles collapsed onto a single coordinate, piled on
+       top of each other, and only the topmost could ever be clicked. Cancel
+       sticky where sticky was actually set, and leave the cells positioned. */
+    table.week td{border-right:0;border-bottom:1px solid var(--line);position:relative;box-shadow:none!important}
+    /* relative, not static — it cancels the sticky just as well and still
+       gives the weekday label's own paint handle something to sit against. */
+    table.week td.day-td,table.week th.day-h{position:relative!important;left:auto!important}
     table.week tr td:last-child{border-bottom:0}
     table.week td.day-td{background:var(--surface-2);border-bottom:1px solid var(--line-2)}
     table.week td[data-label]::before{
@@ -2434,7 +2443,14 @@ function wireColourHandles(){
       const d=byIso[iso]; if(!d) return;
       const p=+ps, delta=+ds;
       const r=mergeRun(d,p,delta);
-      if(!r.changed){ toast(delta>0?'Nothing to merge into':'Not merged'); return; }
+      if(!r.changed){
+        /* SWS.toast, not a bare toast() — there is no global by that name, so
+           this threw and the arrow appeared to do nothing at all. It fires on
+           the two commonest clicks there are: unmerge on a cell that is not
+           merged, and merge on the last period of the row. */
+        SWS.toast(delta>0?'There is no period to the right to merge into.':'This box is not merged.');
+        return;
+      }
       /* Ask the same question colouring asks. A standing double period
          and a one-off assembly are different facts about the year. */
       openMergeScope(btn,d,p,r.next);
@@ -2505,16 +2521,22 @@ function renderWeek(){
   head+=`<th class="notes-h" scope="col"${hStyle(S.fillCol.notes)}>Notes${paintBtn('col:notes','the Notes column')}</th></tr>`;
 
   const ce=PLAINTEXT_OK?'plaintext-only':'true';
-  const lunchCell=`<td class="lunch"><span aria-hidden="true">lunch</span></td>`;
+  /* Lunch is ONE cell down the whole week, not one per day. Her book merges
+     E1:E6 in all 41 weeks without exception — it is a band, not five boxes,
+     and five separate boxes was the most obvious way the grid did not look
+     like her book. Rendered on the first row only, spanning the rest. */
+  const lunchCell = (di) => di === 0
+    ? `<td class="lunch" rowspan="${w.days.length}"><span aria-hidden="true">lunch</span></td>`
+    : '';
   let rows='';
-  for(const d of w.days){
+  for(const [di,d] of w.days.entries()){
     const li=d.letter?c.letters.indexOf(d.letter):-1;
     const chip=d.letter?`<span class="chip l${(li<0?0:li)%6}"><span class="sr-only">Rotation day </span>${esc(d.letter)}</span>`:'';
     const banner=d.special?`<span class="sp-banner">${esc(d.special)}</span>`:'';
     const dayName=`${DAYNAMES[d.dow]} ${niceDate(d.iso)}`;
     const rot=d.letter?`, rotation day ${esc(d.letter)}`:(d.special?`, ${esc(d.special)}`:'');
     rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
-      <td class="day-td"${(()=>{const df=colourById(S.fillDay[d.dow]);return df?` class="day-td filled" style="--cell-fill:${df.hex};--cell-ink:${inkOn(df.hex)}"`:'';})()}>${paintBtn('day:'+d.dow,DAYNAMES[d.dow]+' label')}<div class="day-cell">
+      <td${(()=>{const df=colourById(S.fillDay[d.dow]);return df?` class="day-td filled" style="--cell-fill:${df.hex};--cell-ink:${inkOn(df.hex)}"`:' class="day-td"';})()}>${paintBtn('day:'+d.dow,DAYNAMES[d.dow]+' label')}<div class="day-cell">
         <div>
           <div class="day-name">${DAYNAMES[d.dow]}</div>
           <div class="day-date">${niceDate(d.iso)}${d.iso===todayISO?'<span class="sr-only">, today</span>':''}</div>
@@ -2523,7 +2545,7 @@ function renderWeek(){
         ${banner}
       </div></td>`;
     for(let p=1;p<=c.periods;p++){
-      if(p===preL+1) rows+=lunchCell;
+      if(p===preL+1) rows+=lunchCell(di);
       if(coveredBy(d,p)) continue;                 // swallowed by a merge to its left
       const f=fillFor(d,p), span=spanFor(d,p);
       const fs=f?` class="filled${span>1?' merged':''}" style="--cell-fill:${f.hex};--cell-ink:${inkOn(f.hex)}"`
@@ -2532,7 +2554,7 @@ function renderWeek(){
       const spanNote=span>1?`, spanning ${span} periods`:'';
       rows+=`<td data-label="Period ${p}"${sp}${fs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, period ${p}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' period '+p)}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} period ${p}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} period ${p} with the next">▶</button></span></td>`;
     }
-    if(preL===c.periods) rows+=lunchCell;
+    if(preL===c.periods) rows+=lunchCell(di);
     const nf=colourById(S.fill['n'+d.iso]!==undefined?S.fill['n'+d.iso]:S.fillDow['n'+d.dow]);
     const nfs=nf?` class="filled" style="--cell-fill:${nf.hex};--cell-ink:${inkOn(nf.hex)}"`:'';
     rows+=`<td data-label="Notes"${nfs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div>${paintBtn('note:'+d.iso,'notes for '+dayName)}</td></tr>`;
