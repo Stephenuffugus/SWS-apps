@@ -21,7 +21,7 @@
 :root{
   --limestone:#EDEEEA; --paper:#F5F5F2; --basalt:#161B19; --basalt2:#232B28;
   --serpentine:#3E7A6B; --serp-deep:#2E5C51; --agate:#C9873B; --iron:#A64B3C;
-  --ink:#22271F; --mist:#7E877F; --line:#D8DAD3;
+  --ink:#22271F; --mist:#656E66; --line:#D8DAD3;
   --ff-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --ff-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --ff-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
@@ -46,6 +46,11 @@ a{color:var(--serp-deep)}
 
 /* views */
 .view{padding:14px 16px calc(24px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+/* --mist is solved against limestone (4.53:1). On the dark surfaces it would
+   invert to 3.9:1, so those scopes re-solve it upward against basalt2, the
+   lighter of the two dark grounds — 5.41:1 on basalt, 4.50:1 on basalt2.
+   One grey cannot clear 4.5:1 against both ends; that is why there are two. */
+.view.dark,#tabbar{--mist:#889289}
 .view.dark{background:var(--basalt);color:var(--limestone);max-width:none;margin:0;
   min-height:calc(100dvh - 64px);display:flex;flex-direction:column;padding:10px 14px 8px}
 .empty{text-align:center;padding:48px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
@@ -235,6 +240,24 @@ textarea.text-input{resize:vertical}
 .zone-lead{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mist);flex:0 0 auto}
 .chip-zone-pick{background:var(--basalt2);border:1px solid #33403a;color:var(--limestone)}
 .chip-zone-pick.sel{background:var(--agate);border-color:var(--agate);color:#fff}
+
+/* ── first run ── */
+body.welcoming{overflow:hidden}
+.wc{position:fixed;inset:0;z-index:120;background:var(--limestone);overflow-y:auto;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.wc-inner{max-width:30rem;margin:0 auto;padding:8vh 22px 40px;display:flex;
+  flex-direction:column;align-items:center;text-align:center;gap:8px}
+.wc-steps{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;
+  gap:16px;text-align:left;width:100%}
+.wc-step{display:flex;gap:12px;align-items:flex-start}
+.wc-n{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--serpentine);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;margin-top:1px}
+.wc-step strong{display:block;color:var(--ink);font-size:1rem;margin-bottom:2px}
+.wc-body{display:block;font-size:.88rem;line-height:1.5;color:var(--mist)}
+.wc-promise{margin:26px 0 0;font-size:.84rem;line-height:1.55;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:left}
+.wc-actions{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:24px}
+.full{width:100%}
 
 /* ── development gate ── */
 body.gated #tabbar{display:none}
@@ -1074,7 +1097,9 @@ const collection = {
       (!this.filter.fav || f.favorite));
     if (!shown.length) {
       grid.appendChild(el('div', { class: 'empty' },
-        el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet — Field mode is where it starts.')));
+        el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet — Field mode is where it starts.'),
+        finds.length ? null
+          : el('button', { class: 'btn btn-primary', onclick: () => router.go('field') }, 'Open field mode')));
       return;
     }
 
@@ -2170,6 +2195,68 @@ const sitedetail = {
   }
 };
 
+/* ── first run ────────────────────────────────────────────────────
+   The default route is Field mode, which opens straight into a camera
+   viewfinder. That is right for the hundredth use and wrong for the
+   first: a stranger sees a live camera, a row of rock names and a
+   shutter, and has to guess what the app is for and where anything
+   goes afterwards.
+
+   Shown once, then never again. It says the loop, the promise, and
+   gets out of the way — no account step, no tour, no carousel. Both
+   buttons start you doing the thing; there is no "skip" because
+   neither option is a commitment. */
+const welcome = {
+  seen() { return !!settings.get('seenWelcome'); },
+
+  async dismiss(go) {
+    await settings.set('seenWelcome', true);
+    const w = $('#welcome');
+    if (w) w.remove();
+    document.body.classList.remove('welcoming');
+    router.go(go);
+  },
+
+  show() {
+    if (this.seen()) return false;
+    document.body.classList.add('welcoming');
+    const step = (n, title, body) => el('li', { class: 'wc-step' },
+      el('span', { class: 'wc-n mono' }, n),
+      el('div', {}, el('strong', {}, title), el('span', { class: 'wc-body' }, body)));
+
+    const panel = el('div', { id: 'welcome', class: 'wc' },
+      el('div', { class: 'wc-inner' },
+        el('div', { class: 'gate-mark' }, '◈'),
+        el('h1', { class: 'gate-title' }, 'Float'),
+        el('p', { class: 'gate-sub' }, 'A field log for what you pick up'),
+
+        el('ol', { class: 'wc-steps' },
+          step('1', 'Shoot it where you find it',
+            'Field mode is a camera. Tap the shutter and the find is logged with the time, '
+            + 'your GPS fix and the colour of the rock itself.'),
+          step('2', 'Name it later, at the table',
+            'Everything unnamed waits in the Queue. It offers matches from what you have '
+            + 'already labelled, so the tenth agate names itself.'),
+          step('3', 'Find out where it came from',
+            'Sites and trips remember the places. Hold a rock from the garden up to the '
+            + 'camera and the collection tells you which spot it came out of.')),
+
+        el('p', { class: 'wc-promise' },
+          'Every photo, note and coordinate stays in this browser, on this device. '
+          + 'There is no account and no server — not even the map, which is drawn '
+          + 'here rather than fetched, so your spots are never sent anywhere.'),
+
+        el('div', { class: 'wc-actions' },
+          el('button', { class: 'btn btn-primary full', onclick: () => this.dismiss('trips') },
+            'Name a site first'),
+          el('button', { class: 'btn btn-ghost full', onclick: () => this.dismiss('field') },
+            'Just start shooting'))));
+
+    document.body.appendChild(panel);
+    return true;
+  }
+};
+
 /* ── development gate ─────────────────────────────────────────────
    FLOAT is unfinished and deployed alongside the public apps, so this
    curtain keeps it out of the hands of anyone who wanders in.
@@ -2329,6 +2416,7 @@ const app = {
     bus.on('finds-changed', () => this.updateBadge());
     router.add('more', args => this.route('more', args));
     router.start();
+    welcome.show();
   },
 
   async boot() {

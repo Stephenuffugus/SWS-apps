@@ -201,7 +201,52 @@ check('version exposed', typeof w.FLOAT_VERSION === 'string' && /^\d+\./.test(w.
     w.siteCoord({ id: 'empty', lat: null, lon: null }, finds) === null);
 }
 
-/* ── 8. the development gate ───────────────────────────────────── */
+/* ── 8. palette contrast ───────────────────────────────────────────
+   Float sits outside the studio design system, so nothing solves its
+   colours against a WCAG target and `npm run design:check` never sees
+   it. axe found --mist failing on every view in both themes — 3.18:1
+   on limestone and 3.9:1 on basalt2 — because one grey was being asked
+   to serve as secondary text on both a light and a dark ground, which
+   no single value can do above 4.5:1. It is now two values. This is
+   the guard so it stays that way. */
+{
+  const css = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const tok = (name, scope) => {
+    const re = scope
+      ? new RegExp(scope.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{[^}]*--' + name + ':\\s*(#[0-9a-fA-F]{6})')
+      : new RegExp('--' + name + ':\\s*(#[0-9a-fA-F]{6})');
+    const m = re.exec(css);
+    return m ? m[1] : null;
+  };
+  const lum = (hex) => {
+    const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const ratio = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+
+  const limestone = tok('limestone'), basalt = tok('basalt'), basalt2 = tok('basalt2');
+  const ink = tok('ink'), mistLight = tok('mist'), mistDark = tok('mist', '.view.dark,#tabbar');
+
+  check('palette tokens are readable from the file',
+    !!(limestone && basalt && basalt2 && ink && mistLight && mistDark),
+    { limestone, basalt, basalt2, ink, mistLight, mistDark });
+
+  check('body ink clears 4.5:1 on limestone', ratio(ink, limestone) >= 4.5, ratio(ink, limestone).toFixed(2));
+  check('secondary text clears 4.5:1 on limestone',
+    ratio(mistLight, limestone) >= 4.5, ratio(mistLight, limestone).toFixed(2));
+  check('secondary text clears 4.5:1 on basalt',
+    ratio(mistDark, basalt) >= 4.5, ratio(mistDark, basalt).toFixed(2));
+  check('secondary text clears 4.5:1 on basalt2 (the harder of the two)',
+    ratio(mistDark, basalt2) >= 4.5, ratio(mistDark, basalt2).toFixed(2));
+  check('the light and dark greys are genuinely different values',
+    mistLight.toLowerCase() !== mistDark.toLowerCase(), [mistLight, mistDark]);
+}
+
+/* ── 9. the development gate ───────────────────────────────────── */
 {
   check('gate exists', typeof w.devgate === 'object');
   check('gate reads unlocked from storage', w.devgate.unlocked === true);

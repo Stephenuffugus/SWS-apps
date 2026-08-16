@@ -55,6 +55,9 @@ Siblings now: `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-{192,512}.png`,
 - **Share a find** (detail view): Web Share with the photo, falling back to text, falling back
   to clipboard. **Never includes coordinates** — a share sheet is exactly where a location
   would leak without anyone deciding to.
+- **First run**: a one-time welcome that states the loop (shoot → name → find out where it came
+  from) and the privacy promise, then gets out of the way. The default route is a live camera,
+  which is right for the hundredth use and wrong for the first.
 - **PWA**: real `manifest.webmanifest` (TWA/PWABuilder-ready), real icons including a maskable
   one, `sw.js` cache-first over the shell so it genuinely runs with no signal, and
   `navigator.storage.persist()` requested once after the first find. Installable, standalone,
@@ -150,13 +153,21 @@ REMAINING, priority order:
    "Better matching (downloads ~90MB model once)". Web Worker; never block the queue UI.
    Fuse `0.35*colorScore + 0.65*cosine(embedding)`; keep the margin confidence logic.
    MUST degrade gracefully offline — colour-only is the floor.
-2. **ID assist seam** — "What is this?" on detail → vision API. One `identifyFind(find)`
-   function, feature-flagged, graceful offline. Stored as IdentificationAttempt-shaped notes,
-   never overwriting the user's label.
-3. **Enrollment coach** — first-run: shoot 3 angles of a known specimen to seed the catalog.
-4. **Android share-target** in the manifest, now that it is a real file.
-5. **Zone-aware map** — draw zone sub-pins once a site has several and enough finds to place them.
-6. **Trip GPS track** — the walked line, not just the finds. Needs a positions store.
+2. **Android share-target** in the manifest, now that it is a real file.
+3. **Zone-aware map** — draw zone sub-pins once a site has several and enough finds to place them.
+4. **Trip GPS track** — the walked line, not just the finds. Needs a positions store.
+
+## CUT: ID ASSIST — decided 2026-08-16, do not revisit without new information
+"What is this?" → a vision API was on the plan and is now cut. Honest mineral ID is not
+something a local model can do, and the version that would work needs a network call, an API
+key and a per-use cost — which breaks the zero-network rule, the no-account rule and the free
+rule in one feature. A wrong confident answer about a rock is also worse than no answer:
+people would repeat it. Rockhounds already have identification apps and their own eyes; Float's
+job is the record, not the verdict. The `IdentificationAttempt` shape and the `identifyFind()`
+seam are deliberately NOT stubbed, so nobody half-builds it later by accident.
+
+What Float does instead is the thing an ID app cannot: it tells you **where a rock came from**,
+because it is the only thing that was standing there when you picked it up.
 
 ## DEPLOY NOTES
 - GitHub Pages: drop `index.html` (+ `sw.js` when built) in repo root. HTTPS required for
