@@ -1,0 +1,249 @@
+<title>Sky Wolf Studios — Test Rundown, August 2026</title>
+<style>
+  :root{
+    --paper:#faf7f2; --paper-2:#f2ece2; --card:#fffdfa;
+    --ink:#1d2328; --ink-2:#57626a; --ink-3:#8a939a;
+    --rule:#ddd3c4; --rule-2:#c2b6a3;
+    --accent:#9a3f2b; --accent-soft:#f6e6df;
+    --flag:#7d5a10; --flag-soft:#f8efd8;
+    --ok:#2c6349; --ok-soft:#dfeee6;
+    --cool:#2c6382; --cool-soft:#e0edf4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14181b; --paper-2:#1b2024; --card:#1a1f23;
+      --ink:#e8eaec; --ink-2:#a4aeb4; --ink-3:#7d868c;
+      --rule:#2c3338; --rule-2:#454f56;
+      --accent:#e79076; --accent-soft:#3a231c;
+      --flag:#d8b45f; --flag-soft:#33290f;
+      --ok:#77c3a0; --ok-soft:#132a21;
+      --cool:#84bcdc; --cool-soft:#12262f;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14181b; --paper-2:#1b2024; --card:#1a1f23;
+    --ink:#e8eaec; --ink-2:#a4aeb4; --ink-3:#7d868c;
+    --rule:#2c3338; --rule-2:#454f56;
+    --accent:#e79076; --accent-soft:#3a231c;
+    --flag:#d8b45f; --flag-soft:#33290f;
+    --ok:#77c3a0; --ok-soft:#132a21;
+    --cool:#84bcdc; --cool-soft:#12262f;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:52rem; margin-inline:auto; padding:clamp(1.5rem,4vw,3.5rem) clamp(1rem,4vw,2rem) 5rem}
+
+  h1,h2,h3{font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-weight:600; text-wrap:balance; letter-spacing:-.01em}
+  h1{font-size:clamp(1.9rem,5.5vw,2.9rem); line-height:1.1; margin:0 0 .35em}
+  h2{font-size:clamp(1.3rem,3.4vw,1.7rem); margin:2.8rem 0 .2em; padding-top:1.6rem; border-top:1px solid var(--rule)}
+  h3{font-size:1.06rem; margin:0 0 .35rem}
+  p{margin:0 0 1rem}
+  a{color:var(--accent)}
+
+  .lede{font-size:1.08rem; color:var(--ink-2); max-width:42rem}
+  .stamp{font-size:.78rem; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); margin:0 0 1.4rem}
+
+  /* An app under test */
+  .app{background:var(--card); border:1px solid var(--rule); border-radius:12px;
+       padding:1.15rem 1.25rem; margin:1rem 0}
+  .app > header{display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; margin-bottom:.5rem}
+  .slug{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.8rem; color:var(--ink-3)}
+  .app p:last-child{margin-bottom:0}
+
+  /* Priority is a real signal here, not decoration: it says where my
+     uncertainty actually is, so scarce testing time goes to the right place. */
+  .pri{font-size:.68rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+       padding:.16rem .5rem; border-radius:999px; white-space:nowrap}
+  .p1{background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent)}
+  .p2{background:var(--flag-soft); color:var(--flag); border:1px solid var(--flag)}
+  .p3{background:var(--paper-2); color:var(--ink-2); border:1px solid var(--rule-2)}
+
+  ol.steps{margin:.4rem 0 .9rem; padding-left:1.3rem}
+  ol.steps li{margin:.2rem 0}
+  ul.plain{margin:.4rem 0 .9rem; padding-left:1.15rem}
+  ul.plain li{margin:.25rem 0}
+
+  .want{background:var(--accent-soft); border-left:3px solid var(--accent);
+        border-radius:0 8px 8px 0; padding:.7rem .9rem; margin:.7rem 0 0}
+  .want b{color:var(--accent)}
+  .want p{margin:0}
+  .want p + p{margin-top:.5rem}
+
+  .note{background:var(--cool-soft); border-left:3px solid var(--cool);
+        border-radius:0 8px 8px 0; padding:.7rem .9rem; margin:1rem 0}
+  .note p{margin:0}
+
+  kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.85em;
+      background:var(--paper-2); border:1px solid var(--rule-2); border-bottom-width:2px;
+      border-radius:4px; padding:.05em .4em}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em;
+       background:var(--paper-2); padding:.08em .35em; border-radius:4px}
+
+  table{width:100%; border-collapse:collapse; font-size:.93rem; margin:.6rem 0 1rem}
+  .scroll{overflow-x:auto}
+  th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule); vertical-align:top}
+  th{font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:700}
+
+  .grid2{display:grid; gap:.8rem; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+  .mini{background:var(--card); border:1px solid var(--rule); border-radius:10px; padding:.8rem .9rem}
+  .mini b{display:block; margin-bottom:.15rem}
+  .mini span{font-size:.9rem; color:var(--ink-2)}
+
+  .ok-line{color:var(--ok); font-weight:600}
+  footer{margin-top:3rem; padding-top:1.4rem; border-top:1px solid var(--rule); color:var(--ink-3); font-size:.88rem}
+</style>
+
+<div class="wrap">
+
+<p class="stamp">Sky Wolf Studios · testing round 1 · August 2026</p>
+<h1>What to test, and what I&rsquo;m actually unsure about</h1>
+<p class="lede">Twenty-four apps are live at <a href="https://sws-apps-9646d.web.app/">sws-apps-9646d.web.app</a>, plus Float behind the dev gate. They all pass their tests. That is a much weaker claim than it sounds, so below is an honest map of where my confidence is real and where it is guesswork.</p>
+
+<div class="note"><p><b>The one thing worth saying up front.</b> Automated tests prove the code does what I told it to. They prove nothing about whether what I told it to do is the right thing. Every red flag below is a place where I made a judgement call on your behalf, and only a person actually using it can tell me if I got it wrong.</p></div>
+
+<h2>How to give feedback that I can act on</h2>
+
+<p>The most useful report has three parts, and the third one is the one people skip:</p>
+
+<div class="scroll"><table>
+  <tr><th>Part</th><th>Weak</th><th>Actionable</th></tr>
+  <tr><td>What you did</td><td>&ldquo;I was in the planner&rdquo;</td><td>&ldquo;Week 3, clicked the paint dot on Tuesday period 2&rdquo;</td></tr>
+  <tr><td>What happened</td><td>&ldquo;It broke&rdquo;</td><td>&ldquo;The grid went blank, header still there&rdquo;</td></tr>
+  <tr><td>Where</td><td>&mdash;</td><td>&ldquo;School Dell, Chrome, the locked-down profile&rdquo;</td></tr>
+</table></div>
+
+<p><b>That third line is why the contrast bug is still open.</b> I have tried to reproduce it on both planners, empty and full, light and dark, in Windows High Contrast mode, and in the actual week grid rather than the setup screen. I cannot make it happen. Without knowing the machine and the browser I am guessing, and I have spent enough of your time guessing.</p>
+
+<p>Also genuinely useful, and not a bug: <em>&ldquo;I didn&rsquo;t know what to press next.&rdquo;</em> Say where you stalled even if nothing was broken. That is a design defect and I would rather hear it than not.</p>
+
+<h2>Start here</h2>
+
+<div class="app">
+  <header><h3>Grade Sheet</h3><span class="slug">/grade-sheet/</span><span class="pri p1">Least proven</span></header>
+  <p>Brand new, built this session, and <b>no teacher has ever used it.</b> The arithmetic I am confident about &mdash; 79 assertions including brute-force checks against every possible drop combination. The workflow I am not confident about at all, because I designed it from research rather than from watching Jessie mark a class.</p>
+  <ol class="steps">
+    <li>Add a class, then paste a real roster &mdash; ideally copied straight out of the actual school system, not retyped.</li>
+    <li>Use <b>Give everyone: 4</b>, then change two children: type <kbd>M</kbd> on one, <kbd>E</kbd> on another.</li>
+    <li>Type down the column using <kbd>Enter</kbd> to move between children. Time it.</li>
+    <li>Open <b>How is this worked out?</b> on a student.</li>
+    <li>Press <kbd>Esc</kbd>. Then print a class.</li>
+  </ol>
+  <div class="want">
+    <p><b>What I most need to know:</b> does the roster paste work with <em>her</em> system? I built the parser to read an HTML table straight off the clipboard, which should mean selecting a roster in a web-based SIS and hitting Ctrl+C just works. I have only ever tested that against synthetic data. If it mangles a real roster, that is the app&rsquo;s front door broken and nothing else matters.</p>
+    <p>Second: is <b>&ldquo;Jacob M.&rdquo;</b> enough to know who a row is? I made shortened names the default so the screen is safe to project, but if she has to flip to full names constantly then I optimised for the wrong thing.</p>
+    <p>Third, and I want the honest answer: <b>is marking a class faster than her spreadsheet?</b> If it is not, the app has no reason to exist and I would rather find that out now.</p>
+  </div>
+</div>
+
+<div class="app">
+  <header><h3>Grade Sheet on the school computer</h3><span class="pri p1">Can&rsquo;t test from here</span></header>
+  <p>Separate entry because it is a different question, and it is the one that could sink the app. Grades live in the browser&rsquo;s own storage, and a managed school machine can be configured to wipe that on sign-out.</p>
+  <ol class="steps">
+    <li>Open it on the school computer. Add a class and a couple of marks.</li>
+    <li>Sign out fully. Sign back in. Reopen it.</li>
+  </ol>
+  <div class="want"><p><b>If the class is gone,</b> that is not a bug I can fix &mdash; it is district policy &mdash; but it changes the app&rsquo;s honest advice from &ldquo;back up weekly&rdquo; to &ldquo;back up every single day, or don&rsquo;t use this at school.&rdquo; The app already warns and tries to detect it. I need to know if the detection actually fires. Also worth checking: does the site load at all through the district filter?</p></div>
+</div>
+
+<div class="app">
+  <header><h3>Specials Planner</h3><span class="slug">/specials-planner/</span><span class="pri p1">Open bug</span></header>
+  <p>The colours-with-names, merging and fit-to-screen work from Jessie&rsquo;s own book is all in. Fit-to-screen had a real bug I found and fixed &mdash; on a phone it was crushing the week to 3-pixel text. It now hides itself on screens too small to do it honestly.</p>
+  <ol class="steps">
+    <li>On her laptop: <b>Fit to screen</b>. Does the whole week actually fit, and is it readable?</li>
+    <li>Colour a box, name the colour, choose <b>every week</b> vs <b>just this box</b>.</li>
+    <li>Merge two periods. Check it survives a reload.</li>
+    <li>Print it. Does the colour key print, and does it mean anything to someone who is not her?</li>
+    <li><b>Try to trigger the contrast bug on purpose</b>, on the machine where it happened.</li>
+  </ol>
+  <div class="want"><p><b>The real question behind the colour feature:</b> could a substitute pick up the printed week and understand it without Jessie in the room? That was the whole point of making colours carry names. If the printed key does not achieve that, the feature is decoration.</p></div>
+</div>
+
+<h2>Worth a proper look</h2>
+
+<div class="app">
+  <header><h3>The four shared apps</h3><span class="pri p2">Sign-in flow</span></header>
+  <p><span class="slug">/signup-sheets/ /grocery-list/ /caregiver-log/ /team-parent/</span></p>
+  <p>These are the only apps that touch a server, and the only ones where creating something needs a sign-in. I corrected the hub this session &mdash; it was promising &ldquo;nothing leaves your device&rdquo; above all of them, which was false.</p>
+  <div class="want"><p>Make a real board, open the link on a <b>second device</b>, and have someone else join. I want to know whether the sign-in feels proportionate, and whether the card now saying <b>Shared online</b> makes the difference obvious enough before someone puts a family&rsquo;s details in.</p></div>
+</div>
+
+<div class="app">
+  <header><h3>Float</h3><span class="slug">/float/ &mdash; password <code>wolfden</code></span><span class="pri p2">Needs a field trip</span></header>
+  <p>Untestable at a desk in every way that matters. The map, the GPS track and the camera only mean anything outdoors.</p>
+  <div class="want"><p>Take it somewhere real. Pin a spot, photograph rocks, walk a track, then come back and check the site detail actually shows what you collected there. GPS accuracy in the field is the thing I cannot simulate.</p></div>
+</div>
+
+<div class="app">
+  <header><h3>Anything that prints</h3><span class="pri p2">Never seen on paper</span></header>
+  <p><span class="slug">sub-plans · sitter-sheet · pill-schedule · seating-chart · wedding-timeline · grade-sheet · specials-planner</span></p>
+  <div class="want"><p>Every one of these has a print stylesheet I have only ever verified in a browser preview. <b>Put at least two through a real printer.</b> Page breaks in the wrong place, a table that runs off the right edge, or grey text that vanishes on paper are all invisible to me and obvious to you.</p></div>
+</div>
+
+<h2>Quick pass &mdash; the settled ones</h2>
+
+<p>These have been stable a while. A couple of minutes each is enough; I am looking for anything that feels off rather than a formal test.</p>
+
+<div class="grid2">
+  <div class="mini"><b>Paper &amp; Files</b><span>scan-to-pdf · pdf-tools · image-compressor · signature-maker · qr-maker</span></div>
+  <div class="mini"><b>Events &amp; Groups</b><span>secret-santa · wedding-timeline · seating-chart · bracket-maker · wheel-picker</span></div>
+  <div class="mini"><b>Family &amp; Home</b><span>sitter-sheet · baby-log · pill-schedule</span></div>
+  <div class="mini"><b>Moving, Travel &amp; Money</b><span>moving-boxes · packing-list · home-inventory · bill-splitter</span></div>
+</div>
+
+<p style="margin-top:1rem">On any of them, the three things worth a glance: does it work with the <b>Wi-Fi off</b> (all of them should); does the <b>comfort panel</b> text-size setting actually change anything useful; and does anything look wrong in <b>dark mode</b>.</p>
+
+<h2>What I need from you, since you asked</h2>
+
+<p>Three of these are blocking and only you can supply them.</p>
+
+<div class="scroll"><table>
+  <tr><th>Thing</th><th>Why it&rsquo;s blocking</th></tr>
+  <tr>
+    <td><b>The signing key fingerprint</b></td>
+    <td>All 24 store links hold a placeholder. Without the real SHA-256 the Android apps install but show a browser address bar across the top, which looks broken. Paste it to me and I fill all 24 in a minute.</td>
+  </tr>
+  <tr>
+    <td><b>The domain decision</b></td>
+    <td>The web address gets <b>baked into the signed package</b>. Launch on the Firebase URL, move to a branded domain later, and every installed app breaks and needs a re-release. Deciding before submission #1 costs a few dollars; after costs a release per app.</td>
+  </tr>
+  <tr>
+    <td><b>Play account type</b></td>
+    <td>New <em>personal</em> developer accounts have to run a closed test with a minimum number of testers for a fixed period before production is unlocked. I could not verify the current numbers this session and will not guess &mdash; check it in Play Console. If it applies, it is a hard multi-week gate that has to start first. An organisation account under the LLC may avoid it.</td>
+  </tr>
+  <tr>
+    <td>Hand-made graphics for the first three</td>
+    <td>Not blocking, but the highest-value thing you could make. Twenty-four listings built from one template is exactly the pattern a reviewer flags as repetitive content.</td>
+  </tr>
+</table></div>
+
+<h2>Where things actually stand</h2>
+
+<div class="scroll"><table>
+  <tr><th>Item</th><th>State</th></tr>
+  <tr><td>Apps live</td><td class="ok-line">24 on the hub + Float (dev-gated) = 25 serving</td></tr>
+  <tr><td>Tests</td><td class="ok-line">45 suites passing, 0 failing</td></tr>
+  <tr><td>Accessibility</td><td class="ok-line">axe clean across all 24</td></tr>
+  <tr><td>Colour contrast</td><td class="ok-line">1608 / 1608 pass</td></tr>
+  <tr><td>Store readiness</td><td>1 gap left &mdash; the fingerprint, above</td></tr>
+  <tr><td>Trackfit</td><td>Free version finished and verified; not yet pushed &mdash; see below</td></tr>
+  <tr><td>Contrast bug</td><td>Open. Cannot reproduce. Needs the machine and browser.</td></tr>
+</table></div>
+
+<h2>Trackfit</h2>
+
+<p>The free version is done: paid tier removed, photo-ID removed, fonts self-hosted. Typecheck passes, 84 tests pass, and there is no <code>fetch</code> left anywhere in the source &mdash; so &ldquo;nothing leaves your device&rdquo; is now literally true for it.</p>
+
+<p>I could not push it. A Codespace gets a token scoped to the repo it was created from, so pushing to the trackfit repo returns 403 &mdash; a misleading error, because your <em>account</em> can push; the container&rsquo;s token cannot. I have committed a <code>.devcontainer</code> config that fixes it: <b>rebuild the container or start a new codespace</b>, approve the permission prompt, and I can push it straight away. The work is also parked as patch files in <code>design/findings/trackfit-free/</code> either way, so nothing is lost.</p>
+
+<div class="note"><p><b>Before Trackfit goes on the hub</b> it needs product work I have not done. Its layout suggester is not really a solver &mdash; it reduces your whole box to six numbers and compares them against hand-typed thresholds, and it currently tells a genuine Kato starter oval that it is 8&nbsp;mm short of being an oval. <b>Build this</b> is also a button with no code behind it. Both fixable, neither fixed.</p></div>
+
+<footer>
+  <p>Sky Wolf Studios &middot; SWS Strategic Media LLC. Everything above is checkable &mdash; if a claim here does not match what you see, the claim is wrong and I want to know.</p>
+</footer>
+
+</div>
