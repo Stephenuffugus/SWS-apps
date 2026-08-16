@@ -221,7 +221,96 @@ const ssDraw = async (p) => {
   await p.waitForTimeout(400);
 };
 
+/* The time-of-day checkboxes carry emoji labels and no ids, so they are picked
+   by position: morning, noon, evening, bedtime. */
+const PS_MEDS = [
+  ['Lisinopril', '10 mg, 1 tablet', 'Zestril', [0], 'with breakfast'],
+  ['Metformin', '500 mg, 1 tablet', 'Glucophage', [0, 2], 'with food'],
+  ['Atorvastatin', '20 mg, 1 tablet', 'Lipitor', [3], 'not with grapefruit'],
+  ['Levothyroxine', '75 mcg, 1 tablet', 'Synthroid', [0], 'empty stomach, 30 min before food'],
+  ['Vitamin D3', '2000 IU', '', [0], ''],
+];
+
+const psFill = async (p) => {
+  await p.fill('#whoInput', 'Mom').catch(() => {});
+  for (const [name, dose, alias, times, notes] of PS_MEDS) {
+    await p.fill('#medName', name).catch(() => {});
+    await p.fill('#medDose', dose).catch(() => {});
+    if (alias) await p.fill('#medAlias', alias).catch(() => {});
+    if (notes) await p.fill('#medNotes', notes).catch(() => {});
+    const boxes = p.locator('input[type="checkbox"]');
+    for (const t of times) await boxes.nth(t).check().catch(() => {});
+    await p.getByRole('button', { name: /add (the first )?medication|add to the schedule/i })
+      .first().click().catch(() => {});
+    await p.waitForTimeout(300);
+  }
+  await p.waitForTimeout(400);
+};
+
 export const SCENES = {
+  'pill-schedule': {
+    panels: [
+      {
+        slug: 'schedule',
+        caption: 'One card, every medication',
+        sub: 'Name, dose, the other name on the bottle, and when to take it. A memory aid, not advice.',
+        act: async (p) => {
+          await psFill(p);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /the schedule/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'largeprint',
+        caption: 'Large print, because of who reads it',
+        sub: 'Set to 18pt by default — the large-print floor the APH and the Library of Congress use.',
+        act: async (p) => {
+          await psFill(p);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /exactly as it prints/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'card',
+        caption: 'The card that goes on the fridge',
+        sub: 'Allergies, prescriber and pharmacy printed on it. Tick a box as each dose is taken.',
+        act: async (p) => {
+          await psFill(p);
+          await p.fill('#allergyInput', 'penicillin — rash and trouble breathing').catch(() => {});
+          await p.fill('#prescriber', 'Dr Ellery').catch(() => {});
+          await p.fill('#prescriberPhone', '555 0134').catch(() => {});
+          await p.fill('#pharmacy', 'Hilltop Drug').catch(() => {});
+          await p.waitForTimeout(500);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /exactly as it prints/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY + 180, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'Health details are nobody’s business',
+        sub: 'No account, no cloud, no ads. The card keeps working even if this site disappears.',
+        dark: true,
+        act: async (p) => {
+          await psFill(p);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /the schedule/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
   'secret-santa': {
     panels: [
       {
