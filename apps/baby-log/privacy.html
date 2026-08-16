@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6c5d9d">
+<meta name="description" content="Privacy and accessibility for Baby Log — a one-thumb tracker for a newborn's feeds, sleep, diapers and pumping.">
+<title>Privacy &amp; Accessibility — Baby Log</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root{--bg:#f8f6ff;--ink:#37304d;--muted:#57506f;--line:#d8d3f0;--accent:#6c5d9d}
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0d0b13;--ink:#c5c0dc;--muted:#a5a0bc;--line:#2f2a40;--accent:#b7aae7}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 16px 56px}
+  main{max-width:640px;margin:0 auto}
+  h1{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;letter-spacing:-0.021em;font-size:26px;margin:36px 0 4px}
+  h2{font-size:18px;margin:28px 0 6px}
+  p{margin:8px 0}
+  ul{margin:8px 0;padding-left:22px}
+  a{color:var(--accent)}
+  .lede{color:var(--muted)}
+  .back{display:inline-block;margin-top:28px;font-weight:600;min-height:44px;line-height:44px}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  footer{margin-top:36px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">&larr; Back to Baby Log</a>
+  <h1>Privacy &amp; Accessibility</h1>
+  <p class="lede">Baby Log is a one-thumb tracker for a newborn's feeds, sleep, diapers and pumping. It is free, carries no ads, and is made by Sky Wolf Studios.</p>
+
+  <h2>Where your data goes</h2>
+  <p>Nowhere. Your baby's name and every feed, sleep, diaper and pump entry you tap, each with its timestamp is kept in this browser's own IndexedDB database `sws-babylog` (object store `log`, one record per event under keys `e:&lt;id&gt;`, plus a `meta` record for the name and window setting); the only localStorage key it ever writes is `sws.babylog.ping`, which holds a bare number used to tell a second open tab to re-read.</p>
+  <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>
+
+  <h2>How to check that for yourself</h2>
+  <p>Turn off Wi-Fi and mobile data, reload the page and keep using it — logging, editing and exporting all still work, because the whole app is cached on your device by its service worker. An app that runs with the network off is an app that cannot be sending your baby's data anywhere. To look directly, open DevTools → Application → IndexedDB → sws-babylog and read every record the app holds.</p>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>No account, no sign-in, no email address collected.</li>
+    <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
+    <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
+    <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <p>The app asks for write-only clipboard access when you tap a Copy button — most browsers show no prompt for this, and the app has no ability to read your clipboard, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse — the rest of the app keeps working.</p>
+
+  <h2>Who else is involved</h2>
+  <ul><li>Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything you log, because nothing you log is ever sent to it.</li></ul>
+
+  <h2>Tips</h2>
+  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app — every feature is free either way.</p>
+
+  <h2>Hosting</h2>
+  <p>The app's files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It cannot record anything you type, because what you type is never sent to the host.</p>
+
+  <h2>Children</h2>
+  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
+
+  <h2>Accessibility</h2>
+  <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>
+  <p>If anything gets in your way, email us and we will fix it: <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Baby%20Log">stephenfurpahs@gmail.com</a>.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy ever changes in a way that affects what happens to your data, the change will appear here and the date below will move.</p>
+
+  <hr>
+  <footer>
+    <p>Sky Wolf Studios · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
+    <p>Last updated 2026-08-16.</p>
+  </footer>
+</main>
+</body>
+</html>

@@ -3,63 +3,77 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#2f6b4f">
-<meta name="description" content="Privacy and accessibility for Sub Plans: no accounts, no tracking, no student data collection — your folder stays on your device.">
+<meta name="theme-color" content="#107a65">
+<meta name="description" content="Privacy and accessibility for Sub Plans — a substitute-folder builder that prints your whole classroom handover in minutes.">
 <title>Privacy &amp; Accessibility — Sub Plans</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
-  :root{--bg:#f4f7f5;--ink:#1e2b24;--muted:#5c6b62;--line:#dfe7e2;--accent:#2f6b4f}
+  :root{--bg:#fef6ea;--ink:#173d33;--muted:#385e53;--line:#bfe0d5;--accent:#107a65}
   @media (prefers-color-scheme: dark){
-    :root{--bg:#121714;--ink:#e2e8e4;--muted:#94a29a;--line:#2b332e;--accent:#7fc8a4}
+    :root{--bg:#0b1714;--ink:#b2d3c9;--muted:#8dada3;--line:#17342c;--accent:#79c6b0}
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 16px 56px}
   main{max-width:640px;margin:0 auto}
-  h1{font-size:26px;margin:36px 0 4px}
+  h1{font-family:"Fraunces",Georgia,"Iowan Old Style",serif;font-weight:600;letter-spacing:-0.014em;font-size:26px;margin:36px 0 4px}
   h2{font-size:18px;margin:28px 0 6px}
   p{margin:8px 0}
+  ul{margin:8px 0;padding-left:22px}
   a{color:var(--accent)}
   .lede{color:var(--muted)}
-  .back{display:inline-block;margin-top:28px;font-weight:600}
+  .back{display:inline-block;margin-top:28px;font-weight:600;min-height:44px;line-height:44px}
   hr{border:none;border-top:1px solid var(--line);margin:30px 0}
   footer{margin-top:36px;font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
-  <a class="back" href="./">← Back to Sub Plans</a>
+  <a class="back" href="./">&larr; Back to Sub Plans</a>
   <h1>Privacy &amp; Accessibility</h1>
-  <p class="lede">Sub Plans is a free substitute-folder builder for teachers, made by Sky Wolf Studios. The short version: we don't collect anything. Your folder lives in your browser, on your device.</p>
+  <p class="lede">Sub Plans is a substitute-folder builder that prints your whole classroom handover in minutes. It is free, carries no ads, and is made by Sky Wolf Studios.</p>
 
-  <h2>What we store, and where</h2>
-  <p>Everything you type is saved in your browser's local storage on the device you're using. There is no account, no sign-up, and no database on our end — the app is a static page, so nothing you type is ever transmitted to us. The app caches its own files on your device so it works offline.</p>
+  <h2>Where your data goes</h2>
+  <p>Nowhere. Everything in your substitute folder — your name, class, room and school, the day's schedule, classroom routines, the WiFi and computer passwords you write down, helper and neighbour names, drill and emergency information, and any health or IEP notes you choose to include is kept in this browser's localStorage under the key `subplans`, with your grade band under `subplans.band` and the print-a-QR preference under `subplans.qrpaper`.</p>
+  <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>
 
-  <h2>No student data collection</h2>
-  <p>We collect no student records of any kind. You choose what to write, exactly as you would on a paper sub folder — and whatever you write stays on your device. A good rule of thumb: write what you'd be comfortable leaving on your desk for an adult substitute, because that's precisely what this is.</p>
+  <h2>How to check that for yourself</h2>
+  <p>Turn off Wi-Fi and mobile data, reload, build the whole folder and print it — every step works offline, so none of it was ever uploaded. Open DevTools → Network while you type and you will see no requests at all. Note this app has no tip jar at all, so it makes not one outbound request in normal use.</p>
 
-  <h2>The share link — read this part</h2>
-  <p>"Copy link" packs your folder's text <em>into the link itself</em> — that's how sharing works with no server and no upload. Nothing is stored anywhere; the link is the folder. It also means <strong>anyone who has the link can read the folder</strong>, so send it the way you'd hand over the paper version: directly to your sub, the office, or a colleague — not posted anywhere public.</p>
+  <h2>What we do not do</h2>
+  <ul>
+    <li>No account, no sign-in, no email address collected.</li>
+    <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
+    <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
+    <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
+  </ul>
 
-  <h2>No tracking</h2>
-  <p>No analytics, no ads, no advertising trackers, no cookies, no fingerprinting. The page makes no requests to third-party services — fonts and code are all served from our own site.</p>
+  <h2>Permissions</h2>
+  <p>The app asks for write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse — the rest of the app keeps working.</p>
+
+  <h2>Who else is involved</h2>
+  <ul><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything about your class, because nothing is ever sent to it.</li></ul>
 
   <h2>Tips</h2>
-  <p>The tip jar links to a checkout page hosted by Stripe on Stripe's own site. We never see or store card details. Tipping changes nothing in the app — everything is free either way.</p>
+  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app — every feature is free either way.</p>
 
   <h2>Hosting</h2>
-  <p>The app's static files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs (such as IP addresses) for security and operations. We don't receive or use those logs to identify anyone.</p>
+  <p>The app's files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It cannot record anything you type, because what you type is never sent to the host.</p>
+
+  <h2>Children</h2>
+  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
 
   <h2>Accessibility</h2>
-  <p>We aim for <strong>WCAG 2.1 AA</strong>: labeled fields, keyboard-friendly controls, visible focus, checked color contrast in both light and dark mode, and a plain high-contrast printout. If anything gets in your way, email us and we'll fix it: <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Sub%20Plans">stephenfurpahs@gmail.com</a>.</p>
+  <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>
+  <p>If anything gets in your way, email us and we will fix it: <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Sub%20Plans">stephenfurpahs@gmail.com</a>.</p>
 
-  <h2>For school IT</h2>
-  <p>Static site, HTTPS only, no user accounts, no data collection, no student records, no third-party scripts or trackers. The app makes no external network requests at all in normal use. Questions welcome at the address below.</p>
+  <h2>Changes</h2>
+  <p>If this policy ever changes in a way that affects what happens to your data, the change will appear here and the date below will move.</p>
 
   <hr>
-  <h2>Questions</h2>
-  <p>Email <a href="mailto:stephenfurpahs@gmail.com?subject=Privacy%3A%20Sub%20Plans">stephenfurpahs@gmail.com</a>. If our practices ever change, this page will say so plainly.</p>
-
-  <footer>Sky Wolf Studios · SWS Strategic Media LLC · Effective August 8, 2026</footer>
+  <footer>
+    <p>Sky Wolf Studios · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
+    <p>Last updated 2026-08-16.</p>
+  </footer>
 </main>
 </body>
 </html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#00758d">
+<meta name="description" content="Privacy and accessibility for Bill Splitter — a bill and trip-expense splitter that works out who owes whom.">
+<title>Privacy &amp; Accessibility — Bill Splitter</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root{--bg:#eefafd;--ink:#103b46;--muted:#335c68;--line:#bbdfe9;--accent:#00758d}
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0a161a;--ink:#aed1dc;--muted:#89abb5;--line:#13333b;--accent:#6ec2da}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 16px 56px}
+  main{max-width:640px;margin:0 auto}
+  h1{font-family:"Space Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:600;letter-spacing:-0.022em;font-size:26px;margin:36px 0 4px}
+  h2{font-size:18px;margin:28px 0 6px}
+  p{margin:8px 0}
+  ul{margin:8px 0;padding-left:22px}
+  a{color:var(--accent)}
+  .lede{color:var(--muted)}
+  .back{display:inline-block;margin-top:28px;font-weight:600;min-height:44px;line-height:44px}
+  hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+  footer{margin-top:36px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">&larr; Back to Bill Splitter</a>
+  <h1>Privacy &amp; Accessibility</h1>
+  <p class="lede">Bill Splitter is a bill and trip-expense splitter that works out who owes whom. It is free, carries no ads, and is made by Sky Wolf Studios.</p>
+
+  <h2>Where your data goes</h2>
+  <p>Nowhere. Trip and person names, every expense and who paid it, the resulting settle-up amounts, and any Venmo, Cash App or PayPal handles you type is kept in this browser's own IndexedDB database `sws-billsplit` — object store `trips` for the splits themselves, and `misc` for the last-opened trip id and a short list of recently used names with their payment handles, so you do not retype them.</p>
+  <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>
+
+  <h2>How to check that for yourself</h2>
+  <p>Turn off Wi-Fi and mobile data, reload, and split a bill from scratch — it works completely offline, which no app that uploads your numbers could do. Then open DevTools → Network and use the app: you will see no requests at all until you tap a payment or tip button, which are plain navigations you chose.</p>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>No account, no sign-in, no email address collected.</li>
+    <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
+    <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
+    <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <p>The app asks for write-only clipboard access when you tap Copy — most browsers show no prompt, and the app cannot read your clipboard, your device's share sheet, only when you tap Share, and only with the text you can already see, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse — the rest of the app keeps working.</p>
+
+  <h2>Who else is involved</h2>
+  <ul><li>Venmo, Cash App and PayPal — only when you tap a payment button, which navigates you to their site with the handle, amount and note in the URL. The app holds and transfers no money.</li><li>Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.</li></ul>
+
+  <h2>Tips</h2>
+  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app — every feature is free either way.</p>
+
+  <h2>Hosting</h2>
+  <p>The app's files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It cannot record anything you type, because what you type is never sent to the host.</p>
+
+  <h2>Children</h2>
+  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
+
+  <h2>Accessibility</h2>
+  <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>
+  <p>If anything gets in your way, email us and we will fix it: <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Bill%20Splitter">stephenfurpahs@gmail.com</a>.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy ever changes in a way that affects what happens to your data, the change will appear here and the date below will move.</p>
+
+  <hr>
+  <footer>
+    <p>Sky Wolf Studios · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
+    <p>Last updated 2026-08-16.</p>
+  </footer>
+</main>
+</body>
+</html>
