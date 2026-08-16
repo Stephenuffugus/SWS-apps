@@ -167,6 +167,13 @@ for (const slug of slugs) {
   }
 
   for (const [i, panel] of scene.panels.entries()) {
+    /* The caption band is a fixed height, so a caption long enough to wrap to
+       three lines pushes the sub-line into the phone frame and gets clipped.
+       Cheaper to say so here than to notice it in a contact sheet later. */
+    if (panel.caption.length > 34) {
+      console.log(`  !  ${slug}/${panel.slug}: caption is ${panel.caption.length} chars — may wrap into the frame`);
+    }
+
     const page = await browser.newPage({
       viewport: { width: PHONE_W, height: PHONE_H },
       deviceScaleFactor: 2,

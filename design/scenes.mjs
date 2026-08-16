@@ -19,6 +19,11 @@
 
    Captions are short because Play renders them small. The sub-line is the
    place for the promise the competition cannot match.
+
+   KEEP THE CAPTION UNDER ABOUT 34 CHARACTERS. The caption band is a fixed
+   300px of a 1920px panel; a caption that wraps to three lines pushes the
+   sub-line down and the phone frame starts eating it. shots.mjs warns when a
+   caption is long enough to be at risk.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* scrollIntoViewIfNeeded lands the element anywhere in the viewport, which on a
@@ -221,7 +226,69 @@ const ssDraw = async (p) => {
   await p.waitForTimeout(400);
 };
 
+/* Baby Log is all one-tap buttons, so a scene is just a plausible night: a
+   couple of feeds, a nap, a nappy or two. The buttons carry emoji labels, so
+   they are matched on the word rather than the glyph. */
+const blLog = async (p, taps) => {
+  await p.fill('#nameInput', 'Rosie').catch(() => {});
+  for (const t of taps) {
+    if (t === 'sleep') await p.click('#sleepBtn').catch(() => {});
+    else await p.getByRole('button', { name: new RegExp(t, 'i') }).first().click().catch(() => {});
+    await p.waitForTimeout(420);
+  }
+  await p.waitForTimeout(500);
+};
+
 export const SCENES = {
+  'baby-log': {
+    panels: [
+      {
+        slug: 'onetap',
+        caption: 'One thumb, in the dark',
+        sub: 'Big buttons, no menus, no typing. Tap and it is logged with the time.',
+        act: async (p) => {
+          await blLog(p, ['left', 'wet', 'bottle']);
+          await toTop(p, '#log', 90);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'timeline',
+        caption: 'The night, as it actually went',
+        sub: 'Every feed, nap and nappy stamped with the time it happened.',
+        act: async (p) => {
+          await blLog(p, ['left', 'wet', 'sleep', 'bottle', 'dirty', 'right', 'both']);
+          await toTop(p, '#timelineCard', 90);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'handover',
+        caption: 'The summary you paste at shift change',
+        sub: 'Copy it to your partner, or print the log for the paediatrician.',
+        act: async (p) => {
+          await blLog(p, ['left', 'wet', 'sleep', 'bottle', 'dirty']);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /summary/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 120, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'No cloud, no account',
+        sub: 'Nobody mining your baby’s data. Every entry stays in this browser, on this phone.',
+        dark: true,
+        act: async (p) => {
+          await blLog(p, ['left', 'wet', 'sleep', 'bottle', 'dirty', 'right']);
+          await toTop(p, '#log', 90);
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
   'secret-santa': {
     panels: [
       {
