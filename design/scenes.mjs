@@ -214,6 +214,66 @@ const pdfLoad = async (p, files) => {
 };
 
 export const SCENES = {
+  'scan-to-pdf': {
+    panels: [
+      {
+        slug: 'pages',
+        caption: 'Photos of paper into one PDF',
+        /* Do NOT claim de-skew or clean-up here: the app's own "what this
+           can't do" card says plainly that there is no edge detection and no
+           perspective correction. A caption that contradicts the app's own
+           honesty is worse than a dull one, and it is the kind of thing a
+           reviewer checks against screenshot three. */
+        sub: 'Shoot the pages, order them, name it. One file, made on your phone.',
+        act: async (p) => {
+          await p.setInputFiles('#libInput', [1, 2, 3].map((n) => `${FIXTURES}/photo-receipt-${n}.jpg`));
+          await p.waitForTimeout(2200);
+          await toTop(p, '#pagesCard', 60);
+          await p.waitForTimeout(500);
+        },
+      },
+      {
+        slug: 'presets',
+        caption: 'Named for what it is, not IMG_4471',
+        sub: 'Tap Receipt, Insurance or Tax and the file names itself with today’s date.',
+        act: async (p) => {
+          await p.setInputFiles('#libInput', [1, 2].map((n) => `${FIXTURES}/photo-receipt-${n}.jpg`));
+          await p.waitForTimeout(1800);
+          await p.getByRole('button', { name: /^receipt$/i }).click().catch(() => {});
+          await p.waitForTimeout(500);
+          await toTop(p, '#fileName', 220);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'honest',
+        caption: 'It tells you what it cannot do',
+        sub: 'No fake OCR, no “AI enhancement”. The limits are written on the page.',
+        act: async (p) => {
+          await p.setInputFiles('#libInput', [`${FIXTURES}/photo-receipt-1.jpg`]);
+          await p.waitForTimeout(1600);
+          await p.evaluate(() => {
+            const h = [...document.querySelectorAll('h2')].find((e) => /can.?t do/i.test(e.textContent));
+            if (h) window.scrollTo({ top: h.getBoundingClientRect().top + window.scrollY - 130, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'Your documents never leave the phone',
+        sub: 'Adobe Scan and CamScanner upload to make an account worth having. This one has none.',
+        dark: true,
+        act: async (p) => {
+          await p.setInputFiles('#libInput', [1, 2, 3].map((n) => `${FIXTURES}/photo-receipt-${n}.jpg`));
+          await p.waitForTimeout(2200);
+          await toTop(p, '#pagesCard', 60);
+          await p.waitForTimeout(500);
+        },
+      },
+    ],
+  },
+
   'bill-splitter': {
     panels: [
       {
