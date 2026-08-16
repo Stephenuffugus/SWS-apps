@@ -390,14 +390,34 @@ function upgradeManifest(slug) {
 
 /* ── Bubblewrap input ────────────────────────────────────────────────────── */
 
+/* ── Play titles ────────────────────────────────────────────────────────────
+   A store title and a web manifest name are different jobs, and conflating
+   them costs something either way. The manifest `name` is what a browser shows
+   on install and what search engines read, so the two school apps carry a
+   longer descriptive form on purpose. Play caps its title at 30 characters and
+   Bubblewrap seeds the Android label from `name`, so shortening the manifest to
+   satisfy Play would quietly downgrade the web listing for a field that is not
+   even the same field.
+
+   So: an explicit title, declared here. Only apps whose manifest name exceeds
+   30 characters need an entry — everything else uses its name unchanged, and
+   the check below still fails loudly for any new app that grows past the cap
+   without someone deciding what to do about it. */
+const PLAY_TITLES = {
+  'specials-planner': 'Specials Planner',
+  'sub-plans': 'Sub Plans — Teacher Binder',
+};
+
+export const playTitle = (slug, mf) => PLAY_TITLES[slug] ?? mf.name;
+
 function twaManifest(slug) {
   const mf = JSON.parse(readFileSync(join(APPS, slug, 'manifest.webmanifest'), 'utf8'));
   const pal = palette[slug];
   return {
     packageId: `${PKG_PREFIX}.${slug.replace(/-/g, '')}`,
     host: ORIGIN.replace(/^https:\/\//, ''),
-    name: mf.name,
-    launcherName: mf.short_name ?? mf.name,
+    name: playTitle(slug, mf),
+    launcherName: mf.short_name ?? playTitle(slug, mf),
     display: 'standalone',
     themeColor: mf.theme_color ?? pal.accentDeep,
     themeColorDark: pal.darkCanvas,
@@ -513,8 +533,11 @@ if (check) {
          longer, search-friendly name — that is fine on the web and fine as a
          listing subtitle, but it cannot be the title, so it has to be a
          conscious choice rather than something discovered in Play Console. */
-      if (mf.name && mf.name.length > 30) {
-        fail(slug, `manifest name is ${mf.name.length} chars; Play titles cap at 30 — pick a shorter Play title`);
+      const title = playTitle(slug, mf);
+      if (title.length > 30) {
+        fail(slug, PLAY_TITLES[slug]
+          ? `declared Play title is ${title.length} chars; the cap is 30`
+          : `manifest name is ${mf.name.length} chars; add a PLAY_TITLES entry in design/play.mjs`);
       }
     }
     if (!existsSync(join(APPS, slug, 'privacy.html'))) {
