@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Float — field log</title>
+<meta name="description" content="A private field log for rockhounding, fossils and sea glass. Local-first — no account, no server.">
+<meta name="theme-color" content="#161B19">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Float%20%5Cu2014%20field%20log%22%2C%22short_name%22%3A%22Float%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23161B19%22%2C%22theme_color%22%3A%22%23161B19%22%2C%22description%22%3A%22A%20private%20field%20log%20for%20rockhounding%2C%20fossils%20and%20sea%20glass.%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A//www.w3.org/2000/svg%2527%2520viewBox%253D%25270%25200%2520512%2520512%2527%253E%253Crect%2520width%253D%2527512%2527%2520height%253D%2527512%2527%2520fill%253D%2527%2523161B19%2527/%253E%253Ccircle%2520cx%253D%2527256%2527%2520cy%253D%2527290%2527%2520r%253D%2527140%2527%2520fill%253D%2527%25233E7A6B%2527/%253E%253Ccircle%2520cx%253D%2527210%2527%2520cy%253D%2527245%2527%2520r%253D%252740%2527%2520fill%253D%2527%2523EDEEEA%2527/%253E%253Ccircle%2520cx%253D%2527300%2527%2520cy%253D%2527330%2527%2520r%253D%252722%2527%2520fill%253D%2527%2523EDEEEA%2527%2520opacity%253D%2527.6%2527/%253E%253Crect%2520x%253D%2527116%2527%2520y%253D%252796%2527%2520width%253D%2527280%2527%2520height%253D%252714%2527%2520rx%253D%25277%2527%2520fill%253D%2527%2523C9873B%2527/%253E%253C/svg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20fill%3D%27%23161B19%27/%3E%3Ccircle%20cx%3D%27256%27%20cy%3D%27290%27%20r%3D%27140%27%20fill%3D%27%233E7A6B%27/%3E%3Ccircle%20cx%3D%27210%27%20cy%3D%27245%27%20r%3D%2740%27%20fill%3D%27%23EDEEEA%27/%3E%3C/svg%3E">
+<style>
+/* ═══ Float — design tokens ═══
+   limestone #EDEEEA · basalt #161B19 · basalt-2 #232B28
+   serpentine #3E7A6B · agate #C9873B · iron #A64B3C
+   display: system serif (field journal) · data: monospace */
+:root{
+  --limestone:#EDEEEA; --paper:#F5F5F2; --basalt:#161B19; --basalt2:#232B28;
+  --serpentine:#3E7A6B; --serp-deep:#2E5C51; --agate:#C9873B; --iron:#A64B3C;
+  --ink:#22271F; --mist:#7E877F; --line:#D8DAD3;
+  --ff-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --ff-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ff-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px; --tap:46px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--ff-body);background:var(--limestone);color:var(--ink);
+  min-height:100dvh;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+img{display:block;max-width:100%}
+a{color:var(--serp-deep)}
+:focus-visible{outline:2px solid var(--serpentine);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.display{font-family:var(--ff-display);font-weight:600;letter-spacing:-.01em;font-size:1.7rem;line-height:1.15}
+.mono{font-family:var(--ff-mono);font-size:.78rem;letter-spacing:.01em}
+.eyebrow{display:block;font-family:var(--ff-mono);font-size:.68rem;text-transform:uppercase;
+  letter-spacing:.14em;color:var(--mist);margin:20px 0 8px}
+.dim-t{color:var(--mist)} .small{font-size:.8rem} .amber{color:var(--agate)}
+.warn{color:var(--iron)}
+
+/* views */
+.view{padding:14px 16px calc(24px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+.view.dark{background:var(--basalt);color:var(--limestone);max-width:none;margin:0;
+  min-height:calc(100dvh - 64px);display:flex;flex-direction:column;padding:10px 14px 8px}
+.empty{text-align:center;padding:48px 20px;display:flex;flex-direction:column;gap:12px;align-items:center}
+
+/* ── field mode ── */
+.field-top{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding-top:env(safe-area-inset-top)}
+.trip-chip{font-family:var(--ff-mono);font-size:.78rem;color:var(--limestone);
+  background:var(--basalt2);border-radius:99px;padding:8px 14px;min-height:var(--tap)}
+.trip-chip.dim{color:var(--mist)}
+.pill{border-radius:99px;padding:6px 12px}
+.pill-good{background:var(--serp-deep);color:var(--limestone)}
+.pill-warn{background:var(--basalt2);color:var(--agate)}
+.cam-stage{position:relative;flex:1;min-height:44vh;border-radius:var(--r);overflow:hidden;
+  background:var(--basalt2);margin:10px 0;display:flex;align-items:center;justify-content:center}
+#cam{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.guide{position:absolute;top:50%;left:50%;width:min(82vw,82%);aspect-ratio:1;transform:translate(-50%,-50%);
+  border:1.5px solid rgba(237,238,234,.8);border-radius:8px;pointer-events:none;
+  box-shadow:0 0 0 200vmax rgba(22,27,25,.28)}
+.cam-fallback{position:relative;text-align:center;display:flex;flex-direction:column;gap:10px;padding:24px;color:var(--mist)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
+.chips.wrap{flex-wrap:wrap;overflow:visible}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;font-family:var(--ff-mono);font-size:.78rem;padding:9px 14px;border-radius:99px;
+  background:var(--basalt2);color:var(--limestone);min-height:38px}
+.view.light .chip{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.chip.sel{background:var(--serpentine);color:#fff;border-color:var(--serpentine)}
+.chip-amber{border:1px solid var(--agate)!important;color:var(--agate)}
+.chip-amber.sel{background:var(--agate);color:#fff}
+.field-bottom{padding-bottom:6px}
+.sess-wrap{display:flex;align-items:center;gap:10px;min-height:26px;margin:6px 0}
+.sess-strip{display:flex;gap:4px}
+.sess-cell{width:22px;height:22px;border-radius:5px;border:1px solid rgba(237,238,234,.25)}
+.shutter-row{display:flex;align-items:center;justify-content:center;gap:34px;padding:6px 0 2px}
+.shutter{width:74px;height:74px;border-radius:50%;background:var(--limestone);
+  border:5px solid var(--serpentine);transition:transform .12s}
+.shutter.snap{transform:scale(.86)}
+.round-btn{width:50px;height:50px;border-radius:50%;background:var(--basalt2);color:var(--limestone);font-size:1.15rem}
+.round-btn.on{background:var(--agate)}
+
+/* ── shared controls ── */
+.text-input,.select{width:100%;font:inherit;padding:12px 14px;margin:8px 0;border:1px solid var(--line);
+  border-radius:var(--r);background:#fff;color:var(--ink);min-height:var(--tap)}
+textarea.text-input{resize:vertical}
+.display-input{font-family:var(--ff-display);font-size:1.35rem;font-weight:600;border-color:transparent;background:transparent;padding-left:2px}
+.display-input:focus{background:#fff;border-color:var(--line)}
+.btn{border-radius:var(--r);padding:12px 18px;font-weight:600;min-height:var(--tap)}
+.btn-primary{background:var(--serpentine);color:#fff}
+.btn-primary:active{background:var(--serp-deep)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.view.dark .btn-ghost{color:var(--limestone);border-color:var(--basalt2)}
+.btn-danger{background:transparent;border:1px solid var(--iron);color:var(--iron)}
+.btn.full{width:100%;margin-top:14px}
+
+/* ── strata: the signature ── */
+.strata{height:7px;border-radius:4px;margin:2px 0 6px}
+.strata.tall{height:16px;border-radius:6px;margin:6px 0 10px}
+.mini-strata{width:52px;height:10px;border-radius:4px;flex:0 0 auto}
+
+/* ── queue ── */
+.q-head{display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px}
+.q-photo{border-radius:var(--r);overflow:hidden;background:#fff;border:1px solid var(--line)}
+.q-photo img{width:100%;aspect-ratio:1;object-fit:cover}
+.suggest{margin:12px 0 2px}
+.q-actions{display:flex;gap:10px;margin-top:14px}
+.q-actions .btn{flex:1}
+.q-meta{margin-top:14px;text-align:center}
+
+/* ── collection ── */
+.coll-head{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+.card{text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  display:flex;flex-direction:column;padding:0 0 10px}
+.card-img{aspect-ratio:1;background:var(--paper)}
+.card-img img{width:100%;height:100%;object-fit:cover}
+.card .strata{margin:0 0 8px;border-radius:0}
+.card-body{padding:0 10px;display:flex;flex-direction:column;gap:3px}
+.card-title{font-family:var(--ff-display);font-weight:600;font-size:.95rem;line-height:1.2}
+.card-sub{font-size:.68rem;color:var(--mist)}
+
+/* ── detail ── */
+.photo-pager{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:var(--r);scrollbar-width:none}
+.photo-pager::-webkit-scrollbar{display:none}
+.photo-slide{flex:0 0 100%;scroll-snap-align:center;border-radius:var(--r);overflow:hidden;background:#fff;border:1px solid var(--line)}
+.photo-slide img{width:100%;aspect-ratio:1;object-fit:cover;transition:object-fit .1s}
+.photo-slide img.zoom{object-fit:contain;background:var(--basalt)}
+.photo-slide.none{aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--mist)}
+.meta-block{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;
+  margin:12px 0;display:flex;flex-direction:column;gap:6px;white-space:pre;font-size:.78rem}
+.meta-block a{display:block}
+.sim-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.sim-row::-webkit-scrollbar{display:none}
+.sim-cell{flex:0 0 96px;display:flex;flex-direction:column;gap:5px;text-align:left}
+.sim-cell img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.sim-label{font-size:.66rem;color:var(--mist)}
+
+/* ── lists (sites/trips/more) ── */
+.list{display:flex;flex-direction:column;gap:8px}
+.list-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;text-align:left;width:100%}
+.list-main{display:flex;flex-direction:column;gap:3px}
+.list-row.tap:active{background:var(--paper)}
+.add-row{justify-content:center;color:var(--serp-deep);border-style:dashed}
+.active-trip{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--serp-deep);color:#fff;border-radius:var(--r);padding:13px 14px;margin:6px 0 4px}
+.active-trip .dim-t{color:rgba(255,255,255,.75)}
+
+/* ── stats ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat b{font-size:1.3rem}
+.stat span{font-size:.66rem;color:var(--mist);text-transform:uppercase;letter-spacing:.1em}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar-row{display:grid;grid-template-columns:92px 1fr 28px;align-items:center;gap:10px;font-size:.8rem}
+.bar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:12px;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;background:var(--serpentine);border-radius:6px}
+
+/* ── tab bar ── */
+#tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--basalt);
+  padding-bottom:env(safe-area-inset-bottom);z-index:50;border-top:1px solid var(--basalt2)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 7px;
+  color:var(--mist);font-size:.66rem;font-family:var(--ff-mono);position:relative;min-height:56px}
+.tab.active{color:var(--limestone)}
+.tab.active::after{content:"";position:absolute;top:0;width:34px;height:2px;background:var(--agate);border-radius:2px}
+.tab-icon{font-size:1.15rem;line-height:1}
+.badge{position:absolute;top:5px;right:calc(50% - 24px);background:var(--agate);color:#fff;
+  font-size:.62rem;border-radius:99px;padding:1px 6px;font-family:var(--ff-mono)}
+
+/* ── map ── */
+.map-wrap{position:relative;margin:0 0 12px;border:1px solid var(--line);border-radius:14px;
+  overflow:hidden;background:#F3F4F0}
+.map-cv{display:block;width:100%;height:56vh;min-height:300px;touch-action:none;cursor:grab}
+.map-cv:active{cursor:grabbing}
+.map-ctl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}
+.map-btn{width:44px;height:44px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.94);
+  color:var(--ink);font-size:1.2rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.map-btn:focus-visible{outline:2px solid var(--serpentine);outline-offset:2px}
+.map-scale{position:absolute;left:12px;bottom:12px;height:22px;border:1px solid var(--ink);
+  border-top:none;background:rgba(237,238,234,.86);font-family:var(--ff-mono);font-size:.66rem;
+  color:var(--ink);display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;min-width:40px}
+.map-sheet{display:none;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;margin-bottom:12px}
+.map-sheet.open{display:block}
+.sheet-title{font-family:var(--ff-display);font-size:1.25rem;margin:2px 0 4px;color:var(--ink)}
+.sheet-sub{font-size:.78rem;color:var(--mist);margin:0 0 10px}
+.sheet-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+.sheet-cell{flex:0 0 auto;width:60px;height:60px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:var(--limestone)}
+.sheet-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.sheet-blank{color:var(--mist)}
+.map-note{font-size:.76rem;line-height:1.5;color:var(--mist);margin:0 0 8px}
+.site-notes{font-size:.9rem;line-height:1.55;color:var(--ink);margin:6px 0 12px}
+.back{margin-bottom:6px}
+.from-site{display:block;font-family:var(--ff-mono);font-size:.62rem;color:var(--agate);
+  letter-spacing:.03em;margin-top:1px}
+
+/* ── development gate ── */
+body.gated #tabbar{display:none}
+.gate{max-width:26rem;margin:0 auto;padding:14vh 22px 40px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:10px}
+.gate-mark{font-size:2.4rem;color:var(--serpentine);line-height:1}
+.gate-title{font-family:var(--ff-display);font-size:2.1rem;letter-spacing:.04em;margin:2px 0 0;color:var(--ink)}
+.gate-sub{font-family:var(--ff-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--mist);margin:0 0 18px}
+.gate-label{align-self:flex-start;font-family:var(--ff-mono);font-size:.7rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--mist)}
+#devpass{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;color:var(--ink);font-size:1.05rem;font-family:var(--ff-mono);letter-spacing:.06em}
+#devpass:focus-visible{outline:2px solid var(--serpentine);outline-offset:2px;border-color:var(--serpentine)}
+.gate-go{width:100%;min-height:48px;margin-top:4px}
+.gate-err{min-height:1.2em;margin:2px 0 0;color:var(--iron);font-size:.85rem}
+.gate-note{margin:20px 0 0;font-size:.8rem;line-height:1.5;color:var(--mist);text-align:left}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,12px);
+  background:var(--basalt);color:var(--limestone);padding:10px 18px;border-radius:99px;
+  font-size:.85rem;opacity:0;pointer-events:none;transition:.2s;z-index:99;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<main id="main" class="view"></main>
+<nav id="tabbar" aria-label="Sections"></nav>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   FLOAT — rockhounding field log · v2
+   Single-file PWA. Local-first. No account, no server, no tracking.
+   Every record lives in IndexedDB on this device.
+   ═══════════════════════════════════════════════════════════════════ */
+/* ── core: utils, bus, router ─────────────────────────────────── */
+'use strict';
+const FLOAT_VERSION = '2.0.0';
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const el = (tag, attrs, ...kids) => {
+  const n = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v;
+    else if (k === 'html') n.innerHTML = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined) n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) {
+    if (k === null || k === undefined || k === false) continue;
+    n.appendChild(typeof k === 'string' ? document.createTextNode(k) : k);
+  }
+  return n;
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+const uid = () => {
+  const t = Date.now().toString(36);
+  const r = crypto.getRandomValues(new Uint32Array(2));
+  return t + '-' + r[0].toString(36) + r[1].toString(36);
+};
+const nowISO = () => new Date().toISOString();
+
+const fmtDate = iso => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+const fmtTime = iso => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+const fmtCoord = (lat, lon) => (lat === null || lat === undefined || lon === null || lon === undefined)
+  ? null
+  : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+/* tiny event bus */
+const bus = (() => {
+  const m = new Map();
+  return {
+    on(ev, fn) { (m.get(ev) || m.set(ev, new Set()).get(ev)).add(fn); return () => m.get(ev)?.delete(fn); },
+    emit(ev, data) { m.get(ev)?.forEach(fn => { try { fn(data); } catch (e) { console.error(e); } }); }
+  };
+})();
+
+/* toast */
+let toastTimer = null;
+const toast = (msg, ms = 2200) => {
+  let t = $('#toast');
+  if (!t) { t = el('div', { id: 'toast' }); document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+};
+
+/* hash router: '#/field', '#/find/abc123' */
+const router = (() => {
+  const routes = [];
+  const parse = () => {
+    const h = location.hash.replace(/^#\/?/, '');
+    return h.split('/').filter(Boolean);
+  };
+  const go = path => { location.hash = '#/' + path; };
+  const resolve = () => {
+    const parts = parse();
+    const name = parts[0] || 'field';
+    for (const r of routes) {
+      if (r.name === name) { r.fn(parts.slice(1)); return; }
+    }
+    routes[0]?.fn([]);
+  };
+  return {
+    add(name, fn) { routes.push({ name, fn }); },
+    start() { window.addEventListener('hashchange', resolve); resolve(); },
+    go, parse
+  };
+})();
+
+/* ── data layer: IndexedDB with in-memory fallback ────────────── */
+const DB_NAME = 'float-db', DB_VER = 2;
+const STORES = ['sites', 'trips', 'finds', 'photos', 'settings'];
+
+const memDB = { data: Object.fromEntries(STORES.map(s => [s, new Map()])) };
+
+let idb = null, useMem = false;
+
+const dbOpen = () => new Promise(res => {
+  if (typeof indexedDB === 'undefined') { useMem = true; return res(); }
+  const req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = e => {
+    const d = e.target.result;
+    for (const s of STORES) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: 'id' });
+  };
+  req.onsuccess = e => { idb = e.target.result; res(); };
+  req.onerror = () => { useMem = true; console.warn('IndexedDB unavailable — using in-memory store (data will not persist)'); res(); };
+});
+
+const db = {
+  async put(store, obj) {
+    obj.updatedAt = nowISO();
+    if (!obj.createdAt) obj.createdAt = obj.updatedAt;
+    if (useMem) { memDB.data[store].set(obj.id, structuredClone(obj)); return obj; }
+    return new Promise((res, rej) => {
+      const tx = idb.transaction(store, 'readwrite');
+      tx.objectStore(store).put(obj);
+      tx.oncomplete = () => res(obj);
+      tx.onerror = () => rej(tx.error);
+    });
+  },
+  async get(store, id) {
+    if (useMem) { const v = memDB.data[store].get(id); return v ? structuredClone(v) : undefined; }
+    return new Promise((res, rej) => {
+      const req = idb.transaction(store).objectStore(store).get(id);
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  },
+  async all(store) {
+    if (useMem) return Array.from(memDB.data[store].values()).map(v => structuredClone(v));
+    return new Promise((res, rej) => {
+      const req = idb.transaction(store).objectStore(store).getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => rej(req.error);
+    });
+  },
+  async del(store, id) {
+    if (useMem) { memDB.data[store].delete(id); return; }
+    return new Promise((res, rej) => {
+      const tx = idb.transaction(store, 'readwrite');
+      tx.objectStore(store).delete(id);
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  },
+  async clear(store) {
+    if (useMem) { memDB.data[store].clear(); return; }
+    return new Promise((res, rej) => {
+      const tx = idb.transaction(store, 'readwrite');
+      tx.objectStore(store).clear();
+      tx.oncomplete = () => res();
+      tx.onerror = () => rej(tx.error);
+    });
+  }
+};
+
+/* settings k/v on top of the settings store */
+const settings = {
+  cache: {},
+  async load() {
+    const rows = await db.all('settings');
+    for (const r of rows) this.cache[r.id] = r.value;
+  },
+  get(k, dflt) { return (k in this.cache) ? this.cache[k] : dflt; },
+  async set(k, v) { this.cache[k] = v; await db.put('settings', { id: k, value: v }); }
+};
+
+/* ── domain constants ─────────────────────────────────────────── */
+const MATERIALS = [
+  'agate', 'jasper', 'quartz', 'geode', 'flint/chert', 'fossil',
+  'sea glass', 'pottery', 'concretion', 'granite', 'slate', 'pyrite',
+  'calcite', 'petrified wood', 'unknown', 'other'
+];
+const LAND_TYPES = ['public — check rules', 'private — permission', 'creek/waterway', 'beach/shore', 'quarry/pit', 'roadcut', 'own property', 'unknown'];
+const COLLECT_STATUS = ['ok to collect', 'limited/permit', 'look only', 'unknown'];
+
+/* ── record constructors (sync-ready: id, createdAt, updatedAt, deleted) ── */
+const newSite = (name) => ({
+  id: uid(), name: name || 'Unnamed site', landType: 'unknown', collectStatus: 'unknown',
+  lat: null, lon: null, notes: '', zones: [], deleted: false
+});
+const newTrip = (siteId) => ({
+  id: uid(), siteId: siteId || null, startedAt: nowISO(), endedAt: null, notes: '', deleted: false
+});
+const newFind = (o = {}) => ({
+  id: uid(), tripId: o.tripId || null, siteId: o.siteId || null, zoneId: o.zoneId || null,
+  label: o.label || '', material: o.material || '', lat: o.lat ?? null, lon: o.lon ?? null,
+  gpsAccuracy: o.gpsAccuracy ?? null, notes: o.notes || '', photoIds: o.photoIds || [],
+  hist: o.hist || null,          /* Uint8Array sqrt-packed Lab histogram (stored as Array in IDB-safe form) */
+  strata: o.strata || null,      /* [[r,g,b,weight] x5] dominant colors */
+  embedding: o.embedding || null,/* Int8Array + scale, filled by DINOv2 stage (seam) */
+  favorite: false, deleted: false
+});
+/* ── color pipeline ───────────────────────────────────────────────
+   Stage 1 of the match pipeline: Lab color histogram prefilter.
+   - sRGB → CIELAB conversion (D65)
+   - 8×8×8 quantized histogram over L*a*b* = 512 bins
+   - sqrt-compressed to Uint8 for storage (peaked histograms from
+     uniformly coloured rocks clip badly on a linear byte scale)
+   - Bhattacharyya coefficient for similarity (robust for sparse hists)
+   Stage 2 (DINOv2 embeddings) is a documented seam — see HANDOFF.
+──────────────────────────────────────────────────────────────────── */
+'use strict';
+const HBINS = 8, HDIM = HBINS * HBINS * HBINS;
+
+const srgbToLinear = c => {
+  c /= 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+};
+
+const rgbToLab = (r, g, b) => {
+  const rl = srgbToLinear(r), gl = srgbToLinear(g), bl = srgbToLinear(b);
+  /* linear sRGB → XYZ (D65) */
+  let x = rl * 0.4124564 + gl * 0.3575761 + bl * 0.1804375;
+  let y = rl * 0.2126729 + gl * 0.7151522 + bl * 0.0721750;
+  let z = rl * 0.0193339 + gl * 0.1191920 + bl * 0.9503041;
+  x /= 0.95047; z /= 1.08883;
+  const f = t => t > 0.008856 ? Math.cbrt(t) : (7.787 * t + 16 / 116);
+  const fx = f(x), fy = f(y), fz = f(z);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)]; /* L 0..100, a/b ≈ -128..127 */
+};
+
+const labToBin = (L, a, b) => {
+  const li = Math.min(HBINS - 1, Math.max(0, Math.floor(L / 100 * HBINS)));
+  const ai = Math.min(HBINS - 1, Math.max(0, Math.floor((a + 128) / 256 * HBINS)));
+  const bi = Math.min(HBINS - 1, Math.max(0, Math.floor((b + 128) / 256 * HBINS)));
+  return li * HBINS * HBINS + ai * HBINS + bi;
+};
+
+/* Build a normalized Lab histogram from RGBA pixel data.
+   Center-weighted: rocks are shot centered on the guide square, so
+   pixels near the middle count more than background at the edges. */
+const histFromPixels = (data, w, h) => {
+  const hist = new Float32Array(HDIM);
+  const cx = w / 2, cy = h / 2, maxR = Math.hypot(cx, cy);
+  let total = 0;
+  const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 20000))); /* sample ≤ ~20k px */
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      const i = (y * w + x) * 4;
+      if (data[i + 3] < 128) continue;
+      const d = Math.hypot(x - cx, y - cy) / maxR;
+      const wgt = 1.25 - d;                    /* 1.25 center → 0.25 corner */
+      const [L, a, b] = rgbToLab(data[i], data[i + 1], data[i + 2]);
+      hist[labToBin(L, a, b)] += wgt;
+      total += wgt;
+    }
+  }
+  if (total > 0) for (let i = 0; i < HDIM; i++) hist[i] /= total;
+  return hist;
+};
+
+/* sqrt-compressed byte packing */
+const packHist = h => {
+  const o = new Uint8Array(HDIM);
+  for (let i = 0; i < HDIM; i++) o[i] = Math.round(Math.sqrt(Math.min(1, h[i])) * 255);
+  return o;
+};
+const unpackHist = u => {
+  if (!u) return null;
+  const a = u instanceof Uint8Array ? u : new Uint8Array(u);
+  const o = new Float32Array(HDIM);
+  let s = 0;
+  for (let i = 0; i < HDIM; i++) { const t = a[i] / 255; o[i] = t * t; s += o[i]; }
+  if (s > 0) for (let i = 0; i < HDIM; i++) o[i] /= s;
+  return o;
+};
+
+/* Bhattacharyya coefficient: 1 = identical distributions, 0 = disjoint */
+const histSimilarity = (h1, h2) => {
+  let s = 0;
+  for (let i = 0; i < HDIM; i++) s += Math.sqrt(h1[i] * h2[i]);
+  return s;
+};
+
+/* Rank candidate finds against a query histogram.
+   Returns [{find, score}] sorted desc, with a margin-based confidence:
+   confident only when top clearly beats runner-up. */
+const rankByColor = (queryHist, finds) => {
+  const scored = [];
+  for (const f of finds) {
+    if (!f.hist) continue;
+    const s = histSimilarity(queryHist, unpackHist(f.hist));
+    scored.push({ find: f, score: s });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  const margin = scored.length >= 2 ? scored[0].score - scored[1].score : (scored.length ? scored[0].score : 0);
+  return { results: scored, margin, confident: scored.length > 0 && scored[0].score > 0.55 && margin > 0.06 };
+};
+
+/* ── strata extraction: 5 dominant colors by weight ──────────────
+   Simple k-means-lite in RGB on the sampled pixels; the signature
+   visual for every specimen. Returns [[r,g,b,share] x ≤5] sorted by share. */
+const extractStrata = (data, w, h, k = 5) => {
+  /* sample */
+  const pts = [];
+  const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 4000)));
+  const cx = w / 2, cy = h / 2, maxR = Math.hypot(cx, cy);
+  for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) {
+    const i = (y * w + x) * 4;
+    if (data[i + 3] < 128) continue;
+    const d = Math.hypot(x - cx, y - cy) / maxR;
+    if (d > 0.85) continue;                    /* strata come from the specimen, not the background */
+    pts.push([data[i], data[i + 1], data[i + 2]]);
+  }
+  if (!pts.length) return null;
+  /* init centers spread across luminance */
+  pts.sort((p, q) => (p[0] + p[1] + p[2]) - (q[0] + q[1] + q[2]));
+  const centers = [];
+  for (let i = 0; i < k; i++) centers.push([...pts[Math.floor((i + 0.5) * pts.length / k)]]);
+  const assign = new Array(pts.length).fill(0);
+  for (let iter = 0; iter < 8; iter++) {
+    for (let p = 0; p < pts.length; p++) {
+      let best = 0, bd = Infinity;
+      for (let c = 0; c < k; c++) {
+        const dr = pts[p][0] - centers[c][0], dg = pts[p][1] - centers[c][1], db = pts[p][2] - centers[c][2];
+        const d = dr * dr + dg * dg + db * db;
+        if (d < bd) { bd = d; best = c; }
+      }
+      assign[p] = best;
+    }
+    const sum = Array.from({ length: k }, () => [0, 0, 0, 0]);
+    for (let p = 0; p < pts.length; p++) {
+      const s = sum[assign[p]];
+      s[0] += pts[p][0]; s[1] += pts[p][1]; s[2] += pts[p][2]; s[3]++;
+    }
+    for (let c = 0; c < k; c++) if (sum[c][3] > 0) {
+      centers[c][0] = sum[c][0] / sum[c][3];
+      centers[c][1] = sum[c][1] / sum[c][3];
+      centers[c][2] = sum[c][2] / sum[c][3];
+    }
+  }
+  const counts = new Array(k).fill(0);
+  for (const a of assign) counts[a]++;
+  const out = centers.map((c, i) => [Math.round(c[0]), Math.round(c[1]), Math.round(c[2]), counts[i] / pts.length])
+    .filter(s => s[3] > 0.02)
+    .sort((a, b) => b[3] - a[3])
+    .slice(0, k);
+  return out;
+};
+
+/* strata → inline gradient strip */
+const strataCSS = strata => {
+  if (!strata || !strata.length) return 'linear-gradient(90deg,#ccc,#ccc)';
+  let acc = 0;
+  const stops = [];
+  for (const [r, g, b, w] of strata) {
+    const from = acc * 100; acc += w / strata.reduce((s, x) => s + x[3], 0);
+    const to = acc * 100;
+    stops.push(`rgb(${r},${g},${b}) ${from.toFixed(1)}% ${to.toFixed(1)}%`);
+  }
+  return `linear-gradient(90deg, ${stops.join(', ')})`;
+};
+
+/* ── image processing (browser only) ─────────────────────────────
+   Downscale to ≤2048px original + 320px thumb, extract hist + strata. */
+const processImage = async (blob) => {
+  const img = await createImageBitmap(blob);
+  const scale = Math.min(1, 2048 / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const full = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.86));
+
+  /* thumb */
+  const ts = 320 / Math.max(w, h);
+  const tw = Math.max(1, Math.round(w * ts)), th = Math.max(1, Math.round(h * ts));
+  const tc = document.createElement('canvas');
+  tc.width = tw; tc.height = th;
+  tc.getContext('2d').drawImage(cv, 0, 0, tw, th);
+  const thumb = await new Promise(r => tc.toBlob(r, 'image/jpeg', 0.8));
+
+  /* analysis on a 256px working copy */
+  const as = 256 / Math.max(w, h);
+  const aw = Math.max(1, Math.round(w * as)), ah = Math.max(1, Math.round(h * as));
+  const ac = document.createElement('canvas');
+  ac.width = aw; ac.height = ah;
+  const actx = ac.getContext('2d');
+  actx.drawImage(cv, 0, 0, aw, ah);
+  const px = actx.getImageData(0, 0, aw, ah);
+  const hist = histFromPixels(px.data, aw, ah);
+  const strata = extractStrata(px.data, aw, ah);
+  img.close?.();
+  return { full, thumb, hist: Array.from(packHist(hist)), strata, w, h };
+};
+
+const savePhoto = async (blob, findId) => {
+  const p = await processImage(blob);
+  const photo = {
+    id: uid(), findId, w: p.w, h: p.h,
+    full: p.full, thumb: p.thumb, deleted: false
+  };
+  await db.put('photos', photo);
+  return { photo, hist: p.hist, strata: p.strata };
+};
+
+const photoURL = (photo, thumb = true) => URL.createObjectURL(thumb ? photo.thumb : photo.full);
+/* ── field mode: dark, camera-first, one-thumb logging ─────────── */
+'use strict';
+const field = {
+  stream: null, track: null, torch: false, wakeLock: null,
+  watchId: null, pos: null, sessionFinds: [],
+
+  async gpsStart() {
+    if (!navigator.geolocation || this.watchId !== null) return;
+    this.watchId = navigator.geolocation.watchPosition(
+      p => { this.pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; this.paintGPS(); },
+      () => { this.pos = null; this.paintGPS(); },
+      { enableHighAccuracy: true, maximumAge: 5000 }
+    );
+  },
+  gpsStop() {
+    if (this.watchId !== null) { navigator.geolocation.clearWatch(this.watchId); this.watchId = null; }
+  },
+  paintGPS() {
+    const g = $('#gps-pill'); if (!g) return;
+    if (this.pos) {
+      g.textContent = `± ${Math.round(this.pos.acc)} m`;
+      g.className = 'pill mono ' + (this.pos.acc <= 15 ? 'pill-good' : 'pill-warn');
+    } else { g.textContent = 'no GPS'; g.className = 'pill mono pill-warn'; }
+  },
+
+  async camStart() {
+    const video = $('#cam');
+    if (!video || this.stream) return;
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false
+      });
+      video.srcObject = this.stream;
+      await video.play();
+      this.track = this.stream.getVideoTracks()[0];
+      const caps = this.track.getCapabilities?.() || {};
+      $('#torch-btn').style.display = caps.torch ? '' : 'none';
+      $('#cam-fallback').style.display = 'none';
+      video.style.display = '';
+    } catch (e) {
+      /* no camera permission / desktop: fall back to file input */
+      $('#cam-fallback').style.display = '';
+      if (video) video.style.display = 'none';
+    }
+    try { this.wakeLock = await navigator.wakeLock?.request('screen'); } catch {}
+  },
+  camStop() {
+    this.stream?.getTracks().forEach(t => t.stop());
+    this.stream = null; this.track = null;
+    this.wakeLock?.release().catch(() => {}); this.wakeLock = null;
+  },
+  async toggleTorch() {
+    if (!this.track) return;
+    this.torch = !this.torch;
+    try { await this.track.applyConstraints({ advanced: [{ torch: this.torch }] }); } catch {}
+    $('#torch-btn').classList.toggle('on', this.torch);
+  },
+
+  async capture() {
+    const video = $('#cam');
+    if (!video || !this.stream) { $('#file-input').click(); return; }
+    const vw = video.videoWidth, vh = video.videoHeight;
+    /* crop to the centered guide square (82% of the short side) */
+    const side = Math.round(Math.min(vw, vh) * 0.82);
+    const sx = Math.round((vw - side) / 2), sy = Math.round((vh - side) / 2);
+    const cv = document.createElement('canvas');
+    cv.width = side; cv.height = side;
+    cv.getContext('2d').drawImage(video, sx, sy, side, side, 0, 0, side, side);
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.92));
+    $('#shutter').classList.add('snap');
+    setTimeout(() => $('#shutter')?.classList.remove('snap'), 220);
+    await this.logFind(blob);
+  },
+
+  async fromFile(file) {
+    if (!file) return;
+    await this.logFind(file);
+  },
+
+  async logFind(blob) {
+    const material = app.state.fieldMaterial || '';
+    const trip = app.state.activeTrip;
+    const find = newFind({
+      tripId: trip?.id || null, siteId: trip?.siteId || null,
+      material,
+      lat: this.pos?.lat ?? null, lon: this.pos?.lon ?? null, gpsAccuracy: this.pos?.acc ?? null
+    });
+    const { photo, hist, strata } = await savePhoto(blob, find.id);
+    find.photoIds = [photo.id];
+    find.hist = hist; find.strata = strata;
+    await db.put('finds', find);
+    this.sessionFinds.unshift(find);
+    bus.emit('finds-changed');
+    this.paintSession();
+    toast(material ? `Logged — ${material}` : 'Logged');
+  },
+
+  paintSession() {
+    const strip = $('#session-strip'); if (!strip) return;
+    strip.innerHTML = '';
+    $('#session-count').textContent = this.sessionFinds.length ? `${this.sessionFinds.length} this session` : '';
+    for (const f of this.sessionFinds.slice(0, 12)) {
+      const cell = el('button', { class: 'sess-cell', onclick: () => router.go('find/' + f.id) });
+      cell.style.background = strataCSS(f.strata);
+      strip.appendChild(cell);
+    }
+  },
+
+  async render(host) {
+    this.sessionFinds = [];
+    const trips = (await db.all('trips')).filter(t => !t.deleted && !t.endedAt);
+    app.state.activeTrip = trips.sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0] || null;
+    const site = app.state.activeTrip?.siteId ? await db.get('sites', app.state.activeTrip.siteId) : null;
+
+    host.className = 'view dark';
+    host.innerHTML = '';
+    host.appendChild(el('div', { class: 'field-top' },
+      el('div', { class: 'field-trip' },
+        app.state.activeTrip
+          ? el('button', { class: 'trip-chip', onclick: () => router.go('trips') }, '● ', site ? site.name : 'Trip in progress')
+          : el('button', { class: 'trip-chip dim', onclick: () => field.quickTrip() }, '+ start trip')),
+      el('span', { id: 'gps-pill', class: 'pill mono pill-warn' }, '…')
+    ));
+
+    const stage = el('div', { class: 'cam-stage' },
+      el('video', { id: 'cam', playsinline: '', muted: '' }),
+      el('div', { class: 'guide' }),
+      el('div', { id: 'cam-fallback', class: 'cam-fallback', style: 'display:none' },
+        el('p', {}, 'Camera unavailable here.'),
+        el('button', { class: 'btn btn-ghost', onclick: () => $('#file-input').click() }, 'Add photo from library')
+      )
+    );
+    host.appendChild(stage);
+
+    /* material chips */
+    const chips = el('div', { class: 'chips', id: 'mat-chips' });
+    const recent = settings.get('recentMaterials', []);
+    const ordered = [...new Set([...recent, ...MATERIALS])].slice(0, 16);
+    for (const m of ordered) {
+      chips.appendChild(el('button', {
+        class: 'chip' + (app.state.fieldMaterial === m ? ' sel' : ''),
+        onclick: e => {
+          app.state.fieldMaterial = app.state.fieldMaterial === m ? '' : m;
+          $$('.chip', chips).forEach(c => c.classList.remove('sel'));
+          if (app.state.fieldMaterial) e.currentTarget.classList.add('sel');
+        }
+      }, m));
+    }
+    host.appendChild(chips);
+
+    host.appendChild(el('div', { class: 'field-bottom' },
+      el('div', { class: 'sess-wrap' },
+        el('span', { id: 'session-count', class: 'mono dim-t' }),
+        el('div', { id: 'session-strip', class: 'sess-strip' })),
+      el('div', { class: 'shutter-row' },
+        el('button', { id: 'torch-btn', class: 'round-btn', onclick: () => field.toggleTorch(), 'aria-label': 'Torch' }, '⚡'),
+        el('button', { id: 'shutter', class: 'shutter', onclick: () => field.capture(), 'aria-label': 'Capture' }),
+        el('button', { class: 'round-btn', onclick: () => $('#file-input').click(), 'aria-label': 'From library' }, '🖼')
+      )
+    ));
+
+    const fi = el('input', { id: 'file-input', type: 'file', accept: 'image/*', capture: 'environment', style: 'display:none' });
+    fi.addEventListener('change', e => { field.fromFile(e.target.files[0]); e.target.value = ''; });
+    host.appendChild(fi);
+
+    this.gpsStart(); this.paintGPS();
+    this.camStart();
+  },
+
+  async quickTrip() {
+    const sites = (await db.all('sites')).filter(s => !s.deleted);
+    if (!sites.length) { router.go('trips'); return; }
+    const t = newTrip(null);
+    await db.put('trips', t);
+    app.state.activeTrip = t;
+    toast('Trip started');
+    app.rerender();
+  },
+
+  leave() { this.camStop(); this.gpsStop(); }
+};
+
+/* ── labeling queue: one specimen at a time ────────────────────── */
+const queue = {
+  items: [], idx: 0, lastLabel: null, lastMaterial: null,
+
+  async render(host) {
+    const finds = (await db.all('finds')).filter(f => !f.deleted && !f.label);
+    finds.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    this.items = finds; this.idx = 0;
+    host.className = 'view light';
+    host.innerHTML = '';
+    if (!finds.length) {
+      host.appendChild(el('div', { class: 'empty' },
+        el('h2', { class: 'display' }, 'Queue clear'),
+        el('p', {}, 'Every find has a name. Log more in Field mode.'),
+        el('button', { class: 'btn btn-primary', onclick: () => router.go('field') }, 'Open Field mode')));
+      return;
+    }
+    await this.paintCurrent(host);
+  },
+
+  async paintCurrent(host) {
+    host.innerHTML = '';
+    const f = this.items[this.idx];
+    if (!f) { this.render(host); return; }
+
+    const photo = f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+    const remaining = this.items.length - this.idx;
+
+    host.appendChild(el('div', { class: 'q-head' },
+      el('span', { class: 'eyebrow' }, 'Naming'),
+      el('span', { class: 'mono dim-t' }, `${remaining} left`)));
+
+    const imgWrap = el('div', { class: 'q-photo' });
+    if (photo) {
+      const img = el('img', { src: photoURL(photo, false), alt: 'Specimen' });
+      imgWrap.appendChild(img);
+    }
+    imgWrap.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(f.strata)}` }));
+    host.appendChild(imgWrap);
+
+    /* color-match suggestions from already-labeled finds */
+    if (f.hist) {
+      const labeled = (await db.all('finds')).filter(x => !x.deleted && x.label && x.id !== f.id);
+      const { results, confident } = rankByColor(unpackHist(f.hist), labeled);
+      const top = results.slice(0, 3).filter(r => r.score > 0.4);
+      if (top.length) {
+        const sug = el('div', { class: 'suggest' },
+          el('span', { class: 'eyebrow' }, confident ? 'Likely match' : 'Similar colors'));
+        const row = el('div', { class: 'chips' });
+        const seen = new Set();
+        for (const r of top) {
+          const key = r.find.label + '|' + r.find.material;
+          if (seen.has(key)) continue; seen.add(key);
+          row.appendChild(el('button', {
+            class: 'chip chip-amber',
+            onclick: () => this.commit(f, r.find.label, r.find.material)
+          }, `${r.find.label} · ${(r.score * 100).toFixed(0)}%`));
+        }
+        sug.appendChild(row);
+        host.appendChild(sug);
+      }
+    }
+
+    const input = el('input', { id: 'q-label', class: 'text-input', type: 'text', placeholder: 'Name this find…', value: '' });
+    host.appendChild(input);
+
+    const chips = el('div', { class: 'chips' });
+    if (this.lastLabel) chips.appendChild(el('button', { class: 'chip sel', onclick: () => this.commit(f, this.lastLabel, this.lastMaterial) }, `↺ ${this.lastLabel}`));
+    for (const rl of settings.get('recentLabels', []).slice(0, 8)) {
+      if (rl === this.lastLabel) continue;
+      chips.appendChild(el('button', { class: 'chip', onclick: () => { input.value = rl; } }, rl));
+    }
+    host.appendChild(chips);
+
+    const matSel = el('select', { id: 'q-mat', class: 'select' },
+      el('option', { value: '' }, f.material ? `material: ${f.material}` : 'material…'),
+      ...MATERIALS.map(m => el('option', { value: m }, m)));
+    host.appendChild(matSel);
+
+    host.appendChild(el('div', { class: 'q-actions' },
+      el('button', { class: 'btn btn-ghost', onclick: () => { this.idx++; this.paintCurrent(host); } }, 'Skip'),
+      el('button', {
+        class: 'btn btn-primary', onclick: () => {
+          const label = input.value.trim();
+          if (!label) { toast('Give it a name first'); return; }
+          this.commit(f, label, matSel.value || f.material);
+        }
+      }, 'Save & next')));
+
+    host.appendChild(el('div', { class: 'q-meta mono dim-t' },
+      fmtDate(f.createdAt) + ' · ' + (fmtCoord(f.lat, f.lon) || 'no location')));
+  },
+
+  async commit(f, label, material) {
+    f.label = label;
+    if (material) f.material = material;
+    await db.put('finds', f);
+    this.lastLabel = label; this.lastMaterial = material || f.material;
+    const rl = settings.get('recentLabels', []);
+    settings.set('recentLabels', [label, ...rl.filter(x => x !== label)].slice(0, 12));
+    if (material) {
+      const rm = settings.get('recentMaterials', []);
+      settings.set('recentMaterials', [material, ...rm.filter(x => x !== material)].slice(0, 8));
+    }
+    bus.emit('finds-changed');
+    this.idx++;
+    this.paintCurrent($('#main'));
+  }
+};
+/* ── collection: grid, filters, search ─────────────────────────── */
+'use strict';
+const collection = {
+  filter: { q: '', material: '', siteId: '', fav: false },
+
+  async render(host) {
+    host.className = 'view light';
+    host.innerHTML = '';
+    const finds = (await db.all('finds')).filter(f => !f.deleted);
+    finds.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const sites = (await db.all('sites')).filter(s => !s.deleted);
+    const siteName = Object.fromEntries(sites.map(s => [s.id, s.name]));
+
+    host.appendChild(el('div', { class: 'coll-head' },
+      el('h1', { class: 'display' }, 'Collection'),
+      el('span', { class: 'mono dim-t' }, `${finds.length}`)));
+
+    /* search + filters */
+    const search = el('input', {
+      class: 'text-input', type: 'search', placeholder: 'Search names & notes…',
+      value: this.filter.q,
+      oninput: e => { this.filter.q = e.target.value; this.paintGrid(finds, siteName); }
+    });
+    host.appendChild(search);
+
+    const bar = el('div', { class: 'chips wrap' });
+    const mats = [...new Set(finds.map(f => f.material).filter(Boolean))];
+    for (const m of mats) {
+      bar.appendChild(el('button', {
+        class: 'chip' + (this.filter.material === m ? ' sel' : ''),
+        onclick: e => {
+          this.filter.material = this.filter.material === m ? '' : m;
+          $$('.chip', bar).forEach(c => c.classList.remove('sel'));
+          if (this.filter.material === m) e.currentTarget.classList.add('sel');
+          if (this.filter.fav) $('#fav-chip')?.classList.add('sel');
+          this.paintGrid(finds, siteName);
+        }
+      }, m));
+    }
+    bar.appendChild(el('button', {
+      id: 'fav-chip',
+      class: 'chip chip-amber' + (this.filter.fav ? ' sel' : ''),
+      onclick: e => { this.filter.fav = !this.filter.fav; e.currentTarget.classList.toggle('sel'); this.paintGrid(finds, siteName); }
+    }, '★ favorites'));
+    host.appendChild(bar);
+
+    host.appendChild(el('div', { id: 'grid', class: 'grid' }));
+    await this.paintGrid(finds, siteName);
+  },
+
+  async paintGrid(finds, siteName) {
+    const grid = $('#grid'); if (!grid) return;
+    grid.innerHTML = '';
+    const q = this.filter.q.trim().toLowerCase();
+    const shown = finds.filter(f =>
+      (!q || (f.label + ' ' + f.notes + ' ' + f.material).toLowerCase().includes(q)) &&
+      (!this.filter.material || f.material === this.filter.material) &&
+      (!this.filter.fav || f.favorite));
+    if (!shown.length) {
+      grid.appendChild(el('div', { class: 'empty' },
+        el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet — Field mode is where it starts.')));
+      return;
+    }
+    for (const f of shown.slice(0, 120)) {
+      const card = el('button', { class: 'card', onclick: () => router.go('find/' + f.id) });
+      const ph = f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+      const imgBox = el('div', { class: 'card-img' });
+      if (ph) imgBox.appendChild(el('img', { src: photoURL(ph, true), loading: 'lazy', alt: '' }));
+      card.appendChild(imgBox);
+      card.appendChild(el('div', { class: 'strata', style: `background:${strataCSS(f.strata)}` }));
+      card.appendChild(el('div', { class: 'card-body' },
+        el('span', { class: 'card-title' }, (f.favorite ? '★ ' : '') + (f.label || 'unnamed')),
+        el('span', { class: 'card-sub mono' }, [f.material, siteName[f.siteId]].filter(Boolean).join(' · ') || fmtDate(f.createdAt))));
+      grid.appendChild(card);
+    }
+  }
+};
+
+/* ── specimen detail ────────────────────────────────────────────── */
+const detail = {
+  async render(host, [id]) {
+    const f = await db.get('finds', id);
+    host.className = 'view light';
+    host.innerHTML = '';
+    if (!f || f.deleted) {
+      host.appendChild(el('div', { class: 'empty' }, el('p', {}, 'Find not found.'),
+        el('button', { class: 'btn btn-ghost', onclick: () => router.go('collection') }, 'Back to collection')));
+      return;
+    }
+    const site = f.siteId ? await db.get('sites', f.siteId) : null;
+
+    host.appendChild(el('div', { class: 'q-head' },
+      el('button', { class: 'btn btn-ghost', onclick: () => history.back() }, '← Back'),
+      el('button', {
+        class: 'btn btn-ghost' + (f.favorite ? ' amber' : ''), onclick: async e => {
+          f.favorite = !f.favorite; await db.put('finds', f);
+          e.currentTarget.classList.toggle('amber', f.favorite);
+          e.currentTarget.textContent = f.favorite ? '★' : '☆';
+        }
+      }, f.favorite ? '★' : '☆')));
+
+    /* photos */
+    const photos = [];
+    for (const pid of f.photoIds) { const p = await db.get('photos', pid); if (p) photos.push(p); }
+    const pv = el('div', { class: 'photo-pager' });
+    if (photos.length) {
+      photos.forEach((p) => {
+        const img = el('img', { src: photoURL(p, false), alt: f.label || 'Specimen' });
+        img.addEventListener('click', () => img.classList.toggle('zoom'));
+        pv.appendChild(el('div', { class: 'photo-slide' }, img));
+      });
+    } else pv.appendChild(el('div', { class: 'photo-slide none' }, 'No photo'));
+    host.appendChild(pv);
+    host.appendChild(el('div', { class: 'strata tall', style: `background:${strataCSS(f.strata)}` }));
+
+    /* editable fields */
+    const nameIn = el('input', { class: 'text-input display-input', value: f.label, placeholder: 'unnamed' });
+    nameIn.addEventListener('change', async () => { f.label = nameIn.value.trim(); await db.put('finds', f); bus.emit('finds-changed'); });
+    host.appendChild(nameIn);
+
+    const matSel = el('select', { class: 'select' },
+      el('option', { value: '' }, 'material…'),
+      ...MATERIALS.map(m => el('option', { value: m, selected: f.material === m ? '' : null }, m)));
+    matSel.addEventListener('change', async () => { f.material = matSel.value; await db.put('finds', f); });
+    host.appendChild(matSel);
+
+    const notes = el('textarea', { class: 'text-input', rows: 3, placeholder: 'Notes — texture, weight, where in the creek…' }, f.notes || '');
+    notes.addEventListener('change', async () => { f.notes = notes.value; await db.put('finds', f); });
+    host.appendChild(notes);
+
+    /* meta */
+    const coord = fmtCoord(f.lat, f.lon);
+    host.appendChild(el('div', { class: 'meta-block mono' },
+      el('div', {}, 'logged  ' + fmtDate(f.createdAt) + ' ' + fmtTime(f.createdAt)),
+      site ? el('div', {}, 'site    ' + site.name) : null,
+      coord ? el('a', { href: `https://maps.google.com/?q=${f.lat},${f.lon}`, target: '_blank', rel: 'noopener' }, 'gps     ' + coord + ' ↗') : el('div', {}, 'gps     —')));
+
+    /* similar finds */
+    if (f.hist) {
+      const all = (await db.all('finds')).filter(x => !x.deleted && x.id !== f.id && x.hist);
+      const { results } = rankByColor(unpackHist(f.hist), all);
+      const top = results.slice(0, 4).filter(r => r.score > 0.35);
+      if (top.length) {
+        host.appendChild(el('h3', { class: 'eyebrow' }, 'Similar colors in your collection'));
+        const row = el('div', { class: 'sim-row' });
+        /* Name the SITE on each match, not just the specimen. This is the
+           whole point of the feature: you are holding a rock out of the
+           garden and the question is not "which of my photos does this look
+           like", it is "where did I pick this up". A match that cannot answer
+           that is trivia. Sites are fetched once and shared across the row. */
+        const siteName = {};
+        for (const s of await db.all('sites')) siteName[s.id] = s.name;
+        for (const r of top) {
+          const ph = r.find.photoIds[0] ? await db.get('photos', r.find.photoIds[0]) : null;
+          const where = r.find.siteId ? siteName[r.find.siteId] : null;
+          const cell = el('button', { class: 'sim-cell', onclick: () => router.go('find/' + r.find.id) },
+            ph ? el('img', { src: photoURL(ph, true), alt: '' }) : el('span', {}, '·'),
+            el('span', { class: 'sim-label mono' }, `${r.find.label || 'unnamed'} ${(r.score * 100).toFixed(0)}%`),
+            el('span', { class: 'from-site' }, where ? where : (r.find.lat != null ? 'no site named' : '')));
+          row.appendChild(cell);
+        }
+        host.appendChild(row);
+      }
+    }
+
+    /* actions */
+    const addPhoto = el('input', { type: 'file', accept: 'image/*', style: 'display:none' });
+    addPhoto.addEventListener('change', async e => {
+      const file = e.target.files[0]; if (!file) return;
+      const { photo, hist, strata } = await savePhoto(file, f.id);
+      f.photoIds.push(photo.id);
+      if (!f.hist) { f.hist = hist; f.strata = strata; }
+      await db.put('finds', f);
+      toast('Photo added');
+      this.render(host, [f.id]);
+    });
+    host.appendChild(addPhoto);
+
+    host.appendChild(el('div', { class: 'q-actions' },
+      el('button', { class: 'btn btn-ghost', onclick: () => addPhoto.click() }, '+ Photo'),
+      el('button', {
+        class: 'btn btn-danger', onclick: async () => {
+          if (!confirm('Delete this find?')) return;
+          f.deleted = true; await db.put('finds', f);
+          bus.emit('finds-changed');
+          toast('Deleted');
+          router.go('collection');
+        }
+      }, 'Delete')));
+  }
+};
+/* ── sites & trips ──────────────────────────────────────────────── */
+'use strict';
+const trips = {
+  async render(host) {
+    host.className = 'view light';
+    host.innerHTML = '';
+    const allSites = (await db.all('sites')).filter(s => !s.deleted);
+    const allTrips = (await db.all('trips')).filter(t => !t.deleted);
+    allTrips.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+    const finds = (await db.all('finds')).filter(f => !f.deleted);
+    const perTrip = {};
+    for (const f of finds) if (f.tripId) (perTrip[f.tripId] = perTrip[f.tripId] || []).push(f);
+    const siteName = Object.fromEntries(allSites.map(s => [s.id, s.name]));
+
+    host.appendChild(el('div', { class: 'coll-head' },
+      el('h1', { class: 'display' }, 'Sites & trips'),
+      el('button', { class: 'btn btn-primary', onclick: () => this.startTrip(allSites) }, 'Start trip')));
+
+    /* active trip banner */
+    const active = allTrips.find(t => !t.endedAt);
+    if (active) {
+      host.appendChild(el('div', { class: 'active-trip' },
+        el('div', {},
+          el('strong', {}, siteName[active.siteId] || 'Trip in progress'),
+          el('div', { class: 'mono dim-t' }, `since ${fmtTime(active.startedAt)} · ${(perTrip[active.id] || []).length} finds`)),
+        el('button', {
+          class: 'btn btn-ghost', onclick: async () => {
+            active.endedAt = nowISO(); await db.put('trips', active);
+            app.state.activeTrip = null;
+            toast('Trip ended'); this.render(host);
+          }
+        }, 'End')));
+    }
+
+    /* sites */
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Sites'));
+    const siteList = el('div', { class: 'list' });
+    for (const s of allSites) {
+      const count = finds.filter(f => f.siteId === s.id).length;
+      siteList.appendChild(el('div', { class: 'list-row' },
+        el('div', { class: 'list-main' },
+          el('strong', {}, s.name),
+          el('span', { class: 'mono dim-t' }, `${s.landType} · ${s.collectStatus} · ${count} finds`)),
+        el('button', { class: 'btn btn-ghost', onclick: () => this.editSite(s, host) }, 'Edit')));
+    }
+    siteList.appendChild(el('button', { class: 'btn btn-ghost add-row', onclick: () => this.editSite(null, host) }, '+ Add site'));
+    host.appendChild(siteList);
+
+    /* trip history */
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Trip log'));
+    const tl = el('div', { class: 'list' });
+    for (const t of allTrips.slice(0, 30)) {
+      const tf = perTrip[t.id] || [];
+      const row = el('div', { class: 'list-row' },
+        el('div', { class: 'list-main' },
+          el('strong', {}, siteName[t.siteId] || 'No site'),
+          el('span', { class: 'mono dim-t' }, `${fmtDate(t.startedAt)} · ${tf.length} finds${t.endedAt ? '' : ' · active'}`)),
+        tf.length ? el('div', { class: 'mini-strata', style: `background:${strataCSS(tf.flatMap(f => f.strata || []).slice(0, 6))}` }) : null);
+      tl.appendChild(row);
+    }
+    if (!allTrips.length) tl.appendChild(el('p', { class: 'dim-t' }, 'No trips yet. Start one, then log finds in Field mode.'));
+    host.appendChild(tl);
+  },
+
+  async startTrip(sitesList) {
+    const host = $('#main');
+    host.innerHTML = '';
+    host.appendChild(el('h2', { class: 'display' }, 'Where to?'));
+    const list = el('div', { class: 'list' });
+    for (const s of sitesList) {
+      list.appendChild(el('button', {
+        class: 'list-row tap', onclick: async () => {
+          const t = newTrip(s.id);
+          await db.put('trips', t);
+          app.state.activeTrip = t;
+          toast(`Trip started — ${s.name}`);
+          router.go('field');
+        }
+      }, el('strong', {}, s.name), el('span', { class: 'mono dim-t' }, s.landType)));
+    }
+    list.appendChild(el('button', {
+      class: 'list-row tap', onclick: async () => {
+        const t = newTrip(null);
+        await db.put('trips', t);
+        app.state.activeTrip = t;
+        router.go('field');
+      }
+    }, el('strong', {}, 'No site — just log')));
+    host.appendChild(list);
+    host.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => this.render(host) }, 'Cancel'));
+  },
+
+  editSite(site, host) {
+    const s = site || newSite('');
+    host.innerHTML = '';
+    host.appendChild(el('h2', { class: 'display' }, site ? 'Edit site' : 'New site'));
+    const name = el('input', { class: 'text-input', value: s.name === 'Unnamed site' ? '' : s.name, placeholder: 'Site name' });
+    const land = el('select', { class: 'select' }, ...LAND_TYPES.map(l => el('option', { value: l, selected: s.landType === l ? '' : null }, l)));
+    const stat = el('select', { class: 'select' }, ...COLLECT_STATUS.map(c => el('option', { value: c, selected: s.collectStatus === c ? '' : null }, c)));
+    const notes = el('textarea', { class: 'text-input', rows: 2, placeholder: 'Access notes, parking, who to ask…' }, s.notes || '');
+    host.appendChild(name); host.appendChild(land); host.appendChild(stat); host.appendChild(notes);
+    host.appendChild(el('p', { class: 'dim-t small' }, 'Land type and collecting status are your own notes — always confirm the rules for a site yourself.'));
+    host.appendChild(el('div', { class: 'q-actions' },
+      el('button', { class: 'btn btn-ghost', onclick: () => this.render(host) }, 'Cancel'),
+      el('button', {
+        class: 'btn btn-primary', onclick: async () => {
+          s.name = name.value.trim() || 'Unnamed site';
+          s.landType = land.value; s.collectStatus = stat.value; s.notes = notes.value;
+          await db.put('sites', s);
+          toast('Saved'); this.render(host);
+        }
+      }, 'Save')));
+    if (site) host.appendChild(el('button', {
+      class: 'btn btn-danger full', onclick: async () => {
+        if (!confirm('Delete this site? Finds keep their data.')) return;
+        s.deleted = true; await db.put('sites', s); this.render(host);
+      }
+    }, 'Delete site'));
+  }
+};
+
+/* ── stats ──────────────────────────────────────────────────────── */
+const stats = {
+  async render(host) {
+    host.className = 'view light';
+    host.innerHTML = '';
+    const finds = (await db.all('finds')).filter(f => !f.deleted);
+    const sitesN = (await db.all('sites')).filter(s => !s.deleted).length;
+    const tripsN = (await db.all('trips')).filter(t => !t.deleted).length;
+
+    host.appendChild(el('h1', { class: 'display' }, 'The collection so far'));
+
+    host.appendChild(el('div', { class: 'stat-row mono' },
+      el('div', { class: 'stat' }, el('b', {}, String(finds.length)), el('span', {}, 'finds')),
+      el('div', { class: 'stat' }, el('b', {}, String(sitesN)), el('span', {}, 'sites')),
+      el('div', { class: 'stat' }, el('b', {}, String(tripsN)), el('span', {}, 'trips')),
+      el('div', { class: 'stat' }, el('b', {}, String(finds.filter(f => f.favorite).length)), el('span', {}, 'starred'))));
+
+    /* by material */
+    const byMat = {};
+    for (const f of finds) byMat[f.material || 'unlabeled'] = (byMat[f.material || 'unlabeled'] || 0) + 1;
+    const rows = Object.entries(byMat).sort((a, b) => b[1] - a[1]);
+    const max = rows[0]?.[1] || 1;
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'By material'));
+    const bars = el('div', { class: 'bars' });
+    for (const [m, n] of rows) {
+      bars.appendChild(el('div', { class: 'bar-row' },
+        el('span', { class: 'bar-label' }, m),
+        el('div', { class: 'bar' }, el('div', { class: 'bar-fill', style: `width:${(n / max * 100).toFixed(0)}%` })),
+        el('span', { class: 'mono dim-t' }, String(n))));
+    }
+    host.appendChild(bars);
+
+    /* collection strata: the whole collection's color fingerprint */
+    const allStrata = finds.flatMap(f => f.strata || []);
+    if (allStrata.length) {
+      host.appendChild(el('h3', { class: 'eyebrow' }, 'Collection strata'));
+      const merged = allStrata.sort((a, b) => b[3] - a[3]).slice(0, 24);
+      host.appendChild(el('div', { class: 'strata tall', style: `background:${strataCSS(merged)}` }));
+      host.appendChild(el('p', { class: 'dim-t small' }, 'Every band is a dominant color pulled from a specimen photo.'));
+    }
+  }
+};
+
+/* ── settings + backup ──────────────────────────────────────────── */
+const more = {
+  async render(host) {
+    host.className = 'view light';
+    host.innerHTML = '';
+    host.appendChild(el('h1', { class: 'display' }, 'More'));
+
+    const nav = el('div', { class: 'list' },
+      el('button', { class: 'list-row tap', onclick: () => router.go('trips') }, el('strong', {}, 'Sites & trips')),
+      el('button', { class: 'list-row tap', onclick: () => router.go('stats') }, el('strong', {}, 'Stats')));
+    host.appendChild(nav);
+
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'Backup'));
+    host.appendChild(el('p', { class: 'dim-t small' }, 'Everything lives on this device only. Export regularly — a backup file is the whole collection, photos included.'));
+    host.appendChild(el('div', { class: 'q-actions' },
+      el('button', { class: 'btn btn-primary', onclick: () => backup.exportAll() }, 'Export backup'),
+      el('button', { class: 'btn btn-ghost', onclick: () => $('#restore-input').click() }, 'Restore')));
+    const ri = el('input', { id: 'restore-input', type: 'file', accept: '.json,application/json', style: 'display:none' });
+    ri.addEventListener('change', e => { if (e.target.files[0]) backup.importAll(e.target.files[0]); e.target.value = ''; });
+    host.appendChild(ri);
+
+    host.appendChild(el('h3', { class: 'eyebrow' }, 'About'));
+    host.appendChild(el('p', { class: 'dim-t small' },
+      `Float ${FLOAT_VERSION} — a private field log for rockhounding, fossils and sea glass. Local-first: no account, no server, no tracking.`));
+    if (useMem) host.appendChild(el('p', { class: 'warn small' }, '⚠ Storage unavailable in this browser — data will not survive a reload.'));
+  }
+};
+
+const backup = {
+  blobToB64: blob => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(blob);
+  }),
+  b64ToBlob: (b64, type = 'image/jpeg') => {
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type });
+  },
+
+  async serialize() {
+    const out = { app: 'float', version: FLOAT_VERSION, exportedAt: nowISO(), sites: [], trips: [], finds: [], photos: [] };
+    out.sites = await db.all('sites');
+    out.trips = await db.all('trips');
+    out.finds = await db.all('finds');
+    const photos = await db.all('photos');
+    for (const p of photos) {
+      out.photos.push({
+        id: p.id, findId: p.findId, w: p.w, h: p.h,
+        createdAt: p.createdAt, updatedAt: p.updatedAt, deleted: p.deleted,
+        fullB64: p.full ? await this.blobToB64(p.full) : null,
+        thumbB64: p.thumb ? await this.blobToB64(p.thumb) : null
+      });
+    }
+    return out;
+  },
+
+  async exportAll() {
+    toast('Building backup…');
+    const data = await this.serialize();
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const a = el('a', {
+      href: URL.createObjectURL(blob),
+      download: `float-backup-${new Date().toISOString().slice(0, 10)}.json`
+    });
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Backup exported');
+  },
+
+  async deserialize(data, mode = 'merge') {
+    if (data.app !== 'float') throw new Error('Not a Float backup');
+    if (mode === 'replace') for (const s of STORES) if (s !== 'settings') await db.clear(s);
+    for (const s of data.sites || []) await db.put('sites', s);
+    for (const t of data.trips || []) await db.put('trips', t);
+    for (const f of data.finds || []) await db.put('finds', f);
+    for (const p of data.photos || []) {
+      await db.put('photos', {
+        id: p.id, findId: p.findId, w: p.w, h: p.h,
+        createdAt: p.createdAt, updatedAt: p.updatedAt, deleted: p.deleted,
+        full: p.fullB64 ? this.b64ToBlob(p.fullB64) : null,
+        thumb: p.thumbB64 ? this.b64ToBlob(p.thumbB64) : null
+      });
+    }
+    return { sites: (data.sites || []).length, finds: (data.finds || []).length, photos: (data.photos || []).length };
+  },
+
+  async importAll(file) {
+    try {
+      const data = JSON.parse(await file.text());
+      const n = await this.deserialize(data, 'merge');
+      bus.emit('finds-changed');
+      toast(`Restored ${n.finds} finds, ${n.photos} photos`);
+      app.rerender();
+    } catch (e) {
+      toast('That file is not a Float backup');
+    }
+  }
+};
+
+/* ── map ──────────────────────────────────────────────────────────
+   WHY THERE ARE NO MAP TILES HERE, AND WHY THAT IS THE POINT.
+
+   The obvious way to build this is Leaflet over OpenStreetMap tiles.
+   It is also the one thing this app must not do. A tile map works by
+   requesting images for the exact rectangle you are looking at — so
+   the moment you open your map, a third-party server receives your IP
+   alongside the precise coordinates of every spot you have found
+   anything at. Rockhounding locations are the thing people guard most
+   closely, and "your spots never leave your device" would become false
+   at the exact moment you looked at them. It would also break the
+   file's own rule: no network calls without a flag the user turned on.
+
+   So the map is drawn here, from your own points, in a real Web
+   Mercator projection with a true scale bar. What you lose is the
+   basemap — no roads, no rivers, no terrain. What you keep is that the
+   map of your spots exists only on your phone.
+
+   If a basemap is ever wanted, the honest shape is an explicit opt-in
+   that says plainly what it sends and to whom, defaulting off — never
+   a silent tile fetch.
+   ─────────────────────────────────────────────────────────────────── */
+const R_EARTH = 6378137;
+
+const geo = {
+  /* Web Mercator, metres. Equal-angle so a rotated compass still reads true;
+     latitude clamped to the Mercator limit so a pole cannot produce Infinity. */
+  merc(lat, lon) {
+    const la = Math.max(-85.05112878, Math.min(85.05112878, lat));
+    return {
+      x: R_EARTH * (lon * Math.PI / 180),
+      y: R_EARTH * Math.log(Math.tan(Math.PI / 4 + (la * Math.PI / 180) / 2))
+    };
+  },
+  /* Great-circle metres — used for the scale bar and "how far away am I". */
+  dist(a, b) {
+    const t = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * t, dLon = (b.lon - a.lon) * t;
+    const s = Math.sin(dLat / 2) ** 2
+      + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dLon / 2) ** 2;
+    return 2 * R_EARTH * Math.asin(Math.min(1, Math.sqrt(s)));
+  },
+  fmtDist(m) {
+    if (m < 1000) return Math.round(m) + ' m';
+    if (m < 100000) return (m / 1000).toFixed(1) + ' km';
+    return Math.round(m / 1000) + ' km';
+  }
+};
+
+/* A site's position on the map. Sites are created without coordinates — you
+   name the place before you know where the middle of it is — so fall back to
+   the centroid of everything found there. That is usually a truer centre than
+   the point where you happened to park. */
+const siteCoord = (site, finds) => {
+  if (site.lat != null && site.lon != null) return { lat: site.lat, lon: site.lon, derived: false };
+  const pts = finds.filter(f => f.siteId === site.id && f.lat != null && f.lon != null);
+  if (!pts.length) return null;
+  return {
+    lat: pts.reduce((s, f) => s + f.lat, 0) / pts.length,
+    lon: pts.reduce((s, f) => s + f.lon, 0) / pts.length,
+    derived: true
+  };
+};
+
+const mapview = {
+  view: null,          // {cx, cy, mpp}  centre in mercator metres, metres-per-pixel
+  pins: [],
+  here: null,
+  watchId: null,
+
+  async render(host) {
+    host.className = 'view light';
+    host.innerHTML = '';
+    host.appendChild(el('h2', { class: 'view-title' }, 'Map'));
+
+    const [sites, finds] = await Promise.all([db.all('sites'), db.all('finds')]);
+    const live = finds.filter(f => !f.deleted);
+
+    this.pins = sites.filter(s => !s.deleted).map(s => {
+      const c = siteCoord(s, live);
+      if (!c) return null;
+      const mine = live.filter(f => f.siteId === s.id);
+      return { kind: 'site', site: s, ...c, count: mine.length, finds: mine };
+    }).filter(Boolean);
+
+    /* Finds logged with no site still deserve to appear — they are the
+       "I found this somewhere and never named the place" case, and seeing
+       them on the map is usually how a place ends up getting named. */
+    const loose = live.filter(f => !f.siteId && f.lat != null && f.lon != null)
+      .map(f => ({ kind: 'find', find: f, lat: f.lat, lon: f.lon, count: 1 }));
+    this.pins = this.pins.concat(loose);
+
+    if (!this.pins.length) {
+      host.appendChild(el('div', { class: 'empty' },
+        el('p', {}, 'No coordinates yet.'),
+        el('p', { class: 'sub' },
+          'Log a find in Field mode with GPS on, or set a site’s coordinates on the '
+          + 'Sites screen, and it appears here. Nothing you pin is ever uploaded — the '
+          + 'map is drawn on this device from your own points.'),
+        el('button', { class: 'btn btn-primary', onclick: () => router.go('field') }, 'Open field mode')));
+      return;
+    }
+
+    const wrap = el('div', { class: 'map-wrap' });
+    const cv = el('canvas', { class: 'map-cv', id: 'mapcv' });
+    wrap.appendChild(cv);
+
+    const zin  = el('button', { class: 'map-btn', 'aria-label': 'Zoom in',  onclick: () => this.zoom(0.6) }, '+');
+    const zout = el('button', { class: 'map-btn', 'aria-label': 'Zoom out', onclick: () => this.zoom(1 / 0.6) }, '−');
+    const fit  = el('button', { class: 'map-btn', 'aria-label': 'Fit all pins', onclick: () => { this.fit(); this.draw(); } }, '⬚');
+    wrap.appendChild(el('div', { class: 'map-ctl' }, zin, zout, fit));
+    wrap.appendChild(el('div', { class: 'map-scale', id: 'mapscale' }));
+    host.appendChild(wrap);
+
+    const sheet = el('div', { class: 'map-sheet', id: 'mapsheet' });
+    host.appendChild(sheet);
+    host.appendChild(el('p', { class: 'map-note' },
+      'Drawn on this device from your own coordinates. There is no basemap because '
+      + 'fetching one would send these locations to a tile server.'));
+
+    this.cv = cv;
+    this.sheet = sheet;
+    this.fit();
+    this.bind(cv);
+    requestAnimationFrame(() => { this.resize(); this.draw(); });
+
+    this._onResize = () => { this.resize(); this.draw(); };
+    window.addEventListener('resize', this._onResize);
+  },
+
+  leave() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this.watchId != null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+  },
+
+  resize() {
+    const cv = this.cv; if (!cv) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const r = cv.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(r.width * dpr));
+    cv.height = Math.max(1, Math.round(r.height * dpr));
+    this.dpr = dpr;
+  },
+
+  fit() {
+    const ms = this.pins.map(p => geo.merc(p.lat, p.lon));
+    const xs = ms.map(m => m.x), ys = ms.map(m => m.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const cv = this.cv;
+    const w = (cv?.clientWidth || 360), h = (cv?.clientHeight || 340);
+    /* A single pin has no extent, so give it a sensible neighbourhood
+       (about 400m across) rather than dividing by zero. */
+    const spanX = Math.max(maxX - minX, 1), spanY = Math.max(maxY - minY, 1);
+    const mpp = this.pins.length === 1 ? 1.6 : Math.max(spanX / (w * 0.72), spanY / (h * 0.72));
+    this.view = { cx, cy, mpp: Math.max(mpp, 0.15) };
+  },
+
+  zoom(factor, anchor) {
+    const v = this.view; if (!v) return;
+    const next = Math.max(0.15, Math.min(v.mpp * factor, 40000));
+    if (anchor) {
+      /* Keep the point under the fingers fixed while the scale changes. */
+      const before = this.toWorld(anchor.x, anchor.y);
+      v.mpp = next;
+      const after = this.toWorld(anchor.x, anchor.y);
+      v.cx += before.x - after.x;
+      v.cy += before.y - after.y;
+    } else {
+      v.mpp = next;
+    }
+    this.draw();
+  },
+
+  toScreen(x, y) {
+    const v = this.view, cv = this.cv;
+    return {
+      sx: (x - v.cx) / v.mpp + cv.clientWidth / 2,
+      sy: cv.clientHeight / 2 - (y - v.cy) / v.mpp     // mercator y grows north, screen y grows down
+    };
+  },
+  toWorld(sx, sy) {
+    const v = this.view, cv = this.cv;
+    return {
+      x: v.cx + (sx - cv.clientWidth / 2) * v.mpp,
+      y: v.cy - (sy - cv.clientHeight / 2) * v.mpp
+    };
+  },
+
+  bind(cv) {
+    let drag = null, pinch = null;
+
+    cv.addEventListener('pointerdown', (e) => {
+      cv.setPointerCapture(e.pointerId);
+      drag = { id: e.pointerId, x: e.offsetX, y: e.offsetY, moved: 0 };
+    });
+    cv.addEventListener('pointermove', (e) => {
+      if (!drag || drag.id !== e.pointerId || pinch) return;
+      const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y;
+      drag.moved += Math.abs(dx) + Math.abs(dy);
+      this.view.cx -= dx * this.view.mpp;
+      this.view.cy += dy * this.view.mpp;
+      drag.x = e.offsetX; drag.y = e.offsetY;
+      this.draw();
+    });
+    const end = (e) => {
+      if (!drag || drag.id !== e.pointerId) return;
+      /* A tap is a press that did not travel. 8px of slop, because a thumb on
+         a phone in a gravel pit is not a mouse. */
+      if (drag.moved < 8) this.hit(e.offsetX, e.offsetY);
+      drag = null;
+    };
+    cv.addEventListener('pointerup', end);
+    cv.addEventListener('pointercancel', () => { drag = null; });
+
+    cv.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.zoom(e.deltaY > 0 ? 1.18 : 1 / 1.18, { x: e.offsetX, y: e.offsetY });
+    }, { passive: false });
+
+    /* Two-finger pinch. touch-action:none on the canvas keeps the page from
+       scrolling out from under the gesture. */
+    let lastGap = 0;
+    cv.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      const [a, b] = e.touches;
+      const gap = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      if (lastGap) {
+        const r = cv.getBoundingClientRect();
+        this.zoom(lastGap / gap, {
+          x: (a.clientX + b.clientX) / 2 - r.left,
+          y: (a.clientY + b.clientY) / 2 - r.top
+        });
+      }
+      lastGap = gap;
+      pinch = true;
+    }, { passive: false });
+    cv.addEventListener('touchend', () => { lastGap = 0; pinch = null; });
+  },
+
+  hit(sx, sy) {
+    let best = null, bestD = 30;
+    for (const p of this.pins) {
+      const m = geo.merc(p.lat, p.lon);
+      const s = this.toScreen(m.x, m.y);
+      const d = Math.hypot(s.sx - sx, s.sy - sy);
+      if (d < bestD) { bestD = d; best = p; }
+    }
+    this.selected = best;
+    this.draw();
+    this.showSheet(best);
+  },
+
+  async showSheet(p) {
+    const sheet = this.sheet;
+    sheet.innerHTML = '';
+    if (!p) { sheet.classList.remove('open'); return; }
+    sheet.classList.add('open');
+
+    if (p.kind === 'find') {
+      sheet.appendChild(el('p', { class: 'eyebrow' }, 'Find with no site'));
+      sheet.appendChild(el('h3', { class: 'sheet-title' }, p.find.label || 'Unnamed find'));
+      sheet.appendChild(el('button', {
+        class: 'btn btn-primary full', onclick: () => router.go('find/' + p.find.id)
+      }, 'Open this find'));
+      return;
+    }
+
+    sheet.appendChild(el('p', { class: 'eyebrow' },
+      p.derived ? 'Site · centre from your finds' : 'Site'));
+    sheet.appendChild(el('h3', { class: 'sheet-title' }, p.site.name));
+    sheet.appendChild(el('p', { class: 'sheet-sub mono' },
+      `${p.count} ${p.count === 1 ? 'find' : 'finds'} · ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`));
+
+    const strip = el('div', { class: 'sheet-strip' });
+    for (const f of p.finds.slice(0, 12)) {
+      const ph = f.photoIds && f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+      strip.appendChild(el('button', {
+        class: 'sheet-cell', onclick: () => router.go('find/' + f.id),
+        title: f.label || 'unnamed'
+      }, ph ? el('img', { src: photoURL(ph, true), alt: '' })
+            : el('span', { class: 'sheet-blank' }, '·')));
+    }
+    if (p.finds.length) sheet.appendChild(strip);
+
+    sheet.appendChild(el('button', {
+      class: 'btn btn-primary full', onclick: () => router.go('site/' + p.site.id)
+    }, `Everything from ${p.site.name}`));
+  },
+
+  draw() {
+    const cv = this.cv, v = this.view;
+    if (!cv || !v) return;
+    const ctx = cv.getContext('2d');
+    const w = cv.clientWidth, h = cv.clientHeight;
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = '#F3F4F0';
+    ctx.fillRect(0, 0, w, h);
+
+    /* A graticule at a round number of metres. Without some reference the
+       pins float in a void and the eye cannot judge distance at all. */
+    const targetPx = 76;
+    const raw = targetPx * v.mpp;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map(m => m * pow).find(s => s >= raw) || pow * 10;
+    const px = step / v.mpp;
+    const originX = ((-v.cx / v.mpp + w / 2) % px + px) % px;
+    const originY = ((v.cy / v.mpp + h / 2) % px + px) % px;
+    ctx.strokeStyle = '#DFE1DA';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = originX; x < w; x += px) { ctx.moveTo(Math.round(x) + .5, 0); ctx.lineTo(Math.round(x) + .5, h); }
+    for (let y = originY; y < h; y += px) { ctx.moveTo(0, Math.round(y) + .5); ctx.lineTo(w, Math.round(y) + .5); }
+    ctx.stroke();
+
+    if (this.here) {
+      const m = geo.merc(this.here.lat, this.here.lon);
+      const s = this.toScreen(m.x, m.y);
+      if (this.here.acc) {
+        ctx.fillStyle = 'rgba(62,122,107,.14)';
+        ctx.beginPath();
+        ctx.arc(s.sx, s.sy, Math.max(6, this.here.acc / v.mpp), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#3E7A6B';
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(s.sx, s.sy, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+
+    for (const p of this.pins) {
+      const m = geo.merc(p.lat, p.lon);
+      const s = this.toScreen(m.x, m.y);
+      if (s.sx < -60 || s.sx > w + 60 || s.sy < -60 || s.sy > h + 60) continue;
+      const sel = this.selected === p;
+      const site = p.kind === 'site';
+      const r = site ? (sel ? 15 : 12) : 6;
+
+      ctx.beginPath();
+      if (site) {
+        /* A teardrop, so a site reads as a place and a loose find as a dot.
+           The moveTo is what makes the point: it draws the tip at the actual
+           coordinate, then the arc rounds the head above it. */
+        ctx.moveTo(s.sx, s.sy);
+        ctx.arc(s.sx, s.sy - r, r, Math.PI * 0.15, Math.PI * 0.85, true);
+        ctx.closePath();
+      } else {
+        /* No moveTo here — starting a circle from the centre leaves a spoke
+           from the middle to the arc's start and the dot renders as a pac-man. */
+        ctx.arc(s.sx, s.sy, r, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = site ? (sel ? '#2E5C51' : '#3E7A6B') : '#C9873B';
+      ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+      if (site && p.count) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '600 11px ui-monospace, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(p.count), s.sx, s.sy - r);
+      }
+      if (site && (sel || v.mpp < 60)) {
+        const label = p.site.name;
+        ctx.font = '600 12px system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        const tw = ctx.measureText(label).width;
+        ctx.fillStyle = 'rgba(237,238,234,.92)';
+        ctx.fillRect(s.sx - tw / 2 - 5, s.sy + 5, tw + 10, 17);
+        ctx.fillStyle = '#22271F';
+        ctx.fillText(label, s.sx, s.sy + 7);
+      }
+    }
+
+    const bar = $('#mapscale');
+    if (bar) {
+      bar.style.width = Math.round(px) + 'px';
+      bar.textContent = step >= 1000 ? (step / 1000) + ' km' : step + ' m';
+    }
+  }
+};
+
+/* ── one site, and everything found there ───────────────────────── */
+const sitedetail = {
+  async render(host, args) {
+    const id = args && args[0];
+    host.className = 'view light';
+    host.innerHTML = '';
+
+    const site = await db.get('sites', id);
+    if (!site || site.deleted) {
+      host.appendChild(el('p', { class: 'empty' }, 'That site is gone.'));
+      return;
+    }
+
+    const all = (await db.all('finds')).filter(f => !f.deleted);
+    const mine = all.filter(f => f.siteId === site.id);
+    const c = siteCoord(site, all);
+
+    host.appendChild(el('button', { class: 'btn btn-ghost back', onclick: () => router.go('map') }, '‹ Map'));
+    host.appendChild(el('h2', { class: 'view-title' }, site.name));
+    host.appendChild(el('p', { class: 'sheet-sub mono' },
+      `${mine.length} ${mine.length === 1 ? 'find' : 'finds'}`
+      + (c ? ` · ${c.lat.toFixed(5)}, ${c.lon.toFixed(5)}${c.derived ? ' (from your finds)' : ''}` : '')));
+
+    if (site.notes) host.appendChild(el('p', { class: 'site-notes' }, site.notes));
+
+    if (!mine.length) {
+      host.appendChild(el('p', { class: 'empty sub' }, 'Nothing logged here yet.'));
+      return;
+    }
+
+    const grid = el('div', { class: 'grid' });
+    for (const f of mine) {
+      const ph = f.photoIds && f.photoIds[0] ? await db.get('photos', f.photoIds[0]) : null;
+      const card = el('button', { class: 'card', onclick: () => router.go('find/' + f.id) });
+      if (ph) card.appendChild(el('img', { src: photoURL(ph, true), alt: '', loading: 'lazy' }));
+      if (f.strata) card.appendChild(el('div', { class: 'strata', style: strataCSS(f.strata) }));
+      card.appendChild(el('span', { class: 'card-label' }, f.label || 'unnamed'));
+      grid.appendChild(card);
+    }
+    host.appendChild(grid);
+  }
+};
+
+/* ── development gate ─────────────────────────────────────────────
+   FLOAT is unfinished and deployed alongside the public apps, so this
+   curtain keeps it out of the hands of anyone who wanders in.
+
+   Be clear about what this is and is not. It is NOT security: the
+   passphrase is in the source of a file anyone can read, and a gate
+   written in the page it guards can always be walked around. It does
+   not need to be security — every find, photo and coordinate lives in
+   IndexedDB on this device and has never been anywhere else, so there
+   is nothing here for a stranger to reach even if they get past it.
+   What it buys is that an unfinished app does not look shipped.
+
+   Remove this whole block on the day FLOAT goes public. It is the only
+   thing in the file that assumes a build stage.
+   ─────────────────────────────────────────────────────────────────── */
+const DEV_PASS = 'wolfden';
+const DEV_KEY  = 'float.dev.unlocked';
+
+const devgate = {
+  get unlocked() {
+    try { return localStorage.getItem(DEV_KEY) === DEV_PASS; } catch (e) { return false; }
+  },
+
+  render() {
+    document.body.classList.add('gated');
+    const main = $('#main');
+    main.innerHTML = '';
+    $('#tabbar').innerHTML = '';
+
+    const input = el('input', {
+      type: 'password', id: 'devpass', autocomplete: 'off', autocapitalize: 'none',
+      autocorrect: 'off', spellcheck: 'false', placeholder: 'passphrase',
+      'aria-describedby': 'devhint',
+      onkeydown: (ev) => { if (ev.key === 'Enter') submit(); }
+    });
+    const err = el('p', { class: 'gate-err', role: 'alert' });
+
+    const submit = () => {
+      if (input.value.trim().toLowerCase() !== DEV_PASS) {
+        err.textContent = 'Not that one.';
+        input.value = '';
+        input.focus();
+        return;
+      }
+      try { localStorage.setItem(DEV_KEY, DEV_PASS); } catch (e) { /* private mode: gate holds for this load only */ }
+      document.body.classList.remove('gated');
+      app.start();
+    };
+
+    main.appendChild(el('div', { class: 'gate' },
+      el('div', { class: 'gate-mark' }, '◈'),
+      el('h1', { class: 'gate-title' }, 'FLOAT'),
+      el('p', { class: 'gate-sub' }, 'Rockhounding field log · in development'),
+      el('label', { class: 'gate-label', for: 'devpass' }, 'Passphrase'),
+      input,
+      el('button', { class: 'btn btn-primary gate-go', onclick: submit }, 'Enter'),
+      err,
+      el('p', { class: 'gate-note', id: 'devhint' },
+        'Sky Wolf Studios · this one is not finished yet. Your finds, photos and '
+        + 'coordinates stay in this browser on this device either way — the gate is here so an '
+        + 'unfinished app does not look shipped, not to protect the data.')
+    ));
+    input.focus();
+  }
+};
+
+/* ── app shell ──────────────────────────────────────────────────── */
+const app = {
+  state: { fieldMaterial: '', activeTrip: null },
+  current: null,
+
+  tabs: [
+    { name: 'field', label: 'Field', icon: '◉' },
+    { name: 'queue', label: 'Queue', icon: '◫' },
+    { name: 'collection', label: 'Collection', icon: '▦' },
+    { name: 'map', label: 'Map', icon: '⌖' },
+    { name: 'more', label: 'More', icon: '≡' }
+  ],
+
+  paintTabs(active) {
+    const bar = $('#tabbar');
+    bar.innerHTML = '';
+    for (const t of this.tabs) {
+      const b = el('button', {
+        class: 'tab' + (active === t.name ? ' active' : ''),
+        onclick: () => router.go(t.name)
+      }, el('span', { class: 'tab-icon' }, t.icon), el('span', {}, t.label));
+      if (t.name === 'queue') {
+        const badge = el('span', { class: 'badge', id: 'q-badge', style: 'display:none' });
+        b.appendChild(badge);
+      }
+      bar.appendChild(b);
+    }
+    this.updateBadge();
+  },
+
+  async updateBadge() {
+    const n = (await db.all('finds')).filter(f => !f.deleted && !f.label).length;
+    const badge = $('#q-badge');
+    if (badge) { badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+  },
+
+  async route(name, args) {
+    if (this.current === 'field' && name !== 'field') field.leave();
+    if (this.current === 'map' && name !== 'map') mapview.leave();
+    this.current = name;
+    const main = $('#main');
+    window.scrollTo(0, 0);
+    const tabName = ['find', 'trips', 'stats', 'site'].includes(name)
+      ? (name === 'find' ? 'collection' : name === 'site' ? 'map' : 'more') : name;
+    this.paintTabs(tabName);
+    const views = { field, queue, collection, find: detail, trips, stats, more, map: mapview, site: sitedetail };
+    await (views[name] || field).render(main, args);
+  },
+
+  rerender() { router.go(router.parse().join('/') || 'field'); const p = router.parse(); this.route(p[0] || 'field', p.slice(1)); },
+
+  /* Everything after the gate. Split out of boot() so the gate can call it
+     without a reload — and so deleting the gate later is one line, not surgery. */
+  async start() {
+    await dbOpen();
+    await settings.load();
+    for (const name of ['field', 'queue', 'collection', 'find', 'trips', 'stats', 'map', 'site'])
+      router.add(name, args => this.route(name, args));
+    bus.on('finds-changed', () => this.updateBadge());
+    router.add('more', args => this.route('more', args));
+    router.start();
+  },
+
+  async boot() {
+    if (!devgate.unlocked) { devgate.render(); return; }
+    await this.start();
+  }
+};
+
+if (typeof document !== 'undefined' && document.readyState !== 'loading') app.boot();
+else if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => app.boot());
+
+</script>
+</body>
+</html>
