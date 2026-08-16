@@ -31,6 +31,39 @@ npm run design:preview   # screenshot all 23 skins, light and dark
 npm test                 # every app's test suite
 ```
 
+## Google Play
+
+Every app ships as a Trusted Web Activity. Everything Play needs that a machine
+can derive is derived, from the same source of truth the design system uses —
+`skins.mjs` for identity, `palette.json` for the solved colours, each app's own
+`icon.svg`. Nothing about a listing is assembled by hand twice.
+
+```bash
+npm run play             # icons, manifests, twa-manifests, assetlinks, feature graphics
+npm run play:check       # non-zero exit on any remaining Play gap
+npm run play:privacy     # regenerate 23 privacy pages + the in-app link Play requires
+npm run play:shots <app> # Play screenshots, composed at 1080x1920 (exactly 9:16)
+node design/shots.mjs --list   # which apps still need a screenshot scene
+```
+
+- [`design/play.mjs`](design/play.mjs) — the packaging layer. Read its header for
+  the two things that are load-bearing and easy to get wrong: a maskable icon is
+  not the same drawing as the app icon, and Digital Asset Links only works if
+  the file is actually served.
+- [`design/privacy.mjs`](design/privacy.mjs) — one template, two honest branches,
+  driven by [`design/privacy-facts.json`](design/privacy-facts.json). An app whose
+  facts say data leaves the device can never inherit the on-device paragraph.
+- [`design/scenes.mjs`](design/scenes.mjs) — one screenshot scene per app. A
+  screenshot of an empty list is worth nothing, so each scene drives the real UI
+  into a used state before the capture.
+
+**Two things gate the launch, and neither is code.** Register the Play account as
+an *organisation* under SWS Strategic Media LLC — verification takes 2–4 weeks and
+it removes the 12-testers/14-days gate from all 23 apps. And read Play's
+repetitive-content policy before submitting the second app: 23 small single-purpose
+utilities from one developer is the fact pattern it describes, so ship one at a
+time, roughly one a week, leading with the apps that genuinely differ.
+
 ## Product docs
 
 - [`00-portfolio-brief.md`](00-portfolio-brief.md) — the nine products, four engines, sequencing, open brand decisions

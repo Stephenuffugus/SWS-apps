@@ -1,8 +1,12 @@
 {
   "hosting": {
     "public": "apps",
+    "appAssociation": "NONE",
     "ignore": [
-      "**/.*",
+      "**/.gitignore",
+      "**/.git/**",
+      "**/.DS_Store",
+      "**/.env*",
       "**/node_modules/**",
       "**/test/**",
       "**/*.md",
@@ -19,6 +23,13 @@
       {
         "source": "**/manifest.webmanifest",
         "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+      },
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Cache-Control", "value": "public, max-age=300" }
+        ]
       },
       {
         "source": "**",

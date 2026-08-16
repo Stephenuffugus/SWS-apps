@@ -1,0 +1,369 @@
+{
+  "baby-log": {
+    "slug": "baby-log",
+    "oneLine": "a one-thumb tracker for a newborn's feeds, sleep, diapers and pumping.",
+    "storesWhat": "Your baby's name and every feed, sleep, diaper and pump entry you tap, each with its timestamp",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-babylog` (object store `log`, one record per event under keys `e:<id>`, plus a `meta` record for the name and window setting); the only localStorage key it ever writes is `sws.babylog.ping`, which holds a bare number used to tell a second open tab to re-read",
+    "leavesDevice": "Nothing. There is no network code of any kind in the app — no fetch, no upload, no analytics endpoint. The only copy that ever exists elsewhere is the .json backup you export yourself, which lands in your own Downloads folder.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything you log, because nothing you log is ever sent to it."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap a Copy button — most browsers show no prompt for this, and the app has no ability to read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload the page and keep using it — logging, editing and exporting all still work, because the whole app is cached on your device by its service worker. An app that runs with the network off is an app that cannot be sending your baby's data anywhere. To look directly, open DevTools → Application → IndexedDB → sws-babylog and read every record the app holds."
+  },
+  "bill-splitter": {
+    "slug": "bill-splitter",
+    "oneLine": "a bill and trip-expense splitter that works out who owes whom.",
+    "storesWhat": "Trip and person names, every expense and who paid it, the resulting settle-up amounts, and any Venmo, Cash App or PayPal handles you type",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-billsplit` — object store `trips` for the splits themselves, and `misc` for the last-opened trip id and a short list of recently used names with their payment handles, so you do not retype them",
+    "leavesDevice": "Nothing is uploaded by the app; it has no server and no account. Two things travel only when you deliberately tap them. First, Copy link and the share sheet pack the entire split into the link's own # fragment — browsers never send a fragment to any web server, so the link IS the data, and anyone who holds that link can read the whole split including the payment handles. Second, the Venmo, Cash App and PayPal buttons navigate you out to venmo.com, cash.app or paypal.me with the handle you typed, the amount and the note in the URL; the app never moves money, never sees a payment, and nothing happens unless you tap.",
+    "thirdParties": [
+      "Venmo, Cash App and PayPal — only when you tap a payment button, which navigates you to their site with the handle, amount and note in the URL. The app holds and transfers no money.",
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy — most browsers show no prompt, and the app cannot read your clipboard",
+      "your device's share sheet, only when you tap Share, and only with the text you can already see"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and split a bill from scratch — it works completely offline, which no app that uploads your numbers could do. Then open DevTools → Network and use the app: you will see no requests at all until you tap a payment or tip button, which are plain navigations you chose."
+  },
+  "bracket-maker": {
+    "slug": "bracket-maker",
+    "oneLine": "a single-elimination bracket for game nights, office pools and cook-offs.",
+    "storesWhat": "The bracket title, every competitor name you type and every winner you tap",
+    "storageMechanism": "in this browser's localStorage under the key `bracket-maker`, and simultaneously inside this page's own URL # fragment — a bracket you opened from someone else's link is kept separately under `bracket-maker.visiting` so that tapping around in it can never overwrite your own tournament",
+    "leavesDevice": "Nothing is uploaded — the app has no server and no account. The bracket is mirrored into the page's URL # fragment on every tap, which is how a share link works with no backend: browsers never send a # fragment to any web server. It travels only if you copy that link or use your device's share sheet, and anyone who has the link can see the whole bracket and every result.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard",
+      "your device's share sheet, only when you tap Share, and only with the link you can already see"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload and run a whole tournament — it works, because the app is cached on your device by its service worker and has nowhere to phone home to. Look at your address bar as you tap winners: the bracket is visibly in the URL, which is the whole sharing mechanism, and there is nothing else."
+  },
+  "caregiver-log": {
+    "slug": "caregiver-log",
+    "oneLine": "a shared log where a family keeps appointments, medications and notes about someone they are caring for.",
+    "storesWhat": "The log's title and description, every note, appointment, medication and question anyone posts, the display name each person types, and any task slots and who claimed them",
+    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the log still opens without signal. This browser separately holds your display name under `cl-myname`, an unsent draft note under `cl-draft-<logId>`, a last-viewed timestamp under `cl-seen-<logId>`, and — only if you sign in by email link — your email address under `cl-signin-email`",
+    "leavesDevice": "Everything posted to a log is stored on Google's Firestore servers, because that is the only way everyone holding the link can see it. This app therefore does not carry, and must never carry, the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the log title and description, every entry's author name and body, and every slot label and claim are written to Firestore and readable by anyone with the 6-character share link. The organiser is signed in — anonymously by default, or with Google or an email link if they choose — and Firebase Authentication issues a user id that is stored alongside each entry. Health-related details typed here live on Google's servers; treat the share link like the log itself.",
+    "thirdParties": [
+      "Google Firebase Firestore (firestore.googleapis.com) — stores every log and every entry.",
+      "Google Firebase Authentication (identitytoolkit.googleapis.com) — issues the anonymous or signed-in user id attached to entries.",
+      "Google gstatic.com — the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.",
+      "Google Sign-In (accounts.google.com) — only if the organiser chooses 'Sign in with Google' instead of staying anonymous.",
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open or create a log and you will see requests to firestore.googleapis.com — that is your shared log, and it is the only thing sent. There is no analytics call, and you can confirm why: apps/caregiver-log/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+  },
+  "grocery-list": {
+    "slug": "grocery-list",
+    "oneLine": "a shared household grocery list that updates live for everyone holding the link.",
+    "storesWhat": "The list's title and description, every item anyone adds, the author name typed with it, whether it has been ticked into the cart, and any slots and claims",
+    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the list still opens in a supermarket dead zone. The only localStorage key this app writes is `gl-signin-email`, and only if you sign in by email link",
+    "leavesDevice": "Everything on a list is stored on Google's Firestore servers, because that is the only way the whole household sees the same list. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the list title and description, every item body (capped at 2000 characters) and the author name (capped at 60) are written to Firestore and readable and editable by anyone holding the 6-character share link. The list owner is signed in — anonymously by default, or with Google or an email link if they choose — and Firebase Authentication issues a user id stored alongside each item.",
+    "thirdParties": [
+      "Google Firebase Firestore (firestore.googleapis.com) — stores every list and every item.",
+      "Google Firebase Authentication (identitytoolkit.googleapis.com) — issues the anonymous or signed-in user id attached to items.",
+      "Google gstatic.com — the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.",
+      "Google Sign-In (accounts.google.com) — only if the owner chooses 'Sign in with Google' instead of staying anonymous.",
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a list and you will see requests to firestore.googleapis.com — that is the shared list itself, and it is the only thing sent. There is no analytics call: apps/grocery-list/firebase-config.js has no measurementId, so Google Analytics is never initialised."
+  },
+  "home-inventory": {
+    "slug": "home-inventory",
+    "oneLine": "a room-by-room home inventory for insurance, with photos and a printable PDF report.",
+    "storesWhat": "Every room and item you record — name, brand, model, serial number, purchase date, value, notes, and a photo of each item",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-inventory` (object store `inventories`), with photos downscaled and re-encoded at capture time so they fit; the only localStorage keys are `sws.hi.tab.<inventoryId>`, which remember which tab you were last on",
+    "leavesDevice": "Nothing. The app contains no network code at all. A photo is read from the file picker, resized inside the page and written straight to the local database — it is never uploaded. The PDF report and the ZIP export are both built in the page and land in your own Downloads folder. Because nothing is uploaded, there is no cloud backup either: exporting is genuinely your job.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything about your belongings, because nothing about them is ever sent to it."
+    ],
+    "permissions": [
+      "access to the photos you pick, one at a time, through your browser's own file picker — the app deliberately does not set capture=\"environment\", so it never jumps straight into a camera without asking you"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and photograph and catalogue a whole room, then export the PDF — all of it works offline, which is impossible for an app that uploads your photos. To look directly, open DevTools → Application → IndexedDB → sws-inventory: every item and every photo is right there on your device, and the Network tab stays empty while you work."
+  },
+  "image-compressor": {
+    "slug": "image-compressor",
+    "oneLine": "an in-browser image resizer and compressor with no upload and no file-size cap.",
+    "storesWhat": "No pictures whatsoever — the images you add are held only in this tab's memory and are gone when you close it. The single thing kept between visits is your own compression settings: target size, quality, dimensions and output format",
+    "storageMechanism": "in this browser's localStorage under the key `imgc.settings.v2`, which holds settings only and never any image data",
+    "leavesDevice": "Nothing. The app has no upload path and no network code — every decode, resize and re-encode happens on a canvas inside the tab. The only files that move are the compressed images and the .zip you download to your own device. Re-encoding also drops the original's EXIF metadata, so a compressed photo carries no camera details and no GPS location.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "access to the images you pick, through your browser's own file picker, or images you drag in or paste — the app can only see the files you hand it"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload the page and compress a batch of photos — it works completely, because the whole app is cached on your device. An app that compresses with the network off cannot be uploading your pictures. Open DevTools → Network while you work and you will see no requests at all."
+  },
+  "moving-boxes": {
+    "slug": "moving-boxes",
+    "oneLine": "a numbered box list with printable QR labels you scan to see what is inside.",
+    "storesWhat": "Your box numbers, the room each box belongs to and every item you list inside it",
+    "storageMechanism": "in this browser's localStorage under the key `moving-boxes`, with display options under `moving-boxes-opts`; if a saved record is ever unreadable it is quarantined under `moving-boxes-unreadable` rather than being silently overwritten",
+    "leavesDevice": "Nothing is uploaded — the app has no server and no account, and printing sends nothing anywhere. The one thing that travels is the QR label: its contents are encoded inside a URL's own # fragment, which browsers never send to any web server, so scanning a label opens this app with that box already decoded, offline, with nothing fetched. The consequence to know: anyone who can photograph a label on the side of a box can read the list of what is in it. If that matters, print labels without the contents — the app has a setting for exactly that.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "none"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, add boxes and print labels, then scan one with your phone's camera in airplane mode — the box contents still appear, because they are inside the code itself and no lookup happens. Open DevTools → Network while you work and you will see no requests at all."
+  },
+  "packing-list": {
+    "slug": "packing-list",
+    "oneLine": "a reusable packing list for trips, with a share link and a QR code.",
+    "storesWhat": "Every trip name, every item on every list and which items you have ticked off",
+    "storageMechanism": "in this browser's localStorage under the key `packing-list.trips`; the active trip is also mirrored to the older key `packing-list` so that a browser still serving a cached previous build does not open to an empty list",
+    "leavesDevice": "Nothing is uploaded — there is no account, no server and nothing to sync. A share link or QR code carries the whole list inside the link's own # fragment, which browsers never send to any web server, so it travels only if you paste or show it yourself. Anyone who has that link or scans that code can read the entire list.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data at the airport, or before you leave, and reload — the whole list is there and every tick still saves, because it never needed a network. Open DevTools → Network while you pack and you will see no requests at all."
+  },
+  "pdf-tools": {
+    "slug": "pdf-tools",
+    "oneLine": "an in-browser PDF merger and splitter with no upload, no page limit and no watermark.",
+    "storesWhat": "Everything you load — the PDF files themselves, and the page order, rotations and deletions you set up",
+    "storageMechanism": "in this tab's memory only and nowhere else: the app deliberately writes no localStorage, no IndexedDB and no cookie for your documents, which is why closing or refreshing the tab discards your arrangement and starts over",
+    "leavesDevice": "Nothing. When you add a file the browser hands its bytes to JavaScript inside this tab, and merging, reordering, rotating, deleting and splitting all happen there, in memory, on your machine. There is no upload, no server-side processing, no queue and no copy kept anywhere. The only file that touches your disk is the one you press Save to produce, and it lands in your own Downloads folder. The PDF engine is a copy of pdf-lib that ships inside the app, not a script fetched from anyone.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything about your PDFs, because your PDFs are never sent to it."
+    ],
+    "permissions": [
+      "access to the PDF files you pick, through your browser's own file picker or by dragging them in — the app can only see the files you hand it"
+    ],
+    "verifyTip": "Turn off your Wi-Fi or unplug the network, reload this page, and merge some PDFs. It works, because the whole app is cached on your device by its service worker — and an app that can run with the network off is an app that cannot be sending your documents anywhere. To look directly, open DevTools → Network and use the app: you will see no requests while you work."
+  },
+  "pill-schedule": {
+    "slug": "pill-schedule",
+    "oneLine": "a printable medication schedule with doses, times and a weekly check-off grid.",
+    "storesWhat": "The person's name, their allergies, every medication with its dose, times and notes, and the prescriber and pharmacy names and phone numbers",
+    "storageMechanism": "in this browser's localStorage under the key `pill-schedule`",
+    "leavesDevice": "Nothing is uploaded — there is no account, no server and no analytics, and this is health information, so we are precise about it. A share link or QR code carries the whole card inside the link's own # fragment, which browsers never send to any web server, so it travels only if you copy it or show the code yourself. Anyone who has that link, or photographs that QR code, can read the medications, doses and allergies. Send it the way you would hand over the paper card. The printed card keeps working even if this site disappears.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record any medication detail, because none is ever sent to it."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and build and print a whole schedule — it works, because the app is cached on your device and has no server to talk to. Open DevTools → Network while you type medications and you will see no requests at all; open Application → Local Storage and you will see the single `pill-schedule` key that holds it, on your device."
+  },
+  "qr-maker": {
+    "slug": "qr-maker",
+    "oneLine": "a QR code generator for links, WiFi, phone numbers and text that never expires.",
+    "storesWhat": "Whatever you encode — web links, plain text, phone numbers, email addresses, and WiFi network names together with their passwords — plus the codes you choose to keep and the draft you were last working on",
+    "storageMechanism": "in this browser's localStorage under the key `qr-maker.v1`, which holds up to 60 kept codes and the current draft",
+    "leavesDevice": "Nothing. The codes are computed inside the page by a QR encoder that ships with the app — there is no generator service, no URL shortener and no 'dynamic code' server, which is exactly why the codes never expire and why nothing you encode is ever sent anywhere. One thing worth knowing rather than discovering: a WiFi code contains your network password in plain text, both in this browser's storage and inside any PNG, SVG or printout you export, because that is what makes the code work when someone scans it.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It never sees what you encode."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and generate and download a code — it works, which no server-backed QR generator can do. Open DevTools → Network while you type a WiFi password and you will see no requests at all. Open Application → Local Storage → qr-maker.v1 to see exactly what is kept, and delete it there whenever you like."
+  },
+  "scan-to-pdf": {
+    "slug": "scan-to-pdf",
+    "oneLine": "a document scanner that turns photographed pages into one clean PDF.",
+    "storesWhat": "The photographed pages themselves, as image blobs, together with the order and rotation you set",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-scan-to-pdf` (object store `pages`), with the page order and rotations in a small localStorage record under `sws.scan.order` — pages are written the moment they land so an interrupted session is not lost, and they stay until you export or clear them",
+    "leavesDevice": "Nothing. There is no network code anywhere in this app. Each photo is re-drawn onto a canvas before it is stored, which strips its EXIF metadata — the finished PDF carries no camera information and no GPS location. The PDF is assembled inside the page by a copy of pdf-lib that ships with the app and is saved to your own Downloads folder. There is also no cloud archive, no sync between devices and no account to recover from: treat this as a pipe, not a filing cabinet.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything about your documents, because they are never sent to it."
+    ],
+    "permissions": [
+      "your device's camera, reached through your own camera app when you tap Take photo — the app uses a plain file input with capture=\"environment\" and never opens a live camera stream, so it can only ever see the photo you accept",
+      "access to images you pick from your library, through your browser's own file picker"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, photograph eight pages and export the PDF — every step works offline, which is impossible for a scanner that uploads. Open DevTools → Network while you scan and you will see no requests at all; open Application → IndexedDB → sws-scan-to-pdf to see your pages sitting on your own device, and use Clear to remove them."
+  },
+  "seating-chart": {
+    "slug": "seating-chart",
+    "oneLine": "a wedding and event seating planner with rule checking and print-ready PDFs.",
+    "storesWhat": "Every event you build — guest names, party groupings, meal choices, tags, RSVP status, private notes, your tables, and the together/apart rules you set",
+    "storageMechanism": "in this browser's own IndexedDB database `sws-seating` (object store `projects`), one record per event",
+    "leavesDevice": "Nothing. The app has no network code and no account. Guest lists you paste are parsed inside the page, and the print-ready PDF is generated there too, by a copy of pdf-lib that ships with the app; it lands in your own Downloads folder. Because nothing is uploaded there is also no cloud backup, so exporting a copy is genuinely your responsibility.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record a single guest name, because none is ever sent to it."
+    ],
+    "permissions": [
+      "none"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, paste a guest list, seat everyone and export the PDF — the whole thing works offline, which no app that uploads your guest list could do. Open DevTools → Network while you work and you will see no requests at all; open Application → IndexedDB → sws-seating to read exactly what is stored, on your device."
+  },
+  "secret-santa": {
+    "slug": "secret-santa",
+    "oneLine": "a Secret Santa draw with couple exclusions and a private reveal link for each person.",
+    "storesWhat": "The roster of names you paste, the event name and budget, your no-match (couple) exclusion rules, and the finished draw",
+    "storageMechanism": "in this browser's localStorage under the key `sws.secret-santa.v1`",
+    "leavesDevice": "Nothing is uploaded, and no email address is ever collected or even asked for — the app has no way to send anything to anybody. Each person's private reveal link carries only that one person's name, their match, and the event name and budget, encoded inside the link's own # fragment, which browsers never send to any web server. You hand those links out yourself, by whatever means you like. The consequence to know: whoever receives a link can open it, so passing someone else's link to the wrong person reveals that one pairing. Opening a reveal link keeps no record on that device at all.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy for a reveal link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and run a full draw with exclusions — it works, because the drawing happens in the page and there is nowhere to send names. Open DevTools → Network while you draw and you will see no requests at all. Open a reveal link and look at the address bar: the name and match are visibly inside the # fragment, which is the entire delivery mechanism."
+  },
+  "signature-maker": {
+    "slug": "signature-maker",
+    "oneLine": "a signature tool that draws, types or lifts a signature from a photo and exports a transparent PNG.",
+    "storesWhat": "The strokes, colour and sizing of a signature you draw or type — and nothing else; a signature imported from a photo is never written to storage at all",
+    "storageMechanism": "in this tab's sessionStorage under the key `sig.draft`, which your browser erases the moment the tab closes — this is deliberate, so a reload does not lose your work but closing the tab genuinely leaves nothing behind",
+    "leavesDevice": "Nothing. There is no network code in the app. A photo you import is read inside this tab, has its background removed in the page, and is never uploaded and never saved to this device. The PNG or JPG you export is produced in the page and lands in your own Downloads folder. Your signature is a legally sensitive thing, so the design here is: keep it only as long as the tab is open, and never send it anywhere.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It never sees your signature."
+    ],
+    "permissions": [
+      "access to the photo you pick, through your browser's own file picker — the app can only see the file you hand it, and that file is never stored",
+      "write-only clipboard access when you tap Copy — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, sign, and export a PNG — it all works, so nothing was ever uploaded. Then close the tab, reopen the app, and note that your signature is gone: that is sessionStorage doing exactly what the page promises. Open DevTools → Network while you sign and you will see no requests at all."
+  },
+  "signup-sheets": {
+    "slug": "signup-sheets",
+    "oneLine": "a sign-up sheet for potlucks, volunteer shifts, meal trains and snack rotations.",
+    "storesWhat": "The sheet's title and description, every slot label and its capacity, and the name and short note each person types when they claim a spot",
+    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the sheet still opens without signal. This browser separately holds the display name you last used under `ss-myname`, and — only if you sign in by email link — your email address under `ss-signin-email`",
+    "leavesDevice": "Everything on a sheet is stored on Google's Firestore servers, because that is the only way everyone with the link sees the same sheet update live. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the sheet title and description, every slot label, and every claimant's name (capped at 60 characters) and note (capped at 120) are written to Firestore and readable by anyone holding the share link. The organiser is signed in — anonymously by default, or with Google or an email link if they choose — and Firebase Authentication issues a user id stored with each claim. People who claim a spot need no account: they are signed in anonymously behind the scenes so the app can tell one claim from another.",
+    "thirdParties": [
+      "Google Firebase Firestore (firestore.googleapis.com) — stores every sheet, slot and claim.",
+      "Google Firebase Authentication (identitytoolkit.googleapis.com) — issues the anonymous or signed-in user id attached to claims.",
+      "Google gstatic.com — the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.",
+      "Google Sign-In (accounts.google.com) — only if the organiser chooses 'Sign in with Google' instead of staying anonymous.",
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a sheet and you will see requests to firestore.googleapis.com — that is the sheet itself, and it is the only thing sent. There is no analytics call: apps/signup-sheets/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+  },
+  "sitter-sheet": {
+    "slug": "sitter-sheet",
+    "oneLine": "a one-page sheet for a babysitter or pet sitter: contacts, routines, allergies and quirks.",
+    "storesWhat": "Your home address, phone numbers, backup contacts, allergies and medications, bedtime and feeding routines, and every other detail you type for the sitter",
+    "storageMechanism": "in this browser's localStorage under `sitter-baby` for a babysitter sheet or `sitter-pet` for a pet sitter sheet — one key per sheet type, so the two never overwrite each other",
+    "leavesDevice": "Nothing is uploaded — there is no account, no server and no analytics, and this sheet holds your address and your children's medications, so we are precise about it. A share link or QR code carries the entire sheet inside the link's own # fragment, which browsers never send to any web server, so it travels only if you copy it or show the code yourself. Anyone who has that link, or photographs that QR code, can read the whole sheet including your address. Send it directly to your sitter, the way you would hand over the paper version — not into a group chat and not anywhere public.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record your address, because it is never sent to it."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, fill in the whole sheet and print it — every step works offline, so none of it was ever uploaded. Open DevTools → Network while you type your address and you will see no requests at all; open Application → Local Storage and you will see the single `sitter-baby` or `sitter-pet` key that holds it, on your device."
+  },
+  "specials-planner": {
+    "slug": "specials-planner",
+    "oneLine": "a year-long lesson planner for art, music, PE and library specials teachers.",
+    "storesWhat": "Your schedule setup and every lesson, plan and note you type",
+    "storageMechanism": "in this browser's localStorage under the key `palette2`, with an in-memory fallback if the browser refuses to store anything — in which case the app tells you plainly rather than pretending it saved",
+    "leavesDevice": "Nothing, as the app is currently built. The optional Google Drive save/load feature is switched off in the shipped code: the OAuth client id it depends on is empty (`const CLIENT_ID = \"\"` in index.html), so the Drive buttons are hidden, the Google Identity script is never loaded, and no request to Google's APIs is possible. If that feature is ever turned on, it would ask only for the narrow `drive.file` scope — files the app itself created, never the rest of your Drive and never your email — and your browser would talk to Google directly; the token would never pass through us. The app needs no student information at all; anything you do type stays here like everything else.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.",
+      "Google Drive and Google Identity Services — code for an optional Drive backup exists in the page but is disabled in the shipped build (no OAuth client id), so no connection to Google's APIs is ever made. If it is ever enabled, this page will say so."
+    ],
+    "permissions": [
+      "none"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and plan a full week — it works, because the app is cached on your device and has nothing to call. Open DevTools → Network while you type lesson notes and you will see no requests at all. To confirm the Drive feature is genuinely off, view the page source and search for CLIENT_ID: it is set to an empty string, and every Drive function returns immediately without it."
+  },
+  "sub-plans": {
+    "slug": "sub-plans",
+    "oneLine": "a substitute-folder builder that prints your whole classroom handover in minutes.",
+    "storesWhat": "Everything in your substitute folder — your name, class, room and school, the day's schedule, classroom routines, the WiFi and computer passwords you write down, helper and neighbour names, drill and emergency information, and any health or IEP notes you choose to include",
+    "storageMechanism": "in this browser's localStorage under the key `subplans`, with your grade band under `subplans.band` and the print-a-QR preference under `subplans.qrpaper`",
+    "leavesDevice": "Nothing is uploaded — there is no account, no server, no analytics and nothing to opt out of. The one exception is a share link, and only if you copy it yourself: Copy link packs the whole folder into the link's own # fragment, which browsers never send to any web server. Nothing is stored anywhere — the link IS the folder. That also means anyone who has the link can read the folder, including the passwords and any health notes in it, so send it the way you would hand over the paper version: straight to your sub, the office or a colleague, never anywhere public. The same is true of the optional printed QR code.",
+    "thirdParties": [
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses. It cannot record anything about your class, because nothing is ever sent to it."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, build the whole folder and print it — every step works offline, so none of it was ever uploaded. Open DevTools → Network while you type and you will see no requests at all. Note this app has no tip jar at all, so it makes not one outbound request in normal use."
+  },
+  "team-parent": {
+    "slug": "team-parent",
+    "oneLine": "a season of practices, games, snack duty and carpools in one link every family can open.",
+    "storesWhat": "The team page's title and description, every practice, game and duty slot with its label and capacity, the name each family types when they RSVP or claim a duty, and any announcements or notes posted",
+    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the schedule still opens at a field with no signal. This browser separately holds the display name you last used under `tp-myname`, and — only if the organiser signs in by email link — that email address under `tp-signin-email`",
+    "leavesDevice": "Everything on a team page is stored on Google's Firestore servers, because that is the only way every family sees the same schedule update live. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the page title and description, every slot label, every claimant name (capped at 60 characters) and every announcement body (capped at 2000) are written to Firestore and readable by anyone holding the 6-character share link. Only the organiser signs in — anonymously by default, or with Google or an email link if they choose; families need no account and are signed in anonymously behind the scenes so the app can tell one RSVP from another. Separately, an address you type into a location field is turned into an ordinary Google Maps link: nothing is fetched, and you only go there if you tap it.",
+    "thirdParties": [
+      "Google Firebase Firestore (firestore.googleapis.com) — stores every team page, slot and RSVP.",
+      "Google Firebase Authentication (identitytoolkit.googleapis.com) — issues the anonymous or signed-in user id attached to RSVPs.",
+      "Google gstatic.com — the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.",
+      "Google Sign-In (accounts.google.com) — only if the organiser chooses 'Sign in with Google' instead of staying anonymous.",
+      "Google Maps — a typed address becomes a plain link; tapping it navigates you to google.com/maps with that address in the URL. Nothing is fetched unless you tap.",
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a team page and you will see requests to firestore.googleapis.com — that is the shared schedule, and it is the only thing sent. There is no analytics call: apps/team-parent/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+  },
+  "wedding-timeline": {
+    "slug": "wedding-timeline",
+    "oneLine": "a day-of wedding timeline you build once and print for the wedding party.",
+    "storesWhat": "Every time, event, name and who-goes-where in your day-of timeline, along with its revision history stamp",
+    "storageMechanism": "in this browser's localStorage under the key `wedding-timeline`",
+    "leavesDevice": "Nothing is uploaded — no account, no email, no analytics. A share link is built on your own phone and carries the whole timeline inside the link's own # fragment, which browsers never send to any web server; it travels only if you paste it somewhere yourself, and anyone who has it can read the entire schedule. The backup is a plain .json file saved to your own Downloads folder, and it is never uploaded either.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, build the timeline and print it — every step works offline, which no app that uploads your schedule could do. Open DevTools → Network while you edit and you will see no requests at all; open Application → Local Storage → wedding-timeline to see exactly what is kept, on your device."
+  },
+  "wheel-picker": {
+    "slug": "wheel-picker",
+    "oneLine": "a fair spinning wheel for picking names, chores or winners.",
+    "storesWhat": "The names on the wheel",
+    "storageMechanism": "inside this page's own URL # fragment, which is why bookmarking or sharing the link keeps the wheel forever — the only thing ever written to localStorage is your chosen spin length, under the key `wheel.spin`, and the spin history is held in memory alone and disappears when you close the tab",
+    "leavesDevice": "Nothing. The wheel lives in the link's # fragment, and browsers never send a # fragment to any web server, so the names travel only if you paste that link somewhere yourself — and anyone who has the link sees the same list. The spin history exists purely so you can point at it when somebody says the wheel was rigged; it is never recorded anywhere off this device and there is no record kept of who won.",
+    "thirdParties": [
+      "Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload and spin — it works, because the whole wheel is in the address bar in front of you. Watch the URL change as you add names: that is the entire storage and sharing mechanism, and there is nothing else. Open DevTools → Network while you spin and you will see no requests at all."
+  }
+}

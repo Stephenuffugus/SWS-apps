@@ -1,0 +1,394 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SWS STUDIO — screenshot scenes
+
+   One entry per app, consumed by shots.mjs. A scene answers a single question:
+   what does this app look like when somebody has actually been using it?
+
+   Two ways to get there, and the choice matters:
+
+     act    — drive the real UI: fill the field, click the button. Slower, but
+              the state is real by construction and cannot drift from the app.
+              Prefer this.
+     store  — seed localStorage before boot. Necessary when the state would
+              take twenty interactions to build, but it hard-codes that app's
+              storage shape here, so it breaks silently if the shape changes.
+
+   Each panel becomes one 1080x1920 Play screenshot. Order is the swipe order,
+   and the first one carries the install decision — it should show the app
+   doing its job, not a welcome screen.
+
+   Captions are short because Play renders them small. The sub-line is the
+   place for the promise the competition cannot match.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* scrollIntoViewIfNeeded lands the element anywhere in the viewport, which on a
+   tall page means the capture opens mid-paragraph. Panels want the card's top
+   edge just under the top of the frame, so scroll deliberately. */
+const toTop = async (p, sel, pad = 12) => {
+  await p.evaluate(([s, o]) => {
+    const el = document.querySelector(s);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - o, behavior: 'instant' });
+  }, [sel, pad]);
+};
+
+/* Sub Plans is a single long form keyed #f-<field>. Filling it through the UI
+   rather than seeding storage means the panels below show exactly what a
+   teacher would see, including the live page count on the Print button. */
+const SUB_PLANS_BINDER = {
+  teacher: 'Ms. Rivera',
+  class: '3rd grade — 24 kids',
+  room: '12',
+  school: 'Maple Elementary',
+  plan: '8:00  Morning work — packet on my desk, they know the drill\n'
+    + '8:40  Read-aloud, ch. 7 of Because of Winn-Dixie (bookmark is in it)\n'
+    + '9:15  Math — pages 44-45, work in table groups\n'
+    + '10:30 Recess. Take the orange whistle by the door.\n'
+    + '11:00 Writing — finish the small-moment drafts\n'
+    + '12:00 Lunch (they line up by the sink)\n'
+    + '1:00  Science video + the worksheet in the blue tray\n'
+    + '2:15  Clean-up, read silently, stack chairs at 2:50',
+  bathroom: 'One at a time, with the pass hanging by the door. If two ask at once they can wait.',
+  wifi: 'WiFi: MapleGuest / maple2024!\nLaptop cart code: 4417',
+  office: 'Ext. 100',
+  neighbor: 'Mrs. Alvarez, Rm 14 — she knows my routines and will not mind being asked.',
+  helpers: 'Ava and Marcus know every routine and will tell you the truth about what comes next.',
+  needs: 'Jordan sits up front (glasses). Sam leaves at 1:30 for speech and comes back at 2.',
+  behavior: 'Marble jar on my desk — add for good group work. No need to take any out.',
+  nurse: 'Ext. 108',
+  admin: 'Mr. Okafor — ext. 103',
+  drills: 'Fire: out our door, turn left, flag by the fence at the far end of the lot.\n'
+    + 'Lockdown: lights off, kids behind the bookshelf, door is already locked.',
+  health: 'Maya R: peanut allergy — EpiPen is in the red pouch on my desk, office has a second.\n'
+    + 'Eli T: asthma inhaler in his backpack, he knows when he needs it.',
+  dismissal: 'Bus riders leave at 3:05 — the list is taped inside the closet door. Walkers at 3:10.',
+  note: 'Leave the room roughly standing and I will be delighted. Thank you for taking my class.',
+};
+
+const fillBinder = async (p, keys) => {
+  for (const k of keys) {
+    const v = SUB_PLANS_BINDER[k];
+    if (v == null) continue;
+    await p.fill(`#f-${k}`, v).catch(() => {});
+  }
+  await p.waitForTimeout(300);
+};
+
+/* Home Inventory opens on a list of inventories, so every panel has to create
+   one first: "Start an inventory" → name it → the fast-capture screen. Photos
+   need a real camera, which headless Chromium does not have, so the items are
+   captured without one — the panels that matter are the list, the room
+   breakdown and the export, none of which depend on the image. */
+/* Grouped by room on purpose: the "room by room" panel is a lie if every item
+   lands in Living room and the other rooms read "0 items". */
+const HI_BY_ROOM = [
+  ['Living room', [['65-inch TV', '1', '900'], ['Sofa — three seat', '1', '1400'], ['Rug — wool 8x10', '1', '620']]],
+  ['Kitchen', [['Espresso machine', '1', '480'], ['Stand mixer', '1', '390'], ['Dining table + 6 chairs', '1', '860']]],
+  ['Bedroom', [['MacBook Pro 14"', '1', '1999'], ['Jewellery — inherited', '1', '2200']]],
+  ['Garage', [['Road bike', '1', '1250'], ['Washer / dryer', '1', '1100'], ['Mitre saw', '1', '340']]],
+];
+
+const hiStart = async (p, name = 'Our house — 2026') => {
+  await p.getByRole('button', { name: /start an inventory/i }).click();
+  await p.waitForTimeout(400);
+  await p.fill('#askField', name);
+  await p.getByRole('button', { name: /^create$/i }).click();
+  await p.waitForTimeout(700);
+};
+
+const hiCapture = async (p) => {
+  for (const [room, items] of HI_BY_ROOM) {
+    /* The room select sits on the capture card and carries no id; it is the
+       only select visible on this screen. A room not already in the list has
+       to be added on the Rooms tab first, so fall back to leaving the current
+       room selected rather than throwing the whole panel away. */
+    await p.locator('select:visible').first()
+      .selectOption({ label: room }).catch(() => {});
+    await p.waitForTimeout(150);
+    for (const [n, q, v] of items) {
+      await p.fill('#capName', n).catch(() => {});
+      await p.fill('#capQty', q).catch(() => {});
+      await p.fill('#capValue', v).catch(() => {});
+      await p.getByRole('button', { name: /save & next/i }).click().catch(() => {});
+      await p.waitForTimeout(240);
+    }
+  }
+};
+
+const hiTab = async (p, name) => {
+  await p.getByRole('button', { name: new RegExp(`^${name}$`, 'i') }).click().catch(() => {});
+  await p.waitForTimeout(600);
+};
+
+export const SCENES = {
+  'home-inventory': {
+    panels: [
+      {
+        slug: 'capture',
+        caption: 'Point, shoot, name, next',
+        sub: 'One room at a time. The photo is compressed as it is taken and never uploaded.',
+        act: async (p) => {
+          await hiStart(p);
+          await p.fill('#capName', 'Espresso machine').catch(() => {});
+          await p.fill('#capValue', '480').catch(() => {});
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'items',
+        caption: 'The list your insurer asks for',
+        sub: 'Every item with what it cost, what it would cost to replace, and where it lives.',
+        act: async (p) => {
+          await hiStart(p);
+          await hiCapture(p);
+          await hiTab(p, 'Items');
+        },
+      },
+      {
+        slug: 'rooms',
+        caption: 'Room by room, so nothing is missed',
+        sub: 'Walk the house once. The rooms you have not started are the ones still listed empty.',
+        act: async (p) => {
+          await hiStart(p);
+          await hiCapture(p);
+          await hiTab(p, 'Rooms');
+        },
+      },
+      {
+        slug: 'export',
+        caption: 'A PDF claim exhibit, made on your phone',
+        sub: 'Full report, an items-by-value exhibit, and a CSV your carrier can actually read.',
+        act: async (p) => {
+          await hiStart(p);
+          await hiCapture(p);
+          await hiTab(p, 'Export');
+        },
+      },
+      {
+        slug: 'private',
+        caption: 'Photographs of everything you own, kept by nobody',
+        sub: 'No account, no cloud, no subscription. Sortly and Encircle cannot say that.',
+        dark: true,
+        act: async (p) => {
+          await hiStart(p);
+          await hiCapture(p);
+          await hiTab(p, 'Items');
+        },
+      },
+    ],
+  },
+
+  'sub-plans': {
+    panels: [
+      {
+        slug: 'today',
+        caption: 'The binder writes itself',
+        sub: 'Fill it once in August. On the sick morning you only have to press print.',
+        act: async (p) => {
+          await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
+          await p.click('#viewToday').catch(() => {});
+          await p.waitForTimeout(300);
+          await toTop(p, '#form', 90);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'plan',
+        caption: 'The day, hour by hour',
+        sub: 'Written in your words, not squeezed into somebody else’s template.',
+        act: async (p) => {
+          await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
+          await p.click('#viewAll').catch(() => {});
+          await p.waitForTimeout(300);
+          await toTop(p, '#f-plan', 150);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'emergency',
+        caption: 'Allergies and drills, printed where they get read',
+        sub: 'Health alerts sit in a heavy black box on page one, tuned for a school photocopier.',
+        act: async (p) => {
+          await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
+          await p.click('#viewAll').catch(() => {});
+          await p.waitForTimeout(300);
+          await toTop(p, '#f-health', 190);
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'preview',
+        caption: 'Read it as your sub would',
+        sub: 'Black and white, exactly as it lands on the desk — before you print a page.',
+        act: async (p) => {
+          await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
+          await p.click('#previewBtn').catch(() => {});
+          await p.waitForTimeout(900);
+        },
+      },
+      {
+        slug: 'free',
+        caption: 'Free, offline, nothing uploaded',
+        sub: 'No account, no ads, no subscription. Your class list never leaves this device.',
+        dark: true,
+        act: async (p) => {
+          await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
+          await p.click('#viewAll').catch(() => {});
+          await p.waitForTimeout(300);
+          await toTop(p, '#f-teacher', 150);
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
+  'packing-list': {
+    panels: [
+      {
+        slug: 'presets',
+        caption: 'Pack once, forget nothing',
+        sub: 'Tap the trip you are taking. The presets combine, and nothing is added twice.',
+        act: async (p) => {
+          await p.fill('#tripName', 'Tahoe long weekend');
+          for (const label of [/essentials/i, /camping/i, /with kids/i]) {
+            await p.getByRole('button', { name: label }).click();
+            await p.waitForTimeout(180);
+          }
+          await toTop(p, '#presets', 120);   // the chips are the hook, not the hint above them
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'list',
+        caption: 'Grouped the way you pack',
+        sub: 'Tick as you go. It saves itself on this phone, with no account anywhere.',
+        act: async (p) => {
+          await p.fill('#tripName', 'Tahoe long weekend');
+          for (const label of [/essentials/i, /camping/i]) {
+            await p.getByRole('button', { name: label }).click();
+            await p.waitForTimeout(180);
+          }
+          const boxes = p.locator('#list input[type="checkbox"]');
+          const n = Math.min(5, await boxes.count());
+          for (let i = 0; i < n; i++) { await boxes.nth(i).check().catch(() => {}); await p.waitForTimeout(90); }
+          await toTop(p, '#listCard');
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'custom',
+        caption: 'Add the things only you take',
+        sub: 'Retainer, dog food, the good charger — they stay for next time.',
+        act: async (p) => {
+          await p.fill('#tripName', 'Tahoe long weekend');
+          await p.getByRole('button', { name: /essentials/i }).click();
+          await p.waitForTimeout(200);
+          for (const item of ['Dog food', 'The good charger', 'Retainer case']) {
+            await p.fill('#customItem', item);
+            await p.click('#addBtn');
+            await p.waitForTimeout(220);
+          }
+          /* The point of this panel is the custom items, and they land at the
+             bottom of the list — framing the top of the card would show only
+             the preset rows the previous panel already showed. */
+          await p.evaluate(() => {
+            const hit = [...document.querySelectorAll('#list li')]
+              .find((li) => /dog food/i.test(li.textContent));
+            if (hit) window.scrollTo({ top: hit.getBoundingClientRect().top + window.scrollY - 260, behavior: 'instant' });
+          });
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'share',
+        caption: 'Send the list to whoever else is packing',
+        sub: 'The whole list rides inside the link. Nothing is uploaded to share it.',
+        act: async (p) => {
+          await p.fill('#tripName', 'Tahoe long weekend');
+          await p.getByRole('button', { name: /essentials/i }).click();
+          await p.waitForTimeout(250);
+          await p.click('#qrBtn').catch(() => {});
+          await p.waitForTimeout(700);
+        },
+      },
+      {
+        slug: 'dark',
+        caption: 'Free, and it stays that way',
+        sub: 'No ads, no account, no subscription, and it works with the plane on airplane mode.',
+        dark: true,
+        act: async (p) => {
+          await p.fill('#tripName', 'Tahoe long weekend');
+          for (const label of [/essentials/i, /beach/i]) {
+            await p.getByRole('button', { name: label }).click();
+            await p.waitForTimeout(180);
+          }
+          await toTop(p, '#listCard');
+          await p.waitForTimeout(400);
+        },
+      },
+    ],
+  },
+
+  'qr-maker': {
+    panels: [
+      {
+        slug: 'link',
+        caption: 'Codes that never expire',
+        sub: 'No account, no subscription, no company that can switch your code off',
+        act: async (p) => {
+          await p.fill('#fields input[type="url"]', 'skywolf.example/menu');
+          await p.waitForTimeout(500);
+        },
+      },
+      {
+        slug: 'wifi',
+        caption: 'Share the WiFi, not the password',
+        sub: 'Guests scan and join. The password never leaves this phone.',
+        act: async (p) => {
+          await p.getByRole('button', { name: /wifi/i }).click();
+          await p.waitForTimeout(250);
+          const net = p.locator('#fields input').first();
+          await net.fill('The Back Garden');
+          const pw = p.locator('#fields input').nth(1);
+          await pw.fill('sunflower-42');
+          await p.waitForTimeout(500);
+        },
+      },
+      {
+        slug: 'print',
+        caption: 'Sized for the thing you print it on',
+        sub: 'It states the real pixel count and DPI, instead of a number it cannot keep',
+        act: async (p) => {
+          await p.fill('#fields input[type="url"]', 'skywolf.example/menu');
+          await p.waitForTimeout(500);
+          await toTop(p, '#outputOpts', 60);
+          await p.waitForTimeout(300);
+        },
+      },
+      {
+        slug: 'batch',
+        caption: 'A whole sheet, one paste',
+        sub: 'One line each. Every code is named after the line that made it.',
+        act: async (p) => {
+          await p.fill('#batchIn', [
+            'skywolf.example/menu', 'skywolf.example/wine', 'skywolf.example/hours',
+            'skywolf.example/book', 'skywolf.example/events', 'skywolf.example/parking',
+            'skywolf.example/allergens', 'skywolf.example/feedback',
+          ].join('\n'));
+          await p.waitForTimeout(700);
+          await toTop(p, '#batchCard');
+          await p.waitForTimeout(400);
+        },
+      },
+      {
+        slug: 'offline',
+        caption: 'Works with the WiFi off',
+        sub: 'Built on your device, by this page. Nothing you type is ever sent anywhere.',
+        dark: true,
+        act: async (p) => {
+          await p.fill('#fields input[type="url"]', 'skywolf.example/menu');
+          await p.waitForTimeout(500);
+        },
+      },
+    ],
+  },
+};
