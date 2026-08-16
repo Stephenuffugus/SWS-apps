@@ -158,13 +158,17 @@ for (const slug of slugs) {
   const dir = join(OUT, slug, 'screenshots');
   mkdirSync(dir, { recursive: true });
 
-  /* Panels are named <index>-<slug>.png, so renaming or removing a panel
-     leaves the old file sitting in the directory looking exactly as current as
-     the new one. For a directory whose whole purpose is "upload these to Play",
-     a stale panel is worse than a missing one — clear it and re-render. */
-  for (const f of readdirSync(dir)) {
-    if (f.endsWith('.png')) rmSync(join(dir, f));
-  }
+  /* Panels are named <index>-<slug>.png, so renaming or removing a panel would
+     leave the old file sitting in the directory looking exactly as current as
+     the new one — and for a directory whose whole purpose is "upload these to
+     Play", a stale panel is worse than a missing one.
+
+     But do NOT clear the directory up front. A run killed part-way through —
+     a timeout, a Ctrl-C — would then leave the app with fewer screenshots than
+     it started with, which is how qr-maker lost three good panels. Render
+     first, remember what was written, and sweep the leftovers only once the
+     app has completed. An interrupted run now costs nothing. */
+  const written = new Set();
 
   for (const [i, panel] of scene.panels.entries()) {
     /* The caption band is a fixed height, so a caption long enough to wrap to
@@ -222,11 +226,20 @@ for (const slug of slugs) {
       panelHtml(slug, panel.caption, panel.sub, `data:image/png;base64,${raw.toString('base64')}`),
       { waitUntil: 'load' });
     await composed.evaluate(() => document.fonts.ready);
-    await composed.screenshot({ path: join(OUT, slug, 'screenshots', `${String(i + 1).padStart(2, '0')}-${panel.slug ?? 'panel'}.png`) });
+    const name = `${String(i + 1).padStart(2, '0')}-${panel.slug ?? 'panel'}.png`;
+    await composed.screenshot({ path: join(dir, name) });
     await composed.close();
+    written.add(name);
     made++;
   }
-  console.log(`  ${slug.padEnd(18)} ${scene.panels.length} panel(s)`);
+
+  /* Every panel for this app rendered, so anything else in the directory is a
+     leftover from a scene that has since been renamed or removed. */
+  const stale = readdirSync(dir).filter((f) => f.endsWith('.png') && !written.has(f));
+  for (const f of stale) rmSync(join(dir, f));
+
+  console.log(`  ${slug.padEnd(18)} ${scene.panels.length} panel(s)`
+    + (stale.length ? `  (swept ${stale.length} stale)` : ''));
 }
 
 await browser.close();

@@ -848,7 +848,7 @@ export const SCENES = {
       },
       {
         slug: 'print',
-        caption: 'Sized for the thing you print it on',
+        caption: 'Sized for what you print on',
         sub: 'It states the real pixel count and DPI, instead of a number it cannot keep',
         act: async (p) => {
           await p.fill('#fields input[type="url"]', 'skywolf.example/menu');
