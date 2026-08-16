@@ -1215,80 +1215,6 @@ body::after{
 #swsPrefs .sws-sample p{margin:0; font-size:var(--t-base); color:var(--ink)}
 #swsPrefs .sws-sample .sub{margin-top:var(--s2)}
 
-
-/* ── colour, legend, merge, fit-to-screen ─────────────────────────── */
-.week td.filled, .week th.filled{ background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
-.week td.filled .box{ color:var(--cell-ink) !important; }
-.week td.merged{ text-align:left; }
-
-/* The paint handle. Deliberately faint until the row is hovered or the
-   cell has focus — a grid with a coloured dot in every one of sixty
-   cells is noise, and she is here to write lessons, not to decorate. */
-.paint{ position:absolute; top:2px; right:2px; width:22px; height:22px; border-radius:6px;
-  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2);
-  font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center;
-  opacity:0; transition:opacity .12s; cursor:pointer; padding:0; z-index:2 }
-td:hover > .paint, th:hover > .paint, .paint:focus-visible, td:focus-within > .paint{ opacity:1 }
-.paint:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
-.week td, .week th{ position:relative }
-
-.mergebar{ position:absolute; bottom:2px; right:2px; display:flex; gap:2px; opacity:0;
-  transition:opacity .12s; z-index:2 }
-td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
-.mergebar button{ width:20px; height:20px; border-radius:5px; border:1px solid var(--line-2);
-  background:var(--surface); color:var(--ink-2); font-size:11px; line-height:1; padding:0; cursor:pointer }
-.mergebar button:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
-
-/* ── the key ── */
-.legend{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:10px 0 4px;
-  padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface) }
-.legend-t{ font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:700 }
-.legend-i{ display:inline-flex; align-items:center; gap:6px; font-size:.86rem }
-.legend-sw{ width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.25); flex:none }
-
-/* ── the picker ── */
-.cpick{ position:fixed; z-index:120; width:min(21rem,calc(100vw - 16px));
-  background:var(--surface); border:1px solid var(--line-2); border-radius:12px;
-  box-shadow:0 16px 40px rgba(0,0,0,.22); padding:14px }
-.cpick-t{ margin:0 0 8px; font-weight:650; font-size:.92rem }
-.cpick-sw{ display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:10px }
-.cs{ aspect-ratio:1; border-radius:6px; border:1px solid rgba(0,0,0,.25); cursor:pointer; padding:0 }
-.cs.on{ outline:3px solid var(--focus); outline-offset:1px }
-.cs:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
-.cpick-name{ display:block; font-size:.8rem; color:var(--ink-2); margin-bottom:10px }
-.cpick-name input{ width:100%; min-height:40px; margin-top:4px; padding:0 10px;
-  border:1px solid var(--line-2); border-radius:8px; background:var(--field); color:var(--ink); font-size:.95rem }
-.cpick-scope{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin:0 0 10px }
-.cpick-scope legend{ font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); padding:0 4px }
-.cpick-scope label{ display:flex; align-items:center; gap:7px; font-size:.9rem; min-height:32px }
-.cpick-note{ margin:0 0 10px; font-size:.8rem; color:var(--ink-2) }
-.cpick-act{ display:flex; gap:8px; justify-content:flex-end }
-
-/* ── fit to screen ──
-   Chrome out of the way, grid scaled by a factor measured in JS so the
-   whole week lands inside the viewport without a scrollbar. */
-body.fitscreen header.app, body.fitscreen .weeknav, body.fitscreen .trust,
-body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar{ display:none }
-body.fitscreen{ overflow:hidden }
-/* Too narrow to fit honestly: chrome still hidden for the extra room, but
-   the grid keeps a readable size and scrolls like normal. */
-body.fitscreen.fit-scroll{ overflow:auto }
-body.fitscreen.fit-scroll .grid-scroll{ overflow:auto }
-body.fitscreen .wrap, body.fitscreen main{ max-width:none; padding:0; margin:0 }
-body.fitscreen .grid-scroll{ overflow:visible }
-body.fitscreen table.week{ transform:scale(var(--fit,1)); transform-origin:top left; width:max-content }
-body.fitscreen .legend{ margin:4px 8px }
-.fitbar{ position:fixed; top:8px; right:8px; z-index:60; display:none; gap:6px }
-body.fitscreen .fitbar{ display:flex }
-
-@media print{
-  .paint, .mergebar, .cpick, .fitbar{ display:none !important }
-  .legend{ break-inside:avoid; border:1px solid #999 }
-  .week td.filled, .week th.filled{
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
-    background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
-}
-
 /* ── 16. Print ──────────────────────────────────────────────────────────── */
 /* Half these apps exist to produce a piece of paper. Printing is a feature
    here, not an afterthought. */
@@ -1643,9 +1569,143 @@ body{
   @media (max-width:640px){
     .logo h1{font-size:var(--t-lg)}
   }
+
+/* ══════════════════════════════════════════════════════════════════════
+   COLOUR, MERGE, FIT — app layer, and it has to stay here.
+   This lived inside the generated base block, which design/apply.mjs
+   replaces wholesale on every run — so every apply silently deleted the
+   entire colour system and the grid reverted to a plain spreadsheet.
+   Below the APP LAYER marker it survives.
+   ══════════════════════════════════════════════════════════════════════ */
+/* ── colour, legend, merge, fit-to-screen ─────────────────────────── */
+.week td.filled, .week th.filled{ background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
+.week td.filled .box{ color:var(--cell-ink) !important; }
+.week td.merged{ text-align:left; }
+
+/* The paint handle. Deliberately faint until the row is hovered or the
+   cell has focus — a grid with a coloured dot in every one of sixty
+   cells is noise, and she is here to write lessons, not to decorate. */
+.paint{ position:absolute; top:2px; right:2px; width:22px; height:22px; border-radius:6px;
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2);
+  font-size:11px; line-height:1; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .12s; cursor:pointer; padding:0; z-index:2 }
+td:hover > .paint, th:hover > .paint, .paint:focus-visible, td:focus-within > .paint{ opacity:1 }
+.paint:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+.week td, .week th{ position:relative }
+
+.mergebar{ position:absolute; bottom:2px; right:2px; display:flex; gap:2px; opacity:0;
+  transition:opacity .12s; z-index:2 }
+td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
+.mergebar button{ width:20px; height:20px; border-radius:5px; border:1px solid var(--line-2);
+  background:var(--surface); color:var(--ink-2); font-size:11px; line-height:1; padding:0; cursor:pointer }
+.mergebar button:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+
+/* ── the key ── */
+.legend{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; margin:10px 0 4px;
+  padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface) }
+.legend-t{ font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); font-weight:700 }
+.legend-i{ display:inline-flex; align-items:center; gap:6px; font-size:.86rem }
+.legend-sw{ width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.25); flex:none }
+
+/* ── the picker ── */
+.cpick{ position:fixed; z-index:120; width:min(21rem,calc(100vw - 16px));
+  background:var(--surface); border:1px solid var(--line-2); border-radius:12px;
+  box-shadow:0 16px 40px rgba(0,0,0,.22); padding:14px }
+.cpick-t{ margin:0 0 8px; font-weight:650; font-size:.92rem }
+.cpick-sw{ display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-bottom:10px }
+.cs{ aspect-ratio:1; border-radius:6px; border:1px solid rgba(0,0,0,.25); cursor:pointer; padding:0 }
+.cs.on{ outline:3px solid var(--focus); outline-offset:1px }
+.cs:focus-visible{ outline:2px solid var(--focus); outline-offset:1px }
+.cpick-name{ display:block; font-size:.8rem; color:var(--ink-2); margin-bottom:10px }
+.cpick-name input{ width:100%; min-height:40px; margin-top:4px; padding:0 10px;
+  border:1px solid var(--line-2); border-radius:8px; background:var(--field); color:var(--ink); font-size:.95rem }
+.cpick-scope{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin:0 0 10px }
+.cpick-scope legend{ font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); padding:0 4px }
+.cpick-scope label{ display:flex; align-items:center; gap:7px; font-size:.9rem; min-height:32px }
+.cpick-note{ margin:0 0 10px; font-size:.8rem; color:var(--ink-2) }
+.cpick-act{ display:flex; gap:8px; justify-content:flex-end }
+
+/* ── fit to screen ──
+   Chrome out of the way, grid scaled by a factor measured in JS so the
+   whole week lands inside the viewport without a scrollbar. */
+body.fitscreen header.app, body.fitscreen .weeknav, body.fitscreen .trust,
+body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar{ display:none }
+body.fitscreen{ overflow:hidden }
+/* Too narrow to fit honestly: chrome still hidden for the extra room, but
+   the grid keeps a readable size and scrolls like normal. */
+body.fitscreen.fit-scroll{ overflow:auto }
+body.fitscreen.fit-scroll .grid-scroll{ overflow:auto }
+body.fitscreen .wrap, body.fitscreen main{ max-width:none; padding:0; margin:0 }
+body.fitscreen .grid-scroll{ overflow:visible }
+body.fitscreen table.week{ transform:scale(var(--fit,1)); transform-origin:top left; width:max-content }
+body.fitscreen .legend{ margin:4px 8px }
+.fitbar{ position:fixed; top:8px; right:8px; z-index:60; display:none; gap:6px }
+body.fitscreen .fitbar{ display:flex }
+
+@media print{
+  .paint, .mergebar, .cpick, .fitbar{ display:none !important }
+  .legend{ break-inside:avoid; border:1px solid #999 }
+  .week td.filled, .week th.filled{
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--cell-fill) !important; color:var(--cell-ink) !important; }
+}
+
+/* ── the palette ──────────────────────────────────────────────────────
+   The colours were the whole point and they were invisible: every paint
+   handle sat at opacity:0 until you hovered the exact cell, and the colour
+   key rendered nothing at all until a colour was already in use. The first
+   thing a new teacher saw was a plain grid with no evidence any of this
+   existed. She opened it, saw a spreadsheet, and was right to.
+
+   So the palette is permanent chrome and works the way a spreadsheet fill
+   tool works: pick a colour once, then click boxes. Discoverable because you
+   can see it, fast because arming once covers a whole week, and it works on
+   a touchscreen, which hover never did. */
+.palette{ border:1px solid var(--line); border-radius:var(--r-card); background:var(--surface);
+  padding:5px 8px; margin:8px 0 4px }
+/* One line that scrolls sideways, not a wrapping block. Sixteen named colours
+   wrapped to four rows and ate 412px of a phone screen — on an app whose whole
+   job is to sit open beside her while she teaches, the week has to be what is
+   on screen, not the toolbar. */
+.prow{ display:flex; flex-wrap:nowrap; align-items:center; gap:5px;
+  overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin;
+  padding-bottom:2px }
+.psep{ width:1px; align-self:stretch; background:var(--line); margin:0 4px; flex:none }
+.pmini{ min-height:30px; padding:0 10px; border:1px solid var(--line-2); border-radius:999px;
+  background:var(--field); color:var(--ink-2); font:inherit; font-size:.78rem; cursor:pointer; white-space:nowrap }
+.pmini:hover{ border-color:var(--accent-deep); color:var(--ink) }
+.pmini:focus-visible{ outline:2px solid var(--focus); outline-offset:2px }
+.plabel{ position:sticky; left:0; background:var(--surface); padding-right:4px; z-index:1 }
+.plabel{ font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2);
+  font-weight:700; margin-right:2px }
+.pstate{ font-size:.85rem; color:var(--ink-2); flex:1 1 12rem }
+.pscope{ display:flex; align-items:center; gap:5px; font-size:.8rem; min-height:30px;
+  white-space:nowrap; color:var(--ink-2) }
+
+.pchip{ display:inline-flex; align-items:center; gap:5px; min-height:30px; padding:1px 9px 1px 5px;
+  border:1px solid var(--line-2); border-radius:999px; background:var(--field); color:var(--ink);
+  font:inherit; font-size:.8rem; cursor:pointer; line-height:1.2 }
+.pchip:hover{ border-color:var(--accent-deep) }
+.pchip:focus-visible{ outline:2px solid var(--focus); outline-offset:2px }
+/* Armed reads as pressed three ways at once — ring, weight and the caption
+   below — because colour alone cannot carry state on a palette made of colours. */
+.pchip.on{ outline:2px solid var(--focus); outline-offset:1px; border-color:var(--focus);
+  background:var(--accent-soft); font-weight:700 }
+.pdot{ width:15px; height:15px; border-radius:4px; background:var(--c);
+  border:1px solid rgba(0,0,0,.28); flex:none }
+.pdot.none{ background:repeating-linear-gradient(45deg,var(--surface-2) 0 4px,var(--line) 4px 8px) }
+.pname{ white-space:nowrap; max-width:11rem; overflow:hidden; text-overflow:ellipsis }
+
+/* Holding a colour changes the cursor over the grid, so the mode is obvious
+   before the first click rather than after it. */
+body.painting table.week td, body.painting table.week th, body.painting .box{ cursor:cell }
+
+@media print{ .palette{ display:none !important } }
+
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 </head>
 <body>
 <a class="skip" href="#view">Skip to the planner</a>
@@ -2142,6 +2202,89 @@ function inkOn(hex) {
   return L > 0.45 ? '#1b2430' : '#ffffff';
 }
 
+/* ── the brush ──────────────────────────────────────────────────────
+   The colours were the whole point of this feature and they were invisible.
+   Every paint handle sat at opacity:0 until you hovered the exact cell, and
+   the colour key rendered nothing at all until a colour was already in use —
+   so the first thing a new teacher saw was a plain grid with no evidence that
+   any of this existed. She opened it, saw a spreadsheet, and was right to.
+
+   So the palette is now permanent chrome, and it works the way a spreadsheet
+   fill tool works: pick a colour once, then click cells. That is discoverable
+   because you can see it, fast because arming is a single click for a whole
+   week of boxes, and it works on a touchscreen, which hover never did. */
+let armedId = null;                 // the colour currently held, or null
+let paintScope = 'one';             // 'one' = this box · 'all' = every week
+
+/* One apply path, shared by the brush and the picker, so the two can never
+   disagree about what "every week" means. */
+function paintTarget(tok, id, scope) {
+  ensureColourState();
+  const days = (YEAR[curWeek] || { days: [] }).days;
+  const byIso = {}; for (const d of days) byIso[d.iso] = d;
+  const [kind, a, b] = tok.split(':');
+
+  if (kind === 'col') {
+    const key = (a === 'lunch' || a === 'notes') ? a : +a;
+    if (id) S.fillCol[key] = id; else delete S.fillCol[key];
+  } else if (kind === 'day') {
+    if (id) S.fillDay[+a] = id; else delete S.fillDay[+a];
+  } else if (kind === 'note') {
+    const d = byIso[a]; if (!d) return;
+    if (scope === 'all') { if (id) S.fillDow['n' + d.dow] = id; else delete S.fillDow['n' + d.dow]; delete S.fill['n' + d.iso]; }
+    else { if (id) S.fill['n' + d.iso] = id; else delete S.fill['n' + d.iso]; }
+  } else if (kind === 'cell') {
+    const d = byIso[a]; if (!d) return;
+    const pnum = +b, k = cellKey(d, pnum), dk = d.dow + '|' + pnum;
+    if (scope === 'all') { if (id) S.fillDow[dk] = id; else delete S.fillDow[dk]; delete S.fill[k]; }
+    else { if (id) S.fill[k] = id; else delete S.fill[k]; }
+  }
+  persist();
+}
+
+function paletteHTML() {
+  ensureColourState();
+  const sw = S.legend.map(c => `
+    <button type="button" class="pchip${armedId === c.id ? ' on' : ''}" data-arm="${esc(c.id)}"
+      style="--c:${esc(c.hex)}" aria-pressed="${armedId === c.id}"
+      title="${esc(c.name || 'unnamed')}">
+      <span class="pdot"></span><span class="pname">${esc(c.name || 'unnamed')}</span>
+    </button>`).join('');
+  /* One line. The week is what she needs on screen — this is a tool she
+     reaches for occasionally, so it gets a strip, not a panel. Everything
+     lives in the same horizontally scrolling row, including the scope switch,
+     which only appears once a colour is actually in hand. */
+  return `<div class="palette no-print" aria-label="Colours">
+    <div class="prow">
+      <span class="plabel">Colour${armedId ? 'ing' : ''}</span>
+      ${sw}
+      <button type="button" class="pchip erase${armedId === '__erase' ? ' on' : ''}" data-arm="__erase"
+        aria-pressed="${armedId === '__erase'}" title="Remove colour">
+        <span class="pdot none"></span><span class="pname">Remove</span>
+      </button>
+      <span class="psep" aria-hidden="true"></span>
+      ${armedId ? `<label class="pscope"><input type="checkbox" id="p-scope" ${paintScope === 'all' ? 'checked' : ''}>
+        every week</label>` : ''}
+      <button type="button" class="pmini" id="p-edit">Rename</button>
+    </div>
+  </div>`;
+}
+
+function wirePalette() {
+  view.querySelectorAll('[data-arm]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.arm;
+      armedId = (armedId === id) ? null : id;      // click again to put it down
+      document.body.classList.toggle('painting', !!armedId);
+      render();
+    };
+  });
+  const sc = document.getElementById('p-scope');
+  if (sc) sc.onchange = (e) => { paintScope = e.target.checked ? 'all' : 'one'; };
+  const ed = document.getElementById('p-edit');
+  if (ed) ed.onclick = () => { curView = 'setup'; render(); };
+}
+
 /* ── the picker ─────────────────────────────────────────────────────
    One popover for every colourable thing. `target` says what is being
    painted and therefore which scopes make sense: a single box can be
@@ -2436,6 +2579,26 @@ function wireColourHandles(){
     };
   });
 
+  /* While a colour is held, a click anywhere in a cell paints that cell. When
+     nothing is held, the same click puts the caret in the box and she types —
+     which is the ordinary case, so it stays completely undisturbed. */
+  view.querySelectorAll('table.week td, table.week th').forEach(cell=>{
+    cell.addEventListener('mousedown',(ev)=>{
+      if(!armedId) return;
+      if(ev.target.closest('[data-merge],[data-gear],.paint')) return;
+      const tokEl=cell.querySelector('[data-paint]');
+      if(!tokEl) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const tok=tokEl.dataset.paint;
+      /* Column and weekday headers are inherently every-week; only a single
+         box has a choice to make, so only it consults the scope switch. */
+      const kind=tok.split(':')[0];
+      const scope=(kind==='cell'||kind==='note')?paintScope:'all';
+      paintTarget(tok, armedId==='__erase'?null:armedId, scope);
+      render();
+    });
+  });
+
   view.querySelectorAll('[data-merge]').forEach(btn=>{
     btn.onclick=(ev)=>{
       ev.stopPropagation(); ev.preventDefault();
@@ -2579,6 +2742,7 @@ function renderWeek(){
     <h2 class="sr-only">Week ${curWeek+1} of ${YEAR.length}: ${weekLabel(w)}</h2>
     <p class="scroll-hint no-print" id="scroll-hint" hidden>The periods run off to the right — scroll the grid sideways to reach them. The day column stays put.</p>
     <div class="print-title">Specials Planner · Week of ${weekLabel(w)}${teacher}</div>
+    ${paletteHTML()}
     ${legendHTML()}
     <div class="grid-scroll"><table class="week" style="--cols:${c.periods}" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
     <div class="footnote no-print">Tap a box to type — Enter starts a new line. Everything saves as you go.</div>`;
@@ -2617,6 +2781,7 @@ function renderWeek(){
   });
   else requestAnimationFrame(syncFitBtn);
   wireColourHandles();
+  wirePalette();
   const le=document.getElementById('legend-edit');
   if(le) le.onclick=()=>{ curView='setup'; render(); };
   updateScrollHint();
