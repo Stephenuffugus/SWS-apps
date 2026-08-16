@@ -1,5 +1,5 @@
 /* Team Parent service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'team-v19';
+const VERSION = 'team-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -33,6 +33,23 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   const cacheable = url.origin === location.origin || url.hostname === 'www.gstatic.com';
   if (e.request.method !== 'GET' || !cacheable) return;
+
+  /* The PAGE is fetched network-first. Cache-first served the previous
+     index.html on the FIRST load after every deploy — the browser only
+     discovers a new sw.js during that same navigation, so a fix always
+     appeared one visit late and looked exactly like "nothing changed".
+     Assets stay cache-first; only the document leads with the network, and it
+     still falls back to the cache the moment there is no signal. */
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(VERSION).then(c => c.put(e.request, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(e.request).then(hit => hit || caches.match('index.html')))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request, { ignoreSearch: url.origin === location.origin }).then((cached) => {
       const fetched = fetch(e.request)

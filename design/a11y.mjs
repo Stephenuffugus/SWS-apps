@@ -44,9 +44,18 @@ const server = createServer(async (req, res) => {
     if (p.endsWith('/')) p += 'index.html';
     const file = join(ROOT, normalize(p).replace(/^(\.\.[/\\])+/, ''));
     if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
+    /* Read BEFORE writing the header. Writing 200 first meant a missing file
+       threw into a catch that could no longer set 404, and the server died
+       with ERR_HTTP_HEADERS_SENT — which stayed hidden for as long as the
+       service workers answered everything from cache and never asked for a
+       path that does not exist. */
+    const body = await readFile(file);
     res.writeHead(200, { 'Content-Type': MIME[extname(file)] ?? 'application/octet-stream' });
-    res.end(await readFile(file));
-  } catch { res.writeHead(404).end(); }
+    res.end(body);
+  } catch {
+    if (!res.headersSent) res.writeHead(404);
+    res.end();
+  }
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;

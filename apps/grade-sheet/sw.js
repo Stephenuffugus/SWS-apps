@@ -6,7 +6,7 @@
    `CACHE` it finds, so a worker that declares both ends up with a bumped name
    nothing reads and a cache name that never moves — the exact silent-stale
    failure the bump script exists to prevent. */
-const CACHE = 'gradesheet-v1';
+const CACHE = 'gradesheet-v2';
 const ASSETS = [
   './', './index.html', './app.js', './grade.js', './roster.js', './store.js',
   './manifest.webmanifest', './icon.svg', './privacy.html',
@@ -22,5 +22,22 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+
+  /* The PAGE is fetched network-first. Cache-first served the previous
+     index.html on the FIRST load after every deploy — the browser only
+     discovers a new sw.js during that same navigation, so the fix always
+     appeared one visit late and looked exactly like "nothing changed".
+     Assets below stay cache-first; only the document leads with the network,
+     and it still falls back to the cache the moment there is no signal. */
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(e.request).then(hit => hit || caches.match('index.html')))
+    );
+    return;
+  }
   e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).catch(() => caches.match('./index.html'))));
 });

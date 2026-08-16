@@ -8,7 +8,7 @@
 
    Photos and finds are NOT cached here. They live in IndexedDB, which the
    service worker never touches and never needs to. */
-const VERSION = 'float-v4';
+const VERSION = 'float-v5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './privacy.html'];
 
 self.addEventListener('install', (e) => {
@@ -38,10 +38,18 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return;   // nothing off-origin should exist; if it does, do not cache it
 
   /* A navigation always resolves to the shell, so a deep link like #/map
-     opens offline exactly as it does online. */
+     opens offline exactly as it does online — but it asks the NETWORK first.
+     Serving the cached shell first meant the previous build was handed back on
+     the first load after every deploy, because the browser only discovers a
+     new sw.js during that same navigation. Offline is unchanged: the moment
+     the fetch fails it falls straight back to the cached shell. */
   if (req.mode === 'navigate') {
     e.respondWith(
-      caches.match('./index.html').then((hit) => hit || fetch(req).catch(() => caches.match('./')))
+      fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put('./index.html', copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match('./index.html').then((hit) => hit || caches.match('./')))
     );
     return;
   }
