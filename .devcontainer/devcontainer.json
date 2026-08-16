@@ -1,0 +1,24 @@
+{
+  "name": "SWS Apps",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  // Codespaces issues this container a token scoped to THIS repo only. Trackfit
+  // lives in its own repo, so pushing there fails with a 403 that looks like an
+  // account permission problem and is not one — the account can push, the
+  // container's token cannot. Declaring the repo here makes Codespaces ask for
+  // permission when the container is created and widen the token to match.
+  "customizations": {
+    "codespaces": {
+      "repositories": {
+        "Stephenuffugus/trackfit": {
+          "permissions": {
+            "contents": "write",
+            "pull_requests": "write"
+          }
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "npm install"
+}
