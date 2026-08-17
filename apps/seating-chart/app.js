@@ -759,6 +759,11 @@ function wire() {
   });
   $('gCancel').addEventListener('click', () => closeDlg($('guestDlg')));
   $('gDelete').addEventListener('click', () => {
+    /* Nothing to delete if the dialog was opened without a guest behind it.
+       Only reachable by script today, but the alternative to this line is a
+       TypeError, and a handler that throws is a handler that silently does
+       nothing — which is exactly how the planner's merge arrows died. */
+    if (!guestEditing) return;
     /* Removing a guest also strips them out of every rule and can delete rules
        that fall below their minimum — far more than the confirm() described.
        Undo restores all of it, because a snapshot cannot forget a side effect

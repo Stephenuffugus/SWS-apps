@@ -35,10 +35,27 @@ const clone = o => JSON.parse(JSON.stringify(o));
    so these read through the rendered grid instead of guessing at a key. That
    is the contract that matters anyway: what does the teacher see on that day. */
 const boxAt = (w, iso, p) => w.document.querySelector(`.box[data-iso="${iso}"][data-p="${p}"]`);
-const textAt = (w, iso, p) => { const b = boxAt(w, iso, p); return b ? b.textContent : null; };
+/* Read a box the way the app reads it. Each line is its own element now, so
+   it can carry its own colour — and textContent joins those with nothing
+   between them, which silently turns three lines into one word. The storage
+   assertion below is the real contract and was never affected; this helper
+   was reaching past it into the DOM shape. */
+const readBox = (b) => {
+  const lines = b.querySelectorAll(':scope > .ln');
+  return lines.length ? [...lines].map((d) => d.textContent).join('\n') : b.textContent;
+};
+const textAt = (w, iso, p) => { const b = boxAt(w, iso, p); return b ? readBox(b) : null; };
 const type = (w, iso, p, text) => {
   const b = boxAt(w, iso, p);
-  b.textContent = text;
+  /* Build the line elements a real browser would leave behind, so the test
+     exercises the shape the app actually edits. */
+  b.textContent = '';
+  for (const ln of String(text).split('\n')) {
+    const d = w.document.createElement('div');
+    d.className = 'ln';
+    d.textContent = ln;
+    b.appendChild(d);
+  }
   b.dispatchEvent(new w.Event('input', { bubbles: true }));
   return b;
 };

@@ -1702,6 +1702,18 @@ body.painting table.week td, body.painting table.week th, body.painting .box{ cu
 
 @media print{ .palette{ display:none !important } }
 
+
+/* ── a coloured note ──────────────────────────────────────────────────
+   One line, one meaning. The colour sits behind the text rather than on the
+   whole cell, so several notes can live in one box and each keeps its own
+   sense — which is how her book actually reads. */
+.box .ln{ min-height:1.35em; border-radius:4px; padding:0 3px; margin:0 -3px }
+.box .ln.lnf{ background:var(--ln-bg); color:var(--ln-ink) }
+body.painting .box .ln:hover{ outline:2px dashed var(--focus); outline-offset:0 }
+@media print{
+  .box .ln.lnf{ -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--ln-bg) !important; color:var(--ln-ink) !important }
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
@@ -2152,12 +2164,45 @@ const SWATCHES = ['#FF0000', '#FF9900', '#FFFF00', '#B8FB32', '#00FF00', '#3CF0F
   '#B0F9FF', '#0000FF', '#FF00FF', '#FF6CC2', '#FFD3ED', '#FEA4A4',
   '#FFF2CC', '#F3F3F3', '#999999', '#FFFFFF'];
 
+/* Which line inside which box carries which colour. Kept beside the text
+   rather than inside it: the text stays plain, so copy, paste, print and
+   export are unaffected, and a colour can never corrupt a lesson plan. */
+function boxKeyOf(b) { return b.dataset.p === 'notes' ? 'n' + b.dataset.iso : b.dataset.key; }
+
+function lineFillsFor(key) {
+  ensureColourState();
+  return S.lineFill[key] || (S.lineFill[key] = {});
+}
+
+/* Paint the text of a box as one element per line, so each line can be
+   coloured on its own. Never called while the box has focus — rewriting the
+   DOM under a caret moves it. */
+function renderBoxLines(b, text) {
+  const key = boxKeyOf(b);
+  const fills = (S.lineFill || {})[key] || {};
+  const lines = String(text || '').split('\n');
+  b.textContent = '';
+  lines.forEach((ln, i) => {
+    const d = document.createElement('div');
+    d.className = 'ln';
+    const col = colourById(fills[i]);
+    if (col) {
+      d.classList.add('lnf');
+      d.style.setProperty('--ln-bg', col.hex);
+      d.style.setProperty('--ln-ink', inkOn(col.hex));
+    }
+    if (ln) d.textContent = ln; else d.appendChild(document.createElement('br'));
+    b.appendChild(d);
+  });
+}
+
 function ensureColourState() {
   if (!Array.isArray(S.legend) || !S.legend.length) S.legend = SEED_LEGEND.map(x => ({ ...x }));
   S.fill = S.fill || {};        // cellKey -> colour id            (one box)
   S.fillDow = S.fillDow || {};  // "dow|period" -> colour id       (every week)
   S.fillCol = S.fillCol || {};  // "period" -> colour id           (column heading)
   S.fillDay = S.fillDay || {};  // "dow" -> colour id              (weekday label)
+  S.lineFill = S.lineFill || {}; // boxKey -> { lineIndex: colour id }  (one note)
   S.merge = S.merge || {};      // cellKey -> columns spanned      (one box)
   S.mergeDow = S.mergeDow || {};// "dow|period" -> columns spanned (every week)
 }
@@ -2431,6 +2476,21 @@ function applyMerge(d, p, span, scope) {
    The reason the whole feature exists: a sub picks this up and can read
    it. Only colours actually in use are listed, so the key stays short
    and honest rather than showing fifteen categories she never used. */
+/* Repaint just the key. A full render would rebuild every box and throw away
+   the caret, which is intolerable while she is mid-sentence. */
+function renderLegendInPlace() {
+  const old = view.querySelector('.legend');
+  const html = legendHTML();
+  if (old && html) { old.outerHTML = html; }
+  else if (old && !html) { old.remove(); }
+  else if (!old && html) {
+    const pal = view.querySelector('.palette');
+    if (pal) pal.insertAdjacentHTML('afterend', html);
+  }
+  const le = document.getElementById('legend-edit');
+  if (le) le.onclick = () => { curView = 'setup'; render(); };
+}
+
 function usedColourIds() {
   ensureColourState();
   const used = new Set();
@@ -2438,6 +2498,7 @@ function usedColourIds() {
   for (const v of Object.values(S.fillDow)) used.add(v);
   for (const v of Object.values(S.fillCol)) used.add(v);
   for (const v of Object.values(S.fillDay)) used.add(v);
+  for (const box of Object.values(S.lineFill || {})) for (const v of Object.values(box)) used.add(v);
   return used;
 }
 
@@ -2586,6 +2647,33 @@ function wireColourHandles(){
     cell.addEventListener('mousedown',(ev)=>{
       if(!armedId) return;
       if(ev.target.closest('[data-merge],[data-gear],.paint')) return;
+
+      /* A note first, the box second. She writes several notes in one box and
+         they mean different things, so a click that lands on a line colours
+         that line; a click on the empty part of the cell fills the whole cell
+         behind them. Both are reachable without a mode switch. */
+      const line = ev.target.closest('.ln');
+      if (line && line.parentElement.classList.contains('box')) {
+        ev.preventDefault(); ev.stopPropagation();
+        const box = line.parentElement;
+        const idx = [...box.children].indexOf(line);
+        const fills = lineFillsFor(boxKeyOf(box));
+        if (armedId === '__erase') delete fills[idx]; else fills[idx] = armedId;
+        if (!Object.keys(fills).length) delete S.lineFill[boxKeyOf(box)];
+        persist();
+        const col = colourById(fills[idx]);
+        line.classList.toggle('lnf', !!col);
+        if (col) {
+          line.style.setProperty('--ln-bg', col.hex);
+          line.style.setProperty('--ln-ink', inkOn(col.hex));
+        } else {
+          line.style.removeProperty('--ln-bg');
+          line.style.removeProperty('--ln-ink');
+        }
+        renderLegendInPlace();
+        return;
+      }
+
       const tokEl=cell.querySelector('[data-paint]');
       if(!tokEl) return;
       ev.preventDefault(); ev.stopPropagation();
@@ -2683,7 +2771,12 @@ function renderWeek(){
   if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(S.fillCol.lunch)}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
   head+=`<th class="notes-h" scope="col"${hStyle(S.fillCol.notes)}>Notes${paintBtn('col:notes','the Notes column')}</th></tr>`;
 
-  const ce=PLAINTEXT_OK?'plaintext-only':'true';
+  /* 'true', not 'plaintext-only'. Each line inside a box is its own element so
+     it can carry its own colour — she writes several notes in one box and they
+     mean different things. plaintext-only strips those elements, which is why
+     colouring a single note was impossible rather than merely missing. Paste is
+     still forced to plain text below, so nothing arrives with foreign styling. */
+  const ce='true';
   /* Lunch is ONE cell down the whole week, not one per day. Her book merges
      E1:E6 in all 41 weeks without exception — it is a band, not five boxes,
      and five separate boxes was the most obvious way the grid did not look
@@ -2755,6 +2848,12 @@ function renderWeek(){
     b.addEventListener('focus',()=>onBoxFocus(b));
     b.addEventListener('paste',plainPaste);
     b.addEventListener('keydown',onBoxKey);
+    /* Rebuild the line elements when she leaves the box. Typing into an empty
+       box leaves the first line as a bare text node — the browser only starts
+       making elements once Enter is pressed — and a bare text node is a line
+       that cannot be coloured. Doing it on blur means the caret is already
+       gone, so nothing jumps while she writes. */
+    b.addEventListener('blur',()=>{ if(document.activeElement!==b) renderBoxLines(b, boxValue(b)); });
   });
   view.querySelectorAll('[data-gear]').forEach(g=>g.onclick=()=>openSpecial(g.dataset.gear));
   if(S.sample){
@@ -2795,7 +2894,7 @@ function paintCells(){
   for(const d of (YEAR[curWeek]||{days:[]}).days) byIso[d.iso]=d;
   view.querySelectorAll('.box').forEach(b=>{
     const d=byIso[b.dataset.iso]; if(!d) return;
-    b.textContent = b.dataset.p==='notes' ? (S.notes[d.iso]||'') : cellText(d,+b.dataset.p);
+    renderBoxLines(b, b.dataset.p==='notes' ? (S.notes[d.iso]||'') : cellText(d,+b.dataset.p));
   });
 }
 /* On a phone the grid is stacked and there is nothing to scroll; between tablet
@@ -2820,6 +2919,16 @@ const PLAINTEXT_OK=(()=>{
   catch(e){ return false; }
 })();
 function boxValue(b){
+  /* Read the line elements when they exist. Relying on innerText for the
+     newlines was fine while a box was one text node, but each line is now its
+     own element — and textContent concatenates those with nothing between
+     them, turning three lines into one word. Elements first, innerText as the
+     fallback for a box mid-edit that the browser has not structured yet. */
+  const lines = b.querySelectorAll(':scope > .ln');
+  if (lines.length) {
+    return [...lines].map((d) => d.textContent.replace(/\u00a0/g, ' '))
+      .join('\n').replace(/\n+$/, '');
+  }
   const raw = (typeof b.innerText==='string' && b.innerText!=='') ? b.innerText : b.textContent;
   return String(raw||'').replace(/\r\n?/g,'\n').replace(/\u00a0/g,' ').replace(/\n$/,'');
 }
@@ -2832,6 +2941,14 @@ function onBoxInput(e){
     // any pre-migration leftover shown by cellText() is now superseded
     delete S.cells[`${b.dataset.iso}|${b.dataset.p}`];
     if(k[0]==='c') delete S.cells[`d${b.dataset.iso}|${b.dataset.p}`];
+  }
+  /* Lines that no longer exist must not keep a colour, or deleting a note and
+     typing a new one hands the new note the old one's meaning. */
+  const bk = boxKeyOf(b), fills = S.lineFill && S.lineFill[bk];
+  if (fills) {
+    const n = v.split('\n').length;
+    for (const i of Object.keys(fills)) if (+i >= n) delete fills[i];
+    if (!Object.keys(fills).length) delete S.lineFill[bk];
   }
   queueSave();
 }
