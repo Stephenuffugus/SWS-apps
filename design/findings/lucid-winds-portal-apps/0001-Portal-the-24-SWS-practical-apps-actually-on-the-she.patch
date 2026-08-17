@@ -1,0 +1,152 @@
+From fe877d81f260bd03ff0006c7e1e4d6ced88ba362 Mon Sep 17 00:00:00 2001
+From: Stephenuffugus <99242197+Stephenuffugus@users.noreply.github.com>
+Date: Mon, 17 Aug 2026 02:28:07 +0000
+Subject: [PATCH] Portal: the 24 SWS practical apps, actually on the shelf this
+ time
+
+Stephen asked for this twice. The Apps tab existed and jumped to a shelf
+of four in-house tools, but the SWS-apps suite itself was never added.
+The cards are generated from the live hub page with his own thumbnail
+art, link out to each app's origin in a new tab (Pom Pond rule), and a
+final card opens the full hub.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NremgFwmXv999GGSRaCkru
+---
+ portal/index.html | 113 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 113 insertions(+)
+
+diff --git a/portal/index.html b/portal/index.html
+index 27a3b433..dd4558e4 100644
+--- a/portal/index.html
++++ b/portal/index.html
+@@ -542,6 +542,7 @@
+   .app-card .med{width:44px;height:44px;flex:0 0 auto;border-radius:12px;display:grid;place-items:center;font-size:22px;
+     background:radial-gradient(circle at 34% 28%, rgba(200,168,75,.28), rgba(0,0,0,.42));border:1px solid var(--line)}
+   .app-card small{color:var(--muted);display:block;font-size:.85rem;line-height:1.4}
++  .app-card .med img{width:100%;height:100%;border-radius:11px;object-fit:cover;display:block}
+ 
+   /* scroll reveal + shine sweeps */
+   .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+@@ -742,6 +743,118 @@
+         <span><b>Times Table Quest</b><br><small>A big colorful multiplication chart kids play on, from counting by 10s to mastery.</small></span>
+       </a>
+     </div>
++
++    <!-- PRACTICAL APPS (2026-08-17, Stephen): "I have asked to have the SWS
++         apps put in there as well to have a section for practical apps" — the
++         Apps tab existed but the 24 SWS utilities themselves were never added.
++         These cards are generated from the live hub page (SWS-apps repo,
++         design/hub.mjs is the catalogue) with Stephen's own thumbnail art, so
++         the list cannot drift from the hub by being re-typed here. Each app
++         lives on its own origin, so it opens in a new tab — same rule as
++         Pom Pond above. -->
++    <h2 class="arcade-h" style="margin-top:26px">Practical Apps <span>24 everyday tools from the studio — no ads, no subscriptions, no tracking</span></h2>
++    <div class="apps-row">
++      <a class="app-card" href="https://sws-apps-9646d.web.app/sitter-sheet/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/sitter-sheet/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Sitter Sheet</b><br><small>Everything the babysitter needs, on one page</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/baby-log/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/baby-log/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Baby Log</b><br><small>Feeds, sleep and nappies — one thumb, 3am</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/pill-schedule/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/pill-schedule/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Pill Schedule</b><br><small>A large-print medication card for the fridge</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/caregiver-log/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/caregiver-log/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Caregiver Log</b><br><small>A shared notebook for the family caring at home</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/grocery-list/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/grocery-list/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Grocery List</b><br><small>One list the whole household can add to</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/specials-planner/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/specials-planner/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Specials Planner</b><br><small>Art, music, PE, library — plan the year once</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/sub-plans/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/sub-plans/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Sub Plans</b><br><small>Your substitute folder, ready before you are sick</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/grade-sheet/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/grade-sheet/icon.svg" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Grade Sheet</b><br><small>Grades for every class you teach, on this device only</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/signup-sheets/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/signup-sheets/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Signup Sheets</b><br><small>Claim a spot in seconds — signing up needs no account</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/team-parent/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/team-parent/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Team Parent</b><br><small>One link for the whole season</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/secret-santa/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/secret-santa/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Secret Santa</b><br><small>Draw names without the group-chat chaos</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/wedding-timeline/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/wedding-timeline/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Wedding Day Timeline</b><br><small>So nobody asks &ldquo;when is hair again?&rdquo;</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/seating-chart/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/seating-chart/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Seating Chart</b><br><small>Tables, seats and who must not sit together</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/bracket-maker/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/bracket-maker/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Bracket Maker</b><br><small>Game night, settled properly</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/wheel-picker/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/wheel-picker/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Wheel Picker</b><br><small>Spin to choose — no ads spinning back</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/scan-to-pdf/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/scan-to-pdf/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Scan to PDF</b><br><small>No watermark, no ransom, no upload</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/pdf-tools/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/pdf-tools/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>PDF Tools</b><br><small>Merge, split, rotate — nothing uploaded</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/image-compressor/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/image-compressor/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Image Compressor</b><br><small>Shrink photos without uploading them</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/signature-maker/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/signature-maker/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Signature Maker</b><br><small>Draw it once, use it everywhere</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/qr-maker/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/qr-maker/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>QR Maker</b><br><small>Codes that never expire</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/moving-boxes/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/moving-boxes/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Moving Boxes</b><br><small>Which box has the can opener?</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/packing-list/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/packing-list/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Packing List</b><br><small>Never forget the charger again</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/home-inventory/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/home-inventory/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Home Inventory</b><br><small>Photograph it before you need it</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/bill-splitter/" target="_blank" rel="noopener">
++        <span class="med"><img src="https://sws-apps-9646d.web.app/bill-splitter/marketing/thumb-256.png" alt="" width="44" height="44" loading="lazy" decoding="async"></span>
++        <span><b>Bill Splitter</b><br><small>Split it, settle up, nothing leaves your device</small></span>
++      </a>
++      <a class="app-card" href="https://sws-apps-9646d.web.app/" target="_blank" rel="noopener">
++        <span class="med">🧰</span>
++        <span><b>The whole shelf</b><br><small>All 24 practical apps on one page at the Sky Wolf Studios apps hub.</small></span>
++      </a>
++    </div>
+   </section>
+ 
+   <!-- Support row (Stephen 2026-07-29: "some payment on the main page").
+-- 
+2.53.0
+
