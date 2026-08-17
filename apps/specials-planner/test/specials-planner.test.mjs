@@ -322,6 +322,22 @@ console.log('\n— accessibility contract —');
   box2.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
   ok(w.document.activeElement === w.document.getElementById('bar-day'), 'Ctrl+Enter jumps focus to the copy buttons');
 
+  // — the colour editor (Stephen 2026-08-17: custom colours, add, delete) —
+  // "Edit colours" used to jump to Setup, where no editor existed. Guard the
+  // real one: it opens as a modal, adds a colour, and deletes one cleanly.
+  w.document.getElementById('p-edit').click();
+  ok(w.document.getElementById('modal').classList.contains('show'), 'Edit colours opens the editor modal');
+  const rowsBefore = w.document.querySelectorAll('#c-rows .crow').length;
+  ok(rowsBefore > 0, 'editor lists the legend colours');
+  ok(!!w.document.querySelector('#c-rows .crow input[type="color"]'), 'every colour is editable via a colour input');
+  w.document.getElementById('c-add').click();
+  ok(w.document.querySelectorAll('#c-rows .crow').length === rowsBefore + 1, 'Add a colour grows the legend');
+  const lastRow = [...w.document.querySelectorAll('#c-rows .crow')].pop();
+  lastRow.querySelector('.crow-del').click();   // unused → deletes without confirm
+  ok(w.document.querySelectorAll('#c-rows .crow').length === rowsBefore, 'deleting an unused colour removes it');
+  w.document.getElementById('c-done').click();
+  ok(!w.document.getElementById('modal').classList.contains('show'), 'Done closes the colour editor');
+
   w.document.querySelector('.tab[data-view="setup"]').click();
   const dp = w.document.querySelector('#f-days .dp');
   const before = dp.getAttribute('aria-pressed');

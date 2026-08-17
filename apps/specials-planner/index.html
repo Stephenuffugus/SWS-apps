@@ -1696,6 +1696,17 @@ body.fitscreen .fitbar{ display:flex }
 .pdot.none{ background:repeating-linear-gradient(45deg,var(--surface-2) 0 4px,var(--line) 4px 8px) }
 .pname{ white-space:nowrap; max-width:11rem; overflow:hidden; text-overflow:ellipsis }
 
+/* the colour editor rows */
+.crow{ display:grid; grid-template-columns:auto 1fr auto; gap:2px 10px; align-items:center; margin:0 0 12px }
+.crow input[type="color"]{ width:46px; height:40px; padding:2px; border:1px solid var(--line);
+  border-radius:8px; background:var(--surface); cursor:pointer }
+.crow .crow-del{ min-height:40px; padding:0 12px }
+.crow .crow-use{ grid-column:1/-1; color:var(--ink-2); font-size:.75rem }
+
+/* "any colour" swatch in the quick picker — a wheel, not a preset */
+.cs.pick{ position:relative; background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00) }
+.cs.pick input{ position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer }
+
 /* Holding a colour changes the cursor over the grid, so the mode is obvious
    before the first click rather than after it. */
 body.painting table.week td, body.painting table.week th, body.painting .box{ cursor:cell }
@@ -2190,6 +2201,7 @@ function renderBoxLines(b, text) {
       d.classList.add('lnf');
       d.style.setProperty('--ln-bg', col.hex);
       d.style.setProperty('--ln-ink', inkOn(col.hex));
+      if (col.name) d.title = col.name;   // the meaning in words, not just hue
     }
     if (ln) d.textContent = ln; else d.appendChild(document.createElement('br'));
     b.appendChild(d);
@@ -2310,7 +2322,7 @@ function paletteHTML() {
       <span class="psep" aria-hidden="true"></span>
       ${armedId ? `<label class="pscope"><input type="checkbox" id="p-scope" ${paintScope === 'all' ? 'checked' : ''}>
         every week</label>` : ''}
-      <button type="button" class="pmini" id="p-edit">Rename</button>
+      <button type="button" class="pmini" id="p-edit">Edit colours</button>
     </div>
   </div>`;
 }
@@ -2326,8 +2338,93 @@ function wirePalette() {
   });
   const sc = document.getElementById('p-scope');
   if (sc) sc.onchange = (e) => { paintScope = e.target.checked ? 'all' : 'one'; };
+  /* This used to jump to Setup, where no colour editor existed — a dead
+     end Stephen hit himself. It now opens the real one. */
   const ed = document.getElementById('p-edit');
-  if (ed) ed.onclick = () => { curView = 'setup'; render(); };
+  if (ed) ed.onclick = () => openColourEditor();
+}
+
+/* ── the colour editor ──────────────────────────────────────────────
+   Stephen, 2026-08-17: "we need to be able to customize their own colors,
+   add stuff and take stuff away… what if they're color blind?" So: any
+   colour (the native picker, which is a wheel on a phone), any name, add
+   and delete freely. The names are the colour-blind path — the printed
+   key and every hover carries the meaning in words, so the plan survives
+   any palette a teacher can actually tell apart. */
+function colourUseCount(id) {
+  ensureColourState();
+  let n = 0;
+  for (const v of Object.values(S.fill)) if (v === id) n++;
+  for (const v of Object.values(S.fillDow)) if (v === id) n++;
+  for (const v of Object.values(S.fillCol)) if (v === id) n++;
+  for (const v of Object.values(S.fillDay)) if (v === id) n++;
+  for (const box of Object.values(S.lineFill)) for (const v of Object.values(box)) if (v === id) n++;
+  return n;
+}
+function scrubColour(id) {
+  for (const st of [S.fill, S.fillDow, S.fillCol, S.fillDay])
+    for (const k of Object.keys(st)) if (st[k] === id) delete st[k];
+  for (const bk of Object.keys(S.lineFill)) {
+    const box = S.lineFill[bk];
+    for (const k of Object.keys(box)) if (box[k] === id) delete box[k];
+    if (!Object.keys(box).length) delete S.lineFill[bk];
+  }
+}
+function openColourEditor() {
+  ensureColourState();
+  modalReturn = document.activeElement;
+  const rowsHTML = () => S.legend.map(c => {
+    const used = colourUseCount(c.id);
+    return `<div class="crow" data-id="${esc(c.id)}">
+      <input type="color" value="${esc(c.hex)}" aria-label="Colour swatch, ${esc(c.name || 'unnamed')}">
+      <input type="text" value="${esc(c.name || '')}" maxlength="40" placeholder="What this colour means"
+        aria-label="Meaning of this colour">
+      <button type="button" class="btn ghost crow-del" aria-label="Delete ${esc(c.name || 'this colour')}">✕</button>
+      <small class="crow-use">${used ? `${used} in use` : 'not used yet'}</small>
+    </div>`;
+  }).join('');
+  sheet.innerHTML = `<h3 id="modal-title">Your colours</h3>
+    <p class="sub">Any colour, any meaning — tap a swatch to change it and everything already
+      painted with it changes too. The <b>name</b> is what prints on the key and what a sub
+      reads, so if two colours look alike to you, the words still carry the plan.</p>
+    <div id="c-rows">${rowsHTML()}</div>
+    <div class="opts">
+      <button class="btn" id="c-add">+ Add a colour</button>
+      <button class="btn primary" id="c-done">Done</button>
+    </div>`;
+  const wire = () => {
+    sheet.querySelectorAll('.crow').forEach(row => {
+      const id = row.dataset.id;
+      const col = () => colourById(id);
+      row.querySelector('input[type="color"]').addEventListener('change', (e) => {
+        if (col()) { col().hex = e.target.value; persist(); render(); }
+      });
+      row.querySelector('input[type="text"]').addEventListener('change', (e) => {
+        if (col()) { col().name = e.target.value.trim(); persist(); render(); }
+      });
+      row.querySelector('.crow-del').onclick = () => {
+        const used = colourUseCount(id), name = (col() || {}).name || 'this colour';
+        if (used && !confirm(`“${name}” is painting ${used} thing${used === 1 ? '' : 's'}. Delete it and clear them?`)) return;
+        scrubColour(id);
+        S.legend = S.legend.filter(c => c.id !== id);
+        if (armedId === id) { armedId = null; document.body.classList.remove('painting'); }
+        persist(); render();
+        sheet.querySelector('#c-rows').innerHTML = rowsHTML(); wire();
+        announce(`${name} deleted`);
+      };
+    });
+  };
+  wire();
+  sheet.querySelector('#c-add').onclick = () => {
+    S.legend.push({ id: 'u' + Date.now().toString(36), hex: '#77C043', name: '' });
+    persist();
+    sheet.querySelector('#c-rows').innerHTML = rowsHTML(); wire();
+    const rows = sheet.querySelectorAll('.crow');
+    const last = rows[rows.length - 1]; if (last) last.querySelector('input[type="text"]').focus();
+  };
+  sheet.querySelector('#c-done').onclick = () => { closeModal(); render(); };
+  modal.classList.add('show');
+  const first = sheet.querySelector('button,input'); if (first) first.focus();
 }
 
 /* ── the picker ─────────────────────────────────────────────────────
@@ -2360,7 +2457,9 @@ function openPicker(anchor, target) {
         aria-label="${esc(c.name)}"></button>`).join(''))
     + SWATCHES.filter(h => !S.legend.some(c => c.hex.toLowerCase() === h.toLowerCase()))
       .map(h => `<button type="button" class="cs new" data-hex="${h}" style="background:${h}"
-        aria-label="New colour ${h}"></button>`).join('');
+        aria-label="New colour ${h}"></button>`).join('')
+    + `<label class="cs pick" title="Any colour"><input type="color" id="cp-free" value="#77C043"
+        aria-label="Pick any colour"></label>`;
 
   wrap.innerHTML = `
     <p class="cpick-t">${esc(target.label)}</p>
@@ -2396,7 +2495,7 @@ function openPicker(anchor, target) {
   const nameIn = wrap.querySelector('#cp-name');
   if (current) nameIn.value = (colourById(current) || {}).name || '';
 
-  wrap.querySelectorAll('.cs').forEach(b => b.addEventListener('click', () => {
+  wrap.querySelectorAll('.cs[data-id],.cs[data-hex]').forEach(b => b.addEventListener('click', () => {
     wrap.querySelectorAll('.cs').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     if (b.dataset.id) {
@@ -2407,6 +2506,13 @@ function openPicker(anchor, target) {
       if (!nameIn.value) nameIn.focus();
     }
   }));
+  /* the wheel: any colour she can actually tell apart, not just our presets */
+  const free = wrap.querySelector('#cp-free');
+  if (free) free.addEventListener('input', () => {
+    wrap.querySelectorAll('.cs').forEach(x => x.classList.remove('on'));
+    free.parentElement.classList.add('on');
+    chosenId = null; chosenHex = free.value;
+  });
 
   wrap.querySelector('#cp-clear').onclick = () => { target.apply(null, 'one'); closePicker(); };
   wrap.querySelector('#cp-ok').onclick = () => {
