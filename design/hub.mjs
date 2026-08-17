@@ -85,8 +85,11 @@ const card = ([slug, name, line, find, kind]) => {
      icon only until an app's art is filed. The art was silently dropped for
      icon.svg once (see git 36c52a6) and he rightly noticed; disk is the
      authority here so a regenerate can never lose it again. */
+  /* ?v=2: the first thumb-256 generation was generic icons that were never
+     cut from his stripe art (found 2026-08-17); images are cached for a week
+     by firebase.json, so replacing the content requires a new URL. */
   const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
-    ? `./${slug}/marketing/thumb-256.png`
+    ? `./${slug}/marketing/thumb-256.png?v=2`
     : `./${slug}/icon.svg`;
   return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
