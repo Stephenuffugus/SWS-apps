@@ -1,0 +1,397 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stephen Furpahs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:      #07080a;
+    --ink:     #eef2f4;
+    --muted:   #8a97a3;
+    --dim:     #5a6570;
+    --steel:   #7fa3c9;
+    --emerald: #46b98c;
+    --gold:    #d9a441;
+    --line:    rgba(127,163,201,0.15);
+    --line-2:  rgba(127,163,201,0.09);
+    --surface: rgba(255,255,255,0.018);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+      radial-gradient(115% 70% at 12% -6%, rgba(70,185,140,0.10), transparent 52%),
+      radial-gradient(120% 80% at 100% 108%, rgba(127,163,201,0.09), transparent 55%),
+      linear-gradient(180deg, #0a0c0f 0%, #07080a 60%, #050608 100%);
+    color: var(--ink);
+    font-family: "Archivo", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+
+  .card {
+    position: relative;
+    width: min(412px, 100vw - 14px);
+    height: min(915px, 100dvh - 14px);
+    padding: clamp(18px, 5.2vw, 26px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(12px, 3vw, 18px);
+    background:
+      linear-gradient(rgba(127,163,201,0.028) 1px, transparent 1px) 0 0 / 100% 30px,
+      linear-gradient(90deg, rgba(127,163,201,0.028) 1px, transparent 1px) 0 0 / 30px 100%,
+      var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 0 60px rgba(0,0,0,0.35),
+      0 40px 90px -40px rgba(0,0,0,0.9);
+    overflow: hidden;
+  }
+
+  /* corner registration ticks */
+  .reg { position: absolute; width: 11px; height: 11px; z-index: 4; pointer-events: none; }
+  .reg.tl { top: 8px; left: 8px; border-top: 1.5px solid var(--emerald); border-left: 1.5px solid var(--emerald); }
+  .reg.tr { top: 8px; right: 8px; border-top: 1.5px solid var(--line); border-right: 1.5px solid var(--line); }
+  .reg.bl { bottom: 8px; left: 8px; border-bottom: 1.5px solid var(--line); border-left: 1.5px solid var(--line); }
+  .reg.br { bottom: 8px; right: 8px; border-bottom: 1.5px solid var(--line); border-right: 1.5px solid var(--line); }
+
+  .mono {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .micro {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: clamp(0.5rem, 2.5vw, 0.6rem);
+    letter-spacing: 0.22em;
+    color: var(--dim);
+  }
+
+  /* ---------- HEADER ---------- */
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(0.54rem, 2.7vw, 0.64rem);
+    letter-spacing: 0.24em;
+    color: var(--steel);
+  }
+  .brand .dot {
+    width: 7px; height: 7px;
+    background: var(--emerald);
+    box-shadow: 0 0 10px rgba(70,185,140,0.9);
+    transform: rotate(45deg);
+    flex: none;
+  }
+  .coords {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 400;
+    font-size: clamp(0.5rem, 2.5vw, 0.58rem);
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+  .coords b { color: var(--gold); font-weight: 500; }
+
+  .accent {
+    position: relative;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--emerald) 0%, rgba(70,185,140,0.35) 24%, var(--line-2) 55%, transparent 100%);
+  }
+  .accent::after {
+    content: "";
+    position: absolute; top: -2px; left: 0;
+    width: 46px; height: 6px;
+    background: var(--emerald);
+    filter: blur(7px); opacity: 0.55;
+  }
+
+  /* ---------- IDENTITY ---------- */
+  .identity { display: flex; flex-direction: column; gap: clamp(10px, 2.6vw, 14px); }
+
+  .idhead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .idhead .tag { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; }
+  .idhead .tag .idx {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: clamp(0.56rem, 2.8vw, 0.66rem);
+    letter-spacing: 0.16em;
+    color: var(--emerald);
+  }
+  .idhead .tag .sub {
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(0.5rem, 2.5vw, 0.58rem);
+    letter-spacing: 0.14em;
+    color: var(--dim);
+    max-width: 15ch;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  .photo {
+    position: relative;
+    width: clamp(96px, 27vw, 120px);
+    aspect-ratio: 1 / 1;
+    flex: none;
+    border: 1px solid var(--line);
+    background: #0d1013;
+    box-shadow: 0 18px 34px -20px rgba(0,0,0,0.9);
+  }
+  .photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: grayscale(1) contrast(1.08) brightness(0.92);
+  }
+  .photo::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(150deg, rgba(70,185,140,0.45), transparent 50%, rgba(127,163,201,0.28));
+    mix-blend-mode: color;
+  }
+  .photo::before {
+    content: "";
+    position: absolute; top: -1px; right: -1px;
+    width: 18px; height: 18px;
+    border-top: 2px solid var(--emerald);
+    border-right: 2px solid var(--emerald);
+    z-index: 3;
+  }
+
+  .name {
+    font-family: "Archivo", sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(2.7rem, 14vw, 3.5rem);
+    line-height: 0.88;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .role {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: clamp(0.58rem, 3vw, 0.7rem);
+    letter-spacing: 0.2em;
+    color: var(--steel);
+  }
+
+  /* ---------- VENTURES ---------- */
+  .ventures {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .venture {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(10px, 3vw, 14px);
+    padding: clamp(11px, 3vw, 15px) 0;
+    align-items: baseline;
+  }
+  .venture + .venture { border-top: 1px solid var(--line-2); }
+  .venture .idx {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: clamp(0.6rem, 3vw, 0.72rem);
+    letter-spacing: 0.05em;
+    color: var(--dim);
+    padding-top: 3px;
+  }
+  .venture .idx b { color: var(--emerald); font-weight: 700; }
+  .vbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .vhead { display: flex; align-items: center; gap: 9px; }
+  .vhead .kbd {
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(0.44rem, 2.3vw, 0.52rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--emerald);
+    border: 1px solid rgba(70,185,140,0.32);
+    border-radius: 3px;
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+  .vname {
+    font-family: "Archivo", sans-serif;
+    font-weight: 700;
+    font-size: clamp(0.98rem, 4.7vw, 1.14rem);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .vdesc {
+    font-family: "Archivo", sans-serif;
+    font-weight: 400;
+    font-size: clamp(0.72rem, 3.6vw, 0.82rem);
+    line-height: 1.32;
+    color: var(--muted);
+  }
+
+  /* ---------- FOOTER ---------- */
+  .footer {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: clamp(12px, 4vw, 18px);
+    align-items: end;
+  }
+  .contact { display: flex; flex-direction: column; gap: clamp(7px, 2vw, 10px); min-width: 0; }
+  .contact .rows { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; }
+  .contact a {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    font-size: clamp(0.72rem, 3.7vw, 0.86rem);
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .contact a .k {
+    color: var(--emerald);
+    font-weight: 700;
+    font-size: 0.82em;
+    flex: none;
+  }
+  .contact a:active { color: var(--emerald); }
+
+  .qr { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: none; }
+  .qr .frame {
+    position: relative;
+    width: clamp(86px, 25vw, 104px);
+    height: clamp(86px, 25vw, 104px);
+    padding: 8px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid var(--line);
+    border-radius: 5px;
+  }
+  .qr .frame::before {
+    content: "";
+    position: absolute; top: -1px; left: -1px;
+    width: 15px; height: 15px;
+    border-top: 2px solid var(--emerald);
+    border-left: 2px solid var(--emerald);
+  }
+  .qr img { width: 100%; height: 100%; display: block; }
+  .qr .cap {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: clamp(0.43rem, 2.2vw, 0.5rem);
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-align: center;
+    max-width: 15ch;
+    line-height: 1.4;
+  }
+</style>
+
+<main class="card">
+  <span class="reg tl"></span><span class="reg tr"></span>
+  <span class="reg bl"></span><span class="reg br"></span>
+
+  <header class="head">
+    <div class="brand"><span class="dot"></span>SWS · Strategic Media</div>
+    <div class="coords"><b>41.08°N</b> · 81.52°W</div>
+  </header>
+
+  <div class="accent"></div>
+
+  <section class="identity">
+    <div class="idhead">
+      <div class="tag">
+        <div class="idx">01 / IDENTITY</div>
+        <div class="sub">Solo Founder · Builder of Verifiable Attention</div>
+      </div>
+      <figure class="photo">
+        <img src="/stephen-headshot.jpg" alt="Stephen Furpahs">
+      </figure>
+    </div>
+    <h1 class="name">Stephen<br>Furpahs</h1>
+    <div class="role">Founder · Akron, Ohio</div>
+  </section>
+
+  <section class="ventures">
+    <div class="venture">
+      <div class="idx">[<b>01</b>]</div>
+      <div class="vbody">
+        <div class="vhead">
+          <span class="vname">SWS Attention Protocol</span>
+          <span class="kbd">Protocol</span>
+        </div>
+        <div class="vdesc">Receipts that prove a real person did the activity.</div>
+      </div>
+    </div>
+    <div class="venture">
+      <div class="idx">[<b>02</b>]</div>
+      <div class="vbody">
+        <div class="vhead">
+          <span class="vname">Sky Wolf Studios</span>
+          <span class="kbd">Studio</span>
+        </div>
+        <div class="vdesc">Apps and browser games.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="contact">
+      <div class="micro">Contact</div>
+      <div class="rows">
+        <a href="tel:2342579376"><span class="k">TEL</span>234-257-9376</a>
+        <a href="mailto:stephenfurpahs@gmail.com"><span class="k">EML</span>stephenfurpahs@gmail.com</a>
+      </div>
+    </div>
+    <div class="qr">
+      <div class="frame"><img src="/qr-white.png" alt="QR code"></div>
+      <div class="cap">Scan for full card + contact</div>
+    </div>
+  </footer>
+</main>
+
+<script>
+  /* optional: keep screen awake while presenting the card */
+  (async () => {
+    try {
+      if ("wakeLock" in navigator) {
+        let lock = await navigator.wakeLock.request("screen");
+        document.addEventListener("visibilitychange", async () => {
+          if (document.visibilityState === "visible") {
+            try { lock = await navigator.wakeLock.request("screen"); } catch (e) {}
+          }
+        });
+      }
+    } catch (e) {}
+  })();
+</script>

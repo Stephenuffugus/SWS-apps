@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stephen Furpahs · SWS Strategic Media</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0c0e">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#070809; --bg-1:#101316; --bg-2:#0a0c0e;
+    --ink:#f3eee1; --ink-dim:rgba(243,238,225,.62);
+    --mut:#8b857a; --mut-2:#6f6a60;
+    --gold:#d9a441; --gold-soft:#ecca86; --gold-deep:#b0812f;
+    --steel:#7fa3c9; --emerald:#46b98c;
+    --hair:rgba(243,238,225,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    height:100dvh; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink);
+    font-family:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    background:
+      radial-gradient(75% 48% at 88% 6%, rgba(217,164,65,.13), transparent 60%),
+      radial-gradient(70% 46% at 6% 96%, rgba(127,163,201,.07), transparent 62%),
+      linear-gradient(163deg, var(--bg-1) 0%, var(--bg-2) 44%, var(--bg-0) 100%);
+  }
+  /* fine matte grain */
+  body::after{
+    content:""; position:fixed; inset:0; z-index:6; pointer-events:none;
+    opacity:.045; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .card{
+    position:relative; z-index:2;
+    width:100%; max-width:480px; height:100dvh;
+    display:grid; grid-template-rows:auto 1fr auto;
+    padding:clamp(26px,4.4vh,42px) clamp(26px,7vw,40px);
+  }
+
+  /* editorial spine on the right gutter */
+  .spine{
+    position:absolute; right:clamp(3px,1.6vw,9px); top:50%;
+    transform:translateY(-50%) rotate(180deg);
+    writing-mode:vertical-rl;
+    font-family:"Space Mono",monospace;
+    font-size:clamp(7px,1.9vw,8.5px); letter-spacing:.36em;
+    text-transform:uppercase; color:var(--mut-2); opacity:.55;
+    white-space:nowrap; pointer-events:none;
+  }
+
+  /* ---------- top row ---------- */
+  .top{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px;
+  }
+  .brand{
+    font-family:"Space Mono",monospace;
+    font-size:clamp(9px,2.5vw,10.5px); letter-spacing:.26em;
+    text-transform:uppercase; color:var(--mut); white-space:nowrap;
+  }
+  .brand .mk{ color:var(--gold); font-weight:700; letter-spacing:.16em; }
+  .chip{
+    flex:0 0 auto;
+    width:clamp(50px,13.5vw,62px); height:clamp(50px,13.5vw,62px);
+    border-radius:50%; object-fit:cover; object-position:50% 26%;
+    filter:grayscale(1) contrast(1.05) brightness(1.02) sepia(.22) saturate(1.15);
+    border:1.5px solid rgba(217,164,65,.55);
+    box-shadow:0 8px 22px rgba(0,0,0,.55), 0 0 0 4px rgba(217,164,65,.05);
+  }
+
+  /* ---------- core ---------- */
+  .core{
+    display:flex; flex-direction:column; justify-content:center;
+    gap:clamp(24px,5vh,46px);
+    min-height:0;
+  }
+
+  .name{
+    font-weight:800; line-height:.82;
+    letter-spacing:-.03em;
+    font-size:clamp(58px,19.5vw,90px);
+    display:flex; flex-direction:column;
+  }
+  .name span{ display:block; white-space:nowrap; }
+  .name .fn{
+    font-weight:300; color:var(--ink-dim);
+    letter-spacing:-.015em;
+  }
+  .name .ln{
+    font-weight:800; color:var(--ink);
+    margin-top:clamp(-4px,-.4vh,-2px);
+  }
+  .rule{
+    width:clamp(50px,17vw,74px); height:2px; margin:clamp(13px,2.4vh,20px) 0 clamp(9px,1.6vh,14px);
+    background:linear-gradient(90deg,var(--gold-soft),var(--gold-deep));
+    border-radius:2px;
+  }
+  .role{
+    font-family:"Space Mono",monospace;
+    font-size:clamp(9.5px,2.7vw,11.5px); letter-spacing:.2em;
+    text-transform:uppercase; color:var(--mut);
+  }
+  .role i{ color:var(--gold); font-style:normal; margin:0 .55em; }
+
+  /* ventures */
+  .ventures{ display:flex; flex-direction:column; }
+  .v{
+    display:grid; grid-template-columns:auto 1fr;
+    gap:clamp(12px,3.6vw,18px); align-items:start;
+    padding:clamp(13px,2.3vh,19px) 0;
+  }
+  .v + .v{ border-top:1px solid var(--hair); }
+  .idx{
+    font-family:"Space Mono",monospace; font-weight:700;
+    font-size:clamp(11px,3vw,13px); letter-spacing:.02em;
+    color:var(--gold); padding-top:clamp(3px,.6vh,5px);
+  }
+  .vt{
+    font-weight:600; font-size:clamp(17px,4.9vw,21px);
+    letter-spacing:-.012em; line-height:1.06; color:var(--ink);
+  }
+  .vd{
+    font-family:"Space Mono",monospace;
+    font-size:clamp(10.5px,2.8vw,12px); letter-spacing:.005em;
+    line-height:1.45; color:var(--mut); margin-top:clamp(4px,.8vh,6px);
+    max-width:31ch;
+  }
+
+  /* ---------- footer ---------- */
+  .foot{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:clamp(14px,4vw,22px);
+    padding-top:clamp(14px,2.4vh,20px);
+    border-top:1px solid var(--hair);
+  }
+  .contact{ display:flex; flex-direction:column; min-width:0; }
+  .cap{
+    font-family:"Space Mono",monospace;
+    font-size:clamp(8.5px,2.3vw,10px); letter-spacing:.2em;
+    text-transform:uppercase; color:var(--mut-2); line-height:1.5;
+    max-width:15ch; margin-bottom:clamp(9px,1.6vh,13px);
+  }
+  .contact a{ text-decoration:none; display:block; white-space:nowrap; }
+  .contact .tel{
+    font-weight:600; font-size:clamp(16px,4.7vw,20px);
+    letter-spacing:.01em; color:var(--ink);
+  }
+  .contact .tel b{ color:var(--gold); font-weight:600; margin:0 .18em; }
+  .contact .eml{
+    font-family:"Space Mono",monospace;
+    font-size:clamp(11px,3vw,12.5px); letter-spacing:.005em;
+    color:var(--mut); margin-top:clamp(5px,.9vh,8px);
+  }
+  .qr{
+    flex:0 0 auto;
+    width:clamp(66px,18.5vw,82px); height:clamp(66px,18.5vw,82px);
+    background:#f4efe3; border-radius:11px;
+    padding:clamp(5px,1.5vw,7px);
+    box-shadow:0 10px 26px rgba(0,0,0,.5), 0 0 0 1px rgba(217,164,65,.30);
+  }
+  .qr img{ width:100%; height:100%; display:block; image-rendering:pixelated; }
+
+  @media (max-height:680px){
+    .core{ gap:clamp(16px,3.4vh,26px); }
+    .name{ line-height:.86; }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <span class="spine">SWS · Strategic Media</span>
+
+    <header class="top">
+      <div class="brand"><span class="mk">SWS</span> Strategic Media</div>
+      <img class="chip" src="/stephen-headshot.jpg" alt="Stephen Furpahs">
+    </header>
+
+    <section class="core">
+      <div class="hero">
+        <h1 class="name"><span class="fn">Stephen</span><span class="ln">Furpahs</span></h1>
+        <div class="rule"></div>
+        <div class="role">Founder <i>·</i> Akron, Ohio</div>
+      </div>
+
+      <div class="ventures">
+        <div class="v">
+          <span class="idx">01</span>
+          <div class="vbody">
+            <div class="vt">SWS Attention Protocol</div>
+            <div class="vd">Receipts that prove a real person did the activity</div>
+          </div>
+        </div>
+        <div class="v">
+          <span class="idx">02</span>
+          <div class="vbody">
+            <div class="vt">Sky Wolf Studios</div>
+            <div class="vd">Apps and browser games</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div class="contact">
+        <div class="cap">Scan for full card and contact</div>
+        <a class="tel" href="tel:+12342579376">234<b>·</b>257<b>·</b>9376</a>
+        <a class="eml" href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a>
+      </div>
+      <div class="qr"><img src="/qr-code.png" alt="Scan for full card and contact"></div>
+    </footer>
+  </main>
+
+<script>
+  if ('wakeLock' in navigator) {
+    const grab = () => navigator.wakeLock.request('screen').catch(() => {});
+    grab();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) grab(); });
+  }
+</script>
+</body>
+</html>

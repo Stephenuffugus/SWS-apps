@@ -1,0 +1,303 @@
+<title>Stephen Furpahs · SWS Strategic Media</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#080d10;
+    --emerald:#46b98c;
+    --steel:#7fa3c9;
+    --gold:#d9a441;
+    --ink:#f2f5f4;
+    --muted:#9fb0ad;
+    --faint:#6f827e;
+    --glass:rgba(255,255,255,.075);
+    --glass-line:rgba(255,255,255,.16);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  html,body{height:100%}
+
+  body{
+    height:100dvh;
+    width:100%;
+    overflow:hidden;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:'Manrope',system-ui,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(16px,4vw,26px);
+    position:relative;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ---- drifting gradient-mesh backdrop ---- */
+  body::before{
+    content:"";
+    position:absolute;
+    inset:-25%;
+    z-index:0;
+    background:
+      radial-gradient(42% 38% at 20% 14%, rgba(70,185,140,.55), transparent 62%),
+      radial-gradient(40% 36% at 84% 20%, rgba(127,163,201,.48), transparent 64%),
+      radial-gradient(46% 42% at 80% 86%, rgba(217,164,65,.40), transparent 62%),
+      radial-gradient(40% 40% at 12% 84%, rgba(70,185,140,.34), transparent 64%),
+      radial-gradient(60% 60% at 50% 50%, rgba(20,40,44,.5), transparent 70%);
+    filter:saturate(1.15);
+    animation:drift 22s ease-in-out infinite alternate;
+  }
+
+  /* fine grain for depth */
+  body::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    opacity:.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @keyframes drift{
+    0%  {transform:translate3d(-2%,-1.5%,0) scale(1.05) rotate(0deg)}
+    100%{transform:translate3d(2.5%,2%,0)  scale(1.12) rotate(2deg)}
+  }
+
+  /* ---- glass card ---- */
+  .card{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:352px;
+    max-height:96dvh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(13px,2.35vh,19px);
+    padding:clamp(22px,4vh,32px) clamp(20px,5vw,28px) clamp(18px,3vh,24px);
+    border-radius:30px;
+    background:linear-gradient(158deg, rgba(255,255,255,.12), rgba(255,255,255,.035) 58%, rgba(255,255,255,.06));
+    border:1px solid var(--glass-line);
+    backdrop-filter:blur(34px) saturate(1.4);
+    -webkit-backdrop-filter:blur(34px) saturate(1.4);
+    box-shadow:
+      0 34px 80px -24px rgba(0,0,0,.72),
+      0 3px 14px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.28),
+      inset 0 -1px 0 rgba(0,0,0,.22);
+    overflow:hidden;
+  }
+  /* soft top sheen */
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;height:46%;
+    background:linear-gradient(180deg, rgba(255,255,255,.09), transparent);
+    pointer-events:none;
+  }
+
+  /* ---- brand eyebrow ---- */
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:clamp(9px,2.6vw,10.5px);
+    font-weight:600;
+    letter-spacing:.34em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .eyebrow .rule{
+    width:clamp(14px,5vw,22px);
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(217,164,65,.7));
+  }
+  .eyebrow .rule.r{background:linear-gradient(90deg, rgba(217,164,65,.7), transparent)}
+
+  /* ---- avatar in a glass circle ---- */
+  .avatar{
+    position:relative;
+    width:clamp(102px,28vw,128px);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:3px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(70,185,140,.6);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.05),
+      0 14px 34px -10px rgba(70,185,140,.5),
+      inset 0 1px 0 rgba(255,255,255,.3);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .avatar img{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    object-fit:cover;
+    object-position:50% 28%;
+    display:block;
+  }
+  .avatar::after{ /* inner glass rim */
+    content:"";
+    position:absolute;
+    inset:3px;
+    border-radius:50%;
+    box-shadow:inset 0 1px 3px rgba(255,255,255,.35), inset 0 -6px 14px rgba(0,0,0,.35);
+    pointer-events:none;
+  }
+
+  /* ---- identity ---- */
+  .identity{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .name{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:clamp(27px,8.2vw,35px);
+    letter-spacing:-.02em;
+    line-height:1.02;
+    text-wrap:balance;
+    background:linear-gradient(180deg,#ffffff,#d6e0dd);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .title{
+    font-size:clamp(12px,3.4vw,13.5px);
+    font-weight:500;
+    letter-spacing:.02em;
+    color:var(--muted);
+  }
+
+  /* ---- hairline ---- */
+  .hair{
+    width:72%;
+    height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  }
+
+  /* ---- value lines ---- */
+  .values{display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2vh,15px);width:100%}
+  .value{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+  .value .lead{
+    display:flex;align-items:center;gap:8px;
+    font-family:'Sora',sans-serif;
+    font-weight:600;
+    font-size:clamp(15px,4.3vw,17px);
+    letter-spacing:-.01em;
+    color:var(--ink);
+  }
+  .dot{
+    width:7px;height:7px;border-radius:50%;flex:none;
+  }
+  .dot.em{background:var(--emerald);box-shadow:0 0 10px rgba(70,185,140,.8)}
+  .dot.st{background:var(--steel);box-shadow:0 0 10px rgba(127,163,201,.8)}
+  .value .desc{
+    font-size:clamp(11.5px,3.2vw,13px);
+    font-weight:400;
+    color:var(--muted);
+    line-height:1.35;
+    max-width:30ch;
+    text-wrap:balance;
+  }
+
+  /* ---- contact / QR tile ---- */
+  .tile{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:clamp(12px,3.5vw,16px);
+    padding:clamp(11px,2.4vw,14px);
+    border-radius:18px;
+    background:linear-gradient(150deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 22px -12px rgba(0,0,0,.5);
+  }
+  .qr{
+    flex:none;
+    width:clamp(74px,21vw,88px);
+    aspect-ratio:1;
+    border-radius:12px;
+    padding:7px;
+    background:rgba(4,9,11,.9);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+    display:flex;
+  }
+  .qr img{width:100%;height:100%;display:block;image-rendering:crisp-edges}
+  .info{display:flex;flex-direction:column;gap:clamp(5px,1.2vh,7px);min-width:0}
+  .cap{
+    font-size:clamp(8.5px,2.4vw,9.5px);
+    font-weight:600;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--faint);
+    line-height:1.3;
+  }
+  .info a{
+    color:var(--ink);
+    text-decoration:none;
+    font-size:clamp(12.5px,3.5vw,14px);
+    font-weight:500;
+    letter-spacing:.01em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    transition:color .2s ease;
+  }
+  .info a.phone{font-variant-numeric:tabular-nums}
+  .info a .ic{color:var(--emerald);margin-right:7px;font-size:.9em}
+  .info a.mail .ic{color:var(--steel)}
+  .info a:hover,.info a:focus-visible{color:#fff}
+
+  a:focus-visible{outline:2px solid var(--emerald);outline-offset:3px;border-radius:4px}
+
+  @media (prefers-reduced-motion:reduce){
+    body::before{animation:none}
+  }
+</style>
+
+<main class="card">
+  <div class="eyebrow"><span class="rule"></span>SWS Strategic Media<span class="rule r"></span></div>
+
+  <div class="avatar">
+    <img src="/stephen-headshot.jpg" alt="Stephen Furpahs">
+  </div>
+
+  <div class="identity">
+    <h1 class="name">Stephen Furpahs</h1>
+    <p class="title">Founder&nbsp; ·&nbsp; Akron, Ohio</p>
+  </div>
+
+  <div class="hair"></div>
+
+  <div class="values">
+    <div class="value">
+      <div class="lead"><span class="dot em"></span>SWS Attention Protocol</div>
+      <div class="desc">Receipts that prove a real person did the activity</div>
+    </div>
+    <div class="value">
+      <div class="lead"><span class="dot st"></span>Sky Wolf Studios</div>
+      <div class="desc">Apps and browser games</div>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="qr"><img src="/qr-white.png" alt="QR code linking to full card"></div>
+    <div class="info">
+      <div class="cap">Scan for full card and contact</div>
+      <a class="phone" href="tel:+12342579376"><span class="ic">&#9742;</span>234-257-9376</a>
+      <a class="mail" href="mailto:stephenfurpahs@gmail.com"><span class="ic">&#9993;</span>stephenfurpahs@gmail.com</a>
+    </div>
+  </div>
+</main>
+
+<script>
+  /* optional: keep the screen awake while showing the card */
+  (async () => {
+    try{ if('wakeLock' in navigator){ await navigator.wakeLock.request('screen'); } }catch(e){}
+  })();
+</script>
