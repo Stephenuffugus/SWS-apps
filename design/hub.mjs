@@ -31,10 +31,20 @@ const palette = JSON.parse(readFileSync(join(HERE, 'out', 'palette.json'), 'utf8
    unavoidable, so the hub states them on the card rather than printing a
    blanket on-device promise it cannot keep. See findings/TRUST-COPY-CLOUD-APPS.md;
    the in-app copy was fixed there and this page was the half left behind. */
+/* Hush ships from the arcade repo and lives at lucidwinds.com, so the hub
+   links out to the app itself instead of hosting a copy. Its colours are
+   read from the app's own CSS on lucidwinds.com/hush (--glow and --deep),
+   not the studio palette; its thumb is Stephen's art mirrored from
+   portal-assets/sws-thumbs/hush.png in the arcade repo. */
+const OFFSITE = {
+  hush: { href: 'https://lucidwinds.com/hush/', darkAccent: '#F2B872', accent: '#C87F3C' },
+};
+
 const CATALOGUE = [
   ['Family &amp; Home', [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
     ['baby-log', 'Baby Log', 'Feeds, sleep and nappies with one thumb at 3am', 'newborn infant feeding nursing diaper tracker night'],
+    ['hush', 'Hush', 'A sleep sound machine, honest about the science', 'white noise sleep sound machine baby nursery newborn night bedtime settle offline'],
     ['pill-schedule', 'Pill Schedule', 'A large-print medication card for the fridge', 'medication meds prescription elderly dosage reminder'],
     ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
     ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
@@ -73,7 +83,8 @@ const CATALOGUE = [
 ];
 
 const card = ([slug, name, line, find, kind]) => {
-  const p = palette[slug];
+  const p = palette[slug] || OFFSITE[slug];
+  const href = OFFSITE[slug] ? OFFSITE[slug].href : `./${slug}/`;
   /* "shared online" is searchable too — someone deciding whether to trust a
      list with the school run should be able to find the ones that leave the
      device by typing the thing they are worried about. */
@@ -93,7 +104,7 @@ const card = ([slug, name, line, find, kind]) => {
   const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
     ? `./${slug}/marketing/thumb-256.png?v=4`
     : `./${slug}/icon.svg`;
-  return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
+  return `      <a class="card" href="${href}" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
         <img class="swatch" src="${art}" alt="" width="56" height="56" loading="lazy" decoding="async">
         <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
