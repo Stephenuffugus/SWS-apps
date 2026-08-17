@@ -329,7 +329,14 @@ console.log('\n— accessibility contract —');
   ok(w.document.getElementById('modal').classList.contains('show'), 'Edit colours opens the editor modal');
   const rowsBefore = w.document.querySelectorAll('#c-rows .crow').length;
   ok(rowsBefore > 0, 'editor lists the legend colours');
-  ok(!!w.document.querySelector('#c-rows .crow input[type="color"]'), 'every colour is editable via a colour input');
+  ok(!!w.document.querySelector('#c-rows .crow .cswatch'), 'every colour row has a swatch button');
+  // the swatch opens the wheel, not the native three-slider Android picker
+  w.document.querySelector('#c-rows .crow .cswatch').click();
+  const wheel = w.document.querySelector('#modal-sheet .cwheel');
+  ok(!!wheel && !!wheel.querySelector('canvas') && !!wheel.querySelector('.cw-v'),
+    'tapping a swatch opens the colour wheel with a brightness slider');
+  w.document.querySelector('#c-rows .crow .cswatch').click();
+  ok(!w.document.querySelector('#modal-sheet .cwheel'), 'tapping again folds the wheel away');
   w.document.getElementById('c-add').click();
   ok(w.document.querySelectorAll('#c-rows .crow').length === rowsBefore + 1, 'Add a colour grows the legend');
   const lastRow = [...w.document.querySelectorAll('#c-rows .crow')].pop();
