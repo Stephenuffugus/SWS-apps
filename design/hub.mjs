@@ -34,30 +34,30 @@ const palette = JSON.parse(readFileSync(join(HERE, 'out', 'palette.json'), 'utf8
 const CATALOGUE = [
   ['Family &amp; Home', [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
-    ['baby-log', 'Baby Log', 'Feeds, sleep and nappies — one thumb, 3am', 'newborn infant feeding nursing diaper tracker night'],
+    ['baby-log', 'Baby Log', 'Feeds, sleep and nappies with one thumb at 3am', 'newborn infant feeding nursing diaper tracker night'],
     ['pill-schedule', 'Pill Schedule', 'A large-print medication card for the fridge', 'medication meds prescription elderly dosage reminder'],
     ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
     ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
   ]],
   ['School', [
-    ['specials-planner', 'Specials Planner', 'Art, music, PE, library — plan the year once', 'teacher lesson plan rotation schedule elementary'],
+    ['specials-planner', 'Specials Planner', 'Art, music, PE, library. Plan the whole year once', 'teacher lesson plan rotation schedule elementary'],
     ['sub-plans', 'Sub Plans', 'Your substitute folder, ready before you are sick', 'teacher substitute emergency plans binder classroom'],
     ['grade-sheet', 'Grade Sheet', 'Grades for every class you teach, on this device only', 'gradebook grades teacher marks roster rubric report card averages specials elementary substitute homeschool'],
   ]],
   ['Events &amp; Groups', [
     /* "no account, ever" was false for the one person who makes the sheet —
        they sign in. True for everyone who signs up, which is the many. */
-    ['signup-sheets', 'Signup Sheets', 'Claim a spot in seconds — signing up needs no account', 'volunteer potluck conference slots roster shifts', 'shared'],
+    ['signup-sheets', 'Signup Sheets', 'Claim a spot in seconds, no account needed', 'volunteer potluck conference slots roster shifts', 'shared'],
     ['team-parent', 'Team Parent', 'One link for the whole season', 'youth sports snack schedule roster coach league', 'shared'],
     ['secret-santa', 'Secret Santa', 'Draw names without the group-chat chaos', 'gift exchange christmas holiday office party'],
     ['wedding-timeline', 'Wedding Day Timeline', 'So nobody asks &ldquo;when is hair again?&rdquo;', 'wedding schedule vendors bridal party run of show'],
     ['seating-chart', 'Seating Chart', 'Tables, seats and who must not sit together', 'wedding reception banquet place cards floor plan'],
     ['bracket-maker', 'Bracket Maker', 'Game night, settled properly', 'tournament elimination playoff league office pool'],
-    ['wheel-picker', 'Wheel Picker', 'Spin to choose — no ads spinning back', 'random name picker classroom raffle prize chore'],
+    ['wheel-picker', 'Wheel Picker', 'Spin to choose. No ads spinning back', 'random name picker classroom raffle prize chore'],
   ]],
   ['Paper &amp; Files', [
     ['scan-to-pdf', 'Scan to PDF', 'No watermark, no ransom, no upload', 'scanner document camera receipt paperwork'],
-    ['pdf-tools', 'PDF Tools', 'Merge, split, rotate — nothing uploaded', 'combine pages reorder delete extract'],
+    ['pdf-tools', 'PDF Tools', 'Merge, split and rotate. Nothing gets uploaded', 'combine pages reorder delete extract'],
     ['image-compressor', 'Image Compressor', 'Shrink photos without uploading them', 'resize optimise jpeg png file size email'],
     ['signature-maker', 'Signature Maker', 'Draw it once, use it everywhere', 'sign document esign transparent png contract'],
     ['qr-maker', 'QR Maker', 'Codes that never expire', 'qr code wifi menu flyer link generator'],
@@ -124,10 +124,10 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sky Wolf Studios — ${count} free, ad-free apps</title>
+<title>Sky Wolf Studios: ${count} free, ad-free apps</title>
 <meta name="description" content="${count} free utility apps from Sky Wolf Studios. No ads, no subscription, no tracking. ${localCount} keep everything on your device; the ${word(sharedCount)} shared ones say so.">
 <meta name="theme-color" content="#16171c">
-<meta property="og:title" content="Sky Wolf Studios — ${count} free apps">
+<meta property="og:title" content="Sky Wolf Studios: ${count} free apps">
 <meta property="og:description" content="${count} free, ad-free utilities: signup sheets, lesson planner, sub plans, PDF tools and more. ${localCount} keep everything on your device.">
 <meta property="og:image" content="https://sws-apps-9646d.web.app/signup-sheets/marketing/stripe-thumbnail.png">
 <meta name="twitter:card" content="summary">
@@ -257,7 +257,7 @@ footer .tip{color:var(--ink-2)}
     <h1>Sky Wolf Studios</h1>
     <p class="promise">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device &mdash; the ${word(sharedCount)} shared ones are marked.</span>
+      <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device. The ${word(sharedCount)} shared ones are marked.</span>
     </p>
   </header>
 
@@ -265,7 +265,7 @@ footer .tip{color:var(--ink-2)}
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <label class="sr-only" for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search the apps</label>
-      <input id="q" type="search" placeholder="Search ${count} apps — try &ldquo;teacher&rdquo; or &ldquo;insurance&rdquo;" autocomplete="off">
+      <input id="q" type="search" placeholder="Search ${count} apps. Try &ldquo;teacher&rdquo; or &ldquo;insurance&rdquo;" autocomplete="off">
     </div>
   </div>
 
@@ -277,7 +277,7 @@ ${sections}
 
   <footer>
     <p>Every app here is free and always will be. If one saved your day, each has a tip jar. <span class="tip">&#9829;</span></p>
-    <p style="margin-top:12px"><a href="https://lucidwinds.com/portal">We make games too &mdash; play free in the Arcade</a></p>
+    <p style="margin-top:12px"><a href="https://lucidwinds.com/portal">We make games too. Play free in the Arcade</a></p>
     <p style="margin-top:12px"><a href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studios%20Apps%20feedback">Send feedback</a></p>
     <p style="margin-top:20px">Sky Wolf Studios &middot; SWS Strategic Media LLC</p>
   </footer>
