@@ -91,7 +91,7 @@ const card = ([slug, name, line, find, kind]) => {
   /* v3: sub-plans' thumb content changed under the same URL when Stephen's
      real art replaced the folder placeholder (2026-08-17). */
   const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
-    ? `./${slug}/marketing/thumb-256.png?v=3`
+    ? `./${slug}/marketing/thumb-256.png?v=4`
     : `./${slug}/icon.svg`;
   return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
