@@ -14,7 +14,7 @@
      node design/hub.mjs
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -81,9 +81,16 @@ const card = ([slug, name, line, find, kind]) => {
     ? `<span class="tag">Shared online</span>`
     : '';
   const extra = kind === 'shared' ? ' shared online cloud server link' : '';
+  /* Stephen's thumbnail art, when it exists on disk — falling back to the
+     icon only until an app's art is filed. The art was silently dropped for
+     icon.svg once (see git 36c52a6) and he rightly noticed; disk is the
+     authority here so a regenerate can never lose it again. */
+  const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
+    ? `./${slug}/marketing/thumb-256.png`
+    : `./${slug}/icon.svg`;
   return `      <a class="card" href="./${slug}/" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
-        <img class="swatch" src="./${slug}/icon.svg" alt="" width="38" height="38" loading="lazy" decoding="async">
+        <img class="swatch" src="${art}" alt="" width="56" height="56" loading="lazy" decoding="async">
         <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
       </a>`;
 };
@@ -205,7 +212,7 @@ a.card::before{
 a.card:hover{transform:translateY(-2px); border-color:var(--app); background:#242835}
 a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
 .swatch{
-  width:38px; height:38px; flex:none; border-radius:11px; margin-top:2px;
+  width:56px; height:56px; flex:none; border-radius:12px; margin-top:2px;
   background:var(--app-deep);
 }
 .meta{display:block; min-width:0}
