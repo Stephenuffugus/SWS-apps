@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stephen Furpahs · Founder, SWS Strategic Media</title>
+<meta name="description" content="Stephen Furpahs. Founder of SWS Strategic Media LLC in Akron, Ohio. The SWS Attention Protocol: a receipt that proves a real person did the activity.">
+<meta property="og:title" content="Stephen Furpahs, Founder, SWS Strategic Media">
+<meta property="og:description" content="A receipt that proves a real person did the activity. Akron, Ohio.">
+<meta property="og:image" content="https://stephen-furpahs.web.app/sws-icon-512.png">
+<meta property="og:url" content="https://stephen-furpahs.web.app">
+<link rel="icon" href="/sws-icon-192.png">
+<link rel="apple-touch-icon" href="/sws-icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700;12..96,800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1113;
+    --surface: #161b1e;
+    --ink: #eef0ea;
+    --sub: #b8bfb6;
+    --line: #262d30;
+    --emerald: #46b98c;
+    --emerald-deep: #1f6f54;
+    --steel: #7fa3c9;
+    --gold: #d9a441;
+    --plum: #c58be0;
+    --coral: #e0896b;
+    --indigo: #9b93f2;
+    --cyan: #35c3d6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background:
+      radial-gradient(900px 500px at 15% -5%, rgba(70,185,140,.10), transparent 60%),
+      radial-gradient(800px 500px at 110% 30%, rgba(127,163,201,.09), transparent 60%),
+      radial-gradient(700px 600px at 50% 110%, rgba(217,164,65,.06), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: "Bricolage Grotesque", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 18px 56px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 600px; margin: 0 auto; position: relative; }
+
+  html { scroll-behavior: smooth; }
+  html, body { overflow-x: hidden; }
+
+  /* ---------- drifting aurora ---------- */
+  .aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .aurora span { position: absolute; border-radius: 50%; filter: blur(100px); }
+  .aurora .a1 { width: 620px; height: 620px; background: rgba(70,185,140,.14); top: -180px; left: -160px; animation: drift1 24s ease-in-out infinite; }
+  .aurora .a2 { width: 520px; height: 520px; background: rgba(127,163,201,.12); bottom: -160px; right: -140px; animation: drift2 28s ease-in-out infinite; }
+  .aurora .a3 { width: 440px; height: 440px; background: rgba(217,164,65,.09); top: 44%; left: 60%; animation: drift3 32s ease-in-out infinite; }
+  @keyframes drift1 { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(70px,50px) scale(1.12);} }
+  @keyframes drift2 { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-60px,-40px) scale(1.15);} }
+  @keyframes drift3 { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-50px,40px) scale(.9);} }
+
+  /* ---------- scroll reveal ---------- */
+  .js .reveal { opacity: 0; transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .85s cubic-bezier(.2,.75,.25,1); will-change: opacity, transform; }
+  .js .reveal.from-left  { transform: translateX(-62px) rotate(-2.2deg) scale(.955); }
+  .js .reveal.from-right { transform: translateX(62px) rotate(2.2deg) scale(.955); }
+  .js .reveal.from-bottom{ transform: translateY(42px); }
+  .js .reveal.in { opacity: 1; transform: none; }
+
+  /* ---------- premium polish ---------- */
+  .proj-card .art img, .proj-card .art svg { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+  .proj-card:hover .art img, .proj-card:hover .art svg { transform: scale(1.045); }
+  .btn.primary { position: relative; overflow: hidden; }
+  .btn.primary::after {
+    content:""; position:absolute; top:0; left:-130%; width:55%; height:100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,.30), transparent);
+    transform: skewX(-20deg); transition: left .7s ease; pointer-events:none;
+  }
+  .btn.primary:hover::after { left: 150%; }
+  .js .section-head::after { transform: scaleX(.15); transform-origin: left; transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+  .js .section-head.in::after { transform: scaleX(1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .aurora span { animation: none !important; }
+    .js .section-head::after { transform: none !important; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero { text-align: center; margin-bottom: 30px; }
+  .logo-disc {
+    width: 132px; height: 132px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    border: 1px solid rgba(217,164,65,.45);
+    box-shadow: 0 16px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.10);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-disc img { width: 74%; height: 74%; object-fit: contain; display: block; }
+  h1 {
+    font-family: "Bricolage Grotesque", Georgia, serif;
+    font-size: 54px; font-weight: 800;
+    letter-spacing: -1.4px;
+    line-height: 0.98;
+  }
+  .role {
+    font-family: "Bricolage Grotesque", Georgia, serif;
+    color: var(--sub); font-size: 14px; font-weight: 500;
+    margin-top: 12px; letter-spacing: 0.2px;
+  }
+  .role .dot { color: var(--gold); }
+
+  .btnrow { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+  .btnrow.secondary { margin-top: 10px; }
+  .btn.wide { width: 100%; max-width: 300px; justify-content: center; padding: 15px 22px; font-size: 16px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 15px; font-weight: 600; letter-spacing: 0.2px;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,.09);
+    color: var(--ink);
+    background: rgba(255,255,255,.04);
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    transition: transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .btn:hover { background: rgba(255,255,255,.07); }
+  .btn:hover { transform: translateY(-1px); border-color: var(--emerald); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--emerald), var(--emerald-deep));
+    color: #fff; border-color: transparent;
+    box-shadow: 0 8px 26px rgba(70,185,140,.28);
+  }
+
+  /* ---------- sections ---------- */
+  .section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin: 38px 0 16px;
+  }
+  .section-head h2 {
+    font-family: "Bricolage Grotesque", Georgia, serif;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.3px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .section-head::after {
+    content: ""; flex: 1; height: 2px; border-radius: 1px;
+    background: linear-gradient(90deg, var(--emerald), var(--gold), var(--steel), transparent);
+    opacity: .45;
+  }
+
+  .proj-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)), var(--surface);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 22px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.35);
+  }
+  .proj-card .art { display: block; width: 100%; }
+  .proj-card .art img, .proj-card .art svg { width: 100%; display: block; }
+  /* square app icon presented on a soft accent band, not full-bleed */
+  .proj-card .art.icon-art {
+    display: flex; align-items: center; justify-content: center;
+    padding: 28px 0 26px;
+    background: radial-gradient(120% 130% at 50% 0%, rgba(197,139,224,.18), rgba(197,139,224,.05) 55%, transparent 80%);
+  }
+  .proj-card .art.icon-art img {
+    width: 132px; height: 132px; border-radius: 28px;
+    box-shadow: 0 12px 34px rgba(0,0,0,.5);
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  /* tall/portrait art framed as a cinematic landscape band */
+  .proj-card .art.hero-band { height: 218px; overflow: hidden; background: #05070a; }
+  .proj-card .art.hero-band img { width: 100%; height: 100%; object-fit: cover; object-position: center 41%; }
+  /* the apps card: Stephen's real thumbnails on the move, the same treatment
+     as the apps landing page hero. A still blue graphic sat here before and
+     people scrolled straight past it. */
+  .proj-card .art.strips-art { background: #05070a; padding: 14px 0; overflow: hidden; }
+  .apps-strip { overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); }
+  .apps-strip + .apps-strip { margin-top: 10px; }
+  .apps-track { display: flex; gap: 10px; width: max-content; animation: apps-drift 55s linear infinite; }
+  .apps-strip.rev .apps-track { animation-name: apps-drift-rev; animation-duration: 70s; }
+  /* .proj-card .art img sets width:100% on every art image, and it outranks
+     a bare .apps-strip img, which stretched all 24 thumbs into a blur. This
+     selector outranks it back; the strips own their sizing. */
+  .proj-card .art.strips-art img { width: 88px; height: 88px; border-radius: 16px; flex: none; display: block; transition: none; }
+  @keyframes apps-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes apps-drift-rev { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+  @media (prefers-reduced-motion: reduce) { .apps-track { animation: none; } }
+  .proj-card:hover .art.strips-art img { transform: none; }
+  .proj-body { padding: 20px 22px 22px; }
+  .proj-body .label {
+    font-family: "Bricolage Grotesque", Georgia, serif;
+    font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 5px; opacity: .9;
+  }
+  .proj-body .name {
+    font-family: "Bricolage Grotesque", Georgia, serif;
+    font-size: 21px; font-weight: 600;
+    color: var(--ink); text-decoration: none;
+  }
+  a.name:hover { text-decoration: underline; text-underline-offset: 4px; }
+  ul.points { list-style: none; margin-top: 10px; }
+  ul.points li {
+    color: var(--sub); font-size: 14.5px;
+    padding: 3px 0 3px 20px; position: relative;
+  }
+  ul.points li::before {
+    content: ""; position: absolute; left: 2px; top: 12px;
+    width: 8px; height: 8px; border-radius: 2px;
+    transform: rotate(45deg);
+  }
+  .proj-card.ap .label { color: var(--emerald); }
+  .proj-card.ap ul.points li::before { background: var(--emerald); }
+  .proj-card.lw .label { color: var(--gold); }
+  .proj-card.lw ul.points li::before { background: var(--gold); }
+  .proj-card.sw .label { color: var(--steel); }
+  .proj-card.sw ul.points li::before { background: var(--steel); }
+  .proj-card.pp .label { color: var(--plum); }
+  .proj-card.pp ul.points li::before { background: var(--plum); }
+  .proj-card.jm .label { color: var(--coral); }
+  .proj-card.jm ul.points li::before { background: var(--coral); }
+  .proj-card.ps .label { color: var(--indigo); }
+  .proj-card.ps ul.points li::before { background: var(--indigo); }
+  .proj-card.apps .label { color: var(--cyan); }
+  .proj-card.apps ul.points li::before { background: var(--cyan); }
+  .proj-body .tag {
+    display: inline-block; margin-top: 14px;
+    font-size: 13.5px; font-weight: 700; text-decoration: none;
+    padding: 8px 14px; border-radius: 999px;
+  }
+  .proj-card.ap .tag { color: var(--emerald); border: 1px solid var(--emerald); }
+  .proj-card.lw .tag { color: var(--gold); border: 1px solid var(--gold); }
+  .proj-card.sw .tag { color: var(--steel); border: 1px solid var(--steel); }
+  .proj-card.pp .tag { color: var(--plum); border: 1px solid var(--plum); }
+  .proj-card.jm .tag { color: var(--coral); border: 1px solid var(--coral); }
+  .proj-card.ps .tag { color: var(--indigo); border: 1px solid var(--indigo); }
+  .proj-card.apps .tag { color: var(--cyan); border: 1px solid var(--cyan); }
+  .proj-card .tag:hover { filter: brightness(1.2); }
+  .proj-body .status {
+    display: inline-flex; align-items: center; gap: 9px;
+    margin-top: 16px;
+    font-size: 13px; font-weight: 700; letter-spacing: .4px;
+    padding: 8px 15px; border-radius: 999px;
+    color: var(--sub);
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--line);
+  }
+  .proj-body .status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--indigo);
+    box-shadow: 0 0 0 3px rgba(155,147,242,.18);
+  }
+  .proj-body .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  .proj-body .actions .tag, .proj-body .actions .status { margin-top: 0; }
+
+  .plain-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)), var(--surface);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 24px;
+    padding: 22px 24px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.35);
+  }
+  .plain-card ul.points li::before { background: var(--gold); }
+  .contact-line { font-size: 15.5px; padding: 7px 0; display: flex; align-items: center; gap: 10px; }
+  .contact-line a { color: var(--ink); text-decoration: none; font-weight: 600; }
+  .contact-line a:hover { color: var(--emerald); }
+  .contact-line .ico { width: 22px; text-align: center; }
+
+  footer { text-align: center; color: var(--sub); font-size: 12.5px; margin-top: 36px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg);
+    padding: 10px 18px; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    opacity: 0; transition: opacity .25s; pointer-events: none;
+    z-index: 10;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 420px) {
+    h1 { font-size: 42px; }
+    .logo-disc { width: 116px; height: 116px; }
+  }
+
+  /* ---------- motion ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .rise { opacity: 0; transform: translateY(14px); animation: rise .6s ease forwards; }
+    .rise.d1 { animation-delay: .05s; }
+    .rise.d2 { animation-delay: .18s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    .proj-card { transition: transform .18s ease, border-color .18s ease; }
+    .proj-card:hover { transform: translateY(-3px); }
+    .proj-card.ap:hover { border-color: var(--emerald); }
+    .proj-card.lw:hover { border-color: var(--gold); }
+    .proj-card.sw:hover { border-color: var(--steel); }
+    .proj-card.pp:hover { border-color: var(--plum); }
+    .proj-card.jm:hover { border-color: var(--coral); }
+    .proj-card.ps:hover { border-color: var(--indigo); }
+    .proj-card.apps:hover { border-color: var(--cyan); }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Stephen Furpahs",
+  "jobTitle": "Founder",
+  "worksFor": { "@type": "Organization", "name": "SWS Strategic Media LLC" },
+  "address": { "@type": "PostalAddress", "addressLocality": "Akron", "addressRegion": "OH", "addressCountry": "US" },
+  "email": "mailto:stephenfurpahs@gmail.com",
+  "telephone": "+1-234-257-9376",
+  "url": "https://stephen-furpahs.web.app",
+  "image": "https://stephen-furpahs.web.app/sws-icon-512.png",
+  "alumniOf": { "@type": "CollegeOrUniversity", "name": "The University of Akron" },
+  "knowsAbout": ["behavioral verification", "cryptographic receipts", "online learning integrity", "browser games"]
+}
+</script>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0e1113">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script>document.documentElement.className += ' js';</script>
+</head>
+<body>
+<div class="aurora"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+<div class="wrap">
+
+  <div class="hero rise d1">
+    <div class="logo-disc"><img src="/sws-white.png" alt="SWS Strategic Media"></div>
+    <h1>Stephen Furpahs</h1>
+    <div class="role">Founder, SWS Strategic Media LLC <span class="dot">·</span> Akron, Ohio</div>
+    <div class="btnrow">
+      <a class="btn primary wide" href="stephen-furpahs.vcf" download>Save my contact</a>
+    </div>
+    <div class="btnrow secondary">
+      <a class="btn" href="mailto:stephenfurpahs@gmail.com">Email</a>
+      <button class="btn" id="shareBtn" type="button">Share</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <div class="section-head reveal from-bottom"><h2>What I'm building</h2></div>
+
+  <div class="proj-card ap reveal from-left">
+    <a class="art" href="https://sws-attention-proofs.web.app/" rel="noopener"><img src="ap-hero.png" alt="A signed attention receipt with a behavioral-signal trace, marked verified" loading="lazy"></a>
+    <div class="proj-body">
+      <a class="name" href="https://sws-attention-proofs.web.app/" rel="noopener">SWS Attention Protocol</a>
+      <ul class="points">
+        <li>A receipt that proves a real person did the activity</li>
+        <li>Cryptographically signed, independently verifiable</li>
+        <li>Built for online learning, credentialing, and compliance</li>
+        <li>Patent filed</li>
+      </ul>
+      <a class="tag" href="https://sws-attention-proofs.web.app/" rel="noopener">Try the live demo &rarr;</a>
+    </div>
+  </div>
+
+  <div class="proj-card ps reveal from-right">
+    <a class="art hero-band" href="https://plainsight-web-beta.vercel.app" rel="noopener"><img src="plainsight-hero.jpg" alt="Plainsight, a nonpartisan public record of US elected officials, drawn from primary public records" loading="lazy"></a>
+    <div class="proj-body">
+      <div class="label">Civic accountability</div>
+      <a class="name" href="https://plainsight-web-beta.vercel.app" rel="noopener">Plainsight</a>
+      <ul class="points">
+        <li>A free, nonpartisan public record of what US elected officials say, do, and take money from</li>
+        <li>Every entry ties back to a primary source: FEC filings, roll-call votes, and public disclosures</li>
+      </ul>
+      <div class="actions">
+        <a class="tag" href="https://plainsight-web-beta.vercel.app" rel="noopener">See your ballot &rarr;</a>
+        <span class="status"><span class="dot"></span>Preview</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="proj-card apps reveal from-left">
+    <a class="art strips-art" href="https://sws-apps-9646d.web.app" rel="noopener" aria-label="The Sky Wolf apps, one thumbnail each, drifting past in two rows">
+      <div class="apps-strip" aria-hidden="true"><div class="apps-track"><img src="sws-thumbs/baby-log.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/bill-splitter.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/bracket-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/caregiver-log.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/grade-sheet.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/grocery-list.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/home-inventory.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/image-compressor.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/moving-boxes.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/packing-list.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/pdf-tools.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/pill-schedule.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/baby-log.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/bill-splitter.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/bracket-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/caregiver-log.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/grade-sheet.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/grocery-list.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/home-inventory.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/image-compressor.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/moving-boxes.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/packing-list.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/pdf-tools.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/pill-schedule.png" alt="" width="88" height="88" loading="lazy" decoding="async"></div></div>
+      <div class="apps-strip rev" aria-hidden="true"><div class="apps-track"><img src="sws-thumbs/qr-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/scan-to-pdf.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/seating-chart.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/secret-santa.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/signature-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/signup-sheets.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/sitter-sheet.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/specials-planner.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/sub-plans.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/team-parent.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/wedding-timeline.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/wheel-picker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/qr-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/scan-to-pdf.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/seating-chart.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/secret-santa.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/signature-maker.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/signup-sheets.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/sitter-sheet.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/specials-planner.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/sub-plans.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/team-parent.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/wedding-timeline.png" alt="" width="88" height="88" loading="lazy" decoding="async"><img src="sws-thumbs/wheel-picker.png" alt="" width="88" height="88" loading="lazy" decoding="async"></div></div>
+    </a>
+    <div class="proj-body">
+      <div class="label">Free everyday apps</div>
+      <a class="name" href="https://sws-apps-9646d.web.app" rel="noopener">Sky Wolf Apps</a>
+      <ul class="points">
+        <li>24 free tools for real life: a lesson planner, signup sheets, PDF tools, packing lists, secret santa</li>
+        <li>Nothing leaves your device: no account, no ads, no subscription</li>
+        <li>Runs in any browser, nothing to install</li>
+      </ul>
+      <a class="tag" href="https://sws-apps-9646d.web.app" rel="noopener">Browse the apps &rarr;</a>
+    </div>
+  </div>
+
+  <div class="proj-card sw reveal from-right">
+    <a class="art" href="https://lucidwinds.com/portal/" rel="noopener"><img src="sky-wolf-portal.jpg" alt="Sky Wolf Studios, 160+ free browser games" loading="lazy"></a>
+    <div class="proj-body">
+      <div class="label">App &amp; game studio</div>
+      <a class="name" href="https://lucidwinds.com/portal/" rel="noopener">Sky Wolf Studios</a>
+      <ul class="points">
+        <li>The studio hub: every browser game in one place</li>
+        <li>140+ free browser games, no ads, no sign-up</li>
+        <li>Play in one tap, nothing to download</li>
+      </ul>
+      <a class="tag" href="https://lucidwinds.com/portal/" rel="noopener">Open the studio &rarr;</a>
+    </div>
+  </div>
+
+  <div class="proj-card lw reveal from-left">
+    <a class="art hero-band" href="https://lucidwinds.com/" rel="noopener"><img src="lucid-winds-splash.jpg" alt="Lucid Winds, a golden seed cracking open with a glowing sprout" loading="lazy"></a>
+    <div class="proj-body">
+      <a class="name" href="https://lucidwinds.com/" rel="noopener">Lucid Winds</a>
+      <ul class="points">
+        <li>Cozy, botanical browser game</li>
+        <li>Every plant and haiku created is one of one from a SHA-256 hash</li>
+        <li>Collection of over 140+ free browser games</li>
+        <li>No downloads required</li>
+      </ul>
+      <a class="tag" href="https://lucidwinds.com/" rel="noopener">Play free &rarr;</a>
+    </div>
+  </div>
+
+  <div class="proj-card jm reveal from-right">
+    <a class="art hero-band" href="https://lucidwinds.com/jimothy" rel="noopener"><img src="jimothy-hero.jpg" alt="Jimothy, a round Seattle raccoon painted in ink wash, between the Space Needle and Mount Rainier" loading="lazy"></a>
+    <div class="proj-body">
+      <div class="label">Browser game</div>
+      <a class="name" href="https://lucidwinds.com/jimothy" rel="noopener">Jimothy the Jumping Nugget</a>
+      <ul class="points">
+        <li>Hop Seattle&rsquo;s roundest raccoon across the rainy city to the greatest dumpster feast in town</li>
+        <li>Hand-painted ink-wash art, dozens of unlockable skins, and a hidden Sasquatch</li>
+        <li>Free in your browser, nothing to download</li>
+      </ul>
+      <a class="tag" href="https://lucidwinds.com/jimothy" rel="noopener">Play free &rarr;</a>
+    </div>
+  </div>
+
+  <div class="proj-card pp reveal from-left">
+    <a class="art icon-art" href="https://pom-pond.web.app" rel="noopener"><img src="pom-pond-icon.png" alt="Pom Pond app icon" loading="lazy"></a>
+    <div class="proj-body">
+      <div class="label">Family app</div>
+      <a class="name" href="https://pom-pond.web.app" rel="noopener">Pom Pond</a>
+      <ul class="points">
+        <li>A chore tracker and reward center for kids and parents</li>
+        <li>Kids earn &ldquo;Poms&rdquo; for chores and hatch collectible critters</li>
+        <li>Fill the pond to unlock a reward a parent picks</li>
+      </ul>
+      <a class="tag" href="https://pom-pond.web.app" rel="noopener">Open Pom Pond &rarr;</a>
+    </div>
+  </div>
+
+  <div class="section-head reveal from-bottom"><h2>About me</h2></div>
+  <div class="plain-card reveal from-bottom">
+    <ul class="points">
+      <li>University of Akron graduate: Jazz Guitar Performance</li>
+      <li>Solo founder and dad</li>
+      <li>Lead Developer: design, code, deployment, and testing</li>
+    </ul>
+  </div>
+
+  <div class="section-head reveal from-bottom"><h2>Contact</h2></div>
+  <div class="plain-card reveal from-bottom">
+    <div class="contact-line"><span class="ico">✉️</span> <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></div>
+    <div class="contact-line"><span class="ico">📱</span> <a href="tel:+12342579376">234-257-9376</a></div>
+    <div class="contact-line"><span class="ico">🌐</span> <a href="https://stephen-furpahs.web.app">stephen-furpahs.web.app</a></div>
+  </div>
+
+  </div>
+
+  <footer>Stephen Furpahs · Akron, Ohio · © 2026 SWS Strategic Media LLC</footer>
+</div>
+
+<div class="toast" id="toast">Link copied</div>
+
+<script>
+  const shareBtn = document.getElementById('shareBtn');
+  const toast = document.getElementById('toast');
+  const shareData = {
+    title: 'Stephen Furpahs',
+    text: 'Stephen Furpahs, founder of SWS Strategic Media. A receipt that proves a real person did the activity.',
+    url: 'https://stephen-furpahs.web.app'
+  };
+  shareBtn.addEventListener('click', async () => {
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (e) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+      } catch (e) {}
+    }
+  });
+</script>
+<script>
+  (function () {
+    var all = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      all.forEach(function (e) { e.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+    all.forEach(function (e) { io.observe(e); });
+    // safety net: never let a card stay hidden once it is near/in the viewport
+    var safety = function () {
+      document.querySelectorAll('.reveal:not(.in)').forEach(function (e) {
+        if (e.getBoundingClientRect().top < (window.innerHeight || 800) * 0.95) {
+          e.classList.add('in'); io.unobserve(e);
+        }
+      });
+    };
+    window.addEventListener('scroll', safety, { passive: true });
+    window.addEventListener('resize', safety);
+    window.addEventListener('load', safety);
+  })();
+</script>
+</body>
+</html>
