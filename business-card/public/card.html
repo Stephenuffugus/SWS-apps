@@ -29,7 +29,7 @@
       var(--bg);
     color:var(--ink); font-family:var(--display);
     display:flex; align-items:center; justify-content:center;
-    min-height:100dvh; overflow-y:auto;
+    min-height:100dvh; overflow:hidden;
     padding:max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
   }
   .card {
@@ -90,6 +90,20 @@
     </div>
   </div>
 <script>
+  // Never scroll: if the screen is shorter than the card, scale the card to fit.
+  (function () {
+    var card = document.querySelector('.card');
+    function fit() {
+      card.style.transform = '';
+      var free = document.documentElement.clientHeight - 28;
+      var s = Math.min(1, free / card.offsetHeight);
+      if (s < 1) card.style.transform = 'scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    window.addEventListener('orientationchange', fit);
+    window.addEventListener('load', fit);
+    fit();
+  })();
   if ('wakeLock' in navigator) { const g=()=>navigator.wakeLock.request('screen').catch(()=>{}); g(); document.addEventListener('visibilitychange',()=>{if(!document.hidden)g();}); }
 </script>
 </body>
