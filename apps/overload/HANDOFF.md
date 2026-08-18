@@ -88,6 +88,20 @@ cards, live workout, results, history, and now the volume strip).
 
 ## 6. Later / optional
 
-Firebase sync · share-a-card image (the social-proof loop Hevy owns) ·
+**Round-2 shortlist (competitor scan 2026-08-18, best features vs biggest
+complaints across Hevy/Strong/StrengthLog/Liftosaur):**
+1. **Warm-up ramp from the prescription.** Lifters' most-praised feature and
+   a perfect fit for prescription-first: we already know the working weight,
+   so workout mode can print the standard ramp (40%×5, 60%×5, 80%×3, rounded
+   to the lift's increment) with plate math per line. Zero typing, read-only.
+2. **Per-lift e1RM sparkline.** Progression graphs are the motivation feature
+   the category agrees on. Epley (w×(1+reps/30)) over history's best set per
+   session, drawn with the same SVG sparkline the bodyweight trend already
+   uses. Put it in the ⚙ settings sheet. Zero input, derived entirely from
+   history.
+Skipped on purpose: RPE/RIR logging (breaks one-tap), social/programs
+(anti-wedge), notifications (PWA-flaky on iOS).
+
+Also: Firebase sync · share-a-card image (the social-proof loop Hevy owns) ·
 2-row rep chips if repMax > 12 ranges arrive · sunbeams tie-in.
 Art: `marketing/` thumbs and the PNG icon set ARE Stephen's art (filed 2026-08-18, rescaled from his file, never regenerated). Only `icon.svg` is a functional mark.

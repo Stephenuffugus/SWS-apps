@@ -55,5 +55,17 @@ Everything from v1.0.0 (scroll from a row, keyboard/sheet stability, full/half s
 
 ## Roadmap (later)
 
+**Round-2 shortlist (competitor scan 2026-08-18, ADHD app research):**
+1. **"Hand me one."** The field's answer to task paralysis is picking FOR the
+   user. One quiet button near the add row: picks a task (NOW-weighted
+   random), opens focus mode with a suggested timer. Kills the staring-at-
+   the-list freeze, zero typing, very on-brand for an arcade studio.
+2. **Spatial time in focus mode.** ADHD research is unanimous that a
+   shrinking disk beats digits for time blindness. Draw a thin ring or pie
+   around/behind #fTime that empties as the countdown runs; digits stay.
+   Cheap, no new state.
+Skipped on purpose: body doubling (needs a server, breaks on-device promise),
+virtual-pet gamification (unlockable pens are our version, already listed).
+
 - Records page (per-task PR table, ink laid down per colour) · gentle Finch-style streak that pauses, never dies · unlockable pens · share card PNG · drag-to-reorder within a section (must not conflict with the gesture table) · "break it down" via Claude API (auto-suggest steps).
 - Art: `marketing/thumb-256.png`, `stripe-thumbnail.png` and the PNG icon set ARE Stephen's art (filed 2026-08-18, rescaled from his file, never regenerated). Only `icon.svg` (the vector favicon) is a functional mark.

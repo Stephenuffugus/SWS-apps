@@ -650,18 +650,18 @@ function logSet(reps){
   restStart();
 }
 
-/* rest timer — per-lift duration, beep and buzz at the end */
+/* rest timer — per-lift duration, beep and buzz at the end.
+   Wall-clock, not tick-counted: a locked phone throttles intervals, and a
+   rest that silently stretches from 2:00 to 3:40 is a defect in a gym. */
 let restIv=null;
 function restStart(){
-  let t=W.p.rest||DEFAULT_REST;
+  const deadline=Date.now()+(W.p.rest||DEFAULT_REST)*1000;
   const el=document.getElementById('restT');
   document.getElementById('restNext').textContent=`Next: set ${W.reps.length+1} of ${W.p.sets} at ${W.w} lbs`;
-  el.textContent=fmtT(t);
+  const paint=()=>{const t=Math.round((deadline-Date.now())/1000);el.textContent=fmtT(Math.max(0,t));return t;};
+  paint();
   document.getElementById('rest').classList.add('on');
-  restIv=setInterval(()=>{
-    t--; el.textContent=fmtT(Math.max(0,t));
-    if(t<=0){beep();vib(150);restEnd();}
-  },1000);
+  restIv=setInterval(()=>{ if(paint()<=0){beep();vib(150);restEnd();} },250);
 }
 function restEnd(){clearInterval(restIv);restIv=null;document.getElementById('rest').classList.remove('on');}
 document.getElementById('restSkip').addEventListener('click',restEnd);
