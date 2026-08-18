@@ -1518,5 +1518,32 @@ dialog h3{margin:0 0 var(--s3); font-size:var(--t-lg)}
 
 <script src="vendor-qrcode.js"></script>
 <script type="module" src="app.js"></script>
+<script>
+/* Sky Wolf Studios install affordance, injected studio-wide 2026-08-18.
+   Chrome hands over a real install prompt; iOS gets directions; nothing
+   shows once the app is already installed. */
+(function(){
+  if (matchMedia('(display-mode: standalone)').matches) return;
+  var evt = null;
+  function place(){
+    var a = document.getElementById('swsInstall');
+    if (a) return a;
+    a = document.createElement('button');
+    a.id = 'swsInstall'; a.type = 'button'; a.textContent = '\u2913 Install this app';
+    a.style.cssText = 'font:inherit;font-size:12px;color:inherit;opacity:.75;background:none;border:1px solid currentColor;border-radius:10px;padding:6px 12px;margin-top:10px;cursor:pointer;display:inline-block';
+    var host = document.querySelector('footer.colophon, .colophon, .footnote, footer');
+    if (host){ host.appendChild(document.createElement('br')); host.appendChild(a); }
+    else { a.style.cssText += ';position:fixed;right:12px;bottom:76px;z-index:60'; document.body.appendChild(a); }
+    return a;
+  }
+  addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); evt = e;
+    place().onclick = function(){ if (evt) evt.prompt(); };
+  });
+  if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone){
+    place().onclick = function(){ alert('To install: tap the Share button, then "Add to Home Screen".'); };
+  }
+})();
+</script>
 </body>
 </html>

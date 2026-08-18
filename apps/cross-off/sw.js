@@ -1,6 +1,6 @@
 /* Cross Off service worker — cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'cross-off-v4';
+const CACHE = 'cross-off-v6';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg',
   'icon-192.png', 'icon-512.png', 'sws-ui.js',

@@ -6,7 +6,7 @@
    `CACHE` it finds, so a worker that declares both ends up with a bumped name
    nothing reads and a cache name that never moves — the exact silent-stale
    failure the bump script exists to prevent. */
-const CACHE = 'gradesheet-v3';
+const CACHE = 'gradesheet-v4';
 const ASSETS = [
   './', './index.html', './app.js', './grade.js', './roster.js', './store.js',
   './manifest.webmanifest', './icon.svg', './privacy.html',

@@ -96,11 +96,11 @@
     /* after dark the swipe covers the whole word, so the ink stays on yellow */
     header h1 .underline{background:linear-gradient(transparent 6%, var(--hl-yellow) 6%, var(--hl-yellow) 96%, transparent 96%);border-radius:4px}
     .daycount{color:#9aa0ab}
-    .daycount b{color:#EAE6DC}
+    .daycount b{color:#1D2417}
   }
   .hright{display:flex;align-items:center;gap:10px}
   .daycount{font-size:12.5px;color:var(--ink-soft)}
-  .daycount b{color:var(--ink);font-size:16px}
+  .daycount b{color:#1D2417;font-size:16px;background:var(--hl-green);padding:0 7px;border-radius:3px;font-weight:700}
   #soundBtn{
     border:none;background:transparent;font-size:18px;cursor:pointer;
     opacity:.8;padding:6px;min-width:32px;min-height:32px;border-radius:8px;
@@ -596,7 +596,7 @@
 </div>
 </div>
 
-<div id="hint">drag a highlighter across a task · tap a task to edit it</div>
+<div id="hint">drag a highlighter across a task · tap a task to edit it · swipe to turn the page</div>
 
 <div id="tray" aria-label="Highlighters">
   <button class="marker sel" data-c="#F9E547" aria-label="Yellow highlighter" aria-pressed="true"><span class="tip" style="background:#F9E547"></span><span class="body" style="background:#F9E547"><span class="band"></span></span><span class="cap"></span></button>
@@ -677,24 +677,27 @@ const state={
   color:'#F9E547',addPri:2,
   sound:true,hintShown:true,
   focusTaskId:null,
-  lastFlip:null,flipSnooze:null
+  lastFlip:null,flipSnooze:null,
+  archived:[]
 };
 let uid=0;
 
 /* ---------- persistence (guarded: falls back to in-memory) ---------- */
 const STORE_KEY='crossoff.v1';
 const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const packPage=p=>({id:p.id,name:p.name,color:p.color,
+  past:p.past||[],
+  tasks:p.tasks.map(t=>({id:t.id,text:t.text,note:t.note||'',done:t.done,pri:t.pri||2,
+    chore:!!t.chore,steps:(t.steps||[]).map(s=>({text:s.text,done:!!s.done})),
+    strokes:t.strokes,result:t.result||null,
+    /* a running countdown survives a reload: the deadline is wall-clock */
+    timer:t.timer?{duration:t.timer.duration,deadline:t.timer.deadline,buzzed:t.timer.buzzed}:null}))});
 function save(){
   try{
     const data={
       uid,activePage:state.activePage,
-      pages:state.pages.map(p=>({id:p.id,name:p.name,color:p.color,
-        past:p.past||[],
-        tasks:p.tasks.map(t=>({id:t.id,text:t.text,note:t.note||'',done:t.done,pri:t.pri||2,
-          chore:!!t.chore,steps:(t.steps||[]).map(s=>({text:s.text,done:!!s.done})),
-          strokes:t.strokes,result:t.result||null,
-          /* a running countdown survives a reload: the deadline is wall-clock */
-          timer:t.timer?{duration:t.timer.duration,deadline:t.timer.deadline,buzzed:t.timer.buzzed}:null}))})),
+      pages:state.pages.map(packPage),
+      archived:(state.archived||[]).map(packPage),
       records:state.records,doneToday:state.doneToday,doneDate:todayStr(),
       color:state.color,addPri:state.addPri,sound:state.sound,
       lastCustom:state.lastCustom||null,hintShown:state.hintShown,
@@ -709,7 +712,7 @@ function load(){
     if(!raw)return false;
     const d=JSON.parse(raw);
     uid=d.uid||0;
-    state.pages=(Array.isArray(d.pages)?d.pages:[]).map(p=>({id:p.id,name:p.name,color:p.color,
+    const unpackPage=p=>({id:p.id,name:p.name,color:p.color,
       past:Array.isArray(p.past)?p.past:[],
       tasks:(Array.isArray(p.tasks)?p.tasks:[]).map(t=>({id:t.id,text:String(t.text||''),note:String(t.note||''),
         done:!!t.done,pri:t.pri||2,chore:!!t.chore,
@@ -718,7 +721,9 @@ function load(){
         timer:(t.timer&&typeof t.timer.deadline==='number')?{duration:t.timer.duration,deadline:t.timer.deadline,
           /* a deadline that passed while the app was closed does not get to
              scream on open; it arrives already calm */
-          buzzed:t.timer.buzzed||t.timer.deadline<=Date.now()}:null}))}));
+          buzzed:t.timer.buzzed||t.timer.deadline<=Date.now()}:null}))});
+    state.pages=(Array.isArray(d.pages)?d.pages:[]).map(unpackPage);
+    state.archived=(Array.isArray(d.archived)?d.archived:[]).map(unpackPage);
     state.activePage=d.activePage;
     state.records=d.records||{};
     state.doneToday=(d.doneDate===todayStr())?(d.doneToday||0):0;   // count resets daily
@@ -1137,12 +1142,16 @@ function openEditSheet(task){
 function openPageSheet(p){
   const pastBtn=(p.past&&p.past.length)
     ? '<button class="sbtn line" id="shPast">📖 flip back ('+p.past.length+')</button>':'';
+  const archBtn=(state.pages.length>1)
+    ? '<button class="sbtn line" id="shArchive">🗃 archive page</button>':'';
+  const shelfBtn=((state.archived||[]).length)
+    ? '<button class="sbtn line" id="shShelf">📦 archived ('+state.archived.length+')</button>':'';
   openSheet(
     '<h3>This page</h3>'+
     '<label class="sr-only" for="shPage">Page name</label>'+
     '<input class="field" id="shPage" type="text" autocomplete="off">'+
     '<div class="sheetrow">'+
-      '<button class="sbtn line" id="shFresh">🌅 fresh page</button>'+pastBtn+
+      '<button class="sbtn line" id="shFresh">🌅 fresh page</button>'+pastBtn+archBtn+shelfBtn+
     '</div>'+
     '<div class="sheetrow last">'+
       '<button class="sbtn danger" id="shPageDel">Delete page</button>'+
@@ -1160,6 +1169,23 @@ function openPageSheet(p){
   });
   const pb=document.getElementById('shPast');
   if(pb)pb.addEventListener('click',()=>{closeSheet();openPast(p,p.past.length-1);});
+  const ab=document.getElementById('shArchive');
+  if(ab)ab.addEventListener('click',()=>{
+    const snap=state.pages.indexOf(p);
+    state.archived=state.archived||[];
+    state.archived.push(p);
+    state.pages=state.pages.filter(x=>x.id!==p.id);
+    state.activePage=state.pages[Math.max(0,Math.min(snap,state.pages.length-1))].id;
+    closeSheet();render();save();
+    if(window.SWS&&SWS.toast)SWS.toast('Page "'+p.name.slice(0,30)+'" archived, ink and all.',{
+      action:{label:'Undo',onAction:()=>{
+        state.archived=state.archived.filter(x=>x.id!==p.id);
+        state.pages.splice(Math.min(snap,state.pages.length),0,p);
+        state.activePage=p.id;render();save();
+      }}});
+  });
+  const sb=document.getElementById('shShelf');
+  if(sb)sb.addEventListener('click',()=>{closeSheet();openArchived();});
   document.getElementById('shPageDel').addEventListener('click',()=>{
     if(state.pages.length<=1){closeSheet();return;}
     const snap=state.pages.indexOf(p);
@@ -1174,6 +1200,26 @@ function openPageSheet(p){
       }}});
   });
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('shPageSave').click();});
+}
+
+/* ---------- the archive shelf: finished pages, restorable ---------- */
+function openArchived(){
+  const clean=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const rows=(state.archived||[]).map(p=>{
+    const doneN=p.tasks.filter(t=>t.done).length;
+    return '<div class="sheetrow"><button class="sbtn line" data-restore="'+p.id+'">↩ '+clean(p.name.slice(0,40))+' · '+doneN+'/'+p.tasks.length+' crossed off</button></div>';
+  }).join('');
+  openSheet('<h3>Archived pages</h3>'+(rows||'<p>Nothing on the shelf yet.</p>')+
+    '<div class="sheetrow last"><button class="sbtn" id="archClose">Close</button></div>');
+  document.querySelectorAll('[data-restore]').forEach(b=>b.addEventListener('click',()=>{
+    const id=+b.getAttribute('data-restore');
+    const p=(state.archived||[]).find(x=>x.id===id);
+    if(!p)return;
+    state.archived=state.archived.filter(x=>x.id!==id);
+    state.pages.push(p);state.activePage=p.id;
+    closeSheet();render();save();
+  }));
+  document.getElementById('archClose').addEventListener('click',closeSheet);
 }
 
 /* ---------- the flip-back pile (read-only, ink intact) ---------- */
@@ -1703,10 +1749,60 @@ for(const p of state.pages)for(const t of p.tasks){
   }
 }
 
+/* ---------- swipe between pages ----------
+   Starts on paper only: never on a task's canvas, a button, an input or
+   the tray, because those gestures belong to the highlighters. */
+(function(){
+  const zone=document.getElementById('page');
+  if(!zone)return;
+  let sx=0,sy=0,st=0,ok=false;
+  zone.addEventListener('pointerdown',e=>{
+    ok=!(e.target.closest&&e.target.closest('canvas,button,input,textarea,a,#tray,.marker'));
+    sx=e.clientX;sy=e.clientY;st=Date.now();
+  });
+  zone.addEventListener('pointerup',e=>{
+    if(!ok)return;ok=false;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(Date.now()-st>600||Math.abs(dx)<70||Math.abs(dy)>60)return;
+    const i=state.pages.findIndex(p=>p.id===state.activePage);
+    const j=i+(dx<0?1:-1);
+    if(j<0||j>=state.pages.length)return;
+    state.activePage=state.pages[j].id;
+    render();save();
+  });
+})();
+
 /* ---------- PWA ---------- */
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
   addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
 }
+</script>
+<script>
+/* Sky Wolf Studios install affordance, injected studio-wide 2026-08-18.
+   Chrome hands over a real install prompt; iOS gets directions; nothing
+   shows once the app is already installed. */
+(function(){
+  if (matchMedia('(display-mode: standalone)').matches) return;
+  var evt = null;
+  function place(){
+    var a = document.getElementById('swsInstall');
+    if (a) return a;
+    a = document.createElement('button');
+    a.id = 'swsInstall'; a.type = 'button'; a.textContent = '\u2913 Install this app';
+    a.style.cssText = 'font:inherit;font-size:12px;color:inherit;opacity:.75;background:none;border:1px solid currentColor;border-radius:10px;padding:6px 12px;margin-top:10px;cursor:pointer;display:inline-block';
+    var host = document.querySelector('footer.colophon, .colophon, .footnote, footer');
+    if (host){ host.appendChild(document.createElement('br')); host.appendChild(a); }
+    else { a.style.cssText += ';position:fixed;right:12px;bottom:76px;z-index:60'; document.body.appendChild(a); }
+    return a;
+  }
+  addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); evt = e;
+    place().onclick = function(){ if (evt) evt.prompt(); };
+  });
+  if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone){
+    place().onclick = function(){ alert('To install: tap the Share button, then "Add to Home Screen".'); };
+  }
+})();
 </script>
 </body>
 </html>
