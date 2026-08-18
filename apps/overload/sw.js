@@ -1,6 +1,6 @@
 /* OVERLOAD service worker — cache-first shell for offline basement gyms.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'overload-v3';
+const CACHE = 'overload-v4';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg',
   'icon-192.png', 'icon-512.png', 'sws-ui.js',
