@@ -24,6 +24,7 @@
   --bg:#16171c; --bg-2:#1c1e24; --surface:#212430; --line:#2e3240; --line-2:#454b5e;
   --ink:#eceef4; --ink-2:#a7adbe; --ink-3:#7f8698;
   --cream:#f2e3c1; --teal:#4fd1e0;
+  --gold:#D9B36C; --gold-dim:rgba(217,179,108,.28); --gold-glow:rgba(217,179,108,.08);
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:32px; --s8:48px;
   --r:14px;
   --ease:cubic-bezier(.32,.72,0,1);
@@ -35,8 +36,8 @@ body{
   font:1rem/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   -webkit-font-smoothing:antialiased;
   background-image:
-    radial-gradient(60rem 32rem at 8% -8%, rgba(79,209,224,.07), transparent 60%),
-    radial-gradient(52rem 30rem at 96% 0%, rgba(242,227,193,.05), transparent 55%);
+    radial-gradient(60rem 32rem at 8% -8%, rgba(217,179,108,.07), transparent 60%),
+    radial-gradient(52rem 30rem at 96% 0%, rgba(242,227,193,.06), transparent 55%);
   background-attachment:fixed;
   padding-bottom:calc(var(--s8) + env(safe-area-inset-bottom));
 }
@@ -56,11 +57,12 @@ h1{
 .promise{
   display:inline-flex; align-items:center; gap:var(--s2); flex-wrap:wrap; justify-content:center;
   margin:0 auto; padding:var(--s3) var(--s5);
-  background:var(--surface); border:1px solid var(--line); border-radius:999px;
+  background:var(--surface); border:1px solid var(--gold-dim); border-radius:999px;
+  box-shadow:0 0 16px var(--gold-glow);
   color:var(--ink-2); font-size:.9375rem;
 }
 .promise b{color:var(--ink); font-weight:600}
-.promise svg{width:18px;height:18px;color:var(--teal);flex:none}
+.promise svg{width:18px;height:18px;color:var(--gold);flex:none}
 
 .searchbar{position:sticky; top:0; z-index:10; padding:var(--s4) 0;
   background:linear-gradient(var(--bg) 72%, transparent); margin-bottom:var(--s3)}
@@ -73,28 +75,30 @@ h1{
 .search input::placeholder{color:var(--ink-3)}
 .search svg{position:absolute; left:16px; top:50%; transform:translateY(-50%);
   width:18px; height:18px; color:var(--ink-3); pointer-events:none}
-.search input:focus-visible{outline:2px solid var(--teal); outline-offset:2px; border-color:var(--teal)}
+.search input:focus-visible{outline:2px solid var(--gold); outline-offset:2px; border-color:var(--gold)}
 
 .group{margin-bottom:var(--s7)}
 .group h2{
-  font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
-  color:var(--ink-3); margin:0 0 var(--s4);
+  font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.14em;
+  color:var(--gold); margin:0 0 var(--s4);
 }
 .grid{display:grid; gap:var(--s3); grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
 
 a.card{
   position:relative; display:flex; gap:var(--s4); align-items:flex-start;
   padding:var(--s4) var(--s5) var(--s4) var(--s4);
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  background:var(--surface); border:1px solid var(--gold-dim); border-radius:var(--r);
+  box-shadow:0 0 14px var(--gold-glow);
   text-decoration:none; color:inherit; overflow:hidden;
-  transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
+  transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease), box-shadow .14s var(--ease);
 }
 /* The app's own accent, as a spine down the left edge. Twenty-three of these
    in a grid is the portfolio's colour system stated in one glance. */
 a.card::before{
   content:''; position:absolute; inset:0 auto 0 0; width:3px; background:var(--app);
 }
-a.card:hover{transform:translateY(-2px); border-color:var(--app); background:#242835}
+a.card:hover{transform:translateY(-2px); border-color:var(--gold); background:#242835;
+  box-shadow:0 0 22px rgba(217,179,108,.16)}
 a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
 .swatch{
   width:56px; height:56px; flex:none; border-radius:12px; margin-top:2px;
@@ -116,12 +120,12 @@ a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
 .empty.show{display:block}
 
 footer{
-  margin-top:var(--s8); padding-top:var(--s6); border-top:1px solid var(--line);
+  margin-top:var(--s8); padding-top:var(--s6); border-top:1px solid var(--gold-dim);
   text-align:center; color:var(--ink-3); font-size:.875rem; line-height:1.6;
 }
 footer a{color:var(--ink-2)}
-footer a:hover{color:var(--teal)}
-footer .tip{color:var(--ink-2)}
+footer a:hover{color:var(--gold)}
+footer .tip{color:var(--gold)}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important}
