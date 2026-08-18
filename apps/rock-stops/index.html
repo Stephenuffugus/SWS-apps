@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Float — field log</title>
+<title>Rock Stops · field log</title>
 <meta name="description" content="A private field log for rockhounding, fossils and sea glass. Local-first — no account, no server.">
 <meta name="theme-color" content="#161B19">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1633,10 +1633,12 @@ const more = {
 
     host.appendChild(el('h3', { class: 'eyebrow' }, 'About'));
     host.appendChild(el('p', { class: 'dim-t small' },
-      `Float ${FLOAT_VERSION} — a private field log for rockhounding, fossils and sea glass. Local-first: no account, no server, no tracking.`));
+      `Rock Stops ${FLOAT_VERSION}, a private field log for rockhounding, fossils and sea glass. Local-first: no account, no server, no tracking.`));
     host.appendChild(el('p', { class: 'small' },
       el('a', { href: 'privacy.html' }, 'Privacy & accessibility'),
-      el('span', { class: 'dim-t' }, ' — what is stored, what never leaves, and how to check.')));
+      el('span', { class: 'dim-t' }, ' · what is stored, what never leaves, and how to check.')));
+    host.appendChild(el('p', { class: 'small' },
+      el('a', { href: 'https://buy.stripe.com/8x2cN60rf3H13fn6dX7EQ0r', target: '_blank', rel: 'noopener' }, '\u2665 Tip jar')));
     if (useMem) host.appendChild(el('p', { class: 'warn small' }, '⚠ Storage unavailable in this browser — data will not survive a reload.'));
   }
 };
@@ -1724,7 +1726,7 @@ const backup = {
   },
 
   async deserialize(data, mode = 'merge') {
-    if (data.app !== 'float') throw new Error('Not a Float backup');
+    if (data.app !== 'float') throw new Error('Not a Rock Stops backup');
     if (mode === 'replace') for (const s of STORES) if (s !== 'settings') await db.clear(s);
     for (const s of data.sites || []) await db.put('sites', s);
     for (const t of data.trips || []) await db.put('trips', t);
@@ -1748,7 +1750,7 @@ const backup = {
       toast(`Restored ${n.finds} finds, ${n.photos} photos`);
       app.rerender();
     } catch (e) {
-      toast('That file is not a Float backup');
+      toast('That file is not a Rock Stops backup');
     }
   }
 };
@@ -2317,7 +2319,7 @@ const welcome = {
     const panel = el('div', { id: 'welcome', class: 'wc' },
       el('div', { class: 'wc-inner' },
         el('div', { class: 'gate-mark' }, '◈'),
-        el('h1', { class: 'gate-title' }, 'Float'),
+        el('h1', { class: 'gate-title' }, 'Rock Stops'),
         el('p', { class: 'gate-sub' }, 'A field log for what you pick up'),
 
         el('ol', { class: 'wc-steps' },
@@ -2398,7 +2400,7 @@ const devgate = {
 
     main.appendChild(el('div', { class: 'gate' },
       el('div', { class: 'gate-mark' }, '◈'),
-      el('h1', { class: 'gate-title' }, 'FLOAT'),
+      el('h1', { class: 'gate-title' }, 'ROCK STOPS'),
       el('p', { class: 'gate-sub' }, 'Rockhounding field log · in development'),
       el('label', { class: 'gate-label', for: 'devpass' }, 'Passphrase'),
       input,

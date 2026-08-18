@@ -1,4 +1,4 @@
-# FLOAT — HANDOFF v2.1.0
+# ROCK STOPS (built as Float) — HANDOFF v2.1.0
 Rockhounding field log · single-file vanilla HTML/CSS/JS PWA · local-first
 Owner: Stephen (SWS Strategic Media LLC / Lucid Winds). Co-user: Jessie.
 Target deploy: GitHub Pages or Firebase Hosting → lucidwinds.com portfolio → app store wrap.
@@ -8,7 +8,7 @@ Target deploy: GitHub Pages or Firebase Hosting → lucidwinds.com portfolio →
 Open it in a mobile browser and it runs. All data in IndexedDB (in-memory fallback with a
 visible warning if IDB is unavailable). Logic assertions run from this repo — see TEST HARNESS.
 
-Lives at `apps/float/` in the SWS-apps repo and is served at `/float/`. It is **app 24 and in
+Lives at `apps/rock-stops/` in the SWS-apps repo and is served at `/rock-stops/`. Renamed from Float 2026-08-18; internal keys (float-db, app:"float", float.dev.unlocked) deliberately kept. It is **app 24 and in
 development**: a passphrase gate (`wolfden`, same as the arcade) sits in front of it. The gate is
 a curtain, not security — the passphrase is in the source of a file anyone can read — and its own
 copy says so. It does not need to be security: nothing is behind it but this device's own

@@ -49,6 +49,9 @@ const SELF_STYLED = {
   /* Astra Vault is a built Expo web export dropped into apps/astravault/
      (source repo: Stephenuffugus/astravault); colours from its own tokens. */
   'astravault': { darkAccent: '#60A5FA', accent: '#26356E' },
+  /* Rock Stops (built as Float) carries its own mineral palette: agate
+     amber on serpentine. Still gated for Stephen and Jessie's testing. */
+  'rock-stops': { darkAccent: '#C9873B', accent: '#2E5C51' },
 };
 
 const CATALOGUE = [
@@ -97,6 +100,9 @@ const CATALOGUE = [
   ]],
   ['Night Sky', [
     ['astravault', 'Astra Vault', 'Scan the cosmos and collect the sky', 'stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space'],
+  ]],
+  ['Outdoors', [
+    ['rock-stops', 'Rock Stops', 'Every rock, fossil and sea glass find, logged where you stood', 'rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps'],
   ]],
 ];
 
