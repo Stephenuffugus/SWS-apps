@@ -448,6 +448,125 @@ console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, date
   ok(!w2.__pwn && !w2.document.querySelector('table.week img'), 'a hostile column name cannot inject markup');
 }
 
+console.log('\n— Jessie notes 2026-08-18 round 2: fit mode has a way out —');
+{
+  const w = boot(clone(baseState));
+  ok(!!w.document.getElementById('fitbar'), 'the fitbar exists in the DOM (its CSS shipped a round early, the bar did not)');
+  w.eval('toggleFit(true)');
+  ok(w.document.body.classList.contains('fitscreen'), 'fit mode takes hold');
+  ok(stored(w).fit === true, 'and is remembered');
+  ok(!!w.document.getElementById('fit-exit'), 'an exit control exists while every other control is hidden');
+  w.document.getElementById('fit-exit').click();
+  ok(!w.document.body.classList.contains('fitscreen'), 'Exit full screen leaves the mode');
+  ok(stored(w).fit === false, 'and the preference follows');
+
+  w.eval('toggleFit(true)');
+  w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  ok(!w.document.body.classList.contains('fitscreen'), 'Escape also leaves fit mode');
+
+  // the two honest fits: whole week, or bigger text with a scroll
+  w.eval('toggleFit(true)');
+  const mb = w.document.getElementById('fit-mode');
+  ok(mb.textContent === 'Bigger text', 'the mode button offers the other fit');
+  mb.click();
+  ok(stored(w).fitMode === 'width', 'choosing it stores the width fit');
+  ok(mb.textContent === 'Whole week', 'and the button now offers the way back');
+  mb.click();
+  ok(stored(w).fitMode === 'all', 'which restores the whole-week fit');
+  w.eval('toggleFit(false)');
+
+  // the week arrows in the bar actually turn pages
+  w.document.getElementById('fit-next').click();
+  ok(w.eval('curWeek') === 1, 'the fitbar arrow reaches the next week');
+}
+
+console.log('\n— Jessie notes 2026-08-18 round 2: select many, restyle once —');
+{
+  const w = boot(clone(baseState));
+  const doc = w.document;
+  const md = (el, init) => el.dispatchEvent(new w.MouseEvent('mousedown', { bubbles: true, ...init }));
+
+  // the door in: a visible button, not a secret
+  doc.getElementById('p-multi').click();
+  ok(doc.body.classList.contains('selecting'), 'Select many turns the mode on');
+  ok(doc.querySelector('.box').getAttribute('contenteditable') === 'false', 'boxes stop being text fields');
+  ok(!!doc.getElementById('sel-dim'), 'the palette strip becomes the restyling toolbar');
+
+  // pick up two lesson boxes and the notes box
+  md(boxAt(w, '2026-08-24', 1));
+  md(boxAt(w, '2026-08-24', 2));
+  md(doc.querySelector('.box[data-iso="2026-08-24"][data-p="notes"]'));
+  ok(doc.querySelectorAll('table.week td.sel').length === 3, 'three clicks hold three boxes');
+  md(boxAt(w, '2026-08-24', 2));
+  ok(doc.querySelectorAll('table.week td.sel').length === 2, 'clicking a held box puts it down');
+  md(boxAt(w, '2026-08-24', 2));
+
+  // one colour click lands on all of them
+  doc.querySelector('[data-selpaint="k2"]').click();
+  let s = stored(w);
+  ok(s.fill['c0|1'] === 'k2' && s.fill['c0|2'] === 'k2' && s.fill['n2026-08-24'] === 'k2',
+    'one colour click paints every held box, notes included');
+  ok(doc.querySelectorAll('table.week td.sel').length === 3, 'the selection survives the repaint');
+
+  // grey out, and back
+  doc.getElementById('sel-dim').click();
+  s = stored(w);
+  ok(s.dim['c0|1'] === 1 && s.dim['c0|2'] === 1 && s.dim['n2026-08-24'] === 1, 'Grey out dims every held box');
+  ok(doc.querySelectorAll('table.week td.dimmed').length === 3, 'and the grid shows it');
+  ok(doc.getElementById('sel-dim').textContent === 'Un-grey', 'the button now offers the way back');
+  doc.getElementById('sel-dim').click();
+  ok(Object.keys(stored(w).dim).length === 0, 'Un-grey clears them all');
+
+  // size and font, together, still one gesture each
+  doc.getElementById('sel-sz-l').click();
+  ok(stored(w).boxStyle['c0|1'].sz === 'l', 'bigger text stores its token');
+  ok(boxAt(w, '2026-08-24', 1).classList.contains('sz-l'), 'and the box wears it');
+  const fo = doc.getElementById('sel-font');
+  fo.value = 'hand';
+  fo.dispatchEvent(new w.Event('change', { bubbles: true }));
+  ok(stored(w).boxStyle['c0|1'].f === 'hand', 'the font stores alongside the size');
+  ok(boxAt(w, '2026-08-24', 1).classList.contains('f-hand'), 'and renders');
+
+  // it all comes back after a reload — and an old backup without these
+  // stores boots fine (every other block in this suite already proves that)
+  const w2 = boot(stored(w));
+  ok(boxAt(w2, '2026-08-24', 1).classList.contains('sz-l') && boxAt(w2, '2026-08-24', 1).classList.contains('f-hand'),
+    'size and font survive a reload');
+
+  // clear styling empties every store for the held boxes
+  doc.getElementById('sel-sz-m').click();
+  ok(stored(w).boxStyle['c0|1'].sz === undefined && stored(w).boxStyle['c0|1'].f === 'hand',
+    'normal size clears the token and keeps the font');
+  doc.getElementById('sel-clear').click();
+  s = stored(w);
+  ok(!s.fill['c0|1'] && !s.dim['c0|1'] && !s.boxStyle['c0|1'], 'Clear styling empties every store for the held boxes');
+
+  // done: boxes are text fields again
+  doc.getElementById('sel-done').click();
+  ok(!doc.body.classList.contains('selecting'), 'Done leaves the mode');
+  ok(doc.querySelector('.box').getAttribute('contenteditable') !== 'false', 'boxes are editable again');
+
+  // week nav drops the handful rather than styling boxes off screen
+  doc.getElementById('p-multi').click();
+  md(boxAt(w, '2026-08-24', 1));
+  doc.getElementById('wk-next').click();
+  ok(w.eval('selBoxes.size') === 0, 'changing weeks empties the selection');
+  ok(doc.body.classList.contains('selecting'), 'but the mode stays on for the new week');
+  w.document.body.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  ok(!doc.body.classList.contains('selecting'), 'Escape leaves select mode');
+
+  // the laptop shortcut: Ctrl-click goes straight in
+  const w3 = boot(clone(baseState));
+  md(boxAt(w3, '2026-08-24', 1), { ctrlKey: true });
+  ok(w3.document.body.classList.contains('selecting'), 'Ctrl-click enters select mode');
+  ok(w3.document.querySelectorAll('table.week td.sel').length === 1, 'holding the box it started on');
+
+  // keyboard path: Space toggles a focused box
+  const b3 = boxAt(w3, '2026-08-24', 2);
+  b3.dispatchEvent(new w3.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+  ok(w3.document.querySelectorAll('table.week td.sel').length === 2, 'Space picks up the focused box');
+}
+
 console.log('\n— reset —');
 {
   const w = boot(clone(baseState));

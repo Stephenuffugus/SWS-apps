@@ -1642,20 +1642,34 @@ td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
 
 /* ── fit to screen ──
    Chrome out of the way, grid scaled by a factor measured in JS so the
-   whole week lands inside the viewport without a scrollbar. */
-body.fitscreen header.app, body.fitscreen .weeknav, body.fitscreen .trust,
-body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar{ display:none }
+   whole week lands inside the viewport without a scrollbar.
+   `header`, not `header.app` — the header carries no .app class, so the
+   old selector matched nothing: the one biggest block of chrome stayed
+   on screen and the grid scaled around it, smaller than it had to be.
+   That header also held the only visible controls, which is why hiding
+   it demands the .fitbar below actually exist (Jessie found the version
+   where it did not: fit mode with no way back out). */
+body.fitscreen header, body.fitscreen .weeknav, body.fitscreen .trust,
+body.fitscreen .footnote, body.fitscreen footer.colophon, body.fitscreen .sample-bar,
+body.fitscreen .palette{ display:none }
 body.fitscreen{ overflow:hidden }
 /* Too narrow to fit honestly: chrome still hidden for the extra room, but
    the grid keeps a readable size and scrolls like normal. */
 body.fitscreen.fit-scroll{ overflow:auto }
 body.fitscreen.fit-scroll .grid-scroll{ overflow:auto }
 body.fitscreen .wrap, body.fitscreen main{ max-width:none; padding:0; margin:0 }
+/* Room for the fitbar. In the flow, not overlapped — the bar sits in a
+   band the measurement already knows about, so it can never cover the
+   Notes column on a short laptop screen. */
+body.fitscreen main{ padding-top:56px }
 body.fitscreen .grid-scroll{ overflow:visible }
 body.fitscreen table.week{ transform:scale(var(--fit,1)); transform-origin:top left; width:max-content }
 body.fitscreen .legend{ margin:4px 8px }
-.fitbar{ position:fixed; top:8px; right:8px; z-index:60; display:none; gap:6px }
+.fitbar{ position:fixed; top:8px; right:8px; z-index:60; display:none; gap:6px; flex-wrap:wrap;
+  justify-content:flex-end; max-width:calc(100vw - 16px) }
 body.fitscreen .fitbar{ display:flex }
+.fitbar .btn{ min-height:40px; padding:0 var(--s3); font-size:var(--t-sm);
+  background:var(--surface); box-shadow:var(--shadow) }
 
 @media print{
   .paint, .mergebar, .cpick, .fitbar{ display:none !important }
@@ -1755,6 +1769,41 @@ body.painting .box .ln:hover{ outline:2px dashed var(--focus); outline-offset:0 
   .box .ln.lnf{ -webkit-print-color-adjust:exact; print-color-adjust:exact;
     background:var(--ln-bg) !important; color:var(--ln-ink) !important }
 }
+
+/* ── select many, restyle once ────────────────────────────────────────
+   Jessie, 2026-08-18: "I want to be able to click & highlight many boxes
+   at the same time to change fonts, colors, sizes, grey things out; not
+   individually." So there is a select mode: boxes stop being text fields
+   and become things you pick up, the ring says which ones you are holding,
+   and the palette strip turns into a restyling toolbar that hits all of
+   them at once. */
+body.selecting .box{ cursor:pointer; user-select:none }
+body.selecting .paint, body.selecting .mergebar{ display:none }
+table.week td.sel{ box-shadow:inset 0 0 0 3px var(--focus) !important }
+/* A selected box in the stacked phone layout keeps its ring — td.sel wins
+   the specificity contest against the stacked layer's box-shadow:none. */
+
+/* ── per-box looks: size, font, greyed out ────────────────────────────
+   All additive: a box with no entry renders exactly as before. */
+.box.sz-s{ font-size:var(--t-xs) }
+.box.sz-l{ font-size:var(--t-xl) }
+.box.f-serif{ font-family:'Fraunces',Georgia,serif }
+.box.f-hand{ font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive }
+.box.f-mono{ font-family:ui-monospace,'Cascadia Code',Consolas,'Courier New',monospace }
+/* Greyed out means "this one is not happening / already handled": the whole
+   cell drops back — colour fill, text, everything — but stays legible. */
+table.week td.dimmed{ filter:grayscale(.75); opacity:.5 }
+@media print{
+  table.week td.sel{ box-shadow:none !important }
+  table.week td.dimmed{ filter:grayscale(1); opacity:.5;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  /* These outrank the print sheet's .box sizes by specificity, so paper
+     gets its own steps — relative to print type, not screen type. */
+  .box.sz-s{ font-size:6.5pt }
+  .box.sz-l{ font-size:9.5pt }
+  body[data-print="full"] .box.sz-s{ font-size:8.5pt }
+  body[data-print="full"] .box.sz-l{ font-size:12pt }
+}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
@@ -1798,6 +1847,17 @@ body.painting .box .ln:hover{ outline:2px dashed var(--focus); outline-offset:0 
     <button class="btn" id="bar-day" disabled>Fill whole day</button>
     <button class="btn" id="bar-letter" disabled>Fill matching rotation days</button>
   </div>
+</div>
+
+<!-- Full-screen controls. The CSS for this bar shipped a round before the bar
+     itself, so fit mode hid every control on the page and kept none of these —
+     there was no way out short of clearing storage. It lives outside #view so
+     a re-render cannot wipe it, and CSS shows it only while body.fitscreen. -->
+<div class="fitbar no-print" id="fitbar" role="group" aria-label="Full screen week controls">
+  <button class="btn" id="fit-prev" aria-label="Previous week">‹</button>
+  <button class="btn" id="fit-next" aria-label="Next week">›</button>
+  <button class="btn" id="fit-mode">Bigger text</button>
+  <button class="btn" id="fit-exit">Exit full screen</button>
 </div>
 
 <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -2086,6 +2146,18 @@ function render(){
   hideBar(); closeModal();
   applyPrintMode();
   bar.hidden=true;
+  /* Fit mode belongs to the week grid alone. Any route to another view —
+     welcome, Setup, a reset — must put the chrome back, or that view
+     renders headerless with the page scroll locked. S.fit is left alone:
+     the preference survives, the trap does not. */
+  if(curView!=='week'||!S){
+    document.body.classList.remove('fitscreen','fit-scroll');
+    document.documentElement.style.removeProperty('--fit');
+    /* Same for a held selection — putting the boxes down directly, not via
+       setSelecting, which would render() from inside render(). */
+    selecting=false; selBoxes.clear();
+    document.body.classList.remove('selecting');
+  }
   const tabs=document.querySelector('.tabs');
   if(!S){ tabs.style.display='none'; renderWelcome(); return; }
   tabs.style.display='flex';
@@ -2258,6 +2330,11 @@ function ensureColourState() {
   S.fillCol = S.fillCol || {};  // "period" -> colour id           (column heading)
   S.fillDay = S.fillDay || {};  // "dow" -> colour id              (weekday label)
   S.lineFill = S.lineFill || {}; // boxKey -> { lineIndex: colour id }  (one note)
+  /* Jessie, 2026-08-18 round 2: restyle many boxes at once. Both stores are
+     additive and keyed like S.fill, so a snow-day bump carries the look with
+     the lesson. Absent key = exactly the old rendering. */
+  S.dim = S.dim || {};          // boxKey -> 1                     (greyed out)
+  S.boxStyle = S.boxStyle || {};// boxKey -> {sz:'s'|'l', f:'serif'|'hand'|'mono'}
   S.merge = S.merge || {};      // cellKey -> columns spanned      (one box)
   S.mergeDow = S.mergeDow || {};// "dow|period" -> columns spanned (every week)
   /* Jessie, 2026-08-18: "every Tuesday from now until Christmas". A ranged rule
@@ -2354,6 +2431,71 @@ function inkOn(hex) {
 let armedId = null;                 // the colour currently held, or null
 let paintScope = 'one';             // 'one' = this box · 'all' = every week
 
+/* ── select many, restyle once ──────────────────────────────────────
+   The brush paints one box per click. Jessie wants the other grip too:
+   pick up a handful of boxes first, then change them all in one go —
+   colour, grey-out, text size, font. Selection lives outside S because
+   it is a hand position, not a fact about the year. */
+let selecting = false;              // select mode on/off
+let selBoxes = new Set();           // boxKeys currently held
+let selDrag = false;                // mouse is down and sweeping across cells
+
+function setSelecting(on) {
+  selecting = on;
+  if (!on) selBoxes.clear();
+  else { armedId = null; document.body.classList.remove('painting'); }
+  document.body.classList.toggle('selecting', on);
+  render();
+  announce(on ? 'Select mode on. Click boxes to add them, then use the toolbar above the grid.'
+              : 'Select mode off.');
+}
+
+/* Flipping to another week drops the handful — styling boxes you can no
+   longer see is a surprise, and "every week" already has its own control. */
+function clearSelection() {
+  if (selBoxes.size) selBoxes.clear();
+}
+
+/* Reflect the Set into the grid without a full render, so click-click-click
+   and drag both feel instant. The strip is swapped in place the same way
+   the legend already is. */
+function markSelection() {
+  view.querySelectorAll('table.week td').forEach(td => {
+    const box = td.querySelector(':scope > .box');
+    td.classList.toggle('sel', !!(box && selBoxes.has(boxKeyOf(box))));
+  });
+  const strip = view.querySelector('.palette');
+  if (strip) {
+    const div = document.createElement('div');
+    div.innerHTML = paletteHTML();
+    strip.replaceWith(div.firstElementChild);
+    wirePalette();
+  }
+  announce(selBoxes.size ? `${selBoxes.size} selected` : 'Nothing selected');
+}
+
+function applySel(fn, said) {
+  if (!selBoxes.size) {
+    SWS.toast('Click some boxes first. Then the change lands on all of them at once.');
+    return;
+  }
+  ensureColourState();
+  for (const k of selBoxes) fn(k);
+  persist();
+  render();
+  announce(`${said} ${selBoxes.size} box${selBoxes.size === 1 ? '' : 'es'}`);
+}
+
+/* Size and font share one shape: set a token or clear it, and drop the
+   entry entirely once nothing is left, so untouched state stays absent. */
+function setSelStyle(prop, val, said) {
+  applySel(k => {
+    const st = S.boxStyle[k] || {};
+    if (val) st[prop] = val; else delete st[prop];
+    if (st.sz || st.f) S.boxStyle[k] = st; else delete S.boxStyle[k];
+  }, said);
+}
+
 /* One apply path, shared by the brush and the picker, so the two can never
    disagree about what "every week" means. */
 function paintTarget(tok, id, scope) {
@@ -2387,6 +2529,44 @@ function paintTarget(tok, id, scope) {
 
 function paletteHTML() {
   ensureColourState();
+  /* Select mode turns the strip into the restyling toolbar: the same
+     colours, but a click now lands on every held box at once, and the
+     rest of the row is the other things she asked to change together —
+     grey-out, text size, font. */
+  if (selecting) {
+    const n = selBoxes.size;
+    const allDim = n > 0 && [...selBoxes].every(k => S.dim[k]);
+    const sw = S.legend.map(c => `
+      <button type="button" class="pchip" data-selpaint="${esc(c.id)}" style="--c:${esc(c.hex)}"
+        title="Colour the selected boxes ${esc(c.name || '')}">
+        <span class="pdot"></span><span class="pname">${esc(c.name || 'unnamed')}</span>
+      </button>`).join('');
+    return `<div class="palette no-print" aria-label="Restyle the selected boxes">
+      <div class="prow">
+        <span class="plabel">${n ? n + ' selected' : 'Select boxes'}</span>
+        ${sw}
+        <button type="button" class="pchip" data-selpaint="__erase" title="Remove the colour from the selected boxes">
+          <span class="pdot none"></span><span class="pname">No colour</span>
+        </button>
+        <span class="psep" aria-hidden="true"></span>
+        <button type="button" class="pmini" id="sel-dim">${allDim ? 'Un-grey' : 'Grey out'}</button>
+        <span class="psep" aria-hidden="true"></span>
+        <button type="button" class="pmini" id="sel-sz-s" aria-label="Smaller text in the selected boxes">A−</button>
+        <button type="button" class="pmini" id="sel-sz-m" aria-label="Normal text in the selected boxes">A</button>
+        <button type="button" class="pmini" id="sel-sz-l" aria-label="Bigger text in the selected boxes">A+</button>
+        <select class="pmini" id="sel-font" aria-label="Font for the selected boxes">
+          <option value="" selected disabled>Font…</option>
+          <option value="default">Normal</option>
+          <option value="serif">Serif</option>
+          <option value="hand">Handwriting</option>
+          <option value="mono">Typewriter</option>
+        </select>
+        <span class="psep" aria-hidden="true"></span>
+        <button type="button" class="pmini" id="sel-clear">Clear styling</button>
+        <button type="button" class="pmini" id="sel-done">Done</button>
+      </div>
+    </div>`;
+  }
   const sw = S.legend.map(c => `
     <button type="button" class="pchip${armedId === c.id ? ' on' : ''}" data-arm="${esc(c.id)}"
       style="--c:${esc(c.hex)}" aria-pressed="${armedId === c.id}"
@@ -2408,6 +2588,7 @@ function paletteHTML() {
       <span class="psep" aria-hidden="true"></span>
       ${armedId ? `<label class="pscope"><input type="checkbox" id="p-scope" ${paintScope === 'all' ? 'checked' : ''}>
         every week</label>` : ''}
+      <button type="button" class="pmini" id="p-multi">Select many</button>
       <button type="button" class="pmini" id="p-edit">Edit colours</button>
     </div>
   </div>`;
@@ -2428,6 +2609,39 @@ function wirePalette() {
      end Stephen hit himself. It now opens the real one. */
   const ed = document.getElementById('p-edit');
   if (ed) ed.onclick = () => openColourEditor();
+  const mu = document.getElementById('p-multi');
+  if (mu) mu.onclick = () => setSelecting(true);
+
+  /* The restyling toolbar. Every handler goes through applySel, which
+     refuses politely when nothing is held yet. */
+  view.querySelectorAll('[data-selpaint]').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.selpaint;
+      applySel(k => { if (id === '__erase') delete S.fill[k]; else S.fill[k] = id; },
+        id === '__erase' ? 'Cleared the colour on' : 'Coloured');
+    };
+  });
+  const dim = document.getElementById('sel-dim');
+  if (dim) dim.onclick = () => {
+    const allDim = selBoxes.size > 0 && [...selBoxes].every(k => S.dim[k]);
+    applySel(k => { if (allDim) delete S.dim[k]; else S.dim[k] = 1; },
+      allDim ? 'Un-greyed' : 'Greyed out');
+  };
+  const szs = document.getElementById('sel-sz-s'), szm = document.getElementById('sel-sz-m'), szl = document.getElementById('sel-sz-l');
+  if (szs) szs.onclick = () => setSelStyle('sz', 's', 'Smaller text in');
+  if (szm) szm.onclick = () => setSelStyle('sz', '', 'Normal text in');
+  if (szl) szl.onclick = () => setSelStyle('sz', 'l', 'Bigger text in');
+  const fo = document.getElementById('sel-font');
+  if (fo) fo.onchange = (e) => {
+    const v = e.target.value;
+    setSelStyle('f', v === 'default' ? '' : v, 'Changed the font in');
+  };
+  const cl = document.getElementById('sel-clear');
+  if (cl) cl.onclick = () => applySel(k => {
+    delete S.fill[k]; delete S.dim[k]; delete S.boxStyle[k]; delete S.lineFill[k];
+  }, 'Cleared all styling on');
+  const dn = document.getElementById('sel-done');
+  if (dn) dn.onclick = () => setSelecting(false);
 }
 
 /* ── the colour editor ──────────────────────────────────────────────
@@ -2870,12 +3084,18 @@ function gridIsTable() {
 }
 
 function canFit() {
-  return gridIsTable() && fitScale() >= MIN_FIT;
+  return gridIsTable() && fitScale('all') >= MIN_FIT;
 }
 
 /* What scale would it take, measured without committing to the mode, so
-   the button can decide whether to exist. */
-function fitScale() {
+   the button can decide whether to exist. Two honest answers, because a
+   desktop monitor and a work laptop are different screens (Jessie's note):
+   'all'   — the whole week inside the viewport, no scrolling at all;
+   'width' — every period across, text as big as that allows, scroll down
+             for the rest of the week. The measurement is always of the
+             screen it is on right now, so moving between machines never
+             needs a setting. */
+function fitScale(mode) {
   const tbl = view.querySelector('table.week');
   const box = view.querySelector('.grid-scroll');
   if (!tbl || !box) return 0;
@@ -2888,7 +3108,9 @@ function fitScale() {
   const top = inFit ? box.getBoundingClientRect().top : 96;
   const availW = (inFit ? (box.clientWidth || window.innerWidth) : window.innerWidth) - 16;
   const availH = window.innerHeight - top - 16;
-  const k = Math.min(1, availW / Math.max(1, tbl.scrollWidth), availH / Math.max(1, tbl.scrollHeight));
+  const kw = availW / Math.max(1, tbl.scrollWidth);
+  const kh = availH / Math.max(1, tbl.scrollHeight);
+  const k = Math.min(1, kw, mode === 'width' ? 1 : kh);
   if (!inFit) { if (prev) root.style.setProperty('--fit', prev); else root.style.removeProperty('--fit'); }
   return k;
 }
@@ -2898,31 +3120,91 @@ function toggleFit(force) {
   document.body.classList.toggle('fitscreen', on);
   S.fit = on;
   persist(true);
-  if (on) fitGrid(); else document.documentElement.style.removeProperty('--fit');
+  if (on) { try{ window.scrollTo(0, 0); }catch(e){} fitGrid(); }
+  else {
+    document.body.classList.remove('fit-scroll');
+    document.documentElement.style.removeProperty('--fit');
+    const gs = view.querySelector('.grid-scroll');
+    if (gs) { gs.style.height = gs.style.width = gs.style.overflow = ''; }
+  }
   syncFitBtn();
 }
 
 function syncFitBtn() {
-  const b = document.getElementById('wk-fit');
-  if (!b) return;
   const on = document.body.classList.contains('fitscreen');
-  /* Hidden rather than disabled: a control you cannot use and cannot be
-     told why is worse than one that is not there. */
-  b.hidden = !on && !canFit();
-  b.setAttribute('aria-pressed', String(on));
-  b.textContent = on ? 'Exit full screen' : 'Fit to screen';
+  const b = document.getElementById('wk-fit');
+  if (b) {
+    /* Hidden rather than disabled: a control you cannot use and cannot be
+       told why is worse than one that is not there. */
+    b.hidden = !on && !canFit();
+    b.setAttribute('aria-pressed', String(on));
+  }
+  /* The floating bar is the only chrome left in fit mode, so its state has
+     to be told here, where every mode change already passes through. */
+  const mb = document.getElementById('fit-mode');
+  if (mb) {
+    const width = S && S.fitMode === 'width';
+    mb.textContent = width ? 'Whole week' : 'Bigger text';
+    mb.setAttribute('aria-label', width
+      ? 'Show the whole week on screen at once'
+      : 'Make the text bigger and scroll down for the rest of the week');
+  }
+  const pv = document.getElementById('fit-prev'), nx = document.getElementById('fit-next');
+  if (pv) pv.disabled = curWeek <= 0;
+  if (nx) nx.disabled = curWeek >= YEAR.length - 1;
 }
 
 function fitGrid() {
   if (!document.body.classList.contains('fitscreen')) return;
-  const k = fitScale();
+  const mode = (S && S.fitMode === 'width') ? 'width' : 'all';
+  const k = fitScale(mode);
   /* If the honest answer is below the floor, stop pretending: keep the
      chrome hidden, because the extra room is still worth having, but
      render at a readable size and let it scroll. */
   const tooSmall = k < MIN_FIT;
-  document.body.classList.toggle('fit-scroll', tooSmall);
-  document.documentElement.style.setProperty('--fit', (tooSmall ? 1 : k).toFixed(3));
+  document.body.classList.toggle('fit-scroll', tooSmall || mode === 'width');
+  const kk = tooSmall ? 1 : k;
+  document.documentElement.style.setProperty('--fit', kk.toFixed(3));
+  /* Scaling is visual only — the table's layout box keeps its full height.
+     In the scrolling mode that leaves a page of blank space after Friday,
+     so the wrapper is pinned to the visual size. */
+  const gs = view.querySelector('.grid-scroll'), tbl = view.querySelector('table.week');
+  if (gs && tbl) {
+    if (mode === 'width' && !tooSmall && kk < 1) {
+      gs.style.height = Math.ceil(tbl.scrollHeight * kk) + 'px';
+      gs.style.width = Math.ceil(tbl.scrollWidth * kk) + 'px';
+      gs.style.overflow = 'hidden';
+    } else { gs.style.height = gs.style.width = gs.style.overflow = ''; }
+  }
+  syncFitBtn();
 }
+
+/* The bar's own wiring — static elements, wired once. */
+document.getElementById('fit-exit').onclick = () => toggleFit(false);
+document.getElementById('fit-mode').onclick = () => {
+  if (!S) return;
+  S.fitMode = (S.fitMode === 'width') ? 'all' : 'width';
+  persist(true);
+  /* Measure from the top. Toggling to "whole week" halfway down the scroll
+     would read the grid at a negative offset and scale past the viewport. */
+  try{ window.scrollTo(0, 0); }catch(e){}
+  fitGrid();
+};
+document.getElementById('fit-prev').onclick = () => { if (curWeek > 0) { curWeek--; clearSelection(); render(); } };
+document.getElementById('fit-next').onclick = () => { if (curWeek < YEAR.length - 1) { curWeek++; clearSelection(); render(); } };
+/* Escape leaves fit mode — but never while something more local wants it:
+   an open picker eats the key in its capture handler, the modal handles its
+   own, and typing contexts (a lesson box, a heading rename, any field) keep
+   Escape for themselves. Select mode is also more local than fit. */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (pickerEl) return;
+  if (modal.classList.contains('show')) return;
+  const t = e.target;
+  if (t && (t.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName))) return;
+  if (selecting) { setSelecting(false); return; }
+  if (document.body.classList.contains('fitscreen')) toggleFit(false);
+});
 
 
 /* ── wiring the handles ─────────────────────────────────────────────
@@ -3006,8 +3288,27 @@ function wireColourHandles(){
      which is the ordinary case, so it stays completely undisturbed. */
   view.querySelectorAll('table.week td, table.week th').forEach(cell=>{
     cell.addEventListener('mousedown',(ev)=>{
-      if(!armedId) return;
       if(ev.target.closest('[data-merge],[data-gear],.paint')) return;
+      /* Select mode: a click picks a box up or puts it down; holding the
+         button and sweeping picks up a run of them, the way she would drag
+         across cells in a spreadsheet. Ctrl/Cmd-click is the laptop
+         shortcut into the mode — no toolbar visit needed. */
+      const selBox = cell.querySelector(':scope > .box');
+      if (selBox && (selecting || ev.ctrlKey || ev.metaKey)) {
+        ev.preventDefault(); ev.stopPropagation();
+        const k = boxKeyOf(selBox);
+        if (!selecting) {
+          selBoxes.add(k);
+          setSelecting(true);        // re-renders with the box already held
+        } else {
+          if (selBoxes.has(k)) selBoxes.delete(k); else selBoxes.add(k);
+          markSelection();
+        }
+        selDrag = true;
+        return;
+      }
+      if(selecting) return;          // header/lunch clicks do nothing while selecting
+      if(!armedId) return;
 
       /* A note first, the box second. She writes several notes in one box and
          they mean different things, so a click that lands on a line colours
@@ -3045,6 +3346,14 @@ function wireColourHandles(){
       const scope=(kind==='cell'||kind==='note')?paintScope:'all';
       paintTarget(tok, armedId==='__erase'?null:armedId, scope);
       render();
+    });
+    /* The sweep: while the button is down in select mode, every box the
+       pointer crosses joins the handful. Adding only — a drag that toggled
+       would deselect what a wobble crossed twice. */
+    cell.addEventListener('mouseenter',()=>{
+      if(!selecting||!selDrag) return;
+      const box=cell.querySelector(':scope > .box');
+      if(box&&!selBoxes.has(boxKeyOf(box))){ selBoxes.add(boxKeyOf(box)); markSelection(); }
     });
   });
 
@@ -3096,6 +3405,9 @@ function openMergeScope(anchor,d,p,span){
   setTimeout(()=>document.addEventListener('keydown',pickerKey,true),0);
 }
 
+/* The sweep ends wherever the button comes up, grid or not. */
+document.addEventListener('mouseup',()=>{ selDrag=false; });
+
 /* Rotating a tablet crosses the stacked-card breakpoint in both directions,
    so the mode has to be able to let go as well as take hold. */
 window.addEventListener('resize',()=>{
@@ -3144,6 +3456,15 @@ function renderWeek(){
      colouring a single note was impossible rather than merely missing. Paste is
      still forced to plain text below, so nothing arrives with foreign styling. */
   const ce='true';
+  /* In select mode a box is a thing you pick up, not a field: editing is
+     off so a click cannot land a caret, and tabindex keeps it reachable by
+     keyboard — Space or Enter toggles it in onBoxKey. */
+  const boxCE=selecting?'false':ce;
+  const boxTab=selecting?' tabindex="0"':'';
+  /* The per-box looks, all additive: no entry, no classes, old rendering. */
+  const boxCls=(k)=>{ const st=S.boxStyle[k]||{};
+    return 'box'+(st.sz==='s'?' sz-s':st.sz==='l'?' sz-l':'')
+      +(st.f==='serif'?' f-serif':st.f==='hand'?' f-hand':st.f==='mono'?' f-mono':''); };
   /* Lunch is ONE cell down the whole week, not one per day. Her book merges
      E1:E6 in all 41 weeks without exception — it is a band, not five boxes,
      and five separate boxes was the most obvious way the grid did not look
@@ -3170,18 +3491,20 @@ function renderWeek(){
     for(let p=1;p<=c.periods;p++){
       if(p===preL+1) rows+=lunchCell(di);
       if(coveredBy(d,p)) continue;                 // swallowed by a merge to its left
-      const f=fillFor(d,p), span=spanFor(d,p);
-      const fs=f?` class="filled${span>1?' merged':''}" style="--cell-fill:${f.hex};--cell-ink:${inkOn(f.hex)}"`
-                :(span>1?' class="merged"':'');
+      const f=fillFor(d,p), span=spanFor(d,p), k=cellKey(d,p);
+      const tdCls=[f?'filled':'',span>1?'merged':'',S.dim[k]?'dimmed':'',selBoxes.has(k)?'sel':''].filter(Boolean).join(' ');
+      const fs=(tdCls?` class="${tdCls}"`:'')+(f?` style="--cell-fill:${f.hex};--cell-ink:${inkOn(f.hex)}"`:'');
       const sp=span>1?` colspan="${span}"`:'';
       const spanNote=span>1?`, spanning ${span} periods`:'';
       const pn=esc(periodName(p,true));
-      rows+=`<td data-label="${esc(periodName(p))}"${sp}${fs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, ${pn}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' '+periodName(p,true))}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} ${pn}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} ${pn} with the next">▶</button></span></td>`;
+      rows+=`<td data-label="${esc(periodName(p))}"${sp}${fs}><div class="${boxCls(k)}" contenteditable="${boxCE}"${boxTab} role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, ${pn}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(k)}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' '+periodName(p,true))}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} ${pn}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} ${pn} with the next">▶</button></span></td>`;
     }
     if(preL===c.periods) rows+=lunchCell(di);
-    const nf=colourById(S.fill['n'+d.iso]!==undefined?S.fill['n'+d.iso]:S.fillDow['n'+d.dow]);
-    const nfs=nf?` class="filled" style="--cell-fill:${nf.hex};--cell-ink:${inkOn(nf.hex)}"`:'';
-    rows+=`<td data-label="Notes"${nfs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div>${paintBtn('note:'+d.iso,'notes for '+dayName)}</td></tr>`;
+    const nk='n'+d.iso;
+    const nf=colourById(S.fill[nk]!==undefined?S.fill[nk]:S.fillDow['n'+d.dow]);
+    const nCls=[nf?'filled':'',S.dim[nk]?'dimmed':'',selBoxes.has(nk)?'sel':''].filter(Boolean).join(' ');
+    const nfs=(nCls?` class="${nCls}"`:'')+(nf?` style="--cell-fill:${nf.hex};--cell-ink:${inkOn(nf.hex)}"`:'');
+    rows+=`<td data-label="Notes"${nfs}><div class="${boxCls(nk)}" contenteditable="${boxCE}"${boxTab} role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div>${paintBtn('note:'+d.iso,'notes for '+dayName)}</td></tr>`;
   }
 
   const opts=YEAR.map((wk,i)=>`<option value="${i}" ${i===curWeek?'selected':''}>Wk ${i+1} · ${weekLabel(wk)}</option>`).join('');
@@ -3249,11 +3572,13 @@ function renderWeek(){
     document.getElementById('s-clear').onclick=clearSample;
     document.getElementById('s-keep').onclick=keepSample;
   }
-  document.getElementById('wk-prev').onclick=()=>{curWeek--;render();refocus('wk-prev','wk-next');};
-  document.getElementById('wk-next').onclick=()=>{curWeek++;render();refocus('wk-next','wk-prev');};
-  document.getElementById('wk-jump').onchange=e=>{curWeek=+e.target.value;render();refocus('wk-jump');};
+  /* Changing weeks drops any held selection: styling boxes that are no
+     longer on screen would be a surprise, not a feature. */
+  document.getElementById('wk-prev').onclick=()=>{curWeek--;clearSelection();render();refocus('wk-prev','wk-next');};
+  document.getElementById('wk-next').onclick=()=>{curWeek++;clearSelection();render();refocus('wk-next','wk-prev');};
+  document.getElementById('wk-jump').onchange=e=>{curWeek=+e.target.value;clearSelection();render();refocus('wk-jump');};
   document.getElementById('wk-today').onclick=()=>{
-    curWeek=weekIndexFor(todayISO); render(); refocus('wk-today');
+    curWeek=weekIndexFor(todayISO); clearSelection(); render(); refocus('wk-today');
     const row=view.querySelector('.today-row'); if(row&&row.scrollIntoView) row.scrollIntoView({block:'center'});
   };
   document.getElementById('wk-print').onclick=()=>window.print();
@@ -3347,6 +3672,17 @@ function plainPaste(e){
   document.execCommand('insertText',false,t);
 }
 function onBoxKey(e){
+  /* Select mode: the box is a thing you pick up, and Space or Enter is the
+     keyboard's click. Everything below is editing, which is off right now. */
+  if(selecting){
+    if(e.key===' '||e.key==='Enter'){
+      e.preventDefault();
+      const k=boxKeyOf(e.target);
+      if(selBoxes.has(k)) selBoxes.delete(k); else selBoxes.add(k);
+      markSelection();
+    }
+    return;
+  }
   if(e.key==='Escape'){ hideBar(); return; }
   if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&barCtx){ e.preventDefault(); document.getElementById('bar-day').focus(); return; }
   if(e.key==='Enter'&&!PLAINTEXT_OK&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
@@ -3360,6 +3696,7 @@ const bar=document.getElementById('bar');
 let barCtx=null;
 const barDayBtn=document.getElementById('bar-day'), barLetterBtn=document.getElementById('bar-letter');
 function onBoxFocus(b){
+  if(selecting){ hideBar(); return; }   // the copy bar is an editing tool
   if(b.dataset.p==='notes'){ hideBar(); return; }
   barCtx={iso:b.dataset.iso,p:+b.dataset.p,letter:b.dataset.letter||''};
   document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · ${periodName(barCtx.p)} — Ctrl+Enter reaches these buttons`;
