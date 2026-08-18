@@ -46,6 +46,9 @@ const OFFSITE = {
 const SELF_STYLED = {
   'cross-off': { darkAccent: '#F9E547', accent: '#B99B00' },
   'overload': { darkAccent: '#5C8AD4', accent: '#3F6DB5' },
+  /* Astra Vault is a built Expo web export dropped into apps/astravault/
+     (source repo: Stephenuffugus/astravault); colours from its own tokens. */
+  'astravault': { darkAccent: '#60A5FA', accent: '#26356E' },
 };
 
 const CATALOGUE = [
@@ -91,6 +94,9 @@ const CATALOGUE = [
   ['Body &amp; Mind', [
     ['cross-off', 'Cross Off', 'A paper list you cross off with real highlighters', 'todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying'],
     ['overload', 'OVERLOAD', 'It writes your next workout. You just lift', 'gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise'],
+  ]],
+  ['Night Sky', [
+    ['astravault', 'Astra Vault', 'Scan the cosmos and collect the sky', 'stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space'],
   ]],
 ];
 
