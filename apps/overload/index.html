@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#14161B">
+<title>OVERLOAD</title>
+<meta name="description" content="The engine writes your next workout, so logging is one tap per set. Progressive overload with plate math, verdicts and a bodyweight trend. Free, no ads, on-device.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OVERLOAD">
+<style>
+/* The gym-poster face and the numbers face ship with the app: no network,
+   no font flash in a basement gym. */
+@font-face{font-family:'Big Shoulders Display';font-style:normal;font-weight:600;font-display:swap;
+  src:url(fonts/big-shoulders-600-latin.woff2) format('woff2')}
+@font-face{font-family:'Big Shoulders Display';font-style:normal;font-weight:800;font-display:swap;
+  src:url(fonts/big-shoulders-800-latin.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;
+  src:url(fonts/plex-mono-400-latin.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;
+  src:url(fonts/plex-mono-600-latin.woff2) format('woff2')}
+:root{
+  --bg:#14161B; --surface:#1D2129; --surface2:#262C37; --line:#323947;
+  --chalk:#EAE8E3; --dim:#98A0AD; --faint:#7A8494;
+  --red:#D64541; --yellow:#E8B93E; --green:#3E9B5F; --blue:#3F6DB5; --blue-hi:#5C8AD4;
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+input{user-select:text;-webkit-user-select:text}
+html{font-size:16px}
+body{background:var(--bg);color:var(--chalk);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.disp{font-family:"Big Shoulders Display",system-ui,sans-serif;letter-spacing:.02em}
+
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 10px;display:flex;align-items:center;gap:12px;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:1px solid var(--line)}
+header h1{font-family:"Big Shoulders Display";font-weight:800;font-size:1.6rem;letter-spacing:.06em}
+header h1 span{color:var(--blue-hi)}
+header .hr{display:flex;align-items:center;gap:10px}
+header .d{font-family:"IBM Plex Mono";font-size:.68rem;color:var(--dim)}
+#soundBtn{background:none;border:none;font-size:1.05rem;cursor:pointer;opacity:.8;padding:5px;min-width:30px;min-height:30px;border-radius:8px}
+
+main{padding:16px;max-width:560px;margin:0 auto}
+.view{display:none}.view.on{display:block;animation:fade .16s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;color:var(--faint);font-family:"Big Shoulders Display";font-weight:800;font-size:.95rem;letter-spacing:.09em;padding:14px 4px 12px;cursor:pointer;border-top:3px solid transparent;text-transform:uppercase}
+nav button.sel{color:var(--chalk);border-top-color:var(--blue)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.eyebrow{font-family:"IBM Plex Mono";font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.btn{display:block;width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;font-family:"Big Shoulders Display";font-weight:800;font-size:1.15rem;letter-spacing:.08em;text-transform:uppercase;padding:15px;cursor:pointer;margin-top:12px}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:var(--surface2);color:var(--chalk);border:1px solid var(--line)}
+select,input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:10px;color:var(--chalk);font-size:1.05rem;padding:12px;font-family:"IBM Plex Mono";appearance:none}
+label{display:block;font-size:.72rem;color:var(--dim);margin:12px 0 5px;letter-spacing:.04em}
+.row{display:flex;gap:10px}.row>*{flex:1}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--blue-hi);outline-offset:1px}
+.empty{color:var(--faint);font-size:.9rem;text-align:center;padding:30px 12px;line-height:1.7}
+.formerr{font-family:"IBM Plex Mono";font-size:.72rem;color:var(--red);margin-top:10px;min-height:1em}
+
+/* -------- weekly volume glance -------- */
+#volStrip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#volStrip .vchip{
+  font-family:"IBM Plex Mono";font-size:.66rem;letter-spacing:.06em;color:var(--dim);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:6px 11px;display:flex;align-items:center;gap:7px;
+}
+#volStrip .vdots{display:flex;gap:3px}
+#volStrip .vd{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--line)}
+#volStrip .vd.on{background:var(--green);border-color:var(--green)}
+
+/* -------- due cards (home) -------- */
+.due{border-left:4px solid var(--line);cursor:pointer;position:relative}
+.due.now{border-left-color:var(--green)}
+.due .mg{font-family:"IBM Plex Mono";font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.due h3{font-family:"Big Shoulders Display";font-weight:800;font-size:1.35rem;margin:2px 0 4px;padding-right:96px}
+.due .rx{font-family:"IBM Plex Mono";font-size:.85rem;color:var(--chalk)}
+.due .rx b{color:var(--blue-hi);font-size:1.05rem}
+.chip{font-family:"IBM Plex Mono";font-size:.62rem;padding:3px 8px;border-radius:5px;position:absolute;top:14px;right:14px}
+.chip.now{background:rgba(62,155,95,.16);color:var(--green)}
+.chip.wait{background:var(--surface2);color:var(--faint)}
+.setmap{display:flex;gap:5px;margin-top:8px}
+.dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--line)}
+.dot.hit{background:var(--green);border-color:var(--green)}
+.dot.part{background:var(--yellow);border-color:var(--yellow)}
+.dot.fail{background:var(--red);border-color:var(--red)}
+.gear{
+  position:absolute;right:10px;bottom:10px;
+  background:none;border:none;color:var(--faint);font-size:1rem;cursor:pointer;
+  padding:6px;min-width:30px;min-height:30px;border-radius:8px;
+}
+.gear:hover{color:var(--dim)}
+
+/* -------- bottom sheet (lift settings / restore) -------- */
+#backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:44}
+#backdrop.show{opacity:1;pointer-events:auto}
+#sheet{
+  position:fixed;left:50%;transform:translate(-50%,105%);bottom:0;z-index:45;
+  width:100%;max-width:560px;
+  background:var(--surface);border:1px solid var(--line);border-bottom:none;
+  border-radius:18px 18px 0 0;
+  padding:14px 18px calc(20px + env(safe-area-inset-bottom));
+  transition:transform .24s cubic-bezier(.3,1,.4,1);
+}
+#sheet.show{transform:translate(-50%,0)}
+#sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+#sheet h3{font-family:"Big Shoulders Display";font-weight:800;font-size:1.25rem;letter-spacing:.04em;margin-bottom:2px}
+#sheet .sub{font-family:"IBM Plex Mono";font-size:.66rem;color:var(--dim);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.setrow .lab{font-size:.85rem;color:var(--dim)}
+.step{display:flex;align-items:center;gap:8px}
+.step button{
+  width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
+  background:var(--surface2);color:var(--chalk);font-family:"IBM Plex Mono";
+  font-size:1.1rem;cursor:pointer;
+}
+.step .val{font-family:"IBM Plex Mono";font-size:.95rem;min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.sheetact{display:flex;gap:8px;margin-top:14px}
+.sheetact .btn{margin-top:0;flex:1}
+.btn.danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+
+/* -------- workout mode -------- */
+#wk{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));overflow-y:auto}
+#wk.on{display:flex}
+#wk .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#wk .x{background:none;border:none;color:var(--faint);font-size:1.6rem;cursor:pointer;padding:4px 10px;min-width:38px;min-height:38px}
+#wk .setno{font-family:"IBM Plex Mono";font-size:.7rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+#wk h2{font-family:"Big Shoulders Display";font-weight:800;font-size:1.7rem;text-align:center;margin-top:4px}
+#wk .mgline{text-align:center;font-family:"IBM Plex Mono";font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.wblock{text-align:center;margin:8px 0 4px}
+.wnum{font-family:"Big Shoulders Display";font-weight:800;font-size:4.4rem;line-height:1}
+.wnum small{font-size:1.2rem;color:var(--dim);font-weight:600}
+.wadj{display:flex;justify-content:center;gap:14px;margin-top:6px}
+.wadj button{background:var(--surface2);border:1px solid var(--line);color:var(--chalk);border-radius:10px;font-family:"IBM Plex Mono";font-size:.95rem;padding:8px 16px;cursor:pointer;min-width:44px}
+.plates{text-align:center;font-family:"IBM Plex Mono";font-size:.7rem;color:var(--dim);margin-top:10px;min-height:1em}
+.target{text-align:center;font-size:.85rem;color:var(--dim);margin:16px 0 10px}
+.target b{color:var(--chalk)}
+.hitbtn{display:block;width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;font-family:"Big Shoulders Display";font-weight:800;font-size:1.5rem;letter-spacing:.06em;padding:20px;cursor:pointer;margin-bottom:12px}
+.hitbtn:active{transform:scale(.985)}
+.repchips{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.repchips button{background:var(--surface2);border:1px solid var(--line);color:var(--chalk);border-radius:10px;font-family:"IBM Plex Mono";font-size:1rem;padding:12px 0;cursor:pointer}
+.repchips button:active{transform:scale(.94)}
+.chiplbl{font-family:"IBM Plex Mono";font-size:.62rem;color:var(--faint);text-align:center;margin:14px 0 8px;letter-spacing:.1em;text-transform:uppercase}
+#wk .flex{flex:1}
+#wk .mapline{display:flex;justify-content:center;gap:7px;margin-top:14px}
+#wk .mapline .dot{width:13px;height:13px}
+.dot.pend{border-color:var(--line)}
+
+/* rest overlay */
+#rest{position:fixed;inset:0;background:rgba(20,22,27,.96);z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#rest.on{display:flex}
+#rest .t{font-family:"Big Shoulders Display";font-weight:800;font-size:6rem;line-height:1}
+#rest .l{font-family:"IBM Plex Mono";font-size:.7rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+#rest .nextinfo{font-family:"IBM Plex Mono";font-size:.8rem;color:var(--dim);margin-top:14px}
+#rest button{margin-top:26px;background:var(--surface2);border:1px solid var(--line);color:var(--chalk);border-radius:10px;font-family:"IBM Plex Mono";font-size:.85rem;padding:12px 28px;cursor:pointer}
+
+/* -------- verdict / result -------- */
+.verdict{display:inline-block;font-family:"IBM Plex Mono";font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:5px;margin-bottom:8px}
+.v-progress{background:rgba(62,155,95,.16);color:var(--green)}
+.v-rep{background:rgba(63,109,181,.18);color:var(--blue-hi)}
+.v-hold{background:rgba(232,185,62,.14);color:var(--yellow)}
+.v-deload{background:rgba(214,69,65,.14);color:var(--red)}
+.bigw{font-family:"Big Shoulders Display";font-weight:800;font-size:2.5rem;line-height:1}
+.bigw small{font-size:1rem;color:var(--dim);font-weight:600}
+.why{font-size:.86rem;color:var(--dim);line-height:1.55;margin-top:8px}
+.swap{background:var(--surface2);border:1px dashed var(--yellow);border-radius:10px;padding:11px 13px;margin-top:10px;font-size:.85rem;line-height:1.5}
+.swap b{color:var(--yellow)}
+.swap .act{display:flex;gap:8px;margin-top:10px}
+.swap .act button{flex:1;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--chalk);font-family:"IBM Plex Mono";font-size:.72rem;padding:9px;cursor:pointer;min-height:34px}
+.swap .act button.yes{border-color:var(--yellow);color:var(--yellow)}
+
+/* -------- trend -------- */
+.trend-num{font-family:"Big Shoulders Display";font-weight:800;font-size:2.3rem}
+.trend-delta{font-family:"IBM Plex Mono";font-size:.78rem;margin-left:8px}
+.trend-delta.dn{color:var(--green)}.trend-delta.up{color:var(--yellow)}
+svg.spark{width:100%;height:74px;margin-top:10px}
+.hist{border-top:1px solid var(--line);padding:10px 0;font-size:.86rem}
+.hist:first-child{border-top:none}
+.hist .mono{color:var(--dim);font-size:.68rem}
+.linkbtn{background:none;border:none;color:var(--faint);font-family:"IBM Plex Mono";font-size:.7rem;text-decoration:underline;cursor:pointer;padding:8px 2px;min-height:30px}
+.datarow{display:flex;gap:8px}
+.datarow .btn{flex:1;margin-top:0}
+.footnote{font-size:.74rem;color:var(--faint);line-height:1.8;text-align:center;margin:22px 0 8px}
+.footnote a{color:var(--dim)}
+
+/* -------- toast (SWS.toast / SWS.undo) -------- */
+#toast{
+  position:fixed;left:50%;transform:translate(-50%,16px);
+  bottom:calc(86px + env(safe-area-inset-bottom));z-index:70;
+  max-width:min(92vw,26rem);
+  background:var(--surface2);color:var(--chalk);border:1px solid var(--line);
+  border-radius:12px;padding:11px 15px;font-size:.85rem;line-height:1.5;
+  opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+  display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.45);
+}
+#toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#toast .undo{
+  border:none;background:transparent;color:var(--yellow);font-family:"IBM Plex Mono";
+  font-weight:600;font-size:.8rem;cursor:pointer;text-decoration:underline;
+  padding:6px;min-height:28px;flex:0 0 auto;
+}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>OVER<span>LOAD</span></h1>
+  <div class="hr">
+    <div class="d" id="hdrDate"></div>
+    <button id="soundBtn" aria-label="Sound on or off" aria-pressed="true">🔊</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== TODAY ===== -->
+<section class="view on" id="v-today">
+  <div id="volStrip" aria-label="This week per muscle group"></div>
+  <div id="dueList"></div>
+  <button class="btn ghost" id="addBtn">+ Add a lift</button>
+  <div class="card" id="addForm" style="display:none">
+    <div class="eyebrow">New lift. The only typing you'll ever do</div>
+    <label for="mgSel">Muscle group</label><select id="mgSel"></select>
+    <label for="exSel">Exercise</label><select id="exSel"></select>
+    <div class="row">
+      <div><label for="startW">Starting weight (lbs)</label><input type="number" id="startW" inputmode="decimal" placeholder="135" min="1" max="2000"></div>
+      <div><label for="nSets">Sets</label><input type="number" id="nSets" value="3" min="1" max="6" inputmode="numeric"></div>
+    </div>
+    <div class="row">
+      <div><label for="rMin">Reps low</label><input type="number" id="rMin" value="8" min="1" max="30" inputmode="numeric"></div>
+      <div><label for="rMax">Reps high</label><input type="number" id="rMax" value="12" min="1" max="30" inputmode="numeric"></div>
+    </div>
+    <div class="formerr" id="addErr" role="alert"></div>
+    <button class="btn" id="createBtn">Create. Due now</button>
+  </div>
+</section>
+
+<!-- ===== TREND ===== -->
+<section class="view" id="v-trend">
+  <div class="card">
+    <div class="eyebrow">Weigh-in</div>
+    <div class="row">
+      <div><label for="bwIn">Bodyweight (lbs)</label><input type="number" id="bwIn" step="0.1" inputmode="decimal" min="1" max="1500"></div>
+      <div><label for="bfIn">Body fat % <span style="color:var(--faint)">(opt.)</span></label><input type="number" id="bfIn" step="0.1" inputmode="decimal" min="1" max="80"></div>
+    </div>
+    <div class="formerr" id="bwErr" role="alert"></div>
+    <button class="btn ghost" id="bwBtn">Save</button>
+  </div>
+  <div id="trendCard"></div>
+  <div class="card">
+    <div class="eyebrow">Cut rules</div>
+    <p class="why">The weights defend the muscle. In a deficit, "consolidate" verdicts are wins, not stalls. Protein around 0.8 to 1g per lb, keep the 3-day clock, judge fat loss by the 7-day trend only. Early-set failures (red on set 1 or 2) while cutting mean eat more on training days before touching the program.</p>
+  </div>
+  <div class="card">
+    <div class="eyebrow">History</div>
+    <div id="histList"></div>
+  </div>
+  <div class="card">
+    <div class="eyebrow">Your data</div>
+    <p class="why">Everything lives on this device. A backup file moves it to a new phone or keeps it safe.</p>
+    <div class="datarow" style="margin-top:10px">
+      <button class="btn ghost" id="expBtn">Download backup</button>
+      <button class="btn ghost" id="impBtn">Restore backup</button>
+    </div>
+  </div>
+  <button class="linkbtn" id="wipeBtn" style="display:block;margin:0 auto">Reset all data on this device</button>
+  <div class="footnote">OVERLOAD is free. No ads, no account, no subscription.<br>
+    A free tool by <a href="../">Sky Wolf Studios</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20OVERLOAD">Feedback</a></div>
+</section>
+
+</main>
+
+<nav>
+  <button class="sel" data-v="today">Today</button>
+  <button data-v="trend">Trend</button>
+</nav>
+
+<!-- ===== WORKOUT MODE ===== -->
+<div id="wk">
+  <div class="top">
+    <span class="setno" id="wkSetNo">SET 1 / 3</span>
+    <button class="x" id="wkClose" aria-label="Close workout">×</button>
+  </div>
+  <h2 class="disp" id="wkEx"></h2>
+  <div class="mgline" id="wkMg"></div>
+  <div class="wblock">
+    <div class="wnum"><span id="wkW"></span><small> lbs</small></div>
+    <div class="wadj">
+      <button id="wDown" aria-label="Lower the weight">−</button>
+      <button id="wUp" aria-label="Raise the weight">+</button>
+    </div>
+    <div class="plates" id="wkPlates"></div>
+  </div>
+  <div class="target">Target: <b id="wkTarget"></b>. Do the set, then tap what you got</div>
+  <button class="hitbtn" id="hitBtn">HIT <span id="hitN"></span>+</button>
+  <div class="chiplbl">fell short? tap your reps</div>
+  <div class="repchips" id="repChips"></div>
+  <div class="mapline" id="wkMap"></div>
+  <div class="flex"></div>
+</div>
+
+<!-- ===== REST ===== -->
+<div id="rest">
+  <div class="l">Rest</div>
+  <div class="t mono" id="restT">2:00</div>
+  <div class="nextinfo" id="restNext"></div>
+  <button id="restSkip">Skip rest</button>
+</div>
+
+<div id="backdrop"></div>
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Lift settings"></div>
+<div id="live" class="sr-only" aria-live="polite"></div>
+
+<script src="sws-ui.js"></script>
+<script>
+'use strict';
+/* ================================================================
+   OVERLOAD — Sky Wolf Studios · SWS Strategic Media LLC
+   Prescription-first training: the engine writes the workout, so
+   logging is one tap per set.
+   localStorage "overload.v2"
+   program = {id, mg, ex, w, sets, repMin, repMax, rest, due,
+              outcomes[], stall, history:[{date,w,reps[],verdict}]}
+
+   UX INVARIANT — do not break: after initial lift creation, the
+   user never types anything, anywhere, in the core loop.
+   Verdict vocabulary is fixed: ADD WEIGHT / ADD REPS / CONSOLIDATE /
+   DELOAD −10%. Do not invent new verdict names.
+================================================================ */
+
+const LIB = {
+  "Chest":{inc:5,ex:[
+    {n:"Barbell Bench Press",bar:1,a:"Flat pressing, max load. The baseline."},
+    {n:"Incline DB Press",a:"Upper-chest bias, deeper stretch. The classic swap when flat bench stalls."},
+    {n:"Weighted Dips",a:"Lower chest and a deep stretch, loads the shoulder differently."},
+    {n:"Cable Fly",inc:2.5,a:"Constant tension, no lockout rest."},
+    {n:"Paused Bench Press",bar:1,a:"Kills the stretch reflex. Harder without adding a pound."}]},
+  "Back":{inc:5,ex:[
+    {n:"Barbell Row",bar:1,a:"Heaviest horizontal pull."},
+    {n:"Weighted Pull-up",a:"Vertical pull at lat length. Belt and plates."},
+    {n:"Chest-Supported Row",a:"Zero lower-back cost. Ideal in a cut when recovery is thin."},
+    {n:"Single-Arm DB Row",inc:5,a:"Unilateral, so each side fails honestly."},
+    {n:"Lat Pulldown",inc:5,a:"Smoother curve than pull-ups. A great high-rep swap."}]},
+  "Shoulders":{inc:5,ex:[
+    {n:"Overhead Press",bar:1,a:"Standing barbell. The strength anchor."},
+    {n:"Seated DB Press",a:"More range, no leg cheat. A common OHP breakthrough swap."},
+    {n:"Lateral Raise",inc:2.5,a:"Side delts run on volume. Progress reps first."},
+    {n:"Cable Lateral Raise",inc:2.5,a:"Tension at the bottom where dumbbells give nothing."},
+    {n:"Arnold Press",a:"Rotation adds range. Feels new after months of pressing."}]},
+  "Quads":{inc:10,ex:[
+    {n:"Back Squat",bar:1,a:"Biggest systemic overload available."},
+    {n:"Front Squat",bar:1,a:"Upright and quad-dominant. Swap when low-back fatigue caps you."},
+    {n:"Bulgarian Split Squat",inc:5,a:"Half the load, same stimulus, no spine tax."},
+    {n:"Leg Press",inc:10,a:"True failure, safely."},
+    {n:"Hack Squat",inc:10,a:"Fixed path, deep knee flexion, heavy."}]},
+  "Hams / Glutes":{inc:10,ex:[
+    {n:"Romanian Deadlift",bar:1,a:"Hinge under stretch. The hamstring builder."},
+    {n:"Hip Thrust",bar:1,a:"Peak contraction at lockout. The opposite curve from RDLs."},
+    {n:"Lying Leg Curl",inc:5,a:"Knee flexion RDLs can't give you."},
+    {n:"Good Morning",bar:1,a:"Load up top. Humbling, effective, go strict."},
+    {n:"Single-Leg RDL",inc:5,a:"Balance plus hinge. Less load, more difficulty."}]},
+  "Biceps":{inc:2.5,ex:[
+    {n:"Barbell Curl",bar:1,a:"Heaviest curl. Strict or it's a back exercise."},
+    {n:"Incline DB Curl",a:"Long-head stretch. Growth lives in the stretch."},
+    {n:"Hammer Curl",a:"Brachialis thickness. Usually stronger, breaks plateaus."},
+    {n:"Preacher Curl",inc:2.5,a:"No cheating possible. Resets honesty."},
+    {n:"Cable Curl",inc:2.5,a:"Constant tension top to bottom."}]},
+  "Triceps":{inc:2.5,ex:[
+    {n:"Close-Grip Bench",bar:1,a:"Heaviest triceps option."},
+    {n:"Overhead Cable Extension",inc:2.5,a:"Long head under stretch. The size driver."},
+    {n:"Skull Crushers",a:"Elbow extension under load."},
+    {n:"Cable Pushdown",inc:2.5,a:"Joint-friendly volume. Push reps hard."},
+    {n:"Weighted Diamond Push-up",a:"Vest or plate. New stimulus, zero setup."}]},
+  "Core":{inc:5,ex:[
+    {n:"Cable Crunch",inc:5,a:"Loaded flexion. Abs grow like any muscle."},
+    {n:"Hanging Leg Raise",a:"Lower-ab bias plus grip. Add ankle weight later."},
+    {n:"Ab Wheel Rollout",a:"Anti-extension. Knees, then standing."},
+    {n:"Weighted Plank",a:"Plate on back. Add time or load."},
+    {n:"Pallof Press",inc:2.5,a:"Anti-rotation. The job nothing else trains."}]}
+};
+
+const KEY="overload.v2";
+const DEFAULT_REST=120;
+let S = load();
+function load(){
+  /* A backup is the one file that moves between devices, so every shape that
+     arrives through it is coerced rather than trusted. */
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY))||{};
+    const num=(v,lo,hi,dflt)=>{const n=+v;return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):dflt;};
+    return {
+      programs:(Array.isArray(d.programs)?d.programs:[]).filter(p=>p&&LIB[p.mg]).map(p=>{
+        const repMin=num(p.repMin,1,30,8);
+        return {
+          id:String(p.id||Date.now().toString(36)),
+          mg:p.mg,
+          ex:LIB[p.mg].ex.some(e=>e.n===p.ex)?p.ex:LIB[p.mg].ex[0].n,
+          w:num(p.w,1,2000,45),
+          sets:num(p.sets,1,6,3),
+          repMin, repMax:Math.max(repMin,num(p.repMax,1,30,12)),
+          rest:num(p.rest,15,600,DEFAULT_REST),
+          due:typeof p.due==='string'?p.due:new Date().toISOString(),
+          outcomes:Array.isArray(p.outcomes)?p.outcomes:null,
+          stall:num(p.stall,0,999,0),
+          history:Array.isArray(p.history)?p.history.filter(h=>h&&Array.isArray(h.reps)):[]
+        };
+      }),
+      weighins:(Array.isArray(d.weighins)?d.weighins:[]).filter(x=>x&&Number.isFinite(+x.bw)),
+      sound:d.sound!==false
+    };
+  }catch(e){return{programs:[],weighins:[],sound:true}}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const fmtD = iso=>new Date(iso).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+const fmtT = s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const meta = p => LIB[p.mg].ex.find(e=>e.n===p.ex)||{};
+const incOf = p => (meta(p).inc ?? LIB[p.mg].inc);
+const repRange = p => p.repMin===p.repMax ? `${p.repMax} reps` : `${p.repMin}-${p.repMax} reps`;
+const live = document.getElementById('live');
+const announce = m=>{live.textContent='';setTimeout(()=>{live.textContent=m;},30);};
+
+/* ---------- sound (silent-failure safe on iOS) ---------- */
+let AC=null;
+function beep(){
+  if(!S.sound)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume().catch(()=>{});
+    const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
+    o.type='sine';o.frequency.setValueAtTime(880,t);
+    g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+    o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.4);
+  }catch(e){}
+}
+function vib(ms){ if(S.sound&&navigator.vibrate){try{navigator.vibrate(ms);}catch(e){}} }
+const soundBtn=document.getElementById('soundBtn');
+function syncSound(){soundBtn.textContent=S.sound?'🔊':'🔇';soundBtn.setAttribute('aria-pressed',S.sound);}
+soundBtn.addEventListener('click',()=>{S.sound=!S.sound;syncSound();save();});
+
+/* ---------- engine ---------- */
+function judge(p, reps){
+  const out = reps.map(r=> r>=p.repMax?'hit' : r>=p.repMin?'part' : 'fail');
+  const hits=out.filter(o=>o==='hit').length, fails=out.filter(o=>o==='fail').length;
+  const first=out.indexOf('fail');
+  const rate=Math.round(reps.reduce((a,r)=>a+Math.min(r/p.repMax,1),0)/reps.length*100);
+  let v,nw,why;
+  if(hits===reps.length){v='progress';nw=p.w+incOf(p);
+    why=`Every set topped out at ${p.repMax} reps. ${rate}% success. Adapted. Next: ${nw} lbs, back to the bottom of the range.`;}
+  else if(fails===0){v='rep';nw=p.w;
+    why=`All sets in range, not all at the top (${rate}%). Weight holds. The progression is reps: beat a set next time.`;}
+  else if(first>=reps.length-1){v='hold';nw=p.w;
+    why=`Failure only on the final set. Fatigue, not a ceiling. Consolidate: close that last set and the weight moves.`;}
+  else if(fails===1){v='hold';nw=p.w;
+    why=`One mid-session failure (set ${first+1}), ${rate}%. Hold the weight, take a full 2 to 3 minutes before that set.`;}
+  else{v='deload';nw=Math.max(incOf(p),Math.round(p.w*0.9/2.5)*2.5);
+    why=`Failure hit early, set ${first+1} on, ${rate}%. Grinding builds fatigue, not muscle. Drop to ${nw}, own it, climb back.`;}
+  return {v,nw,why,rate,out};
+}
+function plateMath(t){let s=(t-45)/2;if(s<=0)return"empty bar";
+  const d=[45,35,25,10,5,2.5],o=[];for(const p of d){while(s>=p){o.push(p);s-=p}}return o.join(" + ")+" / side";}
+
+/* ---------- weekly volume glance (read-only, from history) ---------- */
+function weekCount(mg){
+  const ago=Date.now()-7*864e5;
+  let n=0;
+  for(const p of S.programs)if(p.mg===mg)
+    for(const h of p.history)if(new Date(h.date).getTime()>=ago)n++;
+  return n;
+}
+function renderVol(){
+  const box=document.getElementById('volStrip');
+  const mgs=[...new Set(S.programs.map(p=>p.mg))];
+  if(!mgs.length){box.innerHTML='';return;}
+  box.innerHTML=mgs.map(mg=>{
+    const n=weekCount(mg);
+    const dots=[0,1].map(i=>`<span class="vd ${i<n?'on':''}"></span>`).join('');
+    return `<span class="vchip" title="${mg}: ${n} session${n===1?'':'s'} in the last 7 days">${mg}
+      <span class="vdots">${dots}${n>2?`<span style="color:var(--green)">+${n-2}</span>`:''}</span></span>`;
+  }).join('');
+}
+
+/* ---------- today view ---------- */
+function renderDue(){
+  renderVol();
+  const box=document.getElementById('dueList');
+  if(!S.programs.length){
+    box.innerHTML=`<div class="card"><p class="empty">No lifts yet.<br>Add one below. Enter a starting weight once,<br>and the engine takes it from there.</p></div>`;return;
+  }
+  const now=new Date();
+  const list=[...S.programs].sort((a,b)=>new Date(a.due)-new Date(b.due));
+  box.innerHTML=list.map(p=>{
+    const due=new Date(p.due), ready=due<=now;
+    return `<div class="card due ${ready?'now':''}" data-lift="${p.id}" role="button" tabindex="0"
+        aria-label="${p.ex}: ${p.w} lbs, ${repRange(p)}, ${p.sets} sets. ${ready?'Due now, activate to lift':'Due '+fmtD(p.due)}">
+      <span class="chip ${ready?'now':'wait'}">${ready?'DUE · TAP TO LIFT':fmtD(p.due)}</span>
+      <div class="mg">${p.mg}</div>
+      <h3>${p.ex}</h3>
+      <div class="rx"><b>${p.w}</b> lbs × ${p.repMin}-${p.repMax} × ${p.sets}</div>
+      ${p.outcomes?`<div class="setmap">${p.outcomes.map(o=>`<span class="dot ${o}"></span>`).join('')}</div>`:''}
+      <button class="gear" data-gear="${p.id}" aria-label="Settings for ${p.ex}">⚙</button>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-lift]').forEach(el=>{
+    const go=()=>startWorkout(el.dataset.lift);
+    el.addEventListener('click',e=>{if(!e.target.closest('.gear'))go();});
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+  });
+  box.querySelectorAll('[data-gear]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();openLiftSheet(b.dataset.gear);
+  }));
+}
+
+/* ---------- lift settings sheet (zero typing: steppers only) ---------- */
+let sheetOpenedAt=0;
+const sheet=document.getElementById('sheet'),backdrop=document.getElementById('backdrop');
+function openSheet(html){
+  sheet.innerHTML='<div class="grab"></div>'+html;
+  sheet.classList.add('show');backdrop.classList.add('show');
+  sheetOpenedAt=Date.now();
+}
+function closeSheet(){sheet.classList.remove('show');backdrop.classList.remove('show');}
+backdrop.addEventListener('click',()=>{if(Date.now()-sheetOpenedAt<350)return;closeSheet();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet.classList.contains('show'))closeSheet();});
+
+function openLiftSheet(id){
+  const p=S.programs.find(x=>x.id===id); if(!p)return;
+  openSheet(
+    `<h3>${p.ex}</h3><div class="sub">${p.mg} · every knob is a tap</div>`+
+    stepRow('rest','Rest between sets',fmtT(p.rest))+
+    stepRow('sets','Sets',p.sets)+
+    stepRow('rmin','Reps low',p.repMin)+
+    stepRow('rmax','Reps high',p.repMax)+
+    `<div class="sheetact">
+      <button class="btn danger" id="liftDel">Delete lift</button>
+      <button class="btn" id="liftDone">Done</button>
+    </div>`
+  );
+  const val=k=>sheet.querySelector(`[data-val="${k}"]`);
+  const wire=(k,apply)=>{
+    sheet.querySelector(`[data-minus="${k}"]`).addEventListener('click',()=>apply(-1));
+    sheet.querySelector(`[data-plus="${k}"]`).addEventListener('click',()=>apply(1));
+  };
+  wire('rest',d=>{p.rest=Math.max(15,Math.min(600,p.rest+d*15));val('rest').textContent=fmtT(p.rest);save();});
+  wire('sets',d=>{p.sets=Math.max(1,Math.min(6,p.sets+d));val('sets').textContent=p.sets;save();});
+  wire('rmin',d=>{p.repMin=Math.max(1,Math.min(p.repMax,p.repMin+d));val('rmin').textContent=p.repMin;save();});
+  wire('rmax',d=>{p.repMax=Math.max(p.repMin,Math.min(30,p.repMax+d));val('rmax').textContent=p.repMax;save();});
+  sheet.querySelector('#liftDone').addEventListener('click',()=>{closeSheet();renderDue();});
+  sheet.querySelector('#liftDel').addEventListener('click',()=>{
+    const idx=S.programs.indexOf(p);
+    S.programs=S.programs.filter(x=>x.id!==p.id);
+    save();closeSheet();renderDue();renderHist();
+    if(window.SWS&&SWS.toast)SWS.toast(`${p.ex} deleted, history and all.`,{
+      action:{label:'Undo',onAction:()=>{
+        S.programs.splice(Math.min(idx<0?S.programs.length:idx,S.programs.length),0,p);
+        save();renderDue();renderHist();
+      }}});
+  });
+}
+function stepRow(k,label,v){
+  return `<div class="setrow"><span class="lab">${label}</span>
+    <span class="step">
+      <button data-minus="${k}" aria-label="Less: ${label}">−</button>
+      <span class="val" data-val="${k}">${v}</span>
+      <button data-plus="${k}" aria-label="More: ${label}">+</button>
+    </span></div>`;
+}
+
+/* ---------- add lift ---------- */
+const mgSel=document.getElementById('mgSel'), exSel=document.getElementById('exSel');
+mgSel.innerHTML=Object.keys(LIB).map(m=>`<option>${m}</option>`).join('');
+function fillEx(){exSel.innerHTML=LIB[mgSel.value].ex.map(e=>`<option>${e.n}</option>`).join('')}
+mgSel.onchange=fillEx; fillEx();
+document.getElementById('addBtn').onclick=()=>{
+  const f=document.getElementById('addForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')document.getElementById('startW').focus();
+};
+document.getElementById('createBtn').onclick=()=>{
+  const err=document.getElementById('addErr');
+  const w=+document.getElementById('startW').value;
+  if(!w||w<1){err.textContent='Enter a starting weight. It is the last thing you will ever type here.';
+    document.getElementById('startW').focus();return;}
+  err.textContent='';
+  let rMin=Math.max(1,Math.min(30,+document.getElementById('rMin').value||8));
+  let rMax=Math.max(1,Math.min(30,+document.getElementById('rMax').value||12));
+  if(rMin>rMax)[rMin,rMax]=[rMax,rMin];
+  S.programs.push({
+    id:Date.now().toString(36), mg:mgSel.value, ex:exSel.value, w,
+    sets:Math.min(6,Math.max(1,+document.getElementById('nSets').value||3)),
+    repMin:rMin, repMax:rMax, rest:DEFAULT_REST,
+    due:new Date().toISOString(), outcomes:null, stall:0, history:[]
+  });
+  save(); document.getElementById('addForm').style.display='none';
+  document.getElementById('startW').value=''; renderDue();
+  announce(exSel.value+' added, due now');
+};
+
+/* ---------- workout mode ----------
+   W.w is the session's working weight. The ± buttons adjust W.w only;
+   the program's prescription p.w is written once, at finish. Closing
+   mid-session discards everything, by design: no partial sessions. */
+let W=null; // {p, w, reps[]}
+function startWorkout(id){
+  const p=S.programs.find(x=>x.id===id); if(!p)return;
+  W={p, w:p.w, reps:[]};
+  document.getElementById('wkEx').textContent=p.ex;
+  document.getElementById('wkMg').textContent=p.mg+" · 3-day clock";
+  paintSet();
+  document.getElementById('wk').classList.add('on');
+  document.getElementById('hitBtn').focus();
+}
+function paintSet(){
+  const p=W.p;
+  document.getElementById('wkSetNo').textContent=`SET ${Math.min(W.reps.length+1,p.sets)} / ${p.sets}`;
+  document.getElementById('wkW').textContent=W.w;
+  document.getElementById('wkPlates').textContent=meta(p).bar?`LOAD ${plateMath(W.w)}`:'';
+  document.getElementById('wkTarget').textContent=repRange(p);
+  document.getElementById('hitN').textContent=p.repMax;
+  const chips=document.getElementById('repChips');
+  const maxChip=p.repMax-1, minChip=Math.max(0,p.repMax-11);
+  let h=''; for(let r=maxChip;r>=minChip;r--) h+=`<button data-reps="${r}">${r}</button>`;
+  chips.innerHTML=h;
+  chips.querySelectorAll('[data-reps]').forEach(b=>b.addEventListener('click',()=>logSet(+b.dataset.reps)));
+  const map=document.getElementById('wkMap');
+  map.innerHTML=Array.from({length:p.sets},(_,i)=>{
+    const o=W.reps[i]===undefined?'pend':(W.reps[i]>=p.repMax?'hit':W.reps[i]>=p.repMin?'part':'fail');
+    return `<span class="dot ${o}"></span>`;
+  }).join('');
+}
+document.getElementById('hitBtn').addEventListener('click',()=>{if(W)logSet(W.p.repMax);});
+document.getElementById('wDown').addEventListener('click',()=>{if(!W)return;W.w=Math.max(incOf(W.p),W.w-incOf(W.p));paintSet();});
+document.getElementById('wUp').addEventListener('click',()=>{if(!W)return;W.w+=incOf(W.p);paintSet();});
+document.getElementById('wkClose').addEventListener('click',()=>{
+  if(W&&W.reps.length&&!confirm('Leave this session? The logged sets are discarded.'))return;
+  restEnd();
+  document.getElementById('wk').classList.remove('on');W=null;renderDue();
+});
+
+function logSet(reps){
+  if(!W)return;
+  W.reps.push(reps); paintSet();
+  if(W.reps.length>=W.p.sets){ finishWorkout(); return; }
+  restStart();
+}
+
+/* rest timer — per-lift duration, beep and buzz at the end */
+let restIv=null;
+function restStart(){
+  let t=W.p.rest||DEFAULT_REST;
+  const el=document.getElementById('restT');
+  document.getElementById('restNext').textContent=`Next: set ${W.reps.length+1} of ${W.p.sets} at ${W.w} lbs`;
+  el.textContent=fmtT(t);
+  document.getElementById('rest').classList.add('on');
+  restIv=setInterval(()=>{
+    t--; el.textContent=fmtT(Math.max(0,t));
+    if(t<=0){beep();vib(150);restEnd();}
+  },1000);
+}
+function restEnd(){clearInterval(restIv);restIv=null;document.getElementById('rest').classList.remove('on');}
+document.getElementById('restSkip').addEventListener('click',restEnd);
+
+/* finish → judge → schedule */
+function finishWorkout(){
+  restEnd();
+  const p=W.p;
+  p.w=W.w;                      // the weight actually lifted is what gets judged
+  const r=judge(p,W.reps);
+  p.history.push({date:new Date().toISOString(), w:p.w, reps:[...W.reps], verdict:r.v});
+  p.stall = r.v==='progress' ? 0 : p.stall+1;
+  p.outcomes=r.out;
+  p.w=r.nw;
+  const due=new Date(); due.setDate(due.getDate()+3); p.due=due.toISOString();
+  save();
+  document.getElementById('wk').classList.remove('on');
+  W=null;
+  /* rebuild the list FIRST: renderDue() replaces #dueList wholesale, and in
+     the v1 order it silently deleted the verdict card it had just shown */
+  renderDue(); renderHist();
+  showResult(p,r);
+}
+const VLABEL={progress:"ADD WEIGHT",rep:"ADD REPS",hold:"CONSOLIDATE",deload:"DELOAD −10%"};
+function showResult(p,r){
+  let swapH='';
+  if(p.stall>=3){
+    const alts=LIB[p.mg].ex.filter(e=>e.n!==p.ex);
+    const pick=alts[Math.floor(Math.random()*alts.length)];
+    swapH=`<div class="swap"><b>3 sessions with no progress. New approach?</b> ${pick.n}: ${pick.a}
+      <div class="act">
+        <button class="yes" data-swap="${p.id}" data-name="${pick.n.replace(/"/g,'&quot;')}">Swap it in</button>
+        <button data-keep>Keep grinding</button>
+      </div></div>`;
+  }
+  const html=`<div class="card" id="resultCard" style="border-left:4px solid ${
+      {progress:'var(--green)',rep:'var(--blue)',hold:'var(--yellow)',deload:'var(--red)'}[r.v]}">
+    <div class="eyebrow">Session complete. Next prescription</div>
+    <span class="verdict v-${r.v}">${VLABEL[r.v]} · ${r.rate}% SUCCESS</span>
+    <div class="bigw">${p.w}<small> lbs × ${p.repMin}-${p.repMax} × ${p.sets} · ${fmtD(p.due)}</small></div>
+    <div class="setmap">${r.out.map(o=>`<span class="dot ${o}"></span>`).join('')}</div>
+    <p class="why">${r.why}</p>
+    ${swapH}
+  </div>`;
+  const old=document.getElementById('resultCard'); if(old)old.remove();
+  document.getElementById('dueList').insertAdjacentHTML('afterbegin',html);
+  const rc=document.getElementById('resultCard');
+  const sw=rc.querySelector('[data-swap]');
+  if(sw)sw.addEventListener('click',()=>doSwap(sw.dataset.swap,sw.dataset.name));
+  const kp=rc.querySelector('[data-keep]');
+  if(kp)kp.addEventListener('click',()=>{const s=rc.querySelector('.swap');if(s)s.remove();});
+  announce(`${VLABEL[r.v]}. Next: ${p.w} pounds.`);
+  if(window.scrollTo)try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+}
+function doSwap(id,name){
+  const p=S.programs.find(x=>x.id===id); if(!p)return;
+  p.ex=name; p.stall=0; p.outcomes=null;
+  // conservative start on the new lift: drop 15% and round to increment
+  p.w=Math.max(incOf(p),Math.round(p.w*0.85/2.5)*2.5);
+  save(); renderDue();
+  const s=document.querySelector('#resultCard .swap'); if(s)s.remove();
+}
+
+/* ---------- trend ---------- */
+document.getElementById('bwBtn').addEventListener('click',()=>{
+  const err=document.getElementById('bwErr');
+  const bw=+document.getElementById('bwIn').value;
+  if(!bw||bw<1){err.textContent='Enter a bodyweight.';document.getElementById('bwIn').focus();return;}
+  err.textContent='';
+  S.weighins.push({date:new Date().toISOString(),bw,bf:+document.getElementById('bfIn').value||null});
+  save(); renderTrend();
+  document.getElementById('bwIn').value='';document.getElementById('bfIn').value='';
+  announce('Weigh-in saved');
+});
+function renderTrend(){
+  const box=document.getElementById('trendCard'), w=S.weighins;
+  if(!w.length){box.innerHTML=`<div class="card"><p class="empty">No weigh-ins yet.<br>Same time of day, 3 or 4 times a week. The trend is the truth.</p></div>`;return;}
+  const last=w[w.length-1];
+  const ago=new Date();ago.setDate(ago.getDate()-7);
+  const prior=[...w].reverse().find(x=>new Date(x.date)<=ago)||w[0];
+  const d=+(last.bw-prior.bw).toFixed(1);
+  const pts=w.slice(-30);
+  const mn=Math.min(...pts.map(p=>p.bw)),mx=Math.max(...pts.map(p=>p.bw)),sp=(mx-mn)||1;
+  const path=pts.map((p,i)=>{
+    const x=pts.length===1?50:i/(pts.length-1)*100, y=68-(p.bw-mn)/sp*56;
+    return`${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`;}).join(' ');
+  box.innerHTML=`<div class="card">
+    <div class="eyebrow">Bodyweight. 7-day trend</div>
+    <span class="trend-num">${last.bw}<small style="font-size:.95rem;color:var(--dim)"> lbs</small></span>
+    <span class="trend-delta ${d<0?'dn':'up'}">${d>0?'+':''}${d} / 7d</span>
+    ${last.bf?`<div class="mono" style="font-size:.72rem;color:var(--dim);margin-top:4px">body fat ${last.bf}%</div>`:''}
+    <svg class="spark" viewBox="0 0 100 74" preserveAspectRatio="none" aria-label="bodyweight trend">
+      <path d="${path}" fill="none" stroke="var(--blue)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+    <p class="why">${d<0?"Trending down. The cut is working. Watch for early-set reds; that is the signal to eat more on training days.":d>0.5?"Up this week. One week is noise; two weeks up means tighten the deficit slightly.":"Holding. For fat loss aim for half to one percent of bodyweight per week, slow enough to keep the bar moving."}</p>
+  </div>`;
+}
+function renderHist(){
+  const items=[];
+  S.programs.forEach(p=>p.history.forEach(h=>items.push({...h,ex:p.ex,min:p.repMin,max:p.repMax})));
+  items.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('histList').innerHTML=items.length?items.slice(0,25).map(h=>`
+    <div class="hist">
+      <div class="mono">${fmtD(h.date)} · ${h.verdict.toUpperCase()}</div>
+      <b>${h.ex}</b> · ${h.w} lbs · ${h.reps.join('/')}
+      <div class="setmap">${h.reps.map(r=>`<span class="dot ${r>=h.max?'hit':r>=h.min?'part':'fail'}"></span>`).join('')}</div>
+    </div>`).join(''):`<p class="empty">No sessions yet.</p>`;
+}
+
+/* ---------- backup / restore ---------- */
+function backupJSON(){return JSON.stringify({app:'overload',version:2,exported:new Date().toISOString(),data:S},null,1);}
+document.getElementById('expBtn').addEventListener('click',()=>{
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([backupJSON()],{type:'application/json'}));
+    const d=new Date();
+    a.download=`overload-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){if(window.SWS&&SWS.toast)SWS.toast('This browser refused the download.');}
+});
+function applyImportedText(text){
+  let d;
+  try{
+    const j=JSON.parse(text);
+    d=j.data||j;
+    if(!d||!Array.isArray(d.programs))throw 0;
+  }catch(e){
+    if(window.SWS&&SWS.toast)SWS.toast('That file does not look like an OVERLOAD backup.');
+    return false;
+  }
+  const mine=S.programs.length;
+  if(mine&&!confirm(`This backup holds ${d.programs.length} lift${d.programs.length===1?'':'s'}. It replaces the ${mine} on this device. Continue?`))return false;
+  const before=JSON.stringify(S);
+  try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}
+  S=load();
+  renderDue();renderTrend();renderHist();syncSound();
+  if(window.SWS&&SWS.toast)SWS.toast('Backup restored.',{
+    action:{label:'Undo',onAction:()=>{
+      try{localStorage.setItem(KEY,before);}catch(e){}
+      S=load();renderDue();renderTrend();renderHist();syncSound();
+    }}});
+  return true;
+}
+document.getElementById('impBtn').addEventListener('click',()=>{
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const f=inp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>applyImportedText(r.result);
+    r.readAsText(f);
+  };
+  inp.click();
+});
+
+/* ---------- nav / init ---------- */
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    document.getElementById('v-'+b.dataset.v).classList.add('on');
+  };
+});
+document.getElementById('wipeBtn').onclick=()=>{
+  if(confirm('Wipe all lifts, history, and weigh-ins on this device? This cannot be undone.')){
+    try{localStorage.removeItem(KEY);}catch(e){}
+    S=load();
+    renderDue(); renderTrend(); renderHist(); syncSound();
+  }
+};
+document.getElementById('hdrDate').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+syncSound();
+renderDue(); renderTrend(); renderHist();
+
+/* ---------- PWA ---------- */
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+  addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+}
+</script>
+</body>
+</html>

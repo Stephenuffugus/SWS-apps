@@ -40,6 +40,14 @@ const OFFSITE = {
   hush: { href: 'https://lucidwinds.com/hush/', darkAccent: '#F2B872', accent: '#C87F3C' },
 };
 
+/* Two apps ship with their own full identities (paper notebook; gym poster)
+   rather than a studio skin, so they are not in skins.mjs/palette.json. Their
+   card accents are read from their own CSS, the same treatment Hush gets. */
+const SELF_STYLED = {
+  'cross-off': { darkAccent: '#F9E547', accent: '#B99B00' },
+  'overload': { darkAccent: '#5C8AD4', accent: '#3F6DB5' },
+};
+
 const CATALOGUE = [
   ['Family &amp; Home', [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
@@ -80,10 +88,14 @@ const CATALOGUE = [
   ['Money', [
     ['bill-splitter', 'Bill Splitter', 'Split it, settle up, nothing leaves your device', 'split expenses group trip dinner iou owe'],
   ]],
+  ['Body &amp; Mind', [
+    ['cross-off', 'Cross Off', 'A paper list you cross off with real highlighters', 'todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying'],
+    ['overload', 'OVERLOAD', 'It writes your next workout. You just lift', 'gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise'],
+  ]],
 ];
 
 const card = ([slug, name, line, find, kind]) => {
-  const p = palette[slug] || OFFSITE[slug];
+  const p = palette[slug] || OFFSITE[slug] || SELF_STYLED[slug];
   const href = OFFSITE[slug] ? OFFSITE[slug].href : `./${slug}/`;
   /* "shared online" is searchable too — someone deciding whether to trust a
      list with the school run should be able to find the ones that leave the
