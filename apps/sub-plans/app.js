@@ -5,7 +5,7 @@
 // device is a link the teacher copies by hand, and the link carries the folder
 // inside its own fragment rather than pointing at a server.
 
-const CONFIG = { tipUrl: '' };
+const CONFIG = { tipUrl: 'https://buy.stripe.com/bJe3cw8XLfpJ6rz8m57EQ0o' };
 
 const $ = (id) => document.getElementById(id);
 function el(tag, attrs, ...kids) {
