@@ -3,7 +3,7 @@
 **Project:** Cross Off, a paper to-do list you cross off with real highlighters
 **Studio:** Sky Wolf Studios · SWS Strategic Media LLC
 **Stack:** Single-file vanilla HTML/CSS/JS PWA. No build step, no runtime deps. Fonts self-hosted in `fonts/` (Caveat 700 + Patrick Hand, latin woff2).
-**Status:** Studio round 2026-08-18 complete on top of Stephen's user-tested v1.0.0. `node test/cross-off.test.mjs` = 65 assertions, green.
+**Status:** Studio round 2026-08-18 complete on top of Stephen's user-tested v1.0.0. `node test/cross-off.test.mjs` = 73 assertions, green.
 
 ## What this app is
 
@@ -55,15 +55,13 @@ Everything from v1.0.0 (scroll from a row, keyboard/sheet stability, full/half s
 
 ## Roadmap (later)
 
-**Round-2 shortlist (competitor scan 2026-08-18, ADHD app research):**
-1. **"Hand me one."** The field's answer to task paralysis is picking FOR the
-   user. One quiet button near the add row: picks a task (NOW-weighted
-   random), opens focus mode with a suggested timer. Kills the staring-at-
-   the-list freeze, zero typing, very on-brand for an arcade studio.
-2. **Spatial time in focus mode.** ADHD research is unanimous that a
-   shrinking disk beats digits for time blindness. Draw a thin ring or pie
-   around/behind #fTime that empties as the countdown runs; digits stay.
-   Cheap, no new state.
+**Round 2 (built 2026-08-18, from the ADHD research):**
+- **"Hand me one"**: `handMeOne()` behind the ✋ margin button in the add
+  row. Picks from the most urgent non-empty group (random within it), starts
+  `lastCustom||10` minutes, lands in focus. Blank page gets a kind toast.
+- **The time disk**: `#fDisk`, a conic-gradient pie above #fTime that drains
+  with the countdown (updated per tick + on openFocus). Time as a shape for
+  time blindness; digits stay.
 Skipped on purpose: body doubling (needs a server, breaks on-device promise),
 virtual-pet gamification (unlockable pens are our version, already listed).
 

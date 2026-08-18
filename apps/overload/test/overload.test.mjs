@@ -191,6 +191,55 @@ console.log('\n— edge: repMin equals repMax, one set —');
   ok(stored(w).programs[0].history[0].verdict === 'progress', 'and still gets judged');
 }
 
+console.log('\n— warm-up ramp: written by the prescription —');
+{
+  const w = boot();
+  const ramp = (over, wt) => w.eval(`warmupRamp(${JSON.stringify(prog(over))}, ${wt})`);
+  let r = ramp({}, 135);
+  ok(JSON.stringify(r) === JSON.stringify([{ w: 45, reps: 5 }, { w: 80, reps: 5 }, { w: 110, reps: 3 }]),
+    'a 135 bench opens with the empty bar, then 60% and 80%');
+  r = ramp({ mg: 'Quads', ex: 'Back Squat', w: 245 }, 245);
+  ok(JSON.stringify(r) === JSON.stringify([{ w: 45, reps: 5 }, { w: 150, reps: 5 }, { w: 200, reps: 3 }]),
+    'a 245 squat ramps on the 10 lb increment');
+  r = ramp({ mg: 'Biceps', ex: 'Preacher Curl' }, 50);
+  ok(JSON.stringify(r) === JSON.stringify([{ w: 20, reps: 5 }, { w: 30, reps: 5 }, { w: 40, reps: 3 }]),
+    'a non-barbell lift ramps 40/60/80');
+  ok(ramp({ mg: 'Biceps', ex: 'Preacher Curl' }, 5).length === 0, 'a tiny weight gets no ramp at all');
+  ok(ramp({}, 50).length === 0, 'a bar lift barely above the bar gets no ramp (nothing honest to load)');
+
+  // in the DOM: the ramp rides with set 1 and leaves when the work starts
+  const w2 = boot({ programs: [prog({ w: 185 })], weighins: [] });
+  w2.eval(`startWorkout('p1')`);
+  const wu = w2.document.getElementById('wkWarm');
+  ok(!wu.hidden && /Warm up/.test(wu.textContent) && /then 185 for real/.test(wu.textContent),
+    'set 1 shows the warm-up ramp with the working weight named');
+  ok(/empty bar/.test(wu.textContent) && /45 \+ 5 \+ 2\.5 \/ side/.test(wu.textContent), 'ramp lines carry plate math for barbell lifts');
+  w2.eval('logSet(12)'); w2.eval('restEnd()');
+  ok(w2.document.getElementById('wkWarm').hidden, 'the ramp steps aside after the first set');
+}
+
+console.log('\n— e1RM: the line that goes up —');
+{
+  const now = Date.now();
+  const hist = [
+    { date: new Date(now - 6 * 864e5).toISOString(), w: 135, reps: [12, 12, 12], verdict: 'progress' },
+    { date: new Date(now - 3 * 864e5).toISOString(), w: 140, reps: [10, 9, 8], verdict: 'rep' },
+    { date: new Date(now).toISOString(), w: 140, reps: [12, 11, 10], verdict: 'rep' },
+  ];
+  const w = boot({ programs: [prog({ history: hist })], weighins: [] });
+  const es = w.eval(`e1rmSeries(S.programs[0])`);
+  ok(es.length === 3, 'one estimate per session');
+  ok(es[0].e === 189 && es[2].e === 196, 'Epley from the best set, rounded to a tenth');
+  w.document.querySelector('[data-gear]').click();
+  const sheet = w.document.getElementById('sheet');
+  ok(/Estimated 1RM/.test(sheet.textContent) && !!sheet.querySelector('.e1-spark path'), 'the settings sheet draws the strength line');
+  ok(/\+7/.test(sheet.textContent), 'and says how far it has come');
+  // one session is a dot, not a line: no chart until there are two
+  const w2 = boot({ programs: [prog({ history: hist.slice(0, 1) })], weighins: [] });
+  w2.document.querySelector('[data-gear]').click();
+  ok(!w2.document.querySelector('#sheet .e1-spark'), 'a single session shows no chart yet');
+}
+
 console.log('\n— weigh-in and trend —');
 {
   const w = boot();

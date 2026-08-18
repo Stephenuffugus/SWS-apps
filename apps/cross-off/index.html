@@ -260,6 +260,16 @@
     display:flex;align-items:center;gap:8px;
     padding-left:64px;padding-right:12px;
   }
+  /* "hand me one": a doodle in the margin for the moment the list is a wall.
+     One tap picks a task and starts the clock — zero decisions. */
+  #handBtn{
+    position:absolute;left:6px;top:50%;transform:translateY(-50%);
+    width:40px;height:40px;border-radius:50%;
+    border:2px dashed var(--ink-soft);background:var(--paper);
+    font-size:17px;line-height:1;cursor:pointer;padding:0;
+  }
+  #handBtn:hover{border-style:solid}
+  #handBtn:focus-visible{outline:2px solid var(--urgent);outline-offset:2px}
   .addrow input{
     flex:1;min-width:0;border:none;outline:none;background:transparent;
     font-family:var(--sans);font-size:16px;color:var(--ink);min-height:34px;
@@ -490,6 +500,13 @@
     font-variant-numeric:tabular-nums;letter-spacing:-2px;margin:6px 0;
   }
   #fPR{font-size:15px;opacity:.9;min-height:20px}
+  /* time as a shape: the disk drains as the clock runs, because a number is
+     easy to stop believing and a shrinking shape is not */
+  #fDisk{
+    width:64px;height:64px;border-radius:50%;margin:2px 0;
+    background:conic-gradient(rgba(255,255,255,.92) var(--pct,100%), rgba(255,255,255,.18) 0);
+    box-shadow:0 0 0 3px rgba(255,255,255,.28);
+  }
   #fSteps{display:flex;flex-direction:column;gap:8px;max-height:26vh;overflow-y:auto;
     margin-top:10px;width:min(86vw,340px)}
   .fstep{
@@ -561,6 +578,7 @@
   <div id="morningSlot"></div>
   <div id="list"></div>
   <div class="addrow">
+    <button id="handBtn" aria-label="Hand me one task and start a timer" title="can't pick? tap here">✋</button>
     <label class="sr-only" for="addInput">Write a task</label>
     <input id="addInput" type="text" placeholder="write a task…  (! = NOW, ~ = SOON)" enterkeyhint="done" autocomplete="off">
     <div class="prisel" id="addPri">
@@ -607,6 +625,7 @@
   <div class="flabel">RIGHT NOW</div>
   <div id="fTask"></div>
   <div id="fNote"></div>
+  <div id="fDisk" aria-hidden="true"></div>
   <div id="fTime">00:00</div>
   <div id="fPR"></div>
   <div id="fSteps"></div>
@@ -1284,6 +1303,9 @@ function startTick(task,chip){
     if(state.focusTaskId===task.id){
       focusEl.classList.remove('warn','panic','over');
       if(st!=='running')focusEl.classList.add(st);
+      const disk=document.getElementById('fDisk');
+      disk.hidden=false;
+      disk.style.setProperty('--pct',Math.max(0,Math.min(100,rem/task.timer.duration*100))+'%');
       document.getElementById('fTime').textContent=rem<=0?'+'+fmt(-rem):fmt(rem);
       document.getElementById('fPR').textContent=
         rem<=0?'still counts. cross it off when you land it'
@@ -1359,9 +1381,31 @@ function openFocus(task){
   state.focusTaskId=task.id;
   document.getElementById('fTask').textContent=task.text;
   document.getElementById('fNote').textContent=task.note||'';
+  const disk=document.getElementById('fDisk');
+  if(task.timer){
+    disk.hidden=false;
+    disk.style.setProperty('--pct',Math.max(0,Math.min(100,(task.timer.deadline-Date.now())/task.timer.duration*100))+'%');
+  }else disk.hidden=true;
   renderFocusSteps(task);
   focusEl.classList.add('show');
 }
+
+/* "hand me one": the field's best answer to staring at the list. Picks one
+   task (the most urgent group, at random within it), starts a gentle clock,
+   and lands in focus. Zero decisions between wanting to start and starting. */
+function handMeOne(){
+  const p=page(); if(!p)return;
+  const open=p.tasks.filter(t=>!t.done);
+  if(!open.length){
+    if(window.SWS&&SWS.toast)SWS.toast('Blank page. Write one thing below and I can hand it back to you.');
+    return;
+  }
+  const pool=[1,2,3].map(pr=>open.filter(t=>(t.pri||2)===pr)).find(g=>g.length);
+  const task=pool[Math.floor(Math.random()*pool.length)];
+  startCountdown(task,(state.lastCustom||10)*60000);
+  announce('Handed you: '+task.text);
+}
+document.getElementById('handBtn').addEventListener('click',handMeOne);
 function closeFocus(){
   state.focusTaskId=null;
   focusEl.classList.remove('show','warn','panic','over');

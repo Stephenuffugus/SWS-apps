@@ -112,6 +112,12 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--blue-hi);o
 #sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
 #sheet h3{font-family:"Big Shoulders Display";font-weight:800;font-size:1.25rem;letter-spacing:.04em;margin-bottom:2px}
 #sheet .sub{font-family:"IBM Plex Mono";font-size:.66rem;color:var(--dim);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase}
+.e1rm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:var(--surface2)}
+.e1-num{font-family:"Big Shoulders Display";font-weight:800;font-size:1.8rem;line-height:1}
+.e1-num small{font-size:.85rem;color:var(--dim);font-weight:600}
+.e1-delta{font-family:"IBM Plex Mono";font-size:.72rem;margin-left:8px}
+.e1-delta.up{color:var(--green)}.e1-delta.dn{color:var(--yellow)}
+svg.e1-spark{width:100%;height:44px;margin-top:8px;display:block}
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .setrow .lab{font-size:.85rem;color:var(--dim)}
 .step{display:flex;align-items:center;gap:8px}
@@ -139,6 +145,13 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--blue-hi);o
 .wadj{display:flex;justify-content:center;gap:14px;margin-top:6px}
 .wadj button{background:var(--surface2);border:1px solid var(--line);color:var(--chalk);border-radius:10px;font-family:"IBM Plex Mono";font-size:.95rem;padding:8px 16px;cursor:pointer;min-width:44px}
 .plates{text-align:center;font-family:"IBM Plex Mono";font-size:.7rem;color:var(--dim);margin-top:10px;min-height:1em}
+/* the warm-up ramp: printed with set 1, gone once the work starts */
+.warmups{max-width:340px;margin:14px auto 0;border:1px dashed var(--line);border-radius:10px;padding:10px 14px}
+.warmups .wu-t{font-family:"IBM Plex Mono";font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.warmups .wu-l{display:flex;justify-content:space-between;gap:12px;font-family:"IBM Plex Mono";font-size:.8rem;padding:2px 0}
+.warmups .wu-l b{color:var(--chalk)}
+.warmups .wu-l span{color:var(--faint);font-size:.68rem}
+.warmups .wu-e{font-family:"IBM Plex Mono";font-size:.68rem;color:var(--dim);margin-top:6px}
 .target{text-align:center;font-size:.85rem;color:var(--dim);margin:16px 0 10px}
 .target b{color:var(--chalk)}
 .hitbtn{display:block;width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;font-family:"Big Shoulders Display";font-weight:800;font-size:1.5rem;letter-spacing:.06em;padding:20px;cursor:pointer;margin-bottom:12px}
@@ -298,6 +311,7 @@ svg.spark{width:100%;height:74px;margin-top:10px}
     </div>
     <div class="plates" id="wkPlates"></div>
   </div>
+  <div class="warmups" id="wkWarm" hidden></div>
   <div class="target">Target: <b id="wkTarget"></b>. Do the set, then tap what you got</div>
   <button class="hitbtn" id="hitBtn">HIT <span id="hitN"></span>+</button>
   <div class="chiplbl">fell short? tap your reps</div>
@@ -466,6 +480,32 @@ function judge(p, reps){
 function plateMath(t){let s=(t-45)/2;if(s<=0)return"empty bar";
   const d=[45,35,25,10,5,2.5],o=[];for(const p of d){while(s>=p){o.push(p);s-=p}}return o.join(" + ")+" / side";}
 
+/* The warm-up ramp, written by the same engine that writes the workout:
+   barbell lifts open with the empty bar, then 60% and 80% of the working
+   weight; everything else ramps 40/60/80. Rounded to the lift's increment,
+   never at or above the work weight, never below what can be loaded. */
+function warmupRamp(p,w){
+  const inc=incOf(p), bar=!!meta(p).bar;
+  const plan=bar?[[45,5,true],[.6,5],[.8,3]]:[[.4,5],[.6,5],[.8,3]];
+  const out=[];
+  for(const [v,reps,abs] of plan){
+    let t=abs?v:Math.round(w*v/inc)*inc;
+    if(bar&&t<45)continue;
+    if(t<inc||t>=w)continue;
+    if(out.length&&t<=out[out.length-1].w)continue;
+    out.push({w:t,reps});
+  }
+  /* one lonely line is not a ramp — tiny weights warm up by lifting */
+  return out.length>=2?out:[];
+}
+
+/* Epley estimated 1RM per session, from the best set. Derived, never typed. */
+function e1rmSeries(p){
+  return p.history
+    .filter(h=>Array.isArray(h.reps)&&h.reps.length&&h.reps.some(r=>r>0))
+    .map(h=>({date:h.date,e:Math.round(h.w*(1+Math.max(...h.reps)/30)*10)/10}));
+}
+
 /* ---------- weekly volume glance (read-only, from history) ---------- */
 function weekCount(mg){
   const ago=Date.now()-7*864e5;
@@ -531,8 +571,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet.classList.con
 
 function openLiftSheet(id){
   const p=S.programs.find(x=>x.id===id); if(!p)return;
+  /* the line that goes up: estimated 1RM per session, straight from history */
+  const es=e1rmSeries(p).slice(-30);
+  let e1H='';
+  if(es.length>=2){
+    const mn=Math.min(...es.map(x=>x.e)),mx=Math.max(...es.map(x=>x.e)),sp=(mx-mn)||1;
+    const path=es.map((x,i)=>{
+      const px=i/(es.length-1)*100, py=40-(x.e-mn)/sp*32;
+      return`${i?'L':'M'}${px.toFixed(1)},${py.toFixed(1)}`;}).join(' ');
+    const d=+(es[es.length-1].e-es[0].e).toFixed(1);
+    e1H=`<div class="e1rm">
+      <div class="eyebrow">Estimated 1RM · ${es.length} sessions</div>
+      <span class="e1-num">${es[es.length-1].e}<small> lbs</small></span>
+      <span class="e1-delta ${d>=0?'up':'dn'}">${d>0?'+':''}${d}</span>
+      <svg class="e1-spark" viewBox="0 0 100 44" preserveAspectRatio="none" aria-label="strength trend">
+        <path d="${path}" fill="none" stroke="var(--green)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+    </div>`;
+  }
   openSheet(
-    `<h3>${p.ex}</h3><div class="sub">${p.mg} · every knob is a tap</div>`+
+    `<h3>${p.ex}</h3><div class="sub">${p.mg} · every knob is a tap</div>`+e1H+
     stepRow('rest','Rest between sets',fmtT(p.rest))+
     stepRow('sets','Sets',p.sets)+
     stepRow('rmin','Reps low',p.repMin)+
@@ -621,6 +678,13 @@ function paintSet(){
   document.getElementById('wkSetNo').textContent=`SET ${Math.min(W.reps.length+1,p.sets)} / ${p.sets}`;
   document.getElementById('wkW').textContent=W.w;
   document.getElementById('wkPlates').textContent=meta(p).bar?`LOAD ${plateMath(W.w)}`:'';
+  /* the ramp rides with set 1 and steps aside once the work starts */
+  const wu=document.getElementById('wkWarm');
+  const ramp=W.reps.length===0?warmupRamp(p,W.w):[];
+  wu.hidden=!ramp.length;
+  wu.innerHTML=ramp.length?`<div class="wu-t">Warm up</div>`+
+    ramp.map(r=>`<div class="wu-l"><span><b>${r.w}</b> × ${r.reps}</span>${meta(p).bar?`<span>${plateMath(r.w)}</span>`:''}</div>`).join('')+
+    `<div class="wu-e">then ${W.w} for real</div>`:'';
   document.getElementById('wkTarget').textContent=repRange(p);
   document.getElementById('hitN').textContent=p.repMax;
   const chips=document.getElementById('repChips');

@@ -236,6 +236,31 @@ console.log('\n— user text is inert —');
   ok([...w.document.querySelectorAll('.task .txt')].some(t => t.textContent.includes('<img')), 'and still shows as the text they typed');
 }
 
+console.log('\n— hand me one: zero decisions between wanting to start and starting —');
+{
+  const w = boot();
+  w.document.getElementById('handBtn').click();
+  ok(w.document.getElementById('focus').classList.contains('show'), 'one tap lands in focus mode');
+  const picked = w.eval('findTask(state.focusTaskId)');
+  ok(picked && picked.pri === 1, 'it hands you the most urgent group first');
+  ok(w.eval('!!findTask(state.focusTaskId).timer'), 'with a clock already running');
+  ok(!w.document.getElementById('fDisk').hidden, 'and the time disk showing');
+  ok(/%/.test(w.document.getElementById('fDisk').style.getPropertyValue('--pct')), 'the disk knows how full it is');
+
+  // a blank page gets a gentle nudge, not a broken button
+  const w2 = boot();
+  w2.eval('(()=>{page().tasks=[];save();render();})()');
+  w2.document.getElementById('handBtn').click();
+  ok(!w2.document.getElementById('focus').classList.contains('show'), 'nothing to hand: focus stays closed');
+  ok((w2.__toasts || []).some(t => /Blank page/.test(t.m)), 'and it says so kindly');
+
+  // with the NOW task done, it reaches into TODAY
+  const w3 = boot();
+  w3.eval('completeTask(page().tasks.find(t=>t.pri===1))');
+  w3.document.getElementById('handBtn').click();
+  ok(w3.eval('findTask(state.focusTaskId).pri') === 2, 'once NOW is clear it hands you a TODAY task');
+}
+
 console.log('\n— persistence roundtrip and daily reset —');
 {
   const w0 = boot();

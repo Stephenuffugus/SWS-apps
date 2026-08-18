@@ -1,7 +1,7 @@
 # HANDOFF — OVERLOAD
 **Sky Wolf Studios · SWS Strategic Media LLC**
 Prescription-first strength tracker. Single-file vanilla PWA.
-`node test/overload.test.mjs` = 55 assertions, green.
+`node test/overload.test.mjs` = 68 assertions, green.
 
 ## 1. What this is
 
@@ -88,20 +88,16 @@ cards, live workout, results, history, and now the volume strip).
 
 ## 6. Later / optional
 
-**Round-2 shortlist (competitor scan 2026-08-18, best features vs biggest
-complaints across Hevy/Strong/StrengthLog/Liftosaur):**
-1. **Warm-up ramp from the prescription.** Lifters' most-praised feature and
-   a perfect fit for prescription-first: we already know the working weight,
-   so workout mode can print the standard ramp (40%×5, 60%×5, 80%×3, rounded
-   to the lift's increment) with plate math per line. Zero typing, read-only.
-2. **Per-lift e1RM sparkline.** Progression graphs are the motivation feature
-   the category agrees on. Epley (w×(1+reps/30)) over history's best set per
-   session, drawn with the same SVG sparkline the bodyweight trend already
-   uses. Put it in the ⚙ settings sheet. Zero input, derived entirely from
-   history.
+**Round 2 (built 2026-08-18, from the competitor scan):**
+- **Warm-up ramp**: `warmupRamp(p,w)` prints with set 1 only (`#wkWarm`),
+  barbell lifts open with the empty bar then 60/80%, others ramp 40/60/80,
+  rounded to the increment, plate math per line, "then W for real". A ramp
+  under two honest lines renders nothing. Pinned by tests.
+- **e1RM sparkline**: `e1rmSeries(p)` (Epley on the best set per session) in
+  the ⚙ settings sheet with latest number and delta; needs ≥2 sessions.
 Skipped on purpose: RPE/RIR logging (breaks one-tap), social/programs
 (anti-wedge), notifications (PWA-flaky on iOS).
 
-Also: Firebase sync · share-a-card image (the social-proof loop Hevy owns) ·
+Later: Firebase sync · share-a-card image (the social-proof loop Hevy owns) ·
 2-row rep chips if repMax > 12 ranges arrive · sunbeams tie-in.
 Art: `marketing/` thumbs and the PNG icon set ARE Stephen's art (filed 2026-08-18, rescaled from his file, never regenerated). Only `icon.svg` is a functional mark.
