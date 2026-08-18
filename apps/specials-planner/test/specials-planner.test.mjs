@@ -352,6 +352,102 @@ console.log('\n— accessibility contract —');
   ok(dp.getAttribute('aria-pressed') !== before, 'day-picker toggle exposes pressed state');
 }
 
+console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, dated rules —');
+{
+  /* Custom column names: config carries them, everything spoken or printed
+     reads them, and an unnamed column keeps its default. */
+  const st = clone(baseState);
+  st.config.periodNames = ['Kindergarten'];
+  const w = boot(st);
+  const headTexts = () => [...w.document.querySelectorAll('table.week thead th')].map(t => t.textContent.replace(/◧/g, '').trim());
+  ok(headTexts()[1] === 'Kindergarten', 'custom name shows on the column heading');
+  ok(headTexts()[2] === 'Period 2', 'an unnamed column keeps its default');
+  const box = w.document.querySelector('.box[data-iso="2026-08-24"][data-p="1"]');
+  ok(/Kindergarten/.test(box.getAttribute('aria-label')), 'the spoken box label carries the custom name');
+  ok(w.eval('periodName(3)') === 'Period 3' && w.eval('periodName(3,true)') === 'period 3', 'defaults keep the old casing');
+
+  // rename in place: type in the heading, blur commits, empty falls back
+  let pn = w.document.querySelector('.pn-edit[data-pn="2"]');
+  pn.textContent = 'Music';
+  pn.dispatchEvent(new w.Event('blur'));
+  ok(stored(w).config.periodNames[1] === 'Music', 'typing in the heading saves the name');
+  ok(headTexts()[2] === 'Music', 'the grid re-renders with the new name');
+  pn = w.document.querySelector('.pn-edit[data-pn="2"]');
+  pn.textContent = '';
+  pn.dispatchEvent(new w.Event('blur'));
+  ok((stored(w).config.periodNames[1] || '') === '' && headTexts()[2] === 'Period 2', 'clearing the heading restores the default');
+
+  // "Apply it to: every period this day" — one apply, six boxes
+  w.document.querySelector('[data-paint="cell:2026-08-25:1"]').click();
+  const pick = w.document.querySelector('.cpick');
+  ok(!!pick && [...pick.querySelectorAll('input[name="cp-scope"]')].some(r => r.value === 'day'), 'the picker offers every period this day');
+  ok(pick.querySelector('#cp-range').hidden, 'the calendar boxes stay hidden for a one-off');
+  pick.querySelector('.cs[data-id="k2"]').click();
+  pick.querySelector('input[name="cp-scope"][value="day"]').click();
+  pick.querySelector('#cp-ok').click();
+  ok(Object.values(stored(w).fill).filter(v => v === 'k2').length === 6, 'one apply colours all six boxes of that day');
+
+  // a notes box keeps its two choices, a heading gets dates with no radios
+  w.document.querySelector('[data-paint^="note:"]').click();
+  ok(w.document.querySelectorAll('.cpick input[name="cp-scope"]').length === 2, 'a notes box keeps its two choices');
+  w.eval('closePicker()');
+  w.document.querySelector('[data-paint="col:1"]').click();
+  const pc = w.document.querySelector('.cpick');
+  ok(!!pc.querySelector('#cp-range') && !pc.querySelector('#cp-range').hidden && !pc.querySelector('input[name="cp-scope"]'),
+    'a column heading offers the calendar boxes straight away');
+  w.eval('closePicker()');
+
+  // "every Tuesday until Sep 4" — an edited date makes a dated rule
+  w.document.querySelector('[data-paint="cell:2026-08-25:3"]').click();
+  const pick2 = w.document.querySelector('.cpick');
+  pick2.querySelector('.cs[data-id="k1"]').click();
+  pick2.querySelector('input[name="cp-scope"][value="all"]').click();
+  ok(!pick2.querySelector('#cp-range').hidden, 'choosing a recurring scope reveals the calendar boxes');
+  pick2.querySelector('#cp-to').value = '2026-09-04';
+  pick2.querySelector('#cp-ok').click();
+  const s2 = stored(w);
+  ok(s2.fillRules.length === 1 && s2.fillRules[0].to === '2026-09-04' && s2.fillRules[0].p === 3 && s2.fillRules[0].dow === 2,
+    'an edited date stores a dated weekly rule');
+  ok(Object.keys(s2.fillDow).length === 0, 'the standing rules are untouched');
+  ok(w.eval(`(()=>{buildYearIfStale();const d=YEAR[0].days.find(x=>x.iso==='2026-08-25');return (fillFor(d,3)||{}).id})()`) === 'k1',
+    'the rule colours a Tuesday inside the dates');
+  ok(w.eval(`(()=>{buildYearIfStale();const d=YEAR[2].days.find(x=>x.dow===2);return fillFor(d,3)})()`) === null,
+    'a Tuesday after the last date stays plain');
+
+  // precedence: naming the period beats an every-period rule, one-offs beat both
+  w.eval(`(()=>{ensureColourState();S.fillRules.push({c:'k5',dow:2,p:0,from:'',to:''});persist(true)})()`);
+  ok(w.eval(`(()=>{const d=YEAR[1].days.find(x=>x.dow===2);return (fillFor(d,3)||{}).id})()`) === 'k1',
+    'a rule naming the period beats an every-period rule');
+  ok(w.eval(`(()=>{const d=YEAR[1].days.find(x=>x.dow===2);return (fillFor(d,5)||{}).id})()`) === 'k5',
+    'the every-period rule covers the rest of the day');
+  ok(w.eval(`(()=>{const d=YEAR[0].days.find(x=>x.iso==='2026-08-25');return (fillFor(d,5)||{}).id})()`) === 'k2',
+    'a one-off painted box still wins over every rule');
+
+  // dated column-heading rule: on for a week inside the dates, off after
+  w.eval(`(()=>{ensureColourState();S.fillColRules.push({c:'k3',col:2,from:'2026-08-24',to:'2026-08-28'});persist(true)})()`);
+  ok(w.eval(`(()=>{return colFillId(2,YEAR[0])})()`) === 'k3', 'a dated heading rule colours its weeks');
+  ok(w.eval(`(()=>{return colFillId(2,YEAR[1])||null})()`) === null, 'and lets go outside them');
+
+  // the legend and the colour editor both know rules are uses
+  ok(w.eval(`usedColourIds().has('k1') && usedColourIds().has('k3')`), 'rule colours count as used for the printed key');
+  w.eval(`scrubColour('k1')`);
+  ok(w.eval('S.fillRules.every(r=>r.c!==\'k1\')'), 'deleting a colour scrubs its rules too');
+
+  // Setup carries the names too, for phones where the heading row is hidden
+  const w3 = boot(clone(baseState));
+  w3.document.querySelector('.tab[data-view="setup"]').click();
+  w3.document.getElementById('f-pn-1').value = 'Art K';
+  w3.document.getElementById('f-apply').click();
+  ok(stored(w3).config.periodNames[0] === 'Art K', 'Setup saves a period name');
+  ok([...w3.document.querySelectorAll('table.week thead th')].some(t => /Art K/.test(t.textContent)), 'and the grid heading shows it');
+
+  // a hostile column name is text, never markup
+  const evil = clone(baseState);
+  evil.config.periodNames = ['"><img src=x onerror=window.__pwn=1>'];
+  const w2 = boot(evil);
+  ok(!w2.__pwn && !w2.document.querySelector('table.week img'), 'a hostile column name cannot inject markup');
+}
+
 console.log('\n— reset —');
 {
   const w = boot(clone(baseState));

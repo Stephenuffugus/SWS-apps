@@ -1490,6 +1490,8 @@ body{
   .field{display:flex;flex-direction:column;gap:var(--s1);flex:1;min-width:8.5rem}
   .field label{font-size:var(--t-sm);font-weight:600;color:var(--ink-2)}
   .field input,.field select{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field)}
+  .pn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:var(--s2)}
+  .pn-grid input{min-height:var(--tap);padding:var(--s2) var(--s3);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field)}
   .days-pick{display:flex;gap:var(--s2);flex-wrap:wrap}
   .dp{min-width:var(--tap);min-height:var(--tap);padding:0 var(--s2);border-radius:var(--r-ctl);border:1px solid var(--line-2);background:var(--field);font-weight:600;font-size:var(--t-base);color:var(--ink-2)}
   .dp.on{background:var(--ink);border-color:var(--ink);color:var(--canvas)}
@@ -1623,7 +1625,20 @@ td:hover > .mergebar, td:focus-within > .mergebar{ opacity:1 }
 .cpick-scope legend{ font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); padding:0 4px }
 .cpick-scope label{ display:flex; align-items:center; gap:7px; font-size:.9rem; min-height:32px }
 .cpick-note{ margin:0 0 10px; font-size:.8rem; color:var(--ink-2) }
+.cpick-range{ border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin:0 0 10px }
+.cpick-range-t{ display:block; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); margin-bottom:6px }
+.cpick-range-row{ display:flex; gap:10px; flex-wrap:wrap }
+.cpick-range-row label{ display:flex; align-items:center; gap:6px; font-size:.85rem }
+.cpick-range-row input[type="date"]{ min-height:36px; padding:0 6px; border:1px solid var(--line);
+  border-radius:8px; background:var(--field); color:var(--ink); font:inherit; font-size:.85rem }
+.cpick-range-h{ display:block; margin-top:6px; font-size:.74rem; color:var(--ink-2) }
 .cpick-act{ display:flex; gap:8px; justify-content:flex-end }
+/* The column heading doubles as its own rename field. The hover ring is the
+   invitation; focus makes it unmistakably a text box. */
+.pn-edit{ display:inline-block; min-width:3ch; max-width:100%; padding:0 3px; margin:0 -3px;
+  border-radius:6px; cursor:text; outline-offset:1px }
+.pn-edit:hover{ box-shadow:inset 0 0 0 1px var(--line-2) }
+.pn-edit:focus{ background:var(--field); box-shadow:inset 0 0 0 1px var(--focus); outline:none; color:var(--ink) }
 
 /* ── fit to screen ──
    Chrome out of the way, grid scaled by a factor measured in JS so the
@@ -1857,10 +1872,11 @@ function defaultConfig(){
     workDays:[1,2,3,4,5],
     periods:6, lunchAfter:2,
     letters:['A','B','C'],
+    periodNames:[],
     teacher:'', driveFileId:'', printMode:'compact'
   };
 }
-const MAX_LETTERS=12, MAX_LETTER_LEN=4, MAX_PERIODS=10, MAX_WEEKS=300;
+const MAX_LETTERS=12, MAX_LETTER_LEN=4, MAX_PERIODS=10, MAX_WEEKS=300, MAX_PERIOD_NAME=24;
 /* A hand-edited or legacy backup is the one file a teacher carries between
    devices, so every shape that arrives through it is coerced rather than
    trusted. `cells:[]` used to survive as an array and then serialise back as
@@ -1879,6 +1895,10 @@ function normalizeConfig(c){
   if(!Array.isArray(c.letters)) c.letters=['A','B','C'];
   c.letters=c.letters.map(x=>String(x).trim().slice(0,MAX_LETTER_LEN)).filter(Boolean).slice(0,MAX_LETTERS);
   if(!c.letters.length) c.letters=['A'];
+  /* Jessie, 2026-08-18: "many people don't call them periods" — each column can
+     carry its own name. Position i names period i+1; '' means "use the default". */
+  if(!Array.isArray(c.periodNames)) c.periodNames=[];
+  c.periodNames=c.periodNames.slice(0,MAX_PERIODS).map(x=>String(x??'').replace(/\s+/g,' ').trim().slice(0,MAX_PERIOD_NAME));
   if(!Array.isArray(c.workDays)) c.workDays=[1,2,3,4,5];
   /* workDays holding 'Mon' instead of 1 used to dead-end the whole app on
      "No weeks yet — check your year dates", which was the wrong diagnosis. */
@@ -2017,6 +2037,14 @@ function buildYear(){ YEAR = S ? computeYear(S.config,S.special) : []; }
 
 /* Where a day's lesson lives. See migrateCellKeys for why. */
 function cellKey(d,p){ return d.special?`d${d.iso}|${p}`:`c${d.idx}|${p}`; }
+/* The visible name of a period. Defaults keep the old copy exactly ("Period 3"
+   in headings, "period 3" mid-sentence); a custom name is used as she typed it
+   in both places. Every HTML interpolation of this must go through esc() —
+   custom names are user text. */
+function periodName(p,lower){
+  const n=(S&&S.config&&Array.isArray(S.config.periodNames)?S.config.periodNames[p-1]:'')||'';
+  return n||(lower?`period ${p}`:`Period ${p}`);
+}
 function cellText(d,p){
   const v=S.cells[cellKey(d,p)];
   if(v!==undefined) return v;
@@ -2232,19 +2260,57 @@ function ensureColourState() {
   S.lineFill = S.lineFill || {}; // boxKey -> { lineIndex: colour id }  (one note)
   S.merge = S.merge || {};      // cellKey -> columns spanned      (one box)
   S.mergeDow = S.mergeDow || {};// "dow|period" -> columns spanned (every week)
+  /* Jessie, 2026-08-18: "every Tuesday from now until Christmas". A ranged rule
+     is a standing rule with a first and last date. p:0 means every period of
+     that weekday. Later rules win where two overlap, so "red until break, green
+     after" is just two rules. */
+  if (!Array.isArray(S.fillRules)) S.fillRules = [];       // {c, dow, p(0=all), from, to}
+  if (!Array.isArray(S.fillColRules)) S.fillColRules = []; // {c, col, from, to}   (column headings)
 }
 
 const colourById = (id) => (S.legend || []).find(c => c.id === id) || null;
 
 /* A one-off beats the standing rule: if she painted this particular
-   Tuesday red for a sub, that wins over "period 3 is always green". */
+   Tuesday red for a sub, that wins over "period 3 is always green".
+   In between the two sit the ranged rules: dated is more specific than
+   all-year, and a rule naming this period beats one covering the day. */
+function rangeRuleFor(d, p) {
+  const inRange = r => r.dow === d.dow && !(r.from && d.iso < r.from) && !(r.to && d.iso > r.to) && colourById(r.c);
+  for (let i = S.fillRules.length - 1; i >= 0; i--) {
+    const r = S.fillRules[i];
+    if (+r.p === p && inRange(r)) return r;
+  }
+  for (let i = S.fillRules.length - 1; i >= 0; i--) {
+    const r = S.fillRules[i];
+    if (!+r.p && inRange(r)) return r;
+  }
+  return null;
+}
 function fillFor(d, p) {
   ensureColourState();
   const k = cellKey(d, p);
   if (k in S.fill) return colourById(S.fill[k]);
+  const rr = rangeRuleFor(d, p);
+  if (rr) return colourById(rr.c);
   const dk = `${d.dow}|${p}`;
   if (dk in S.fillDow) return colourById(S.fillDow[dk]);
   return null;
+}
+/* A column heading's colour for THIS week: a ranged rule that overlaps any
+   day of the week beats the standing colour, so "period 3 is kindergarten
+   until the nine weeks end, then first grade" reads true week by week. */
+function colFillId(key, w) {
+  ensureColourState();
+  const a = w.days[0].iso, b = w.days[w.days.length - 1].iso;
+  for (let i = S.fillColRules.length - 1; i >= 0; i--) {
+    const r = S.fillColRules[i];
+    if (String(r.col) !== String(key)) continue;
+    if (r.from && b < r.from) continue;
+    if (r.to && a > r.to) continue;
+    if (!colourById(r.c)) continue;
+    return r.c;
+  }
+  return S.fillCol[key];
 }
 function spanFor(d, p) {
   ensureColourState();
@@ -2298,7 +2364,8 @@ function paintTarget(tok, id, scope) {
 
   if (kind === 'col') {
     const key = (a === 'lunch' || a === 'notes') ? a : +a;
-    if (id) S.fillCol[key] = id; else delete S.fillCol[key];
+    if (id) S.fillCol[key] = id;
+    else { delete S.fillCol[key]; S.fillColRules = S.fillColRules.filter(r => String(r.col) !== String(key)); }
   } else if (kind === 'day') {
     if (id) S.fillDay[+a] = id; else delete S.fillDay[+a];
   } else if (kind === 'note') {
@@ -2308,7 +2375,11 @@ function paintTarget(tok, id, scope) {
   } else if (kind === 'cell') {
     const d = byIso[a]; if (!d) return;
     const pnum = +b, k = cellKey(d, pnum), dk = d.dow + '|' + pnum;
-    if (scope === 'all') { if (id) S.fillDow[dk] = id; else delete S.fillDow[dk]; delete S.fill[k]; }
+    if (scope === 'all') {
+      if (id) S.fillDow[dk] = id;
+      else { delete S.fillDow[dk]; S.fillRules = S.fillRules.filter(r => !(r.dow === d.dow && +r.p === pnum)); }
+      delete S.fill[k];
+    }
     else { if (id) S.fill[k] = id; else delete S.fill[k]; }
   }
   persist();
@@ -2453,12 +2524,16 @@ function colourUseCount(id) {
   for (const v of Object.values(S.fillDow)) if (v === id) n++;
   for (const v of Object.values(S.fillCol)) if (v === id) n++;
   for (const v of Object.values(S.fillDay)) if (v === id) n++;
+  for (const r of S.fillRules) if (r.c === id) n++;
+  for (const r of S.fillColRules) if (r.c === id) n++;
   for (const box of Object.values(S.lineFill)) for (const v of Object.values(box)) if (v === id) n++;
   return n;
 }
 function scrubColour(id) {
   for (const st of [S.fill, S.fillDow, S.fillCol, S.fillDay])
     for (const k of Object.keys(st)) if (st[k] === id) delete st[k];
+  S.fillRules = S.fillRules.filter(r => r.c !== id);
+  S.fillColRules = S.fillColRules.filter(r => r.c !== id);
   for (const bk of Object.keys(S.lineFill)) {
     const box = S.lineFill[bk];
     for (const k of Object.keys(box)) if (box[k] === id) delete box[k];
@@ -2551,7 +2626,15 @@ function pickerKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closePick
 function openPicker(anchor, target) {
   ensureColourState();
   closePicker();
-  const asksScope = target.kind === 'cell';
+  /* Which "Apply it to" choices exist depends on what was clicked. A period
+     box offers the full set (this box / whole day / every week, with dates);
+     a notes box keeps its two; headings take dates with no radio at all. */
+  const scopes = target.scopes
+    || (target.kind === 'cell'
+      ? [{ v: 'one', label: 'Just this box' }, { v: 'all', label: target.everyLabel || 'Every week' }]
+      : null);
+  const asksScope = !!scopes;
+  const rangeScopes = target.rangeScopes || ['all', 'dowall'];
   const current = target.currentId || '';
 
   const wrap = document.createElement('div');
@@ -2578,9 +2661,17 @@ function openPicker(anchor, target) {
     ${asksScope ? `
     <fieldset class="cpick-scope">
       <legend>Apply it to</legend>
-      <label><input type="radio" name="cp-scope" value="one" checked> Just this box</label>
-      <label><input type="radio" name="cp-scope" value="all"> ${esc(target.everyLabel || 'Every week')}</label>
-    </fieldset>` : `<p class="cpick-note">Applies to every week.</p>`}
+      ${scopes.map((s, i) => `<label><input type="radio" name="cp-scope" value="${esc(s.v)}" ${i === 0 ? 'checked' : ''}> ${esc(s.label)}</label>`).join('')}
+    </fieldset>` : (target.range ? '' : `<p class="cpick-note">Applies to every week.</p>`)}
+    ${target.range ? `
+    <div class="cpick-range" id="cp-range" ${asksScope ? 'hidden' : ''}>
+      <span class="cpick-range-t">Which dates?</span>
+      <div class="cpick-range-row">
+        <label>From <input type="date" id="cp-from" value="${esc(target.rangeFrom || '')}"></label>
+        <label>Until <input type="date" id="cp-to" value="${esc(target.rangeTo || '')}"></label>
+      </div>
+      <span class="cpick-range-h">Leave these alone for the whole year, or pick dates so it starts or stops partway through. Handy when classes switch at the nine weeks or the semester.</span>
+    </div>` : ''}
     <div class="cpick-act">
       <button type="button" class="btn ghost" id="cp-clear">Remove colour</button>
       <button type="button" class="btn primary" id="cp-ok">Apply</button>
@@ -2630,7 +2721,26 @@ function openPicker(anchor, target) {
     free.setAttribute('aria-expanded', 'true');
   });
 
-  wrap.querySelector('#cp-clear').onclick = () => { target.apply(null, 'one'); closePicker(); };
+  /* The calendar boxes only appear once a recurring scope is chosen — "just
+     this box" has no dates to ask about. */
+  const rangeEl = wrap.querySelector('#cp-range');
+  const curScope = () => asksScope
+    ? (wrap.querySelector('input[name="cp-scope"]:checked') || {}).value || scopes[0].v
+    : 'all';
+  const syncRange = () => { if (rangeEl && asksScope) rangeEl.hidden = !rangeScopes.includes(curScope()); };
+  if (asksScope) wrap.querySelectorAll('input[name="cp-scope"]').forEach(r => r.addEventListener('change', syncRange));
+  /* Untouched dates mean "the whole year" and land in the standing rule, the
+     same place they landed before dates existed. Only an edited date makes a
+     ranged rule, so old backups and new stay the same shape until she uses it. */
+  const rangeOf = () => {
+    if (!target.range || !rangeEl || rangeEl.hidden) return null;
+    const f = (wrap.querySelector('#cp-from') || {}).value || '';
+    const t = (wrap.querySelector('#cp-to') || {}).value || '';
+    if ((f === (target.rangeFrom || '') || !f) && (t === (target.rangeTo || '') || !t)) return null;
+    const from = f || target.rangeFrom || '', to = t || target.rangeTo || '';
+    return (from && to && to < from) ? { from: to, to: from } : { from, to };
+  };
+  wrap.querySelector('#cp-clear').onclick = () => { target.apply(null, curScope(), rangeOf()); closePicker(); };
   wrap.querySelector('#cp-ok').onclick = () => {
     const name = nameIn.value.trim();
     let id = chosenId;
@@ -2645,10 +2755,7 @@ function openPicker(anchor, target) {
       colourById(id).name = name;      // renaming here renames it everywhere
     }
     if (!id) { closePicker(); return; }
-    const scope = asksScope
-      ? (wrap.querySelector('input[name="cp-scope"]:checked') || {}).value || 'one'
-      : 'all';
-    target.apply(id, scope);
+    target.apply(id, curScope(), rangeOf());
     closePicker();
   };
 
@@ -2720,6 +2827,8 @@ function usedColourIds() {
   for (const v of Object.values(S.fillDow)) used.add(v);
   for (const v of Object.values(S.fillCol)) used.add(v);
   for (const v of Object.values(S.fillDay)) used.add(v);
+  for (const r of S.fillRules) used.add(r.c);
+  for (const r of S.fillColRules) used.add(r.c);
   for (const box of Object.values(S.lineFill || {})) for (const v of Object.values(box)) used.add(v);
   return used;
 }
@@ -2831,10 +2940,15 @@ function wireColourHandles(){
       ev.stopPropagation(); ev.preventDefault();
       const tok=btn.dataset.paint, [kind,a,b]=tok.split(':');
       if(kind==='col'){
-        openPicker(btn,{ kind:'col', label:a==='lunch'?'Lunch column':a==='notes'?'Notes column':'Period '+a+' column',
-          currentId:S.fillCol[a==='lunch'||a==='notes'?a:+a]||'',
-          apply:(id)=>{ const key=(a==='lunch'||a==='notes')?a:+a;
-            if(id) S.fillCol[key]=id; else delete S.fillCol[key]; persist(); render(); } });
+        const w=YEAR[curWeek];
+        openPicker(btn,{ kind:'col', label:a==='lunch'?'Lunch column':a==='notes'?'Notes column':periodName(+a)+' column',
+          currentId:(w?colFillId(a==='lunch'||a==='notes'?a:+a,w):S.fillCol[a==='lunch'||a==='notes'?a:+a])||'',
+          range:true, rangeFrom:S.config.yearStart, rangeTo:S.config.yearEnd,
+          apply:(id,scope,range)=>{ const key=(a==='lunch'||a==='notes')?a:+a;
+            if(id&&range) S.fillColRules.push({c:id,col:key,from:range.from,to:range.to});
+            else if(id) S.fillCol[key]=id;
+            else { delete S.fillCol[key]; S.fillColRules=S.fillColRules.filter(r=>String(r.col)!==String(key)); }
+            persist(); render(); } });
       } else if(kind==='day'){
         openPicker(btn,{ kind:'day', label:DAYNAMES[+a]+' label, every week',
           currentId:S.fillDay[+a]||'',
@@ -2850,12 +2964,37 @@ function wireColourHandles(){
             persist(); render(); } });
       } else if(kind==='cell'){
         const d=byIso[a]; if(!d) return; const p=+b;
-        openPicker(btn,{ kind:'cell', label:DAYNAMES[d.dow]+' '+niceDate(d.iso)+' · period '+p,
-          everyLabel:'Every '+DAYNAMES[d.dow]+' period '+p,
-          currentId:(()=>{const k=cellKey(d,p);return (k in S.fill)?S.fill[k]:(S.fillDow[d.dow+'|'+p]||'');})(),
-          apply:(id,scope)=>{
-            const k=cellKey(d,p), dk=d.dow+'|'+p;
-            if(scope==='all'){ if(id) S.fillDow[dk]=id; else delete S.fillDow[dk]; delete S.fill[k]; }
+        openPicker(btn,{ kind:'cell', label:DAYNAMES[d.dow]+' '+niceDate(d.iso)+' · '+periodName(p,true),
+          scopes:[
+            {v:'one',   label:'Just this box'},
+            {v:'day',   label:'Every period this day'},
+            {v:'all',   label:'Every '+DAYNAMES[d.dow]+' '+periodName(p,true)},
+            {v:'dowall',label:'Every '+DAYNAMES[d.dow]+', every period'},
+          ],
+          range:true, rangeFrom:S.config.yearStart, rangeTo:S.config.yearEnd,
+          currentId:(()=>{const k=cellKey(d,p);return (k in S.fill)?S.fill[k]:((rangeRuleFor(d,p)||{}).c||S.fillDow[d.dow+'|'+p]||'');})(),
+          apply:(id,scope,range)=>{
+            const k=cellKey(d,p), dk=d.dow+'|'+p, per=S.config.periods;
+            if(scope==='day'){
+              /* One-offs for every period of this one day — Jessie's "so I
+                 don't have to change the colour of every box on that day". */
+              for(let q=1;q<=per;q++){ const qk=cellKey(d,q); if(id) S.fill[qk]=id; else delete S.fill[qk]; }
+            } else if(scope==='all'||scope==='dowall'){
+              if(id&&range){
+                S.fillRules.push({c:id,dow:d.dow,p:scope==='all'?p:0,from:range.from,to:range.to});
+                delete S.fill[k];              // a one-off here would mask what she just asked for
+              } else if(id){
+                if(scope==='all') S.fillDow[dk]=id;
+                else for(let q=1;q<=per;q++) S.fillDow[d.dow+'|'+q]=id;
+                delete S.fill[k];
+              } else if(scope==='all'){
+                delete S.fillDow[dk]; delete S.fill[k];
+                S.fillRules=S.fillRules.filter(r=>!(r.dow===d.dow&&+r.p===p));
+              } else {
+                for(let q=1;q<=per;q++){ delete S.fillDow[d.dow+'|'+q]; delete S.fill[cellKey(d,q)]; }
+                S.fillRules=S.fillRules.filter(r=>r.dow!==d.dow);
+              }
+            }
             else { if(id) S.fill[k]=id; else delete S.fill[k]; }
             persist(); render(); } });
       }
@@ -2940,7 +3079,7 @@ function openMergeScope(anchor,d,p,span){
   wrap.setAttribute('role','dialog');
   wrap.setAttribute('aria-label','Merge scope');
   wrap.innerHTML=`
-    <p class="cpick-t">${span>1?'Merge':'Unmerge'} ${esc(DAYNAMES[d.dow])} period ${p}</p>
+    <p class="cpick-t">${span>1?'Merge':'Unmerge'} ${esc(DAYNAMES[d.dow])} ${esc(periodName(p,true))}</p>
     <p class="cpick-note">${span>1?'It will span '+span+' periods.':'It will go back to one period.'}</p>
     <div class="cpick-act" style="flex-direction:column;align-items:stretch;gap:6px">
       <button type="button" class="btn primary" id="mg-one">Just this week</button>
@@ -2983,15 +3122,21 @@ function renderWeek(){
   ensureColourState();
   const hStyle=(id)=>{ const col=colourById(id); return col
       ? ` class="filled" style="--cell-fill:${col.hex};--cell-ink:${inkOn(col.hex)}"` : ''; };
-  const paintBtn=(what,label)=>`<button type="button" class="paint no-print" data-paint="${what}" aria-label="Colour ${label}">◧</button>`;
+  /* Labels can carry a custom column name now, which is user text — esc here
+     covers every call site at once. */
+  const paintBtn=(what,label)=>`<button type="button" class="paint no-print" data-paint="${what}" aria-label="Colour ${esc(label)}">◧</button>`;
 
+  /* The heading text is editable in place — "many people don't call them
+     periods". The name lives in config, so it flows to the copy bar, the CSV
+     and every spoken label; emptied, it falls back to "Period n". */
+  const hce=PLAINTEXT_OK?'plaintext-only':'true';
   let head=`<tr><th class="day-h" scope="col">Day</th>`;
   for(let p=1;p<=c.periods;p++){
-    if(p===preL+1) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(S.fillCol.lunch)}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
-    head+=`<th scope="col"${hStyle(S.fillCol[p])}>Period ${p}${paintBtn('col:'+p,'the Period '+p+' column')}</th>`;
+    if(p===preL+1) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(colFillId('lunch',w))}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
+    head+=`<th scope="col"${hStyle(colFillId(p,w))}><span class="pn-edit" contenteditable="${hce}" role="textbox" spellcheck="false" data-pn="${p}" aria-label="Column name, edit to rename it" title="Click to rename">${esc(periodName(p))}</span>${paintBtn('col:'+p,'the '+periodName(p,true)+' column')}</th>`;
   }
-  if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(S.fillCol.lunch)}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
-  head+=`<th class="notes-h" scope="col"${hStyle(S.fillCol.notes)}>Notes${paintBtn('col:notes','the Notes column')}</th></tr>`;
+  if(preL===c.periods) head+=`<th class="lunch-h" scope="col" aria-label="Lunch"${hStyle(colFillId('lunch',w))}>🍎${paintBtn('col:lunch','the Lunch column')}</th>`;
+  head+=`<th class="notes-h" scope="col"${hStyle(colFillId('notes',w))}>Notes${paintBtn('col:notes','the Notes column')}</th></tr>`;
 
   /* 'true', not 'plaintext-only'. Each line inside a box is its own element so
      it can carry its own colour — she writes several notes in one box and they
@@ -3030,7 +3175,8 @@ function renderWeek(){
                 :(span>1?' class="merged"':'');
       const sp=span>1?` colspan="${span}"`:'';
       const spanNote=span>1?`, spanning ${span} periods`:'';
-      rows+=`<td data-label="Period ${p}"${sp}${fs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, period ${p}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' period '+p)}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} period ${p}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} period ${p} with the next">▶</button></span></td>`;
+      const pn=esc(periodName(p,true));
+      rows+=`<td data-label="${esc(periodName(p))}"${sp}${fs}><div class="box" contenteditable="${ce}" role="textbox" aria-multiline="true" aria-label="${dayName}${rot}, ${pn}${spanNote}" data-iso="${d.iso}" data-p="${p}" data-letter="${esc(d.letter||'')}" data-key="${esc(cellKey(d,p))}"></div>${paintBtn('cell:'+d.iso+':'+p,dayName+' '+periodName(p,true))}<span class="mergebar no-print"><button type="button" data-merge="${d.iso}:${p}:-1" aria-label="Unmerge ${dayName} ${pn}">◀</button><button type="button" data-merge="${d.iso}:${p}:1" aria-label="Merge ${dayName} ${pn} with the next">▶</button></span></td>`;
     }
     if(preL===c.periods) rows+=lunchCell(di);
     const nf=colourById(S.fill['n'+d.iso]!==undefined?S.fill['n'+d.iso]:S.fillDow['n'+d.dow]);
@@ -3060,7 +3206,7 @@ function renderWeek(){
     ${paletteHTML()}
     ${legendHTML()}
     <div class="grid-scroll"><table class="week" style="--cols:${c.periods}" aria-label="Week of ${weekLabel(w)}"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
-    <div class="footnote no-print">Tap a box to type — Enter starts a new line. Everything saves as you go.</div>`;
+    <div class="footnote no-print">Tap a box to type — Enter starts a new line. Tap a column heading to rename it. Everything saves as you go.</div>`;
 
   const gs=view.querySelector('.grid-scroll');
   view.insertBefore(bar,gs); bar.hidden=false;   // in the flow, above the grid
@@ -3076,6 +3222,27 @@ function renderWeek(){
        that cannot be coloured. Doing it on blur means the caret is already
        gone, so nothing jumps while she writes. */
     b.addEventListener('blur',()=>{ if(document.activeElement!==b) renderBoxLines(b, boxValue(b)); });
+  });
+  /* Renaming a column: type in the heading, Enter or click away to keep it,
+     Escape to put it back. Clearing it restores "Period n". */
+  view.querySelectorAll('.pn-edit').forEach(el=>{
+    const p=+el.dataset.pn;
+    el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); el.blur(); }
+      else if(e.key==='Escape'){ e.stopPropagation(); el.textContent=periodName(p); el.blur(); }
+    });
+    el.addEventListener('paste',plainPaste);
+    el.addEventListener('blur',()=>{
+      const v=el.textContent.replace(/\s+/g,' ').trim().slice(0,MAX_PERIOD_NAME);
+      const next=(v===`Period ${p}`)?'':v;
+      const names=S.config.periodNames;
+      if(next===(names[p-1]||'')){ el.textContent=periodName(p); return; }
+      while(names.length<p) names.push('');
+      names[p-1]=next;
+      while(names.length&&!names[names.length-1]) names.pop();
+      persist(); render();
+      announce(next?`Column renamed to ${next}`:`Column name back to Period ${p}`);
+    });
   });
   view.querySelectorAll('[data-gear]').forEach(g=>g.onclick=()=>openSpecial(g.dataset.gear));
   if(S.sample){
@@ -3195,11 +3362,11 @@ const barDayBtn=document.getElementById('bar-day'), barLetterBtn=document.getEle
 function onBoxFocus(b){
   if(b.dataset.p==='notes'){ hideBar(); return; }
   barCtx={iso:b.dataset.iso,p:+b.dataset.p,letter:b.dataset.letter||''};
-  document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · Period ${barCtx.p} — Ctrl+Enter reaches these buttons`;
+  document.getElementById('bar-hint').textContent=`${DAYNAMES[parseISO(barCtx.iso).getDay()]} · ${periodName(barCtx.p)} — Ctrl+Enter reaches these buttons`;
   barDayBtn.disabled=false;
   /* The label is deliberately the same length armed or disarmed: this row sits
      above the grid and must not change height as you tab across the week. */
-  if(barCtx.letter){ barLetterBtn.hidden=false; barLetterBtn.disabled=false; barLetterBtn.textContent=`Fill all ${barCtx.letter}-days (period ${barCtx.p})`; }
+  if(barCtx.letter){ barLetterBtn.hidden=false; barLetterBtn.disabled=false; barLetterBtn.textContent=`Fill all ${barCtx.letter}-days (${periodName(barCtx.p,true)})`; }
   else { barLetterBtn.hidden=true; barLetterBtn.disabled=true; }
   bar.classList.add('show');
 }
@@ -3250,7 +3417,7 @@ function doCopy(mode){
   for(const k of targets) S.cells[k]=src;
   persist(); paintCells();
   const n=targets.length, noun=n===1?'box':'boxes';
-  const what=mode==='day'?`the rest of ${DAYNAMES[parseISO(barCtx.iso).getDay()]}`:`period ${barCtx.p} of every ${barCtx.letter}-day this year`;
+  const what=mode==='day'?`the rest of ${DAYNAMES[parseISO(barCtx.iso).getDay()]}`:`${periodName(barCtx.p,true)} of every ${barCtx.letter}-day this year`;
   announce(`Copied to ${n} ${noun}: ${what}`);
   SWS.undo(`Copied to ${n} ${noun} — ${what}.`,()=>{
     for(const [k,v] of before){ if(v===undefined) delete S.cells[k]; else S.cells[k]=v; }
@@ -3327,10 +3494,15 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ------------------ setup ------------------------------------------- */
+/* One text box per period so renaming works on a phone too — the grid's
+   tap-to-rename heading only exists where the header row is on screen. */
+function periodNameInputs(n,names){
+  return Array.from({length:n},(_,i)=>`<input type="text" id="f-pn-${i+1}" maxlength="${MAX_PERIOD_NAME}" value="${esc((names&&names[i])||'')}" placeholder="Period ${i+1}" aria-label="Name for period ${i+1}">`).join('');
+}
 function renderSetup(){
   const c=S.config;
   const dayBtns=[1,2,3,4,5,6,0].map(d=>`<button class="dp ${c.workDays.includes(d)?'on':''}" data-d="${d}" aria-pressed="${c.workDays.includes(d)}" aria-label="${DAYNAMES[d]}">${DAYABBR[d]}</button>`).join('');
-  const lunchOpts=Array.from({length:c.periods+1},(_,i)=>`<option value="${i}" ${i===c.lunchAfter?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
+  const lunchOpts=Array.from({length:c.periods+1},(_,i)=>`<option value="${i}" ${i===c.lunchAfter?'selected':''}>${i===0?`Before ${esc(periodName(1,true))}`:`After ${esc(periodName(i,true))}`}</option>`).join('');
   view.innerHTML=`
   <div class="card">
     <h2>Your schedule</h2>
@@ -3345,6 +3517,12 @@ function renderSetup(){
     <div class="frow">
       <div class="field"><label for="f-periods">Periods per day</label><input type="number" id="f-periods" min="1" max="10" value="${c.periods}"></div>
       <div class="field"><label for="f-lunch">Lunch falls</label><select id="f-lunch">${lunchOpts}</select></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label id="lbl-pnames" for="f-pn-1">What you call each period</label>
+        <div class="pn-grid" id="f-pnames" role="group" aria-labelledby="lbl-pnames">${periodNameInputs(c.periods,c.periodNames)}</div>
+        <span class="hint">Optional. Call them anything: a class name, Specials A, Block 1. A blank one stays "Period". You can also rename them right on the grid by tapping a heading.</span>
+      </div>
     </div>
     <div class="frow">
       <div class="field"><label for="f-letters">Rotation letters</label><input id="f-letters" value="${esc(c.letters.join(', '))}" placeholder="A, B, C" aria-describedby="letters-hint"><span class="hint" id="letters-hint">Separated by commas — up to ${MAX_LETTERS}. A six-day cycle is 1, 2, 3, 4, 5, 6.</span></div>
@@ -3385,7 +3563,11 @@ function renderSetup(){
     const n=Math.max(1,Math.min(10,+e.target.value||6));
     e.target.value=n;
     const l=document.getElementById('f-lunch'), cur=Math.min(+l.value,n);
-    l.innerHTML=Array.from({length:n+1},(_,i)=>`<option value="${i}" ${i===cur?'selected':''}>${i===0?'Before period 1':`After period ${i}`}</option>`).join('');
+    l.innerHTML=Array.from({length:n+1},(_,i)=>`<option value="${i}" ${i===cur?'selected':''}>${i===0?`Before ${esc(periodName(1,true))}`:`After ${esc(periodName(i,true))}`}</option>`).join('');
+    /* keep whatever names she already typed while the count changes under them */
+    const pg=document.getElementById('f-pnames');
+    const typed=[...pg.querySelectorAll('input')].map(x=>x.value);
+    pg.innerHTML=periodNameInputs(n,typed);
   };
   document.getElementById('f-print').onchange=e=>{ S.config.printMode=e.target.value==='full'?'full':'compact'; applyPrintMode(); persist(); };
   document.getElementById('f-apply').onclick=applySetup;
@@ -3430,6 +3612,12 @@ function applySetup(){
   document.getElementById('f-periods').value=c.periods;
   const la=Math.round(Number(document.getElementById('f-lunch').value));
   c.lunchAfter=Number.isFinite(la)?Math.max(0,Math.min(c.periods,la)):Math.min(2,c.periods);
+  c.periodNames=Array.from({length:c.periods},(_,i)=>{
+    const el=document.getElementById('f-pn-'+(i+1));
+    const v=(el?el.value:(c.periodNames[i]||'')).replace(/\s+/g,' ').trim().slice(0,MAX_PERIOD_NAME);
+    return v===`Period ${i+1}`?'':v;      // typing the default back means "no custom name"
+  });
+  while(c.periodNames.length&&!c.periodNames[c.periodNames.length-1]) c.periodNames.pop();
   c.letters=letters.length?letters:['A'];
   c.teacher=document.getElementById('f-teacher').value.trim().slice(0,80);
   markStale(); persist();
@@ -3499,7 +3687,7 @@ function csvField(v){
 function exportCSV(){
   buildYearIfStale();
   const c=S.config;
-  const head=['Date','Weekday','Rotation',...Array.from({length:c.periods},(_,i)=>`Period ${i+1}`),'Notes'];
+  const head=['Date','Weekday','Rotation',...Array.from({length:c.periods},(_,i)=>periodName(i+1)),'Notes'];
   const lines=[head.join(',')];
   for(const w of YEAR) for(const d of w.days){
     const row=[d.iso,DAYNAMES[d.dow],d.special?d.special:(d.letter||'')];
