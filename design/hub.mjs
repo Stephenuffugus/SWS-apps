@@ -203,7 +203,8 @@ const html = `<!doctype html>
 <meta property="og:image" content="https://skywolfstudio.com/signup-sheets/marketing/stripe-thumbnail.png">
 <meta property="og:url" content="https://skywolfstudio.com/">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="./qr-maker/icon.svg" type="image/svg+xml">
+<link rel="icon" href="./brand/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="./brand/apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
