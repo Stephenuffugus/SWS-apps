@@ -4,12 +4,16 @@
 
    Generates apps/index.html: the front door to every app in the studio.
 
-   The hub deliberately does NOT wear an app skin. The apps are the pictures;
-   this is the wall they hang on, so it stays in the studio's own dark palette
-   and lets each card carry its app's accent. Seeing 23 accents laid out in a
-   grid is the clearest possible statement of "one studio, different products",
-   and the colours come from design/out/palette.json so the wall can never
-   drift from the pictures.
+   The hub wears the SAME premium setup as the business card portfolio and
+   the Lucid Winds landing (Stephen, 2026-08-19: "use the same setup as the
+   virtual portfolio and the game studio" — the earlier flat-list hub with a
+   gold border pass was not it). That means: near-black #0e1113, drifting
+   aurora, Bricolage Grotesque display type, glassy 20px-radius cards, and a
+   hero of Stephen's real thumbnails drifting in strips — the treatment the
+   business card miniaturised and credited to "the apps landing page hero".
+   Each card still carries its app's accent as the left spine; the colours
+   come from design/out/palette.json so the wall can never drift from the
+   pictures, and all art is read from disk, never regenerated.
 
      node design/hub.mjs
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -134,16 +138,16 @@ const card = ([slug, name, line, find, kind]) => {
   const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
     ? `./${slug}/marketing/thumb-256.png?v=4`
     : `./${slug}/icon.svg`;
-  return `      <a class="card" href="${href}" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
+  return `      <a class="card reveal" href="${href}" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
-        <img class="swatch" src="${art}" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img class="swatch" src="${art}" alt="" width="64" height="64" loading="lazy" decoding="async">
         <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
       </a>`;
 };
 
 const sections = CATALOGUE.map(([title, apps]) => `
     <section class="group" data-group>
-      <h2>${title}</h2>
+      <div class="section-head reveal"><h2>${title}</h2></div>
       <div class="grid">
 ${apps.map(card).join('\n')}
       </div>
@@ -160,6 +164,19 @@ const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'e
 const word = (n) => WORDS[n] || String(n);
 const Word = (n) => { const w = word(n); return w[0].toUpperCase() + w.slice(1); };
 
+/* The hero strips: every app whose real thumbnail art exists on disk, split
+   over two rows drifting opposite ways, each row doubled for the seamless
+   -50% loop. Decorative (aria-hidden); the cards below carry the links. */
+const thumbed = CATALOGUE.flatMap(([, apps]) => apps.map(a => a[0]))
+  .filter(slug => existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png')));
+const half = Math.ceil(thumbed.length / 2);
+const stripImgs = slugs => slugs.map(s =>
+  `<img src="./${s}/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async">`).join('');
+const strips = `<div class="hero-strips" aria-hidden="true">
+      <div class="apps-strip"><div class="apps-track">${stripImgs(thumbed.slice(0, half))}${stripImgs(thumbed.slice(0, half))}</div></div>
+      <div class="apps-strip rev"><div class="apps-track">${stripImgs(thumbed.slice(half))}${stripImgs(thumbed.slice(half))}</div></div>
+    </div>`;
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -167,144 +184,206 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sky Wolf Studios: ${count} free, ad-free apps</title>
 <meta name="description" content="${count} free utility apps from Sky Wolf Studios. No ads, no subscription, no tracking. ${localCount} keep everything on your device; the ${word(sharedCount)} shared ones say so.">
-<meta name="theme-color" content="#16171c">
+<meta name="theme-color" content="#0e1113">
 <meta property="og:title" content="Sky Wolf Studios: ${count} free apps">
 <meta property="og:description" content="${count} free, ad-free utilities: signup sheets, lesson planner, sub plans, PDF tools and more. ${localCount} keep everything on your device.">
-<meta property="og:image" content="https://sws-apps-9646d.web.app/signup-sheets/marketing/stripe-thumbnail.png">
+<meta property="og:image" content="https://skywolfstudio.com/signup-sheets/marketing/stripe-thumbnail.png">
+<meta property="og:url" content="https://skywolfstudio.com/">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="./qr-maker/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700;12..96,800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');</script>
 <style>
-/* Generated by design/hub.mjs — edit the catalogue there, not here. */
-@font-face{
-  font-family:'Fraunces';font-style:normal;font-weight:500 700;font-display:swap;
-  src:url(specials-planner/fonts/fraunces-latin.woff2) format('woff2');
-  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
+/* Generated by design/hub.mjs — edit the catalogue there, not here.
+   Design language shared with the business card portfolio and the arcade:
+   near-black, drifting aurora, Bricolage Grotesque, glassy cards. */
 :root{
   color-scheme:dark;
-  --bg:#16171c; --bg-2:#1c1e24; --surface:#212430; --line:#2e3240; --line-2:#454b5e;
-  --ink:#eceef4; --ink-2:#a7adbe; --ink-3:#7f8698;
-  --cream:#f2e3c1; --teal:#4fd1e0;
-  --gold:#D9B36C; --gold-dim:rgba(217,179,108,.28); --gold-glow:rgba(217,179,108,.08);
+  --bg:#0e1113; --surface:#161b1e; --ink:#eef0ea; --sub:#b8bfb6; --line:#262d30;
+  --emerald:#46b98c; --emerald-deep:#1f6f54; --steel:#7fa3c9; --gold:#d9a441;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:32px; --s8:48px;
-  --r:14px;
-  --ease:cubic-bezier(.32,.72,0,1);
+  --ease:cubic-bezier(.2,.7,.2,1);
 }
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+html,body{overflow-x:hidden}
 body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font:1rem/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(60rem 32rem at 8% -8%, rgba(217,179,108,.07), transparent 60%),
-    radial-gradient(52rem 30rem at 96% 0%, rgba(242,227,193,.06), transparent 55%);
-  background-attachment:fixed;
+  margin:0; color:var(--ink);
+  background:
+    radial-gradient(900px 500px at 15% -5%, rgba(70,185,140,.10), transparent 60%),
+    radial-gradient(800px 500px at 110% 30%, rgba(127,163,201,.09), transparent 60%),
+    radial-gradient(700px 600px at 50% 110%, rgba(217,164,65,.06), transparent 60%),
+    var(--bg);
+  font-family:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
   padding-bottom:calc(var(--s8) + env(safe-area-inset-bottom));
 }
 .wrap{max-width:74rem; margin-inline:auto; padding-inline:max(var(--s5), env(safe-area-inset-left))}
 
+/* ---------- drifting aurora ---------- */
+.aurora{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
+.aurora span{position:absolute; border-radius:50%; filter:blur(100px)}
+.aurora .a1{width:620px;height:620px;background:rgba(70,185,140,.14);top:-180px;left:-160px;animation:drift1 24s ease-in-out infinite}
+.aurora .a2{width:520px;height:520px;background:rgba(127,163,201,.12);bottom:-160px;right:-140px;animation:drift2 28s ease-in-out infinite}
+.aurora .a3{width:440px;height:440px;background:rgba(217,164,65,.09);top:44%;left:60%;animation:drift3 32s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(70px,50px) scale(1.12)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-40px) scale(1.15)}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,40px) scale(.9)}}
+
 .skip{position:absolute;left:var(--s4);top:var(--s4);z-index:20;padding:var(--s3) var(--s4);
-  background:var(--teal);color:#06222a;border-radius:10px;font-weight:600;text-decoration:none;
+  background:var(--emerald);color:#06231a;border-radius:10px;font-weight:600;text-decoration:none;
   transform:translateY(-200%);transition:transform .2s var(--ease)}
 .skip:focus-visible{transform:none}
 
-header{padding:var(--s8) 0 var(--s6); text-align:center}
+/* ---------- hero ---------- */
+header{padding:var(--s8) 0 var(--s5); text-align:center}
 h1{
-  font-family:'Fraunces',Georgia,serif; font-weight:600;
-  font-size:clamp(2rem,6vw,3rem); line-height:1.05; letter-spacing:-.02em;
-  margin:0 0 var(--s3); color:var(--cream); text-wrap:balance;
+  font-weight:800; font-size:clamp(2.6rem,7vw,3.6rem);
+  letter-spacing:-1.4px; line-height:.98; margin:0;
 }
+h1 .dot{color:var(--gold)}
 .promise{
   display:inline-flex; align-items:center; gap:var(--s2); flex-wrap:wrap; justify-content:center;
-  margin:0 auto; padding:var(--s3) var(--s5);
-  background:var(--surface); border:1px solid var(--gold-dim); border-radius:999px;
-  box-shadow:0 0 16px var(--gold-glow);
-  color:var(--ink-2); font-size:.9375rem;
+  margin:var(--s4) auto 0; padding:var(--s3) var(--s5);
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:999px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+  color:var(--sub); font-size:.9375rem;
 }
 .promise b{color:var(--ink); font-weight:600}
-.promise svg{width:18px;height:18px;color:var(--gold);flex:none}
+.promise svg{width:18px;height:18px;color:var(--emerald);flex:none}
 
+/* Stephen's thumbnails on the move: the apps landing page hero itself,
+   the treatment the business card borrowed in miniature */
+.hero-strips{margin:var(--s6) auto 0; max-width:62rem}
+.apps-strip{overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
+.apps-strip + .apps-strip{margin-top:12px}
+.apps-track{display:flex; gap:12px; width:max-content; animation:apps-drift 55s linear infinite}
+.apps-strip.rev .apps-track{animation-name:apps-drift-rev; animation-duration:70s}
+.apps-track img{width:84px;height:84px;border-radius:18px;flex:none;display:block;
+  border:1px solid rgba(255,255,255,.10); box-shadow:0 10px 26px rgba(0,0,0,.45)}
+@keyframes apps-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes apps-drift-rev{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+
+/* ---------- search ---------- */
 .searchbar{position:sticky; top:0; z-index:10; padding:var(--s4) 0;
   background:linear-gradient(var(--bg) 72%, transparent); margin-bottom:var(--s3)}
 .search{position:relative; max-width:32rem; margin-inline:auto}
 .search input{
   width:100%; min-height:48px; padding:0 var(--s5) 0 44px;
   font-size:1rem; font-family:inherit; color:var(--ink);
-  background:var(--bg-2); border:1px solid var(--line-2); border-radius:999px;
+  background:var(--surface); border:1px solid var(--line); border-radius:999px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
 }
-.search input::placeholder{color:var(--ink-3)}
+.search input::placeholder{color:var(--sub)}
 .search svg{position:absolute; left:16px; top:50%; transform:translateY(-50%);
-  width:18px; height:18px; color:var(--ink-3); pointer-events:none}
-.search input:focus-visible{outline:2px solid var(--gold); outline-offset:2px; border-color:var(--gold)}
+  width:18px; height:18px; color:var(--sub); pointer-events:none}
+.search input:focus-visible{outline:2px solid var(--emerald); outline-offset:2px; border-color:var(--emerald)}
 
-.group{margin-bottom:var(--s7)}
-.group h2{
-  font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.14em;
-  color:var(--gold); margin:0 0 var(--s4);
+/* ---------- sections ---------- */
+.group{margin-bottom:var(--s6)}
+.section-head{display:flex; align-items:center; gap:12px; margin:38px 0 16px}
+.section-head h2{
+  font-size:20px; font-weight:700; letter-spacing:-.3px;
+  color:var(--ink); white-space:nowrap; margin:0;
 }
+.section-head::after{
+  content:""; flex:1; height:2px; border-radius:1px;
+  background:linear-gradient(90deg, var(--emerald), var(--gold), var(--steel), transparent);
+  opacity:.45;
+}
+.js .section-head::after{transform:scaleX(.15); transform-origin:left; transition:transform .9s var(--ease)}
+.js .section-head.in::after{transform:scaleX(1)}
 .grid{display:grid; gap:var(--s3); grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
 
+/* ---------- cards ---------- */
 a.card{
   position:relative; display:flex; gap:var(--s4); align-items:flex-start;
   padding:var(--s4) var(--s5) var(--s4) var(--s4);
-  background:var(--surface); border:1px solid var(--gold-dim); border-radius:var(--r);
-  box-shadow:0 0 14px var(--gold-glow);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0)), var(--surface);
+  border:1px solid rgba(255,255,255,.06); border-radius:20px;
+  box-shadow:0 14px 44px rgba(0,0,0,.35);
   text-decoration:none; color:inherit; overflow:hidden;
-  transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease), box-shadow .14s var(--ease);
+  transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
 }
-/* The app's own accent, as a spine down the left edge. Twenty-three of these
+/* The app's own accent, as a spine down the left edge. Twenty-nine of these
    in a grid is the portfolio's colour system stated in one glance. */
 a.card::before{
   content:''; position:absolute; inset:0 auto 0 0; width:3px; background:var(--app);
 }
-a.card:hover{transform:translateY(-2px); border-color:var(--gold); background:#242835;
-  box-shadow:0 0 22px rgba(217,179,108,.16)}
+a.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
 a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
 .swatch{
-  width:56px; height:56px; flex:none; border-radius:12px; margin-top:2px;
+  width:64px; height:64px; flex:none; border-radius:16px; margin-top:2px;
   background:var(--app-deep);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 8px 22px rgba(0,0,0,.4);
+  transition:transform .6s var(--ease);
 }
+a.card:hover .swatch{transform:scale(1.06)}
 .meta{display:block; min-width:0}
-.meta b{display:block; font-size:1.0625rem; font-weight:600; letter-spacing:-.01em; margin-bottom:2px}
-.meta span{display:block; color:var(--ink-2); font-size:.875rem; line-height:1.4}
+.meta b{display:block; font-size:1.0625rem; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
+.meta span{display:block; color:var(--sub); font-size:.875rem; line-height:1.4}
 /* Two classes deep on purpose: '.meta span' above is (0,1,1) and would
    otherwise win and force this back to a full-width block. */
 .meta .tag{
   display:inline-block; margin-top:var(--s2); padding:2px var(--s2);
-  background:var(--bg-2); border:1px solid var(--line-2); border-radius:999px;
-  color:var(--ink-2); font-size:.6875rem; font-weight:600;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); border-radius:999px;
+  color:var(--sub); font-family:"Space Mono",monospace; font-size:.6875rem; font-weight:700;
   letter-spacing:.04em; text-transform:uppercase; line-height:1.5;
 }
 
-.empty{display:none; text-align:center; color:var(--ink-2); padding:var(--s8) var(--s4)}
+/* ---------- scroll reveal ---------- */
+.js .reveal{opacity:0; transform:translateY(26px);
+  transition:opacity .7s var(--ease), transform .85s var(--ease); will-change:opacity,transform}
+.js .reveal.in{opacity:1; transform:none}
+
+.empty{display:none; text-align:center; color:var(--sub); padding:var(--s8) var(--s4)}
 .empty.show{display:block}
 
+/* ---------- footer ---------- */
 footer{
-  margin-top:var(--s8); padding-top:var(--s6); border-top:1px solid var(--gold-dim);
-  text-align:center; color:var(--ink-3); font-size:.875rem; line-height:1.6;
+  margin-top:var(--s8); padding-top:var(--s6); border-top:1px solid var(--line);
+  text-align:center; color:var(--sub); font-size:.875rem; line-height:1.6;
 }
-footer a{color:var(--ink-2)}
-footer a:hover{color:var(--gold)}
+footer a{color:var(--ink)}
+footer a:hover{color:var(--emerald)}
 footer .tip{color:var(--gold)}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; padding:12px 22px;
+  border-radius:999px; font-size:15px; font-weight:600; letter-spacing:.2px;
+  text-decoration:none; cursor:pointer; font-family:inherit;
+  border:1px solid rgba(255,255,255,.09); color:var(--ink); background:rgba(255,255,255,.04);
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+  transition:transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.btn:hover{transform:translateY(-1px); border-color:var(--emerald); background:rgba(255,255,255,.07); color:var(--ink)}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important}
-  a.card:hover{transform:none}
+  .aurora span,.apps-track{animation:none !important}
+  a.card:hover,.btn:hover{transform:none}
+  .js .reveal{opacity:1 !important; transform:none !important}
+  .js .section-head::after{transform:none !important}
 }
 </style>
 </head>
 <body>
+<div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
 <a class="skip" href="#apps">Skip to the apps</a>
 <div class="wrap">
 
   <header>
-    <h1>Sky Wolf Studios</h1>
+    <h1>Sky Wolf Studios<span class="dot">.</span></h1>
     <p class="promise">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device. The ${word(sharedCount)} shared ones are marked.</span>
     </p>
+    ${strips}
   </header>
 
   <div class="searchbar">
@@ -323,7 +402,7 @@ ${sections}
 
   <footer>
     <p>Every app here is free and always will be. If one saved your day, each has a tip jar. <span class="tip">&#9829;</span></p>
-    <p style="margin-top:12px"><a href="https://lucidwinds.com/portal">We make games too. Play free in the Arcade</a></p>
+    <p style="margin-top:16px"><a class="btn" href="https://lucidwinds.com/portal">&#127918; We make games too. Play free in the Arcade</a></p>
     <p style="margin-top:12px"><a href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studios%20Apps%20feedback">Send feedback</a></p>
     <p style="margin-top:20px">Sky Wolf Studios &middot; SWS Strategic Media LLC</p>
   </footer>
@@ -365,6 +444,20 @@ ${sections}
 })();
 </script>
 <script>
+/* Scroll reveal, same feel as the portfolio. The .js gate on <html> means a
+   browser with no JS (or no IntersectionObserver) shows everything plainly. */
+(function(){
+  var els = [].slice.call(document.querySelectorAll('.reveal'));
+  if (!('IntersectionObserver' in window)){ els.forEach(function(el){ el.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: .08 });
+  els.forEach(function(el){ io.observe(el); });
+})();
+</script>
+<script>
 /* Install affordance: Chrome hands over a prompt, iOS gets directions. */
 (function(){
   if (matchMedia('(display-mode: standalone)').matches) return;
@@ -373,8 +466,9 @@ ${sections}
     var a = document.getElementById('swsInstall');
     if (a) return a;
     a = document.createElement('button');
-    a.id = 'swsInstall'; a.type = 'button'; a.textContent = '\u2913 Install the studio';
-    a.style.cssText = 'font:inherit;font-size:13px;color:inherit;opacity:.8;background:none;border:1px solid currentColor;border-radius:10px;padding:8px 16px;margin-top:14px;cursor:pointer';
+    a.id = 'swsInstall'; a.type = 'button'; a.className = 'btn';
+    a.textContent = '\u2913 Install the studio';
+    a.style.marginTop = '14px';
     document.querySelector('footer').appendChild(a);
     return a;
   }
