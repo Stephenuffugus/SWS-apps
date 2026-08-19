@@ -138,11 +138,24 @@ const card = ([slug, name, line, find, kind]) => {
   const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
     ? `./${slug}/marketing/thumb-256.png?v=4`
     : `./${slug}/icon.svg`;
-  return `      <a class="card reveal" href="${href}" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
+  /* Per-card install: a page can only prompt for ITS OWN app, so the ⤓ opens
+     the app with ?sws-install=1 and the app's studio-wide install affordance
+     greets them as a banner instead of hiding in the footer. Only offered
+     where that affordance actually exists in the app's HTML. */
+  const installable = !OFFSITE[slug]
+    && existsSync(join(HERE, '..', 'apps', slug, 'index.html'))
+    && readFileSync(join(HERE, '..', 'apps', slug, 'index.html'), 'utf8').includes('swsInstall');
+  const get = installable
+    ? `
+        <a class="getbtn" href="./${slug}/?sws-install=1" aria-label="Install ${name.replace(/"/g, '&quot;')}" title="Install this app">&#10515;</a>`
+    : '';
+  return `      <div class="card reveal" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
          style="--app:${p.darkAccent};--app-deep:${p.accent}">
-        <img class="swatch" src="${art}" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
-      </a>`;
+        <a class="applink" href="${href}">
+          <img class="swatch" src="${art}" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
+        </a>${get}
+      </div>`;
 };
 
 const sections = CATALOGUE.map(([title, apps]) => `
@@ -301,22 +314,36 @@ h1 .dot{color:var(--gold)}
 .grid{display:grid; gap:var(--s3); grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
 
 /* ---------- cards ---------- */
-a.card{
-  position:relative; display:flex; gap:var(--s4); align-items:flex-start;
-  padding:var(--s4) var(--s5) var(--s4) var(--s4);
+.card{
+  position:relative; display:flex;
   background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0)), var(--surface);
   border:1px solid rgba(255,255,255,.06); border-radius:20px;
   box-shadow:0 14px 44px rgba(0,0,0,.35);
-  text-decoration:none; color:inherit; overflow:hidden;
+  overflow:hidden;
   transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
 }
 /* The app's own accent, as a spine down the left edge. Twenty-nine of these
    in a grid is the portfolio's colour system stated in one glance. */
-a.card::before{
+.card::before{
   content:''; position:absolute; inset:0 auto 0 0; width:3px; background:var(--app);
 }
-a.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
-a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
+.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
+.applink{
+  display:flex; gap:var(--s4); align-items:flex-start; flex:1; min-width:0;
+  padding:var(--s4) 52px var(--s4) var(--s4);
+  text-decoration:none; color:inherit;
+}
+.applink:focus-visible{outline:2px solid var(--app); outline-offset:-2px; border-radius:20px}
+.getbtn{
+  position:absolute; top:10px; right:10px; width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; border:1px solid rgba(255,255,255,.12);
+  color:var(--sub); background:rgba(255,255,255,.03);
+  text-decoration:none; font-size:16px; line-height:1;
+  transition:color .12s ease, border-color .12s ease, background .12s ease;
+}
+.getbtn:hover{color:#fff; border-color:var(--emerald); background:var(--emerald-deep)}
+.getbtn:focus-visible{outline:2px solid var(--emerald); outline-offset:2px}
 .swatch{
   width:64px; height:64px; flex:none; border-radius:16px; margin-top:2px;
   background:var(--app-deep);
@@ -324,7 +351,7 @@ a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
   box-shadow:0 8px 22px rgba(0,0,0,.4);
   transition:transform .6s var(--ease);
 }
-a.card:hover .swatch{transform:scale(1.06)}
+.card:hover .swatch{transform:scale(1.06)}
 .meta{display:block; min-width:0}
 .meta b{display:block; font-size:1.0625rem; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
 .meta span{display:block; color:var(--sub); font-size:.875rem; line-height:1.4}
@@ -362,11 +389,25 @@ footer .tip{color:var(--gold)}
   transition:transform .12s ease, border-color .12s ease, background .12s ease;
 }
 .btn:hover{transform:translateY(-1px); border-color:var(--emerald); background:rgba(255,255,255,.07); color:var(--ink)}
+.btn.primary{
+  position:relative; overflow:hidden;
+  background:linear-gradient(135deg, var(--emerald), var(--emerald-deep));
+  color:#fff; border-color:transparent;
+  box-shadow:0 8px 26px rgba(70,185,140,.28);
+}
+.btn.primary:hover{color:#fff}
+.btn.primary::after{
+  content:""; position:absolute; top:0; left:-130%; width:55%; height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.30), transparent);
+  transform:skewX(-20deg); transition:left .7s ease; pointer-events:none;
+}
+.btn.primary:hover::after{left:150%}
+.cta{margin:var(--s5) 0 0}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important}
   .aurora span,.apps-track{animation:none !important}
-  a.card:hover,.btn:hover{transform:none}
+  .card:hover,.btn:hover{transform:none}
   .js .reveal{opacity:1 !important; transform:none !important}
   .js .section-head::after{transform:none !important}
 }
@@ -383,6 +424,7 @@ footer .tip{color:var(--gold)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device. The ${word(sharedCount)} shared ones are marked.</span>
     </p>
+    <p class="cta"><button class="btn primary" id="installStudio" hidden>&#10515; Save the studio to your home screen</button></p>
     ${strips}
   </header>
 
@@ -458,27 +500,22 @@ ${sections}
 })();
 </script>
 <script>
-/* Install affordance: Chrome hands over a prompt, iOS gets directions. */
+/* The studio install button, up top where Stephen wants it. Always visible
+   when the page is not already installed: Chrome hands over the real prompt,
+   iOS gets Share-sheet directions, everything else gets its menu path. */
 (function(){
-  if (matchMedia('(display-mode: standalone)').matches) return;
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return;
   var evt = null;
-  function place(){
-    var a = document.getElementById('swsInstall');
-    if (a) return a;
-    a = document.createElement('button');
-    a.id = 'swsInstall'; a.type = 'button'; a.className = 'btn';
-    a.textContent = '\u2913 Install the studio';
-    a.style.marginTop = '14px';
-    document.querySelector('footer').appendChild(a);
-    return a;
-  }
-  addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault(); evt = e;
-    place().onclick = function(){ if (evt) evt.prompt(); };
+  var b = document.getElementById('installStudio');
+  b.hidden = false;
+  addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); evt = e; });
+  b.addEventListener('click', function(){
+    if (evt){ evt.prompt(); return; }
+    if (/iPhone|iPad/.test(navigator.userAgent)){
+      alert('To install: tap the Share button, then "Add to Home Screen".'); return;
+    }
+    alert('To install: open your browser menu and choose "Install app" or "Add to Home Screen".');
   });
-  if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone){
-    place().onclick = function(){ alert('To install: tap the Share button, then "Add to Home Screen".'); };
-  }
 })();
 </script>
 </body>

@@ -2537,6 +2537,11 @@ else if (typeof document !== 'undefined') document.addEventListener('DOMContentL
     var host = document.querySelector('footer.colophon, .colophon, .footnote, footer');
     if (host){ host.appendChild(document.createElement('br')); host.appendChild(a); }
     else { a.style.cssText += ';position:fixed;right:12px;bottom:76px;z-index:60'; document.body.appendChild(a); }
+    /* arrived from the hub's per-app install button: the affordance stops
+       hiding in the footer and greets them as a banner */
+    if (/[?&]sws-install/.test(location.search)){
+      a.style.cssText += ';position:fixed;left:50%;right:auto;top:calc(10px + env(safe-area-inset-top));bottom:auto;transform:translateX(-50%);z-index:99;opacity:1;font-size:15px;font-weight:600;padding:12px 22px;border-radius:999px;background:#1f6f54;color:#fff;border:0;box-shadow:0 8px 26px rgba(0,0,0,.45)';
+    }
     return a;
   }
   addEventListener('beforeinstallprompt', function(e){

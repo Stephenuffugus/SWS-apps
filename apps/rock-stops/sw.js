@@ -8,7 +8,7 @@
 
    Photos and finds are NOT cached here. They live in IndexedDB, which the
    service worker never touches and never needs to. */
-const VERSION = 'float-v7';
+const VERSION = 'float-v8';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './privacy.html'];
 
 self.addEventListener('install', (e) => {

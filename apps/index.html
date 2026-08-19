@@ -122,22 +122,36 @@ h1 .dot{color:var(--gold)}
 .grid{display:grid; gap:var(--s3); grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
 
 /* ---------- cards ---------- */
-a.card{
-  position:relative; display:flex; gap:var(--s4); align-items:flex-start;
-  padding:var(--s4) var(--s5) var(--s4) var(--s4);
+.card{
+  position:relative; display:flex;
   background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0)), var(--surface);
   border:1px solid rgba(255,255,255,.06); border-radius:20px;
   box-shadow:0 14px 44px rgba(0,0,0,.35);
-  text-decoration:none; color:inherit; overflow:hidden;
+  overflow:hidden;
   transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
 }
 /* The app's own accent, as a spine down the left edge. Twenty-nine of these
    in a grid is the portfolio's colour system stated in one glance. */
-a.card::before{
+.card::before{
   content:''; position:absolute; inset:0 auto 0 0; width:3px; background:var(--app);
 }
-a.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
-a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
+.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
+.applink{
+  display:flex; gap:var(--s4); align-items:flex-start; flex:1; min-width:0;
+  padding:var(--s4) 52px var(--s4) var(--s4);
+  text-decoration:none; color:inherit;
+}
+.applink:focus-visible{outline:2px solid var(--app); outline-offset:-2px; border-radius:20px}
+.getbtn{
+  position:absolute; top:10px; right:10px; width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%; border:1px solid rgba(255,255,255,.12);
+  color:var(--sub); background:rgba(255,255,255,.03);
+  text-decoration:none; font-size:16px; line-height:1;
+  transition:color .12s ease, border-color .12s ease, background .12s ease;
+}
+.getbtn:hover{color:#fff; border-color:var(--emerald); background:var(--emerald-deep)}
+.getbtn:focus-visible{outline:2px solid var(--emerald); outline-offset:2px}
 .swatch{
   width:64px; height:64px; flex:none; border-radius:16px; margin-top:2px;
   background:var(--app-deep);
@@ -145,7 +159,7 @@ a.card:focus-visible{outline:2px solid var(--app); outline-offset:2px}
   box-shadow:0 8px 22px rgba(0,0,0,.4);
   transition:transform .6s var(--ease);
 }
-a.card:hover .swatch{transform:scale(1.06)}
+.card:hover .swatch{transform:scale(1.06)}
 .meta{display:block; min-width:0}
 .meta b{display:block; font-size:1.0625rem; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
 .meta span{display:block; color:var(--sub); font-size:.875rem; line-height:1.4}
@@ -183,11 +197,25 @@ footer .tip{color:var(--gold)}
   transition:transform .12s ease, border-color .12s ease, background .12s ease;
 }
 .btn:hover{transform:translateY(-1px); border-color:var(--emerald); background:rgba(255,255,255,.07); color:var(--ink)}
+.btn.primary{
+  position:relative; overflow:hidden;
+  background:linear-gradient(135deg, var(--emerald), var(--emerald-deep));
+  color:#fff; border-color:transparent;
+  box-shadow:0 8px 26px rgba(70,185,140,.28);
+}
+.btn.primary:hover{color:#fff}
+.btn.primary::after{
+  content:""; position:absolute; top:0; left:-130%; width:55%; height:100%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.30), transparent);
+  transform:skewX(-20deg); transition:left .7s ease; pointer-events:none;
+}
+.btn.primary:hover::after{left:150%}
+.cta{margin:var(--s5) 0 0}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important}
   .aurora span,.apps-track{animation:none !important}
-  a.card:hover,.btn:hover{transform:none}
+  .card:hover,.btn:hover{transform:none}
   .js .reveal{opacity:1 !important; transform:none !important}
   .js .section-head::after{transform:none !important}
 }
@@ -204,6 +232,7 @@ footer .tip{color:var(--gold)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span><b>No ads. No subscription. No tracking.</b> 25 keep everything on your device. The four shared ones are marked.</span>
     </p>
+    <p class="cta"><button class="btn primary" id="installStudio" hidden>&#10515; Save the studio to your home screen</button></p>
     <div class="hero-strips" aria-hidden="true">
       <div class="apps-strip"><div class="apps-track"><img src="./sitter-sheet/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./baby-log/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./hush/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./pill-schedule/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./caregiver-log/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./grocery-list/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./specials-planner/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./sub-plans/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./grade-sheet/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./signup-sheets/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./team-parent/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./secret-santa/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./wedding-timeline/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./seating-chart/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./bracket-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./sitter-sheet/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./baby-log/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./hush/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./pill-schedule/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./caregiver-log/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./grocery-list/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./specials-planner/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./sub-plans/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./grade-sheet/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./signup-sheets/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./team-parent/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./secret-santa/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./wedding-timeline/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./seating-chart/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./bracket-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"></div></div>
       <div class="apps-strip rev"><div class="apps-track"><img src="./wheel-picker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./scan-to-pdf/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./pdf-tools/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./image-compressor/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./signature-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./qr-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./moving-boxes/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./packing-list/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./home-inventory/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./bill-splitter/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./cross-off/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./overload/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./astravault/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./rock-stops/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./wheel-picker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./scan-to-pdf/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./pdf-tools/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./image-compressor/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./signature-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./qr-maker/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./moving-boxes/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./packing-list/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./home-inventory/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./bill-splitter/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./cross-off/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./overload/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./astravault/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"><img src="./rock-stops/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async"></div></div>
@@ -223,199 +252,283 @@ footer .tip{color:var(--gold)}
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Family &amp; Home</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./sitter-sheet/" data-find="sitter sheet everything the babysitter needs, on one page babysitter nanny childcare emergency contacts allergies"
+      <div class="card reveal" data-find="sitter sheet everything the babysitter needs, on one page babysitter nanny childcare emergency contacts allergies"
          style="--app:#d2af61;--app-deep:#a17b0f">
-        <img class="swatch" src="./sitter-sheet/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Sitter Sheet</b><span>Everything the babysitter needs, on one page</span></span>
-      </a>
-      <a class="card reveal" href="./baby-log/" data-find="baby log feeds, sleep and nappies with one thumb at 3am newborn infant feeding nursing diaper tracker night"
+        <a class="applink" href="./sitter-sheet/">
+          <img class="swatch" src="./sitter-sheet/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Sitter Sheet</b><span>Everything the babysitter needs, on one page</span></span>
+        </a>
+        <a class="getbtn" href="./sitter-sheet/?sws-install=1" aria-label="Install Sitter Sheet" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="baby log feeds, sleep and nappies with one thumb at 3am newborn infant feeding nursing diaper tracker night"
          style="--app:#b7aae7;--app-deep:#8575b8">
-        <img class="swatch" src="./baby-log/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Baby Log</b><span>Feeds, sleep and nappies with one thumb at 3am</span></span>
-      </a>
-      <a class="card reveal" href="https://lucidwinds.com/hush/" data-find="hush a sleep sound machine, honest about the science white noise sleep sound machine baby nursery newborn night bedtime settle offline"
+        <a class="applink" href="./baby-log/">
+          <img class="swatch" src="./baby-log/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Baby Log</b><span>Feeds, sleep and nappies with one thumb at 3am</span></span>
+        </a>
+        <a class="getbtn" href="./baby-log/?sws-install=1" aria-label="Install Baby Log" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="hush a sleep sound machine, honest about the science white noise sleep sound machine baby nursery newborn night bedtime settle offline"
          style="--app:#F2B872;--app-deep:#C87F3C">
-        <img class="swatch" src="./hush/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Hush</b><span>A sleep sound machine, honest about the science</span></span>
-      </a>
-      <a class="card reveal" href="./pill-schedule/" data-find="pill schedule a large-print medication card for the fridge medication meds prescription elderly dosage reminder"
+        <a class="applink" href="https://lucidwinds.com/hush/">
+          <img class="swatch" src="./hush/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Hush</b><span>A sleep sound machine, honest about the science</span></span>
+        </a>
+      </div>
+      <div class="card reveal" data-find="pill schedule a large-print medication card for the fridge medication meds prescription elderly dosage reminder"
          style="--app:#6ebfeb;--app-deep:#258cbc">
-        <img class="swatch" src="./pill-schedule/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Pill Schedule</b><span>A large-print medication card for the fridge</span></span>
-      </a>
-      <a class="card reveal" href="./caregiver-log/" data-find="caregiver log a shared notebook for the family caring at home elderly parent hospice shift notes dementia care shared online cloud server link"
+        <a class="applink" href="./pill-schedule/">
+          <img class="swatch" src="./pill-schedule/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Pill Schedule</b><span>A large-print medication card for the fridge</span></span>
+        </a>
+        <a class="getbtn" href="./pill-schedule/?sws-install=1" aria-label="Install Pill Schedule" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="caregiver log a shared notebook for the family caring at home elderly parent hospice shift notes dementia care shared online cloud server link"
          style="--app:#a6b6c8;--app-deep:#728496">
-        <img class="swatch" src="./caregiver-log/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Caregiver Log</b><span>A shared notebook for the family caring at home</span><span class="tag">Shared online</span></span>
-      </a>
-      <a class="card reveal" href="./grocery-list/" data-find="grocery list one list the whole household can add to shopping supermarket household share shared online cloud server link"
+        <a class="applink" href="./caregiver-log/">
+          <img class="swatch" src="./caregiver-log/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Caregiver Log</b><span>A shared notebook for the family caring at home</span><span class="tag">Shared online</span></span>
+        </a>
+        <a class="getbtn" href="./caregiver-log/?sws-install=1" aria-label="Install Caregiver Log" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="grocery list one list the whole household can add to shopping supermarket household share shared online cloud server link"
          style="--app:#68cc96;--app-deep:#079a60">
-        <img class="swatch" src="./grocery-list/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Grocery List</b><span>One list the whole household can add to</span><span class="tag">Shared online</span></span>
-      </a>
+        <a class="applink" href="./grocery-list/">
+          <img class="swatch" src="./grocery-list/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Grocery List</b><span>One list the whole household can add to</span><span class="tag">Shared online</span></span>
+        </a>
+        <a class="getbtn" href="./grocery-list/?sws-install=1" aria-label="Install Grocery List" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>School</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./specials-planner/" data-find="specials planner art, music, pe, library. plan the whole year once teacher lesson plan rotation schedule elementary"
+      <div class="card reveal" data-find="specials planner art, music, pe, library. plan the whole year once teacher lesson plan rotation schedule elementary"
          style="--app:#f39a7e;--app-deep:#c26245">
-        <img class="swatch" src="./specials-planner/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Specials Planner</b><span>Art, music, PE, library. Plan the whole year once</span></span>
-      </a>
-      <a class="card reveal" href="./sub-plans/" data-find="sub plans your substitute folder, ready before you are sick teacher substitute emergency plans binder classroom"
+        <a class="applink" href="./specials-planner/">
+          <img class="swatch" src="./specials-planner/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Specials Planner</b><span>Art, music, PE, library. Plan the whole year once</span></span>
+        </a>
+        <a class="getbtn" href="./specials-planner/?sws-install=1" aria-label="Install Specials Planner" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="sub plans your substitute folder, ready before you are sick teacher substitute emergency plans binder classroom"
          style="--app:#79c6b0;--app-deep:#36947d">
-        <img class="swatch" src="./sub-plans/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Sub Plans</b><span>Your substitute folder, ready before you are sick</span></span>
-      </a>
-      <a class="card reveal" href="./grade-sheet/" data-find="grade sheet grades for every class you teach, on this device only gradebook grades teacher marks roster rubric report card averages specials elementary substitute homeschool"
+        <a class="applink" href="./sub-plans/">
+          <img class="swatch" src="./sub-plans/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Sub Plans</b><span>Your substitute folder, ready before you are sick</span></span>
+        </a>
+      </div>
+      <div class="card reveal" data-find="grade sheet grades for every class you teach, on this device only gradebook grades teacher marks roster rubric report card averages specials elementary substitute homeschool"
          style="--app:#83bed7;--app-deep:#478ca6">
-        <img class="swatch" src="./grade-sheet/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Grade Sheet</b><span>Grades for every class you teach, on this device only</span></span>
-      </a>
+        <a class="applink" href="./grade-sheet/">
+          <img class="swatch" src="./grade-sheet/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Grade Sheet</b><span>Grades for every class you teach, on this device only</span></span>
+        </a>
+        <a class="getbtn" href="./grade-sheet/?sws-install=1" aria-label="Install Grade Sheet" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Events &amp; Groups</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./signup-sheets/" data-find="signup sheets claim a spot in seconds, no account needed volunteer potluck conference slots roster shifts shared online cloud server link"
+      <div class="card reveal" data-find="signup sheets claim a spot in seconds, no account needed volunteer potluck conference slots roster shifts shared online cloud server link"
          style="--app:#f49d55;--app-deep:#c06700">
-        <img class="swatch" src="./signup-sheets/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Signup Sheets</b><span>Claim a spot in seconds, no account needed</span><span class="tag">Shared online</span></span>
-      </a>
-      <a class="card reveal" href="./team-parent/" data-find="team parent one link for the whole season youth sports snack schedule roster coach league shared online cloud server link"
+        <a class="applink" href="./signup-sheets/">
+          <img class="swatch" src="./signup-sheets/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Signup Sheets</b><span>Claim a spot in seconds, no account needed</span><span class="tag">Shared online</span></span>
+        </a>
+        <a class="getbtn" href="./signup-sheets/?sws-install=1" aria-label="Install Signup Sheets" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="team parent one link for the whole season youth sports snack schedule roster coach league shared online cloud server link"
          style="--app:#84b6ff;--app-deep:#4481da">
-        <img class="swatch" src="./team-parent/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Team Parent</b><span>One link for the whole season</span><span class="tag">Shared online</span></span>
-      </a>
-      <a class="card reveal" href="./secret-santa/" data-find="secret santa draw names without the group-chat chaos gift exchange christmas holiday office party"
+        <a class="applink" href="./team-parent/">
+          <img class="swatch" src="./team-parent/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Team Parent</b><span>One link for the whole season</span><span class="tag">Shared online</span></span>
+        </a>
+        <a class="getbtn" href="./team-parent/?sws-install=1" aria-label="Install Team Parent" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="secret santa draw names without the group-chat chaos gift exchange christmas holiday office party"
          style="--app:#f990a5;--app-deep:#c75771">
-        <img class="swatch" src="./secret-santa/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Secret Santa</b><span>Draw names without the group-chat chaos</span></span>
-      </a>
-      <a class="card reveal" href="./wedding-timeline/" data-find="wedding day timeline so nobody asks when is hair again? wedding schedule vendors bridal party run of show"
+        <a class="applink" href="./secret-santa/">
+          <img class="swatch" src="./secret-santa/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Secret Santa</b><span>Draw names without the group-chat chaos</span></span>
+        </a>
+        <a class="getbtn" href="./secret-santa/?sws-install=1" aria-label="Install Secret Santa" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="wedding day timeline so nobody asks when is hair again? wedding schedule vendors bridal party run of show"
          style="--app:#d3a2c7;--app-deep:#a26e95">
-        <img class="swatch" src="./wedding-timeline/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Wedding Day Timeline</b><span>So nobody asks &ldquo;when is hair again?&rdquo;</span></span>
-      </a>
-      <a class="card reveal" href="./seating-chart/" data-find="seating chart tables, seats and who must not sit together wedding reception banquet place cards floor plan"
+        <a class="applink" href="./wedding-timeline/">
+          <img class="swatch" src="./wedding-timeline/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Wedding Day Timeline</b><span>So nobody asks &ldquo;when is hair again?&rdquo;</span></span>
+        </a>
+        <a class="getbtn" href="./wedding-timeline/?sws-install=1" aria-label="Install Wedding Day Timeline" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="seating chart tables, seats and who must not sit together wedding reception banquet place cards floor plan"
          style="--app:#c8a2e5;--app-deep:#976db5">
-        <img class="swatch" src="./seating-chart/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Seating Chart</b><span>Tables, seats and who must not sit together</span></span>
-      </a>
-      <a class="card reveal" href="./bracket-maker/" data-find="bracket maker game night, settled properly tournament elimination playoff league office pool"
+        <a class="applink" href="./seating-chart/">
+          <img class="swatch" src="./seating-chart/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Seating Chart</b><span>Tables, seats and who must not sit together</span></span>
+        </a>
+        <a class="getbtn" href="./seating-chart/?sws-install=1" aria-label="Install Seating Chart" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="bracket maker game night, settled properly tournament elimination playoff league office pool"
          style="--app:#dbad3c;--app-deep:#a27b00">
-        <img class="swatch" src="./bracket-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Bracket Maker</b><span>Game night, settled properly</span></span>
-      </a>
-      <a class="card reveal" href="./wheel-picker/" data-find="wheel picker spin to choose. no ads spinning back random name picker classroom raffle prize chore"
+        <a class="applink" href="./bracket-maker/">
+          <img class="swatch" src="./bracket-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Bracket Maker</b><span>Game night, settled properly</span></span>
+        </a>
+        <a class="getbtn" href="./bracket-maker/?sws-install=1" aria-label="Install Bracket Maker" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="wheel picker spin to choose. no ads spinning back random name picker classroom raffle prize chore"
          style="--app:#fc88c2;--app-deep:#ca4c90">
-        <img class="swatch" src="./wheel-picker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Wheel Picker</b><span>Spin to choose. No ads spinning back</span></span>
-      </a>
+        <a class="applink" href="./wheel-picker/">
+          <img class="swatch" src="./wheel-picker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Wheel Picker</b><span>Spin to choose. No ads spinning back</span></span>
+        </a>
+        <a class="getbtn" href="./wheel-picker/?sws-install=1" aria-label="Install Wheel Picker" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Paper &amp; Files</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./scan-to-pdf/" data-find="scan to pdf no watermark, no ransom, no upload scanner document camera receipt paperwork"
+      <div class="card reveal" data-find="scan to pdf no watermark, no ransom, no upload scanner document camera receipt paperwork"
          style="--app:#52c8d1;--app-deep:#00939c">
-        <img class="swatch" src="./scan-to-pdf/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Scan to PDF</b><span>No watermark, no ransom, no upload</span></span>
-      </a>
-      <a class="card reveal" href="./pdf-tools/" data-find="pdf tools merge, split and rotate. nothing gets uploaded combine pages reorder delete extract"
+        <a class="applink" href="./scan-to-pdf/">
+          <img class="swatch" src="./scan-to-pdf/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Scan to PDF</b><span>No watermark, no ransom, no upload</span></span>
+        </a>
+        <a class="getbtn" href="./scan-to-pdf/?sws-install=1" aria-label="Install Scan to PDF" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="pdf tools merge, split and rotate. nothing gets uploaded combine pages reorder delete extract"
          style="--app:#a0adff;--app-deep:#6d78d1">
-        <img class="swatch" src="./pdf-tools/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>PDF Tools</b><span>Merge, split and rotate. Nothing gets uploaded</span></span>
-      </a>
-      <a class="card reveal" href="./image-compressor/" data-find="image compressor shrink photos without uploading them resize optimise jpeg png file size email"
+        <a class="applink" href="./pdf-tools/">
+          <img class="swatch" src="./pdf-tools/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>PDF Tools</b><span>Merge, split and rotate. Nothing gets uploaded</span></span>
+        </a>
+        <a class="getbtn" href="./pdf-tools/?sws-install=1" aria-label="Install PDF Tools" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="image compressor shrink photos without uploading them resize optimise jpeg png file size email"
          style="--app:#a7b5ca;--app-deep:#748399">
-        <img class="swatch" src="./image-compressor/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Image Compressor</b><span>Shrink photos without uploading them</span></span>
-      </a>
-      <a class="card reveal" href="./signature-maker/" data-find="signature maker draw it once, use it everywhere sign document esign transparent png contract"
+        <a class="applink" href="./image-compressor/">
+          <img class="swatch" src="./image-compressor/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Image Compressor</b><span>Shrink photos without uploading them</span></span>
+        </a>
+        <a class="getbtn" href="./image-compressor/?sws-install=1" aria-label="Install Image Compressor" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="signature maker draw it once, use it everywhere sign document esign transparent png contract"
          style="--app:#aeb4c1;--app-deep:#7b828f">
-        <img class="swatch" src="./signature-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Signature Maker</b><span>Draw it once, use it everywhere</span></span>
-      </a>
-      <a class="card reveal" href="./qr-maker/" data-find="qr maker codes that never expire qr code wifi menu flyer link generator"
+        <a class="applink" href="./signature-maker/">
+          <img class="swatch" src="./signature-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Signature Maker</b><span>Draw it once, use it everywhere</span></span>
+        </a>
+        <a class="getbtn" href="./signature-maker/?sws-install=1" aria-label="Install Signature Maker" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="qr maker codes that never expire qr code wifi menu flyer link generator"
          style="--app:#89c782;--app-deep:#509549">
-        <img class="swatch" src="./qr-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>QR Maker</b><span>Codes that never expire</span></span>
-      </a>
+        <a class="applink" href="./qr-maker/">
+          <img class="swatch" src="./qr-maker/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>QR Maker</b><span>Codes that never expire</span></span>
+        </a>
+        <a class="getbtn" href="./qr-maker/?sws-install=1" aria-label="Install QR Maker" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Moving &amp; Travel</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./moving-boxes/" data-find="moving boxes which box has the can opener? move house packing labels inventory qr"
+      <div class="card reveal" data-find="moving boxes which box has the can opener? move house packing labels inventory qr"
          style="--app:#d9ab71;--app-deep:#a87632">
-        <img class="swatch" src="./moving-boxes/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Moving Boxes</b><span>Which box has the can opener?</span></span>
-      </a>
-      <a class="card reveal" href="./packing-list/" data-find="packing list never forget the charger again travel trip suitcase checklist holiday"
+        <a class="applink" href="./moving-boxes/">
+          <img class="swatch" src="./moving-boxes/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Moving Boxes</b><span>Which box has the can opener?</span></span>
+        </a>
+        <a class="getbtn" href="./moving-boxes/?sws-install=1" aria-label="Install Moving Boxes" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="packing list never forget the charger again travel trip suitcase checklist holiday"
          style="--app:#55cac1;--app-deep:#00958d">
-        <img class="swatch" src="./packing-list/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Packing List</b><span>Never forget the charger again</span></span>
-      </a>
-      <a class="card reveal" href="./home-inventory/" data-find="home inventory photograph it before you need it insurance claim contents valuables fire flood"
+        <a class="applink" href="./packing-list/">
+          <img class="swatch" src="./packing-list/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Packing List</b><span>Never forget the charger again</span></span>
+        </a>
+        <a class="getbtn" href="./packing-list/?sws-install=1" aria-label="Install Packing List" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="home inventory photograph it before you need it insurance claim contents valuables fire flood"
          style="--app:#aabd88;--app-deep:#778a50">
-        <img class="swatch" src="./home-inventory/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Home Inventory</b><span>Photograph it before you need it</span></span>
-      </a>
+        <a class="applink" href="./home-inventory/">
+          <img class="swatch" src="./home-inventory/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Home Inventory</b><span>Photograph it before you need it</span></span>
+        </a>
+        <a class="getbtn" href="./home-inventory/?sws-install=1" aria-label="Install Home Inventory" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Money</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./bill-splitter/" data-find="bill splitter split it, settle up, nothing leaves your device split expenses group trip dinner iou owe"
+      <div class="card reveal" data-find="bill splitter split it, settle up, nothing leaves your device split expenses group trip dinner iou owe"
          style="--app:#6ec2da;--app-deep:#2290a9">
-        <img class="swatch" src="./bill-splitter/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Bill Splitter</b><span>Split it, settle up, nothing leaves your device</span></span>
-      </a>
+        <a class="applink" href="./bill-splitter/">
+          <img class="swatch" src="./bill-splitter/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Bill Splitter</b><span>Split it, settle up, nothing leaves your device</span></span>
+        </a>
+        <a class="getbtn" href="./bill-splitter/?sws-install=1" aria-label="Install Bill Splitter" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Body &amp; Mind</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./cross-off/" data-find="cross off a paper list you cross off with real highlighters todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying"
+      <div class="card reveal" data-find="cross off a paper list you cross off with real highlighters todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying"
          style="--app:#F9E547;--app-deep:#B99B00">
-        <img class="swatch" src="./cross-off/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Cross Off</b><span>A paper list you cross off with real highlighters</span></span>
-      </a>
-      <a class="card reveal" href="./overload/" data-find="overload it writes your next workout. you just lift gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise"
+        <a class="applink" href="./cross-off/">
+          <img class="swatch" src="./cross-off/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Cross Off</b><span>A paper list you cross off with real highlighters</span></span>
+        </a>
+        <a class="getbtn" href="./cross-off/?sws-install=1" aria-label="Install Cross Off" title="Install this app">&#10515;</a>
+      </div>
+      <div class="card reveal" data-find="overload it writes your next workout. you just lift gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise"
          style="--app:#5C8AD4;--app-deep:#3F6DB5">
-        <img class="swatch" src="./overload/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>OVERLOAD</b><span>It writes your next workout. You just lift</span></span>
-      </a>
+        <a class="applink" href="./overload/">
+          <img class="swatch" src="./overload/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>OVERLOAD</b><span>It writes your next workout. You just lift</span></span>
+        </a>
+        <a class="getbtn" href="./overload/?sws-install=1" aria-label="Install OVERLOAD" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Night Sky</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./astravault/" data-find="astra vault scan the cosmos and collect the sky stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space beta in development testing"
+      <div class="card reveal" data-find="astra vault scan the cosmos and collect the sky stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space beta in development testing"
          style="--app:#60A5FA;--app-deep:#26356E">
-        <img class="swatch" src="./astravault/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Astra Vault</b><span>Scan the cosmos and collect the sky</span><span class="tag">In testing</span></span>
-      </a>
+        <a class="applink" href="./astravault/">
+          <img class="swatch" src="./astravault/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Astra Vault</b><span>Scan the cosmos and collect the sky</span><span class="tag">In testing</span></span>
+        </a>
+      </div>
       </div>
     </section>
 
     <section class="group" data-group>
       <div class="section-head reveal"><h2>Outdoors</h2></div>
       <div class="grid">
-      <a class="card reveal" href="./rock-stops/" data-find="rock stops every rock, fossil and sea glass find, logged where you stood rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps beta in development testing"
+      <div class="card reveal" data-find="rock stops every rock, fossil and sea glass find, logged where you stood rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps beta in development testing"
          style="--app:#C9873B;--app-deep:#2E5C51">
-        <img class="swatch" src="./rock-stops/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
-        <span class="meta"><b>Rock Stops</b><span>Every rock, fossil and sea glass find, logged where you stood</span><span class="tag">In testing</span></span>
-      </a>
+        <a class="applink" href="./rock-stops/">
+          <img class="swatch" src="./rock-stops/marketing/thumb-256.png?v=4" alt="" width="64" height="64" loading="lazy" decoding="async">
+          <span class="meta"><b>Rock Stops</b><span>Every rock, fossil and sea glass find, logged where you stood</span><span class="tag">In testing</span></span>
+        </a>
+        <a class="getbtn" href="./rock-stops/?sws-install=1" aria-label="Install Rock Stops" title="Install this app">&#10515;</a>
+      </div>
       </div>
     </section>
 
@@ -480,27 +593,22 @@ footer .tip{color:var(--gold)}
 })();
 </script>
 <script>
-/* Install affordance: Chrome hands over a prompt, iOS gets directions. */
+/* The studio install button, up top where Stephen wants it. Always visible
+   when the page is not already installed: Chrome hands over the real prompt,
+   iOS gets Share-sheet directions, everything else gets its menu path. */
 (function(){
-  if (matchMedia('(display-mode: standalone)').matches) return;
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return;
   var evt = null;
-  function place(){
-    var a = document.getElementById('swsInstall');
-    if (a) return a;
-    a = document.createElement('button');
-    a.id = 'swsInstall'; a.type = 'button'; a.className = 'btn';
-    a.textContent = '⤓ Install the studio';
-    a.style.marginTop = '14px';
-    document.querySelector('footer').appendChild(a);
-    return a;
-  }
-  addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault(); evt = e;
-    place().onclick = function(){ if (evt) evt.prompt(); };
+  var b = document.getElementById('installStudio');
+  b.hidden = false;
+  addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); evt = e; });
+  b.addEventListener('click', function(){
+    if (evt){ evt.prompt(); return; }
+    if (/iPhone|iPad/.test(navigator.userAgent)){
+      alert('To install: tap the Share button, then "Add to Home Screen".'); return;
+    }
+    alert('To install: open your browser menu and choose "Install app" or "Add to Home Screen".');
   });
-  if (/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone){
-    place().onclick = function(){ alert('To install: tap the Share button, then "Add to Home Screen".'); };
-  }
 })();
 </script>
 </body>
