@@ -777,7 +777,7 @@ function showQr(url) {
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); $('qrClose').focus(); }
 }
 
-/* Sky Wolf Studios install affordance, injected studio-wide 2026-08-18.
+/* Sky Wolf Studio install affordance, injected studio-wide 2026-08-18.
    Chrome hands over a real install prompt; iOS gets directions; nothing
    shows once the app is already installed. */
 (function(){

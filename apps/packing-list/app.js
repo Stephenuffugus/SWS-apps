@@ -582,7 +582,7 @@ function stampPrintMeta() {
   const when = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
   $('printMeta').textContent = s.total === 0
     ? 'This list is empty — printed ' + when + '.'
-    : s.done + ' of ' + s.total + ' packed · printed ' + when + ' · Packing List by Sky Wolf Studios';
+    : s.done + ' of ' + s.total + ' packed · printed ' + when + ' · Packing List by Sky Wolf Studio's;
 }
 
 /* ══ Shared links ════════════════════════════════════════════════════════ */

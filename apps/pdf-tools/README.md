@@ -5,7 +5,7 @@ in the browser via vendored pdf-lib. The popular PDF sites route your tax
 returns, contracts, and medical records through their servers and then paywall
 the second merge of the day; here the documents never leave the tab, there are
 no limits, and free means free. Password-protected and damaged PDFs get an
-honest explanation instead of a crash. A free tool by Sky Wolf Studios.
+honest explanation instead of a crash. A free tool by Sky Wolf Studio.
 
 ## Things worth knowing before changing it
 

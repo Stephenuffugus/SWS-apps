@@ -1,4 +1,4 @@
-# Marketing Kit — Sky Wolf Studios Apps
+# Marketing Kit — Sky Wolf Studio Apps
 
 The suite is live at **https://sws-apps-9646d.web.app** (swap in the real domain
 everywhere once purchased — including the `og:image` URLs baked into each app's

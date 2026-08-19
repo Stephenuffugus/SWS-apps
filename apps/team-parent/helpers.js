@@ -324,7 +324,7 @@ export function seasonIcs({ title, slots, url, stamp }) {
   const now = stamp instanceof Date ? stamp : new Date();
   const dtstamp = `${now.getUTCFullYear()}${p2(now.getUTCMonth() + 1)}${p2(now.getUTCDate())}T${p2(now.getUTCHours())}${p2(now.getUTCMinutes())}${p2(now.getUTCSeconds())}Z`;
   const lines = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sky Wolf Studios//Team Parent//EN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sky Wolf Studio//Team Parent//EN',
     'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
     'X-WR-CALNAME:' + icsEsc(title),
   ];

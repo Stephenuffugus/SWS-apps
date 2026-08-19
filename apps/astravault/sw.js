@@ -5,7 +5,7 @@
    shell itself goes network-first so a deploy reaches everyone on their
    next open. External API calls (NASA, launches, meteor networks) are
    deliberately untouched: live data must not go stale. */
-const CACHE = 'astravault-v5';
+const CACHE = 'astravault-v6';
 const SHELL = '/astravault/';
 
 self.addEventListener('install', () => {

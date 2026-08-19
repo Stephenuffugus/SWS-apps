@@ -111,7 +111,7 @@ const SLAB = (slug, skin) => `
 
   <footer class="colophon">
     Runs entirely in your browser.<br>
-    A free tool by Sky Wolf Studios &middot; Feedback
+    A free tool by Sky Wolf Studio &middot; Feedback
   </footer>
 </div>
 <div id="toast" class="show">Saved to this device</div>

@@ -1,7 +1,7 @@
 # Play Console copy — the first three listings
 
 Written against each app's actual source and character-counted. Paste straight into Play Console.
-Generated 16 August 2026 for Sky Wolf Studios (SWS Strategic Media LLC).
+Generated 16 August 2026 for Sky Wolf Studio (SWS Strategic Media LLC).
 
 > Order: **1. Sub Plans → 2. Seating Chart → 3. Home Inventory.** Ship one, let it clear review
 > and sit in production, then the next — roughly one a week. Batching is what triggers Play's
@@ -85,7 +85,7 @@ NOT IN THIS VERSION
 
 No seating chart, and no must-do / if-time splitter with time estimates. Everything above is finished and prints correctly on US Letter.
 
-Sub Plans is one of a set of free, ad-free tools from Sky Wolf Studios. No accounts, no tracking, no catch.
+Sub Plans is one of a set of free, ad-free tools from Sky Wolf Studio. No accounts, no tracking, no catch.
 ```
 
 **Wedges used, and where they came from:** the "easier to go in sick" line is documented across four independent teacher sources in `sub-plans.research.json`; the three-fonts-or-it-breaks failure is The Curriculum Corner's own stated limitation; "editable only in the boxes the seller left open" is TpT/Tes sellers' own warning language; the monthly meter is LessonDraft's 8-generations-a-month model; "nothing you build here can be held hostage" answers a real Additio reviewer complaint that "if you buy it you have to keep buying it to continue to use your student data"; the WiFi-password hunt is the Notion4Teachers sub-plan guide complaint; "a clear two pages beats a thorough ten" is Differentiated Teaching's guidance.
@@ -269,7 +269,7 @@ There is a tip jar. It appears once, after a PDF finishes downloading, and it ch
 
 Weddings, rehearsal dinners, banquets, fundraisers, awards nights, conference tables, classrooms, and the holiday dinner with a difficult uncle.
 
-Made by Sky Wolf Studios.
+Made by Sky Wolf Studio.
 ```
 
 The wedge is drawn straight from Play-specific evidence, stated as a pattern rather than a named competitor (naming rivals in a Play listing is a metadata risk): free tiers that stop at 30–75 guests, the design-free-but-pay-to-save model, and weekly subscription billing for a single-evening tool. Each of the three sentences in paragraph two maps to a real, documented product. "Seating chart" appears three times in 3,150 characters — well under any stuffing threshold.
@@ -440,7 +440,7 @@ Search by name, serial, brand or notes. Sort by most recent, highest value, name
 
 Owners and renters both: your policy covers contents, and contents is the part you have to prove. The same home inventory works for a move, an estate, or a burglary report.
 
-Made by Sky Wolf Studios. No account, no ads, no analytics, no trackers, no in-app purchases, no cloud, nothing to cancel. If this app disappeared tomorrow, your exported backup file would still open.
+Made by Sky Wolf Studio. No account, no ads, no analytics, no trackers, no in-app purchases, no cloud, nothing to cancel. If this app disappeared tomorrow, your exported backup file would still open.
 ```
 
 **3,985 / 4,000.** Term density is deliberately low — "home inventory" 3×, "insurance" 2×, "photo" 12×, everything else once or twice, all in running prose. No comma-separated keyword blocks.

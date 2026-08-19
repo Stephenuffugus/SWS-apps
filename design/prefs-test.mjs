@@ -334,7 +334,7 @@ for (const slug of slugs) {
 }
 
 /* ── Cross-app: one origin, one setting ───────────────────────────────────
-   The claim in the panel's own footer is "used across every Sky Wolf Studios
+   The claim in the panel's own footer is "used across every Sky Wolf Studio
    app". This is that claim, tested: set it in the first app, then open two
    others in the same context and require it to already be in force before any
    interaction at all. */

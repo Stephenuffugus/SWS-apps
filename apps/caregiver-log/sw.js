@@ -1,5 +1,5 @@
 /* Caregiver Log service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'care-v22';
+const VERSION = 'care-v23';
 const ASSETS = [
   './',
   './index.html',

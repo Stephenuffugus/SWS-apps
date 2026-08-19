@@ -3,7 +3,7 @@
 Engine 2 (local data → print-ready PDF), skin A — and the biggest single
 opportunity in the portfolio. Weddings at peak; banquets, conferences, and
 classrooms year-round. **Free, unlimited, no watermark, and nothing ever
-leaves the device.** A free tool by Sky Wolf Studios.
+leaves the device.** A free tool by Sky Wolf Studio.
 
 ## The product insight
 

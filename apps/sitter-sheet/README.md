@@ -3,7 +3,7 @@
 One printable page with everything the babysitter or pet sitter needs:
 contacts, routines, meals, meds, allergies, house quirks. Data lives in
 localStorage on your device only — family details are nobody's business. A free
-tool by Sky Wolf Studios.
+tool by Sky Wolf Studio.
 
 **Two documents, one form.** The parent gets an edit form with a live print
 preview that is literally the printed page. The sitter — anyone opening the

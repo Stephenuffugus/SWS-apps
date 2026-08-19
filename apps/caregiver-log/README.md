@@ -3,7 +3,7 @@
 Engine 1 (shared-link coordination), skin C. A calm, private, shared family
 notebook for caring for someone — the timeline every sibling can see, the
 coverage schedule nobody has to renegotiate in a group text. A free tool by
-Sky Wolf Studios.
+Sky Wolf Studio.
 
 **Handle with care:** this app holds health-adjacent information about a third
 party. Design rules from the product doc, enforced here:

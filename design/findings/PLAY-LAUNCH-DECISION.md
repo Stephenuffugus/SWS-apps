@@ -1,4 +1,4 @@
-# Sky Wolf Studios → Google Play: the decision document
+# Sky Wolf Studio → Google Play: the decision document
 **Date: 2026-08-16 · Repo: `/workspaces/SWS-apps` · Origin: `https://sws-apps-9646d.web.app`**
 
 ---
@@ -37,7 +37,7 @@ This is the decision. Take Google's own named remedy seriously: the tail of the 
 
 **c) Treat the first three approvals as the experiment.** If #1–#3 approve cleanly with no policy warnings, continue. If any one draws a repetitive-content or minimum-functionality flag, stop submitting and consolidate — do not appeal your way through five more.
 
-**d) Move to a branded custom domain before app #1.** `skywolfstudios.app` (or similar) costs ~$20/yr and directly answers the "webview of a website without permission from the website owner" question a reviewer asks when a Firebase subdomain shows up. **This must be decided before the first `bubblewrap init`, because the origin is baked into every TWA, every `twa-manifest.json`, and the one `assetlinks.json`.** Changing it after submission means new packages.
+**d) Move to a branded custom domain before app #1.** `skywolfstudios.app` (or similar) costs ~$20/yr — RESOLVED 2026-08-19: skywolfstudio.com (singular; the plural .com belongs to someone else) is bought, live on Firebase, and baked into ORIGIN and PKG_PREFIX (com.skywolfstudio.*) and directly answers the "webview of a website without permission from the website owner" question a reviewer asks when a Firebase subdomain shows up. **This must be decided before the first `bubblewrap init`, because the origin is baked into every TWA, every `twa-manifest.json`, and the one `assetlinks.json`.** Changing it after submission means new packages.
 
 **e) Never ship as standalone listings:**
 
@@ -242,7 +242,7 @@ NOT IN THIS VERSION
 
 No seating chart, and no must-do / if-time splitter with time estimates. Everything above is finished and prints correctly on US Letter.
 
-Sub Plans is one of a set of free, ad-free tools from Sky Wolf Studios. No accounts, no tracking, no catch.
+Sub Plans is one of a set of free, ad-free tools from Sky Wolf Studio. No accounts, no tracking, no catch.
 ```
 
 ### Keywords (ranked by intent match — Play publishes no volumes, and Play Console keyword tooling was not reachable from here)
@@ -355,7 +355,7 @@ There is a tip jar. It appears once, after a PDF finishes downloading, and it ch
 
 Weddings, rehearsal dinners, banquets, fundraisers, awards nights, conference tables, classrooms, and the holiday dinner with a difficult uncle.
 
-Made by Sky Wolf Studios.
+Made by Sky Wolf Studio.
 ```
 
 Competitors are described as a pattern, never named — naming rivals in a Play listing is a metadata risk. "Seating chart" appears three times in 3,150 characters, well under any stuffing threshold.
@@ -466,7 +466,7 @@ THE HONEST LIMITS
 
 One photo plus one receipt per item, not an album per item. No barcode scanning. No cloud sync between your phone and your laptop — you move a backup file yourself.
 
-Made by Sky Wolf Studios. Free, no ads, no account, no subscription.
+Made by Sky Wolf Studio. Free, no ads, no account, no subscription.
 ```
 
 ### Keywords (ranked)

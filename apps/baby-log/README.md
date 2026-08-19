@@ -8,6 +8,6 @@ shift handoff or the pediatrician, and sleep math handles sessions that
 cross midnight (unit-tested). Data lives in IndexedDB on the phone —
 deliberately: baby-tracker apps are notorious data harvesters, and an
 infant's schedule is nobody's business. Export/import for backups.
-A free tool by Sky Wolf Studios.
+A free tool by Sky Wolf Studio.
 
 `CONFIG.tipUrl` in `app.js` for the tip jar. Test: `node test/model.test.mjs`.

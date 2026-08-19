@@ -1,7 +1,7 @@
 # HANDOFF — Cross Off
 
 **Project:** Cross Off, a paper to-do list you cross off with real highlighters
-**Studio:** Sky Wolf Studios · SWS Strategic Media LLC
+**Studio:** Sky Wolf Studio · SWS Strategic Media LLC
 **Stack:** Single-file vanilla HTML/CSS/JS PWA. No build step, no runtime deps. Fonts self-hosted in `fonts/` (Caveat 700 + Patrick Hand, latin woff2).
 **Status:** User-test round 2026-08-19 complete (see below) on top of the 2026-08-18 studio round. `node test/cross-off.test.mjs` = 83 assertions, green.
 
@@ -56,7 +56,7 @@ until the first win (`syncDayCount`). The add placeholder dropped the
 
 ## Studio round 2026-08-18 (this build)
 
-- **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document, cache-first assets — bump `CACHE` on every deploy), full icon set, self-hosted fonts. `privacy.html`. Footer + branding corrected to Sky Wolf Studios.
+- **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document, cache-first assets — bump `CACHE` on every deploy), full icon set, self-hosted fonts. `privacy.html`. Footer + branding corrected to Sky Wolf Studio.
 - **The morning page-flip** (the anti-graveyard, was roadmap v1.2): archives the marked-up page (ink intact) into `p.past` (cap `MAX_PAST_DAYS`), carries unfinished forward silently, and re-adds `chore:true` tasks undone. ~~A gentle morning bar offers the flip~~ superseded 2026-08-19: the flip is automatic on a new day, see the user-test round above. **Flip-back viewer** (`#past`): read-only pages, strokes redrawn, prev/next through days.
 - **Chores:** `task.chore`, toggled in the edit sheet ("↻ every day"), row wears ↻.
 - **Task details:** `task.note` (textarea in the edit sheet, shown in focus mode, ✳ on the row). This is the "I can be more detailed" ask.

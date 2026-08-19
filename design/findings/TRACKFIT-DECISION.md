@@ -21,7 +21,7 @@ they have different answers:
 | One company, one front door, one set of practices | **yes** |
 | Off `trackfit.stevieweedseed.com` onto a studio domain | **yes, and it gets more expensive the longer you wait** |
 | Same git repo, served from `sws-apps-9646d.web.app/trackfit/` | **no** |
-| Sky Wolf Studios Play account | **no — not in year one** |
+| Sky Wolf Studio Play account | **no — not in year one** |
 
 ---
 
@@ -165,7 +165,7 @@ declaration. The contamination path is the *account*, via payments — not the f
 
 ---
 
-## Making it read as Sky Wolf Studios
+## Making it read as Sky Wolf Studio
 
 The surprise: **Trackfit is not a Tailwind app.** 384 `className` values, one
 Tailwind utility hit (and that one is a custom class). Every class is
@@ -188,7 +188,7 @@ to ship, in an app whose audience is 56–64:
 3. **Input font-size 14px → 16px** (`index.css:65`) — trips iOS Safari
    zoom-on-focus.
 4. **Commit the self-hosted fonts** (below).
-5. **Colophon:** "A tool by Sky Wolf Studios · SWS Strategic Media LLC."
+5. **Colophon:** "A tool by Sky Wolf Studio · SWS Strategic Media LLC."
 
 ### Worth doing later, in this order
 

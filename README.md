@@ -1,6 +1,6 @@
 # SWS-apps
 
-The app portfolio of **Sky Wolf Studios** (SWS Strategic Media LLC).
+The app portfolio of **Sky Wolf Studio** (SWS Strategic Media LLC).
 Games live in the **SWS Arcade**; these are the apps. Free, ad-free utilities
 with a tip jar — the brand promise across every app here:
 

@@ -68,8 +68,8 @@ const slugs = Object.keys(SKINS).filter((s) => !only.length || only.includes(s))
 /* The origin every app is served from, and the Android package prefix. Both
    are single points of truth — changing the domain must not mean editing 23
    files. */
-export const ORIGIN = 'https://sws-apps-9646d.web.app';
-export const PKG_PREFIX = 'app.skywolfstudios';
+export const ORIGIN = 'https://skywolfstudio.com';
+export const PKG_PREFIX = 'com.skywolfstudio';
 
 /* Play Console category per app. Play requires exactly one, and it decides
    which charts the app can ever appear in, so it is a positioning decision
@@ -343,7 +343,7 @@ p{
 </style>
 <div class="mark">${icon}</div>
 <div class="copy"><h1>${name}</h1><p>${promise}</p></div>
-<div class="studio">Sky Wolf Studios · free, no ads, no account</div>`;
+<div class="studio">Sky Wolf Studio · free, no ads, no account</div>`;
 }
 
 /* ── The web manifest ────────────────────────────────────────────────────── */

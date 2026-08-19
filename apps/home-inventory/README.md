@@ -3,7 +3,7 @@
 Engine 2 (local data → print-ready PDF), skin B. The trigger is a sentence
 that recurs in every disaster thread: *"I wish I'd photographed everything
 before the fire."* Competitors can't be local-first because they sell cloud
-storage; we can, because we sell nothing. A free tool by Sky Wolf Studios.
+storage; we can, because we sell nothing. A free tool by Sky Wolf Studio.
 
 ## Design center: fast capture
 

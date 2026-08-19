@@ -1,4 +1,4 @@
-// Firebase web-app config — Sky Wolf Studios Apps (sws-apps-9646d).
+// Firebase web-app config — Sky Wolf Studio Apps (sws-apps-9646d).
 // NOTE: deliberately no measurementId / Analytics. The brand promise is
 // no ads and no trackers; we do not load Google Analytics in any app.
 //

@@ -106,7 +106,7 @@ async function guardControls(slug) {
          phone. WCAG 2.5.8 wants 24; the studio's own rule is 44 for anything
          primary, but 24 is the line worth failing a build over. */
       /* WCAG 2.5.8 exempts a link sitting inside a sentence — a footer that
-         reads "A free tool by Sky Wolf Studios · Privacy" is prose, not a
+         reads "A free tool by Sky Wolf Studio · Privacy" is prose, not a
          tap target, and padding it to 24px would wreck the line. */
       const inlineLink = (e) => e.tagName === 'A'
         && getComputedStyle(e).display.startsWith('inline')

@@ -3,7 +3,7 @@
 Engine 1 (shared-link coordination), skin B. One coach or team parent signs in,
 builds the season page, and shares one link. Families RSVP to events, claim
 duty slots (snacks ×2, carpool ×4), and see pinned announcements — **no
-accounts for families, ever.** A free tool by Sky Wolf Studios.
+accounts for families, ever.** A free tool by Sky Wolf Studio.
 
 ## How it maps onto the engine
 

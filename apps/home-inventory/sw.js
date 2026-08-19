@@ -1,6 +1,6 @@
 /* Home Inventory service worker — the app is local-first; cache everything,
    including the vendored pdf-lib, so exports work fully offline. */
-const VERSION = 'inventory-v22';
+const VERSION = 'inventory-v23';
 const ASSETS = [
   './',
   './index.html',

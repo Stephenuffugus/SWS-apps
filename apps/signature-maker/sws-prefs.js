@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SWS STUDIO — comfort preferences
-   Sky Wolf Studios · SWS Strategic Media LLC
+   Sky Wolf Studio · SWS Strategic Media LLC
 
    Copied to apps/<slug>/sws-prefs.js by design/apply.mjs. Do not edit the
    copies; edit this file and re-run `npm run design:apply`.

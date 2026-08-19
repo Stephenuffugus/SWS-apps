@@ -5,6 +5,6 @@ notes ("with food"), plus Mon–Sun check-off boxes. Tape it to the fridge or us
 it on pill-organizer day. Built for the families juggling a parent's meds —
 the same audience as our Caregiver Log. A memory aid, never medical advice,
 and it says so on the printout. localStorage only; health details are nobody's
-business. A free tool by Sky Wolf Studios.
+business. A free tool by Sky Wolf Studio.
 
 `CONFIG.tipUrl` in `app.js` for the tip jar. Test: `node test/smoke.test.mjs`.

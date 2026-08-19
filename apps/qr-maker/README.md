@@ -4,7 +4,7 @@ Permanent QR codes, generated entirely on your device. The "free" QR generator
 industry runs a bait-and-switch: make a code, print it on 500 menus, then it
 stops working unless you subscribe — because they silently made it a "dynamic"
 code that routes through their server. Ours encode your data directly, so they
-work forever and belong to no one. A free tool by Sky Wolf Studios.
+work forever and belong to no one. A free tool by Sky Wolf Studio.
 
 Types: link, plain text, WiFi (scan-to-join, with proper special-character
 escaping, a hidden-network flag and an honest note about WPA3), phone (vanity

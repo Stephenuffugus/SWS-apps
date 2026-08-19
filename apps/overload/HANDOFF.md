@@ -1,5 +1,5 @@
 # HANDOFF — OVERLOAD
-**Sky Wolf Studios · SWS Strategic Media LLC**
+**Sky Wolf Studio · SWS Strategic Media LLC**
 Prescription-first strength tracker. Single-file vanilla PWA.
 `node test/overload.test.mjs` = 68 assertions, green.
 
@@ -51,7 +51,7 @@ Also fixed from v2:
   the prescription is written once, at finish. Closing mid-session discards
   everything, by design — no partial sessions.
 - Inline `onclick` handlers replaced with listeners; due cards are keyboard
-  buttons; `#live` announcements; branding corrected to Sky Wolf Studios;
+  buttons; `#live` announcements; branding corrected to Sky Wolf Studio;
   `privacy.html` + footer; copy brought into Stephen's voice.
 
 ## 3. Engine (pinned by tests — change only deliberately)

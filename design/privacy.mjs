@@ -152,7 +152,7 @@ function page(slug) {
 <main>
   <a class="back" href="./">&larr; Back to ${esc(name)}</a>
   <h1>Privacy &amp; Accessibility</h1>
-  <p class="lede">${esc(name)} is ${esc(f.oneLine)} It is free, carries no ads, and is made by Sky Wolf Studios.</p>
+  <p class="lede">${esc(name)} is ${esc(f.oneLine)} It is free, carries no ads, and is made by Sky Wolf Studio.</p>
 
   ${whereItGoes}
 
@@ -188,7 +188,7 @@ function page(slug) {
 
   <hr>
   <footer>
-    <p>Sky Wolf Studios · SWS Strategic Media LLC · <a href="mailto:${CONTACT}">${CONTACT}</a></p>
+    <p>Sky Wolf Studio · SWS Strategic Media LLC · <a href="mailto:${CONTACT}">${CONTACT}</a></p>
     <p>Last updated ${new Date().toISOString().slice(0, 10)}.</p>
   </footer>
 </main>

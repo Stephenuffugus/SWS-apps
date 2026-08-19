@@ -6,7 +6,7 @@ top two can only meet in the final), byes handled correctly (an empty-subtree
 check — "opponent undecided" never auto-advances anyone), tap-to-advance with
 honest downstream invalidation when you change your mind, and the whole
 bracket — names, results, title — lives in the shareable URL. Print view for
-the wall. A free tool by Sky Wolf Studios.
+the wall. A free tool by Sky Wolf Studio.
 
 Logic is fully unit-tested including a 60-tournament random play-through fuzz.
 `CONFIG.tipUrl` in `app.js` for the tip jar. Test: `node test/helpers.test.mjs`.

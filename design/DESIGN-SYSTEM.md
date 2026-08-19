@@ -1,6 +1,6 @@
 # SWS Studio — the design system
 
-Sky Wolf Studios ships 23 free, ad-free, on-device apps. Before this system
+Sky Wolf Studio ships 23 free, ad-free, on-device apps. Before this system
 they all looked like the same app wearing 6 accent colours: identical
 `#f6f7f9` page, identical `#ffffff` card, identical `#1c2733` text, and one
 `--accent` that repeated across four apps at a time.

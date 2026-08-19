@@ -104,7 +104,7 @@ const appRow = ({ slug, skin, p, before, light, dark }) => `
   </div>
 </article>`;
 
-const html = `<title>Sky Wolf Studios — 23 apps, one design system</title>
+const html = `<title>Sky Wolf Studio — 23 apps, one design system</title>
 <style>
 @font-face{
   font-family:'Fraunces';font-style:normal;font-weight:500 700;font-display:swap;
