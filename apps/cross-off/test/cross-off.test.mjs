@@ -37,7 +37,7 @@ console.log('\n— fresh boot —');
   ok(w.document.querySelectorAll('#tabs .tab').length === 3, 'two seeded pages plus the add tab');
   ok(w.document.querySelectorAll('.task').length === 4, 'Home seeds four sample tasks');
   ok(/blank page/.test('') === false && !!w.localStorage.getItem('crossoff.v1'), 'state persisted on first run');
-  ok(w.document.querySelector('.seclabel').textContent === 'DO IT NOW', 'NOW section renders first');
+  ok(w.document.querySelector('.seclabel').textContent === 'NOW', 'NOW section renders first, wearing the same word as its button');
   ok(!!w.document.querySelector('.task .editbtn'), 'every task has a keyboard-reachable edit button');
 }
 
@@ -114,7 +114,7 @@ console.log('\n— the morning page-flip —');
   ok(w.eval('page().tasks.length') === 3 && w.eval('page().past.length') === 0, 'undo puts the old page back');
 }
 
-console.log('\n— morning bar shows on a new day —');
+console.log('\n— a new day flips the page all by itself —');
 {
   const w0 = boot();
   w0.eval(`(()=>{page().tasks[0].done=true;save();})()`);
@@ -122,10 +122,30 @@ console.log('\n— morning bar shows on a new day —');
   st.doneDate = '2000-01-01';           // it is no longer that day
   st.doneToday = 3;
   const w = boot(st);
-  ok(!!w.document.getElementById('morning'), 'a new day with crossed-off work offers the flip');
-  w.document.getElementById('mLater').click();
-  ok(!w.document.getElementById('morning'), '"not yet" puts it away');
-  ok(stored(w).flipSnooze === w.eval('todayStr()'), 'and stays away for the day');
+  ok(w.eval('page().past.length') === 1, 'yesterday is already in the flip-back pile on open');
+  ok(w.eval('page().past[0].date') === '2000-01-01', 'the pile stamps the day the work happened, not this morning');
+  ok(w.eval('!page().tasks.some(t=>t.done)'), 'the page she opens to is clean');
+  ok(w.eval('page().tasks.length') === 3, 'unfinished work carried forward, the finished one left the page');
+  ok(w.eval('state.pages[1].past.length') === 0, 'a page with nothing crossed off stays as it was');
+  ok(w.eval('state.doneToday') === 0, 'the count starts the day at zero');
+  const flip = (w.__toasts || []).find(t => /New day/.test(t.m));
+  ok(!!flip && flip.o && flip.o.action, 'the flip says where yesterday went, with an undo');
+  flip.o.action.onAction();
+  ok(w.eval('page().tasks.length') === 4 && w.eval('page().past.length') === 0, 'undo puts yesterday back on the page');
+}
+
+console.log('\n— crossed-off work settles below the open list —');
+{
+  const w = boot();
+  w.eval('completeTask(page().tasks[0]);render()');
+  const labels = [...w.document.querySelectorAll('.seclabel')].map(e => e.textContent);
+  ok(labels[labels.length - 1] === 'CROSSED OFF', 'a CROSSED OFF section closes the page');
+  const rows = [...w.document.querySelectorAll('#list .task')];
+  ok(rows[rows.length - 1].classList.contains('done'), 'the done line sits at the bottom, ink and all');
+  ok(!rows[0].classList.contains('done'), 'open work is the first thing on the page');
+  ok(w.document.getElementById('dayCount').style.visibility === 'visible', 'the day count shows once there is a win');
+  const w2 = boot();
+  ok(w2.document.getElementById('dayCount').style.visibility === 'hidden', 'and hides while it would read zero');
 }
 
 console.log('\n— timers survive a reload —');

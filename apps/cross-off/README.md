@@ -3,9 +3,10 @@
 A paper to-do list you cross off with real highlighters. Priorities that
 auto-group (NOW / TODAY / SOON), beat-the-clock countdowns with personal
 records, a focus screen, a multi-page notebook, and the morning page-flip:
-yesterday's marked-up page goes to a flip-back pile with its ink intact,
-unfinished tasks carry forward with nothing said about it, and daily chores
-rewrite themselves onto the fresh page.
+on a new day the app flips the page all by itself. Yesterday's marked-up
+page goes to a flip-back pile with its ink intact, unfinished tasks carry
+forward with nothing said about it, and daily chores rewrite themselves
+onto the fresh page.
 
 Made for the way an ADHD brain actually works: no overdue labels, no dying
 streaks, no guilt copy, zero onboarding. The celebration fires on wins and

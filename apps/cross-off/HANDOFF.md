@@ -3,7 +3,7 @@
 **Project:** Cross Off, a paper to-do list you cross off with real highlighters
 **Studio:** Sky Wolf Studios · SWS Strategic Media LLC
 **Stack:** Single-file vanilla HTML/CSS/JS PWA. No build step, no runtime deps. Fonts self-hosted in `fonts/` (Caveat 700 + Patrick Hand, latin woff2).
-**Status:** Studio round 2026-08-18 complete on top of Stephen's user-tested v1.0.0. `node test/cross-off.test.mjs` = 73 assertions, green.
+**Status:** User-test round 2026-08-19 complete (see below) on top of the 2026-08-18 studio round. `node test/cross-off.test.mjs` = 83 assertions, green.
 
 ## What this app is
 
@@ -23,10 +23,41 @@ Design ethos (from competitor research; respect in all future work):
 
 Also: tap-to-edit only fires from a gesture that stayed "pending" under 8px movement.
 
+## User-test round 2026-08-19 (the mom it was built for)
+
+Field report: she opened the app the next day and her crossed-off list was
+still sitting there. "It's the same stuff from yesterday." Two causes, both
+fixed; do not resurrect either.
+
+1. **The morning flip is now automatic.** v1 offered a "flip when you're
+   ready" bar and the real user never flipped. `morningFlip(workDate)` runs
+   on boot when the saved `doneDate` is not today, flips EVERY page with
+   crossed-off work (not just the active one), stamps the pile with the day
+   the work happened (`workDate`), and announces with one Undo that restores
+   all flipped pages. The bar, `flipSnooze`, and the "not yet" decision are
+   gone. `freshPage(p)` remains as the manual mid-day flip in the page sheet;
+   both share `flipPage(p,date)`.
+2. **Day rollover is watched, not just booted.** Phones keep the PWA alive
+   for days, so the load() path (and its daily resets) never ran on reopen.
+   `checkNewDay()` fires on visibilitychange (returning to foreground),
+   pageshow, and a 60s tick while hidden: resets `doneToday`, runs the flip.
+   It deliberately does NOT fire while she is actively using the app at
+   midnight.
+
+Comfort pass from the same feedback ("make it comfortable for paralyzing
+ADHD"): crossed-off rows settle into a CROSSED OFF section at the bottom of
+the page ~2.6s after the stroke (`settleSoon()`, guarded by `strokeActive`
+so a re-render never eats an in-progress stroke); open work is always the
+top of the page. The NOW rows no longer pulse forever (bold red holds
+still). Section labels match the buttons: NOW / TODAY / SOON. "give up
+timer" became "stop the clock". The "0 crossed off today" header hides
+until the first win (`syncDayCount`). The add placeholder dropped the
+`!`/`~` syntax lesson (prefixes still parse).
+
 ## Studio round 2026-08-18 (this build)
 
 - **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document, cache-first assets — bump `CACHE` on every deploy), full icon set, self-hosted fonts. `privacy.html`. Footer + branding corrected to Sky Wolf Studios.
-- **The morning page-flip** (the anti-graveyard, was roadmap v1.2): `freshPage(p)` archives the marked-up page (ink intact) into `p.past` (cap `MAX_PAST_DAYS`), carries unfinished forward silently, and re-adds `chore:true` tasks undone. A gentle morning bar offers the flip on a new day with crossed-off work (`lastFlip`/`flipSnooze` gate it, "not yet" snoozes for the day); it is also in the page sheet, with Undo via SWS.toast. **Flip-back viewer** (`#past`): read-only pages, strokes redrawn, prev/next through days.
+- **The morning page-flip** (the anti-graveyard, was roadmap v1.2): archives the marked-up page (ink intact) into `p.past` (cap `MAX_PAST_DAYS`), carries unfinished forward silently, and re-adds `chore:true` tasks undone. ~~A gentle morning bar offers the flip~~ superseded 2026-08-19: the flip is automatic on a new day, see the user-test round above. **Flip-back viewer** (`#past`): read-only pages, strokes redrawn, prev/next through days.
 - **Chores:** `task.chore`, toggled in the edit sheet ("↻ every day"), row wears ↻.
 - **Task details:** `task.note` (textarea in the edit sheet, shown in focus mode, ✳ on the row). This is the "I can be more detailed" ask.
 - **Steps (Stephen, 2026-08-18): the checklist within the checklist.** `task.steps:[{text,done}]`. "the dishwasher" breaks into load it / run it / empty it: edited in the edit sheet (Enter adds, multi-line paste adds a batch, ✕ removes), toggled there or in focus mode (`toggleStep`), counter pill on the row (`.stepflag`, green at full). When the LAST step lands: confetti + toast + the row takes a pulsing golden ring (`.task.ready`, derived state, survives re-render) — and the app deliberately does NOT cross the task off. The stroke is hers; the sheet clears itself away so the highlighters are right there. Chores reset their steps on the page-flip. Never gate `completeTask` on steps — crossing off with steps unfinished is allowed (no shame mechanics).
@@ -45,9 +76,14 @@ Also: tap-to-edit only fires from a gesture that stayed "pending" under 8px move
           tasks:[{id,text,note,done,pri(1|2|3),chore,steps:[{text,done}],
                   strokes:[{color,pts[]}],
                   timer:{duration,deadline,buzzed}|null,result|null}]}],
+  archived:[page…],
   records:{normText:bestMs}, doneToday, doneDate,
-  color, addPri, sound, lastCustom, hintShown, lastFlip, flipSnooze }
+  color, addPri, sound, lastCustom, hintShown, lastFlip }
 ```
+
+`flipSnooze` is no longer written (2026-08-19); old saves carrying it load
+fine, the field is just ignored. `doneDate` doubles as the last-touched day
+that drives the automatic morning flip.
 
 ## Test checklist (run on a real phone after any change)
 

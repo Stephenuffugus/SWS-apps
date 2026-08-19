@@ -161,24 +161,6 @@
     height:var(--row);display:flex;align-items:center;
   }
 
-  /* ---------- morning bar (the anti-graveyard) ---------- */
-  .morning{
-    margin:10px 12px 0 60px;
-    background:var(--paper);
-    border:2px dashed var(--rule);border-radius:12px;
-    padding:10px 12px;
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    font-family:var(--hand);font-size:16px;color:var(--ink);
-  }
-  .morning .mbtns{display:flex;gap:8px;margin-left:auto}
-  .mbtn{
-    font-family:var(--sans);font-size:13px;font-weight:700;
-    border:2px solid var(--ink);border-radius:10px;
-    background:var(--ink);color:var(--paper);
-    padding:8px 13px;cursor:pointer;min-height:32px;
-  }
-  .mbtn.ghost{background:transparent;color:var(--ink-soft);border-color:var(--ink-faint)}
-
   /* ---------- rows ---------- */
   .task{
     position:relative;height:var(--row);
@@ -208,16 +190,14 @@
   }
   @keyframes readyPulse{50%{box-shadow:0 0 0 6px rgba(201,164,0,.14)}}
   @media (prefers-reduced-motion: reduce){ .task.ready::after{animation:none} }
-  .task.p1 .txt{font-weight:800;color:var(--urgent);animation:urgentPulse 1.1s ease-in-out infinite}
-  @keyframes urgentPulse{
-    0%,100%{opacity:1;text-shadow:0 0 0 rgba(214,47,47,0)}
-    50%{opacity:.6;text-shadow:0 0 9px rgba(214,47,47,.4)}
-  }
+  /* urgent is bold and red and HOLDS STILL. the old infinite pulse read as
+     an alarm that never shuts up; a paralyzed brain needs loud, not screaming */
+  .task.p1 .txt{font-weight:800;color:var(--urgent)}
   .task.p2 .txt{font-weight:500;color:var(--ink)}
   .task.p3 .txt{font-weight:400;color:var(--ink-soft)}
   .task.done .txt{color:#9AA6B1 !important;font-weight:400;animation:none;text-shadow:none}
   @media (prefers-reduced-motion: reduce){
-    .task.p1 .txt,.chip{animation:none !important}
+    .chip{animation:none !important}
   }
 
   .task canvas{
@@ -247,7 +227,7 @@
   .chip.over{background:#6B4A3A;border-color:#6B4A3A;color:#fff}
   @keyframes panic{50%{transform:scale(1.07)}}
   .task.done .chip{opacity:.55;pointer-events:none;animation:none}
-  .chip:focus-visible,.mbtn:focus-visible{outline:2px solid var(--urgent);outline-offset:2px}
+  .chip:focus-visible{outline:2px solid var(--urgent);outline-offset:2px}
 
   .newpr{
     position:absolute;right:10px;top:-6px;z-index:4;
@@ -571,7 +551,7 @@
 <header>
   <h1><span class="underline">Cross Off</span></h1>
   <div class="hright">
-    <div class="daycount"><b id="doneCount">0</b> crossed off today</div>
+    <div class="daycount" id="dayCount" style="visibility:hidden"><b id="doneCount">0</b> crossed off today</div>
     <button id="soundBtn" aria-label="Sound on or off" aria-pressed="true">🔊</button>
   </div>
 </header>
@@ -579,12 +559,11 @@
 <div id="tabs" role="tablist" aria-label="Pages"></div>
 
 <div id="page">
-  <div id="morningSlot"></div>
   <div id="list"></div>
   <div class="addrow">
     <button id="handBtn" aria-label="Hand me one task and start a timer" title="can't pick? tap here">✋</button>
     <label class="sr-only" for="addInput">Write a task</label>
-    <input id="addInput" type="text" placeholder="write a task…  (! = NOW, ~ = SOON)" enterkeyhint="done" autocomplete="off">
+    <input id="addInput" type="text" placeholder="write a task…" enterkeyhint="done" autocomplete="off">
     <div class="prisel" id="addPri">
       <button class="pri" data-p="1">NOW</button>
       <button class="pri sel" data-p="2">TODAY</button>
@@ -635,7 +614,7 @@
   <div id="fSteps"></div>
   <div class="fbtns">
     <button class="fbtn" id="fDone">✓ I did it</button>
-    <button class="fbtn line" id="fStop">give up timer</button>
+    <button class="fbtn line" id="fStop">stop the clock</button>
   </div>
 </div>
 
@@ -667,7 +646,9 @@
 
 const PAGE_COLORS=['#F9E547','#FA86C4','#8CE55C','#63D4F5','#FFAE45'];
 const DURATIONS=[2,5,10,15,25];
-const SEC_LABELS={1:'DO IT NOW',2:'TODAY',3:'NEXT FEW DAYS'};
+/* one vocabulary everywhere: the buttons say NOW/TODAY/SOON, so the page
+   says NOW/TODAY/SOON. two names for the same bucket is one name too many */
+const SEC_LABELS={1:'NOW',2:'TODAY',3:'SOON'};
 const MAX_PAST_DAYS=120;      // per page; a school year of mornings
 const REDUCED=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -677,7 +658,7 @@ const state={
   color:'#F9E547',addPri:2,
   sound:true,hintShown:true,
   focusTaskId:null,
-  lastFlip:null,flipSnooze:null,
+  lastFlip:null,lastSaveDay:null,
   archived:[]
 };
 let uid=0;
@@ -701,7 +682,7 @@ function save(){
       records:state.records,doneToday:state.doneToday,doneDate:todayStr(),
       color:state.color,addPri:state.addPri,sound:state.sound,
       lastCustom:state.lastCustom||null,hintShown:state.hintShown,
-      lastFlip:state.lastFlip,flipSnooze:state.flipSnooze
+      lastFlip:state.lastFlip
     };
     localStorage.setItem(STORE_KEY,JSON.stringify(data));
   }catch(e){/* no storage available: session runs in-memory */}
@@ -733,7 +714,7 @@ function load(){
     state.lastCustom=d.lastCustom||null;
     state.hintShown=d.hintShown!==false;
     state.lastFlip=d.lastFlip||null;
-    state.flipSnooze=d.flipSnooze||null;
+    state.lastSaveDay=d.doneDate||null;   // the day the notebook was last touched
     return state.pages.length>0;
   }catch(e){return false;}
 }
@@ -749,6 +730,13 @@ const focusEl=document.getElementById('focus');
 const liveEl=document.getElementById('live');
 const ticks={};
 const announce=m=>{liveEl.textContent='';setTimeout(()=>{liveEl.textContent=m;},30);};
+/* the count only shows once there is something to count: "0 crossed off
+   today" is a lousy first thing to read in the morning */
+const dayCountWrap=document.getElementById('dayCount');
+function syncDayCount(){
+  doneCountEl.textContent=state.doneToday;
+  dayCountWrap.style.visibility=state.doneToday>0?'visible':'hidden';
+}
 
 /* ---------- audio + haptics ---------- */
 let AC=null;
@@ -839,63 +827,68 @@ function renderTabs(){
   tabsEl.appendChild(add);
 }
 
-/* ---------- the morning page-flip (the anti-graveyard) ------------
+/* ---------- the page-flip (the anti-graveyard) ------------
    Yesterday's marked-up page goes to the flip-back pile with its ink
    intact. Unfinished tasks carry forward without a word said about
    it: no overdue label, no red counter, nothing to be ashamed of.
    Chores rewrite themselves onto the fresh page, undone. */
-function freshPage(p){
+function flipPage(p,date){
   p.past=p.past||[];
-  p.past.push({date:todayStr(),tasks:JSON.parse(JSON.stringify(p.tasks))});
+  p.past.push({date,tasks:JSON.parse(JSON.stringify(p.tasks))});
   while(p.past.length>MAX_PAST_DAYS)p.past.shift();
+  const snapshot=JSON.parse(JSON.stringify(p.tasks));
   const carried=p.tasks.filter(t=>!t.done);
   const chores=p.tasks.filter(t=>t.done&&t.chore).map(t=>({
     id:++uid,text:t.text,note:t.note||'',done:false,pri:t.pri||2,chore:true,
     steps:(t.steps||[]).map(s=>({text:s.text,done:false})),   // the steps start over too
     strokes:[],timer:null,result:null
   }));
-  const snapshotJson=JSON.stringify({tasks:p.tasks,pastLen:p.past.length});
   p.tasks=[...carried,...chores];
+  return snapshot;
+}
+/* the manual flip in the page sheet, for mid-day fresh starts */
+function freshPage(p){
+  const snapshot=flipPage(p,todayStr());
   state.lastFlip=todayStr();
   render();save();
   announce('Fresh page');
   if(window.SWS&&SWS.toast)SWS.toast('Fresh page. Yesterday is in the flip-back pile, ink and all.',{
     ms:7000,action:{label:'Undo',onAction:()=>{
-      const snap=JSON.parse(snapshotJson);
       p.past.pop();
-      p.tasks=snap.tasks;
+      p.tasks=snapshot;
       render();save();
     }}});
 }
-function morningBarHTML(){
-  const p=page();
-  if(!p)return '';
-  const today=todayStr();
-  if(state.lastFlip===today||state.flipSnooze===today)return '';
-  if(!p.tasks.some(t=>t.done))return '';
-  /* only once the day has actually changed since the last save with
-     crossed-off work on the page: doneToday resetting handles "today" */
-  if(state.doneToday>0)return '';
-  return `<div class="morning" id="morning">New day.
-    <span>Flip to a fresh page when you're ready.</span>
-    <span class="mbtns">
-      <button class="mbtn" id="mFlip">Flip the page</button>
-      <button class="mbtn ghost" id="mLater">not yet</button>
-    </span></div>`;
+/* the morning flip happens BY ITSELF. v1 offered a "flip when you're ready"
+   bar and the first real tester never flipped: she opened the app to
+   yesterday's graveyard and figured it was broken. She was right. A new day
+   means a fresh page, no decision to make; the toast says where yesterday
+   went and Undo brings it back. workDate stamps the pile with the day the
+   work actually happened, not the morning it got filed. */
+function morningFlip(workDate){
+  const flipped=[];
+  for(const p of state.pages){
+    if(!p.tasks.some(t=>t.done))continue;
+    flipped.push({p,snapshot:flipPage(p,workDate)});
+  }
+  if(!flipped.length)return false;
+  state.lastFlip=todayStr();
+  render();save();
+  announce('New day, fresh page. Yesterday is in the flip-back pile.');
+  if(window.SWS&&SWS.toast)SWS.toast('New day, fresh page. Yesterday is in the flip-back pile, ink and all.',{
+    ms:9000,action:{label:'Undo',onAction:()=>{
+      for(const f of flipped){f.p.past.pop();f.p.tasks=f.snapshot;}
+      render();save();
+    }}});
+  return true;
 }
 
 /* ---------- list ---------- */
 function render(){
   renderTabs();
   listEl.innerHTML='';
-  doneCountEl.textContent=state.doneToday;
+  syncDayCount();
   const p=page();
-  const slot=document.getElementById('morningSlot');
-  slot.innerHTML=morningBarHTML();
-  const mf=document.getElementById('mFlip');
-  if(mf)mf.addEventListener('click',()=>freshPage(page()));
-  const ml=document.getElementById('mLater');
-  if(ml)ml.addEventListener('click',()=>{state.flipSnooze=todayStr();slot.innerHTML='';save();});
   if(!p)return;
   if(!p.tasks.length){
     const e=document.createElement('div');
@@ -903,14 +896,31 @@ function render(){
     listEl.appendChild(e);
     return;
   }
+  /* open work on top, crossed-off work settles to the bottom of the page.
+     What is left to do is the first thing she sees, not what is already
+     behind her — the wins wait at the bottom, ink and all */
+  const open=p.tasks.filter(t=>!t.done);
+  const done=p.tasks.filter(t=>t.done);
   for(const pri of [1,2,3]){
-    const group=p.tasks.filter(t=>(t.pri||2)===pri);
+    const group=open.filter(t=>(t.pri||2)===pri);
     if(!group.length)continue;
     const lbl=document.createElement('div');
     lbl.className='seclabel'+(pri===1?' urg':'');
     lbl.textContent=SEC_LABELS[pri];
     listEl.appendChild(lbl);
     for(const task of group) listEl.appendChild(buildRow(task));
+  }
+  if(!open.length){
+    const e=document.createElement('div');
+    e.className='empty';e.textContent='every line crossed off. look at that';
+    listEl.appendChild(e);
+  }
+  if(done.length){
+    const lbl=document.createElement('div');
+    lbl.className='seclabel';
+    lbl.textContent='CROSSED OFF';
+    listEl.appendChild(lbl);
+    for(const task of done) listEl.appendChild(buildRow(task));
   }
 }
 
@@ -1523,7 +1533,7 @@ function bindStroke(cv,row,task){
     const dx=Math.abs(e.offsetX-sx),dy=Math.abs(e.offsetY-sy);
     if(mode==='pending'){
       if(dy>10&&dy>dx){mode='scroll';pts=[];return;}      // vertical intent → let the page scroll
-      if(dx>6&&dx>=dy){mode='draw';cv.setPointerCapture(e.pointerId);squeak();}
+      if(dx>6&&dx>=dy){mode='draw';strokeActive=true;cv.setPointerCapture(e.pointerId);squeak();}
       else return;                                        // not decided yet
     }
     pts.push({x:e.offsetX,y:e.offsetY});
@@ -1533,7 +1543,7 @@ function bindStroke(cv,row,task){
   cv.addEventListener('pointerup',e=>{
     if(mode==='idle')return;
     const wasPending=(mode==='pending'),wasDraw=(mode==='draw');
-    mode='idle';
+    mode='idle';strokeActive=false;
     const dx=Math.abs(e.offsetX-sx),dy=Math.abs(e.offsetY-sy);
     if(wasPending&&dx<8&&dy<8){pts=[];redrawStrokes(cv,task);openEditSheet(task);return;}
     if(!wasDraw){pts=[];return;}
@@ -1552,7 +1562,7 @@ function bindStroke(cv,row,task){
       },40);
     }
   });
-  cv.addEventListener('pointercancel',()=>{mode='idle';pts=[];redrawStrokes(cv,task);});
+  cv.addEventListener('pointercancel',()=>{mode='idle';strokeActive=false;pts=[];redrawStrokes(cv,task);});
 }
 
 /* auto-stroke: the app draws the highlighter for you ("I did it",
@@ -1580,13 +1590,24 @@ function autoStroke(task,done){
   squeak();requestAnimationFrame(step);
 }
 
+/* after a cross-off the line stays put for a beat (the stamp, the confetti,
+   the ink under her finger), then the page tidies itself: the done line
+   settles down into the CROSSED OFF pile at the bottom. Never mid-stroke. */
+let settleT=null,strokeActive=false;
+function settleSoon(){
+  clearTimeout(settleT);
+  settleT=setTimeout(()=>{
+    if(strokeActive){settleSoon();return;}
+    render();
+  },2600);
+}
 function completeTask(task,opts={}){
   const finish=()=>{
     task.done=true;
     const row=rowFor(task);
     if(row){row.classList.remove('p1');row.classList.add('done');}
     state.doneToday++;
-    doneCountEl.textContent=state.doneToday;
+    syncDayCount();
     if(state.hintShown){hint.classList.add('hide');state.hintShown=false;}
     const res=finishCountdown(task);
     refreshChip(task,chipFor(task));
@@ -1605,6 +1626,7 @@ function completeTask(task,opts={}){
       }else confetti(40);
     }
     save();
+    settleSoon();
   };
   if(opts.autoStroke)autoStroke(task,finish);
   else finish();
@@ -1739,7 +1761,27 @@ document.querySelectorAll('.marker').forEach(m=>{
   m.classList.toggle('sel',on);m.setAttribute('aria-pressed',on);
 });
 if(!state.hintShown)hint.classList.add('hide');
+/* a new day flips the page all by itself: yesterday's work is already in
+   the flip-back pile before she sees the screen, stamped with the day it
+   actually happened */
+if(state.lastSaveDay&&state.lastSaveDay!==todayStr())morningFlip(state.lastSaveDay);
 render();
+
+/* the phone keeps the app alive for days, so "reopened" is usually not
+   "rebooted" and the load() path never runs. Watch for the date changing
+   out from under a living session: coming back to the foreground, or a
+   quiet minute tick while backgrounded. */
+let dayNow=todayStr();
+function checkNewDay(){
+  const t=todayStr();
+  if(t===dayNow)return;
+  const was=dayNow;dayNow=t;
+  state.doneToday=0;
+  if(!morningFlip(was)){render();save();}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkNewDay();});
+addEventListener('pageshow',checkNewDay);
+setInterval(()=>{if(document.hidden)checkNewDay();},60000);
 
 /* a timer that was running when the app closed picks itself back up */
 for(const p of state.pages)for(const t of p.tasks){
