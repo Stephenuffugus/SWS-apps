@@ -62,7 +62,7 @@ const CATALOGUE = [
   ['Family &amp; Home', [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
     ['baby-log', 'Baby Log', 'Feeds, sleep and nappies with one thumb at 3am', 'newborn infant feeding nursing diaper tracker night'],
-    ['hush', 'Hush', 'A sleep sound machine, honest about the science', 'white noise sleep sound machine baby nursery newborn night bedtime settle offline'],
+    ['hush', 'Hush', 'Pick your sound. Go to sleep', 'white noise sleep sound machine baby nursery newborn night bedtime settle offline honest science'],
     ['pill-schedule', 'Pill Schedule', 'A large-print medication card for the fridge', 'medication meds prescription elderly dosage reminder'],
     ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
     ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
