@@ -1,7 +1,7 @@
 /* A real QR decoder, for tests only.
    ─────────────────────────────────────────────────────────────────────────
-   The existing tests asserted on the SVG *string* — its prefix, its length,
-   its viewBox — which is why the UTF-8 bug survived them: 'Café' produced a
+   The existing tests asserted on the SVG *string*, its prefix, its length,
+   its viewBox, which is why the UTF-8 bug survived them: 'Café' produced a
    perfectly well-formed SVG of a perfectly valid code containing the wrong
    bytes. The only assertion that can see that class of defect is one that
    reads the modules back out and reconstructs the string.
@@ -12,7 +12,7 @@
    de-interleaving, so it is restricted to single-RS-block symbols and refuses
    loudly outside them rather than returning plausible garbage. */
 
-// Number of RS blocks, versions 1–10 × [L, M, Q, H].
+// Number of RS blocks, versions 1 to 10 × [L, M, Q, H].
 const BLOCKS = {
   1: { L: 1, M: 1, Q: 1, H: 1 },
   2: { L: 1, M: 1, Q: 1, H: 1 },
@@ -26,7 +26,7 @@ const BLOCKS = {
   10: { L: 4, M: 5, Q: 8, H: 8 },
 };
 
-// Alignment-pattern centre coordinates, versions 1–10.
+// Alignment-pattern centre coordinates, versions 1 to 10.
 const ALIGN = {
   1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
   6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
@@ -110,7 +110,7 @@ export function decodeQr(qr) {
   const n = qr.getModuleCount();
   const version = (n - 17) / 4;
   if (!Number.isInteger(version) || version < 1 || version > 10) {
-    throw new Error('test decoder handles versions 1–10, got module count ' + n);
+    throw new Error('test decoder handles versions 1 to 10, got module count ' + n);
   }
   const { ec, mask } = readFormat(qr, n);
   const blocks = BLOCKS[version][ec];

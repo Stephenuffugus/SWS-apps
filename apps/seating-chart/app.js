@@ -1,7 +1,7 @@
-// Seating Chart — Engine 2, skin A. Local-first: IndexedDB + vendored pdf-lib.
+// Seating Chart, Engine 2, skin A. Local-first: IndexedDB + vendored pdf-lib.
 // Seating is a constraint problem: declare rules, and when the guest list
 // changes we show what broke. Auto-arrange is a suggestion, never the boss.
-// All user data reaches the DOM via textContent — never innerHTML.
+// All user data reaches the DOM via textContent, never innerHTML.
 import {
   newProject, newId, parseGuestPaste, validate, autoArrange,
   occupancy, unassignedGuests, parseGuestPasteDetailed, MAX_PASTE,
@@ -10,7 +10,7 @@ import { makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf, unprintableNames }
 import { saveProject, getProject, allProjects, deleteProject } from './store.js';
 
 const CONFIG = {
-  // Stripe payment link for the tip jar — button stays hidden while empty.
+  // Stripe payment link for the tip jar, button stays hidden while empty.
   // Per the product doc: we only ever ASK after an export succeeds.
   tipUrl: 'https://buy.stripe.com/eVq4gA2zn4L52bj31L7EQ05',
 };
@@ -54,10 +54,10 @@ let saveWarned = 0;
 
 function persistSnap(snap) {
   saveProject(snap).catch(() => {
-    // storage full / private mode — the user must know their work isn't landing
+    // storage full / private mode, the user must know their work isn't landing
     if (Date.now() - saveWarned > 60000) {
       saveWarned = Date.now();
-      toast('⚠ Couldn’t save to this device — storage may be full. Export a backup file now.', 8000);
+      toast('⚠ Couldn’t save to this device, storage may be full. Export a backup file now.', 8000);
     }
   });
 }
@@ -89,12 +89,12 @@ async function renderHome() {
   v.replaceChildren();
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'Seating charts without the 2am panic'),
-    el('p', {}, 'Declare the rules — who sits together, who absolutely doesn’t — and when the guest list changes, we show you exactly what broke. Then print PDFs that look like you hired someone. ',
+    el('p', {}, 'Declare the rules, who sits together, who absolutely doesn’t, and when the guest list changes, we show you exactly what broke. Then print PDFs that look like you hired someone. ',
       el('strong', {}, 'Free, no watermark, and nothing ever leaves your device.')),
     el('button', { class: 'btn primary', type: 'button', onclick: createProject }, 'New event')));
 
   /* The promise as an object, not a sentence in grey at the bottom. The
-     research is blunt that nobody believes it as body copy — and for this app
+     research is blunt that nobody believes it as body copy, and for this app
      the claim is unusually concrete, because a guest list with dietary and
      accessibility notes on it is genuinely sensitive. */
   const lock = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -108,7 +108,7 @@ async function renderHome() {
   v.append(el('p', { class: 'trust noprint' }, lock,
     el('span', {}, el('b', {}, 'Your guest list stays on this device.'),
       ' Names, meals, allergies and who cannot sit near whom are stored in this ' +
-      'browser only — no account, no upload, and the PDFs are made here too.')));
+      'browser only, no account, no upload, and the PDFs are made here too.')));
 
   const sec = el('section', { class: 'card' }, el('h2', {}, 'Your events'));
   const list = el('ul', { class: 'plain' });
@@ -116,7 +116,7 @@ async function renderHome() {
   let rows = [];
   try { rows = (await allProjects()) || []; } catch (e) {}
   rows.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  if (rows.length === 0) sec.append(el('p', { class: 'hint', text: 'Saved on this device only — export a backup file before switching computers.' }));
+  if (rows.length === 0) sec.append(el('p', { class: 'hint', text: 'Saved on this device only, export a backup file before switching computers.' }));
   for (const p of rows) {
     list.append(el('li', {},
       el('div', { class: 'grow' },
@@ -147,12 +147,12 @@ async function renderHome() {
     el('h2', {}, 'Backup'),
     el('button', { class: 'btn', type: 'button', onclick: () => file.click() }, 'Import an event file'),
     file,
-    el('p', { class: 'hint', text: 'Local-only means you own the backup problem — every event can be exported as one .json file from its Print tab.' })));
+    el('p', { class: 'hint', text: 'Local-only means you own the backup problem, every event can be exported as one .json file from its Print tab.' })));
 }
 
 /* The name dialog, not a native prompt(): a system prompt ignores the comfort
-   panel entirely — text size, light/dark and the warm night tint all stop at
-   its edge — and this is the first thing anyone sees in the app. */
+   panel entirely, text size, light/dark and the warm night tint all stop at
+   its edge, and this is the first thing anyone sees in the app. */
 function createProject() {
   const field = $('nameField');
   field.value = '';
@@ -295,7 +295,7 @@ function renderGuestsTab() {
     touch(); drawEditor();
   } }, 'Add');
   add.append(el('div', { class: 'row' }, nameIn, partyIn, addBtn));
-  const ta = el('textarea', { placeholder: 'Or paste your whole list — one guest per line:\nAnn Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish, nut allergy\nCara Chen' });
+  const ta = el('textarea', { placeholder: 'Or paste your whole list, one guest per line:\nAnn Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish, nut allergy\nCara Chen' });
   add.append(el('details', { style: 'margin-top:10px' },
     el('summary', { class: 'sub', style: 'cursor:pointer' }, 'Paste a list or spreadsheet (nobody retypes 140 names)'),
     ta,
@@ -304,8 +304,7 @@ function renderGuestsTab() {
         const { rows, dropped } = parseGuestPasteDetailed(ta.value);
         if (rows.length === 0) { toast('Paste one guest per line: Name, party, meal, flags'); return; }
 
-        // Duplicates are usually a double-paste, not two people with one name —
-        // but sometimes they are two people with one name, so warn, never block.
+        // Duplicates are usually a double-paste, not two people with one name, // but sometimes they are two people with one name, so warn, never block.
         const existing = new Set(project.guests.map(g => g.name.trim().toLowerCase()));
         const dupes = rows.filter(r => existing.has(r.name.trim().toLowerCase())).length;
 
@@ -318,7 +317,7 @@ function renderGuestsTab() {
            "1000 guests added". Losing 200 people quietly is the exact failure
            this app's whole positioning is against. */
         if (dropped > 0) {
-          toast(`${rows.length} added — but ${dropped} did not fit. This app holds ${MAX_PASTE} guests per event.`, 7000);
+          toast(`${rows.length} added, but ${dropped} did not fit. This app holds ${MAX_PASTE} guests per event.`, 7000);
         } else if (dupes > 0) {
           toast(`${rows.length} guests added · ${dupes} ${dupes === 1 ? 'name was' : 'names were'} already on the list`, 5000);
         } else {
@@ -331,7 +330,7 @@ function renderGuestsTab() {
     el('h2', {}, project.guests.length + ' guests · ' + yes + ' expected'));
   /* No ad-hoc focus restore here any more. The old one handed focus back but
      always jammed the caret to the end of the string, so editing a typo in the
-     middle of a search term was impossible — every keystroke teleported the
+     middle of a search term was impossible, every keystroke teleported the
      cursor. drawEditor() now restores focus AND the selection range, for this
      field and every other one carrying a data-fk. */
   const search = el('input', { type: 'search', id: 'guestSearch', 'data-fk': 'guestSearch',
@@ -382,9 +381,9 @@ function renderTablesTab() {
     el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto', onclick: () => {
       const label = labelIn.value.trim() || 'Table ' + (project.tables.length + 1);
       const seats = Math.min(Math.max(parseInt(seatsIn.value, 10) || 8, 1), 30);
-      /* Seeded inside the band a table can actually be dragged to (0.07–0.93).
+      /* Seeded inside the band a table can actually be dragged to (0.07 to 0.93).
          The old grid was y = 0.15 + row * 0.28, which passes 1.0 at the 13th
-         table — so at a normal 18-table wedding six were clipped by the floor's
+         table, so at a normal 18-table wedding six were clipped by the floor's
          overflow:hidden and two were entirely invisible, and at 50 tables 34
          could not be seen at all. Wrapping every four rows overlaps instead,
          which is visible and can be dragged apart. */
@@ -401,12 +400,12 @@ function renderTablesTab() {
   const floorCard = el('section', { class: 'card' }, el('h2', {}, 'Floor plan'));
   const floor = el('div', { class: 'floor' });
   /* Height grows with the table count. A fixed 420px box is fine for eight
-     tables and unreadable for thirty — the positions are fractions of this
+     tables and unreadable for thirty, the positions are fractions of this
      box, so giving it more room spreads them out rather than stacking them. */
   const rows = Math.max(1, Math.ceil(project.tables.length / 4));
   floor.style.height = Math.min(880, Math.max(420, rows * 130 + 90)) + 'px';
   for (const t of project.tables) floor.append(renderFloorTable(t, floor, occ));
-  floorCard.append(floor, el('p', { class: 'hint', text: 'Drag to arrange · tap a table to edit it. The layout is for you — the printed chart lists tables in the order added.' }));
+  floorCard.append(floor, el('p', { class: 'hint', text: 'Drag to arrange · tap a table to edit it. The layout is for you, the printed chart lists tables in the order added.' }));
   frag.append(floorCard);
   return frag;
 }
@@ -468,7 +467,7 @@ function renderSeatTab() {
 
   const un = unassignedGuests(project);
   const pool = el('section', { class: 'card' },
-    el('h2', {}, un.length ? 'Not seated yet (' + un.length + ') — tap to pick up, then tap a table' : 'Everyone is seated'));
+    el('h2', {}, un.length ? 'Not seated yet (' + un.length + '), tap to pick up, then tap a table' : 'Everyone is seated'));
   const byParty = Object.create(null);
   for (const g of un) (byParty[g.party || ''] = byParty[g.party || ''] || []).push(g);
   const chips = el('div', { class: 'chips' });
@@ -492,7 +491,7 @@ function renderSeatTab() {
   }
   pool.append(chips);
   if (un.length === 0 && project.guests.length === 0)
-    pool.append(el('p', { class: 'hint', text: 'Add guests first — then seating them takes minutes.' }));
+    pool.append(el('p', { class: 'hint', text: 'Add guests first, then seating them takes minutes.' }));
   pool.append(el('div', { class: 'row', style: 'margin-top:10px' },
     el('button', { class: 'btn', type: 'button', onclick: () => {
       /* Hand-placed seating is hours of work. This used to be guarded by a
@@ -505,8 +504,8 @@ function renderSeatTab() {
 
       const left = unassignedGuests(project).length;
       const msg = left
-        ? `Seating suggested — ${left} could not be placed`
-        : 'Seating suggested — rearrange anything you like';
+        ? `Seating suggested, ${left} could not be placed`
+        : 'Seating suggested, rearrange anything you like';
 
       if (window.SWS && Object.keys(before).length) {
         SWS.undo(msg, () => { project.assignments = before; touch(); drawEditor(); },
@@ -556,7 +555,7 @@ function renderSeatTab() {
         el('span', { class: 'tname', text: t.label }),
         el('span', { class: 'tcount' + (over ? ' over' : ''), text: guests.length + ' / ' + t.seats })));
 
-    /* The core verb — "put these people at that table" — was a click listener
+    /* The core verb, "put these people at that table", was a click listener
        on an unfocusable <div>, so a keyboard user could select guests and then
        had nowhere to put them. A real button says what it does, is reachable
        by Tab, and does not need a nested-interactive workaround the way
@@ -615,7 +614,7 @@ function renderRulesTab() {
   const tableOf = Object.create(null);
   for (const t of project.tables) tableOf[t.id] = t.label;
 
-  const card = el('section', { class: 'card' }, el('h2', {}, 'Rules — declared once, checked forever'));
+  const card = el('section', { class: 'card' }, el('h2', {}, 'Rules, declared once, checked forever'));
   const list = el('ul', { class: 'plain' });
   const words = { together: 'Keep together', apart: 'Keep apart', mustTable: 'Must be at' };
   for (const r of project.rules) {
@@ -627,7 +626,7 @@ function renderRulesTab() {
         onclick: () => { project.rules = project.rules.filter(x => x.id !== r.id); touch(); drawEditor(); } }, '✕')));
   }
   if (project.rules.length === 0)
-    card.append(el('p', { class: 'hint', text: '“Grandma near the front.” “The exes at different tables.” Write them down once — every future change gets checked against them automatically.' }));
+    card.append(el('p', { class: 'hint', text: '“Grandma near the front.” “The exes at different tables.” Write them down once, every future change gets checked against them automatically.' }));
   card.append(list,
     el('div', { style: 'margin-top:10px' },
       el('button', { class: 'btn primary', type: 'button', onclick: openRuleDlg }, 'Add a rule')));
@@ -659,7 +658,7 @@ function openRuleDlg() {
 /* ----- print tab ----- */
 function renderPrintTab() {
   const frag = document.createDocumentFragment();
-  const card = el('section', { class: 'card' }, el('h2', {}, 'Print-ready PDFs — free, no watermark'));
+  const card = el('section', { class: 'card' }, el('h2', {}, 'Print-ready PDFs, free, no watermark'));
 
   const sizeSel = el('select', { style: 'flex:0 0 110px', 'aria-label': 'Page size',
     onchange: (ev) => { pageSize = ev.target.value; } },
@@ -670,9 +669,9 @@ function renderPrintTab() {
     el('span', { class: 'sub', style: 'align-self:center' }, 'Page size'), sizeSel));
 
   const exports = [
-    ['Entrance display', 'Big and pretty, by table — frame it or pin it at the door.', makeEntrancePdf, 'entrance'],
+    ['Entrance display', 'Big and pretty, by table, frame it or pin it at the door.', makeEntrancePdf, 'entrance'],
     ['Escort cards', 'Alphabetical by last name, ten per page, dashed cut lines.', makeEscortCardsPdf, 'escort-cards'],
-    ['Caterer’s sheet', 'Table by table with meal counts, dietary flags, and totals — the one venues ask for a week out.', makeCatererPdf, 'caterer-sheet'],
+    ['Caterer’s sheet', 'Table by table with meal counts, dietary flags, and totals, the one venues ask for a week out.', makeCatererPdf, 'caterer-sheet'],
   ];
   for (const [title, desc, fn, slug] of exports) {
     card.append(el('div', { class: 'exportcard' },
@@ -702,11 +701,11 @@ function renderPrintTab() {
         : `${cannot.length} names cannot be printed in these PDFs`),
       el('div', { style: 'margin-top:4px' },
         names + (cannot.length > 6 ? ` and ${cannot.length - 6} more` : '') +
-        ' — the built-in PDF fonts cover Latin script only, so these come out as question marks. ' +
+        ', the built-in PDF fonts cover Latin script only, so these come out as question marks. ' +
         'Write those cards by hand, or add a Latin spelling in the guest’s name field.')));
   }
 
-  card.append(el('p', { class: 'hint', text: 'Print one physical page before the big day — paper always finds something screens miss.' }));
+  card.append(el('p', { class: 'hint', text: 'Print one physical page before the big day, paper always finds something screens miss.' }));
   frag.append(card);
 
   const backup = el('section', { class: 'card' }, el('h2', {}, 'Backup'));
@@ -715,7 +714,7 @@ function renderPrintTab() {
     const a = el('a', { href: URL.createObjectURL(blob), download: slugify(project.name) + '.seating.json' });
     document.body.append(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    toast('Exported — email it to yourself; this device is the only copy otherwise');
+    toast('Exported, email it to yourself; this device is the only copy otherwise');
   } }, 'Export this event as a file'));
   frag.append(backup);
   return frag;
@@ -731,7 +730,7 @@ function downloadBytes(bytes, filename) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
 function afterExportAsk() {
-  // The doc's rule: ask after the export succeeds — never before, never mid-flow.
+  // The doc's rule: ask after the export succeeds, never before, never mid-flow.
   if (!CONFIG.tipUrl) { toast('Exported ✓'); return; }
   const t = $('toast');
   t.replaceChildren('Exported ✓  ',
@@ -762,10 +761,10 @@ function wire() {
     /* Nothing to delete if the dialog was opened without a guest behind it.
        Only reachable by script today, but the alternative to this line is a
        TypeError, and a handler that throws is a handler that silently does
-       nothing — which is exactly how the planner's merge arrows died. */
+       nothing, which is exactly how the planner's merge arrows died. */
     if (!guestEditing) return;
     /* Removing a guest also strips them out of every rule and can delete rules
-       that fall below their minimum — far more than the confirm() described.
+       that fall below their minimum, far more than the confirm() described.
        Undo restores all of it, because a snapshot cannot forget a side effect
        the way a hand-written inverse can. */
     const name = guestEditing.name;
@@ -828,7 +827,7 @@ function wire() {
     closeDlg($('tableDlg'));
 
     const msg = n
-      ? `${label} deleted — ${n} ${n === 1 ? 'guest is' : 'guests are'} back in the pool`
+      ? `${label} deleted, ${n} ${n === 1 ? 'guest is' : 'guests are'} back in the pool`
       : `${label} deleted`;
     if (window.SWS) {
       SWS.undo(msg, () => {

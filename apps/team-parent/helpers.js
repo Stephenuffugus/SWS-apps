@@ -1,4 +1,4 @@
-// Pure helpers — no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
+// Pure helpers, no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
 
 // Share-code alphabet from the product doc: no 0/O/1/I/l lookalikes.
 export const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -38,9 +38,9 @@ export function parseBulkSlots(text) {
   return out;
 }
 
-/* Date-range slots: "every Tue and Thu, Sept–Nov" style generation.
-   weekdays: Set/array of 0–6 (Sun=0). Dates are LOCAL. The date goes into the
-   sort key (`order`), not into the label — see THE DATE MODEL below. */
+/* Date-range slots: "every Tue and Thu, Sept-Nov" style generation.
+   weekdays: Set/array of 0 to 6 (Sun=0). Dates are LOCAL. The date goes into the
+   sort key (`order`), not into the label, see THE DATE MODEL below. */
 export function dateRangeSlots({ start, end, weekdays, time, name, where, wear, capacity }) {
   const out = [];
   const from = new Date(start + 'T00:00:00');
@@ -91,7 +91,7 @@ export function shareUrl(code, base) {
    THE DATE MODEL
 
    firestore.rules pins a slot document to exactly
-   ['label','capacity','order','claimedCount'] — a new `startsAt` field cannot
+   ['label','capacity','order','claimedCount'], a new `startsAt` field cannot
    ship without a rules change, and the rules are shared with signup-sheets.
    `order` is already a number, so the date IS the order key:
 
@@ -219,7 +219,7 @@ export function sniffDateTime(line, now) {
     if (m) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = m[3] ? +m[3] : 0; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); }
   }
   if (!mo) {
-    m = /(?:^|[\s(·—–-])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=$|[\s)·—–,-])/.exec(s);
+    m = /(?:^|[\s(·, --])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=$|[\s)·, -,-])/.exec(s);
     if (m) {
       mo = +m[1]; d = +m[2];
       y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : 0;
@@ -249,7 +249,7 @@ export function sniffDateTime(line, now) {
     }
     date = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
-  const rest = s.replace(/\s*[·—–-]\s*[·—–-]\s*/g, ' — ').replace(/^[\s·—–,-]+|[\s·—–,-]+$/g, '').replace(/\s{2,}/g, ' ').trim();
+  const rest = s.replace(/\s*[·, --]\s*[·, --]\s*/g, ', ').replace(/^[\s·, -,-]+|[\s·, -,-]+$/g, '').replace(/\s{2,}/g, ' ').trim();
   return { date, time, rest };
 }
 
@@ -318,7 +318,7 @@ function fold(line) {
   return out.join('\r\n');
 }
 
-/** The whole season as a calendar file. Floating local times — no timezone
+/** The whole season as a calendar file. Floating local times, no timezone
     database, no permission prompt, no OAuth: the parent gets a file. */
 export function seasonIcs({ title, slots, url, stamp }) {
   const now = stamp instanceof Date ? stamp : new Date();
@@ -368,7 +368,7 @@ export function weekMessage({ title, url, events, now, days = 7 }) {
     const dt = keyToDate(s.order);
     return dt && !isPast(s.order, from) && dt <= until;
   });
-  const lines = [`${title} — next ${days} days:`];
+  const lines = [`${title}, next ${days} days:`];
   if (soon.length === 0) lines.push('Nothing on the calendar this week.');
   for (const s of soon.slice(0, 20)) {
     const { name, where, wear } = parseLabel(s.label);

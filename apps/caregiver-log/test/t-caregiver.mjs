@@ -67,7 +67,7 @@ await board(async ({ page, errors, overflow, offenders, axe, smallTargets }) => 
   await page.click('[data-fk="addentry"]');
   await page.waitForTimeout(200);
   const medBody = await page.evaluate(() => window.__S.entries.slice(-1)[0].body);
-  ok('a medication entry records the drug and dose', medBody === 'Gave Donepezil — 5mg', medBody);
+  ok('a medication entry records the drug and dose', medBody === 'Gave Donepezil, 5mg', medBody);
 
   // second person, same drug, an hour later
   await page.evaluate(() => window.__addRemote({ body: 'Gave the 2pm donepezil.', type: 'medication', author: 'Rosalie' }));
@@ -214,7 +214,7 @@ await board(async ({ page, errors, overflow, offenders, axe, smallTargets }) => 
   const v = await axe();
   ok('axe on the live board', v.length === 0, JSON.stringify(v));
   // The three 36px header controls are the shared base's chrome, identical in
-  // all 23 apps and held in design/ — not this app's to change.
+  // all 23 apps and held in design/, not this app's to change.
   const BASE_CHROME = ['a#brandLink', 'button#swsPrefsBtn.noprint', 'a#tipLink.tipbtn', 'button#authBtn.btn'];
   const small = (await smallTargets()).filter(t => !BASE_CHROME.includes(t.sel));
   ok('no targets under the comfort floor', small.length === 0, JSON.stringify(small));

@@ -1,4 +1,4 @@
-# HANDOFF — Cross Off
+# HANDOFF, Cross Off
 
 **Project:** Cross Off, a paper to-do list you cross off with real highlighters
 **Studio:** Sky Wolf Studio · SWS Strategic Media LLC
@@ -15,7 +15,7 @@ Design ethos (from competitor research; respect in all future work):
 - **Celebration is event-driven, never nagging.** Sound and vibration share one mute, persisted.
 - **Streamlined over featureful.** Every addition must defend its place.
 
-## ⚠️ Hard-won invariants — do not regress
+## ⚠️ Hard-won invariants, do not regress
 
 1. **Never re-render on resize.** The handler ignores height-only changes (the phone keyboard), only re-sizes canvases, debounced, on width change, and skips entirely while an input or textarea has focus. Violating this recreates the keyboard→resize→render→blur→keyboard flash loop.
 2. **Canvas gesture = direction lock, not touch-action:none.** Canvases use `touch-action:pan-y` with a pending→draw/scroll machine (`bindStroke`). `touch-action:none` kills list scrolling because canvases cover every row.
@@ -56,11 +56,11 @@ until the first win (`syncDayCount`). The add placeholder dropped the
 
 ## Studio round 2026-08-18 (this build)
 
-- **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document, cache-first assets — bump `CACHE` on every deploy), full icon set, self-hosted fonts. `privacy.html`. Footer + branding corrected to Sky Wolf Studio.
+- **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document, cache-first assets, bump `CACHE` on every deploy), full icon set, self-hosted fonts. `privacy.html`. Footer + branding corrected to Sky Wolf Studio.
 - **The morning page-flip** (the anti-graveyard, was roadmap v1.2): archives the marked-up page (ink intact) into `p.past` (cap `MAX_PAST_DAYS`), carries unfinished forward silently, and re-adds `chore:true` tasks undone. ~~A gentle morning bar offers the flip~~ superseded 2026-08-19: the flip is automatic on a new day, see the user-test round above. **Flip-back viewer** (`#past`): read-only pages, strokes redrawn, prev/next through days.
 - **Chores:** `task.chore`, toggled in the edit sheet ("↻ every day"), row wears ↻.
 - **Task details:** `task.note` (textarea in the edit sheet, shown in focus mode, ✳ on the row). This is the "I can be more detailed" ask.
-- **Steps (Stephen, 2026-08-18): the checklist within the checklist.** `task.steps:[{text,done}]`. "the dishwasher" breaks into load it / run it / empty it: edited in the edit sheet (Enter adds, multi-line paste adds a batch, ✕ removes), toggled there or in focus mode (`toggleStep`), counter pill on the row (`.stepflag`, green at full). When the LAST step lands: confetti + toast + the row takes a pulsing golden ring (`.task.ready`, derived state, survives re-render) — and the app deliberately does NOT cross the task off. The stroke is hers; the sheet clears itself away so the highlighters are right there. Chores reset their steps on the page-flip. Never gate `completeTask` on steps — crossing off with steps unfinished is allowed (no shame mechanics).
+- **Steps (Stephen, 2026-08-18): the checklist within the checklist.** `task.steps:[{text,done}]`. "the dishwasher" breaks into load it / run it / empty it: edited in the edit sheet (Enter adds, multi-line paste adds a batch, ✕ removes), toggled there or in focus mode (`toggleStep`), counter pill on the row (`.stepflag`, green at full). When the LAST step lands: confetti + toast + the row takes a pulsing golden ring (`.task.ready`, derived state, survives re-render), and the app deliberately does NOT cross the task off. The stroke is hers; the sheet clears itself away so the highlighters are right there. Chores reset their steps on the page-flip. Never gate `completeTask` on steps, crossing off with steps unfinished is allowed (no shame mechanics).
 - **Paste a braindump:** a multi-line paste into the add box becomes one task per line, `!`/`~` prefixes parsed per line.
 - **Timers are wall-clock and survive reloads:** deadlines are `Date.now()`-based, persisted, resumed on boot; a deadline that passed while closed arrives calm (`buzzed` forced true on load).
 - **Haptics:** 10ms on stroke commit, 200ms on buzzer, gated by the sound toggle.
@@ -68,7 +68,7 @@ until the first win (`syncDayCount`). The add placeholder dropped the
 - **SWS.toast/undo** (`sws-ui.js`, styled by this app's own `#toast` CSS): delete task, delete page, and page-flip all announce with Undo.
 - **Dark scheme:** the desk dims, the paper stays paper (highlighter multiply-blend needs a light page). Notebook centers at 44rem+ on big screens.
 
-## Storage (`crossoff.v1`, additive only — old saves must keep loading)
+## Storage (`crossoff.v1`, additive only, old saves must keep loading)
 
 ```
 { uid, activePage,

@@ -1,4 +1,4 @@
-// Wedding timeline — pure logic. Tested in test/helpers.test.mjs.
+// Wedding timeline, pure logic. Tested in test/helpers.test.mjs.
 
 export const MAX_EVENTS = 100;
 const DAY = 24 * 60;
@@ -16,12 +16,12 @@ export function uid() {
 /* ── reading a time a person typed ────────────────────────────────────────
    Returns one of:
      { minutes }                          an unambiguous time
-     { ambiguous:true, am, pm, hour, min } "7" — 7:00 AM or 7:00 PM, ask
+     { ambiguous:true, am, pm, hour, min } "7", 7:00 AM or 7:00 PM, ask
      null                                 not a time at all
 
-   The old parser took any bare 0–23 as a 24-hour value, so "7" for a 7pm
+   The old parser took any bare 0 to 23 as a 24-hour value, so "7" for a 7pm
    reception was silently recorded as 7:00 AM. Twelve hours wrong, no warning.
-   Anything with an hour of 1–12 and no am/pm marker is now reported as
+   Anything with an hour of 1 to 12 and no am/pm marker is now reported as
    ambiguous so the caller can ask instead of guessing. */
 export function readTime(input) {
   if (typeof input !== 'string') return null;
@@ -37,7 +37,7 @@ export function readTime(input) {
   const tail = /(a|p)m?$/.exec(t);
   if (tail) { ap = tail[1]; t = t.slice(0, tail.index).trim(); }
 
-  t = t.replace(/[\s:.∶·\-–]+/g, ':');
+  t = t.replace(/[\s:.∶·\--]+/g, ':');
 
   let h, min, military = false, m;
   if ((m = /^(\d{1,2}):(\d{1,2})$/.exec(t))) { h = +m[1]; min = +m[2]; }
@@ -88,7 +88,7 @@ export function fmtTime(minutes) {
 const timeOf = (e) => (e && Number.isInteger(e.minutes) && e.minutes >= 0 && e.minutes < DAY) ? e.minutes : null;
 
 /* Sort events by time; untimed events sink to the end in insertion order.
-   Returns the SAME object references — rows depend on that. */
+   Returns the SAME object references, rows depend on that. */
 export function sortEvents(events) {
   const src = Array.isArray(events) ? events.filter(e => e && typeof e === 'object') : [];
   return src.map((e, i) => ({ e, i }))

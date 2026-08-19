@@ -1,11 +1,11 @@
-// jsdom — the sitter's half of the app: a shared link renders a read-only
+// jsdom, the sitter's half of the app: a shared link renders a read-only
 // page with tap-to-call numbers, and writes nothing to the recipient's device.
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 
 const SHEET = {
   kids: 'Maya (6)\nLeo (3)',
-  allergies: 'Maya: peanuts — EpiPen in the red box on the counter.',
+  allergies: 'Maya: peanuts, EpiPen in the red box on the counter.',
   parents: 'Sam: 555-0101\nRiver: 555-0102',
   backup: 'Grandma Pat next door: 555-0333',
   address: '412 Maple Ct',

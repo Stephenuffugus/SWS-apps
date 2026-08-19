@@ -1,5 +1,5 @@
-/* Baby Log service worker — fully offline (3am has no patience for spinners). */
-const VERSION = 'baby-v24';
+/* Baby Log service worker, fully offline (3am has no patience for spinners). */
+const VERSION = 'baby-v25';
 const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./model.js", "./sws-prefs.js", "./sws-ui.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -13,7 +13,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so a fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets stay cache-first; only the document leads with the network, and it

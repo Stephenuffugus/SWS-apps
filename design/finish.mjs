@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the full pass
+   SWS STUDIO, the full pass
 
      node design/finish.mjs           rebuild, apply, verify, capture, report
      node design/finish.mjs --quick   skip the slow capture and report steps
@@ -8,7 +8,7 @@
    Runs every step in order and keeps going when one fails, because a failing
    accessibility audit is information, not a reason to skip the screenshots.
    Prints one summary at the end and exits non-zero if anything that MATTERS
-   failed — a broken test or a serious a11y violation, not a slow screenshot.
+   failed, a broken test or a serious a11y violation, not a slow screenshot.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import { spawn } from 'node:child_process';

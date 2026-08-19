@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRADE SHEET — the arithmetic
+   GRADE SHEET, the arithmetic
 
    This file is the whole reason the app can be trusted, so it is pure: no DOM,
    no storage, no dates. Everything here is a function of its arguments, which
@@ -25,7 +25,7 @@
        teacher can actually see. Rounding twice moves real grades.
 
      · Never invent a number. A category with no graded work yet is `null`, not
-       0 — the difference between "we don't know" and "she scored nothing" is
+       0, the difference between "we don't know" and "she scored nothing" is
        the difference between an A and an F in week two.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -71,7 +71,7 @@ export function roundHalfUp(x, dp = 0) {
      excused   does not apply.   out of the numerator AND the denominator
 
    `absent` and `late` are flags, not states. They record a fact about the
-   child, attach to any state, and deliberately change no number — a teacher
+   child, attach to any state, and deliberately change no number, a teacher
    decides what absence means for a grade, not us. */
 export const STATES = ['ungraded', 'graded', 'missing', 'excused'];
 
@@ -84,7 +84,7 @@ export function participation(row, includeUngraded) {
 }
 
 /* Extra credit is points with no denominator. An assignment worth 0 points is
-   treated as extra credit implicitly — there is no other coherent reading of
+   treated as extra credit implicitly, there is no other coherent reading of
    "out of zero", and a teacher who types it means "bonus". */
 export const isExtraCredit = (a) =>
   a.extraCredit === true || !(Number(a.pointsPossible) > 0);
@@ -109,8 +109,7 @@ const sum = (arr, f) => arr.reduce((n, x) => n + (typeof f === 'function' ? f(x)
    it is 50%), which means a teacher turns on a feature described as helping
    students and quietly hurts them.
 
-   So this maximises (Σm + fixM) / (Σn + fixN) over subsets of a fixed size —
-   a fractional program, solved exactly by Dinkelbach's method. Each round
+   So this maximises (Σm + fixM) / (Σn + fixN) over subsets of a fixed size, a fractional program, solved exactly by Dinkelbach's method. Each round
    ranks items by (m − q·n) for the current best ratio q and keeps the top
    `keep`; the ratio rises monotonically and converges in a handful of passes.
    Exact, not greedy, and test 51 checks it against brute force on 4,000
@@ -126,7 +125,7 @@ export function optimalKeep(droppable, keep, neverDrop = []) {
     return d ? (sum(S, 'm') + fixM) / d : 0;
   };
 
-  /* Ties are broken for display stability only — tied items have identical m
+  /* Ties are broken for display stability only, tied items have identical m
      and n so the ratio cannot move. Preferring the higher state rank means a
      `missing` is marked dropped before a projected ungraded zero, which keeps
      the SAME cell struck through in both the "so far" and "projected" views.
@@ -163,7 +162,7 @@ export function optimalKeep(droppable, keep, neverDrop = []) {
 }
 
 /* ── one category ───────────────────────────────────────────────────────────
-   Returns pct: null — never 0 — when there is nothing to divide by. That
+   Returns pct: null, never 0, when there is nothing to divide by. That
    single choice is what stops "Tests are 40% and no test has happened" from
    reading as an F. */
 export function categoryAggregate(items, rules = {}, includeUngraded = false) {
@@ -217,7 +216,7 @@ export function categoryAggregate(items, rules = {}, includeUngraded = false) {
    everything is active and the weights sum to 100 that is a no-op. When a
    category is empty it scales the rest up, which is what Canvas does and what
    teachers expect. When the teacher's weights sum to more than 100 it scales
-   down — which Canvas does NOT do (its calculator only normalises when the
+   down, which Canvas does NOT do (its calculator only normalises when the
    total is under 100), so weights of 45/40/20 with scores 80/90/100 give
    Canvas 92.0 and give us 87.6. Ours is the defensible one: a 105-point scheme
    should not hand out 105 points of credit. The app blocks saving weights that
@@ -278,7 +277,7 @@ export function classGrade(cls, rows, includeUngraded = false) {
 
 /* ── the number she sees ────────────────────────────────────────────────────
    The letter comes from the DISPLAYED value, not the raw one. If the screen
-   says 90 the letter must be an A, even though the raw was 89.5 — a teacher
+   says 90 the letter must be an A, even though the raw was 89.5, a teacher
    cannot defend "it says 90 but it's a B" to a parent, and she is the one who
    has to have that conversation. */
 export function letterFor(display, scale) {
@@ -383,7 +382,7 @@ export function explain(cls, rows, includeUngraded = false) {
   const droppedSet = new Set(g.dropped);
 
   for (const p of g.categories) {
-    if (p.cat) lines.push({ kind: 'cat', text: `${p.cat.name} — worth ${p.cat.weight}%` });
+    if (p.cat) lines.push({ kind: 'cat', text: `${p.cat.name}, worth ${p.cat.weight}%` });
     for (const it of p.counted) {
       const st = it.state || 'ungraded';
       const val = st === 'missing' ? '0 (missing)' : st === 'ungraded' ? '0 (not turned in yet)' : String(fromCp(it.m));
@@ -393,7 +392,7 @@ export function explain(cls, rows, includeUngraded = false) {
       lines.push({ kind: 'dropped', text: `${it.name}: dropped (lowest)` });
     }
     for (const it of rows.filter((r) => (p.cat ? r.categoryId === p.cat.id : true) && r.state === 'excused')) {
-      lines.push({ kind: 'excused', text: `${it.name}: excused — taken out of the total too` });
+      lines.push({ kind: 'excused', text: `${it.name}: excused, taken out of the total too` });
     }
     if (p.extraCreditPoints) lines.push({ kind: 'ec', text: `Extra credit: +${p.extraCreditPoints}` });
     lines.push({
@@ -406,7 +405,7 @@ export function explain(cls, rows, includeUngraded = false) {
 
   if (cls.model === 'weighted-categories') {
     if (g.inactive.length) {
-      lines.push({ kind: 'note', text: `Not counted yet: ${g.inactive.join(', ')} — nothing graded in there.` });
+      lines.push({ kind: 'note', text: `Not counted yet: ${g.inactive.join(', ')}, nothing graded in there.` });
     }
     lines.push({ kind: 'note', text: `Counting ${g.W}% of the total weight, so the parts are scaled to fill it.` });
   }

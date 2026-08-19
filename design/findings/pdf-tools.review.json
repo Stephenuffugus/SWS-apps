@@ -4,35 +4,35 @@
     "personas": [
       {
         "name": "Adaeze Nwachukwu",
-        "who": "34, applying for Canadian permanent residence herself. Competent with software, not technical. Came here after Smallpdf told her she had used her free tasks for the day — the research's 'you'll hit that wall pretty fast'. Chose this page because the search result did not say 'upload'.",
-        "context": "The research's core scenario: 23:40 on a Tuesday, portal cut-off at midnight, work-issued Windows laptop at 1280×900 where she cannot install anything, kitchen table, two hands, tired and tense. IRCC's rule is the reason she is here at all — 'You can only upload 1 file per field.'",
+        "who": "34, applying for Canadian permanent residence herself. Competent with software, not technical. Came here after Smallpdf told her she had used her free tasks for the day, the research's 'you'll hit that wall pretty fast'. Chose this page because the search result did not say 'upload'.",
+        "context": "The research's core scenario: 23:40 on a Tuesday, portal cut-off at midnight, work-issued Windows laptop at 1280×900 where she cannot install anything, kitchen table, two hands, tired and tense. IRCC's rule is the reason she is here at all, 'You can only upload 1 file per field.'",
         "task": "Merge a passport scan, three payslips and an employer letter into one PDF, drop the blank back page her scanner added, and upload before midnight.",
-        "verdict": "Finished in about four minutes and the file was correct — the interleave order she built on screen came out of the merge exactly as arranged (verified: A4/letter page widths came out 595 612 595 612 595 612 …). But she could not tell which page was the signed letter without opening the file elsewhere first, and she pressed Save not knowing what the file would be called or how big it would be.",
+        "verdict": "Finished in about four minutes and the file was correct, the interleave order she built on screen came out of the merge exactly as arranged (verified: A4/letter page widths came out 595 612 595 612 595 612 …). But she could not tell which page was the signed letter without opening the file elsewhere first, and she pressed Save not knowing what the file would be called or how big it would be.",
         "delights": [
-          "Seventeen pages from three files appeared as rows 123 ms after she picked them. No upload bar, no spinner, no queue — which is the entire pitch against iLovePDF's 'file too large to upload' article.",
+          "Seventeen pages from three files appeared as rows 123 ms after she picked them. No upload bar, no spinner, no queue, which is the entire pitch against iLovePDF's 'file too large to upload' article.",
           "The merge took 131 ms for 200 pages and 1,004 ms for a 66 MB scanned file. Nothing froze long enough to look broken.",
-          "No cookie banner, no ad rail, no account wall, no interstitial between pressing Save and the file landing in Downloads. The tip link is a 36px pill in the header and never appears on the finish path — exactly what the research says buys trust in this category."
+          "No cookie banner, no ad rail, no account wall, no interstitial between pressing Save and the file landing in Downloads. The tip link is a 36px pill in the header and never appears on the finish path, exactly what the research says buys trust in this category."
         ],
         "frictions": [
           {
-            "what": "There are no page thumbnails. Every page is the text row 'Page 4' plus 'payslip.pdf' at 12.48px. The app ships only vendor-pdf-lib.js — there is no pdf.js and no canvas anywhere in the build.",
+            "what": "There are no page thumbnails. Every page is the text row 'Page 4' plus 'payslip.pdf' at 12.48px. The app ships only vendor-pdf-lib.js, there is no pdf.js and no canvas anywhere in the build.",
             "severity": "blocker",
-            "whyItMatters": "Her actual cognitive task is 'is that the signed one?'. A text list cannot answer it. Every credible competitor — offlinepdf.com, Sejda, Adobe, Smallpdf, macOS Preview — shows a thumbnail grid, and the research names this as the single thing that will read as amateur. She ended up opening the source PDFs in another tab to count pages, which is the round trip the app exists to remove."
+            "whyItMatters": "Her actual cognitive task is 'is that the signed one?'. A text list cannot answer it. Every credible competitor, offlinepdf.com, Sejda, Adobe, Smallpdf, macOS Preview, shows a thumbnail grid, and the research names this as the single thing that will read as amateur. She ended up opening the source PDFs in another tab to count pages, which is the round trip the app exists to remove."
           },
           {
-            "what": "The output filename is hard-coded: 'merged.pdf' when two or more files are loaded, 'edited.pdf' for one — regardless of the source name (a file called 確定申告書.pdf still saves as edited.pdf). There is no filename field and no size readout anywhere. Merging three 66 MB files produced a 197.8 MB file with no warning.",
+            "what": "The output filename is hard-coded: 'merged.pdf' when two or more files are loaded, 'edited.pdf' for one, regardless of the source name (a file called 確定申告書.pdf still saves as edited.pdf). There is no filename field and no size readout anywhere. Merging three 66 MB files produced a 197.8 MB file with no warning.",
             "severity": "major",
             "whyItMatters": "Portals have naming and size rules; USCIS caps at 12 MB and IRCC rejects on both counts. The research's 'weWinIf' for the last-step ambush is explicit: 'show the output filename and byte size next to the button BEFORE they press it, so there is visibly nothing left to happen.' Right now the first time she learns either fact is after the download."
           },
           {
-            "what": "She added payslip.pdf twice by accident (it was in two folders). The list went from 12 rows to 24 with no warning and the toast said 'contract.pdf — 12 pages loaded' both times.",
+            "what": "She added payslip.pdf twice by accident (it was in two folders). The list went from 12 rows to 24 with no warning and the toast said 'contract.pdf, 12 pages loaded' both times.",
             "severity": "major",
             "whyItMatters": "A duplicated payslip inside a 24-page immigration packet is a rejection. app.js:70-77 pushes every file with no name/size comparison, and because the loaded files are never rendered as objects there is no list of documents she can check."
           },
           {
             "what": "Removing the blank page is a 37×36px ✕ sitting 12px from the rotate button, with no confirmation, no undo, and no toast. Deleting is instant and final.",
             "severity": "major",
-            "whyItMatters": "The one thing this app must never do to somebody's mortgage or visa packet is lose a page irrecoverably. The shared runtime already ships SWS.undo in sws-ui.js and the base already styles '#toast .undo' at index.html:789 — app.js calls neither."
+            "whyItMatters": "The one thing this app must never do to somebody's mortgage or visa packet is lose a page irrecoverably. The shared runtime already ships SWS.undo in sws-ui.js and the base already styles '#toast .undo' at index.html:789, app.js calls neither."
           }
         ]
       },
@@ -41,14 +41,14 @@
         "who": "71, settling her late husband's estate. Macular degeneration in one eye plus a mild essential tremor; reads at arm's length and taps with the side of her thumb. Confident with an iPad, deeply suspicious of anything that asks her to upload a bank statement. This is the comfort-panel persona.",
         "context": "Late morning, iPad in portrait at 414 CSS px on a cushion, bright window behind her, one hand steadying the device. No deadline, very little patience for anything that moves or shrinks.",
         "task": "Combine two bank statements and a pension letter into one PDF for the probate solicitor, and drop the two pages that are just the bank's advertising.",
-        "verdict": "Got the merge done, but only after the comfort panel made the app harder to use, not easier — and she turned the settings back off, which is the worst possible outcome for a feature built for her.",
+        "verdict": "Got the merge done, but only after the comfort panel made the app harder to use, not easier, and she turned the settings back off, which is the worst possible outcome for a feature built for her.",
         "delights": [
           "She found the settings gear in the header unprompted and it behaved perfectly on its own terms: opens as a 736px modal, focus moves inside, real radio groups with a permanent tick slot so she could see what was on without reading colour, and axe returns zero violations with it open.",
           "The page never scrolls sideways. Measured 0px horizontal overflow at 320, 360, 390, 414 and 1280, and at every comfort combination tested."
         ],
         "frictions": [
           {
-            "what": "Turning on Largest text + High contrast + Roomy + Easier reading made the page dramatically worse. Measured at 414px with a 12-page file: the root font goes 16px → 24px correctly, but the filename column (.grow) collapses from 98px to 9px, each row grows from 61px to 641px tall, 'contract.pdf' wraps to roughly one character per line, and the document goes from 1,613px to 9,437px with Save as one PDF pushed to y=8,949 — ten full screens down.",
+            "what": "Turning on Largest text + High contrast + Roomy + Easier reading made the page dramatically worse. Measured at 414px with a 12-page file: the root font goes 16px → 24px correctly, but the filename column (.grow) collapses from 98px to 9px, each row grows from 61px to 641px tall, 'contract.pdf' wraps to roughly one character per line, and the document goes from 1,613px to 9,437px with Save as one PDF pushed to y=8,949, ten full screens down.",
             "severity": "blocker",
             "whyItMatters": "She turned all four settings on for exactly the reason they exist and the app answered by making the only text that identifies a document unreadable and putting the finish button ten screens away. She switched them back off and squinted instead. Roomy alone does it too: at 414px, density:roomy takes .grow from 98px to 41px, because the row is a nowrap flex line whose four fixed buttons and five gaps grow while the container does not."
           },
@@ -58,12 +58,12 @@
             "whyItMatters": "The comfort system's own rule, written in the base at index.html:257-265, is that raising the text size must not shrink the targets, 'because someone who has turned the text up is often doing it for eyesight or tremor'. Here the text obeys and the buttons do not. With a tremor, ✕ and ⟳ 12px apart at 39px tall is a coin flip, and ✕ has no undo."
           },
           {
-            "what": "The rotation badge is 12px #6d78d1 on #fdfeff — 3.96:1 measured, below the 4.5:1 floor — and High contrast does not touch it, because the contrast preference darkens --ink-2/--ink-3 and --line but not --accent.",
+            "what": "The rotation badge is 12px #6d78d1 on #fdfeff, 3.96:1 measured, below the 4.5:1 floor, and High contrast does not touch it, because the contrast preference darkens --ink-2/--ink-3 and --line but not --accent.",
             "severity": "major",
             "whyItMatters": "It is the only indication that a page will come out sideways, it is the smallest text in the app, and it is the one piece of state the high-contrast setting cannot reach. In dark mode the same badge measures 7.83:1, so this is a light-mode-only failure that is easy to miss in review."
           },
           {
-            "what": "Nothing is spoken and nothing is written down. Deleting a page changes no visible message at all — the toast still read 'forty.pdf — 40 pages loaded' after a delete, and the only count is the 12px uppercase h2.",
+            "what": "Nothing is spoken and nothing is written down. Deleting a page changes no visible message at all, the toast still read 'forty.pdf, 40 pages loaded' after a delete, and the only count is the 12px uppercase h2.",
             "severity": "minor",
             "whyItMatters": "She could not confirm she had removed the right page except by re-reading a list where every row looks identical. The toast already carries role=status/aria-live=polite and is simply never used for row actions."
           }
@@ -72,16 +72,16 @@
       {
         "name": "Devon Ashcroft-Mbeki",
         "who": "29, paralegal with a repetitive strain injury; drives everything from the keyboard and uses NVDA for long documents to rest their eyes. Files court bundles weekly and has been burned by Acrobat's thumbnail drag bug ('BUG Drag and Drop Not Working in PAGE THUMBNAILS').",
-        "context": "Office desk, 1280px window, keyboard only, no pointer for the next hour. Deadline is Friday, not tonight — so this is a fair test rather than a panicked one.",
+        "context": "Office desk, 1280px window, keyboard only, no pointer for the next hour. Deadline is Friday, not tonight, so this is a fair test rather than a panicked one.",
         "task": "Take a 40-page scanned exhibit bundle and move the index page from the back to the front, then drop four duplicate pages.",
-        "verdict": "Could not do it. Not slowly — the reorder loop is structurally impossible from the keyboard because each successful press throws focus away.",
+        "verdict": "Could not do it. Not slowly, the reorder loop is structurally impossible from the keyboard because each successful press throws focus away.",
         "delights": [
           "Tab order is clean and untrapped: settings → Tip jar → Add PDF → the four controls of each row in document order → Save → Split → footer links. Nothing is unreachable and every control has an accessible name (harness: 7 focusable at boot, 0 unreachable, 0 unnamed).",
           "axe with 17 rows rendered returns zero violations across wcag2a/2aa/21a/21aa/22aa, and zero again with the comfort panel open."
         ],
         "frictions": [
           {
-            "what": "Every row action destroys focus. render() calls list.replaceChildren() (app.js:42) and every one of the four row buttons calls render() (app.js:55, 57, 59, 61), so the button just activated no longer exists. Verified: focus a 'Move up' and press Enter five times — the page moves exactly once and activeElement is BODY after every press; presses 2 through 5 do nothing at all.",
+            "what": "Every row action destroys focus. render() calls list.replaceChildren() (app.js:42) and every one of the four row buttons calls render() (app.js:55, 57, 59, 61), so the button just activated no longer exists. Verified: focus a 'Move up' and press Enter five times, the page moves exactly once and activeElement is BODY after every press; presses 2 through 5 do nothing at all.",
             "severity": "blocker",
             "whyItMatters": "Moving page 40 to position 1 needs 39 successful presses, and each one costs a fresh journey from the top of the document. The row's first control is tab stop 3 + 4×(row−1) + 1, so the full job is roughly 3,276 Tab presses and 39 Enters for something a mouse user does with 39 clicks. With RSI that is not an inconvenience, it is an injury. The audit already named this 'the single highest-impact fix in the app'."
           },
@@ -93,28 +93,28 @@
           {
             "what": "No row action announces anything. Reorder, rotate and delete all rebuild the list in silence; the h2 count changes but heading mutation is not a live-region event; the toast (role=status, aria-live=polite, no aria-atomic) is never called from a row handler.",
             "severity": "major",
-            "whyItMatters": "They pressed ⟳ and heard nothing, so they pressed it again — which is how a page ends up at 180°. The rotation state itself is only visible as a 12px badge."
+            "whyItMatters": "They pressed ⟳ and heard nothing, so they pressed it again, which is how a page ends up at 180°. The rotation state itself is only visible as a 12px badge."
           },
           {
             "what": "There is no long-distance move at all: no drag, no 'move to top/bottom', no 'move to position N'. app.js:55/57 only swap with the immediate neighbour, and there are no dragover/drop handlers anywhere (verified: a synthetic drop on document.body comes back with defaultPrevented false).",
             "severity": "major",
-            "whyItMatters": "The research's table stake is that drag must work and must never be the only way — 'including move to top, move to bottom, and move to position N for documents too long to drag through'. This app has neither half. And because nothing intercepts a drop, dragging a PDF onto the window lets the browser navigate to that file, which destroys the whole session (see persona Kayla)."
+            "whyItMatters": "The research's table stake is that drag must work and must never be the only way, 'including move to top, move to bottom, and move to position N for documents too long to drag through'. This app has neither half. And because nothing intercepts a drop, dragging a PDF onto the window lets the browser navigate to that file, which destroys the whole session (see persona Kayla)."
           }
         ]
       },
       {
         "name": "Yusuf Bektaş",
         "who": "45, runs a four-van removals firm and does his own paperwork. Non-technical, over 40, the designated computer person for his family as well. Reads reviews before trusting a site and has heard about the FBI's March 2025 warning on free converter sites from a WhatsApp group.",
-        "context": "Small office, Windows desktop at 1280, Thursday afternoon, coffee going cold. Not panicked, but easily put off — one confusing message and he goes back to emailing the accountant.",
-        "task": "Split a 40-page scanned batch of delivery notes into one file per job, and separately merge three bank statements — one of which is the password-protected PDF his bank sends.",
-        "verdict": "The split worked, eventually, and he never knew how long it would take. The password message was genuinely helpful. But one corrupted scan showed him a programmer's error string, and a second one vanished behind a success message — and that is the moment a cautious 45-year-old closes the tab.",
+        "context": "Small office, Windows desktop at 1280, Thursday afternoon, coffee going cold. Not panicked, but easily put off, one confusing message and he goes back to emailing the accountant.",
+        "task": "Split a 40-page scanned batch of delivery notes into one file per job, and separately merge three bank statements, one of which is the password-protected PDF his bank sends.",
+        "verdict": "The split worked, eventually, and he never knew how long it would take. The password message was genuinely helpful. But one corrupted scan showed him a programmer's error string, and a second one vanished behind a success message, and that is the moment a cautious 45-year-old closes the tab.",
         "delights": [
           "The password-protected statement produced a real sentence, not a crash: 'That PDF is password-protected. Remove the password first (print it to a new PDF), then load it here.' That is better than the market leader, whose 1-star review reads 'it can only open half of my PDFs'.",
-          "Splitting a 40-page file produced forty correctly named files — forty-page-1.pdf … forty-page-40.pdf — and the confirm before it ('This will download 40 separate files. Continue?') was the right question at the right moment."
+          "Splitting a 40-page file produced forty correctly named files, forty-page-1.pdf … forty-page-40.pdf, and the confirm before it ('This will download 40 separate files. Continue?') was the right question at the right moment."
         ],
         "frictions": [
           {
-            "what": "Split ignores everything the user did. He deleted a page and rotated another; the heading read '2 pages (in output order)'; Split then produced THREE files — including the page he had deleted — and the rotation was gone (verified: split-1.pdf comes out at 0°, not the 90° shown on screen). splitAll() takes docs[0].pdf and walks the source page count (core.js:36-46, called at app.js:103); it never looks at `order`.",
+            "what": "Split ignores everything the user did. He deleted a page and rotated another; the heading read '2 pages (in output order)'; Split then produced THREE files, including the page he had deleted, and the rotation was gone (verified: split-1.pdf comes out at 0°, not the 90° shown on screen). splitAll() takes docs[0].pdf and walks the source page count (core.js:36-46, called at app.js:103); it never looks at `order`.",
             "severity": "blocker",
             "whyItMatters": "This is the worst class of bug this app can have: it silently un-does the user's work and hands back a page they deliberately removed. In his case that is a delivery note going to the wrong client; in the research's framing it is a page of somebody's divorce paperwork reappearing in a bundle. Nothing in the UI hints that Save and Split operate on different data."
           },
@@ -124,17 +124,17 @@
             "whyItMatters": "The repo's own README promises 'password-protected PDFs get an honest explanation instead of a crash'. A developer stack-trace fragment on a page whose entire proposition is 'trust me with your bank statements' reads as a broken or malicious site, which post-FBI-advisory is exactly the inference the research says users now make."
           },
           {
-            "what": "When he picked a folder containing one bad file and one good one, the failure was erased. Loading [broken.pdf, contract.pdf] shows only 'contract.pdf — 12 pages loaded'; the error toast for the first file is overwritten ~10ms later by the success toast for the second (app.js:77 and 79 both call the same single toast in a loop).",
+            "what": "When he picked a folder containing one bad file and one good one, the failure was erased. Loading [broken.pdf, contract.pdf] shows only 'contract.pdf, 12 pages loaded'; the error toast for the first file is overwritten ~10ms later by the success toast for the second (app.js:77 and 79 both call the same single toast in a loop).",
             "severity": "blocker",
-            "whyItMatters": "He would have submitted a bank statement pack silently missing a statement. Errors here need to persist — the base already ships an unused .warn block at index.html:670 for precisely this."
+            "whyItMatters": "He would have submitted a bank statement pack silently missing a statement. Errors here need to persist, the base already ships an unused .warn block at index.html:670 for precisely this."
           },
           {
-            "what": "Splitting is a black box with no progress and no cancel. Measured on a 200-page file: 200 downloads arriving 348ms apart across 69.9 seconds, during which the button reads 'Working…' and nothing else changes. The one piece of advice — 'If the browser asks about multiple downloads, allow it' — is a toast that fades after 4 seconds of a 70-second operation. The 40-page case takes 18.2 seconds.",
+            "what": "Splitting is a black box with no progress and no cancel. Measured on a 200-page file: 200 downloads arriving 348ms apart across 69.9 seconds, during which the button reads 'Working…' and nothing else changes. The one piece of advice, 'If the browser asks about multiple downloads, allow it', is a toast that fades after 4 seconds of a 70-second operation. The 40-page case takes 18.2 seconds.",
             "severity": "major",
             "whyItMatters": "Seventy seconds with no counter is indistinguishable from a hung tab, and there is no way to stop it once it starts. The audit's suggestion of a single ZIP would also remove the browser's multiple-download permission prompt entirely."
           },
           {
-            "what": "Split is silently unavailable in the most likely state. With two files loaded the button looks completely normal (disabled=false, no aria-disabled, no title) and clicking it does nothing but toast 'Split works on one file at a time — reload with just that file'.",
+            "what": "Split is silently unavailable in the most likely state. With two files loaded the button looks completely normal (disabled=false, no aria-disabled, no title) and clicking it does nothing but toast 'Split works on one file at a time, reload with just that file'.",
             "severity": "major",
             "whyItMatters": "'Reload' means losing everything, because nothing is persisted. He is told to destroy his work as the remedy for pressing a button that gave no sign it was unavailable."
           }
@@ -142,19 +142,19 @@
       },
       {
         "name": "Kayla Osei-Bright",
-        "who": "19, second-year student, no laptop of her own this term — she does everything on an Android phone with a cracked screen at 360 CSS px, sometimes on a library machine. Has never paid for software and never will.",
+        "who": "19, second-year student, no laptop of her own this term, she does everything on an Android phone with a cracked screen at 360 CSS px, sometimes on a library machine. Has never paid for software and never will.",
         "context": "23:50, in bed, phone at 360×800 in one hand, brightness low, assignment portal closes at midnight and wants a single PDF.",
         "task": "Merge her essay PDF and the marked cover sheet into one file, with the cover sheet first, and submit.",
         "verdict": "Made it, with about ninety seconds to spare, by scrolling past twelve near-identical rows twice. On the library's 320px kiosk earlier the same day she gave up.",
         "delights": [
-          "It works at all on a phone, offline, with no app install and no account — the research's stated demand ('Reorder PDF Pages on iPhone & iPad — Free, No App Needed' is a live search target) is met.",
+          "It works at all on a phone, offline, with no app install and no account, the research's stated demand ('Reorder PDF Pages on iPhone & iPad, Free, No App Needed' is a live search target) is met.",
           "Twelve pages appeared instantly and reordering by tapping ↑ actually worked on touch, unlike the mobile fallbacks competitors apologise for."
         ],
         "frictions": [
           {
-            "what": "At 320px the row layout collapses completely. Measured with a 12-page file: the filename column is 4px wide, so 'contract.pdf' renders as twelve stacked single characters, each row is 373px tall, the list is 4,551px and the whole document is 5,523px with Save as one PDF at y=5,209. At 360px it is only slightly better — .grow 44px, rows 105px. `ul.plain > li` is a nowrap flex line (index.html:685) whose four 37px buttons and 12px gaps never shrink.",
+            "what": "At 320px the row layout collapses completely. Measured with a 12-page file: the filename column is 4px wide, so 'contract.pdf' renders as twelve stacked single characters, each row is 373px tall, the list is 4,551px and the whole document is 5,523px with Save as one PDF at y=5,209. At 360px it is only slightly better, .grow 44px, rows 105px. `ul.plain > li` is a nowrap flex line (index.html:685) whose four 37px buttons and 12px gaps never shrink.",
             "severity": "blocker",
-            "whyItMatters": "A 12-page merge on a 320px phone means scrolling nearly six screens of vertically-spelled filenames to reach the button that finishes the job — and 320px is the library kiosk and the older Android, i.e. exactly the audience the research says this app is for. A screenshot confirms it: the row reads P / a / g / e / 1 down the page."
+            "whyItMatters": "A 12-page merge on a 320px phone means scrolling nearly six screens of vertically-spelled filenames to reach the button that finishes the job, and 320px is the library kiosk and the older Android, i.e. exactly the audience the research says this app is for. A screenshot confirms it: the row reads P / a / g / e / 1 down the page."
           },
           {
             "what": "The primary actions live at the bottom of an unbounded page. At 200 pages Save sits at y=12,814 (14.2 screens at 414×900); at 1,000 pages the document is 62,020px and Save is 69 screens down. The base ships a sticky .actionbar built for exactly this (index.html:805-816) and the app never uses it.",
@@ -162,9 +162,9 @@
             "whyItMatters": "The finish button should never be further away than the work. On a phone this converts a 30-second job into a scrolling exercise, and there is no back-to-top control either."
           },
           {
-            "what": "Nothing survives anything. There is no persistence, no beforeunload guard (window.onbeforeunload is null; localStorage holds 0 bytes for this app), and no drop handler — so a stray swipe-back, a tab discard, or dragging the PDF onto the window instead of using the button wipes the whole arrangement in silence.",
+            "what": "Nothing survives anything. There is no persistence, no beforeunload guard (window.onbeforeunload is null; localStorage holds 0 bytes for this app), and no drop handler, so a stray swipe-back, a tab discard, or dragging the PDF onto the window instead of using the button wipes the whole arrangement in silence.",
             "severity": "major",
-            "whyItMatters": "Phones discard background tabs routinely. She rebuilt her order once already. Even if the file bytes genuinely cannot be persisted, the app never says so — the base's .trust stamp is defined and unused, and a beforeunload guard is two lines."
+            "whyItMatters": "Phones discard background tabs routinely. She rebuilt her order once already. Even if the file bytes genuinely cannot be persisted, the app never says so, the base's .trust stamp is defined and unused, and a beforeunload guard is two lines."
           },
           {
             "what": "The empty state is a 15px grey sentence that teaches with bare glyphs she has never seen: 'Loaded pages appear here. Use ↑ ↓ to reorder, ⟳ to rotate, ✕ to leave a page out.' The base's .empty component (glyph/h3/p, index.html:702-723) is defined and unused, and card 3 has no heading at all, so nothing explains that Save and Split are alternatives rather than steps.",
@@ -178,17 +178,17 @@
         "who": "56, IT contractor at a hospital trust, and the person friends send links to for a verdict. Read the Malwarebytes writeup of the FBI Denver advisory on malware-bearing free converter sites and now treats every PDF site as hostile until proven otherwise.",
         "context": "Locked-down corporate Windows laptop, Edge, 1280px, no installs permitted, network monitored. Ten minutes of curiosity, not a deadline.",
         "task": "Decide whether he is willing to tell his sister to merge her medical records here.",
-        "verdict": "Convinced — but only because he opened devtools. Nothing in the interface itself let him verify the claim, and the claim as written is the same sentence the clone farms use.",
+        "verdict": "Convinced, but only because he opened devtools. Nothing in the interface itself let him verify the claim, and the claim as written is the same sentence the clone farms use.",
         "delights": [
           "The offline claim is literally true and he proved it: with the network cut, the page reloads from the service-worker cache, pdf-lib is present, and a full merge of a 12-page file completes and downloads. Zero failed requests, zero console errors, cache 'pdftools-v14' holding all 11 assets including the 525KB vendored pdf-lib.",
-          "The output PDF is clean. No source filename appears anywhere in the bytes, no title or author is carried over from the source document, and the producer string is just pdf-lib. Merging three 66 MB files (198 MB, 36 pages) took 1.67 s and produced a byte-faithful 197.8 MB result with no bloat — merging a 200-page file produced 43,081 bytes from a 43,107-byte source (ratio 1.00), because core.js:22 batches one copyPages call per document.",
+          "The output PDF is clean. No source filename appears anywhere in the bytes, no title or author is carried over from the source document, and the producer string is just pdf-lib. Merging three 66 MB files (198 MB, 36 pages) took 1.67 s and produced a byte-faithful 197.8 MB result with no bloat, merging a 200-page file produced 43,081 bytes from a 43,107-byte source (ratio 1.00), because core.js:22 batches one copyPages call per document.",
           "Page order and rotation are exactly right. Interleaving A4 and Letter pages produced output widths 595 612 595 612 595 612 612… matching the on-screen order precisely, and rotation stacks correctly through the source value (a page already at 90° in the file, rotated once here, comes out at 180°)."
         ],
         "frictions": [
           {
-            "what": "The privacy claim is asserted in prose and nowhere else. There is no privacy page link in the footer (sub-plans has privacy.html; pdf-tools' colophon has only 'Sky Wolf Studio's and 'Feedback'), no 'turn your Wi-Fi off and try it' invitation, no request/origin list, and no link to source. The words in the hero — 'entirely in your browser', 'never leave this device', 'Free, no limits, no watermark' — are the identical boilerplate on smallpdf.us and the S3-hosted lookalikes.",
+            "what": "The privacy claim is asserted in prose and nowhere else. There is no privacy page link in the footer (sub-plans has privacy.html; pdf-tools' colophon has only 'Sky Wolf Studio's and 'Feedback'), no 'turn your Wi-Fi off and try it' invitation, no request/origin list, and no link to source. The words in the hero, 'entirely in your browser', 'never leave this device', 'Free, no limits, no watermark', are the identical boilerplate on smallpdf.us and the S3-hosted lookalikes.",
             "severity": "major",
-            "whyItMatters": "The research is blunt about this: 'A user cannot tell us apart from a malware site by reading our marketing copy… The claim is free to make, so it no longer differentiates. Proof does.' The app has the rarest thing in the category — a genuinely verifiable offline build — and does not invite anyone to test it."
+            "whyItMatters": "The research is blunt about this: 'A user cannot tell us apart from a malware site by reading our marketing copy… The claim is free to make, so it no longer differentiates. Proof does.' The app has the rarest thing in the category, a genuinely verifiable offline build, and does not invite anyone to test it."
           },
           {
             "what": "The rotation badge shows the delta the user applied, not the rotation the page will have. A page that is already 90° in the source shows '⟳90°' after one tap and comes out of the merge at 180° (verified in the output PDF: rotations 0:90 … 12:180 13:180).",
@@ -203,50 +203,50 @@
           {
             "what": "Ctrl+P prints a picture of the tool. With 3 pages loaded, print media leaves the hero paragraph, the '📄 Add PDF file(s)' button, all 12 row buttons and both finish buttons visible; only the header, footer and tip pill are hidden by the base.",
             "severity": "minor",
-            "whyItMatters": "It is a dead end rather than a hazard — but a numbered manifest of 'page 7 of contract.pdf, rotated 90°' would be genuinely useful in an assembly workflow, and adding .noprint to cards 1 and 3 is a one-line change."
+            "whyItMatters": "It is a dead end rather than a hazard, but a numbered manifest of 'page 7 of contract.pdf, rotated 90°' would be genuinely useful in an assembly workflow, and adding .noprint to cards 1 and 3 is a one-line change."
           }
         ]
       }
     ],
     "consensus": {
       "worksWell": [
-        "The engine is correct and fast. Interleaved multi-file order comes out of the merge exactly as arranged (A4/Letter widths 595 612 595 612 595 612…), rotation stacks correctly on top of the source page's own /Rotate, and one copyPages call per document means a 200-page merge produces 43,081 bytes from a 43,107-byte source — ratio 1.00, no bloat.",
+        "The engine is correct and fast. Interleaved multi-file order comes out of the merge exactly as arranged (A4/Letter widths 595 612 595 612 595 612…), rotation stacks correctly on top of the source page's own /Rotate, and one copyPages call per document means a 200-page merge produces 43,081 bytes from a 43,107-byte source, ratio 1.00, no bloat.",
         "It does not fall over on real-world files, which is the standing objection to the whole architecture. A 66 MB scanned PDF loads in 255 ms and merges in 1,004 ms; three of them (198 MB, 36 pages) load in 935 ms and merge in 1,669 ms into a 197.8 MB output. 1,000 rows render in 440 ms and merge in 783 ms. Longest single frame gap observed anywhere: 768 ms. Zero console errors across every run in this review.",
         "The offline promise is real and testable. With the network cut, the page reloads from the 'pdftools-v14' cache (all 11 assets including the 525KB vendored pdf-lib), and a full load-and-merge completes with zero failed requests. This is the one thing in the category nobody with a server can copy.",
         "The output is clean of the user. No source filename, title or author survives into the merged PDF; the producer is just pdf-lib.",
-        "Nothing on the finish path asks for anything. No account, no ads, no cookie banner, no interstitial, no counter — and the tip link sits in the header, never on the download path, which is precisely the anti-pattern the research says wins trust here.",
+        "Nothing on the finish path asks for anything. No account, no ads, no cookie banner, no interstitial, no counter, and the tip link sits in the header, never on the download path, which is precisely the anti-pattern the research says wins trust here.",
         "Text safety is solid. Filenames containing <script>, <img onerror>, 220 A's, RTL Arabic and CJK all render as literal text: 0 injected script nodes, 0 injected img nodes, document.title untouched, and 0px horizontal overflow at every width tested.",
-        "The comfort panel itself is faultless — modal, focus moved inside, real radio fieldsets with a permanent tick slot, axe clean with it open — and the standard battery finds zero hard failures (though it barely touches this app; see the stress notes).",
+        "The comfort panel itself is faultless, modal, focus moved inside, real radio fieldsets with a permanent tick slot, axe clean with it open, and the standard battery finds zero hard failures (though it barely touches this app; see the stress notes).",
         "The password-protected-PDF message is a genuine, actionable sentence rather than a crash, which directly answers the market leader's 1-star 'it can only open half of my PDFs'."
       ],
       "hurts": [
-        "Split silently discards the user's entire editing session. With a page deleted and another rotated, the heading said '2 pages (in output order)' and Split produced 3 files — including the deleted page, with the rotation dropped. splitAll walks the source document and never reads `order`.",
+        "Split silently discards the user's entire editing session. With a page deleted and another rotated, the heading said '2 pages (in output order)' and Split produced 3 files, including the deleted page, with the rotation dropped. splitAll walks the source document and never reads `order`.",
         "Errors are erased by whatever happens next. One bad file in a batch of two leaves only the success toast; the failure is overwritten within milliseconds. And a corrupt scan surfaces the raw string \"Cannot read properties of undefined (reading 'Pages')\" because getPageCount() throws outside loadPdf's guard.",
         "Keyboard reorder is structurally impossible. replaceChildren() on every action sends focus to BODY, so Enter works exactly once per journey; moving page 40 to the top costs roughly 3,276 Tab presses and 39 Enters.",
         "The comfort panel makes this app worse. At Largest + High contrast + Roomy + Easier reading on a 414px screen, the filename column collapses from 98px to 9px, rows grow from 61px to 641px, the document goes from 1,613px to 9,437px, and the row buttons reach only 39px against a --tap floor that has risen to 66px.",
         "At 320px the filename column is 4px wide and filenames render one character per line, making each row 373px tall and pushing Save to y=5,209 for a 12-page file.",
-        "There are no thumbnails at all — the category's number-one table stake — and the rotation badge shows the delta rather than the resulting angle, so a scan already at 90° comes out at 180° with nothing on screen to show it.",
+        "There are no thumbnails at all, the category's number-one table stake, and the rotation badge shows the delta rather than the resulting angle, so a scan already at 90° comes out at 180° with nothing on screen to show it.",
         "There is no undo, no persistence, no beforeunload guard and no drop handler: a mis-tapped ✕, a refresh, a discarded tab or a dropped file all destroy work irrecoverably and silently.",
-        "The finish buttons sit at the bottom of an unbounded page — 12,814px down at 200 pages, 62,020px at 1,000 — while the base's sticky .actionbar sits defined and unused.",
+        "The finish buttons sit at the bottom of an unbounded page, 12,814px down at 200 pages, 62,020px at 1,000, while the base's sticky .actionbar sits defined and unused.",
         "Row controls are 37×36px, below the system's own 44px floor, with the destructive ✕ 12px from rotate and no separation.",
         "Splitting is a 70-second black box for a 200-page file: no count, no progress, no cancel, and the only advisory toast fades after 4 seconds.",
         "Duplicate files are accepted silently (12 rows became 24), loaded documents are never rendered as objects, and there is no way to remove a whole file.",
         "Screen readers get 40 buttons named 'Move up', an unlabelled list, and no announcement of any reorder, rotation or deletion.",
-        "The output filename is hard-coded ('merged.pdf' / 'edited.pdf') and there is no size readout before or after — a 197.8 MB file arrives with no warning against portals that cap at 12 MB.",
-        "The privacy claim is unfalsifiable in the UI: no privacy page link, no offline-verification invitation, no source link — the same sentences the Smallpdf clones use."
+        "The output filename is hard-coded ('merged.pdf' / 'edited.pdf') and there is no size readout before or after, a 197.8 MB file arrives with no warning against portals that cap at 12 MB.",
+        "The privacy claim is unfalsifiable in the UI: no privacy page link, no offline-verification invitation, no source link, the same sentences the Smallpdf clones use."
       ],
       "mostWantedNext": [
         "Rendered page thumbnails, large enough to answer 'is that the signed one?' on a 390px screen, with the resulting rotation shown on the thumbnail itself rather than as a delta badge.",
         "Make Split obey the visible order: split what is on screen, honouring deletions and rotations, and offer named modes (every page, at page N, custom ranges, extract selection) with a plain-language preview of the files that will come out.",
         "Undo on delete via the SWS.undo runtime that is already loaded, plus a beforeunload guard and an honest 'held in this tab only' stamp using the unused .trust component.",
-        "Keyboard-first reorder: preserve focus across render(), and add move-to-top / move-to-bottom / move-to-position-N so long moves are not 39 round trips — with drag-and-drop added alongside, never instead.",
+        "Keyboard-first reorder: preserve focus across render(), and add move-to-top / move-to-bottom / move-to-position-N so long moves are not 39 round trips, with drag-and-drop added alongside, never instead.",
         "A responsive row: below ~30rem put the pagetag and label on line one and a 44px control cluster on line two, and stop the filename column collapsing under Roomy and Largest.",
         "A sticky .actionbar holding Save, Split and the live page count, so the finish button is never further away than the work.",
-        "An output filename field and a live size readout beside Save ('merged.pdf — 14.2 MB'), with the portal thresholds the research names (USCIS 12 MB, common 5/10 MB) as presets.",
-        "Persistent, per-file error reporting in a .warn block instead of a single toast that the next event erases — and never print a raw exception message.",
+        "An output filename field and a live size readout beside Save ('merged.pdf, 14.2 MB'), with the portal thresholds the research names (USCIS 12 MB, common 5/10 MB) as presets.",
+        "Persistent, per-file error reporting in a .warn block instead of a single toast that the next event erases, and never print a raw exception message.",
         "A visible file list with page counts, a remove-file control, and a duplicate warning when the same name and size is added twice.",
         "Progress with a working cancel for split, or a single ZIP, which also removes the browser's multiple-download prompt.",
-        "Make the privacy claim falsifiable: a privacy page link in the colophon, a 'turn your Wi-Fi off — it still works' line, and the negative-space list where competitors put a pricing table."
+        "Make the privacy claim falsifiable: a privacy page link in the colophon, a 'turn your Wi-Fi off, it still works' line, and the negative-space list where competitors put a pricing table."
       ]
     }
   },
@@ -258,13 +258,13 @@
         "name": "The standard battery (node design/stress.mjs pdf-tools)",
         "method": "Ran the shipped battery end to end and read every line of its output.",
         "result": "0 hard failures. Layout clean at 320/414/1280 and at largest text and roomy; touch targets under 32px: none; hostile text: 0 injected scripts/imgs, title intact; numeric edges clean; 30 clicks on the primary action in 617ms with content 679→679 chars; bulk 200 adds: ran=false; reload 'persisted' 679→679; no app storage key to corrupt; keyboard 7 focusable, 0 unreachable, 0 unnamed; axe clean; print 3 dark fills; 0 console errors.",
-        "defect": "The battery is close to vacuous for this app and its 'clean' verdict is misleading. This app has no text inputs and no localStorage, so the hostile-text, numeric, bulk-add, corrupt-storage and persistence probes never touched it; 'content 679→679 chars' after 30 primary clicks is just the empty page toasting 'Add a PDF first' thirty times; 'survives reload — persisted' actually means the page is identically empty before and after. Every finding below required loading real PDFs, which the battery cannot do.",
+        "defect": "The battery is close to vacuous for this app and its 'clean' verdict is misleading. This app has no text inputs and no localStorage, so the hostile-text, numeric, bulk-add, corrupt-storage and persistence probes never touched it; 'content 679→679 chars' after 30 primary clicks is just the empty page toasting 'Add a PDF first' thirty times; 'survives reload, persisted' actually means the page is identically empty before and after. Every finding below required loading real PDFs, which the battery cannot do.",
         "severity": "none"
       },
       {
         "name": "Split ignores the visible order, deletions and rotations",
         "method": "Loaded payslip.pdf (3 pages), deleted page 2 and rotated page 1 through the UI, confirmed the heading read '2 pages (in output order)', then clicked Split and loaded every produced file back into pdf-lib.",
-        "result": "Split produced THREE files — payslip-page-1/2/3.pdf — including the page that had been deleted. payslip-page-1.pdf comes back with rotation 0 despite the on-screen badge reading ⟳90°. splitAll(PDFLib, docs[0].pdf) at core.js:36-46 iterates srcDoc.getPageCount() and never reads `order` (called from app.js:103).",
+        "result": "Split produced THREE files, payslip-page-1/2/3.pdf, including the page that had been deleted. payslip-page-1.pdf comes back with rotation 0 despite the on-screen badge reading ⟳90°. splitAll(PDFLib, docs[0].pdf) at core.js:36-46 iterates srcDoc.getPageCount() and never reads `order` (called from app.js:103).",
         "defect": "Split silently reverses the user's entire editing session and re-emits pages they deliberately removed. Nothing in the UI indicates Save and Split read different data.",
         "severity": "blocker"
       },
@@ -279,7 +279,7 @@
         "name": "Row geometry at 320/360/390/414/1280 and under each comfort setting",
         "method": "Loaded contract.pdf (12 pages) in seven separate withApp runs and measured .grow width, row height, doclabel line count, button box, list height, document height and the Save button's page offset.",
         "result": "320px: .grow 4px, row 373px, 'contract.pdf' over 12 lines, list 4,551px, document 5,523px, Save at y=5,209. 360px: .grow 44px, row 105px. 390px and 414px: .grow 74/98px, row 61px, document 1,613px, Save at 1,319. 414 + roomy: .grow 41px, row 109px. 414 + xxl text: .grow 74px, row 149px, document 3,072px, buttons 43×36. 1280px: .grow 348px, row 61px. Horizontal overflow 0px in all seven.",
-        "defect": "`ul.plain > li` is a nowrap flex line whose four 37px buttons and five 12px gaps never shrink, so the filename column — the only thing distinguishing contract.pdf from w2.pdf during a merge — is the sole element that absorbs every narrowing. Below ~380px it collapses to unreadable, and increasing spacing makes it worse.",
+        "defect": "`ul.plain > li` is a nowrap flex line whose four 37px buttons and five 12px gaps never shrink, so the filename column, the only thing distinguishing contract.pdf from w2.pdf during a merge, is the sole element that absorbs every narrowing. Below ~380px it collapses to unreadable, and increasing spacing makes it worse.",
         "severity": "blocker"
       },
       {
@@ -292,7 +292,7 @@
       {
         "name": "Error paths: encrypted, corrupt, non-PDF, mixed batch, duplicates, empty list",
         "method": "Fed the file input a hand-built PDF with an /Encrypt trailer, a truncated PDF, a ZIP renamed .pdf, a two-file batch of [broken, good], the same good file twice, and then deleted every row and pressed both buttons.",
-        "result": "Encrypted → 'That PDF is password-protected. Remove the password first (print it to a new PDF), then load it here.' rendered as a 207×164px eight-line toast that disappears after 6s, leaving nothing on the page. ZIP-as-PDF → 'That file doesn't look like a readable PDF.' Truncated PDF → \"Cannot read properties of undefined (reading 'Pages')\". Mixed batch → only 'contract.pdf — 12 pages loaded'; the error is gone. Same file twice → 12 rows became 24 with no warning. All rows deleted → Save toasts 'Add a PDF first' even though a file is loaded, and Split still refuses on doc count.",
+        "result": "Encrypted → 'That PDF is password-protected. Remove the password first (print it to a new PDF), then load it here.' rendered as a 207×164px eight-line toast that disappears after 6s, leaving nothing on the page. ZIP-as-PDF → 'That file doesn't look like a readable PDF.' Truncated PDF → \"Cannot read properties of undefined (reading 'Pages')\". Mixed batch → only 'contract.pdf, 12 pages loaded'; the error is gone. Same file twice → 12 rows became 24 with no warning. All rows deleted → Save toasts 'Add a PDF first' even though a file is loaded, and Split still refuses on doc count.",
         "defect": "Three separate failures: a raw exception message reaches the user because getPageCount() (app.js:76) throws outside loadPdf's guard; a per-file error is destroyed by the next file's success because both share one toast; and duplicate documents are accepted invisibly.",
         "severity": "blocker"
       },
@@ -307,7 +307,7 @@
         "name": "Real-world file weight: one 66 MB scan, then three of them",
         "method": "Generated PDFs of incompressible 2400×2400 noise images (66 MB / 12 pages), loaded one and then three, with a requestAnimationFrame probe recording the longest frame gap.",
         "result": "One 66 MB file: rows in 255 ms, longest frame gap during load 54 ms, merge 1,004 ms with a 768 ms frame gap, output byte-identical in size. Three (198 MB, 36 pages): loaded in 935 ms with a 91 ms gap, merged in 1,669 ms with a 658 ms gap, produced a 197.8 MB file. No crash, no console errors.",
-        "defect": "No defect — this directly refutes the research's standing objection ('Three 80 MB PDFs = 240 MB sitting in RAM… Browser tab crashes'). The only gap is that the 197.8 MB output size is never shown to the user, before or after.",
+        "defect": "No defect, this directly refutes the research's standing objection ('Three 80 MB PDFs = 240 MB sitting in RAM… Browser tab crashes'). The only gap is that the 197.8 MB output size is never shown to the user, before or after.",
         "severity": "none"
       },
       {
@@ -318,15 +318,15 @@
         "severity": "major"
       },
       {
-        "name": "Output PDF inspection — order, rotation, metadata, bloat",
+        "name": "Output PDF inspection, order, rotation, metadata, bloat",
         "method": "Built A4 and Letter sources, interleaved them through the UI, rotated a normal page once and a page whose source /Rotate is already 90, merged, then loaded the downloaded bytes back into pdf-lib and inspected page sizes, rotations, metadata and byte totals.",
-        "result": "Interleave order is exact: UI 'a4:1 contract:1 a4:2 contract:2 a4:3 contract:3 …' → output widths 595 612 595 612 595 612 612…. Rotations: the normal page comes out at 90; the page already at 90 in the source, shown as '⟳90°', comes out at 180 — arithmetically correct per core.js:26-29. Metadata: title/author undefined, producer and creator 'pdf-lib', creationDate the current timestamp. No source filename appears in the bytes. 200-page merge: 43,081 bytes out of a 43,107-byte source (ratio 1.00).",
-        "defect": "The engine is correct; the label is not. The badge reports the delta the user applied, not the angle the page will have, and with no thumbnail there is no other cue — so scanned pages carrying their own /Rotate come out wrong-way-up with the UI showing '90°'.",
+        "result": "Interleave order is exact: UI 'a4:1 contract:1 a4:2 contract:2 a4:3 contract:3 …' → output widths 595 612 595 612 595 612 612…. Rotations: the normal page comes out at 90; the page already at 90 in the source, shown as '⟳90°', comes out at 180, arithmetically correct per core.js:26-29. Metadata: title/author undefined, producer and creator 'pdf-lib', creationDate the current timestamp. No source filename appears in the bytes. 200-page merge: 43,081 bytes out of a 43,107-byte source (ratio 1.00).",
+        "defect": "The engine is correct; the label is not. The badge reports the delta the user applied, not the angle the page will have, and with no thumbnail there is no other cue, so scanned pages carrying their own /Rotate come out wrong-way-up with the UI showing '90°'.",
         "severity": "major"
       },
       {
         "name": "Hostile and non-Latin filenames at 320 and 414",
-        "method": "Fed seven files through the input with crafted names — <script>, <img src=x onerror>, 220 A's, a 108-character unbroken word, Arabic, Japanese, and whitespace-only — then queried for injected nodes and measured row geometry.",
+        "method": "Fed seven files through the input with crafted names, <script>, <img src=x onerror>, 220 A's, a 108-character unbroken word, Arabic, Japanese, and whitespace-only, then queried for injected nodes and measured row geometry.",
         "result": "0 injected script nodes, 0 img[src=x], document.title untouched; every name renders as literal text; Arabic and Japanese render correctly. But at 320px the .grow column is 4px for every row and the 220-character name produces a single row 4,474px tall; at 414px the same row is 409px tall. Page overflow 0px at both widths, no console errors.",
         "defect": "Text handling is safe. Layout is not: an ordinary long filename (the kind a scanner or a bank produces) turns one page into four screens of vertical letters, and there is no truncation, ellipsis or title attribute anywhere.",
         "severity": "major"
@@ -334,22 +334,22 @@
       {
         "name": "Offline verification and drag-and-drop",
         "method": "Waited for the service worker, listed the cache, set the browser context offline, reloaded, then loaded a PDF and merged it. Separately dispatched a real DragEvent carrying a File at document.body.",
-        "result": "Cache 'pdftools-v14' holds all 11 declared assets. Offline reload restores the full page with window.PDFLib present; loading a 12-page PDF and merging it both succeed offline; zero failed requests, zero errors. Drag events: dragover defaultPrevented false, drop defaultPrevented false, 0 rows added — there is no handler of any kind.",
-        "defect": "The offline promise is real (a genuine strength). But nothing intercepts a dropped file, so the browser's default takes over and navigates away from the page — and with no persistence and no beforeunload guard (window.onbeforeunload is null, localStorage 0 bytes), that destroys the entire session silently.",
+        "result": "Cache 'pdftools-v14' holds all 11 declared assets. Offline reload restores the full page with window.PDFLib present; loading a 12-page PDF and merging it both succeed offline; zero failed requests, zero errors. Drag events: dragover defaultPrevented false, drop defaultPrevented false, 0 rows added, there is no handler of any kind.",
+        "defect": "The offline promise is real (a genuine strength). But nothing intercepts a dropped file, so the browser's default takes over and navigates away from the page, and with no persistence and no beforeunload guard (window.onbeforeunload is null, localStorage 0 bytes), that destroys the entire session silently.",
         "severity": "major"
       },
       {
         "name": "Contrast of the app-layer tokens in light and dark",
         "method": "Rendered a rotated row and computed WCAG ratios from getComputedStyle for .rot, .doclabel, .pagetag and the colophon in both schemes.",
-        "result": "Light — .rot 12px #6d78d1 on #fdfeff = 3.96:1 (fails 4.5:1); .doclabel 12.48px = 5.99:1; .pagetag 14.77:1; colophon 15px = 5.65:1 and its links the same. Dark — .rot 7.83:1, .doclabel 7.17:1, .pagetag 12.36:1, colophon 7.94:1. High contrast does not change .rot, because the preference darkens --ink-2/--ink-3/--line and not --accent.",
-        "defect": "One real failure: the rotation badge, which is state rather than decoration, is under 4.5:1 in light mode at the smallest size in the app and is the one thing the contrast setting cannot fix. The footer-contrast defect recorded in the earlier audit is resolved — the colophon now measures 5.65:1.",
+        "result": "Light, .rot 12px #6d78d1 on #fdfeff = 3.96:1 (fails 4.5:1); .doclabel 12.48px = 5.99:1; .pagetag 14.77:1; colophon 15px = 5.65:1 and its links the same. Dark, .rot 7.83:1, .doclabel 7.17:1, .pagetag 12.36:1, colophon 7.94:1. High contrast does not change .rot, because the preference darkens --ink-2/--ink-3/--line and not --accent.",
+        "defect": "One real failure: the rotation badge, which is state rather than decoration, is under 4.5:1 in light mode at the smallest size in the app and is the one thing the contrast setting cannot fix. The footer-contrast defect recorded in the earlier audit is resolved, the colophon now measures 5.65:1.",
         "severity": "minor"
       },
       {
         "name": "Screen-reader surface with 17 and 40 rows",
         "method": "Counted duplicate accessible names, inspected #pageList and its children for roles and position info, and compared toast text immediately before and after a delete.",
-        "result": "aria-label counts on a 17-page file: {'Move up':17, 'Move down':17, 'Rotate 90 degrees':17, 'Remove page':17}. #pageList has role null and aria-label null; li elements have no role, no aria-posinset, no aria-setsize. #toast is role=status aria-live=polite with no aria-atomic, and its text is byte-identical before and after a delete ('forty.pdf — 40 pages loaded' both times). axe with 17 rows rendered: 0 violations.",
-        "defect": "axe is clean and still the list is unusable non-visually: 160 identically-named buttons, no row context, and no announcement for any reorder, rotation or deletion — the three things the app exists to do.",
+        "result": "aria-label counts on a 17-page file: {'Move up':17, 'Move down':17, 'Rotate 90 degrees':17, 'Remove page':17}. #pageList has role null and aria-label null; li elements have no role, no aria-posinset, no aria-setsize. #toast is role=status aria-live=polite with no aria-atomic, and its text is byte-identical before and after a delete ('forty.pdf, 40 pages loaded' both times). axe with 17 rows rendered: 0 violations.",
+        "defect": "axe is clean and still the list is unusable non-visually: 160 identically-named buttons, no row context, and no announcement for any reorder, rotation or deletion, the three things the app exists to do.",
         "severity": "major"
       },
       {
@@ -362,21 +362,21 @@
       {
         "name": "Reload and session durability",
         "method": "Built a 17-page arrangement across three files, reloaded, and inspected the DOM and storage; also read window.onbeforeunload.",
-        "result": "0 rows after reload. localStorage holds 0 bytes for this app (only sws.prefs once the comfort panel is touched). window.onbeforeunload is null — no guard, no warning, no toast.",
-        "defect": "An accidental refresh, a mobile tab discard or a dropped file wipes an arbitrary amount of arranging work with no prompt and no trace. The file bytes genuinely cannot go to localStorage, but the app never says so either — the base's .trust stamp is defined and unused.",
+        "result": "0 rows after reload. localStorage holds 0 bytes for this app (only sws.prefs once the comfort panel is touched). window.onbeforeunload is null, no guard, no warning, no toast.",
+        "defect": "An accidental refresh, a mobile tab discard or a dropped file wipes an arbitrary amount of arranging work with no prompt and no trace. The file bytes genuinely cannot go to localStorage, but the app never says so either, the base's .trust stamp is defined and unused.",
         "severity": "major"
       },
       {
         "name": "Browser print with pages loaded",
         "method": "Loaded a 3-page file, switched to print media and enumerated what remains visible.",
         "result": "header.app correctly hidden. Still visible: the hero paragraph, the '📄 Add PDF file(s)' button, all 12 row control buttons, and both finish buttons. The sheet is a screenshot of the tool.",
-        "defect": "Ctrl+P produces a printed picture of a UI. The base hides chrome but the app never marks cards 1 and 3, or the row buttons, .noprint — so a 200-page list would be ~10 sheets of inert ↑ ↓ ⟳ ✕.",
+        "defect": "Ctrl+P produces a printed picture of a UI. The base hides chrome but the app never marks cards 1 and 3, or the row buttons, .noprint, so a 200-page list would be ~10 sheets of inert ↑ ↓ ⟳ ✕.",
         "severity": "minor"
       },
       {
         "name": "Static DOM and unused-component audit",
         "method": "Probed the rendered document for landmarks, heading sizes, unused base components, and the resolved skin tokens.",
-        "result": "<main id=\"main\"> is present (an improvement on the earlier audit) but there is no skip link despite .skip being styled at index.html:840. .empty, .actionbar, .trust and .warn are all defined and unused. Card 3 has no heading. Headings are h1 20px, h2 24px (hero), h2 12px (card label) — two very different roles at one level. #addBtn is 189px wide inside a 382px card. No privacy link in the colophon (sub-plans ships privacy.html). Resolved tokens: --wrap 42rem and --r 14px, i.e. the skin's intended 48rem/10px are still being overwritten by studio.css's own :root.",
+        "result": "<main id=\"main\"> is present (an improvement on the earlier audit) but there is no skip link despite .skip being styled at index.html:840. .empty, .actionbar, .trust and .warn are all defined and unused. Card 3 has no heading. Headings are h1 20px, h2 24px (hero), h2 12px (card label), two very different roles at one level. #addBtn is 189px wide inside a 382px card. No privacy link in the colophon (sub-plans ships privacy.html). Resolved tokens: --wrap 42rem and --r 14px, i.e. the skin's intended 48rem/10px are still being overwritten by studio.css's own :root.",
         "defect": "The portfolio-wide --r/--wrap override flagged in the audit is still live, and four base components built for exactly this app's problems (empty state, sticky action bar, trust stamp, warning block) are shipped in the CSS and never used.",
         "severity": "minor"
       }
@@ -384,29 +384,29 @@
   },
   "fixes": [
     {
-      "title": "Make Split operate on the visible order — it currently re-emits deleted pages and drops rotations",
+      "title": "Make Split operate on the visible order, it currently re-emits deleted pages and drops rotations",
       "rationale": "Verified: with page 2 deleted and page 1 rotated, the heading read '2 pages (in output order)' and Split produced three files including the deleted page, with split-1.pdf coming back at 0° rather than the 90° shown on screen. splitAll() walks srcDoc.getPageCount() and never reads `order`. Yusuf's delivery notes and, in the research's framing, somebody's divorce paperwork, come back after being removed. Split the assembled order instead: group `order` into ranges, emit one document per group, carrying rotation through the same path buildOutput uses. While in there, add the named modes the research lists as table stakes (every page / at page N / custom ranges / extract selection) with a preview of the filenames that will be produced.",
       "where": "apps/pdf-tools/core.js:36-46 (splitAll), called at apps/pdf-tools/app.js:95-113",
       "severity": "blocker",
       "effort": "M"
     },
     {
-      "title": "Preserve focus across render() — keyboard reorder is one move per journey",
-      "rationale": "app.js:42 calls list.replaceChildren() and all four row handlers (app.js:55, 57, 59, 61) call render(), so the activated button is destroyed. Measured: focus 'Move up' and press Enter five times — the page moves once and activeElement is BODY after every press. Devon's job, moving page 40 to the front of a 40-page court bundle, costs roughly 3,276 Tab presses and 39 Enters. Record the focused row index and action before rebuilding and restore the equivalent button afterwards (for a removal, the same index, or the previous row if it was last). Do the same for the merge/split buttons, which lose focus to `btn.disabled = true` at app.js:87 and app.js:101. The prior audit already called this 'the single highest-impact fix in the app'.",
+      "title": "Preserve focus across render(), keyboard reorder is one move per journey",
+      "rationale": "app.js:42 calls list.replaceChildren() and all four row handlers (app.js:55, 57, 59, 61) call render(), so the activated button is destroyed. Measured: focus 'Move up' and press Enter five times, the page moves once and activeElement is BODY after every press. Devon's job, moving page 40 to the front of a 40-page court bundle, costs roughly 3,276 Tab presses and 39 Enters. Record the focused row index and action before rebuilding and restore the equivalent button afterwards (for a removal, the same index, or the previous row if it was last). Do the same for the merge/split buttons, which lose focus to `btn.disabled = true` at app.js:87 and app.js:101. The prior audit already called this 'the single highest-impact fix in the app'.",
       "where": "apps/pdf-tools/app.js:40-63 (render), :87/:93 and :101/:112 (disable/re-enable)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Stop errors being erased, and never show a raw exception string",
-      "rationale": "Loading [broken.pdf, contract.pdf] leaves only 'contract.pdf — 12 pages loaded' — the failure toast is overwritten milliseconds later, so Yusuf would have submitted a pack silently missing a statement. And a truncated PDF surfaces \"Cannot read properties of undefined (reading 'Pages')\" verbatim, because loadPdf only guards PDFDocument.load while getPageCount() throws at app.js:76 outside it. Move getPageCount inside loadPdf's try (or validate the loaded doc there), and render per-file outcomes into a persistent, dismissable .warn block inside the Add card — the component already exists at index.html:670 and is unused. Keep the toast for confirmations only; the eight-line password message currently disappears after 6 seconds.",
+      "rationale": "Loading [broken.pdf, contract.pdf] leaves only 'contract.pdf, 12 pages loaded', the failure toast is overwritten milliseconds later, so Yusuf would have submitted a pack silently missing a statement. And a truncated PDF surfaces \"Cannot read properties of undefined (reading 'Pages')\" verbatim, because loadPdf only guards PDFDocument.load while getPageCount() throws at app.js:76 outside it. Move getPageCount inside loadPdf's try (or validate the loaded doc there), and render per-file outcomes into a persistent, dismissable .warn block inside the Add card, the component already exists at index.html:670 and is unused. Keep the toast for confirmations only; the eight-line password message currently disappears after 6 seconds.",
       "where": "apps/pdf-tools/app.js:70-82 (the per-file loop and its single toast), apps/pdf-tools/core.js:49-58 (loadPdf guard)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Rebuild the page row so the filename survives narrow screens and the comfort settings",
-      "rationale": "`ul.plain > li` is a nowrap flex line whose four 37px buttons and five 12px gaps never shrink, so .grow absorbs every narrowing. Measured with a 12-page file: 320px → .grow 4px, 'contract.pdf' over 12 lines, row 373px, Save at y=5,209; 360px → .grow 44px; 414 + roomy → 41px; 414 at Largest+Roomy+Easier → 9px, row 641px, Save at y=8,949. Kayla gave up on the 320px library kiosk and Marion switched her accessibility settings back off. Below ~30rem (and whenever the row would squeeze), make it a two-line grid — pagetag plus label on line one, a right-aligned 44px control cluster on line two — with flex:none on the buttons and a sensible max-width plus middle-ellipsis on the filename.",
+      "rationale": "`ul.plain > li` is a nowrap flex line whose four 37px buttons and five 12px gaps never shrink, so .grow absorbs every narrowing. Measured with a 12-page file: 320px → .grow 4px, 'contract.pdf' over 12 lines, row 373px, Save at y=5,209; 360px → .grow 44px; 414 + roomy → 41px; 414 at Largest+Roomy+Easier → 9px, row 641px, Save at y=8,949. Kayla gave up on the 320px library kiosk and Marion switched her accessibility settings back off. Below ~30rem (and whenever the row would squeeze), make it a two-line grid, pagetag plus label on line one, a right-aligned 44px control cluster on line two, with flex:none on the buttons and a sensible max-width plus middle-ellipsis on the filename.",
       "where": "apps/pdf-tools/index.html:685-693 (ul.plain > li, .grow) and the app layer at index.html:1255-1260; rows emitted at apps/pdf-tools/app.js:48-61",
       "severity": "blocker",
       "effort": "M"
@@ -420,7 +420,7 @@
     },
     {
       "title": "Undo for page removal, plus a beforeunload guard and an honest durability statement",
-      "rationale": "✕ splices the entry and re-renders with no confirm, no toast and no restore (app.js:60-61), on a 37×36 target sitting 12px from rotate — Marion has a tremor and Adaeze is deleting pages from a visa packet. Nothing is persisted (localStorage 0 bytes), window.onbeforeunload is null, and there is no drop handler, so a refresh, a mobile tab discard or a dropped file wipes everything. The shared SWS.undo runtime is already loaded via sws-ui.js and the base already styles '#toast .undo'; app.js calls neither. Add undo, add a two-line beforeunload guard when order.length > 0, and state the constraint using the unused .trust stamp: 'held in this tab only — a refresh starts over'.",
+      "rationale": "✕ splices the entry and re-renders with no confirm, no toast and no restore (app.js:60-61), on a 37×36 target sitting 12px from rotate, Marion has a tremor and Adaeze is deleting pages from a visa packet. Nothing is persisted (localStorage 0 bytes), window.onbeforeunload is null, and there is no drop handler, so a refresh, a mobile tab discard or a dropped file wipes everything. The shared SWS.undo runtime is already loaded via sws-ui.js and the base already styles '#toast .undo'; app.js calls neither. Add undo, add a two-line beforeunload guard when order.length > 0, and state the constraint using the unused .trust stamp: 'held in this tab only, a refresh starts over'.",
       "where": "apps/pdf-tools/app.js:60-61 (splice), :37-38 (module state), unused runtime in apps/pdf-tools/sws-ui.js, toast undo styling at apps/pdf-tools/index.html:789, .trust at index.html:437",
       "severity": "blocker",
       "effort": "S"
@@ -434,20 +434,20 @@
     },
     {
       "title": "Give the row controls a real 44px target that grows with the text setting",
-      "rationale": "Measured 37×36px at every width, and only 51×39px at Largest — while --tap resolves to max(44px, 44×1.5) = 66px, because .btn.small hard-codes min-height:36px (index.html:589) and --ui-scale never reaches it. These are the app's most-used controls: reordering 40 pages is hundreds of taps, and the destructive ✕ is 12px from rotate with no separation and no undo. Use .btn.icon (index.html:595, already sized to --tap) for row controls, or scope `#pageList .btn.small{min-height:var(--tap);min-width:var(--tap);padding:0}`, and push ✕ to the far edge with margin-left:auto.",
+      "rationale": "Measured 37×36px at every width, and only 51×39px at Largest, while --tap resolves to max(44px, 44×1.5) = 66px, because .btn.small hard-codes min-height:36px (index.html:589) and --ui-scale never reaches it. These are the app's most-used controls: reordering 40 pages is hundreds of taps, and the destructive ✕ is 12px from rotate with no separation and no undo. Use .btn.icon (index.html:595, already sized to --tap) for row controls, or scope `#pageList .btn.small{min-height:var(--tap);min-width:var(--tap);padding:0}`, and push ✕ to the far edge with margin-left:auto.",
       "where": "apps/pdf-tools/index.html:589 (.btn.small) as applied at apps/pdf-tools/app.js:54, 56, 58, 60",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Show the output filename and size before Save, and let the user set the name",
-      "rationale": "The name is hard-coded — 'merged.pdf' for several files, 'edited.pdf' for one, even when the source is 確定申告書.pdf — and there is no size readout anywhere: merging three 66 MB files produced a 197.8 MB download with no warning. Adaeze is feeding IRCC, which takes one file per field; USCIS caps at 12 MB. The research's fix for the last-step ambush is explicit: 'show the output filename and byte size next to the button BEFORE they press it'. Default the name from the first source file, make it editable, and render an estimated size beside Save with the common portal thresholds as reference.",
+      "rationale": "The name is hard-coded, 'merged.pdf' for several files, 'edited.pdf' for one, even when the source is 確定申告書.pdf, and there is no size readout anywhere: merging three 66 MB files produced a 197.8 MB download with no warning. Adaeze is feeding IRCC, which takes one file per field; USCIS caps at 12 MB. The research's fix for the last-step ambush is explicit: 'show the output filename and byte size next to the button BEFORE they press it'. Default the name from the first source file, make it editable, and render an estimated size beside Save with the common portal thresholds as reference.",
       "where": "apps/pdf-tools/app.js:90 (download filename), apps/pdf-tools/app.js:30-35 (download helper)",
       "severity": "major",
       "effort": "S"
     },
     {
-      "title": "Give split real progress and a cancel — or emit one ZIP",
+      "title": "Give split real progress and a cancel, or emit one ZIP",
       "rationale": "Measured on a 200-page file: 200 downloads 348 ms apart spanning 69.9 seconds, with splitBtn reading 'Working…' and disabled the whole time, no count anywhere in the page, and the only advice ('If the browser asks about multiple downloads, allow it') fading after 4 seconds. 40 pages takes 18.2 seconds. Merge and Add stay clickable throughout. Update a status line to 'Saving 14 of 200…' inside the loop with a working cancel, and consider a single ZIP, which also removes the browser's multiple-download permission prompt entirely.",
       "where": "apps/pdf-tools/app.js:100-112 (the split loop and its 350ms spacing)",
       "severity": "major",
@@ -455,42 +455,42 @@
     },
     {
       "title": "Render the loaded documents as objects: a file list, a remove-file control, and a duplicate warning",
-      "rationale": "`docs` is never rendered (app.js:37, 70-77). Adding payslip.pdf twice took the list from 12 rows to 24 with no warning and an identical success toast — a duplicated payslip inside an immigration packet is a rejection. There is also no way to remove a whole file, and no way to see why Split is refusing: with two files loaded the button reports disabled=false, no aria-disabled, no title, and clicking it just says 'reload with just that file' — advice that destroys the session, since nothing is persisted. Add a compact file list with page counts and a remove control, warn on a matching name+size, and disable Split with an explanation whenever docs.length !== 1.",
+      "rationale": "`docs` is never rendered (app.js:37, 70-77). Adding payslip.pdf twice took the list from 12 rows to 24 with no warning and an identical success toast, a duplicated payslip inside an immigration packet is a rejection. There is also no way to remove a whole file, and no way to see why Split is refusing: with two files loaded the button reports disabled=false, no aria-disabled, no title, and clicking it just says 'reload with just that file', advice that destroys the session, since nothing is persisted. Add a compact file list with page counts and a remove control, warn on a matching name+size, and disable Split with an explanation whenever docs.length !== 1.",
       "where": "apps/pdf-tools/app.js:70-77 (push with no dedupe, docs never rendered), app.js:96-97 (split refusal)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Make the list speak: unique button names, a labelled list, and a spoken result for every row action",
-      "rationale": "Measured on a 17-page file: {'Move up':17, 'Move down':17, 'Rotate 90 degrees':17, 'Remove page':17} — 160 identically-named buttons on a 40-page bundle — with #pageList carrying no role or aria-label, li elements carrying no aria-posinset/setsize, and the toast text byte-identical before and after a delete. axe returns 0 violations and the list is still unusable non-visually. Interpolate position and source into each label ('Move page 3 of 17, contract.pdf, up'), give #pageList an accessible name, and call the existing toast on every row action; add aria-atomic=\"true\" to #toast so repeated messages re-announce.",
+      "rationale": "Measured on a 17-page file: {'Move up':17, 'Move down':17, 'Rotate 90 degrees':17, 'Remove page':17}, 160 identically-named buttons on a 40-page bundle, with #pageList carrying no role or aria-label, li elements carrying no aria-posinset/setsize, and the toast text byte-identical before and after a delete. axe returns 0 violations and the list is still unusable non-visually. Interpolate position and source into each label ('Move page 3 of 17, contract.pdf, up'), give #pageList an accessible name, and call the existing toast on every row action; add aria-atomic=\"true\" to #toast so repeated messages re-announce.",
       "where": "apps/pdf-tools/app.js:54-61 (aria-labels, no toast call), apps/pdf-tools/index.html:1291 (#pageList), index.html:1304 (#toast)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Accept dropped files instead of letting the browser navigate away",
-      "rationale": "There are no dragover/drop handlers anywhere — a synthetic drop on document.body comes back with defaultPrevented false — so dragging a PDF onto the window triggers the browser default and replaces the page, destroying an unsaved arrangement (no persistence, no beforeunload). Drop is also the natural gesture for the desktop users the research targets, and card 1's #addBtn is a 189px button floating in a 382px card with no drop affordance. Make card 1 a real drop zone with the button centred inside it.",
+      "rationale": "There are no dragover/drop handlers anywhere, a synthetic drop on document.body comes back with defaultPrevented false, so dragging a PDF onto the window triggers the browser default and replaces the page, destroying an unsaved arrangement (no persistence, no beforeunload). Drop is also the natural gesture for the desktop users the research targets, and card 1's #addBtn is a 189px button floating in a 382px card with no drop affordance. Make card 1 a real drop zone with the button centred inside it.",
       "where": "apps/pdf-tools/app.js:66-67 (no drop handlers), apps/pdf-tools/index.html:1283-1287 (card 1)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Fix the rotation badge's contrast and size, and stop it being the only rotation cue",
-      "rationale": "Measured 12px #6d78d1 on #fdfeff = 3.96:1 in light mode, below the 4.5:1 floor, and High contrast does not change it because that preference darkens --ink-2/--ink-3/--line and not --accent (dark mode is fine at 7.83:1). It is the smallest text in the app and it is state, not decoration — Marion could not see it and Devon was never told about it. Use --accent-deep or render it as a chip on --accent-soft at --t-xs with a real margin, and delete the two-space text hack at app.js:52 once it has one.",
+      "rationale": "Measured 12px #6d78d1 on #fdfeff = 3.96:1 in light mode, below the 4.5:1 floor, and High contrast does not change it because that preference darkens --ink-2/--ink-3/--line and not --accent (dark mode is fine at 7.83:1). It is the smallest text in the app and it is state, not decoration, Marion could not see it and Devon was never told about it. Use --accent-deep or render it as a chip on --accent-soft at --t-xs with a real margin, and delete the two-space text hack at app.js:52 once it has one.",
       "where": "apps/pdf-tools/index.html:1260 (.rot), content at apps/pdf-tools/app.js:52",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Make the privacy claim falsifiable, and add the negative-space list",
-      "rationale": "Tomasz needed devtools to confirm the one thing this app genuinely has: it reloads and merges with the network cut, from an 11-asset cache, with zero requests. The UI offers no way to know that. There is no privacy page link in the colophon (sub-plans ships privacy.html), no 'turn your Wi-Fi off — it still works' invitation, no source link, and the hero's words are the same boilerplate as the smallpdf.us clones the research documents. Add the privacy link, the offline-verification line, and the explicit list — no account, no upload, no daily limit, no size cap, no watermark, no ads, no card on file — where competitors put a pricing table.",
+      "rationale": "Tomasz needed devtools to confirm the one thing this app genuinely has: it reloads and merges with the network cut, from an 11-asset cache, with zero requests. The UI offers no way to know that. There is no privacy page link in the colophon (sub-plans ships privacy.html), no 'turn your Wi-Fi off, it still works' invitation, no source link, and the hero's words are the same boilerplate as the smallpdf.us clones the research documents. Add the privacy link, the offline-verification line, and the explicit list, no account, no upload, no daily limit, no size cap, no watermark, no ads, no card on file, where competitors put a pricing table.",
       "where": "apps/pdf-tools/index.html:1305 (colophon), index.html:1276-1281 (hero copy)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Finish the structural odds and ends the base already solved",
-      "rationale": "Verified in the rendered DOM: no skip link although .skip is styled at index.html:840; .empty, .warn and .trust defined and unused; card 3 has no heading, so nothing labels Save and Split as alternatives; headings run h1 20px, h2 24px (hero), h2 12px (card label) — two roles at one level; printing leaves the hero, the Add button, all row buttons and both finish buttons visible; and the skin's --r:10px/--wrap:48rem are still overwritten by studio.css's own :root, so this app renders at 42rem/14px rather than the intended crisp workbench.",
+      "rationale": "Verified in the rendered DOM: no skip link although .skip is styled at index.html:840; .empty, .warn and .trust defined and unused; card 3 has no heading, so nothing labels Save and Split as alternatives; headings run h1 20px, h2 24px (hero), h2 12px (card label), two roles at one level; printing leaves the hero, the Add button, all row buttons and both finish buttons visible; and the skin's --r:10px/--wrap:48rem are still overwritten by studio.css's own :root, so this app renders at 42rem/14px rather than the intended crisp workbench.",
       "where": "apps/pdf-tools/index.html:1266 (no skip link), :1292 (#emptyHint vs unused .empty), :1295 (card 3 heading), print rules at index.html:1181-1237; token override in design/studio.css :root",
       "severity": "minor",
       "effort": "S"

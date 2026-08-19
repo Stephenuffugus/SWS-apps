@@ -6,38 +6,38 @@
         "name": "Renata Villalobos",
         "who": "38, room parent for a class of 24 and the person who ends up running every sign-up. She is the research's organizer: 5% of sessions, 100% of the adoption decision. Left SignUpGenius after a parent complained about the video ads on the sheet she'd sent.",
         "context": "Kitchen table, 21:40, iPhone at 414px in one hand while the dishwasher runs. Ten minutes before she gives up for the night. She has the potluck list already written in Notes and wants to paste it.",
-        "task": "Build the Fall potluck sheet — ten spots with quantities — and get the link into the class WhatsApp before bed.",
+        "task": "Build the Fall potluck sheet, ten spots with quantities, and get the link into the class WhatsApp before bed.",
         "verdict": "She got there in about eight minutes and the finished sheet is genuinely better-looking than anything she's sent before. But she reopened the Manage panel eleven times, because it slams shut every single time she touches it, and she has no idea that fifty of the lines she pasted were thrown away.",
         "delights": [
-          "'Copy nudge' produced a paste-ready message with no prompting: 'Still need a hand with “Fall potluck — Room 12”! Open spots: • Side or salad (3 needed) • Dessert (2 needed) … Grab one here (no account needed): <link>'. This is the research's #2 differentiator, shipped and working.",
+          "'Copy nudge' produced a paste-ready message with no prompting: 'Still need a hand with “Fall potluck, Room 12”! Open spots: • Side or salad (3 needed) • Dessert (2 needed) … Grab one here (no account needed): <link>'. This is the research's #2 differentiator, shipped and working.",
           "Pasting 'Main dish x3 / Side or salad x4 / Dessert x2' created three spots with the right capacities in 3.1 seconds. 'x', '×' and '(4)' all parse.",
           "The share card is the first thing an owner sees: a 27px share code, Copy link, and a QR button, above everything else."
         ],
         "frictions": [
           {
-            "what": "The Manage panel is a <details> rebuilt from scratch on every redraw with no `open` attribute (app.js:391). Measured: switching from 'One at a time' to 'Paste a list' sets details.open true → false. Adding spots does it too — after her 150-line paste the panel was closed (`open: false`), along with 102 full re-renders of <main> during the write.",
+            "what": "The Manage panel is a <details> rebuilt from scratch on every redraw with no `open` attribute (app.js:391). Measured: switching from 'One at a time' to 'Paste a list' sets details.open true → false. Adding spots does it too, after her 150-line paste the panel was closed (`open: false`), along with 102 full re-renders of <main> during the write.",
             "severity": "blocker",
-            "whyItMatters": "Every single owner action closes the console she is working in. Choosing the input mode, adding one spot, renaming the sheet, and — because the redraw is driven by Firestore snapshots — any participant claiming a spot anywhere in the world while she types. Setup is the make-or-break minute the research names ('sheet creation must be under 60 seconds with no wizard'), and the app spends it re-collapsing itself."
+            "whyItMatters": "Every single owner action closes the console she is working in. Choosing the input mode, adding one spot, renaming the sheet, and, because the redraw is driven by Firestore snapshots, any participant claiming a spot anywhere in the world while she types. Setup is the make-or-break minute the research names ('sheet creation must be under 60 seconds with no wizard'), and the app spends it re-collapsing itself."
           },
           {
             "what": "She pasted 150 shift lines. 100 spots were created and the toast said '100 spots added'. helpers.js:36 breaks the parse loop at 100 and returns quietly; nothing anywhere reports the 50 discarded lines.",
             "severity": "blocker",
-            "whyItMatters": "This is the exact betrayal the research puts at the centre of the category — a cap discovered after the work is done, reported as a success. Fifty shifts do not exist and she has no reason to look."
+            "whyItMatters": "This is the exact betrayal the research puts at the centre of the category, a cap discovered after the work is done, reported as a success. Fifty shifts do not exist and she has no reason to look."
           },
           {
-            "what": "Second paste onto a sheet that already had 60 spots: the cap check at app.js:520 fires, toasts 'Sheets max out at 100 spots', adds nothing — and then app.js:427 clears the textarea anyway, because addSlotsChecked returns normally instead of throwing. Measured: 50 typed lines, 0 characters left in the box.",
+            "what": "Second paste onto a sheet that already had 60 spots: the cap check at app.js:520 fires, toasts 'Sheets max out at 100 spots', adds nothing, and then app.js:427 clears the textarea anyway, because addSlotsChecked returns normally instead of throwing. Measured: 50 typed lines, 0 characters left in the box.",
             "severity": "blocker",
             "whyItMatters": "She is told to split into a second sheet, and the thing she would paste into the second sheet has just been deleted from in front of her. Same at app.js:418 for a single label."
           },
           {
-            "what": "Saving a slot edit produces nothing at all. Measured: renaming 'Week 1 snack' → 'Week 1 snack (renamed)' fired zero toasts; the dialog just closes (app.js:610). Same for Title & details — that one at least toasts 'Saved'.",
+            "what": "Saving a slot edit produces nothing at all. Measured: renaming 'Week 1 snack' → 'Week 1 snack (renamed)' fired zero toasts; the dialog just closes (app.js:610). Same for Title & details, that one at least toasts 'Saved'.",
             "severity": "minor",
             "whyItMatters": "sws-ui.js ships SWS.saved() precisely for this and index.html loads it; app.js calls it zero times. Silence after a save is how a tired organizer ends up saving twice."
           },
           {
             "what": "'Your sheets' on the home screen lists title, share code and an Open button and nothing else (app.js:147-151). No fill count, no date, no duplicate, no delete, no archive.",
             "severity": "major",
-            "whyItMatters": "The research names recurring coordination — meal trains, monthly snack rotas, weekly nursery shifts — as the real usage pattern, with 'duplicate for next month' as the differentiator. Next month she will build the same sheet again by hand, and the only way to delete last month's is to open it and dig through Manage."
+            "whyItMatters": "The research names recurring coordination, meal trains, monthly snack rotas, weekly nursery shifts, as the real usage pattern, with 'duplicate for next month' as the differentiator. Next month she will build the same sheet again by hand, and the only way to delete last month's is to open it and dig through Manage."
           }
         ]
       },
@@ -46,25 +46,25 @@
         "who": "71, grandmother, macular changes plus varifocals. Confident with her iPad, wary of anything that looks like software. Got the meal-train link forwarded twice. This is the comfort-panel persona.",
         "context": "Sitting room, mid-morning, iPad in portrait at 414 CSS px propped on a cushion, bright window behind her, reading glasses on the arm of the chair. No time pressure, low patience.",
         "task": "Take Tuesday's dinner slot on a hospice sitting rota, then change her mind and swap to Monday.",
-        "verdict": "She claimed Tuesday and she liked the page. She could not release it. The ✕ that gives a spot back measured 16 × 19 pixels, and even after she turned the text up to Largest it was 22 × 29 — still the smallest thing on the screen and still under the 44px floor the design system sets.",
+        "verdict": "She claimed Tuesday and she liked the page. She could not release it. The ✕ that gives a spot back measured 16 × 19 pixels, and even after she turned the text up to Largest it was 22 × 29, still the smallest thing on the screen and still under the 44px floor the design system sets.",
         "delights": [
           "She found the gear in the header unprompted, opened it, and set Text size to Largest. It worked properly: root font 16px → 24px, slot labels 16px → 24px, the whole layout scaled in proportion, and page overflow stayed at exactly 0px at 414px AND at 320px. axe with the panel open: zero violations. The permanent tick slot meant she could see which option was on.",
           "The claim dialog at Largest is 381 × 506 with a 343 × 66 'Claim it' button, fully inside the viewport, nothing clipped.",
-          "Her own claim is marked '(you)' and tinted with a distinct --mine background plus an accent border — not colour alone, and it survives dark mode."
+          "Her own claim is marked '(you)' and tinted with a distinct --mine background plus an accent border, not colour alone, and it survives dark mode."
         ],
         "frictions": [
           {
-            "what": "The release control is `.chip button` (index.html:1276) — border:0, background:none, padding:0 2px, font-size:.9rem. Measured 16 × 19px at default and 22 × 29px at Largest text. Its only visible form is a ✕ glyph inside the name pill.",
+            "what": "The release control is `.chip button` (index.html:1276), border:0, background:none, padding:0 2px, font-size:.9rem. Measured 16 × 19px at default and 22 × 29px at Largest text. Its only visible form is a ✕ glyph inside the name pill.",
             "severity": "blocker",
-            "whyItMatters": "'Un-claim or edit your own entry from the same link' is on the research's table-stakes list — every credible tool in the category has it. Here it exists and is effectively unhittable, and a miss lands on the chip, which does nothing, so she tapped four times and concluded she was stuck with Tuesday."
+            "whyItMatters": "'Un-claim or edit your own entry from the same link' is on the research's table-stakes list, every credible tool in the category has it. Here it exists and is effectively unhittable, and a miss lands on the chip, which does nothing, so she tapped four times and concluded she was stuck with Tuesday."
           },
           {
-            "what": "'Claim this spot' is `.btn primary small` (app.js:331), and `.btn.small` is a hardcoded `min-height:36px` (index.html:607). Measured 123 × 36px at Default text, 137 × 36 at Large, 173 × 36 at Largest — the height never moves while the label inside grows from 13px to 19.5px.",
+            "what": "'Claim this spot' is `.btn primary small` (app.js:331), and `.btn.small` is a hardcoded `min-height:36px` (index.html:607). Measured 123 × 36px at Default text, 137 × 36 at Large, 173 × 36 at Largest, the height never moves while the label inside grows from 13px to 19.5px.",
             "severity": "blocker",
             "whyItMatters": "This is the one button 95% of sessions exist to press, and it is the only control on the page that refuses to grow with her text setting. The design system's rule is explicit: --tap is floored at 44px and scales with --ui-scale precisely because someone turning the text up is doing it for eyesight or tremor."
           },
           {
-            "what": "The availability number — '2 of 4', 'Full' — is `.slot .count` at 0.82rem (index.html:1281), measured 13.12px. 'Full' renders in --pos green, the same green the system uses for success.",
+            "what": "The availability number, '2 of 4', 'Full', is `.slot .count` at 0.82rem (index.html:1281), measured 13.12px. 'Full' renders in --pos green, the same green the system uses for success.",
             "severity": "major",
             "whyItMatters": "The single fact she came for is set in the smallest type on the page, below the system's 15px instructional floor, and 'Full' being green reads as good news when it is the opposite."
           },
@@ -80,20 +80,20 @@
         "who": "44, dad of two, in the school pickup line. Got the link in a group text at 14:58. Has never heard of the app and has about fifteen seconds of attention before the gate opens.",
         "context": "Standing, one thumb, phone at 414px, bright afternoon sun, car keys in the other hand. Arrives mildly suspicious of an unsolicited link.",
         "task": "Take the last dessert slot before someone else does.",
-        "verdict": "He lost the race, which is fine — but he lost it the way the category is hated for. He tapped 'Claim it', the dialog vanished in 53ms with no spinner, and about a second later a toast told him it didn't go through. His typed note was gone and nothing offered him another spot.",
+        "verdict": "He lost the race, which is fine, but he lost it the way the category is hated for. He tapped 'Claim it', the dialog vanished in 53ms with no spinner, and about a second later a toast told him it didn't go through. His typed note was gone and nothing offered him another spot.",
         "delights": [
-          "Cold open of the shared link to the first slot painted: 554ms on a 5-slot sheet, 1,035ms on a 60-slot one. No layout shift after paint, no cookie banner, no interstitial, no install bar — the research's second complaint, answered.",
-          "The footer on a shared sheet reads 'Made with Signup Sheets — free, no ads. Start yours' (app.js:99-101) instead of the studio colophon. The stance is on the participant-facing sheet, exactly as the research asks.",
-          "Claiming took one tap, one field and a second tap. No account, no email, no verification — and the app remembers his name in localStorage ('ss-myname') for next time."
+          "Cold open of the shared link to the first slot painted: 554ms on a 5-slot sheet, 1,035ms on a 60-slot one. No layout shift after paint, no cookie banner, no interstitial, no install bar, the research's second complaint, answered.",
+          "The footer on a shared sheet reads 'Made with Signup Sheets, free, no ads. Start yours' (app.js:99-101) instead of the studio colophon. The stance is on the participant-facing sheet, exactly as the research asks.",
+          "Claiming took one tap, one field and a second tap. No account, no email, no verification, and the app remembers his name in localStorage ('ss-myname') for next time."
         ],
         "frictions": [
           {
-            "what": "app.js:594 closes the dialog BEFORE awaiting the write (`closeDlg($('nameDlg')); … await D.claimSlot(…)`). Measured: dialog gone in 53ms; the failure toast arrives after the round trip. On the loser's screen the note field still holds 'tiramisu, my mother's recipe' — inside a dialog that is closed and will be blanked the next time it opens (app.js:341 sets noteInput to '').",
+            "what": "app.js:594 closes the dialog BEFORE awaiting the write (`closeDlg($('nameDlg')); … await D.claimSlot(…)`). Measured: dialog gone in 53ms; the failure toast arrives after the round trip. On the loser's screen the note field still holds 'tiramisu, my mother's recipe', inside a dialog that is closed and will be blanked the next time it opens (app.js:341 sets noteInput to '').",
             "severity": "blocker",
-            "whyItMatters": "The research quotes this exact moment as the most humiliating in the category: 'by the time I have gotten to the end, another person has taken that spot' — and names 'never lose typed input on a claim collision' as a differentiator. His name survives by accident, via localStorage. His note does not."
+            "whyItMatters": "The research quotes this exact moment as the most humiliating in the category: 'by the time I have gotten to the end, another person has taken that spot', and names 'never lose typed input on a claim collision' as a differentiator. His name survives by accident, via localStorage. His note does not."
           },
           {
-            "what": "The failure message is 'That didn't go through — the spot may have just filled, or the sheet is locked.' (app.js:56). No nearest-open-slot offer; the sheet simply redraws with someone else's name in the pill.",
+            "what": "The failure message is 'That didn't go through, the spot may have just filled, or the sheet is locked.' (app.js:56). No nearest-open-slot offer; the sheet simply redraws with someone else's name in the pill.",
             "severity": "major",
             "whyItMatters": "The research's fix is one tap: 'keep the name in the field, say plainly what happened, and offer the nearest still-open slot as a single tap.' Two of the three are there; the tap is not, and 'or the sheet is locked' makes a clear event ambiguous."
           },
@@ -103,7 +103,7 @@
             "whyItMatters": "On a good connection the gap is a few hundred milliseconds. In a pickup line on one bar it is seconds of a page that looks like it ignored him, which is when people tap again or close the tab."
           },
           {
-            "what": "On a 60-slot conference sheet the page is 6,980px tall with 60 identical 'Claim this spot' buttons and no filter. Measured: no 'show only open', no 'hide full', no still-needed sentence — the only summary is a progress bar and '0 of 60 spots filled'.",
+            "what": "On a 60-slot conference sheet the page is 6,980px tall with 60 identical 'Claim this spot' buttons and no filter. Measured: no 'show only open', no 'hide full', no still-needed sentence, the only summary is a progress bar and '0 of 60 spots filled'.",
             "severity": "major",
             "whyItMatters": "Capterra, quoted in the research: 'the layout often times may get a little annoying when scrolling down to find open time slots.' The research asks for availability answerable in under two seconds without scrolling; here it takes seven screenfuls."
           }
@@ -118,7 +118,7 @@
         "delights": [
           "The participant path is genuinely keyboard-clean: Tab order runs brand → comfort settings → tip jar → Sign in → each 'Claim this spot' → the notes fields. Enter opens the claim dialog, focus lands on #nameInput automatically, Enter submits, and the ✕ release is a real focusable button.",
           "Escape closes every dialog, and nothing is focus-trapped.",
-          "Zero console errors across every run — cold loads, 100-spot pastes, races, offline claims, deletions. Not one."
+          "Zero console errors across every run, cold loads, 100-spot pastes, races, offline claims, deletions. Not one."
         ],
         "frictions": [
           {
@@ -134,10 +134,10 @@
           {
             "what": "After a successful claim, activeElement is <body> (measured). The dialog is closed by app.js:594 and focus is never returned to the 'Claim this spot' button that opened it. Same after Escape on the auth dialog.",
             "severity": "major",
-            "whyItMatters": "On a 60-slot sheet, taking two slots means tabbing from the top of the document twice — 4 chrome stops plus up to 60 buttons."
+            "whyItMatters": "On a 60-slot sheet, taking two slots means tabbing from the top of the document twice, 4 chrome stops plus up to 60 buttons."
           },
           {
-            "what": "Four native confirm() dialogs (app.js:455 add N dated spots, :492 rotate link, :498 delete sheet, :615 delete a spot and its signups) and zero undo. window.SWS is present with {toast, undo, hideToast, saved} — app.js references it zero times.",
+            "what": "Four native confirm() dialogs (app.js:455 add N dated spots, :492 rotate link, :498 delete sheet, :615 delete a spot and its signups) and zero undo. window.SWS is present with {toast, undo, hideToast, saved}, app.js references it zero times.",
             "severity": "major",
             "whyItMatters": "The portfolio's stated answer to destructive actions is undo, not confirm; the runtime is loaded on this page and untouched. Deleting a spot that already has signups is permanent, silent to the people who signed up, and one tap away behind a browser alert."
           }
@@ -148,32 +148,32 @@
         "who": "56, deacon at a small church, coordinates meal trains for families after a death or a diagnosis. Not technical; deeply attuned to tone. The research's warning case: the same sheet format runs funeral receptions and hospice shifts.",
         "context": "Parish office desktop at 1280px in the morning, then her phone in the evening. She will print the sheet and put it on the noticeboard because half the congregation is over seventy.",
         "task": "Run a two-week meal train for a bereaved family, print a copy for the foyer, and keep the tone right.",
-        "verdict": "The sheet itself is warm and dignified and the print is the best she has seen from a free tool. Then she opened the colour picker, found it already showing blue as her choice, tapped it, and got a page with an orange button and a blue progress bar. She turned it back off — except there is no 'off'.",
+        "verdict": "The sheet itself is warm and dignified and the print is the best she has seen from a free tool. Then she opened the colour picker, found it already showing blue as her choice, tapped it, and got a page with an orange button and a blue progress bar. She turned it back off, except there is no 'off'.",
         "delights": [
           "The printed sheet is a real sign-up sheet: title, details line, 'x of y spots filled', each spot with its claimed names, and a blank pill '________________' printed for every unclaimed place. Header, Manage, share card, all buttons and the colophon are correctly hidden. One page for a five-spot sheet. This is the research's 'compete with paper rather than against it', shipped.",
-          "The default marigold palette is warm without being celebratory — no confetti, no clip-art, no theme wallpaper. It carries a bereavement meal train without a wince.",
-          "Locking the sheet works end to end: the participant sees 'This sheet is locked by the organizer — read-only for now', all claim buttons disappear, and the notes composer is withdrawn."
+          "The default marigold palette is warm without being celebratory, no confetti, no clip-art, no theme wallpaper. It carries a bereavement meal train without a wince.",
+          "Locking the sheet works end to end: the participant sees 'This sheet is locked by the organizer, read-only for now', all claim buttons disappear, and the notes composer is withdrawn."
         ],
         "frictions": [
           {
             "what": "applyTheme() (app.js:219-223) sets only `--accent` inline on <html>. Measured after choosing blue: --accent #2563eb, but --accent-fill still #f7933c, --focus still #a95a00, --accent-deep still marigold. The primary button stays orange (rgb(247,147,60)), links stay warm brown, and only the fill bar and the weekday chips turn blue.",
             "severity": "major",
-            "whyItMatters": "The result is not a blue sheet, it is a broken one — and it propagates to every participant who opens the link. Worse, the research is explicit that an organizer-selectable theme system is 'precisely what makes their pages look dated and untrustworthy', and that SaaS blue is the single hue to avoid. This ships both."
+            "whyItMatters": "The result is not a blue sheet, it is a broken one, and it propagates to every participant who opens the link. Worse, the research is explicit that an organizer-selectable theme system is 'precisely what makes their pages look dated and untrustworthy', and that SaaS blue is the single hue to avoid. This ships both."
           },
           {
-            "what": "The picker shows blue as already selected on a sheet that has no theme at all — `(s.theme || 'blue') === key` at app.js:469, while applyTheme leaves the marigold skin in place when settings.theme is absent. Measured: `--accent` inline = '' (skin default) while the blue dot carries `.sel`. There is also no way back to 'no theme'.",
+            "what": "The picker shows blue as already selected on a sheet that has no theme at all, `(s.theme || 'blue') === key` at app.js:469, while applyTheme leaves the marigold skin in place when settings.theme is absent. Measured: `--accent` inline = '' (skin default) while the blue dot carries `.sel`. There is also no way back to 'no theme'.",
             "severity": "major",
             "whyItMatters": "The control lies about the current state, and once touched it cannot be untouched. She had to ask the organizer of a bereavement sheet to live with whatever she picked."
           },
           {
-            "what": "Deleting a spot that people had already signed up for: a native confirm ('Delete this spot and its 1 signup(s)?'), then nothing. Measured on the participant's screen: the spot silently vanishes from the list and their stale toast still reads 'You're in — Week 1 snack'.",
+            "what": "Deleting a spot that people had already signed up for: a native confirm ('Delete this spot and its 1 signup(s)?'), then nothing. Measured on the participant's screen: the spot silently vanishes from the list and their stale toast still reads 'You're in, Week 1 snack'.",
             "severity": "major",
             "whyItMatters": "Someone who committed to bring Tuesday's dinner to a grieving family is quietly un-committed and told nothing. There is no undo for Ana either."
           },
           {
-            "what": "The printed sheet carries no date, no share code, no link and no QR. It also prints the 'you run this' badge and the Extras placeholder quote '“I'll also bring lemonade!” — anything that isn't a listed spot goes here.' as if it were content.",
+            "what": "The printed sheet carries no date, no share code, no link and no QR. It also prints the 'you run this' badge and the Extras placeholder quote '“I'll also bring lemonade!”, anything that isn't a listed spot goes here.' as if it were content.",
             "severity": "major",
-            "whyItMatters": "The whole reason to print is the noticeboard, and the noticeboard copy is a dead end — nobody who reads it can get to the live sheet. The lemonade line on a bereavement meal train is the tonal misfire the research warns about, printed in ink."
+            "whyItMatters": "The whole reason to print is the noticeboard, and the noticeboard copy is a dead end, nobody who reads it can get to the live sheet. The lemonade line on a bereavement meal train is the tonal misfire the research warns about, printed in ink."
           }
         ]
       },
@@ -192,7 +192,7 @@
           {
             "what": "index.html:1339 is `<main id=\"view\" aria-live=\"polite\">`, and drawBoard() (app.js:225-234) calls replaceChildren() on it. Measured on a 60-slot sheet: 3,491 characters inside the live region, 73 full replacements in the six seconds after load, 6 more for a single claim, 102 during one bulk add. Each slot gets its own onSnapshot listener that calls drawBoard (app.js:212-213).",
             "severity": "blocker",
-            "whyItMatters": "The app asks a screen reader to re-announce the whole sheet dozens of times on load and again whenever anyone, anywhere, claims anything. There is no aria-atomic and no dedicated status region, so the things worth announcing — 'you're in', 'that spot just filled' — arrive buried in a re-read of the entire page."
+            "whyItMatters": "The app asks a screen reader to re-announce the whole sheet dozens of times on load and again whenever anyone, anywhere, claims anything. There is no aria-atomic and no dedicated status region, so the things worth announcing, 'you're in', 'that spot just filled', arrive buried in a re-read of the entire page."
           },
           {
             "what": "The pending-note badge is appended straight after the body text with only a CSS margin (app.js:354). innerText reads 'Ana Ruiz: I will also bring lemonade and cupsawaiting approval'.",
@@ -202,7 +202,7 @@
           {
             "what": "None of the five <dialog> elements carries aria-labelledby (measured: authDlg, nameDlg, createDlg, slotDlg, qrDlg all null), even though #nameDlgTitle already has an id. The QR canvas has no role, no aria-label and no text alternative.",
             "severity": "minor",
-            "whyItMatters": "A dialog announces itself as 'dialog' with no name. The QR dialog announces a heading and then silence where the code is — and the code is the only content."
+            "whyItMatters": "A dialog announces itself as 'dialog' with no name. The QR dialog announces a heading and then silence where the code is, and the code is the only content."
           },
           {
             "what": "No skip link, despite .skip being styled in the base at index.html:858 and hidden in print at :1214. The header has four focusable controls before the content on every load.",
@@ -216,39 +216,39 @@
       "worksWell": [
         "The participant path is fast, clean and honest. 554ms to first slot on a small sheet, 1,035ms on a 60-slot one; one tap to a dialog, one field, one tap to claim; the name is remembered locally; zero console errors in any run; zero axe violations on the fully rendered board.",
         "Layout is unbreakable. Page overflow measured exactly 0px in every combination tried: 320px, 414px, 1280px, Largest text at both phone widths, roomy + easier reading + warmth 3, dark mode, and a 100-spot sheet. Not one offending element anywhere.",
-        "The stance is on the shared sheet, not just the marketing page — the colophon on a participant's view is rewritten to 'Made with Signup Sheets — free, no ads. Start yours'. That is the research's single biggest wedge against SignUpGenius, shipped where it counts.",
+        "The stance is on the shared sheet, not just the marketing page, the colophon on a participant's view is rewritten to 'Made with Signup Sheets, free, no ads. Start yours'. That is the research's single biggest wedge against SignUpGenius, shipped where it counts.",
         "'Copy nudge' works and is good: a paste-ready group-chat message listing only the open spots with counts and the link. Nobody in the category does this well.",
         "Print is a real sign-up sheet. Blank '________________' pills for every unclaimed place, claimed names filled in, chrome and buttons correctly hidden, one page for a five-spot sheet.",
         "Text safety is total. Every user string goes through textContent; script and img payloads render as literal text with zero injected nodes; no NaN, Infinity, undefined or [object Object] reached the screen under any numeric input.",
         "The comfort panel is faultless and it helps: opens from the header, focus moves inside, axe clean, Largest takes the root from 16px to 24px, and slot labels, chips, dialogs and the notes composer all scale with it. Dark mode is correct on every app-layer colour.",
-        "The realtime model is honest about failure. Offline shows a banner and the claim still applies locally and syncs on reconnect; a rotated code gives 'That sheet doesn't exist — the code may have been rotated by the organizer'; approval-required notes round-trip correctly between participant and owner."
+        "The realtime model is honest about failure. Offline shows a banner and the claim still applies locally and syncs on reconnect; a rotated code gives 'That sheet doesn't exist, the code may have been rotated by the organizer'; approval-required notes round-trip correctly between participant and owner."
       ],
       "hurts": [
-        "The owner's Manage panel closes on every interaction — mode switch, add, save — and also whenever any participant claims anything, because it is rebuilt without its open state on every Firestore snapshot.",
+        "The owner's Manage panel closes on every interaction, mode switch, add, save, and also whenever any participant claims anything, because it is rebuilt without its open state on every Firestore snapshot.",
         "Silent data loss on the way in: a 150-line paste creates 100 spots and toasts '100 spots added'; a paste that would breach the cap is rejected and the textarea is cleared anyway.",
         "'Claim this spot' is 36px tall at every text setting, and the release ✕ is 16 × 19px. The two verbs the product exists for are the two smallest targets on the page.",
         "The claim dialog closes before the write resolves, so a lost race destroys the typed note, shows no progress in between, and offers no other slot.",
-        "<main> is a live region that gets fully replaced 73 times on a 60-slot cold load and again on every remote change — which also wipes any half-typed note and throws focus to <body>.",
+        "<main> is a live region that gets fully replaced 73 times on a 60-slot cold load and again on every remote change, which also wipes any half-typed note and throws focus to <body>.",
         "The 'Repeating dates' generator is keyboard-unusable: its weekday checkboxes are display:none, 0 of 7 focusable.",
         "The colour picker is half-wired (only --accent moves), lies about the current selection, has no off switch, and its default choice is the exact SaaS blue the research says to avoid.",
         "No undo anywhere; four native confirm() dialogs instead, while window.SWS.undo sits loaded and unused. Deleting a spot with signups tells the signed-up nobody.",
         "One participant claimed 8 of 8 spots with no cap, no warning and no notice to the organizer.",
-        "There is no way to edit a claim — only remove and re-add. data.js:259 exports renameClaim() and nothing calls it.",
+        "There is no way to edit a claim, only remove and re-add. data.js:259 exports renameClaim() and nothing calls it.",
         "A deleted sheet keeps rendering: watchBoard returns null, drawBoard early-returns, and the participant is left with a live-looking board whose claim button fails.",
         "Availability is set in the smallest type on the page (13.12px), and 'Full' is rendered in success green."
       ],
       "mostWantedNext": [
-        "Stop rebuilding the world: keep the Manage panel's open state and the addMode across redraws, and patch the slot list instead of replacing <main> — that one change fixes the collapsing panel, the wiped note field, the lost focus and most of the screen-reader noise at once.",
-        "Report what was dropped. 'Added 100 — 50 more lines were not imported' and never clear a textarea whose contents were not accepted.",
+        "Stop rebuilding the world: keep the Manage panel's open state and the addMode across redraws, and patch the slot list instead of replacing <main>, that one change fixes the collapsing panel, the wiped note field, the lost focus and most of the screen-reader noise at once.",
+        "Report what was dropped. 'Added 100 to 50 more lines were not imported' and never clear a textarea whose contents were not accepted.",
         "Raise 'Claim this spot' and the release ✕ to var(--tap), and give the release a word ('Give it back') rather than a 16px glyph.",
         "Hold the claim dialog open until the write resolves, show progress on the button, and on a collision keep the note, say 'that one just filled', and offer the nearest open spot as one tap.",
         "Per-person claim cap in Settings ('anyone may take up to N'), which the rules layer can enforce the same way it enforces capacity.",
         "Undo via SWS.undo on all four confirm() paths, plus a note to the affected participants when a spot they hold is deleted.",
         "Either finish the theme system (drive --accent-fill, --accent-deep, --focus and --accent-soft from the choice, add a 'default' option) or delete it, which is what the research recommends.",
-        "An 'open spots only' toggle and a still-needed sentence at the top — 'Still needed: 3 salads, 2 desserts, someone to bring ice' — instead of only a progress bar.",
+        "An 'open spots only' toggle and a still-needed sentence at the top, 'Still needed: 3 salads, 2 desserts, someone to bring ice', instead of only a progress bar.",
         "Put the share code and a QR on the printed sheet, drop the 'you run this' badge and the empty-state lemonade line from print, and add a date.",
         "An .ics download at the moment of claiming, the research's named answer to reminder emails and currently the most visible gap in the feature set.",
-        "Let people edit a claim, not just delete it — renameClaim() is already written and tested at the data layer."
+        "Let people edit a claim, not just delete it, renameClaim() is already written and tested at the data layer."
       ]
     }
   },
@@ -259,12 +259,12 @@
       {
         "name": "The standard battery (node design/stress.mjs signup-sheets)",
         "method": "Ran the shipped battery unmodified: layout at 320/414/1280 and at largest-text and roomy, touch targets, hostile text and injection, numeric edges, 30 rapid clicks, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
-        "result": "0 hard failures. Layout clean at all five sizes. Touch targets: only a#brandLink at 134×26. Hostile text: 0 injected imgs, title not hijacked, no poison on screen. Keyboard: 9 focusable, 0 unreachable, 0 unnamed, 0 placeholder-only. axe: clean. Console: silent. BUT the battery never left the home screen — creating a sheet needs Firebase auth, so 'boots with corrupt storage' reported 'no app storage key to corrupt' and 'bulk: 200 rapid adds' reported 0 nodes. Everything below was run against the real app driven through local Firebase emulators (auth 9099, firestore 8081, project demo-signup) with firebase-config.js swapped at the network layer.",
+        "result": "0 hard failures. Layout clean at all five sizes. Touch targets: only a#brandLink at 134×26. Hostile text: 0 injected imgs, title not hijacked, no poison on screen. Keyboard: 9 focusable, 0 unreachable, 0 unnamed, 0 placeholder-only. axe: clean. Console: silent. BUT the battery never left the home screen, creating a sheet needs Firebase auth, so 'boots with corrupt storage' reported 'no app storage key to corrupt' and 'bulk: 200 rapid adds' reported 0 nodes. Everything below was run against the real app driven through local Firebase emulators (auth 9099, firestore 8081, project demo-signup) with firebase-config.js swapped at the network layer.",
         "defect": "The standard battery is structurally blind to this app: 100% of its product surface sits behind a share code and an auth round trip.",
         "severity": "none"
       },
       {
-        "name": "Owner console stability — does the Manage panel survive its own use?",
+        "name": "Owner console stability, does the Manage panel survive its own use?",
         "method": "Created a sheet, opened <details class=\"manage\">, read details.open, clicked the 'Paste a list' segment, read details.open again. Then pasted 150 lines and re-read. Counted full replacements of #view with a MutationObserver.",
         "result": "open true → false on the mode switch. After the 150-line add: open false, and 102 full replaceChildren() of <main> during the write. The panel is created fresh by app.js:391 with no open attribute, and every Firestore snapshot calls drawBoard().",
         "defect": "Every owner action, and every remote claim by anyone, closes the panel the owner is working in and destroys everything typed in it.",
@@ -273,21 +273,21 @@
       {
         "name": "Bulk paste past the cap",
         "method": "Pasted 150 lines into an empty sheet; then pasted 50 lines onto a sheet that already held 60; then added one label to a sheet holding 100. Captured every toast via a MutationObserver on #toast.",
-        "result": "150 lines → exactly 100 slots, one toast: '100 spots added'. 50 lines onto 60 → 0 added, toast 'Sheets max out at 100 spots — split into a second sheet if you need more.', and the textarea measured 0 characters afterwards. 1 label onto 100 → same toast, label field also cleared. helpers.js:36 breaks the parse at 100; app.js:520 returns rather than throws, so app.js:418/427 clear the field regardless.",
+        "result": "150 lines → exactly 100 slots, one toast: '100 spots added'. 50 lines onto 60 → 0 added, toast 'Sheets max out at 100 spots, split into a second sheet if you need more.', and the textarea measured 0 characters afterwards. 1 label onto 100 → same toast, label field also cleared. helpers.js:36 breaks the parse at 100; app.js:520 returns rather than throws, so app.js:418/427 clear the field regardless.",
         "defect": "50 pasted lines discarded and reported as success; a rejected paste is deleted from the box the user would need to copy it out of.",
         "severity": "blocker"
       },
       {
         "name": "Two people racing for the last spot",
         "method": "Two independent browser contexts on a one-capacity sheet. Both opened the claim dialog, both typed a name and a note, then both pressed 'Claim it' inside the same tick. Recorded the toast, dialog state, retained field values and the offer made afterwards.",
-        "result": "Winner: 'You're in — The last dessert'. Loser: dialog closed 53ms after the tap, toast 'That didn't go through — the spot may have just filled, or the sheet is locked.', slot redrew showing the winner's name. Loser's #nameInput and #noteInput still held their text — inside a closed dialog that app.js:341 blanks the note of on next open. 0 alternative slots offered. app.js:594 closes the dialog before awaiting the write.",
+        "result": "Winner: 'You're in, The last dessert'. Loser: dialog closed 53ms after the tap, toast 'That didn't go through, the spot may have just filled, or the sheet is locked.', slot redrew showing the winner's name. Loser's #nameInput and #noteInput still held their text, inside a closed dialog that app.js:341 blanks the note of on next open. 0 alternative slots offered. app.js:594 closes the dialog before awaiting the write.",
         "defect": "The typed note is lost and the recovery tap the research asks for does not exist. The name survives only because saveName() ran before the attempt.",
         "severity": "blocker"
       },
       {
         "name": "Touch-target geometry across every comfort setting",
         "method": "Measured the two verbs of the product at Default, Large and Largest text, at 414px and 320px, and compared against the --tap floor.",
-        "result": "'Claim this spot': 123×36 @13px (default), 137×36 @14.95px (Large), 173×36 @19.5px (Largest) — the height is constant because .btn.small hardcodes min-height:36px at index.html:607. Release ✕ (.chip button, index.html:1276): 16×19 default, 22×29 at Largest. Also under 44px: theme dots 34×34, ✎ edit slot 37×36, seg buttons 38, #authBtn 36, .wkdays label 33.",
+        "result": "'Claim this spot': 123×36 @13px (default), 137×36 @14.95px (Large), 173×36 @19.5px (Largest), the height is constant because .btn.small hardcodes min-height:36px at index.html:607. Release ✕ (.chip button, index.html:1276): 16×19 default, 22×29 at Largest. Also under 44px: theme dots 34×34, ✎ edit slot 37×36, seg buttons 38, #authBtn 36, .wkdays label 33.",
         "defect": "The primary action never grows with the text setting, and the un-claim action is a 16px glyph.",
         "severity": "blocker"
       },
@@ -301,7 +301,7 @@
       {
         "name": "A remote change while a participant is typing",
         "method": "Participant typed a name and a 29-character note into the Extras composer, put the caret mid-string, then the owner renamed an unrelated slot from another context. Read the field values and activeElement afterwards.",
-        "result": "Before: ['Half-typed Name', 'I will also bring a lemon dri']. After: ['Priya Raman', ''] — the note is gone and the name field has been re-seeded from localStorage. activeElement: BODY.",
+        "result": "Before: ['Half-typed Name', 'I will also bring a lemon dri']. After: ['Priya Raman', ''], the note is gone and the name field has been re-seeded from localStorage. activeElement: BODY.",
         "defect": "Any claim by anyone, anywhere, deletes what the current user is typing and takes their focus.",
         "severity": "blocker"
       },
@@ -309,7 +309,7 @@
         "name": "Keyboard reach into the repeating-dates generator",
         "method": "Enumerated the focusable set on the owner console with 'Repeating dates' selected, intersected it with .wkdays input, and tabbed six stops from the 'From' date field.",
         "result": "7 weekday checkboxes, computed display 'none', bounding boxes 0×0, 0 of 7 in the focusable set. Tab never leaves the date inputs. index.html:1307 is `.wkdays input{display:none}`.",
-        "defect": "A whole feature is unreachable without a pointer — WCAG 2.1.1 — and the design system warns against this exact pattern in its own comments.",
+        "defect": "A whole feature is unreachable without a pointer, WCAG 2.1.1, and the design system warns against this exact pattern in its own comments.",
         "severity": "blocker"
       },
       {
@@ -335,36 +335,36 @@
       },
       {
         "name": "Destructive owner actions",
-        "method": "Renamed a slot, set its capacity below its claim count, deleted a slot holding a signup, rotated the code, and deleted a whole sheet — each with a live participant context watching. Captured every toast and every native dialog message.",
-        "result": "Slot rename: 0 toasts, dialog just closes. Capacity '0' on a slot with 1 claim: parseInt('0')||1 clamps to 1 with no message, and the slot flips to 'Full'. Delete a spot with a signup: confirm 'Delete this spot and its 1 signup(s)?', no undo, no toast, and on the participant's screen the spot silently disappears while their stale toast still reads 'You're in — Week 1 snack'. Rotate: participant keeps working until reload, then gets the correct 'That sheet doesn't exist' card. window.SWS = {toast, undo, hideToast, saved} is loaded and called zero times by app.js.",
+        "method": "Renamed a slot, set its capacity below its claim count, deleted a slot holding a signup, rotated the code, and deleted a whole sheet, each with a live participant context watching. Captured every toast and every native dialog message.",
+        "result": "Slot rename: 0 toasts, dialog just closes. Capacity '0' on a slot with 1 claim: parseInt('0')||1 clamps to 1 with no message, and the slot flips to 'Full'. Delete a spot with a signup: confirm 'Delete this spot and its 1 signup(s)?', no undo, no toast, and on the participant's screen the spot silently disappears while their stale toast still reads 'You're in, Week 1 snack'. Rotate: participant keeps working until reload, then gets the correct 'That sheet doesn't exist' card. window.SWS = {toast, undo, hideToast, saved} is loaded and called zero times by app.js.",
         "defect": "No confirmation on save, no undo on anything, and no notice to the people whose commitment was deleted.",
         "severity": "major"
       },
       {
         "name": "Deleting a sheet out from under a live participant",
         "method": "Owner deleted the board while a participant had it open; then the participant pressed 'Claim this spot'.",
-        "result": "The participant's page kept rendering the full board — title, spots, claim buttons, share card — indefinitely. watchBoard's callback passes null (data.js:121), drawBoard() early-returns at app.js:226 and leaves the stale DOM in place. Clicking Claim produced 'That didn't go through — the spot may have just filled, or the sheet is locked.' No console errors.",
+        "result": "The participant's page kept rendering the full board, title, spots, claim buttons, share card, indefinitely. watchBoard's callback passes null (data.js:121), drawBoard() early-returns at app.js:226 and leaves the stale DOM in place. Clicking Claim produced 'That didn't go through, the spot may have just filled, or the sheet is locked.' No console errors.",
         "defect": "A deleted sheet keeps advertising itself as live, and the only feedback is a message about the wrong cause.",
         "severity": "major"
       },
       {
         "name": "The theme picker",
         "method": "Read the computed tokens before and after choosing each dot, then loaded the sheet fresh in a participant context and screenshotted it.",
-        "result": "Before any choice: --accent #c06700 (skin), no inline override — yet the 'blue theme' dot already carries .sel, because app.js:469 defaults to 'blue'. After choosing blue: --accent inline #2563eb, but --accent-fill stays #f7933c, --focus #a95a00, --accent-deep unchanged. Screenshot confirms an orange-button page with one blue progress bar. Contrast of .wkdays label:has(input:checked), which pairs --accent with --accent-ink at 12.8px: marigold 4.69:1, amber 3.79:1, blue 3.69:1, green 3.46:1, plum 3.34:1, slate 2.51:1. There is no 'no theme' option.",
+        "result": "Before any choice: --accent #c06700 (skin), no inline override, yet the 'blue theme' dot already carries .sel, because app.js:469 defaults to 'blue'. After choosing blue: --accent inline #2563eb, but --accent-fill stays #f7933c, --focus #a95a00, --accent-deep unchanged. Screenshot confirms an orange-button page with one blue progress bar. Contrast of .wkdays label:has(input:checked), which pairs --accent with --accent-ink at 12.8px: marigold 4.69:1, amber 3.79:1, blue 3.69:1, green 3.46:1, plum 3.34:1, slate 2.51:1. There is no 'no theme' option.",
         "defect": "Half-applied theming, a control that misreports its own state, no way back, and four of five choices fail contrast on the chip they colour.",
         "severity": "major"
       },
       {
         "name": "Print, with real claims on the sheet",
         "method": "emulateMedia({media:'print'}) at A4, then page.pdf(), then read the generated PDF.",
-        "result": "One page. header.app, details.manage, .btn, .noprint, #toast and footer.colophon all correctly hidden; the share card and every remove ✕ gone; 9 blank '________________' chips printed for the 9 unclaimed places; names and notes intact. Missing from the paper: the date, the share code, the URL, any QR. Present and unwanted: the 'you run this' badge and the Extras empty-state line '“I'll also bring lemonade!” — anything that isn't a listed spot goes here.' Blank pills measure ~115px wide, short for a handwritten name. (CJK names printed as tofu, but this container has 0 Japanese fonts installed — that is the environment, not the app, and it is not counted as a defect.)",
+        "result": "One page. header.app, details.manage, .btn, .noprint, #toast and footer.colophon all correctly hidden; the share card and every remove ✕ gone; 9 blank '________________' chips printed for the 9 unclaimed places; names and notes intact. Missing from the paper: the date, the share code, the URL, any QR. Present and unwanted: the 'you run this' badge and the Extras empty-state line '“I'll also bring lemonade!”, anything that isn't a listed spot goes here.' Blank pills measure ~115px wide, short for a handwritten name. (CJK names printed as tofu, but this container has 0 Japanese fonts installed, that is the environment, not the app, and it is not counted as a defect.)",
         "defect": "The noticeboard copy is a dead end: nothing on it leads back to the live sheet, and it prints an owner badge and a placeholder quote.",
         "severity": "major"
       },
       {
         "name": "QR code",
         "method": "Opened the QR dialog, read the canvas pixels for module extent and quiet zone, exported the PNG and inspected it.",
-        "result": "300×300 canvas, module block 34→264 (230px), quiet zone 34/34/36/36px, 26,558 dark pixels, scannable. The dialog's only control is 'Close' — no download, no save, no print. The canvas has no role, no aria-label and no text alternative. #qrBox forces a white background so it survives dark mode.",
+        "result": "300×300 canvas, module block 34→264 (230px), quiet zone 34/34/36/36px, 26,558 dark pixels, scannable. The dialog's only control is 'Close', no download, no save, no print. The canvas has no role, no aria-label and no text alternative. #qrBox forces a white background so it survives dark mode.",
         "defect": "You cannot get the QR off the phone and onto a flyer, and the QR is not on the printed sheet either.",
         "severity": "major"
       },
@@ -378,21 +378,21 @@
       {
         "name": "Offline claim and reconnect",
         "method": "Set the participant context offline, dispatched the offline event, claimed a spot, then went back online.",
-        "result": "Banner appears: 'You're offline — you can read the sheet; claims will sync when you're back.' The claim applies optimistically from Firestore's local cache — the row shows 'Ola Okafor (you)' immediately — but the success toast is empty, because app.js:596 awaits batch.commit() which does not resolve until the server acks. On reconnect the toast finally fires 'You're in — Bring the ice'. No errors, no duplicate write.",
+        "result": "Banner appears: 'You're offline, you can read the sheet; claims will sync when you're back.' The claim applies optimistically from Firestore's local cache, the row shows 'Ola Okafor (you)' immediately, but the success toast is empty, because app.js:596 awaits batch.commit() which does not resolve until the server acks. On reconnect the toast finally fires 'You're in, Bring the ice'. No errors, no duplicate write.",
         "defect": "The confirmation arrives minutes late or not at all; the only offline feedback is the row quietly changing.",
         "severity": "minor"
       },
       {
         "name": "Approval mode, rotated codes and mistyped codes",
         "method": "Turned on 'Require my approval', posted a note as a participant, read both views; rotated a live code; opened #/b/ZZZZZZ; typed 'abc' into the code box.",
-        "result": "Approval round-trips correctly: participant sees their own pending note with an 'awaiting approval' badge and a toast 'Added — the organizer will approve it shortly'; the owner sees it with a ✓ approve button. innerText reads 'cupsawaiting approval' — the badge is glued to the body text with only a CSS margin (app.js:354). Rotation and a bogus code both land on 'That sheet doesn't exist — the code may have been rotated by the organizer.' A short code toasts 'Codes are 6 letters/numbers — check the link you were sent'.",
+        "result": "Approval round-trips correctly: participant sees their own pending note with an 'awaiting approval' badge and a toast 'Added, the organizer will approve it shortly'; the owner sees it with a ✓ approve button. innerText reads 'cupsawaiting approval', the badge is glued to the body text with only a CSS margin (app.js:354). Rotation and a bogus code both land on 'That sheet doesn't exist, the code may have been rotated by the organizer.' A short code toasts 'Codes are 6 letters/numbers, check the link you were sent'.",
         "defect": "A stranger who mistypes a code is told about an organizer rotating it, which explains nothing; and the pending badge reads as one word to assistive tech.",
         "severity": "minor"
       },
       {
         "name": "Dialog semantics, focus and the sign-in gate",
         "method": "Enumerated all five <dialog> elements, opened each, read activeElement on open and after Escape, and walked the create-a-sheet path while signed out.",
-        "result": "aria-labelledby is null on all five (authDlg, nameDlg, createDlg, slotDlg, qrDlg), though #nameDlgTitle already has an id. Focus on open: nameDlg→#nameInput, createDlg→#createTitle, slotDlg→#slotLabel, qrDlg→#qrClose, authDlg→#googleBtn — all sensible. After Escape or a successful claim, activeElement is <body>, never the button that opened the dialog. 'Create a sheet' while signed out opens authDlg reading 'Only organizers sign in. People claiming spots never need an account.' No skip link exists although .skip is styled at index.html:858.",
+        "result": "aria-labelledby is null on all five (authDlg, nameDlg, createDlg, slotDlg, qrDlg), though #nameDlgTitle already has an id. Focus on open: nameDlg→#nameInput, createDlg→#createTitle, slotDlg→#slotLabel, qrDlg→#qrClose, authDlg→#googleBtn, all sensible. After Escape or a successful claim, activeElement is <body>, never the button that opened the dialog. 'Create a sheet' while signed out opens authDlg reading 'Only organizers sign in. People claiming spots never need an account.' No skip link exists although .skip is styled at index.html:858.",
         "defect": "Unnamed dialogs, focus never returned to the invoking control, no skip link.",
         "severity": "minor"
       }
@@ -400,7 +400,7 @@
   },
   "fixes": [
     {
-      "title": "Stop replacing the whole board on every snapshot — keep the Manage panel open and stop eating typed input",
+      "title": "Stop replacing the whole board on every snapshot, keep the Manage panel open and stop eating typed input",
       "rationale": "drawBoard() calls v.replaceChildren() and rebuilds <details class=\"manage\"> with no open attribute, so the owner console closes on every mode switch, every add, and every remote claim. Measured: details.open true→false on one segment click; 102 full re-renders during a single bulk add; 73 in the first six seconds of a 60-slot cold load; a participant's half-typed note ('I will also bring a lemon dri') erased and focus thrown to <body> when an unrelated slot was renamed elsewhere. Renata reopened the panel eleven times; Tobias heard the page 73 times. Persist addMode and details.open across redraws, patch the slot list in place instead of replacing <main>, and never rebuild a subtree that currently contains focus or a non-empty field.",
       "where": "apps/signup-sheets/app.js:225-234 (drawBoard replaceChildren), app.js:391 (the details element), app.js:408 (addMode → drawBoard), app.js:212-213 (per-slot watchClaims → drawBoard)",
       "severity": "blocker",
@@ -408,98 +408,98 @@
     },
     {
       "title": "Never discard pasted spots silently, and never clear a field whose contents were refused",
-      "rationale": "150 pasted lines produced 100 spots and the toast '100 spots added' — the category's signature betrayal, shipped by the app whose positioning is the opposite. Separately, a 50-line paste onto a 60-spot sheet added nothing and the textarea measured 0 characters afterwards, because addSlotsChecked returns instead of throwing and app.js:427 clears the box regardless. Report the truth ('Added 100 — 50 more lines were not imported') and leave rejected input exactly where the user can copy it.",
+      "rationale": "150 pasted lines produced 100 spots and the toast '100 spots added', the category's signature betrayal, shipped by the app whose positioning is the opposite. Separately, a 50-line paste onto a 60-spot sheet added nothing and the textarea measured 0 characters afterwards, because addSlotsChecked returns instead of throwing and app.js:427 clears the box regardless. Report the truth ('Added 100 to 50 more lines were not imported') and leave rejected input exactly where the user can copy it.",
       "where": "apps/signup-sheets/helpers.js:36 and :58 (`if (out.length >= 100) break;`), apps/signup-sheets/app.js:519-528 (addSlotsChecked returns silently), app.js:418 and :427 (`lab.value = ''` / `ta.value = ''`)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Give the two verbs of the product real hit areas",
-      "rationale": "'Claim this spot' measured 123×36 at Default text and 173×36 at Largest — the height never moves, because .btn.small hardcodes min-height:36px. The release ✕ measured 16×19 (22×29 at Largest). Dolores could not give her slot back at all, and the design system's rule is explicit that --tap is floored at 44px and scales with --ui-scale precisely for her. Use .btn.primary (not .small) for the claim, give .chip button min-height:var(--tap) with real padding and a word rather than a glyph, and put the slot name in each remove button's accessible name — all eight currently read 'Remove Greedy Greg from this spot'.",
+      "rationale": "'Claim this spot' measured 123×36 at Default text and 173×36 at Largest, the height never moves, because .btn.small hardcodes min-height:36px. The release ✕ measured 16×19 (22×29 at Largest). Dolores could not give her slot back at all, and the design system's rule is explicit that --tap is floored at 44px and scales with --ui-scale precisely for her. Use .btn.primary (not .small) for the claim, give .chip button min-height:var(--tap) with real padding and a word rather than a glyph, and put the slot name in each remove button's accessible name, all eight currently read 'Remove Greedy Greg from this spot'.",
       "where": "apps/signup-sheets/app.js:331 (`class: 'btn primary small'`), apps/signup-sheets/index.html:1276 (.chip button), index.html:607 (.btn.small min-height), app.js:314-323 (the remove button's aria-label)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Hold the claim dialog until the write lands, and make a lost race recoverable in one tap",
-      "rationale": "app.js:594 closes the dialog 53ms after the tap and then awaits the write. Measured on the losing side of a real two-context race: dialog gone, note text stranded in a closed dialog that gets blanked on next open, toast 'That didn't go through — the spot may have just filled, or the sheet is locked', zero alternative slots offered. The research calls this the most humiliating moment in the category and names the fix: keep the name, say plainly what happened, offer the nearest still-open slot as a single tap. Also disable the button and show progress in the gap, which on one bar is seconds of apparent nothing.",
+      "rationale": "app.js:594 closes the dialog 53ms after the tap and then awaits the write. Measured on the losing side of a real two-context race: dialog gone, note text stranded in a closed dialog that gets blanked on next open, toast 'That didn't go through, the spot may have just filled, or the sheet is locked', zero alternative slots offered. The research calls this the most humiliating moment in the category and names the fix: keep the name, say plainly what happened, offer the nearest still-open slot as a single tap. Also disable the button and show progress in the gap, which on one bar is seconds of apparent nothing.",
       "where": "apps/signup-sheets/app.js:590-601 (nameOk handler), app.js:336-344 (openClaim, which blanks noteInput), app.js:54-59 (friendly())",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Make the weekday picker reachable without a pointer",
-      "rationale": "`.wkdays input{display:none}` — measured 7 checkboxes at 0×0, 0 of 7 focusable, Tab never reaches them. The entire 'Repeating dates' generator, which is how a nursery rota or a shift block gets built, cannot be operated from a keyboard: a flat WCAG 2.1.1 failure. The design system already solves this two hundred lines above in the same file, in the comfort panel's own comment: clip the input, never display:none it. Copy that pattern, and give the group a fieldset/legend.",
+      "rationale": "`.wkdays input{display:none}`, measured 7 checkboxes at 0×0, 0 of 7 focusable, Tab never reaches them. The entire 'Repeating dates' generator, which is how a nursery rota or a shift block gets built, cannot be operated from a keyboard: a flat WCAG 2.1.1 failure. The design system already solves this two hundred lines above in the same file, in the comfort panel's own comment: clip the input, never display:none it. Copy that pattern, and give the group a fieldset/legend.",
       "where": "apps/signup-sheets/index.html:1302-1308 (.wkdays), apps/signup-sheets/app.js:436-438 (the checkbox construction), pattern to copy at index.html:1140-1148",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Take aria-live off <main> and give the app a real status region",
-      "rationale": "<main id=\"view\" aria-live=\"polite\"> is replaced wholesale by drawBoard(). Measured: 3,491 characters re-announced 73 times in six seconds on a 60-slot cold load, six more per claim, 102 during a bulk add, with no aria-atomic. Meanwhile the events actually worth announcing — 'you're in', 'that spot just filled', 'the organizer locked the sheet' — have no region of their own; #toast has role=status but the app's own toast() bypasses SWS entirely. Remove aria-live from #view and announce specific changes in a short live line.",
+      "rationale": "<main id=\"view\" aria-live=\"polite\"> is replaced wholesale by drawBoard(). Measured: 3,491 characters re-announced 73 times in six seconds on a 60-slot cold load, six more per claim, 102 during a bulk add, with no aria-atomic. Meanwhile the events actually worth announcing, 'you're in', 'that spot just filled', 'the organizer locked the sheet', have no region of their own; #toast has role=status but the app's own toast() bypasses SWS entirely. Remove aria-live from #view and announce specific changes in a short live line.",
       "where": "apps/signup-sheets/index.html:1339 (<main aria-live=\"polite\">), apps/signup-sheets/app.js:34-41 (the local toast), app.js:225-234",
       "severity": "blocker",
       "effort": "S"
     },
     {
-      "title": "Finish the colour picker or delete it — today it half-applies, misreports itself, and cannot be undone",
-      "rationale": "applyTheme() sets only --accent inline. Measured after choosing blue: --accent #2563eb while --accent-fill stays #f7933c and --focus stays #a95a00, producing an orange-buttoned page with a blue progress bar (screenshot in design/out/ss-blue-theme.png). The picker shows blue as selected on a sheet that has no theme at all (app.js:469 defaults to 'blue' while applyTheme leaves the skin alone), and there is no way back to no-theme. The .wkdays selected chip pairs --accent with --accent-ink at 12.8px: 2.51:1 on slate, 3.34:1 plum, 3.46:1 green, 3.69:1 blue, 3.79:1 amber — four of five fail. The research's recommendation is blunter: 'avoid any organizer-selectable decorative theme system at all', and SaaS blue is the one hue it names to avoid. Deleting this is a smaller change than fixing it.",
+      "title": "Finish the colour picker or delete it, today it half-applies, misreports itself, and cannot be undone",
+      "rationale": "applyTheme() sets only --accent inline. Measured after choosing blue: --accent #2563eb while --accent-fill stays #f7933c and --focus stays #a95a00, producing an orange-buttoned page with a blue progress bar (screenshot in design/out/ss-blue-theme.png). The picker shows blue as selected on a sheet that has no theme at all (app.js:469 defaults to 'blue' while applyTheme leaves the skin alone), and there is no way back to no-theme. The .wkdays selected chip pairs --accent with --accent-ink at 12.8px: 2.51:1 on slate, 3.34:1 plum, 3.46:1 green, 3.69:1 blue, 3.79:1 amber, four of five fail. The research's recommendation is blunter: 'avoid any organizer-selectable decorative theme system at all', and SaaS blue is the one hue it names to avoid. Deleting this is a smaller change than fixing it.",
       "where": "apps/signup-sheets/app.js:218-223 (THEMES / applyTheme), app.js:461-476 (the dots and the 'blue' default), apps/signup-sheets/index.html:1308 (.wkdays checked chip), index.html:1310-1312 (.themedots, 34×34)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Replace the four confirm() dialogs with SWS.undo, and tell people when a spot they hold is deleted",
-      "rationale": "window.SWS is loaded with {toast, undo, hideToast, saved} and app.js references it zero times; instead there are four native confirm() calls and no undo anywhere. Measured: deleting a spot holding one signup asked 'Delete this spot and its 1 signup(s)?', emitted no toast, offered no undo, and on the participant's screen the spot simply vanished while their stale toast still read 'You're in — Week 1 snack'. Ana deletes spots on bereavement meal trains; that person needs to be told. Snapshot, mutate, then SWS.undo('Spot deleted', restore) — and surface a line on the affected participant's next render.",
+      "rationale": "window.SWS is loaded with {toast, undo, hideToast, saved} and app.js references it zero times; instead there are four native confirm() calls and no undo anywhere. Measured: deleting a spot holding one signup asked 'Delete this spot and its 1 signup(s)?', emitted no toast, offered no undo, and on the participant's screen the spot simply vanished while their stale toast still read 'You're in, Week 1 snack'. Ana deletes spots on bereavement meal trains; that person needs to be told. Snapshot, mutate, then SWS.undo('Spot deleted', restore), and surface a line on the affected participant's next render.",
       "where": "apps/signup-sheets/app.js:455 (add N dated spots), :492 (rotate link), :498 (delete sheet), :615 (delete slot), :561 (sign out); runtime at apps/signup-sheets/sws-ui.js:130",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Stop rendering a sheet that no longer exists",
-      "rationale": "When the owner deletes a board, watchBoard's callback passes null and drawBoard() early-returns at app.js:226, so the participant keeps looking at a fully live-looking sheet — title, spots, claim buttons, share card — indefinitely. Measured: the claim button was still present and clicking it produced 'That didn't go through — the spot may have just filled, or the sheet is locked', which names the wrong cause. Handle the null board the same way a bad code is handled at app.js:177-180.",
+      "rationale": "When the owner deletes a board, watchBoard's callback passes null and drawBoard() early-returns at app.js:226, so the participant keeps looking at a fully live-looking sheet, title, spots, claim buttons, share card, indefinitely. Measured: the claim button was still present and clicking it produced 'That didn't go through, the spot may have just filled, or the sheet is locked', which names the wrong cause. Handle the null board the same way a bad code is handled at app.js:177-180.",
       "where": "apps/signup-sheets/app.js:183-184 (watchBoard callback), app.js:226 (the early return), apps/signup-sheets/data.js:119-121",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Make the printed sheet lead back to the live one",
-      "rationale": "The print path is genuinely good — one page, blank '________________' places for walk-ups, all chrome hidden — and then it strands the reader. Measured on the generated PDF: no date, no share code, no URL, no QR, plus a printed 'you run this' badge and the Extras empty-state line '“I'll also bring lemonade!” — anything that isn't a listed spot goes here.' Add a .printonly block carrying the code, the short URL and the QR (the canvas already exists), hide the badge and the empty state in print, and widen the blank pills — 115px is short for a handwritten name.",
+      "rationale": "The print path is genuinely good, one page, blank '________________' places for walk-ups, all chrome hidden, and then it strands the reader. Measured on the generated PDF: no date, no share code, no URL, no QR, plus a printed 'you run this' badge and the Extras empty-state line '“I'll also bring lemonade!”, anything that isn't a listed spot goes here.' Add a .printonly block carrying the code, the short URL and the QR (the canvas already exists), hide the badge and the empty state in print, and widen the blank pills, 115px is short for a handwritten name.",
       "where": "apps/signup-sheets/index.html:1318-1325 (the app print block), apps/signup-sheets/app.js:240 (the 'you run this' badge), app.js:365 (Extras empty state), app.js:327 (the printonly blank chips)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Answer 'what's still open' without scrolling",
-      "rationale": "A 60-slot conference sheet is 6,980px tall with 60 identical claim buttons and no filter (measured: no 'show only open', no 'hide full'). The only summary is a bar and '0 of 60 spots filled'. Capterra, via the research: 'the layout often times may get a little annoying when scrolling down to find open time slots'; the research asks for a still-needed sentence plus a one-tap open-only filter and calls availability-in-two-seconds table stakes. nudgeMessage() at helpers.js:73 already computes exactly this sentence for the clipboard — put it on the page.",
+      "rationale": "A 60-slot conference sheet is 6,980px tall with 60 identical claim buttons and no filter (measured: no 'show only open', no 'hide full'). The only summary is a bar and '0 of 60 spots filled'. Capterra, via the research: 'the layout often times may get a little annoying when scrolling down to find open time slots'; the research asks for a still-needed sentence plus a one-tap open-only filter and calls availability-in-two-seconds table stakes. nudgeMessage() at helpers.js:73 already computes exactly this sentence for the clipboard, put it on the page.",
       "where": "apps/signup-sheets/app.js:242-247 (the fillStats block), apps/signup-sheets/app.js:268-275 (the slots card), reuse apps/signup-sheets/helpers.js:73-84",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Cap how many spots one person can take, and let them edit a claim instead of only deleting it",
-      "rationale": "One anonymous participant claimed 8 of 8 spots with no cap, no warning and no notice to the organizer — the research lists 'multi-slot claiming with a configurable cap' as table stakes for exactly this reason. And there is no edit path at all: the only control on your own chip is Remove, while data.js:259 exports a tested renameClaim() that nothing calls. 'Un-claim OR EDIT your own entry from the same link' is also table stakes.",
+      "rationale": "One anonymous participant claimed 8 of 8 spots with no cap, no warning and no notice to the organizer, the research lists 'multi-slot claiming with a configurable cap' as table stakes for exactly this reason. And there is no edit path at all: the only control on your own chip is Remove, while data.js:259 exports a tested renameClaim() that nothing calls. 'Un-claim OR EDIT your own entry from the same link' is also table stakes.",
       "where": "apps/signup-sheets/data.js:224-242 (claimSlot), apps/signup-sheets/firestore.rules (the claim rule, where the cap has to be enforced), apps/signup-sheets/app.js:310-325 (the chip controls), unused apps/signup-sheets/data.js:259-261",
       "severity": "major",
       "effort": "L"
     },
     {
       "title": "Say something when a save succeeds",
-      "rationale": "Renaming a slot fired zero toasts — the dialog just closes (app.js:610). Setting capacity to '0' on a slot with one claim silently became 1 and flipped the row to 'Full' with no message. sws-ui.js ships SWS.saved() for precisely this and the base stylesheet already styles [data-saved-flag]; neither is used. Also surface the clamp: a number the organizer typed being replaced by a different one without a word is how capacity quietly stops matching what they meant.",
+      "rationale": "Renaming a slot fired zero toasts, the dialog just closes (app.js:610). Setting capacity to '0' on a slot with one claim silently became 1 and flipped the row to 'Full' with no message. sws-ui.js ships SWS.saved() for precisely this and the base stylesheet already styles [data-saved-flag]; neither is used. Also surface the clamp: a number the organizer typed being replaced by a different one without a word is how capacity quietly stops matching what they meant.",
       "where": "apps/signup-sheets/app.js:605-612 (slotSave), app.js:607 (the parseInt clamp), apps/signup-sheets/sws-ui.js:151 (SWS.saved), apps/signup-sheets/index.html:679 ([data-saved-flag])",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Let the QR leave the phone, and name it for assistive tech",
-      "rationale": "The QR renders correctly (300×300, 230px of modules, 34px quiet zone, scannable) but the dialog's only button is Close — measured, no download, no save, no print — so an organizer on a phone cannot get it onto a flyer or a bulletin board, which is the only reason a QR exists here. The canvas also has no role, no aria-label and no text alternative, so a screen reader reaches a dialog whose entire content is silence.",
+      "rationale": "The QR renders correctly (300×300, 230px of modules, 34px quiet zone, scannable) but the dialog's only button is Close, measured, no download, no save, no print, so an organizer on a phone cannot get it onto a flyer or a bulletin board, which is the only reason a QR exists here. The canvas also has no role, no aria-label and no text alternative, so a screen reader reaches a dialog whose entire content is silence.",
       "where": "apps/signup-sheets/index.html:1396-1403 (#qrDlg), apps/signup-sheets/app.js:540-555 (showQR)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Small type and small copy fixes on the facts people came for",
-      "rationale": "The availability count is 13.12px (index.html:1281) and 'Full' renders in --pos success green — the one fact a participant is scanning for is the smallest text on the page, styled like good news. The pending badge is glued to the note body so innerText reads 'cupsawaiting approval' (app.js:354). The app-layer `.warn` override (index.html:1288) drops the shared amber advisory to 13.6px red, and .banner is 14.1px — both below the system's 15px instructional floor. A mistyped code is answered with 'the code may have been rotated by the organizer', which explains nothing to a stranger.",
+      "rationale": "The availability count is 13.12px (index.html:1281) and 'Full' renders in --pos success green, the one fact a participant is scanning for is the smallest text on the page, styled like good news. The pending badge is glued to the note body so innerText reads 'cupsawaiting approval' (app.js:354). The app-layer `.warn` override (index.html:1288) drops the shared amber advisory to 13.6px red, and .banner is 14.1px, both below the system's 15px instructional floor. A mistyped code is answered with 'the code may have been rotated by the organizer', which explains nothing to a stranger.",
       "where": "apps/signup-sheets/index.html:1281-1282 (.slot .count), :1284-1286 (.badge, .banner), :1288 (.warn override of the base at :688), apps/signup-sheets/app.js:354 (badge concatenation), app.js:178 (the not-found copy)",
       "severity": "minor",
       "effort": "S"
@@ -507,80 +507,80 @@
     {
       "title": "Name the dialogs, restore focus, and add the skip link the base already styles",
       "rationale": "All five <dialog> elements have aria-labelledby null even though #nameDlgTitle already carries an id; focus after Escape or after a successful claim lands on <body> rather than the control that opened the dialog; and there is no skip link although .skip is styled at index.html:858 and hidden in print at :1214, with four focusable controls in the header before the content on every load. None of this is caught by axe, which is clean on every view.",
-      "where": "apps/signup-sheets/index.html:1346, :1360, :1373, :1385, :1396 (the five dialogs), apps/signup-sheets/app.js:42-43 (showDlg/closeDlg — the natural place to record and restore focus), index.html:1331 (no .skip anchor)",
+      "where": "apps/signup-sheets/index.html:1346, :1360, :1373, :1385, :1396 (the five dialogs), apps/signup-sheets/app.js:42-43 (showDlg/closeDlg, the natural place to record and restore focus), index.html:1331 (no .skip anchor)",
       "severity": "minor",
       "effort": "S"
     }
   ],
   "audit": {
     "slug": "signup-sheets",
-    "purpose": "The portfolio's one networked app. An organizer signs in (Google or an email link), creates a sheet, adds spots — one at a time, pasted as a list with 'x3' multipliers, or generated across a date range and weekday set — and shares a 6-character code, a link, a QR or a paste-ready 'nudge' message. Anyone with the link claims a spot with a name and an optional note; participants are Firebase anonymous users, so their uid is the claim token that lets them release their own spot later on the same device, with no account. Owners can lock the sheet, require approval for free-text notes, recolour it, rotate the code (killing the old link instantly) and delete it. Data lives in Firestore under boards/{id} with slots, claims and entries subcollections, and a separate codes/{CODE} → boardId map so a leaked code exposes only an opaque id; firestore.rules is the real product, batch-coupling every participant write to a counter so capacity, one-claim-per-person and the 500-entry cap are hard limits rather than UI suggestions. Offline reads come from Firestore's persistent cache and claims queue until reconnect. Print produces a paper sign-up sheet with blank lines for walk-ups.",
-    "structure": "Single page, hash-routed, two views. body > div.wrap containing header.app (index.html:1332-1338 — 32px icon.svg with alt=\"\", h1 > a#brandLink 'Signup Sheets', span.spacer, a#tipLink.tipbtn.hidden un-hidden by app.js:653-657, and button#authBtn.btn.small 'Sign in'; sws-prefs.js injects #swsPrefsBtn before the tip pill at runtime), main#view[aria-live=polite] (1339) which is EMPTY in source and entirely JS-rendered, and footer.colophon (1340-1343) whose #orgLine is rewritten by setGrowthFooter() to an invitation on any sheet the viewer does not own. Outside .wrap sit five <dialog> elements written in source — #authDlg (1346-1358: Google button, email input, Cancel/Send link, a hidden #emailSent hint), #nameDlg (1360-1371: h3#nameDlgTitle, p#nameDlgSlot, #nameInput maxlength 60, #noteInput maxlength 120, Cancel/Claim it), #createDlg (1373-1383: #createTitle 100, #createDesc 1000), #slotDlg (1385-1394: #slotLabel 120, #slotCap number min 1 max 999, Delete/Cancel/Save), #qrDlg (1396-1403: #qrBox > canvas#qrCanvas 300×300, Close) — then div#toast[role=status][aria-live=polite] (1405). Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head> (1327-1328), an importmap pointing firebase/* at gstatic ESM (1020-1028), vendor-qrcode.js as a classic script and app.js as a module (1407-1408). app.js imports helpers.js (pure, unit-tested), data.js (every Firestore/Auth call) and firebase-config.js. There is NO skip link, NO <noscript>, and no <nav> landmark. sw.js (VERSION 'signup-v16') precaches the shell, the three gstatic firebase modules, the woff2, sws-prefs.js and sws-ui.js.",
+    "purpose": "The portfolio's one networked app. An organizer signs in (Google or an email link), creates a sheet, adds spots, one at a time, pasted as a list with 'x3' multipliers, or generated across a date range and weekday set, and shares a 6-character code, a link, a QR or a paste-ready 'nudge' message. Anyone with the link claims a spot with a name and an optional note; participants are Firebase anonymous users, so their uid is the claim token that lets them release their own spot later on the same device, with no account. Owners can lock the sheet, require approval for free-text notes, recolour it, rotate the code (killing the old link instantly) and delete it. Data lives in Firestore under boards/{id} with slots, claims and entries subcollections, and a separate codes/{CODE} → boardId map so a leaked code exposes only an opaque id; firestore.rules is the real product, batch-coupling every participant write to a counter so capacity, one-claim-per-person and the 500-entry cap are hard limits rather than UI suggestions. Offline reads come from Firestore's persistent cache and claims queue until reconnect. Print produces a paper sign-up sheet with blank lines for walk-ups.",
+    "structure": "Single page, hash-routed, two views. body > div.wrap containing header.app (index.html:1332-1338 to 32px icon.svg with alt=\"\", h1 > a#brandLink 'Signup Sheets', span.spacer, a#tipLink.tipbtn.hidden un-hidden by app.js:653-657, and button#authBtn.btn.small 'Sign in'; sws-prefs.js injects #swsPrefsBtn before the tip pill at runtime), main#view[aria-live=polite] (1339) which is EMPTY in source and entirely JS-rendered, and footer.colophon (1340-1343) whose #orgLine is rewritten by setGrowthFooter() to an invitation on any sheet the viewer does not own. Outside .wrap sit five <dialog> elements written in source, #authDlg (1346-1358: Google button, email input, Cancel/Send link, a hidden #emailSent hint), #nameDlg (1360-1371: h3#nameDlgTitle, p#nameDlgSlot, #nameInput maxlength 60, #noteInput maxlength 120, Cancel/Claim it), #createDlg (1373-1383: #createTitle 100, #createDesc 1000), #slotDlg (1385-1394: #slotLabel 120, #slotCap number min 1 max 999, Delete/Cancel/Save), #qrDlg (1396-1403: #qrBox > canvas#qrCanvas 300×300, Close), then div#toast[role=status][aria-live=polite] (1405). Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head> (1327-1328), an importmap pointing firebase/* at gstatic ESM (1020-1028), vendor-qrcode.js as a classic script and app.js as a module (1407-1408). app.js imports helpers.js (pure, unit-tested), data.js (every Firestore/Auth call) and firebase-config.js. There is NO skip link, NO <noscript>, and no <nav> landmark. sw.js (VERSION 'signup-v16') precaches the shell, the three gstatic firebase modules, the woff2, sws-prefs.js and sws-ui.js.",
     "cssClasses": [
-      ".wrap — page gutter, max-width var(--wrap) = 46rem (index.html:349)",
-      "header.app — flex app bar, wraps; measured 112px tall across four rows at 414px because it carries icon, title, spacer, prefs, tip pill AND #authBtn (374-385)",
-      "a.tipbtn / #tipLink — 36px pill revealed by JS (412)",
-      "button#authBtn — .btn.small, 36px; the only app-specific header control in the portfolio (index.html:1337)",
-      "#swsPrefsBtn — 36×36 icon button injected by sws-prefs.js (1024)",
-      "main#view — the whole rendered app; also a polite live region replaced wholesale on every Firestore snapshot (1339)",
-      "footer.colophon — trust + feedback; #orgLine is swapped to growth copy on shared sheets (1340, app.js:95-102)",
-      ".hero / .hero h2 / .hero p — home headline block (431-434)",
-      "section.card — surface panel, --r-card 12px (469)",
-      "section.card > h2 — 12px uppercase micro-label; used for 'SPOTS', 'EXTRAS & NOTES', 'SHARE', 'YOUR SHEETS' (481)",
-      ".slot — APP LAYER. One spot: 12px vertical padding, bottom rule (1277)",
-      ".slot .top — flex baseline row holding label, count and the owner's ✎ (1279)",
-      ".slot .label — flex:1, overflow-wrap:anywhere, 600 weight, 16px (1280)",
-      ".slot .count — the availability figure at .82rem = 13.12px in --muted; measured 34×20 (1281)",
-      ".slot .count.full — 'Full' in --pos green, 600 weight (1282)",
-      ".slot .chips — the claimed-name pills, 6px above (1283)",
-      ".chip — base pill, 13px, measured 28px tall at default and 37px at Largest (663)",
-      ".chip.mine — APP LAYER, --mine background + --accent border, marks your own claim (1275)",
-      ".chip button — the release/remove ✕: border 0, background none, padding 0 2px, .9rem. Measured 16×19px (1276)",
-      ".chip.printonly — the blank '________________' place printed for each unclaimed seat (app.js:327)",
-      ".badge — 11.5px pill for 'you run this'; .badge.pending recolours to --neg for 'awaiting approval' (1284-1285)",
-      ".banner — 14.1px advisory strip for locked and offline states (1286)",
-      ".warn — APP LAYER OVERRIDE of the base amber advisory at :688; keeps the base's padding/background/border but forces --neg text at .85rem = 13.6px (1288)",
-      ".fillbar / .fillbar>div — 6px progress rail; the fill uses --accent, so it is the one element the theme picker visibly changes (1289-1290)",
-      "details.manage / >summary / >.inner — the owner console; summary measured 51px, rebuilt without its open state on every redraw (1291-1300, app.js:391)",
-      ".seg / .seg button / .active — the base segmented control, used for the three add modes; buttons measured 38px (616-645)",
-      ".wkdays / .wkdays label / .wkdays input — weekday picker; label 33px, input display:none (1302-1308)",
-      ".sharecode — 1.7rem tracked share code, measured 340×42 (1309)",
-      ".themedots / .themedots button / .sel — five 34×34 colour buttons, selection carried by a box-shadow ring (1310-1312)",
-      "dialog — APP LAYER override: 14px radius, 18px padding, max-width min(92vw,420px) (1313)",
-      "#qrBox — forces a white ground behind the canvas so the code survives dark mode (1316)",
-      ".printonly / @media print — app print block hiding header.app, details.manage, .btn, .noprint, #toast, footer.colophon (1318-1325)",
-      "ul.plain > li — 'Your sheets' rows and the Extras list (703)",
-      ".trust — the base's privacy stamp component, UNUSED; the promise is footer prose instead (455)",
-      ".empty — the base's empty-state component, UNUSED; every empty state here is a bare .hint paragraph (720)",
-      ".actionbar, .tablewrap, table — UNUSED (823, 747)",
-      ".skip — skip-link styling present in the base, but NO skip link exists in the markup (858)",
-      "[data-saved-flag] — the base's quiet save confirmation, UNUSED (679)"
+      ".wrap, page gutter, max-width var(--wrap) = 46rem (index.html:349)",
+      "header.app, flex app bar, wraps; measured 112px tall across four rows at 414px because it carries icon, title, spacer, prefs, tip pill AND #authBtn (374-385)",
+      "a.tipbtn / #tipLink, 36px pill revealed by JS (412)",
+      "button#authBtn, .btn.small, 36px; the only app-specific header control in the portfolio (index.html:1337)",
+      "#swsPrefsBtn, 36×36 icon button injected by sws-prefs.js (1024)",
+      "main#view, the whole rendered app; also a polite live region replaced wholesale on every Firestore snapshot (1339)",
+      "footer.colophon, trust + feedback; #orgLine is swapped to growth copy on shared sheets (1340, app.js:95-102)",
+      ".hero / .hero h2 / .hero p, home headline block (431-434)",
+      "section.card, surface panel, --r-card 12px (469)",
+      "section.card > h2 to 12px uppercase micro-label; used for 'SPOTS', 'EXTRAS & NOTES', 'SHARE', 'YOUR SHEETS' (481)",
+      ".slot, APP LAYER. One spot: 12px vertical padding, bottom rule (1277)",
+      ".slot .top, flex baseline row holding label, count and the owner's ✎ (1279)",
+      ".slot .label, flex:1, overflow-wrap:anywhere, 600 weight, 16px (1280)",
+      ".slot .count, the availability figure at .82rem = 13.12px in --muted; measured 34×20 (1281)",
+      ".slot .count.full, 'Full' in --pos green, 600 weight (1282)",
+      ".slot .chips, the claimed-name pills, 6px above (1283)",
+      ".chip, base pill, 13px, measured 28px tall at default and 37px at Largest (663)",
+      ".chip.mine, APP LAYER, --mine background + --accent border, marks your own claim (1275)",
+      ".chip button, the release/remove ✕: border 0, background none, padding 0 2px, .9rem. Measured 16×19px (1276)",
+      ".chip.printonly, the blank '________________' place printed for each unclaimed seat (app.js:327)",
+      ".badge, 11.5px pill for 'you run this'; .badge.pending recolours to --neg for 'awaiting approval' (1284-1285)",
+      ".banner, 14.1px advisory strip for locked and offline states (1286)",
+      ".warn, APP LAYER OVERRIDE of the base amber advisory at :688; keeps the base's padding/background/border but forces --neg text at .85rem = 13.6px (1288)",
+      ".fillbar / .fillbar>div, 6px progress rail; the fill uses --accent, so it is the one element the theme picker visibly changes (1289-1290)",
+      "details.manage / >summary / >.inner, the owner console; summary measured 51px, rebuilt without its open state on every redraw (1291-1300, app.js:391)",
+      ".seg / .seg button / .active, the base segmented control, used for the three add modes; buttons measured 38px (616-645)",
+      ".wkdays / .wkdays label / .wkdays input, weekday picker; label 33px, input display:none (1302-1308)",
+      ".sharecode, 1.7rem tracked share code, measured 340×42 (1309)",
+      ".themedots / .themedots button / .sel, five 34×34 colour buttons, selection carried by a box-shadow ring (1310-1312)",
+      "dialog, APP LAYER override: 14px radius, 18px padding, max-width min(92vw,420px) (1313)",
+      "#qrBox, forces a white ground behind the canvas so the code survives dark mode (1316)",
+      ".printonly / @media print, app print block hiding header.app, details.manage, .btn, .noprint, #toast, footer.colophon (1318-1325)",
+      "ul.plain > li, 'Your sheets' rows and the Extras list (703)",
+      ".trust, the base's privacy stamp component, UNUSED; the promise is footer prose instead (455)",
+      ".empty, the base's empty-state component, UNUSED; every empty state here is a bare .hint paragraph (720)",
+      ".actionbar, .tablewrap, table, UNUSED (823, 747)",
+      ".skip, skip-link styling present in the base, but NO skip link exists in the markup (858)",
+      "[data-saved-flag], the base's quiet save confirmation, UNUSED (679)"
     ],
-    "dynamicMarkup": "main#view is empty in source; render() (app.js:639) picks a view from location.hash matched against /^#\\/b\\/([A-HJ-NP-Z2-9]{6})/. renderHome() (104) stops all subscriptions, clears any board theme, and writes a .hero (h2 'Signup sheets that take 15 seconds', a paragraph ending in a bolded 'No accounts for participants. No ads. Free.', a 'Create a sheet' primary button), a 'Got a code?' card with an uppercase-transformed code input labelled 'Sheet code' plus an Open button, and — only for a signed-in non-anonymous user — a 'Your sheets' card listing each board as title, 'Code XXXXXX · locked', and an Open button. Nothing else: no fill counts, no dates, no delete, no duplicate. renderBoard(code) (168) shows 'Opening sheet…', signs in anonymously, resolves the code to a boardId and attaches watchBoard + watchSlots; a missing code renders a card reading 'That sheet doesn't exist — the code may have been rotated by the organizer.' syncClaimWatchers() (205) opens ONE onSnapshot per slot, each of whose callbacks calls drawBoard() — 60 slots means 60 listeners and, measured, 73 full redraws in six seconds. drawBoard() (225) replaceChildren()s the entire live region and rebuilds: a title card (an h2 carrying `all:unset` plus inline font styling at app.js:239, an optional 'you run this' badge, the description, a .fillbar and 'n of m spots filled'); for owners a 'Share this sheet' card with the big code, Copy link and QR; a .banner if locked or offline; a 'Spots' card with one .slot per slot (label, count or 'Full', owner ✎, claimed-name chips each with a remove ✕, printonly blanks for the remainder, and a 'Claim this spot' .btn.primary.small when the slot is open, unlocked and not already yours); an 'Extras & notes' card listing entries with an approve ✓ for pending ones and a delete ✕, plus a name/note/Add composer; for owners <details class=\"manage\"> containing Share (URL, Copy link, QR, Copy nudge, Print), Add spots (a .seg of three modes → single label+capacity, a bulk textarea, or a date-range generator with a .wkdays row), Settings (five theme dots, approval and lock checkboxes, Rotate link, Delete sheet) and Title & details; and for participants a lighter Share card. Claims are optimistic only in the sense that Firestore's local cache applies them — the UI shows no pending state and app.js:594 closes the dialog before awaiting the write.",
+    "dynamicMarkup": "main#view is empty in source; render() (app.js:639) picks a view from location.hash matched against /^#\\/b\\/([A-HJ-NP-Z2-9]{6})/. renderHome() (104) stops all subscriptions, clears any board theme, and writes a .hero (h2 'Signup sheets that take 15 seconds', a paragraph ending in a bolded 'No accounts for participants. No ads. Free.', a 'Create a sheet' primary button), a 'Got a code?' card with an uppercase-transformed code input labelled 'Sheet code' plus an Open button, and, only for a signed-in non-anonymous user, a 'Your sheets' card listing each board as title, 'Code XXXXXX · locked', and an Open button. Nothing else: no fill counts, no dates, no delete, no duplicate. renderBoard(code) (168) shows 'Opening sheet…', signs in anonymously, resolves the code to a boardId and attaches watchBoard + watchSlots; a missing code renders a card reading 'That sheet doesn't exist, the code may have been rotated by the organizer.' syncClaimWatchers() (205) opens ONE onSnapshot per slot, each of whose callbacks calls drawBoard(), 60 slots means 60 listeners and, measured, 73 full redraws in six seconds. drawBoard() (225) replaceChildren()s the entire live region and rebuilds: a title card (an h2 carrying `all:unset` plus inline font styling at app.js:239, an optional 'you run this' badge, the description, a .fillbar and 'n of m spots filled'); for owners a 'Share this sheet' card with the big code, Copy link and QR; a .banner if locked or offline; a 'Spots' card with one .slot per slot (label, count or 'Full', owner ✎, claimed-name chips each with a remove ✕, printonly blanks for the remainder, and a 'Claim this spot' .btn.primary.small when the slot is open, unlocked and not already yours); an 'Extras & notes' card listing entries with an approve ✓ for pending ones and a delete ✕, plus a name/note/Add composer; for owners <details class=\"manage\"> containing Share (URL, Copy link, QR, Copy nudge, Print), Add spots (a .seg of three modes → single label+capacity, a bulk textarea, or a date-range generator with a .wkdays row), Settings (five theme dots, approval and lock checkboxes, Rotate link, Delete sheet) and Title & details; and for participants a lighter Share card. Claims are optimistic only in the sense that Firestore's local cache applies them, the UI shows no pending state and app.js:594 closes the dialog before awaiting the write.",
     "comfortDefects": [
-      { "issue": "'Claim this spot' is .btn.primary.small, and .btn.small hardcodes min-height:36px. Measured 123×36 at Default, 137×36 at Large, 173×36 at Largest — the one control the product exists for never grows with the text setting.", "where": "app.js:331; index.html:607", "fix": "Use .btn.primary (min-height:var(--tap)) for the claim, or give .btn.small a --tap-derived floor in this app." },
-      { "issue": "The release/remove ✕ inside a claim chip measures 16×19px at default and 22×29px at Largest — the smallest interactive thing in the app, and it is the 'change my mind' path the research calls table stakes.", "where": "index.html:1276 (.chip button)", "fix": "min-height:var(--tap), real padding, and a word rather than a glyph." },
-      { "issue": "The availability figure — the single fact a participant came for — is .82rem (13.12px), below the system's 15px instructional floor.", "where": "index.html:1281 (.slot .count)", "fix": "var(--t-sm), and consider tabular numerals." },
+      { "issue": "'Claim this spot' is .btn.primary.small, and .btn.small hardcodes min-height:36px. Measured 123×36 at Default, 137×36 at Large, 173×36 at Largest, the one control the product exists for never grows with the text setting.", "where": "app.js:331; index.html:607", "fix": "Use .btn.primary (min-height:var(--tap)) for the claim, or give .btn.small a --tap-derived floor in this app." },
+      { "issue": "The release/remove ✕ inside a claim chip measures 16×19px at default and 22×29px at Largest, the smallest interactive thing in the app, and it is the 'change my mind' path the research calls table stakes.", "where": "index.html:1276 (.chip button)", "fix": "min-height:var(--tap), real padding, and a word rather than a glyph." },
+      { "issue": "The availability figure, the single fact a participant came for, is .82rem (13.12px), below the system's 15px instructional floor.", "where": "index.html:1281 (.slot .count)", "fix": "var(--t-sm), and consider tabular numerals." },
       { "issue": "'Full' is rendered in --pos green, the system's success colour.", "where": "index.html:1282 (.slot .count.full)", "fix": "Use --ink-2 or --warn; green on 'Full' tells a scanning participant the opposite of the truth." },
-      { "issue": ".badge is .72rem (11.5px) — smaller than --t-micro, which the system reserves for uppercase labels — and .banner is .88rem (14.1px) for sentences about locking and offline state.", "where": "index.html:1284-1286", "fix": "var(--t-xs) for the badge, var(--t-sm) for the banner." },
-      { "issue": "The app layer redefines .warn, which the base ships as the amber advisory block, into 13.6px --neg text — so the app both loses the shared component and sets its only error copy below the floor.", "where": "index.html:1288 overriding index.html:688-696", "fix": "Rename the app's variant (.errline) and leave .warn as the system component." },
-      { "issue": "The theme dots are 34×34 and .wkdays labels 33px tall; the ✎ edit is 37×36 and the .seg buttons 38px — all under the 44px floor at every comfort setting.", "where": "index.html:1311, :1303-1306, app.js:307, index.html:626-629", "fix": "min-height:var(--tap) on each; the .seg is a base component and should be fixed there." },
-      { "issue": "Selection state on the theme dots rests on a box-shadow ring plus colour alone — no tick, no aria-pressed — which the design system explicitly forbids for option groups.", "where": "index.html:1312, app.js:467-476", "fix": "Adopt the comfort panel's permanent tick-slot pattern and add aria-pressed." },
+      { "issue": ".badge is .72rem (11.5px), smaller than --t-micro, which the system reserves for uppercase labels, and .banner is .88rem (14.1px) for sentences about locking and offline state.", "where": "index.html:1284-1286", "fix": "var(--t-xs) for the badge, var(--t-sm) for the banner." },
+      { "issue": "The app layer redefines .warn, which the base ships as the amber advisory block, into 13.6px --neg text, so the app both loses the shared component and sets its only error copy below the floor.", "where": "index.html:1288 overriding index.html:688-696", "fix": "Rename the app's variant (.errline) and leave .warn as the system component." },
+      { "issue": "The theme dots are 34×34 and .wkdays labels 33px tall; the ✎ edit is 37×36 and the .seg buttons 38px, all under the 44px floor at every comfort setting.", "where": "index.html:1311, :1303-1306, app.js:307, index.html:626-629", "fix": "min-height:var(--tap) on each; the .seg is a base component and should be fixed there." },
+      { "issue": "Selection state on the theme dots rests on a box-shadow ring plus colour alone, no tick, no aria-pressed, which the design system explicitly forbids for option groups.", "where": "index.html:1312, app.js:467-476", "fix": "Adopt the comfort panel's permanent tick-slot pattern and add aria-pressed." },
       { "issue": "The board title is written with `all:unset` plus inline font-size/font-weight, escaping the type scale and the display font entirely.", "where": "app.js:239", "fix": "A class in the app layer using var(--t-xl)." },
       { "issue": "Roughly fifteen inline style attributes are written from JS (flex:0 0 auto, margin-top:8px, width:auto, text-transform:uppercase, margin:6px 0 0, flex:0 0 84px …), none of which the comfort settings can reach.", "where": "app.js:120, 125, 238-241, 253-259, 330, 354, 368-382, 397-398, 405, 413, 461, 465-483, 490; index.html:1342, 1348-1350, 1362, 1400", "fix": "Promote each to a class in the app layer." },
-      { "issue": "The base's .trust stamp is unused — the privacy promise is grey footer prose, which the design system says users do not believe — and .empty is unused, so every empty state is a bare .hint paragraph.", "where": "index.html:1341, app.js:135, 145, 270-272, 365", "fix": "A .trust stamp on the home hero and .empty for the three empty states." },
+      { "issue": "The base's .trust stamp is unused, the privacy promise is grey footer prose, which the design system says users do not believe, and .empty is unused, so every empty state is a bare .hint paragraph.", "where": "index.html:1341, app.js:135, 145, 270-272, 365", "fix": "A .trust stamp on the home hero and .empty for the three empty states." },
       { "issue": "SWS.saved() and the base's [data-saved-flag] are both unused; a successful slot save produces no feedback at all.", "where": "app.js:610; sws-ui.js:151; index.html:679", "fix": "SWS.saved() on every successful write." },
       { "issue": "The QR canvas is a fixed 300×300 with the module grid computed from Math.floor(size/(count+8)), so at Largest text the dialog scales around a QR that does not.", "where": "app.js:545-547, index.html:1398", "fix": "Size the canvas from a rem value and redraw on the comfort change." }
     ],
     "navigationDefects": [
-      { "issue": "The Manage <details> is rebuilt with no open attribute on every redraw, so it closes on every mode switch, every add, every save — and on every remote claim, because Firestore snapshots drive drawBoard(). Measured: open true→false on one segment click; 102 redraws during one bulk add.", "where": "app.js:391, app.js:408, app.js:225-234", "fix": "Persist details.open (and addMode) across redraws; better, stop replacing <main>." },
+      { "issue": "The Manage <details> is rebuilt with no open attribute on every redraw, so it closes on every mode switch, every add, every save, and on every remote claim, because Firestore snapshots drive drawBoard(). Measured: open true→false on one segment click; 102 redraws during one bulk add.", "where": "app.js:391, app.js:408, app.js:225-234", "fix": "Persist details.open (and addMode) across redraws; better, stop replacing <main>." },
       { "issue": "Every slot opens its own onSnapshot whose callback calls drawBoard(), so a 60-slot sheet re-renders the whole page 73 times in six seconds.", "where": "app.js:205-216, app.js:212-213", "fix": "Coalesce claim snapshots into one debounced render, and patch only the slot that changed." },
-      { "issue": "A remote change destroys anything the current user has typed and throws focus to <body> — measured: a 29-character half-typed note wiped and the name field re-seeded from localStorage when an unrelated slot was renamed elsewhere.", "where": "app.js:225-234, app.js:368-382", "fix": "Preserve field values and focus across a redraw, or never rebuild a subtree containing focus." },
+      { "issue": "A remote change destroys anything the current user has typed and throws focus to <body>, measured: a 29-character half-typed note wiped and the name field re-seeded from localStorage when an unrelated slot was renamed elsewhere.", "where": "app.js:225-234, app.js:368-382", "fix": "Preserve field values and focus across a redraw, or never rebuild a subtree containing focus." },
       { "issue": "The claim dialog closes before the write resolves (53ms measured), so there is no progress state and a failed claim strands its typed note in a closed dialog that is blanked on next open.", "where": "app.js:590-601, app.js:336-344", "fix": "Keep the dialog open with the button disabled until the promise settles." },
       { "issue": "A deleted board leaves a fully live-looking sheet on screen forever, because watchBoard passes null and drawBoard() early-returns.", "where": "app.js:183, app.js:226", "fix": "Render the same 'this sheet is gone' card used for an unresolvable code (app.js:177-180)." },
       { "issue": "No undo anywhere; four native confirm() dialogs instead, while window.SWS.undo is loaded and never called. Deleting a spot with signups is permanent and invisible to the people who signed up.", "where": "app.js:455, 492, 498, 615; sws-ui.js:130", "fix": "SWS.undo on each, plus a notice on the affected participants' next render." },
       { "issue": "The current view is not fully in the URL: the add mode, the open/closed state of Manage and the scroll position all reset. Back from a board goes to home, which is correct, but there is no deep link to the owner console.", "where": "app.js:82-88, module-level addMode at app.js:388", "fix": "Encode the mode in the hash, or at least keep it in sessionStorage." },
-      { "issue": "'Your sheets' offers only Open — no fill count, no date, no delete, no duplicate, no archive — and deleting a sheet requires opening it and expanding Manage.", "where": "app.js:137-156", "fix": "Add counts and a duplicate action; the research names 'duplicate for next month' as the recurring-use differentiator." },
+      { "issue": "'Your sheets' offers only Open, no fill count, no date, no delete, no duplicate, no archive, and deleting a sheet requires opening it and expanding Manage.", "where": "app.js:137-156", "fix": "Add counts and a duplicate action; the research names 'duplicate for next month' as the recurring-use differentiator." },
       { "issue": "There is no way to edit a claim, only remove and re-add; data.js exports a tested renameClaim() that nothing calls.", "where": "app.js:310-325; unused data.js:259-261", "fix": "An edit affordance on your own chip." },
       { "issue": "No filter or jump on long sheets: a 60-slot sheet is 6,980px of identical rows with no 'open only' toggle and no still-needed sentence.", "where": "app.js:268-275, app.js:242-247", "fix": "An open-only toggle plus the sentence nudgeMessage() already builds at helpers.js:73." },
       { "issue": "Focus is never returned to the control that opened a dialog: after Escape and after a successful claim, activeElement is <body>.", "where": "app.js:42-43 (showDlg/closeDlg), app.js:594", "fix": "Record the invoker in showDlg and restore it in closeDlg." },
@@ -588,31 +588,31 @@
       { "issue": "completeEmailLink falls back to a native prompt() to confirm the email address; if the browser suppresses dialogs (some in-app browsers do) sign-in silently fails.", "where": "app.js:659, data.js:73-82", "fix": "An inline field in #authDlg rather than a browser prompt." }
     ],
     "a11yDefects": [
-      { "issue": "`.wkdays input{display:none}` — 7 checkboxes measured at 0×0, 0 of 7 focusable. The 'Repeating dates' generator cannot be operated from a keyboard at all. WCAG 2.1.1.", "where": "index.html:1307, app.js:436-438", "fix": "Clip the input the way the comfort panel does at index.html:1140-1148, and wrap the group in a fieldset with a legend." },
+      { "issue": "`.wkdays input{display:none}`, 7 checkboxes measured at 0×0, 0 of 7 focusable. The 'Repeating dates' generator cannot be operated from a keyboard at all. WCAG 2.1.1.", "where": "index.html:1307, app.js:436-438", "fix": "Clip the input the way the comfort panel does at index.html:1140-1148, and wrap the group in a fieldset with a legend." },
       { "issue": "<main id=\"view\" aria-live=\"polite\"> is replaced wholesale on every snapshot: 3,491 characters re-announced 73 times in six seconds on a 60-slot cold load, with no aria-atomic and no dedicated status region.", "where": "index.html:1339, app.js:225-234", "fix": "Remove aria-live from #view; announce specific events in a short live line." },
       { "issue": "The 'awaiting approval' badge is appended directly after the note body with only a CSS margin, so innerText reads 'cupsawaiting approval'.", "where": "app.js:353-354", "fix": "A separator text node, or render the status as a separate block." },
       { "issue": "All eight remove buttons on a sheet share the identical accessible name 'Remove <name> from this spot' with no slot identity.", "where": "app.js:314-315", "fix": "Include the slot label in the aria-label." },
       { "issue": "None of the five <dialog> elements has aria-labelledby, even though #nameDlgTitle already carries an id.", "where": "index.html:1346, 1360, 1373, 1385, 1396", "fix": "aria-labelledby on each, pointing at its own h3." },
-      { "issue": "The QR canvas has no role, no aria-label and no text alternative — the dialog's entire content is inaccessible.", "where": "index.html:1398, app.js:540-555", "fix": "role=\"img\" plus aria-label carrying the URL, and render the code as text beneath it." },
+      { "issue": "The QR canvas has no role, no aria-label and no text alternative, the dialog's entire content is inaccessible.", "where": "index.html:1398, app.js:540-555", "fix": "role=\"img\" plus aria-label carrying the URL, and render the code as text beneath it." },
       { "issue": "Theme selection is conveyed by colour and a box-shadow ring only, with no aria-pressed and no tick.", "where": "app.js:467-476, index.html:1312", "fix": "aria-pressed plus a non-colour indicator." },
       { "issue": "The .wkdays selected chip pairs --accent with --accent-ink at 12.8px: 2.51:1 on slate, 3.34:1 plum, 3.46:1 green, 3.69:1 blue, 3.79:1 amber, 4.69:1 on the default marigold. Four of five themes fail 4.5:1.", "where": "index.html:1308, app.js:218", "fix": "Use --accent-fill/--accent-ink pairs that are contrast-checked, or drop the theme system." },
       { "issue": "No skip link and no <noscript>: with JavaScript off the page is a header, an empty <main> and a footer, with nothing explaining why.", "where": "index.html:1331, 1339", "fix": "Add both." },
       { "issue": "Focus lands on <body> after every dialog close and every successful claim.", "where": "app.js:42-43, app.js:594", "fix": "Restore focus to the invoking element." },
-      { "issue": "axe (wcag2a/2aa/21a/21aa/22aa) returns ZERO violations on the home screen, the owner board, the participant board and with the comfort panel open — every defect above is one axe cannot see.", "where": "verified across four rendered states", "fix": "Keep it that way; do not treat the clean axe run as coverage." }
+      { "issue": "axe (wcag2a/2aa/21a/21aa/22aa) returns ZERO violations on the home screen, the owner board, the participant board and with the comfort panel open, every defect above is one axe cannot see.", "where": "verified across four rendered states", "fix": "Keep it that way; do not treat the clean axe run as coverage." }
     ],
-    "printSupport": "One real paper path, and it is good. The app print block (index.html:1319-1325) hides header.app, details.manage, every .btn, .noprint, #toast and footer.colophon, flattens section.card to borderless 4px rows, and reveals .printonly. app.js:327 prints a '________________' chip for every unclaimed place, so the sheet works as a real walk-up sign-up on a noticeboard — the research's 'compete with paper rather than against it', shipped. Verified by generating an A4 PDF from a live five-spot sheet with four claims: one page, title, description, 'x of y spots filled', every spot with its claimed names and notes, nine blank places, no chrome, no buttons, no share card. What is missing is the return path: no date, no share code, no URL, no QR, so nobody reading the paper can reach the live sheet. What is present and unwanted: the 'you run this' badge (app.js:240) and the Extras empty-state line '“I'll also bring lemonade!” — anything that isn't a listed spot goes here.' (app.js:365), which is a tonal misfire in ink on a bereavement meal train. The blank pills measure ~115px, short for a handwritten name. The .fillbar prints as a solid accent bar that disappears when the browser prints with background graphics off, leaving the numeric summary as the only signal — which is fine. Non-Latin names could not be verified here: this container has zero CJK fonts installed, so the tofu in the generated PDF is an environment artifact rather than an app defect, and unlike a pdf-lib path this one hands the glyphs to the OS.",
+    "printSupport": "One real paper path, and it is good. The app print block (index.html:1319-1325) hides header.app, details.manage, every .btn, .noprint, #toast and footer.colophon, flattens section.card to borderless 4px rows, and reveals .printonly. app.js:327 prints a '________________' chip for every unclaimed place, so the sheet works as a real walk-up sign-up on a noticeboard, the research's 'compete with paper rather than against it', shipped. Verified by generating an A4 PDF from a live five-spot sheet with four claims: one page, title, description, 'x of y spots filled', every spot with its claimed names and notes, nine blank places, no chrome, no buttons, no share card. What is missing is the return path: no date, no share code, no URL, no QR, so nobody reading the paper can reach the live sheet. What is present and unwanted: the 'you run this' badge (app.js:240) and the Extras empty-state line '“I'll also bring lemonade!”, anything that isn't a listed spot goes here.' (app.js:365), which is a tonal misfire in ink on a bereavement meal train. The blank pills measure ~115px, short for a handwritten name. The .fillbar prints as a solid accent bar that disappears when the browser prints with background graphics off, leaving the numeric summary as the only signal, which is fine. Non-Latin names could not be verified here: this container has zero CJK fonts installed, so the tofu in the generated PDF is an environment artifact rather than an app defect, and unlike a pdf-lib path this one hands the glyphs to the OS.",
     "riskyToRestyle": [
-      "main#view is a live region that drawBoard() replaces on every Firestore snapshot. Any CSS transition, :focus-within rule or scroll anchoring attached to its children will fire or be destroyed continuously — measured at 73 replacements in six seconds on a 60-slot sheet.",
-      "applyTheme() writes --accent as an inline style on <html> (app.js:221), which beats every stylesheet rule including the comfort settings. Anything restyled in terms of --accent will change colour when an organizer picks a theme, and anything in terms of --accent-fill will not — that split is the current bug and it has to be resolved before either token is used more widely.",
+      "main#view is a live region that drawBoard() replaces on every Firestore snapshot. Any CSS transition, :focus-within rule or scroll anchoring attached to its children will fire or be destroyed continuously, measured at 73 replacements in six seconds on a 60-slot sheet.",
+      "applyTheme() writes --accent as an inline style on <html> (app.js:221), which beats every stylesheet rule including the comfort settings. Anything restyled in terms of --accent will change colour when an organizer picks a theme, and anything in terms of --accent-fill will not, that split is the current bug and it has to be resolved before either token is used more widely.",
       "The bare `dialog{}` override at index.html:1313 also matches #swsPrefs. The comfort panel's own rules are scoped by ID and currently win, but any added specificity here reaches the shared panel in all 23 apps.",
       "The app layer redefines .warn (index.html:1288), a base component. Restyling either one silently changes the other, and the app's error copy currently inherits the base's amber box with red text.",
-      ".chip does four jobs — a claimed name, your own claim, the printed blank line, and the base pill used elsewhere. Sizing it up to fix the 16px release ✕ also widens the printed blanks and every name pill; they need separate variants.",
+      ".chip does four jobs, a claimed name, your own claim, the printed blank line, and the base pill used elsewhere. Sizing it up to fix the 16px release ✕ also widens the printed blanks and every name pill; they need separate variants.",
       "`.wkdays input{display:none}` is load-bearing for the current visual: the label uses :has(input:checked) for its selected state. Clipping the input instead (the correct fix) keeps :has working but exposes a focus ring that has to be styled on the label.",
       ".printonly/.noprint are applied from JS on individual elements (app.js:253, 285, 307, 315, 327, 330, 382, 391), not only in CSS, so changing what prints means editing app.js, not the stylesheet.",
       "The QR canvas is drawn at a fixed 300px with the cell size floored from the module count; changing #qrBox's box model or the canvas attributes without re-running showQR() produces a blurry or mis-quiet-zoned code.",
       "vendor-qrcode.js is a classic script defining a global qrcode(), loaded before app.js and precached by sw.js; deferring it or converting it to a module breaks the QR path and the offline promise together.",
       "sw.js precaches the three gstatic Firebase module URLs by exact version (12.17.1, matching the importmap at index.html:20-28). Changing the SDK version in one place without the other leaves an app serving a stale module from cache.",
-      "firestore.rules is the enforcement layer for every cap the UI shows. Any change to claim, entry or counter shape in data.js must be mirrored there and re-run through `npm run test:rules` (66-case matrix) — the UI cannot loosen a limit on its own, and a mismatch surfaces to the user as the generic 'That didn't go through' toast."
+      "firestore.rules is the enforcement layer for every cap the UI shows. Any change to claim, entry or counter shape in data.js must be mirrored there and re-run through `npm run test:rules` (66-case matrix), the UI cannot loosen a limit on its own, and a mismatch surfaces to the user as the generic 'That didn't go through' toast."
     ]
   }
 }

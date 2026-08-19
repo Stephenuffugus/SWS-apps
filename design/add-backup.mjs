@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — give the remaining apps a backup file
+   SWS STUDIO, give the remaining apps a backup file
 
    Local-only storage means the backup problem belongs to the user, and only
    six apps handed them a way to solve it. This installs the shared runtime
@@ -11,8 +11,8 @@
      node design/add-backup.mjs --check   report only, exit 1 if any app lacks it
 
    Apps NOT listed here, and why:
-     · the four Firestore apps — their data already lives on a shared board
-     · pdf-tools, image-compressor, scan-to-pdf, signature-maker — pipelines
+     · the four Firestore apps, their data already lives on a shared board
+     · pdf-tools, image-compressor, scan-to-pdf, signature-maker, pipelines
        that deliberately keep nothing between sessions
      · the six that already had a working export/restore pair
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -72,7 +72,7 @@ for (const [slug, cfg] of Object.entries(TARGETS)) {
   const card = `
 <section class="card noprint" id="backupCard">
   <h2>Keep a copy</h2>
-  <p class="hint">Everything here is saved on this device only — no account, nothing uploaded.
+  <p class="hint">Everything here is saved on this device only, no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
   now and again; it lands in your downloads and restores everything exactly as it was.</p>
   <div id="backupControls" data-sws-backup data-app="${slug}" data-name="${cfg.name}"
@@ -87,7 +87,7 @@ for (const [slug, cfg] of Object.entries(TARGETS)) {
 
   writeFileSync(page, html);
 
-  /* Precache it, or the card renders empty offline — which is exactly the
+  /* Precache it, or the card renders empty offline, which is exactly the
      situation a backup button exists for. apply.mjs does this automatically
      for runtime it installs; this script installs its own, so it has to. */
   const swPath = join(dir, 'sw.js');

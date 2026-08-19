@@ -1,4 +1,4 @@
-// Scan-to-PDF — pure helpers. No DOM, no browser APIs, so node can test them.
+// Scan-to-PDF, pure helpers. No DOM, no browser APIs, so node can test them.
 
 export function dataUrlToBytes(dataUrl) {
   const i = String(dataUrl || '').indexOf(',');
@@ -48,7 +48,7 @@ export function estimatePdfBytes(imageBytes, pageCount) {
   return Math.round(imageBytes + pageCount * 340 + 700);
 }
 
-/* Local date, not UTC — someone scanning at 9pm on the 8th should not get the
+/* Local date, not UTC, someone scanning at 9pm on the 8th should not get the
    9th in their filename. */
 export function todayStamp(d = new Date()) {
   const p = (n) => String(n).padStart(2, '0');

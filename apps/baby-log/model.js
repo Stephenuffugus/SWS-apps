@@ -1,4 +1,4 @@
-// Baby log — pure model logic. Tested in test/model.test.mjs.
+// Baby log, pure model logic. Tested in test/model.test.mjs.
 // events: {id, ts (epoch ms), kind: 'feed'|'sleep_start'|'sleep_end'|'diaper', detail}
 //   feed detail: 'left'|'right'|'bottle'   diaper detail: 'wet'|'dirty'|'both'
 
@@ -15,7 +15,7 @@ export function sortedEvents(events) {
    A newborn night straddles midnight by definition, so a calendar day cuts
    every night in half: the 11pm feed and the 2am feed land on different
    sheets, and the summary a parent hands over at 6am reports one feed for a
-   night that had five. The log day therefore turns over at 5am — a night
+   night that had five. The log day therefore turns over at 5am, a night
    counts with the day it started. */
 export const ROLL_HOUR = 5;
 
@@ -36,7 +36,7 @@ export function dayEnd(ts, roll = ROLL_HOUR) {
 export function dayWindow(ts, roll = ROLL_HOUR) {
   return { start: dayStart(ts, roll), end: dayEnd(ts, roll) };
 }
-/* Whole log-days between two instants — the basis for "Today" / "Yesterday". */
+/* Whole log-days between two instants, the basis for "Today" / "Yesterday". */
 export function dayIndexDiff(aTs, bTs, roll = ROLL_HOUR) {
   return Math.round((dayStart(aTs, roll) - dayStart(bTs, roll)) / 86400000);
 }
@@ -55,7 +55,7 @@ export function tsOk(ts, now) {
 
 /* Resolve a typed clock time to the nearest PAST occurrence, anchored on the
    day the entry already sits in. If it is 00:40 and you type 22:00 you mean
-   last night, not tonight — the case every competitor gets wrong. */
+   last night, not tonight, the case every competitor gets wrong. */
 export function nearestPast(baseTs, hh, mm, now) {
   const d = new Date(baseTs);
   d.setHours(hh, mm, 0, 0);
@@ -144,10 +144,10 @@ export function daySummary(events, dayStart, dayEnd, now) {
 
 export function agoText(ms) {
   /* A backup from a fast-clocked device, an NTP correction or a timezone
-     change used to floor to "just now" — the app's single most important
+     change used to floor to "just now", the app's single most important
      number, lying in the reassuring direction. One minute of tolerance for
      ordinary clock jitter, then say so plainly. */
-  if (ms < -60000) return 'in the future — check this phone’s clock';
+  if (ms < -60000) return 'in the future, check this phone’s clock';
   const min = Math.floor(Math.max(0, ms) / 60000);
   if (min < 1) return 'just now';
   if (min < 60) return min + 'm ago';
@@ -174,7 +174,7 @@ export function summaryText(name, summary, dateLabel, notes) {
     ? durText(summary.sleepClosedMin) + ' (+ ' + durText(summary.sleepOpenMin) + ' still asleep)'
     : durText(summary.sleepMin);
   return [
-    (name || 'Baby') + ' — ' + dateLabel,
+    (name || 'Baby') + ', ' + dateLabel,
     'Feeds: ' + summary.feeds + (feedsBits ? ' (' + feedsBits + ')' : ''),
     'Sleep: ' + sleep,
     'Diapers: ' + summary.diapers + (diaperBits ? ' (' + diaperBits + ')' : ''),

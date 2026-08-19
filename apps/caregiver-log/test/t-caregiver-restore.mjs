@@ -94,7 +94,7 @@ const COPY = {
     { label: 'school run', capacity: 1, people: [] },
   ],
   entries: [
-    { author: 'Rosalie', type: 'medication', text: 'Gave Donepezil — 5mg',
+    { author: 'Rosalie', type: 'medication', text: 'Gave Donepezil, 5mg',
       happenedAt: '2026-03-04T14:00:00.000Z', writtenAt: '2026-03-04T23:40:00.000Z', editedAt: null, status: 'ok' },
     { author: 'Dana', type: 'question', text: 'Ask about the ankle swelling.',
       happenedAt: '2026-03-05T09:15:00.000Z', writtenAt: '2026-03-05T09:15:00.000Z', editedAt: null, status: 'ok' },
@@ -165,7 +165,7 @@ await board(async ({ page, errors, overflow, axe }) => {
 
   const dose = after.stored.find(b => /Donepezil/.test(b));
   ok('the time it HAPPENED is preserved, not re-dated to the restore',
-    /^\[when 2026-03-04T\d\d:\d\d\] Gave Donepezil — 5mg$/.test(dose), dose);
+    /^\[when 2026-03-04T\d\d:\d\d\] Gave Donepezil, 5mg$/.test(dose), dose);
   const doseRow = after.rows.find(r => /Donepezil/.test(r.body));
   ok('the timeline shows it at its original time, marked as logged today',
     doseRow && doseRow.logged && doseRow.when.length > 0, JSON.stringify(doseRow));
@@ -178,7 +178,7 @@ await board(async ({ page, errors, overflow, axe }) => {
     after.days.includes('school run') && after.days.includes('Tuesday, Aug 11'),
     JSON.stringify(after.days));
 
-  // idempotence — the same file twice must not double a year of log
+  // idempotence, the same file twice must not double a year of log
   await put(page, COPY);
   const second = await page.evaluate(() => ({
     open: document.getElementById('importDlg').open,
@@ -272,7 +272,7 @@ await board(async ({ page, errors }) => {
   // and it must not fire twice, or steal the key from someone typing
   await page.keyboard.press('Control+z');
   await page.waitForTimeout(150);
-  ok('a second Ctrl+Z does nothing — the offer expired with the toast',
+  ok('a second Ctrl+Z does nothing, the offer expired with the toast',
     (await page.evaluate(() => document.querySelectorAll('.entry').length)) === 2);
 
   await page.click('[data-fk^="delete-"]');

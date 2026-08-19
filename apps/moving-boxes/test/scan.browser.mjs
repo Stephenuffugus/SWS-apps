@@ -3,7 +3,7 @@
  * Two elements shared id="main", so getElementById('main') returned the <main>
  * that CONTAINS the reveal card, and scanning a printed label produced a blank
  * 225px page with zero console errors. helpers.test.mjs only covers pure
- * functions and could never have caught it — this can. It asserts the reveal
+ * functions and could never have caught it, this can. It asserts the reveal
  * card has a non-zero bounding box, AND that the packer's private inventory
  * and editor are not visible to whoever scanned the box.
  *
@@ -19,7 +19,7 @@ const ok = (name, fn) => {
 
 await withApp('moving-boxes', async ({ page, errors, url }) => {
   // Seal a real box through the real UI, then read back the exact label URL
-  // the app itself would print — no hand-built payload.
+  // the app itself would print, no hand-built payload.
   await page.fill('#boxRoom', 'Kitchen');
   await page.fill('#boxItems', 'Can opener\nPots and pans\nThe good knife\nColander\nTea towels');
   await page.click('#addBox');

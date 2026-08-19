@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — before / after report
+   SWS STUDIO, before / after report
 
    Builds one self-contained page showing every app before and after, in both
    themes, next to the palette it was given and why.
@@ -12,7 +12,7 @@
    fine as a local file.
 
    Screenshots are downscaled and re-encoded to JPEG inside the browser before
-   being embedded as data URIs — 92 full-page PNGs at 2x would be hundreds of
+   being embedded as data URIs, 92 full-page PNGs at 2x would be hundreds of
    megabytes; this lands around three.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -32,7 +32,7 @@ const MAX_H = 1450;
 const title = (s) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 
 /* Fraunces is the studio's own display face and is already self-hosted in the
-   repo. Inlining it keeps the page standalone — an artifact cannot reach a
+   repo. Inlining it keeps the page standalone, an artifact cannot reach a
    font CDN, and a silent fallback would undercut a page about typography. */
 const fraunces = readFileSync(join(HERE, 'fonts', 'fraunces-latin.woff2')).toString('base64');
 
@@ -99,12 +99,12 @@ const appRow = ({ slug, skin, p, before, light, dark }) => `
   </div>
   <div class="shots">
     ${shot('Before', before, `${title(slug)} before`)}
-    ${shot('After — light', light, `${title(slug)} after, light theme`)}
-    ${shot('After — dark', dark, `${title(slug)} after, dark theme`)}
+    ${shot('After, light', light, `${title(slug)} after, light theme`)}
+    ${shot('After, dark', dark, `${title(slug)} after, dark theme`)}
   </div>
 </article>`;
 
-const html = `<title>Sky Wolf Studio — 23 apps, one design system</title>
+const html = `<title>Sky Wolf Studio: 23 apps, one design system</title>
 <style>
 @font-face{
   font-family:'Fraunces';font-style:normal;font-weight:500 700;font-display:swap;
@@ -245,14 +245,13 @@ img{width:100%;height:auto;display:block;border:1px solid var(--line);border-rad
 <div class="wrap">
   <header class="top">
     <h1>One studio, twenty&#8209;three products</h1>
-    <p class="lede">Every app shares the same skeleton — spacing scale, type scale, component
+    <p class="lede">Every app shares the same skeleton, spacing scale, type scale, component
       shapes, focus behaviour, motion timing, print rules. What changes per app is <b>hue</b>,
       <b>chroma</b>, <b>paper warmth</b> (cream stationery or tinted glass), the <b>display face</b>,
       and one <b>background texture</b>.</p>
     <p class="lede">Colour is specified in OKLCH and compiled to hex, so a yellow and a blue at the
       same lightness actually look the same weight. Every text, control-boundary, focus and
-      semantic colour is solved against a WCAG target rather than chosen by eye —
-      <b>1542 of 1542 contrast checks pass</b>, and a palette that would ship unreadable fails
+      semantic colour is solved against a WCAG target rather than chosen by eye, <b>1542 of 1542 contrast checks pass</b>, and a palette that would ship unreadable fails
       the build.</p>
     <nav class="band" aria-label="Jump to an app">${band}</nav>
   </header>
@@ -260,7 +259,7 @@ img{width:100%;height:auto;display:block;border:1px solid var(--line);border-rad
   <section class="how">
     <div>
       <h2>Hue &amp; chroma</h2>
-      <p>Twenty-three apps cannot each have their own hue — the wheel is only 360° wide. So
+      <p>Twenty-three apps cannot each have their own hue, the wheel is only 360° wide. So
       saturation does as much work: <b>Caregiver Log runs at 0.035 chroma and Wheel Picker at
       0.175</b>. Two apps 15° apart at opposite ends of that range do not read as related.</p>
     </div>
@@ -274,7 +273,7 @@ img{width:100%;height:auto;display:block;border:1px solid var(--line);border-rad
       <h2>Voice</h2>
       <p>Three display faces, not twenty-three. <b>Fraunces</b> for the editorial apps,
       <b>Space Grotesk</b> for the tool-like ones, and the system stack for the four read
-      one-handed in a hurry — where a neutral face is the right answer, not a cop-out.</p>
+      one-handed in a hurry, where a neutral face is the right answer, not a cop-out.</p>
     </div>
     <div>
       <h2>Ink</h2>
@@ -289,4 +288,4 @@ ${rows.map(appRow).join('\n')}
 `;
 
 writeFileSync(join(OUT, 'report.html'), html);
-console.log(`\ndesign/out/report.html — ${rows.length} apps, ${(Buffer.byteLength(html) / 1024 / 1024).toFixed(1)} MB`);
+console.log(`\ndesign/out/report.html, ${rows.length} apps, ${(Buffer.byteLength(html) / 1024 / 1024).toFixed(1)} MB`);

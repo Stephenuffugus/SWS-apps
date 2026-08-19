@@ -1,4 +1,4 @@
-# Trackfit and the studio — decision
+# Trackfit and the studio, decision
 
 Written 2026-08-16, after four independent analysis passes over
 `github.com/Stephenuffugus/trackfit` (pnpm monorepo, Vite + React 18 + TS,
@@ -21,7 +21,7 @@ they have different answers:
 | One company, one front door, one set of practices | **yes** |
 | Off `trackfit.stevieweedseed.com` onto a studio domain | **yes, and it gets more expensive the longer you wait** |
 | Same git repo, served from `sws-apps-9646d.web.app/trackfit/` | **no** |
-| Sky Wolf Studio Play account | **no — not in year one** |
+| Sky Wolf Studio Play account | **no, not in year one** |
 
 ---
 
@@ -33,7 +33,7 @@ The mechanical objections everyone expects don't exist. **Verified:**
   GitHub Pages subpath. `VITE_BASE_PATH=/trackfit/ pnpm build` produces a
   correct bundle; every asset 200s under the subpath.
 - The manifest already uses `"start_url": "./"` and `"scope": "./"`.
-- **There is no router anywhere** in `apps/web/src` or `packages` — so
+- **There is no router anywhere** in `apps/web/src` or `packages`, so
   `firebase.json` would need no `rewrites` block.
 - The service worker self-scopes to `/trackfit/`; offline survives untouched.
 - 964K across 12 files makes it the *second*-largest app here. signup-sheets
@@ -51,8 +51,8 @@ worker keeps serving the cached copy.**
 
 The best argument *for* the subpath is that `localStorage['sws.prefs']` is
 origin-scoped, so only a shared origin shares the comfort settings. It loses
-anyway: *judgement* — there is close to zero audience overlap between a
-56–64-year-old model railroader and a teacher in August. A subdomain is a
+anyway: *judgement*, there is close to zero audience overlap between a
+56 to 64-year-old model railroader and a teacher in August. A subdomain is a
 separate origin too, so the prefs cost is identical either way, and a
 subdomain keeps CI and keeps the brand boundary enforced by DNS instead of by
 discipline.
@@ -77,24 +77,24 @@ clause by clause against the live production bundle, not the source:
 | Clause | Trackfit | Evidence |
 |---|---|---|
 | Nothing leaves your device | **true**, once the font fix lands | only two `fetch(` sites in the bundle: Vite's own polyfill, and photo-ID which is dead behind two unset env vars |
-| No account | **true — and more true than four apps here** | activation is a code SHA-256'd in-browser against an embedded allowlist; no server, works offline |
+| No account | **true, and more true than four apps here** | activation is a code SHA-256'd in-browser against an embedded allowlist; no server, works offline |
 | No ads | **true today** | `affiliate_tag` is a field on the returned object, never appended to a URL; the live Amazon link is a bare `/s` |
 | No subscription | **true and deliberate** | `VITE_PREMIUM_MONTHLY_URL` is empty; that audience resents recurring billing |
 
-The Tally telemetry POST is **not in production** — tree-shaken out because
+The Tally telemetry POST is **not in production**, tree-shaken out because
 `App.tsx:927` disables `<PremiumPricingTest>`.
 
 **Trackfit breaks exactly one studio sentence, and it isn't in the trust
 badge.** It is `hub.mjs` / `apps/index.html`: *"Every app here is free and
 always will be."* Which is why the recommendation is a footer cross-link under
-a separate heading rather than a card in the grid — a cross-link claims
+a separate heading rather than a card in the grid, a cross-link claims
 nothing, so that line stays true.
 
 ### Never port to Trackfit
 
 The `.trust` badge, the tip jar, and `design/privacy.mjs`. That generator
 hardcodes "There is no data to sell" and "collects no personal information
-from anyone, of any age" — it cannot be pointed at a paid app. Ship the same
+from anyone, of any age", it cannot be pointed at a paid app. Ship the same
 *component shape* with true Trackfit copy instead.
 
 ---
@@ -105,11 +105,11 @@ from anyone, of any age" — it cannot be pointed at a paid app. Ship the same
 
 Verified directly in `apps/web/src/lib/identify-piece.ts`:
 
-- `:202` — `const baseConfidences = [0.95, 0.72, 0.55];`
-- `:55` — `AUTO_FILL_CONFIDENCE_THRESHOLD = 0.85`
+- `:202`, `const baseConfidences = [0.95, 0.72, 0.55];`
+- `:55`, `AUTO_FILL_CONFIDENCE_THRESHOLD = 0.85`
 
 Top-1 always clears the threshold, so the stub **silently auto-fills a made-up
-piece into the user's row**. The result carries `fromStub: true` — and grep
+piece into the user's row**. The result carries `fromStub: true`, and grep
 across `apps/web/src` and `packages` returns three hits, all inside
 `identify-piece.ts` itself (`:41` declares it, `:294` and `:322` set it).
 **No component anywhere reads it.** The user is never told.
@@ -120,8 +120,8 @@ Photo-ID is the headline premium unlock, with a 3-call trial that then fires
 *Judgement:* this is a refund and consumer-protection problem before it is a
 brand problem, and it sits far worse next to a studio built on verifiable
 honesty than the paid model ever could. **Take photo-ID off the premium list
-until the Cloudflare Worker is funded and live** — it's already written,
-Haiku 4.5, roughly $0.005–0.012/call. Keep selling the inventory PDF and the
+until the Cloudflare Worker is funded and live**, it's already written,
+Haiku 4.5, roughly $0.005 to 0.012/call. Keep selling the inventory PDF and the
 full eight-vendor list; both are real and work today.
 
 ---
@@ -134,7 +134,7 @@ All four passes agreed independently.
 `VITE_PREMIUM_LIFETIME_URL:"https://payhip.com/b/zpHqr"`. A Payhip out-link
 that unlocks digital features is a Payments violation plus anti-steering, and
 **Play enforces payments at account level**. `PLAY-LAUNCH-DECISION.md` §3 keeps
-all 23 tip jars legal on exactly one clause — the payment "does not grant
+all 23 tip jars legal on exactly one clause, the payment "does not grant
 access to any digital content or services." Trackfit is that clause's
 counterexample. A violation carried in by Trackfit takes the other listings
 with it.
@@ -144,7 +144,7 @@ still marked `data_quality: "unverified-draft"`, no TWA scaffolding of any
 kind, and its own runbook names forums as the real distribution plan.
 
 **One myth worth dropping:** the domain mismatch is *not* the webview-wrapper
-violation — that clause reads "without permission from the website owner," and
+violation, that clause reads "without permission from the website owner," and
 a verified `assetlinks.json` **is** that permission. The real hazard is that
 assetlinks verification fails *soft*: get it wrong and the app still runs, it
 just shows an address bar reading `trackfit.stevieweedseed.com` to a
@@ -154,14 +154,14 @@ just shows an address bar reading `trackfit.stevieweedseed.com` to a
 
 `deploy.yml` passes `VITE_USE_REAL_PHOTO_ID` and `VITE_PHOTO_ID_PROXY_URL` in
 **from repo secrets**. Flipping one secret turns the app from sending nothing
-into POSTing a user's photo to a Worker that forwards to Anthropic — no code
+into POSTing a user's photo to a Worker that forwards to Anthropic, no code
 change, no PR, no review. If a listing ever exists, that toggle silently makes
 its Data Safety declaration false. Hard-code the flag in source so flipping it
 requires a commit.
 
 Scope correction, because this is easy to over-fear: **Data Safety is declared
 per listing.** Adding Trackfit anywhere does not touch any other app's
-declaration. The contamination path is the *account*, via payments — not the form.
+declaration. The contamination path is the *account*, via payments, not the form.
 
 ---
 
@@ -170,22 +170,22 @@ declaration. The contamination path is the *account*, via payments — not the f
 The surprise: **Trackfit is not a Tailwind app.** 384 `className` values, one
 Tailwind utility hit (and that one is a custom class). Every class is
 semantic/BEM, and the 2710-line stylesheet is 8 custom properties with alpha
-shades — architecturally the same shape as `studio.css`. It also independently
+shades, architecturally the same shape as `studio.css`. It also independently
 converged on our palette: its accent is OKLCH hue **37.6** against
 specials-planner's 38, and its paper is hue 83 against our `PAPER_HUE = 78`.
 
-### Do these regardless of every other decision — about an hour
+### Do these regardless of every other decision, about an hour
 
 These aren't branding. They're defects our own build gate would have refused
-to ship, in an app whose audience is 56–64:
+to ship, in an app whose audience is 56 to 64:
 
 1. **Three colours.** `--rule` #c9bfa8 is **1.57:1** and it is the border on
-   every text input — WCAG 2.2 SC 1.4.11 wants 3:1 for a control boundary. We
+   every text input, WCAG 2.2 SC 1.4.11 wants 3:1 for a control boundary. We
    already ship #998a73 at 3.06:1 for the same skin.
 2. **Delete six `outline: none`** (`index.css` 1004, 1052, 1078, 1753, 2411,
-   2648). Only one is repaired. The worst is `.settings-trigger` — **the gear
+   2648). Only one is repaired. The worst is `.settings-trigger`, **the gear
    that opens the accessibility panel signals keyboard focus by colour alone.**
-3. **Input font-size 14px → 16px** (`index.css:65`) — trips iOS Safari
+3. **Input font-size 14px → 16px** (`index.css:65`), trips iOS Safari
    zoom-on-focus.
 4. **Commit the self-hosted fonts** (below).
 5. **Colophon:** "A tool by Sky Wolf Studio · SWS Strategic Media LLC."
@@ -194,19 +194,19 @@ to ship, in an app whose audience is 56–64:
 
 1. **`--ui-scale` and the comfort panel.** The only item that's a product
    improvement rather than branding. Trackfit already has the right
-   architecture — `lib/prefs.ts` writes to `<html>` before hydration, same
+   architecture, `lib/prefs.ts` writes to `<html>` before hydration, same
    discipline we use. Gated on converting ~60 `font-size` declarations from px
    to rem. **Worth knowing: Trackfit's current control is already broken this
-   way** — `SettingsMenu.tsx:277` promises "increases body text by 25%" and
+   way**, `SettingsMenu.tsx:277` promises "increases body text by 25%" and
    delivers **6%**, moving ten selectors while forty sub-16px sizes stay put.
 2. **A skins row.** Tested: an 8-line row plus a new `inkHue` axis gives 24
    skins, **1622/1622 contrast checks pass**, and all 23 existing
    `design/out/*.css` come out **byte-identical**. Fixes all three colours by
-   construction and brings a real dark mode — canvas #10141d with a faint grid,
+   construction and brings a real dark mode, canvas #10141d with a faint grid,
    *which is literally a blueprint*, in an app that currently has zero
    `prefers-color-scheme` rules. The new axis is needed because `build.mjs:117`
    tints ink toward the accent and would otherwise paint a **rust** blueprint grid.
-3. **`studio.css`'s print block** — free, and Trackfit has **zero** `@media
+3. **`studio.css`'s print block**, free, and Trackfit has **zero** `@media
    print` rules today.
 
 **Open both apps side by side before taking #2.** Every colour claim here is
@@ -215,8 +215,7 @@ in a browser.
 
 **One real collision:** IBM Plex Mono. There is no `--font-mono` token in
 `studio.css` (`.tnum` is the only mono-adjacent line) and Trackfit uses Plex
-Mono in 20+ rules for its bill-of-lading register. *Judgement:* add the token —
-bill-splitter, home-inventory and moving-boxes all have ledger content that
+Mono in 20+ rules for its bill-of-lading register. *Judgement:* add the token, bill-splitter, home-inventory and moving-boxes all have ledger content that
 `.tnum` only half-serves. Don't try to express it as a fourth `voice`;
 Trackfit needs mono *and* Fraunces *and* a sans simultaneously.
 
@@ -229,12 +228,12 @@ identity. Adopting `.trust` would be drift. Those are different things.
 ## Already done, sitting uncommitted in the Trackfit repo
 
 Trackfit loaded Fraunces + IBM Plex Mono + IBM Plex Sans **from Google Fonts on
-every cold load** — telling `fonts.gstatic.com` the user's IP before anything
+every cold load**, telling `fonts.gstatic.com` the user's IP before anything
 rendered, and breaking the app in a basement with no signal, which is exactly
 where it is meant to be used.
 
 Self-hosted all four faces, latin subsets, **152 kB** (Fraunces was already in
-`design/fonts/` — we use it too). Removed the now-dead Google runtime-caching
+`design/fonts/`, we use it too). Removed the now-dead Google runtime-caching
 rules from the Workbox config, which would have re-enabled the request the
 moment a stylesheet referenced them again.
 
@@ -242,7 +241,7 @@ moment a stylesheet referenced them again.
 
 Uncommitted in `/tmp/trackfit`: `M apps/web/index.html`,
 `M apps/web/vite.config.ts`, `?? apps/web/public/fonts/`. **This needs pushing
-to `Stephenuffugus/trackfit` — it will be lost when the codespace closes.**
+to `Stephenuffugus/trackfit`, it will be lost when the codespace closes.**
 
 ---
 
@@ -250,7 +249,7 @@ to `Stephenuffugus/trackfit` — it will be lost when the codespace closes.**
 
 - **Delete `/tmp/trackfit/index.html` and `trackfit-1.html`.** Neither is
   deployed (`deploy.yml:94` uploads `apps/web/dist` only). They're superficially
-  perfect studio-format single-file PWAs, which is the trap — v0.2 against
+  perfect studio-format single-file PWAs, which is the trap, v0.2 against
   v0.3.5, four packages behind, with live `TODO(curves)`, and curves are the
   2D half of the problem domain. Two Trackfits giving different answers to the
   same question is worse than one. Git history keeps them.
@@ -259,7 +258,7 @@ to `Stephenuffugus/trackfit` — it will be lost when the codespace closes.**
   itself beta. Both sections rest on the opposite, and Kato Unitrack N is the
   largest library here at 56 pieces. Quoting a competitor's missing feature they
   shipped seven months ago is exactly the error this audience punishes. Re-centre
-  on the near-miss solver ("you'd need a 2.375-inch piece") — still unmatched.
+  on the near-miss solver ("you'd need a 2.375-inch piece"), still unmatched.
   Bonus: RailScanPro is rolling-stock only at **$19/month** against $19 once.
   That contrast is a better headline than anything in the current pitch.
 

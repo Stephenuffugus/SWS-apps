@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — preview harness
+   SWS STUDIO, preview harness
 
    Renders the same slab of real components under every skin, so the whole
    portfolio can be judged side by side instead of one app at a time. This is
@@ -44,7 +44,7 @@ const SLAB = (slug, skin) => `
   <main id="main">
   <section class="card">
     <h2>Section label</h2>
-    <p class="sub">The uppercase micro-label above is the studio's section marker — the same in all 23 apps.</p>
+    <p class="sub">The uppercase micro-label above is the studio's section marker, the same in all 23 apps.</p>
     <label class="f"><span>Text field</span>
       <input type="text" placeholder="Placeholder text" value="A filled value">
     </label>
@@ -119,7 +119,7 @@ const SLAB = (slug, skin) => `
 
 const title = (s) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 
-/** A short slab — enough to judge identity, small enough that 23 fit on one sheet. */
+/** A short slab, enough to judge identity, small enough that 23 fit on one sheet. */
 const COMPACT = (slug, skin) => `
 <div class="wrap">
   <header class="app">
@@ -149,12 +149,12 @@ function page(slug, skin, body){
   const css = readFileSync(join(OUT, `${slug}.css`), 'utf8');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title(slug)} — SWS studio preview</title>
+<title>${title(slug)}: SWS studio preview</title>
 <style>${css}</style>
 </head><body>${body}</body></html>`;
 }
 
-/* ── Contact sheet — every skin in one scrollable page ──────────────────── */
+/* ── Contact sheet, every skin in one scrollable page ──────────────────── */
 function contactSheet(){
   const frames = Object.keys(SKINS).map((slug) =>
     `<figure><figcaption>${title(slug)} <span>${SKINS[slug].voice} · ${SKINS[slug].texture} · h${SKINS[slug].hue} c${SKINS[slug].chroma} · ${SKINS[slug].paper}</span></figcaption>
@@ -163,7 +163,7 @@ function contactSheet(){
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SWS Studio — all 23 skins</title>
+<title>SWS Studio: all 23 skins</title>
 <style>
   body{margin:0;background:#14151a;color:#e8e8ea;font:15px/1.5 ui-sans-serif,system-ui,sans-serif;padding:24px}
   h1{font-size:22px;margin:0 0 4px}
@@ -174,7 +174,7 @@ function contactSheet(){
   figcaption span{color:#8b8b95;font-weight:400;font-size:11.5px}
   iframe{width:100%;height:470px;border:1px solid #2a2b33;border-radius:10px;background:#fff;display:block}
 </style></head><body>
-<h1>SWS Studio — 23 skins, one skeleton</h1>
+<h1>SWS Studio, 23 skins, one skeleton</h1>
 <p class="lede">Same components, same geometry, same spacing. Only hue, chroma, paper warmth, display face and texture change.</p>
 <div class="sheet">${frames}</div>
 </body></html>`;
@@ -215,13 +215,13 @@ if (process.argv.includes('--shots')){
     console.log(`  shot ${mode}`);
   }
   /* The contact sheet is composed from the PNGs just captured rather than from
-     23 live iframes — same picture, a fraction of the work. */
+     23 live iframes, same picture, a fraction of the work. */
   for (const mode of ['light', 'dark']){
     const cells = Object.entries(SKINS).map(([slug, k]) =>
       `<figure><figcaption>${title(slug)}<span>${k.voice} · ${k.texture} · h${k.hue} c${k.chroma} · ${k.paper}</span></figcaption>
        <img src="./${slug}-${mode}.png" alt=""></figure>`).join('\n');
     writeFileSync(join(OUT, 'shots', `sheet-${mode}.html`), `<!doctype html><meta charset="utf-8">
-<title>SWS Studio — 23 skins (${mode})</title><style>
+<title>SWS Studio: 23 skins (${mode})</title><style>
 body{margin:0;background:#14151a;color:#e8e8ea;font:14px/1.5 ui-sans-serif,system-ui,sans-serif;padding:20px}
 h1{font-size:20px;margin:0 0 16px}
 .sheet{display:grid;gap:16px;grid-template-columns:repeat(6,1fr)}
@@ -229,7 +229,7 @@ figure{margin:0}
 figcaption{font-size:12px;font-weight:600;padding-bottom:6px;display:flex;flex-direction:column}
 figcaption span{color:#8b8b95;font-weight:400;font-size:10px}
 img{width:100%;border:1px solid #2a2b33;border-radius:8px;display:block}
-</style><h1>SWS Studio — 23 skins, one skeleton (${mode})</h1><div class="sheet">${cells}</div>`);
+</style><h1>SWS Studio, 23 skins, one skeleton (${mode})</h1><div class="sheet">${cells}</div>`);
 
     const p = await browser.newPage({ viewport: { width: 2200, height: 1200 } });
     await p.goto(`file://${join(OUT, 'shots', `sheet-${mode}.html`)}`);

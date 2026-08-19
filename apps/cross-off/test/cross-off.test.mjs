@@ -31,7 +31,7 @@ const stored = w => JSON.parse(w.localStorage.getItem('crossoff.v1'));
 
 async function main() {
 
-console.log('\n— fresh boot —');
+console.log('\n== fresh boot ==');
 {
   const w = boot();
   ok(w.document.querySelectorAll('#tabs .tab').length === 3, 'two seeded pages plus the add tab');
@@ -41,7 +41,7 @@ console.log('\n— fresh boot —');
   ok(!!w.document.querySelector('.task .editbtn'), 'every task has a keyboard-reachable edit button');
 }
 
-console.log('\n— add, prefixes, paste-a-list —');
+console.log('\n== add, prefixes, paste-a-list ==');
 {
   const w = boot();
   const inp = w.document.getElementById('addInput');
@@ -63,7 +63,7 @@ console.log('\n— add, prefixes, paste-a-list —');
   ok(w.eval(`page().tasks.some(t=>t.text==='sign the permission slip'&&t.pri===1)`), 'prefixes parse per pasted line');
 }
 
-console.log('\n— crossing off, records, focus path —');
+console.log('\n== crossing off, records, focus path ==');
 {
   const w = boot();
   w.eval('completeTask(page().tasks[0])');
@@ -86,7 +86,7 @@ console.log('\n— crossing off, records, focus path —');
   ok(stored(w).doneToday === 1, 'un-cross bookkeeping holds');
 }
 
-console.log('\n— the morning page-flip —');
+console.log('\n== the morning page-flip ==');
 {
   const w = boot();
   // set up: one done chore, one done plain task, one unfinished
@@ -114,7 +114,7 @@ console.log('\n— the morning page-flip —');
   ok(w.eval('page().tasks.length') === 3 && w.eval('page().past.length') === 0, 'undo puts the old page back');
 }
 
-console.log('\n— a new day flips the page all by itself —');
+console.log('\n== a new day flips the page all by itself ==');
 {
   const w0 = boot();
   w0.eval(`(()=>{page().tasks[0].done=true;save();})()`);
@@ -134,7 +134,7 @@ console.log('\n— a new day flips the page all by itself —');
   ok(w.eval('page().tasks.length') === 4 && w.eval('page().past.length') === 0, 'undo puts yesterday back on the page');
 }
 
-console.log('\n— crossed-off work settles below the open list —');
+console.log('\n== crossed-off work settles below the open list ==');
 {
   const w = boot();
   w.eval('completeTask(page().tasks[0]);render()');
@@ -148,7 +148,7 @@ console.log('\n— crossed-off work settles below the open list —');
   ok(w2.document.getElementById('dayCount').style.visibility === 'hidden', 'and hides while it would read zero');
 }
 
-console.log('\n— timers survive a reload —');
+console.log('\n== timers survive a reload ==');
 {
   const w0 = boot();
   w0.eval('startCountdown(page().tasks[0], 300000)');
@@ -163,7 +163,7 @@ console.log('\n— timers survive a reload —');
   ok(w2.eval('page().tasks[0].timer.buzzed') === true, 'a deadline that passed while away does not buzz on open');
 }
 
-console.log('\n— edit sheet: note, chore, delete undo, keyboard cross-off —');
+console.log('\n== edit sheet: note, chore, delete undo, keyboard cross-off ==');
 {
   const w = boot();
   w.eval('openEditSheet(page().tasks[0])');
@@ -193,7 +193,7 @@ console.log('\n— edit sheet: note, chore, delete undo, keyboard cross-off —'
   ok(w.eval(`page().tasks.some(t=>t.text===${JSON.stringify('call the pharmacy before it closes')})`) || w.eval(`page().tasks.length`) === 4, 'undo restores the task');
 }
 
-console.log('\n— steps: the checklist within the checklist —');
+console.log('\n== steps: the checklist within the checklist ==');
 {
   const w = boot();
   ok(w.eval(`page().tasks.some(t=>t.text==='the dishwasher'&&t.steps.length===3)`), 'the sample shows the dishwasher broken into steps');
@@ -246,7 +246,7 @@ console.log('\n— steps: the checklist within the checklist —');
   ok(!w2.__pwn && !w2.document.querySelector('#shSteps img'), 'a hostile step cannot inject markup');
 }
 
-console.log('\n— user text is inert —');
+console.log('\n== user text is inert ==');
 {
   const w = boot();
   const inp = w.document.getElementById('addInput');
@@ -256,7 +256,7 @@ console.log('\n— user text is inert —');
   ok([...w.document.querySelectorAll('.task .txt')].some(t => t.textContent.includes('<img')), 'and still shows as the text they typed');
 }
 
-console.log('\n— hand me one: zero decisions between wanting to start and starting —');
+console.log('\n== hand me one: zero decisions between wanting to start and starting ==');
 {
   const w = boot();
   w.document.getElementById('handBtn').click();
@@ -281,7 +281,7 @@ console.log('\n— hand me one: zero decisions between wanting to start and star
   ok(w3.eval('findTask(state.focusTaskId).pri') === 2, 'once NOW is clear it hands you a TODAY task');
 }
 
-console.log('\n— persistence roundtrip and daily reset —');
+console.log('\n== persistence roundtrip and daily reset ==');
 {
   const w0 = boot();
   w0.eval(`(()=>{page().tasks[0].note='remember the card';page().tasks[0].chore=true;completeTask(page().tasks[1]);save();})()`);

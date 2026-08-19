@@ -1,5 +1,4 @@
-// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly —
-// the counter-coupled batches are not optional; the rules reject anything else.
+// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly, // the counter-coupled batches are not optional; the rules reject anything else.
 // Imported via an import map: the browser resolves 'firebase/*' to gstatic ESM
 // builds; node tests resolve it to the npm package against the emulator.
 import { initializeApp } from 'firebase/app';
@@ -54,7 +53,7 @@ export async function signInGoogle() {
   } catch (e) {
     const code = (e && e.code) || '';
     // Popup blocked or closed (embedded browsers, strict blockers):
-    // fall back to a full-page redirect — the page comes back signed in.
+    // fall back to a full-page redirect, the page comes back signed in.
     if (code.includes('popup') || code.includes('cancelled')) {
       await signInWithRedirect(auth, new GoogleAuthProvider());
       return null; // navigating away
@@ -286,7 +285,7 @@ export async function addEntry(boardId, board, { authorName, body, type, done })
 export const updateEntry = (boardId, entryId, fields) =>
   updateDoc(doc(db, 'boards', boardId, 'entries', entryId), fields);
 
-/* Anyone with the link can check items off — whoever's at the store wins. */
+/* Anyone with the link can check items off, whoever's at the store wins. */
 export const toggleDone = (boardId, entryId, done) =>
   updateDoc(doc(db, 'boards', boardId, 'entries', entryId), { done: !!done });
 
@@ -307,7 +306,7 @@ export async function clearChecked(boardId, entries) {
    way to reclaim anything.
 
    The rules deliberately refuse a PARTICIPANT-driven decrement (firestore.rules
-   'Participants: increment only' — a hostile client could otherwise drain the
+   'Participants: increment only', a hostile client could otherwise drain the
    counter and bypass the cap), but the owner's board-update rule allows any
    entryCount >= 0. So when the owner removes a row we batch the delete with a
    -1 and the quota is genuinely refunded. Participants keep the plain delete,

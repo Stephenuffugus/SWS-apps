@@ -13,8 +13,8 @@ service-worker cache does not open to an empty list.
 
 Everything is local. A list travels inside the URL fragment of a shareable link
 or a QR code (checks reset for the recipient); a fragment is never sent to a
-server. Arriving with a shared link offers four choices — open as a new trip,
-merge, replace, or keep mine — and every one of them, plus every delete and
+server. Arriving with a shared link offers four choices, open as a new trip,
+merge, replace, or keep mine, and every one of them, plus every delete and
 "Uncheck all", is undoable from the toast.
 
 Limits are named where they bite: item names cap at 60 characters, a share link

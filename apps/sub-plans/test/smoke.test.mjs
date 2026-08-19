@@ -1,4 +1,4 @@
-// jsdom smoke — form persists, folder prints only filled blocks, share link
+// jsdom smoke, form persists, folder prints only filled blocks, share link
 // round-trips, hostile input stays inert.
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';

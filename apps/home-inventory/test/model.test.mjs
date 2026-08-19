@@ -1,4 +1,4 @@
-// Unit tests — run: node test/model.test.mjs
+// Unit tests, run: node test/model.test.mjs
 import assert from 'node:assert/strict';
 import {
   newInventory, parseValue, totals, roomItems, byValueDesc, dataUrlToBytes,

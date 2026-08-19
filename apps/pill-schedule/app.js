@@ -1,4 +1,4 @@
-// Pill Schedule — printable weekly medication card. localStorage only.
+// Pill Schedule, printable weekly medication card. localStorage only.
 // A memory aid, never medical advice. All user data rendered via textContent.
 
 const CONFIG = { tipUrl: 'https://buy.stripe.com/3cIfZic9X91ldU131L7EQ0b' };
@@ -38,13 +38,13 @@ function savedFlag() { if (window.SWS && SWS.saved) SWS.saved({ text: 'Saved' })
 
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
-  catch (e) { toast('Could not copy — the link is selectable under the QR code.', { assertive: true }); }
+  catch (e) { toast('Could not copy, the link is selectable under the QR code.', { assertive: true }); }
 }
 
 const KEY = 'pill-schedule';
 const TIME_ORDER = ['Morning', 'Noon', 'Evening', 'Bedtime'];
 const SIZES = ['std', 'lg', 'xl', 'xxl'];
-/* Not "the one-page limit" — the card is honest about page count now, so this
+/* Not "the one-page limit", the card is honest about page count now, so this
    is only a sanity ceiling on how much one card should ever hold. */
 const ROW_CAP = 60;
 
@@ -65,7 +65,7 @@ export function sortTimes(times) {
 }
 
 /* ---------- normalising anything that claims to be a card ----------
-   Every path into the data — localStorage, a shared link — goes through here.
+   Every path into the data, localStorage, a shared link, goes through here.
    A record whose shape is slightly wrong used to throw out of renderList,
    which killed init() mid-module and left Show QR, Copy link and the dialog's
    Close button with no listeners at all, over data that was still in storage. */
@@ -104,7 +104,7 @@ function nameNodes(text) {
   let buf = '';
   for (const ch of s) {
     buf += ch;
-    if ('/-–—+·'.indexOf(ch) >= 0) {
+    if ('/--, +·'.indexOf(ch) >= 0) {
       out.push(document.createTextNode(buf));
       out.push(document.createElement('wbr'));
       buf = '';
@@ -221,7 +221,7 @@ function genericKey(name) {
   if (!k) return '';
   return BRAND[k] || k;
 }
-/* Returns [{a, b}] — pairs of medications that resolve to the same ingredient. */
+/* Returns [{a, b}], pairs of medications that resolve to the same ingredient. */
 function duplicatePairs(meds) {
   const pairs = [];
   for (let i = 0; i < meds.length; i++) {
@@ -276,7 +276,7 @@ function renderList() {
         el('div', {},
           el('strong', {}, nameNodes(m.name)),
           m.alias ? [' (', nameNodes(m.alias), ')'] : '',
-          m.dose ? ' — ' + m.dose : ''),
+          m.dose ? ', ' + m.dose : ''),
         el('div', { class: 'sub', text: when + (m.notes ? '  ·  ' + m.notes : '') }),
         flagged.has(m.id) ? el('span', { class: 'flag' }, 'check for a duplicate') : null),
       // every button on the page would otherwise announce as "Edit" / "Remove"
@@ -294,7 +294,7 @@ function renderList() {
   if (dupes.length) {
     const names = dupes.slice(0, 3)
       .map(p => p.a.name + ' and ' + p.b.name).join('; ');
-    warn.textContent = 'Two rows look like the same medicine — ' + names
+    warn.textContent = 'Two rows look like the same medicine, ' + names
       + '. Double-check with the pharmacist before this card goes on the fridge.';
     warn.classList.remove('hidden');
   } else {
@@ -383,13 +383,13 @@ function renderSheet() {
       schedRows.push(el('tr', {},
         el('td', {},
           el('div', { class: 'med' }, nameLine(m)),
-          el('div', { class: 'when' }, timeLabel(time) + (m.notes ? ' — ' + m.notes : ''))),
+          el('div', { class: 'when' }, timeLabel(time) + (m.notes ? ', ' + m.notes : ''))),
         ...DAYS.map(() => el('td', { class: 'day' }, el('span', { class: 'box' })))));
     }
   }
   const prnMeds = data.meds.filter(m => m.prn);
   const prnHeading = prnMeds.length
-    ? el('div', { class: 'prnhead' }, 'AS NEEDED — not on the schedule. Take only when it is needed.')
+    ? el('div', { class: 'prnhead' }, 'AS NEEDED, not on the schedule. Take only when it is needed.')
     : null;
   const prnRows = prnMeds.map(m => el('tr', {},
     el('td', {}, el('div', { class: 'med' }, nameLine(m))),
@@ -474,7 +474,7 @@ function renderSheet() {
 }
 
 /* The preview is the real sheet at true print width, scaled to the column it
-   sits in — not a redrawn approximation. */
+   sits in, not a redrawn approximation. */
 function fitPreview() {
   const frame = $('previewFrame'), scaler = $('sheetScale'), sheet = $('sheet');
   if (!frame || !scaler) return;
@@ -494,7 +494,7 @@ function updateFitNote() {
   const rows = rowCount(data.meds);
   const pages = pageCount;
   $('fitNote').textContent = rows + (rows === 1 ? ' row' : ' rows') + ' at ' + SIZE_PT[data.size]
-    + ' — ' + (pages === 1 ? 'fits on one page (Letter or A4).'
+    + ', ' + (pages === 1 ? 'fits on one page (Letter or A4).'
       : pages + ' pages. Each one carries the name, the date and its page number.');
 }
 
@@ -574,7 +574,7 @@ function submitMed() {
   if (!med) return;
   const others = data.meds.filter(m => m.id !== editingId);
   if (rowCount(others) + rowsOf(med) > ROW_CAP) {
-    toast('That is ' + ROW_CAP + ' rows — as much as one card should hold. '
+    toast('That is ' + ROW_CAP + ' rows, as much as one card should hold. '
       + 'Print this one, then start a second card.', { assertive: true, ms: 6000 });
     return;
   }
@@ -602,7 +602,7 @@ const pageWord = () => (pageCount === 1 ? 'prints on 1 page' : 'prints on ' + pa
 /* ---------- share ----------
    The payload is kept as small as it can honestly be: times ride as a 4-bit
    mask, empty fields are dropped rather than encoded as "", and empty tails
-   are trimmed. That is not tidiness — every character is more QR modules, and
+   are trimmed. That is not tidiness, every character is more QR modules, and
    the code stops being scannable long before the link stops working. */
 const TIME_BIT = { Morning: 1, Noon: 2, Evening: 4, Bedtime: 8 };
 function encodeCard() {
@@ -666,7 +666,7 @@ function offerShared(shared) {
     box.remove();
     let msg = 'Schedule loaded from the link';
     if (shared.trimmed) {
-      msg += ' — ' + shared.trimmed + (shared.trimmed === 1 ? ' medication' : ' medications')
+      msg += ', ' + shared.trimmed + (shared.trimmed === 1 ? ' medication' : ' medications')
         + ' past the ' + ROW_CAP + '-row limit had to be left off';
     }
     toast(msg, { ms: shared.trimmed ? 6000 : 4000 });
@@ -706,13 +706,13 @@ function showQr(url) {
 
   const quiet = 4;
   const box = qrBoxPx();
-  // an integer number of CSS pixels per module — a fractionally scaled canvas
+  // an integer number of CSS pixels per module, a fractionally scaled canvas
   // is a blurred code, which is the failure this fix exists to end
   const cssModule = qr ? Math.floor(box / (count + quiet * 2)) : 0;
   if (!qr || cssModule < MIN_MODULE_PX) {
     canvas.classList.add('hidden');
     note.textContent = 'This schedule is too big for a QR code a phone camera could read '
-      + '(' + data.meds.length + ' medications). Use the link below instead — it holds exactly the same card.';
+      + '(' + data.meds.length + ' medications). Use the link below instead, it holds exactly the same card.';
   } else {
     const dpr = Math.min(3, Math.max(1, Math.round(window.devicePixelRatio || 1)));
     const cell = cssModule * dpr;
@@ -728,7 +728,7 @@ function showQr(url) {
         if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * cell, (r + quiet) * cell, cell, cell);
       }
     }
-    note.textContent = 'Point another phone’s camera at it. The whole schedule travels inside the code — '
+    note.textContent = 'Point another phone’s camera at it. The whole schedule travels inside the code, '
       + 'nothing is uploaded.';
   }
   try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
@@ -765,7 +765,7 @@ function setSize(size, quiet) {
 }
 
 function wire() {
-  // Ctrl/Cmd+P must print the CURRENT card — stale medication info is dangerous
+  // Ctrl/Cmd+P must print the CURRENT card, stale medication info is dangerous
   window.addEventListener('beforeprint', renderSheet);
   bindText('whoInput', 'who', 40);
   bindText('allergyInput', 'allergies', 200);
@@ -793,7 +793,7 @@ function wire() {
   $('qrCopy').addEventListener('click', () => copyText($('qrUrl').value, 'Link copied'));
   $('shareBtn').addEventListener('click', () => {
     if (data.meds.length === 0) { toast('Add the medications first'); return; }
-    copyText(cardShareUrl(), 'Link copied — the whole schedule is inside it');
+    copyText(cardShareUrl(), 'Link copied, the whole schedule is inside it');
   });
   $('qrBtn').addEventListener('click', () => {
     if (data.meds.length === 0) { toast('Add the medications first'); return; }

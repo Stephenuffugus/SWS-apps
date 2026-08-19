@@ -1,9 +1,9 @@
-// Firebase web-app config — Sky Wolf Studio Apps (sws-apps-9646d).
+// Firebase web-app config, Sky Wolf Studio Apps (sws-apps-9646d).
 // NOTE: deliberately no measurementId / Analytics. The brand promise is
 // no ads and no trackers; we do not load Google Analytics in any app.
 //
 // If projectId ever starts with "demo-", the app talks to the LOCAL
-// emulators instead of production — that's the development mode.
+// emulators instead of production, that's the development mode.
 export const firebaseConfig = {
   apiKey: 'AIzaSyDjDuyvQhTS8cnZstJK1s7MxEnQkn_duJk',
   authDomain: 'sws-apps-9646d.firebaseapp.com',

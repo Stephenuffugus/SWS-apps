@@ -73,7 +73,7 @@ ok('summaryText is paste-ready', () => {
     { id: '3', ts: day0 + 5 * H, kind: 'diaper', detail: 'both' },
   ], day0, day1, day1);
   const txt = summaryText('June', s, 'Tuesday');
-  assert.ok(txt.includes('June — Tuesday'));
+  assert.ok(txt.includes('June, Tuesday'));
   assert.ok(txt.includes('Feeds: 1 (1 left)'));
   assert.ok(txt.includes('Diapers: 1 (1 both)'));
 });

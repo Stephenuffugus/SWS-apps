@@ -59,7 +59,7 @@ await t('corrupt images are skipped, not fatal', async () => {
   assert.equal(doc.getPageCount(), 1);
 });
 
-/* This used to assert the opposite — a blank one-page PDF — and that blank
+/* This used to assert the opposite, a blank one-page PDF, and that blank
    PDF is what the audit caught being downloaded and announced as "saved"
    after four unreadable files. No usable page must mean no file at all. */
 await t('zero usable pages yields NO file, so nothing can be called "saved"', async () => {
@@ -97,7 +97,7 @@ await t('a quarter turn keeps the page portrait; a half turn changes nothing', a
     assert.equal(Math.round(height), 792);
   }
   /* The 1x1 test image is square, so 90/270 must also stay on a portrait
-     sheet — the landscape rule keys off the image, not the rotation. */
+     sheet, the landscape rule keys off the image, not the rotation. */
   for (const rot of [90, 270]) {
     const { bytes, made } = await makePdfFromImages(PDFLib, P(1, { rot }), 'letter');
     assert.equal(made, 1);

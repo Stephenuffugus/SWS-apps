@@ -1,102 +1,102 @@
 {
   "slug": "packing-list",
-  "purpose": "A trip packing checklist: tap emoji preset chips (essentials/beach/camping/business/kids/international/winter) to bulk-add items, name the trip, add custom items, check them off as they hit the bag, then share the list by link or QR, print it, or \"Uncheck all\" to reuse the same list next trip — state persists in localStorage under key `packing-list` and travels in a base64url URL hash.",
-  "structure": "Single scrolling page, no router, no tabs. `div.wrap` (index.html:781) is the only container — there is NO `<main>` element. Inside: `header.app` (782-787: decorative icon.svg, `h1` \"Packing List\", `span.spacer`, `a#tipLink.tipbtn.hidden` unhidden by JS). Then three `section.card` panels: (1) `.card.noprint` 789-793 — bare `input#tripName` with no label, `h2` \"Start from a preset (tap to add)\" carrying an inline `margin-top:12px`, and empty `div.chips#presets` filled by JS; (2) `.card` 795-805 — `h2#listHead` (text replaced at runtime by the trip name), `div.fillbar.noprint > div#fill` progress bar, `div.sub.noprint#fillText` counter, empty `ul.plain#list` filled by JS, `p.hint#emptyHint` acting as the de-facto empty state, and `div.row.noprint` holding `input#customItem` + `button#addBtn.btn`; (3) `.card.noprint` 807-815 — a `div.row` of four identical `.btn`s (uncheckBtn, shareBtn, qrBtn, printBtn) and a `p.hint`. Outside `.wrap`: `div#toast[role=status][aria-live=polite]` (818), `footer.colophon` (819), and `dialog#qrDlg` (821-825) containing an inline-styled `h3`, `canvas#qrCanvas` at a hardcoded 300x300, and `button#qrClose.btn`. Flow: land cold → tap preset chips → optionally name trip → add customs → check off → share/QR/print → \"Uncheck all\" to reset for the next trip. A `#`-hash on load decodes a shared list and, if the user already has items, gates the overwrite behind a native `confirm()` (app.js:130), then strips the hash via `history.replaceState`. The `<style>` block (17-778) is a generated SWS Studio base layer spliced between `▼▼▼`/`▲▲▲` markers (18/758) with a small app layer below the `APP LAYER` marker (760-777).",
+  "purpose": "A trip packing checklist: tap emoji preset chips (essentials/beach/camping/business/kids/international/winter) to bulk-add items, name the trip, add custom items, check them off as they hit the bag, then share the list by link or QR, print it, or \"Uncheck all\" to reuse the same list next trip, state persists in localStorage under key `packing-list` and travels in a base64url URL hash.",
+  "structure": "Single scrolling page, no router, no tabs. `div.wrap` (index.html:781) is the only container, there is NO `<main>` element. Inside: `header.app` (782-787: decorative icon.svg, `h1` \"Packing List\", `span.spacer`, `a#tipLink.tipbtn.hidden` unhidden by JS). Then three `section.card` panels: (1) `.card.noprint` 789-793, bare `input#tripName` with no label, `h2` \"Start from a preset (tap to add)\" carrying an inline `margin-top:12px`, and empty `div.chips#presets` filled by JS; (2) `.card` 795-805, `h2#listHead` (text replaced at runtime by the trip name), `div.fillbar.noprint > div#fill` progress bar, `div.sub.noprint#fillText` counter, empty `ul.plain#list` filled by JS, `p.hint#emptyHint` acting as the de-facto empty state, and `div.row.noprint` holding `input#customItem` + `button#addBtn.btn`; (3) `.card.noprint` 807-815, a `div.row` of four identical `.btn`s (uncheckBtn, shareBtn, qrBtn, printBtn) and a `p.hint`. Outside `.wrap`: `div#toast[role=status][aria-live=polite]` (818), `footer.colophon` (819), and `dialog#qrDlg` (821-825) containing an inline-styled `h3`, `canvas#qrCanvas` at a hardcoded 300x300, and `button#qrClose.btn`. Flow: land cold → tap preset chips → optionally name trip → add customs → check off → share/QR/print → \"Uncheck all\" to reset for the next trip. A `#`-hash on load decodes a shared list and, if the user already has items, gates the overwrite behind a native `confirm()` (app.js:130), then strips the hash via `history.replaceState`. The `<style>` block (17-778) is a generated SWS Studio base layer spliced between `▼▼▼`/`▲▲▲` markers (18/758) with a small app layer below the `APP LAYER` marker (760-777).",
   "cssClasses": [
-    "`.wrap` — page container, max-width var(--wrap), safe-area inline padding (base:234)",
-    "`header.app` — banner flex row, min-height 44+16px (base:259)",
-    "`header.app img` / `.mark` — 32px app icon (base:266)",
-    "`header.app .tagline` and `.hero`/`.hero h2`/`.hero p` — subtitle and intro block; both UNUSED here (base:275, :303)",
-    "`header.app .spacer` — flex:1 pusher between h1 and tip link (base:284)",
-    "`a.tipbtn` — 36px pill tip-jar link; `.hidden` removed by JS at app.js:123 (base:288)",
-    "`footer.colophon` — 13px centered footer at --ink-3; links overridden to inherit by inline style (base:308)",
-    "`section.card` / `.card` — the three panel surfaces, 20px padding rising to 24px ≥30rem (base:337)",
-    "`section.card > h2` / `.card > h2` — 12px UPPERCASE letterspaced eyebrow; this wraps `#listHead`, i.e. the user's trip name (base:349)",
-    "`.card .sub` — 15px muted secondary line with a 16px bottom margin that is reserved even when empty (base:360)",
-    "`.sub` — 15px muted secondary text; used on `#fillText` (base:565)",
-    "`.hint` / `.footnote` / `.small` — 13px muted note capped at --measure; used on `#emptyHint` and the card-3 note (base:516)",
-    "`.row` — wrapping flex, children `flex:1 1 12rem`; used for the add-row and the 4-button bar (base:250)",
-    "`.chips` — flex-wrap container for the preset buttons (base:536)",
-    "`.chip` — ~28px pill; JS applies it to `<button>` elements, so it is a control here despite being styled as passive display and carrying no cursor:pointer (base:526)",
-    "`.chip.on` — selected chip state; UNUSED, presets never show added state (base:537)",
-    "`.btn` — 44px control, --t-sm text; every one of the app's 6 buttons uses it bare (base:436)",
-    "`.btn.primary` — accent-filled primary; UNUSED, so the accent never appears on a control (base:458)",
-    "`.btn.danger` — negative-tinted; UNUSED, though `#uncheckBtn` and `.x` are the candidates (base:466)",
-    "`.btn.ghost` / `.btn.plain` — transparent tertiary; UNUSED (base:469)",
-    "`.btn.small` / `.btn.big` / `.btn.block` / `.btn.icon` — size variants incl. the 44px square icon button `.x` should have been; all UNUSED (base:475-481)",
-    "`ul.plain` / `ol.plain` — list reset; the item list (base:552)",
-    "`ul.plain > li` — 44px min row, 15px text, bottom hairline in --line (base:553)",
-    "`ul.plain .grow` — flex filler inside a row; UNUSED here (base:561)",
-    "`ul.plain label` — APP OVERRIDE: item text at .98rem, flex:1, 9px vertical padding, gap 10px (app:764)",
-    "`ul.plain li.done label` — muted + line-through; depends on the JS-applied `li.done` class (app:769)",
-    "`ul.plain input[type=checkbox]` — 20px accent checkbox; redundantly restates the base 1.25rem (app:768)",
-    "`label:has(> input[type=checkbox])` — base rule granting the item row its 44px min-height; survives the app override only because that override omits min-height (base:429)",
-    "`.x` — BESPOKE remove button: no border, no background, 15.2px glyph, 6px padding, ~27px box; entirely outside the `.btn` system and has no hover rule (app:770)",
-    "`.fillbar` — 8px progress track on --chip, margin 8px 0 4px (app:761)",
-    "`.fillbar > div` — accent fill; width set inline by JS, 0.3s transition (app:762)",
-    "`.empty` / `.empty .glyph` / `.empty h3` / `.empty p` — the design system's real empty-state component; UNUSED, app substitutes a `.hint` (base:570-593)",
-    "`.well`, `.trust`, `.seg`/`.seg button`, `.actionbar` — inset well, privacy stamp, segmented control, sticky action bar; all defined, all UNUSED (base:363, :323, :483, :644)",
-    "`.tablewrap` / `table` / `th` / `td` — table system; UNUSED, app has no tables (base:597-619)",
-    "`.stack`/`.stack-sm`/`.stack-lg`, `.cluster`, `.frow` — layout primitives; all UNUSED (base:241, :246, :417)",
-    "`label.f` / `.field` / `label.f > span` — the portfolio's field-label convention; UNUSED, this app has zero `<label>` elements in static markup (base:407)",
-    "`.warn` — warning callout; UNUSED (base:540)",
-    "`.hidden` — `display:none !important`; JS toggles it on `#emptyHint` and `#tipLink` (base:691)",
-    "`.noprint` / `.no-print` / `.screenonly` — print-hidden; used in markup and JS-applied to `.x` (base:733, app:773)",
-    "`.printonly` — print-only reveal; UNUSED, nothing is print-only (base:734)",
-    "`.sr-only` and `.skip` — visually-hidden text and skip-to-content link; both UNUSED, no skip link exists (base:673, :679)",
-    "`.em` / `.muted` / `.nowrap` / `.tnum` — inline text utilities; all UNUSED (base:525, :694)",
-    "`:focus-visible` — 2px --focus outline, 2px offset, 4px --focus-halo ring (base:661)",
-    "`::placeholder` — --ink-3; carries the ONLY labelling for both text inputs (base:393)",
-    "`#toast` — fixed bottom pill live region, role=status (base:623)",
-    "`#toast.show` — visible state, JS toggled on a 2400ms timer (base:641)",
-    "`#tripName` — trip name input, unlabeled, maxlength 60 (790)",
-    "`#presets` — chips container, JS-filled (792)",
-    "`#listHead` — h2 whose text is overwritten with the trip name (796)",
-    "`#fill` — progress fill, inline width owned by JS (797)",
-    "`#fillText` — 'N packed · N to go' / '🎉 All packed!' counter (798)",
-    "`#list` — the ul, fully re-rendered on every interaction (799)",
-    "`#emptyHint` — de-facto empty state, JS-toggled via `.hidden` (800)",
-    "`#customItem` / `#addBtn` — add-item input and button; button carries inline `flex:0 0 auto` (802-803)",
-    "`#uncheckBtn` / `#shareBtn` / `#qrBtn` / `#printBtn` — the four undifferentiated action buttons (809-812)",
-    "`#qrDlg` / `#qrCanvas` / `#qrClose` — QR dialog, 300×300 canvas, close button; dialog and h3 are inline-styled (821-825)",
-    "`#tipLink` — tip jar anchor, unhidden by JS when CONFIG.tipUrl is set (786)"
+    "`.wrap`, page container, max-width var(--wrap), safe-area inline padding (base:234)",
+    "`header.app`, banner flex row, min-height 44+16px (base:259)",
+    "`header.app img` / `.mark`, 32px app icon (base:266)",
+    "`header.app .tagline` and `.hero`/`.hero h2`/`.hero p`, subtitle and intro block; both UNUSED here (base:275, :303)",
+    "`header.app .spacer`, flex:1 pusher between h1 and tip link (base:284)",
+    "`a.tipbtn`, 36px pill tip-jar link; `.hidden` removed by JS at app.js:123 (base:288)",
+    "`footer.colophon`, 13px centered footer at --ink-3; links overridden to inherit by inline style (base:308)",
+    "`section.card` / `.card`, the three panel surfaces, 20px padding rising to 24px ≥30rem (base:337)",
+    "`section.card > h2` / `.card > h2`, 12px UPPERCASE letterspaced eyebrow; this wraps `#listHead`, i.e. the user's trip name (base:349)",
+    "`.card .sub`, 15px muted secondary line with a 16px bottom margin that is reserved even when empty (base:360)",
+    "`.sub`, 15px muted secondary text; used on `#fillText` (base:565)",
+    "`.hint` / `.footnote` / `.small`, 13px muted note capped at --measure; used on `#emptyHint` and the card-3 note (base:516)",
+    "`.row`, wrapping flex, children `flex:1 1 12rem`; used for the add-row and the 4-button bar (base:250)",
+    "`.chips`, flex-wrap container for the preset buttons (base:536)",
+    "`.chip`, ~28px pill; JS applies it to `<button>` elements, so it is a control here despite being styled as passive display and carrying no cursor:pointer (base:526)",
+    "`.chip.on`, selected chip state; UNUSED, presets never show added state (base:537)",
+    "`.btn`, 44px control, --t-sm text; every one of the app's 6 buttons uses it bare (base:436)",
+    "`.btn.primary`, accent-filled primary; UNUSED, so the accent never appears on a control (base:458)",
+    "`.btn.danger`, negative-tinted; UNUSED, though `#uncheckBtn` and `.x` are the candidates (base:466)",
+    "`.btn.ghost` / `.btn.plain`, transparent tertiary; UNUSED (base:469)",
+    "`.btn.small` / `.btn.big` / `.btn.block` / `.btn.icon`, size variants incl. the 44px square icon button `.x` should have been; all UNUSED (base:475-481)",
+    "`ul.plain` / `ol.plain`, list reset; the item list (base:552)",
+    "`ul.plain > li`, 44px min row, 15px text, bottom hairline in --line (base:553)",
+    "`ul.plain .grow`, flex filler inside a row; UNUSED here (base:561)",
+    "`ul.plain label`, APP OVERRIDE: item text at .98rem, flex:1, 9px vertical padding, gap 10px (app:764)",
+    "`ul.plain li.done label`, muted + line-through; depends on the JS-applied `li.done` class (app:769)",
+    "`ul.plain input[type=checkbox]`, 20px accent checkbox; redundantly restates the base 1.25rem (app:768)",
+    "`label:has(> input[type=checkbox])`, base rule granting the item row its 44px min-height; survives the app override only because that override omits min-height (base:429)",
+    "`.x`, BESPOKE remove button: no border, no background, 15.2px glyph, 6px padding, ~27px box; entirely outside the `.btn` system and has no hover rule (app:770)",
+    "`.fillbar`, 8px progress track on --chip, margin 8px 0 4px (app:761)",
+    "`.fillbar > div`, accent fill; width set inline by JS, 0.3s transition (app:762)",
+    "`.empty` / `.empty .glyph` / `.empty h3` / `.empty p`, the design system's real empty-state component; UNUSED, app substitutes a `.hint` (base:570-593)",
+    "`.well`, `.trust`, `.seg`/`.seg button`, `.actionbar`, inset well, privacy stamp, segmented control, sticky action bar; all defined, all UNUSED (base:363, :323, :483, :644)",
+    "`.tablewrap` / `table` / `th` / `td`, table system; UNUSED, app has no tables (base:597-619)",
+    "`.stack`/`.stack-sm`/`.stack-lg`, `.cluster`, `.frow`, layout primitives; all UNUSED (base:241, :246, :417)",
+    "`label.f` / `.field` / `label.f > span`, the portfolio's field-label convention; UNUSED, this app has zero `<label>` elements in static markup (base:407)",
+    "`.warn`, warning callout; UNUSED (base:540)",
+    "`.hidden`, `display:none !important`; JS toggles it on `#emptyHint` and `#tipLink` (base:691)",
+    "`.noprint` / `.no-print` / `.screenonly`, print-hidden; used in markup and JS-applied to `.x` (base:733, app:773)",
+    "`.printonly`, print-only reveal; UNUSED, nothing is print-only (base:734)",
+    "`.sr-only` and `.skip`, visually-hidden text and skip-to-content link; both UNUSED, no skip link exists (base:673, :679)",
+    "`.em` / `.muted` / `.nowrap` / `.tnum`, inline text utilities; all UNUSED (base:525, :694)",
+    "`:focus-visible`, 2px --focus outline, 2px offset, 4px --focus-halo ring (base:661)",
+    "`::placeholder`, --ink-3; carries the ONLY labelling for both text inputs (base:393)",
+    "`#toast`, fixed bottom pill live region, role=status (base:623)",
+    "`#toast.show`, visible state, JS toggled on a 2400ms timer (base:641)",
+    "`#tripName`, trip name input, unlabeled, maxlength 60 (790)",
+    "`#presets`, chips container, JS-filled (792)",
+    "`#listHead`, h2 whose text is overwritten with the trip name (796)",
+    "`#fill`, progress fill, inline width owned by JS (797)",
+    "`#fillText`, 'N packed · N to go' / '🎉 All packed!' counter (798)",
+    "`#list`, the ul, fully re-rendered on every interaction (799)",
+    "`#emptyHint`, de-facto empty state, JS-toggled via `.hidden` (800)",
+    "`#customItem` / `#addBtn`, add-item input and button; button carries inline `flex:0 0 auto` (802-803)",
+    "`#uncheckBtn` / `#shareBtn` / `#qrBtn` / `#printBtn`, the four undifferentiated action buttons (809-812)",
+    "`#qrDlg` / `#qrCanvas` / `#qrClose`, QR dialog, 300×300 canvas, close button; dialog and h3 are inline-styled (821-825)",
+    "`#tipLink`, tip jar anchor, unhidden by JS when CONFIG.tipUrl is set (786)"
   ],
-  "dynamicMarkup": "All list and preset content is built at runtime by `el()` (app.js:9-23), which sets `class` via `n.className = v` — a plain overwrite, so any class a restyle wants on these nodes must be added in JS, not CSS.\n\n**Preset chips** — `renderPresets()` (app.js:51-63) clears `#presets` with `replaceChildren()` and appends one `<button class=\"chip\" type=\"button\">` per key of `PRESETS`, text from `PRESET_LABELS` (emoji + word, e.g. \"🏖️ Beach\"). No `.on`/selected state is ever applied, no `aria-pressed`, no wrapper element. Click merges the preset and toasts.\n\n**Item rows** — `renderList()` (app.js:65-84) clears `#list` and appends, per item:\n`<li class=\"done|\">` → `<label>` containing `<input type=\"checkbox\">` (checked set as a property, not an attribute) followed by a bare text node of `item.label`; then a sibling `<button class=\"x noprint\" type=\"button\" aria-label=\"Remove {label}\">✕</button>`.\nCritical couplings: the `done` class on the `<li>` (empty string when not done) drives `ul.plain li.done label`; the item text is an unwrapped text node with **no element around it**, so a restyle cannot target the label text separately without changing app.js:80; the checkbox is a **direct child** of the `<label>`, which is what makes the base `label:has(> input[type=checkbox])` 44px min-height rule match — wrapping the input in a span silently drops the row to ~36px.\n\n**Other runtime mutations:** `#emptyHint` gets `.hidden` toggled (app.js:69); `#fill` gets `style.width` set as an inline percentage (app.js:70) so CSS cannot control it; `#fillText` textContent becomes \"🎉 All packed!\" or \"N packed · N to go\" or \"\" (app.js:71-73); `#listHead` textContent is overwritten with the trip name or \"Your list\" (app.js:74, 90); `#toast` gets textContent + `.show` add/remove on a 2400ms timer (app.js:25-31); `#tipLink` has `.hidden` removed and href set (app.js:120-124); `#qrCanvas` is painted imperatively with a hardcoded `size = 300` (app.js:151-166).\n\nThe whole list re-renders on every single interaction (check, add, delete, preset merge, uncheck-all), so any CSS transition or animation attached to `li`/`label` restarts from scratch each time — a restyle that adds row enter/exit animation will flicker the entire list on every checkbox tap.",
+  "dynamicMarkup": "All list and preset content is built at runtime by `el()` (app.js:9-23), which sets `class` via `n.className = v`, a plain overwrite, so any class a restyle wants on these nodes must be added in JS, not CSS.\n\n**Preset chips**, `renderPresets()` (app.js:51-63) clears `#presets` with `replaceChildren()` and appends one `<button class=\"chip\" type=\"button\">` per key of `PRESETS`, text from `PRESET_LABELS` (emoji + word, e.g. \"🏖️ Beach\"). No `.on`/selected state is ever applied, no `aria-pressed`, no wrapper element. Click merges the preset and toasts.\n\n**Item rows**, `renderList()` (app.js:65-84) clears `#list` and appends, per item:\n`<li class=\"done|\">` → `<label>` containing `<input type=\"checkbox\">` (checked set as a property, not an attribute) followed by a bare text node of `item.label`; then a sibling `<button class=\"x noprint\" type=\"button\" aria-label=\"Remove {label}\">✕</button>`.\nCritical couplings: the `done` class on the `<li>` (empty string when not done) drives `ul.plain li.done label`; the item text is an unwrapped text node with **no element around it**, so a restyle cannot target the label text separately without changing app.js:80; the checkbox is a **direct child** of the `<label>`, which is what makes the base `label:has(> input[type=checkbox])` 44px min-height rule match, wrapping the input in a span silently drops the row to ~36px.\n\n**Other runtime mutations:** `#emptyHint` gets `.hidden` toggled (app.js:69); `#fill` gets `style.width` set as an inline percentage (app.js:70) so CSS cannot control it; `#fillText` textContent becomes \"🎉 All packed!\" or \"N packed · N to go\" or \"\" (app.js:71-73); `#listHead` textContent is overwritten with the trip name or \"Your list\" (app.js:74, 90); `#toast` gets textContent + `.show` add/remove on a 2400ms timer (app.js:25-31); `#tipLink` has `.hidden` removed and href set (app.js:120-124); `#qrCanvas` is painted imperatively with a hardcoded `size = 300` (app.js:151-166).\n\nThe whole list re-renders on every single interaction (check, add, delete, preset merge, uncheck-all), so any CSS transition or animation attached to `li`/`label` restarts from scratch each time, a restyle that adds row enter/exit animation will flicker the entire list on every checkbox tap.",
   "comfortDefects": [
     {
-      "issue": "The user's trip name — the most important string on the page and the only identifier on the printed sheet — renders as a 12px ALL-CAPS letterspaced eyebrow. `#listHead` is a direct child of `section.card`, so it inherits `font-size:var(--t-micro)` + `text-transform:uppercase` from the base card-label rule. The base's own token comment at line 148 says --t-micro is for 'uppercase labels only, never sentences'. `text-transform` also destroys the user's own capitalization ('Zoë's bachelorette' → 'ZOË'S BACHELORETTE').",
+      "issue": "The user's trip name, the most important string on the page and the only identifier on the printed sheet, renders as a 12px ALL-CAPS letterspaced eyebrow. `#listHead` is a direct child of `section.card`, so it inherits `font-size:var(--t-micro)` + `text-transform:uppercase` from the base card-label rule. The base's own token comment at line 148 says --t-micro is for 'uppercase labels only, never sentences'. `text-transform` also destroys the user's own capitalization ('Zoë's bachelorette' → 'ZOË'S BACHELORETTE').",
       "where": "index.html:796 (`<h2 id=\"listHead\">`) styled by base index.html:349-357",
       "fix": "Give the list card a real title: keep a static eyebrow `<h2>` reading 'Your list' and put the trip name in a separate `<p class=\"listtitle\">` at --t-xl, --ink, no uppercase. Update app.js:74 and app.js:90 to write to that node instead of `#listHead`."
     },
     {
-      "issue": "The preset chips are the app's primary onboarding action ('tap to add') and compute to roughly 28px tall — 13px text × 1.4 line-height + 4px padding top/bottom + 2px border. Far below the --tap 44px the design system defines at base:180, and the hardest thing on the page to hit while holding a bag.",
+      "issue": "The preset chips are the app's primary onboarding action ('tap to add') and compute to roughly 28px tall, 13px text × 1.4 line-height + 4px padding top/bottom + 2px border. Far below the --tap 44px the design system defines at base:180, and the hardest thing on the page to hit while holding a bag.",
       "where": "index.html:792 `#presets`, buttons built at app.js:55, styled by base `.chip` index.html:526-535",
-      "fix": "Do not reuse `.chip` for actionable presets. Add a `.chip.tappable`/`.presetbtn` variant at `min-height:var(--tap)`, `padding:0 var(--s4)`, `font-size:var(--t-sm)`, `cursor:pointer`, with hover and `:active` states — or switch app.js:55 to emit `class: 'btn small'` with min-height raised."
+      "fix": "Do not reuse `.chip` for actionable presets. Add a `.chip.tappable`/`.presetbtn` variant at `min-height:var(--tap)`, `padding:0 var(--s4)`, `font-size:var(--t-sm)`, `cursor:pointer`, with hover and `:active` states, or switch app.js:55 to emit `class: 'btn small'` with min-height raised."
     },
     {
-      "issue": "Item labels — the actual content of the app — are set to `.98rem` (15.68px), and the base row rule underneath sets 15px. Both are under the 16px floor the design system explicitly promises in its own comment ('Body never drops below 16px … 14px body copy is the single most common reason a free tool feels cheap'). This is read at 6am in an airport, per the skin's own note at index.html:20.",
+      "issue": "Item labels, the actual content of the app, are set to `.98rem` (15.68px), and the base row rule underneath sets 15px. Both are under the 16px floor the design system explicitly promises in its own comment ('Body never drops below 16px … 14px body copy is the single most common reason a free tool feels cheap'). This is read at 6am in an airport, per the skin's own note at index.html:20.",
       "where": "index.html:766 (`ul.plain label{font-size:.98rem}`) and base index.html:553-559 (`ul.plain > li{font-size:var(--t-sm)}`)",
-      "fix": "Drop the `.98rem` override entirely and raise the base row to `var(--t-base)` (16px), or set `font-size:var(--t-lg)` on `ul.plain label`. Also delete the redundant `ul.plain input[type=checkbox]` width/height at index.html:768 — it restates the base 1.25rem."
+      "fix": "Drop the `.98rem` override entirely and raise the base row to `var(--t-base)` (16px), or set `font-size:var(--t-lg)` on `ul.plain label`. Also delete the redundant `ul.plain input[type=checkbox]` width/height at index.html:768, it restates the base 1.25rem."
     },
     {
-      "issue": "The per-app skin's structural tokens are dead. `--r:16px` (line 26) and `--wrap:38rem` (line 27) are declared in the skin `:root`, then re-declared as `--r:14px` (line 166) and `--wrap:42rem` (line 182) in the base `:root` that follows. Equal specificity, later wins — so the app renders at 14px radius and a 672px measure instead of the intended 16px and 608px. Verified across all 23 apps: every index.html contains exactly 2 `--r` and 2 `--wrap` declarations, so the entire portfolio is rendering base defaults, not its skins.",
+      "issue": "The per-app skin's structural tokens are dead. `--r:16px` (line 26) and `--wrap:38rem` (line 27) are declared in the skin `:root`, then re-declared as `--r:14px` (line 166) and `--wrap:42rem` (line 182) in the base `:root` that follows. Equal specificity, later wins, so the app renders at 14px radius and a 672px measure instead of the intended 16px and 608px. Verified across all 23 apps: every index.html contains exactly 2 `--r` and 2 `--wrap` declarations, so the entire portfolio is rendering base defaults, not its skins.",
       "where": "index.html:26-27 (skin) overridden by index.html:166 and :182 (base); source is design/studio.css:45 and :61, concatenated after the skin at design/build.mjs:366",
       "fix": "Remove `--r` and `--wrap` from the `:root` block in design/studio.css (the skin generator already emits both for every app), then re-run `node design/build.mjs && node design/apply.mjs`. This one fix changes geometry across all 23 apps, so land it before any per-app tuning."
     },
     {
-      "issue": "The remove button is a ~27×30px box (15.2px glyph + 6px padding, no border, no background) sitting 12px from the checkbox label. It is the only destructive control on a row, the smallest target on the page, and it has no hover rule at all — zero feedback on desktop before the item vanishes.",
+      "issue": "The remove button is a ~27×30px box (15.2px glyph + 6px padding, no border, no background) sitting 12px from the checkbox label. It is the only destructive control on a row, the smallest target on the page, and it has no hover rule at all, zero feedback on desktop before the item vanishes.",
       "where": "index.html:770 (`.x{border:0; background:none; … font-size:.95rem; padding:6px}`), applied at app.js:81",
       "fix": "Retire `.x` in favour of the base `.btn.icon` (44px square, base:481) with a ghost/danger modifier, and add `:hover`/`:focus-visible` states shifting colour to `--neg` and background to `--neg-soft`. Update the class string at app.js:81 to match."
     },
     {
-      "issue": "Four buttons of identical visual weight sit in one undifferentiated row — 'Uncheck all (reuse trip)', 'Copy link', 'Show QR', 'Print'. No primary, no grouping separating the destructive reset from the three share/output actions, no ordering logic. This is the 'wall of undifferentiated controls' case exactly.",
+      "issue": "Four buttons of identical visual weight sit in one undifferentiated row, 'Uncheck all (reuse trip)', 'Copy link', 'Show QR', 'Print'. No primary, no grouping separating the destructive reset from the three share/output actions, no ordering logic. This is the 'wall of undifferentiated controls' case exactly.",
       "where": "index.html:808-813 (`div.row` with four bare `.btn`)",
       "fix": "Promote 'Copy link' to `.btn.primary`, keep 'Show QR' and 'Print' secondary, and split 'Uncheck all' onto its own line below an `<hr>` as `.btn.ghost`. Consider moving the share trio into the base `.actionbar` (base:644), which is defined and unused."
     },
     {
-      "issue": "The app's most-used action — adding a custom item — is a bare `.btn` with no primary treatment. `.btn.primary` is defined in the sheet and used nowhere, so the accent colour never appears on a control anywhere in the app.",
+      "issue": "The app's most-used action, adding a custom item, is a bare `.btn` with no primary treatment. `.btn.primary` is defined in the sheet and used nowhere, so the accent colour never appears on a control anywhere in the app.",
       "where": "index.html:803 (`<button class=\"btn\" id=\"addBtn\">`); `.btn.primary` defined at base index.html:458, zero usages",
-      "fix": "`class=\"btn primary\"` on `#addBtn`. Verify the focus ring afterwards — see the a11y finding on --focus against --accent-fill."
+      "fix": "`class=\"btn primary\"` on `#addBtn`. Verify the focus ring afterwards, see the a11y finding on --focus against --accent-fill."
     },
     {
       "issue": "On a cold open with zero items the progress bar still renders: an 8px empty grey track with 12px of margin, communicating nothing. Below it `.card .sub` reserves a 16px bottom margin for `#fillText` even though its textContent is set to the empty string, leaving a dead ~36px band between heading and empty state.",
@@ -106,7 +106,7 @@
     {
       "issue": "The QR dialog is a fixed 300px canvas inside 18px of inline padding, giving a minimum content width of ~336px with no `max-width`. On a 320px viewport (iPhone SE, small/folded Android) the dialog overflows the screen. The base `canvas{max-width:100%}` shrinks the canvas but the dialog box itself has no constraint.",
       "where": "index.html:821 (`<dialog style=\"…padding:18px…\">`) and index.html:823 (`<canvas width=\"300\" height=\"300\">`)",
-      "fix": "Move dialog styling out of the inline attribute into a `#qrDlg` rule with `max-width:min(92vw, 22rem)` and `padding:var(--s5)`, and give the canvas `width:100%; height:auto`. Keep the 300×300 attributes — they are the backing store the JS draws into."
+      "fix": "Move dialog styling out of the inline attribute into a `#qrDlg` rule with `max-width:min(92vw, 22rem)` and `padding:var(--s5)`, and give the canvas `width:100%; height:auto`. Keep the 300×300 attributes, they are the backing store the JS draws into."
     },
     {
       "issue": "The teaching copy that tells a first-time user what to do is 13px in muted --ink-2, sitting below an invisible empty `<ul>`. It is the smallest text in the card and the least prominent thing on a cold-open screen.",
@@ -119,29 +119,29 @@
       "fix": "Delete both inline `color:inherit` declarations so the base --ink-2 link colour applies, and raise `footer.colophon` from --t-xs to --t-sm."
     },
     {
-      "issue": "Inline style attributes scattered through the body will silently defeat any new stylesheet rule touching the same property — a restyle changing spacing or flex behaviour on these nodes will appear to do nothing.",
+      "issue": "Inline style attributes scattered through the body will silently defeat any new stylesheet rule touching the same property, a restyle changing spacing or flex behaviour on these nodes will appear to do nothing.",
       "where": "index.html:791 (`margin-top:12px`), :801 (`margin-top:10px`), :803 (`flex:0 0 auto`), :819 (`color:inherit` ×2), :821-824 (dialog, h3, wrapper div)",
       "fix": "Lift every one into the app layer below the `APP LAYER` marker (index.html:760) as real selectors before restyling. The only inline style that must stay is `#fill`'s width at :797, which JS owns."
     }
   ],
   "navigationDefects": [
     {
-      "issue": "There is no real empty state. A first-time user sees a card headed 'YOUR LIST' containing an empty progress bar and a 13px grey sentence. The design system ships a purpose-built `.empty` component with glyph, h3 and paragraph — and the base's own comment calls this out as the portfolio-wide gap ('most apps opened cold show an empty box and no idea what to do').",
+      "issue": "There is no real empty state. A first-time user sees a card headed 'YOUR LIST' containing an empty progress bar and a 13px grey sentence. The design system ships a purpose-built `.empty` component with glyph, h3 and paragraph, and the base's own comment calls this out as the portfolio-wide gap ('most apps opened cold show an empty box and no idea what to do').",
       "where": "index.html:800 (`p.hint#emptyHint`); unused `.empty` at base index.html:570-593",
       "fix": "Swap `#emptyHint` for `<div class=\"empty\" id=\"emptyHint\"><div class=\"glyph\">🧳</div><h3>Nothing packed yet</h3><p>Tap a preset above to add a starter set, or type your own below.</p></div>`. The `.hidden` toggle at app.js:69 keeps working unchanged."
     },
     {
-      "issue": "The primary path is not obvious. The preset chips — the fastest route to a useful list — are 28px pills in --surface-2, which computes to 1.08:1 against the card they sit on, bordered at 1.34:1. They read as passive metadata tags, not buttons. They also carry no `cursor:pointer` (base `.chip` sets none and `<button>` defaults to `cursor:default`), so the desktop pointer never changes over them.",
+      "issue": "The primary path is not obvious. The preset chips, the fastest route to a useful list, are 28px pills in --surface-2, which computes to 1.08:1 against the card they sit on, bordered at 1.34:1. They read as passive metadata tags, not buttons. They also carry no `cursor:pointer` (base `.chip` sets none and `<button>` defaults to `cursor:default`), so the desktop pointer never changes over them.",
       "where": "index.html:791-792, buttons emitted at app.js:55, base `.chip` at index.html:526-535",
       "fix": "Give the preset variant a visible affordance: `cursor:pointer`, a --line-2 border, hover to `--accent-soft`, and a leading '+' glyph. Reword the heading from 'Start from a preset (tap to add)' to an imperative like 'Start with a preset'."
     },
     {
-      "issue": "'Uncheck all (reuse trip)' wipes every check state with no confirmation, no undo and no revert affordance in the toast — and it sits FIRST in the button row at identical weight to 'Copy link', directly under a list the user has just spent minutes checking off. Fat-fingering it on a phone destroys the session's work.",
+      "issue": "'Uncheck all (reuse trip)' wipes every check state with no confirmation, no undo and no revert affordance in the toast, and it sits FIRST in the button row at identical weight to 'Copy link', directly under a list the user has just spent minutes checking off. Fat-fingering it on a phone destroys the session's work.",
       "where": "index.html:809 (`#uncheckBtn`), handler at app.js:101-105",
-      "fix": "Move it out of the primary row (own line, below a divider, `.btn.ghost`), and make the toast undoable — stash the pre-reset `items` array and offer 'Undo' in the toast."
+      "fix": "Move it out of the primary row (own line, below a divider, `.btn.ghost`), and make the toast undoable, stash the pre-reset `items` array and offer 'Undo' in the toast."
     },
     {
-      "issue": "Deleting an item is instant and irreversible — `items.splice(idx,1)` with no confirm and no undo — behind the smallest, lowest-contrast control on the page.",
+      "issue": "Deleting an item is instant and irreversible, `items.splice(idx,1)` with no confirm and no undo, behind the smallest, lowest-contrast control on the page.",
       "where": "app.js:82 (`onclick: () => { items.splice(idx, 1); save(); renderList(); }`), button at app.js:81",
       "fix": "Toast the deletion with an Undo affordance (stash the removed item and its index), or at minimum enlarge and colour the control per the `.x` comfort finding so it cannot be hit by accident."
     },
@@ -156,14 +156,14 @@
       "fix": "After merge, compare each preset against `items` and apply `.on` plus `aria-pressed` to chips whose items are all present. Recompute inside `renderList()` so the state survives deletes."
     },
     {
-      "issue": "The third card has no heading at all — an unlabeled `section.card` containing four buttons. Users navigating by heading (screen reader rotor, or just visually scanning) find a block of controls with no name explaining these are the share/output actions.",
+      "issue": "The third card has no heading at all, an unlabeled `section.card` containing four buttons. Users navigating by heading (screen reader rotor, or just visually scanning) find a block of controls with no name explaining these are the share/output actions.",
       "where": "index.html:807-815 (`section.card.noprint` with no `<h2>`)",
       "fix": "Add `<h2>Share &amp; print</h2>` as the first child, matching the eyebrow pattern of the other two cards."
     },
     {
       "issue": "Opening a shared link fires a native `confirm()` whose message concatenates the shared list name and the current item count into one dense sentence. It cannot be styled, will not match the new design system, and on mobile it is a jarring system modal as the very first interaction.",
       "where": "app.js:130-131",
-      "fix": "Replace with an in-page choice rendered into the list card — 'Someone shared “Tahoe long weekend” (12 items). [Open it] [Keep my list]' — using the base `.warn` component (base:540), currently unused."
+      "fix": "Replace with an in-page choice rendered into the list card, 'Someone shared “Tahoe long weekend” (12 items). [Open it] [Keep my list]', using the base `.warn` component (base:540), currently unused."
     },
     {
       "issue": "Share, QR and Print all look enabled on an empty list but silently no-op with a rejection toast. The affordance says the action is available; the result says it is not.",
@@ -178,27 +178,27 @@
     {
       "issue": "The trip-name input is the first thing on the page, has no label, and gives no signal that it is optional. A first-time user can read it as a required step gating the rest of the app, when the presets below are the intended entry point.",
       "where": "index.html:790 (`input#tripName`, placeholder only)",
-      "fix": "Wrap in `label.f` with visible text 'Trip name' plus a `.hint` reading 'Optional — names the printed sheet.' This also fixes the accessible-name defect."
+      "fix": "Wrap in `label.f` with visible text 'Trip name' plus a `.hint` reading 'Optional, names the printed sheet.' This also fixes the accessible-name defect."
     },
     {
       "issue": "A recipient who opens a shared link cannot re-share it: `history.replaceState` strips the hash immediately after load, so the address bar no longer carries the list. Copy link does regenerate it, but nothing signals that the visible URL has stopped matching the content.",
       "where": "app.js:137 and app.js:139 (`history.replaceState(null, '', location.pathname)`)",
-      "fix": "Defensible as a deliberate choice, but the toast at app.js:135 should say so — 'List loaded — use Copy link to pass it on.'"
+      "fix": "Defensible as a deliberate choice, but the toast at app.js:135 should say so, 'List loaded, use Copy link to pass it on.'"
     }
   ],
   "a11yDefects": [
     {
-      "issue": "Both text inputs are completely unlabeled — no `<label>`, no `aria-label`, no `aria-labelledby`. The placeholder is the only naming, and placeholders are not reliable accessible names, disappear on input, and leave the field anonymous once typed into. There is not a single `<label>` element in the entire body.",
+      "issue": "Both text inputs are completely unlabeled, no `<label>`, no `aria-label`, no `aria-labelledby`. The placeholder is the only naming, and placeholders are not reliable accessible names, disappear on input, and leave the field anonymous once typed into. There is not a single `<label>` element in the entire body.",
       "where": "index.html:790 (`input#tripName`) and index.html:802 (`input#customItem`)",
       "fix": "Wrap each in the base `label.f` pattern: `<label class=\"f\" for=\"tripName\"><span>Trip name</span><input id=\"tripName\" …></label>`. `label.f > span` is already styled at base index.html:408-414."
     },
     {
-      "issue": "Placeholder text fails contrast at 3.34:1 — `--ink-3` #798e8c on `--field` #f6fcfc, against a 4.5:1 requirement. Because the placeholder is doing the labelling work, the app's entire naming mechanism is rendered in sub-threshold grey.",
+      "issue": "Placeholder text fails contrast at 3.34:1, `--ink-3` #798e8c on `--field` #f6fcfc, against a 4.5:1 requirement. Because the placeholder is doing the labelling work, the app's entire naming mechanism is rendered in sub-threshold grey.",
       "where": "base index.html:393 (`::placeholder{color:var(--ink-3)}`), tokens at index.html:41 and :36",
       "fix": "Darken light-mode `--ink-3` to roughly #5f7573 (≈4.6:1 on --field) or point `::placeholder` at `--ink-2` (#546866, 5.87:1). The dark palette already passes at 4.93:1, so this is a light-ramp fix in design/skins.mjs."
     },
     {
-      "issue": "The footer and both its links fail contrast at 3.25:1 — `--ink-3` #798e8c on `--canvas` #eefaf9. The links are additionally forced to that colour by inline `style=\"color:inherit\"`, so the Feedback mailto and the studio link are sub-threshold and colour-indistinguishable from surrounding text.",
+      "issue": "The footer and both its links fail contrast at 3.25:1, `--ink-3` #798e8c on `--canvas` #eefaf9. The links are additionally forced to that colour by inline `style=\"color:inherit\"`, so the Feedback mailto and the studio link are sub-threshold and colour-indistinguishable from surrounding text.",
       "where": "index.html:819; `footer.colophon{color:var(--ink-3)}` at base index.html:308-316",
       "fix": "Remove both inline `color:inherit` attributes (base:317 already sets links to --ink-2 at 5.54:1) and change `footer.colophon` to `color:var(--ink-2)`."
     },
@@ -213,7 +213,7 @@
       "fix": "Add `id=\"qrTitle\"` to the h3 and `aria-labelledby=\"qrTitle\"` to the dialog."
     },
     {
-      "issue": "Preset buttons have no perceivable boundary. `.chip` fill `--surface-2` #eaf8f6 against the card `--surface` #fbfffe is 1.08:1, and its `--line` #cee2e0 border is 1.34:1 — both far below the 3:1 WCAG 1.4.11 requires for the visual boundary of a control. Seven interactive elements are effectively borderless.",
+      "issue": "Preset buttons have no perceivable boundary. `.chip` fill `--surface-2` #eaf8f6 against the card `--surface` #fbfffe is 1.08:1, and its `--line` #cee2e0 border is 1.34:1, both far below the 3:1 WCAG 1.4.11 requires for the visual boundary of a control. Seven interactive elements are effectively borderless.",
       "where": "base index.html:526-535 (`.chip`), instantiated at app.js:55",
       "fix": "For the actionable variant use `border-color:var(--line-2)` (#778f8c, 3.3:1 on --field) or an `--accent-soft` fill. Same change also fixes the tap-target finding."
     },
@@ -223,24 +223,24 @@
       "fix": "Raise the dark `--line` until it clears 3:1 against --surface, or have list rows specifically use `var(--line-2)` (#637a77) for their separator."
     },
     {
-      "issue": "The focus ring will be invisible on primary buttons the moment the overhaul introduces them: `--focus` #00837c against `--accent-fill` #35c8be is 2.24:1, below the 3:1 required for a focus indicator. Latent today only because the app uses no `.btn.primary` — but the brief promises both a primary action and stronger focus states, which lands exactly on this pair.",
+      "issue": "The focus ring will be invisible on primary buttons the moment the overhaul introduces them: `--focus` #00837c against `--accent-fill` #35c8be is 2.24:1, below the 3:1 required for a focus indicator. Latent today only because the app uses no `.btn.primary`, but the brief promises both a primary action and stronger focus states, which lands exactly on this pair.",
       "where": "base index.html:661-666 (`:focus-visible`), tokens at index.html:48 (`--focus`) and :44 (`--accent-fill`)",
       "fix": "Add an inner contrast ring so the indicator works on any ground: `box-shadow:0 0 0 2px var(--surface), 0 0 0 5px var(--focus)`, or use `--accent-deep` #007973 for the on-accent case."
     },
     {
-      "issue": "The progress bar is exposed to assistive tech as nothing at all — a bare `div` with an inline width, no `role=\"progressbar\"`, no `aria-valuenow/valuemin/valuemax`, and no programmatic association with the `#fillText` counter that describes it.",
+      "issue": "The progress bar is exposed to assistive tech as nothing at all, a bare `div` with an inline width, no `role=\"progressbar\"`, no `aria-valuenow/valuemin/valuemax`, and no programmatic association with the `#fillText` counter that describes it.",
       "where": "index.html:797 (`div.fillbar > div#fill`), width set at app.js:70, counter text at app.js:71-73",
       "fix": "Put `role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\"` on `.fillbar`, update `aria-valuenow`/`aria-valuetext` alongside the width at app.js:70, and add `aria-describedby=\"fillText\"`."
     },
     {
-      "issue": "Checking an item, deleting one, and merging a preset all trigger a full `renderList()` that silently replaces the list DOM. Progress changes ('8 packed · 4 to go') are never announced — the only live region is `#toast`, and neither the checkbox handler nor the delete handler toasts. A screen reader user gets no confirmation that a tap registered.",
+      "issue": "Checking an item, deleting one, and merging a preset all trigger a full `renderList()` that silently replaces the list DOM. Progress changes ('8 packed · 4 to go') are never announced, the only live region is `#toast`, and neither the checkbox handler nor the delete handler toasts. A screen reader user gets no confirmation that a tap registered.",
       "where": "app.js:77 (checkbox `onchange`), app.js:82 (delete `onclick`), `#toast` live region at index.html:818",
       "fix": "Make `#fillText` a polite live region (`aria-live=\"polite\" aria-atomic=\"true\"`) so the packed/remaining count announces on every change, and toast removals ('Removed Sunscreen') from the delete handler."
     },
     {
-      "issue": "Rebuilding the whole list on every checkbox change destroys and recreates the focused element, so keyboard focus is lost to `<body>` after each toggle. A keyboard user must re-tab from the top of the list for every item they check off — on a 30-item list that is unusable. This is a keyboard-operability failure, not a cosmetic one.",
+      "issue": "Rebuilding the whole list on every checkbox change destroys and recreates the focused element, so keyboard focus is lost to `<body>` after each toggle. A keyboard user must re-tab from the top of the list for every item they check off, on a 30-item list that is unusable. This is a keyboard-operability failure, not a cosmetic one.",
       "where": "app.js:77 (`onchange: () => { … renderList(); }`) combined with `list.replaceChildren()` at app.js:67",
-      "fix": "For a checkbox toggle, mutate in place — `li.classList.toggle('done')` plus a counter update — instead of calling `renderList()`. If a full re-render is kept, record the focused item index before `replaceChildren()` and restore focus to the matching checkbox afterwards."
+      "fix": "For a checkbox toggle, mutate in place, `li.classList.toggle('done')` plus a counter update, instead of calling `renderList()`. If a full re-render is kept, record the focused item index before `replaceChildren()` and restore focus to the matching checkbox afterwards."
     },
     {
       "issue": "Heading structure is technically valid (h1 → h2 → h3) but semantically misleading: `#listHead` is an `<h2>` whose text is swapped for the trip name at runtime, so the list section's accessible heading changes from 'Your list' to e.g. 'Tahoe long weekend', while the visually identical eyebrow in card 1 stays a static label. Card 3 has no heading at all, leaving a four-button group unnamed in the heading tree.",
@@ -248,19 +248,19 @@
       "fix": "Keep `<h2>Your list</h2>` static, render the trip name into a separate non-heading element, and add an `<h2>` to card 3."
     }
   ],
-  "printSupport": "**Yes, print is a genuine supported path** — there is a dedicated Print button (index.html:812 → `window.print()` at app.js:114), the README frames the list as something you carry, and a paper checklist you tick with a pen is the natural fallback when your phone is in a bag. It is secondary to on-device checking off, but it is real, and it is currently the weakest surface in the app.\n\n**Two print blocks exist and partially conflict.** Base: index.html:717-746. App layer: index.html:772-777.\n\n**What works:** cards 1 and 3 carry `.noprint` so the trip-name field, presets, action buttons and add-row all drop out; `.fillbar` and `#fillText` are individually `.noprint`; the `.x` remove buttons get `noprint` from JS (app.js:81); `header.app`, `footer.colophon` and `#toast` are hidden; `@page{margin:14mm}` is set; `tr,li{break-inside:avoid}` keeps items from splitting across pages.\n\n**What is broken or missing:**\n\n1. **The printed sheet has no title.** `header.app` is hidden, so the only identifier left is `#listHead` — rendered as a 12px uppercase letterspaced grey eyebrow (base:349-357, with base print forcing `--ink-2:#333`). A packing list printed for a trip carries no legible trip name, no app name, and no date. Nothing uses `.printonly` (base:734), which exists for exactly this.\n\n2. **Checked items may print identically to unchecked ones.** `ul.plain input[type=checkbox]{accent-color:#000}` (index.html:776) is largely inert: browsers suppress form-control backgrounds in print unless `print-color-adjust:exact` is set. The only surviving distinction is the `text-decoration:line-through` on `li.done label` (index.html:769), which does print — so the accent-color declaration is decorative and the intended checkbox fill will not appear.\n\n3. **`break-inside:avoid` on the list card is a pagination hazard.** Base index.html:737-743 applies `break-inside:avoid; page-break-inside:avoid` to `section.card`. The list card holds the entire list, so a 30-40 item list asks the engine to avoid breaking a container taller than a page. Browsers degrade gracefully but it can force a near-empty first page. The app-layer rule at :775 overrides `border` and `padding` but not `break-inside`, so it stays live.\n\n4. **`section.card{border:0; padding:4px 0}`** (index.html:775) overrides the base's `border:1px solid #bbb` (base:739), so the printed list has no frame and no visual separation from the page edge.\n\n5. **The empty state prints.** `#emptyHint` is a `.hint` with no `.noprint`. The Print button guards on `items.length === 0` (app.js:113), but Ctrl/Cmd-P bypasses that guard entirely, so printing an empty list yields a page containing only the onboarding sentence.\n\n6. **No multi-column layout.** A 40-item packing list prints as one narrow column down a full sheet, wasting most of the page. `columns:2` on `#list` inside `@media print` would halve the paper.\n\n7. **No print-specific checkbox.** For a paper checklist the ideal is a generous empty square to tick with a pen; the current 20px `accent-color` input is a screen control carried into print unchanged.",
+  "printSupport": "**Yes, print is a genuine supported path**, there is a dedicated Print button (index.html:812 → `window.print()` at app.js:114), the README frames the list as something you carry, and a paper checklist you tick with a pen is the natural fallback when your phone is in a bag. It is secondary to on-device checking off, but it is real, and it is currently the weakest surface in the app.\n\n**Two print blocks exist and partially conflict.** Base: index.html:717-746. App layer: index.html:772-777.\n\n**What works:** cards 1 and 3 carry `.noprint` so the trip-name field, presets, action buttons and add-row all drop out; `.fillbar` and `#fillText` are individually `.noprint`; the `.x` remove buttons get `noprint` from JS (app.js:81); `header.app`, `footer.colophon` and `#toast` are hidden; `@page{margin:14mm}` is set; `tr,li{break-inside:avoid}` keeps items from splitting across pages.\n\n**What is broken or missing:**\n\n1. **The printed sheet has no title.** `header.app` is hidden, so the only identifier left is `#listHead`, rendered as a 12px uppercase letterspaced grey eyebrow (base:349-357, with base print forcing `--ink-2:#333`). A packing list printed for a trip carries no legible trip name, no app name, and no date. Nothing uses `.printonly` (base:734), which exists for exactly this.\n\n2. **Checked items may print identically to unchecked ones.** `ul.plain input[type=checkbox]{accent-color:#000}` (index.html:776) is largely inert: browsers suppress form-control backgrounds in print unless `print-color-adjust:exact` is set. The only surviving distinction is the `text-decoration:line-through` on `li.done label` (index.html:769), which does print, so the accent-color declaration is decorative and the intended checkbox fill will not appear.\n\n3. **`break-inside:avoid` on the list card is a pagination hazard.** Base index.html:737-743 applies `break-inside:avoid; page-break-inside:avoid` to `section.card`. The list card holds the entire list, so a 30-40 item list asks the engine to avoid breaking a container taller than a page. Browsers degrade gracefully but it can force a near-empty first page. The app-layer rule at :775 overrides `border` and `padding` but not `break-inside`, so it stays live.\n\n4. **`section.card{border:0; padding:4px 0}`** (index.html:775) overrides the base's `border:1px solid #bbb` (base:739), so the printed list has no frame and no visual separation from the page edge.\n\n5. **The empty state prints.** `#emptyHint` is a `.hint` with no `.noprint`. The Print button guards on `items.length === 0` (app.js:113), but Ctrl/Cmd-P bypasses that guard entirely, so printing an empty list yields a page containing only the onboarding sentence.\n\n6. **No multi-column layout.** A 40-item packing list prints as one narrow column down a full sheet, wasting most of the page. `columns:2` on `#list` inside `@media print` would halve the paper.\n\n7. **No print-specific checkbox.** For a paper checklist the ideal is a generous empty square to tick with a pen; the current 20px `accent-color` input is a screen control carried into print unchanged.",
   "riskyToRestyle": [
-    "**QR canvas size is hardcoded in two places that must stay in sync.** `<canvas id=\"qrCanvas\" width=\"300\" height=\"300\">` (index.html:823) and `const canvas = $('qrCanvas'), size = 300` (app.js:155). The module math — `cell = Math.floor(size / (count + 8))` (app.js:156) and `off = Math.floor((size - cell * count) / 2)` (app.js:157) — derives cell size and the quiet-zone offset from that literal. Changing the HTML attributes without changing app.js:155 draws the QR into the corner of a larger backing store or clips it. Style the canvas with CSS (`width:100%;height:auto`); leave the attributes and the literal alone.",
-    "**`.hidden` must keep `display:none !important`** (base index.html:691). JS toggles it on `#emptyHint` (app.js:69) and removes it from `#tipLink` (app.js:123). If the empty state is swapped for the `.empty` component, the new element must still carry `id=\"emptyHint\"` and respond to `.hidden` — and `.empty`'s own `display` must not out-specify it.",
+    "**QR canvas size is hardcoded in two places that must stay in sync.** `<canvas id=\"qrCanvas\" width=\"300\" height=\"300\">` (index.html:823) and `const canvas = $('qrCanvas'), size = 300` (app.js:155). The module math, `cell = Math.floor(size / (count + 8))` (app.js:156) and `off = Math.floor((size - cell * count) / 2)` (app.js:157), derives cell size and the quiet-zone offset from that literal. Changing the HTML attributes without changing app.js:155 draws the QR into the corner of a larger backing store or clips it. Style the canvas with CSS (`width:100%;height:auto`); leave the attributes and the literal alone.",
+    "**`.hidden` must keep `display:none !important`** (base index.html:691). JS toggles it on `#emptyHint` (app.js:69) and removes it from `#tipLink` (app.js:123). If the empty state is swapped for the `.empty` component, the new element must still carry `id=\"emptyHint\"` and respond to `.hidden`, and `.empty`'s own `display` must not out-specify it.",
     "**`#toast.show` is the entire visibility mechanism** (base index.html:641, driven by app.js:28 and :30). The toast is `opacity:0; visibility:hidden` by default; any restyle changing `#toast` display or transition must preserve the `.show` contract or every piece of feedback in the app goes silent.",
-    "**`li.done` is JS-applied as a raw className string** (app.js:79, `class: item.done ? 'done' : ''`) and is the sole hook for `ul.plain li.done label{text-decoration:line-through}` (index.html:769). Renaming it in CSS without editing app.js:79 removes the only visual indication that an item is packed — and, per the print findings, the only one that survives printing.",
+    "**`li.done` is JS-applied as a raw className string** (app.js:79, `class: item.done ? 'done' : ''`) and is the sole hook for `ul.plain li.done label{text-decoration:line-through}` (index.html:769). Renaming it in CSS without editing app.js:79 removes the only visual indication that an item is packed, and, per the print findings, the only one that survives printing.",
     "**`.x` and `.chip` are class names owned by JS**, not by markup: app.js:81 emits `class: 'x noprint'`, app.js:55 emits `class: 'chip'`, and `el()` sets them via `n.className = v` (app.js:13), a full overwrite. Renaming either in the stylesheet silently unstyles every remove button and every preset.",
-    "**The item label is an unwrapped text node.** `el('label', {}, cb, item.label)` (app.js:80) appends the checkbox then a bare text node. There is no element around the label text, so it cannot be targeted, truncated, or given its own type treatment without changing app.js:80 — and if you do wrap it, keep the `<input>` a *direct* child of the `<label>`.",
+    "**The item label is an unwrapped text node.** `el('label', {}, cb, item.label)` (app.js:80) appends the checkbox then a bare text node. There is no element around the label text, so it cannot be targeted, truncated, or given its own type treatment without changing app.js:80, and if you do wrap it, keep the `<input>` a *direct* child of the `<label>`.",
     "**The 44px row height depends on a `:has()` rule the app layer only partially overrides.** Base `label:has(> input[type=checkbox]){min-height:var(--tap)}` (index.html:429-433) and app `ul.plain label{…}` (index.html:764-767) have identical specificity (0,1,2); the app rule wins on source order for the properties it declares but does NOT declare `min-height`, so the base 44px survives. Adding `min-height` to the app rule, or moving the checkbox out of direct-child position, collapses every row to ~36px.",
     "**`#fill`'s width is owned by inline JS** (`$('fill').style.width = …`, app.js:70). No CSS rule can control it. If the progress bar is redesigned as a ring, a segmented meter, or anything not driven by a percentage width, app.js:70 must change with it.",
     "**Inline `style` attributes will defeat new stylesheet rules on the same properties**: index.html:791 (`margin-top:12px`), :801 (`margin-top:10px`), :803 (`flex:0 0 auto` on `#addBtn`), :819 (`color:inherit` ×2), :821 (dialog border/radius/padding/text-align), :822 (h3 margin plus the dark-mode-breaking `color:#111`), :824 (wrapper margin). Lift these into the app layer first or the changes will appear to no-op.",
     "**The `<style>` block between the markers at index.html:18 and index.html:758 is generated and will be overwritten.** `design/apply.mjs` splices between `▼▼▼ SWS STUDIO BASE` and `▲▲▲ END SWS STUDIO BASE` (apply.mjs:35-36). All hand edits belong below the `APP LAYER` marker at index.html:760; anything above it is lost on the next `node design/build.mjs && node design/apply.mjs`.",
-    "**The duplicate-token cascade must be fixed at source, not per app.** `--r` and `--wrap` are declared twice in every generated file (skin at index.html:26-27, base at :166 and :182) and the base wins. The base copies come from design/studio.css:45 and :61, concatenated after the skin at design/build.mjs:366. Verified across all 23 apps. Fixing it changes card radius and container width portfolio-wide in one step — land it first and re-baseline any screenshots rather than compensating per app.",
-    "**Service worker caching will pin the old design.** `sw.js:2` sets `VERSION = 'pack-v5'` and `sw.js:3` precaches `./index.html`, which is where all the CSS lives; the fetch handler is cache-first (`return cached || fetched`, sw.js:19), so returning visitors keep the old stylesheet until the version string changes. Bump `VERSION` as part of the restyle commit. **Not a risk:** test/helpers.test.mjs is pure logic — it imports only from helpers.js and asserts on data, with zero DOM, class-name or structure assertions — so markup and class names can be changed freely without touching tests."
+    "**The duplicate-token cascade must be fixed at source, not per app.** `--r` and `--wrap` are declared twice in every generated file (skin at index.html:26-27, base at :166 and :182) and the base wins. The base copies come from design/studio.css:45 and :61, concatenated after the skin at design/build.mjs:366. Verified across all 23 apps. Fixing it changes card radius and container width portfolio-wide in one step, land it first and re-baseline any screenshots rather than compensating per app.",
+    "**Service worker caching will pin the old design.** `sw.js:2` sets `VERSION = 'pack-v5'` and `sw.js:3` precaches `./index.html`, which is where all the CSS lives; the fetch handler is cache-first (`return cached || fetched`, sw.js:19), so returning visitors keep the old stylesheet until the version string changes. Bump `VERSION` as part of the restyle commit. **Not a risk:** test/helpers.test.mjs is pure logic, it imports only from helpers.js and asserts on data, with zero DOM, class-name or structure assertions, so markup and class names can be changed freely without touching tests."
   ]
 }

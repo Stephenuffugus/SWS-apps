@@ -1,5 +1,5 @@
-/* Team Parent service worker — offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'team-v23';
+/* Team Parent service worker, offline-first shell. Bump VERSION on deploy. */
+const VERSION = 'team-v24';
 const ASSETS = [
   './',
   './index.html',
@@ -35,7 +35,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || !cacheable) return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so a fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets stay cache-first; only the document leads with the network, and it

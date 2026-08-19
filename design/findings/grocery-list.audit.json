@@ -3,75 +3,75 @@
   "purpose": "A live shared household grocery list: the owner signs in once, creates a board, and shares a 6-char code / link; everyone else opens it with no account and adds or checks off items in real time via Firestore snapshots. Flow: home (hero \"Start our list\" → auth dialog → createBoard → #/b/CODE) or join (paste code → Open) → board view (add box, item list with checkboxes, collapsed \"Share with the household\" disclosure holding code / copy link / QR / rotate / delete).",
   "structure": "Single-page hash-routed PWA, all CSS inline in index.html:26-97 (no external stylesheet), all view markup built in JS. Shell: div.wrap > header.app (icon img, h1 \"Grocery List\" wrapping a #/ link, span.spacer, a#tipLink.tipbtn.hidden, button#authBtn.btn.small) + main#view[aria-live=polite] (entirely replaced on every render) + footer.colophon. Outside .wrap: dialog#authDlg (h3, p.hint, #googleBtn, p.sub \"or\", input#emailInput, div.row with #authCancel/#emailBtn, p#emailSent.hint.hidden), dialog#qrDlg (h3, #qrBox > canvas#qrCanvas 300x300, div.row > #qrClose), div#toast[role=status]. Home view (app.js:84-127) injects div.hero (h2/p/button.btn.primary) + section.card \"Joining a household list?\" (div.row > code input + Open btn) + optional section.card \"Your lists\" (ul.plain of li > label + Open btn). Board view (app.js:176-267) injects section.card (add row only, no heading) + section.card (h2 \"N to get\"/\"All done\", optional p.hint empty state, ul.plain of li[.done] > label > checkbox + text, optional ✕ btn, optional \"Clear checked (n)\") + details.manage > summary + div.inner (div.sharecode, row of Copy link/QR code, owner-only row of Rotate link/Delete list). No test/ dir; the only tests are data-layer integration at /workspaces/SWS-apps/apps/signup-sheets/test/grocery.test.mjs.",
   "cssClasses": [
-    ":root — light palette tokens: bg/card/ink/muted/line/accent/accent-ink/chip/focus/neg (index.html:27-30); dark overrides at :31-36",
-    ".wrap — 600px max-width centred column, 14px side padding (:43)",
-    "header.app — flex app bar, TAG-COUPLED to <header> (:44)",
-    "header.app img — 34x34 rounded app icon, alt=\"\" (:45)",
-    "header.app h1 — 1.15rem app title (:46)",
-    "header.app h1 a — home link, color:inherit + no underline (invisible as a link) (:47)",
-    "header.app .spacer — flex:1 pusher, not in studio.css (:48)",
-    "a.tipbtn — pill tip-jar link, TAG-COUPLED to <a>, ~34px tall (:49)",
-    ".hero — centred intro block, text-align:center (:50)",
-    ".hero h2 — 1.4rem headline, -.02em tracking (:51)",
-    ".hero p — muted subhead (:52)",
-    "section.card — white panel, 14px radius/padding, TAG-COUPLED to <section> (:53)",
-    "section.card h2 — .8rem uppercase muted eyebrow; also renders the primary status \"N to get\" (:54)",
-    "input[type=text] — ATTRIBUTE-COUPLED: only text inputs styled; email/checkbox get nothing (:55-58)",
-    "input:focus-visible,button:focus-visible,a:focus-visible — 2px var(--focus) ring; excludes summary (:59)",
-    ".row — flex, 8px gap, NO flex-wrap (:60)",
-    ".row>* — flex:1; min-width:0, direct-child only (:61)",
-    "button — font-family:inherit only; no font-size/line-height reset (:62)",
-    ".btn — base button, 11px/14px pad, .95rem, ~42px computed height (:63)",
-    ".btn.primary — accent fill, bold (:64)",
-    ".btn.small — 7px/10px pad, .85rem, ~32px computed height (:65)",
-    "ul.plain — list-style:none, zero margin/padding, TAG-COUPLED to <ul> (:66)",
-    "ul.plain li — flex row, 6px gap, bottom hairline (:67)",
-    "ul.plain li:last-child — border-bottom:0 (:68)",
-    "ul.plain label — flex:1 tap row, 1.05rem, 12px vertical pad, overflow-wrap:anywhere (:69-72)",
-    "ul.plain input[type=checkbox] — 22x22, accent-color (:73)",
-    "ul.plain li.done label — muted + line-through, .done set dynamically (:74)",
-    ".byline — DEAD CSS, .72rem muted, referenced nowhere (:75)",
-    ".sharecode — 1.6rem 700 weight, .28em tracking + matching padding-left recentre hack (:76)",
-    ".banner — DEAD CSS, chip-filled notice strip, referenced nowhere (:77)",
-    ".sub — muted .82rem; used for error copy and dialog \"or\" (:78)",
-    ".hint — muted .8rem; empty state, loading, help text (:79)",
-    "details.manage — share disclosure wrapper (:80)",
-    "details.manage>summary — card-styled clickable header, list-style:none (:81)",
-    "details.manage>summary::-webkit-details-marker — hides the triangle (:82)",
-    "details.manage[open]>summary — squares the bottom corners (:83)",
-    "details.manage>.inner — attached panel body, DIRECT-CHILD combinator (:84)",
-    "dialog — modal shell, min(92vw,420px) (:85)",
-    "dialog::backdrop — rgba(0,0,0,.45) scrim (:86)",
-    "dialog h3 — 1.05rem modal title (:87)",
-    "#qrBox — hardcoded #fff QR frame, must stay white in dark mode (:88)",
-    "#toast — fixed pill, bottom:24px, opacity-only hide, z-index:50 (:89-93)",
-    "#toast.show — opacity:1 (:94)",
-    "footer.colophon — centred .78rem muted, TAG-COUPLED to <footer> (:95)",
-    ".hidden — display:none !important; used by #tipLink and #emailSent (:96)",
-    "#view — main region, wholly replaced each render, carries aria-live=polite",
-    "#authBtn — header Sign in / Sign out toggle (.btn.small)",
-    "#tipLink — tip-jar anchor, unhidden by JS when CONFIG.tipUrl set",
-    "#authDlg — sign-in modal",
-    "#googleBtn — Continue with Google, inline width:100%",
-    "#emailInput — type=email, fully inline-styled because input[type=text] misses it",
-    "#authCancel / #emailBtn — dialog action row",
-    "#emailSent — hidden 'check spam' confirmation",
-    "#qrDlg / #qrCanvas / #qrClose — QR modal, canvas fixed at 300x300"
+    ":root, light palette tokens: bg/card/ink/muted/line/accent/accent-ink/chip/focus/neg (index.html:27-30); dark overrides at :31-36",
+    ".wrap, 600px max-width centred column, 14px side padding (:43)",
+    "header.app, flex app bar, TAG-COUPLED to <header> (:44)",
+    "header.app img, 34x34 rounded app icon, alt=\"\" (:45)",
+    "header.app h1 to 1.15rem app title (:46)",
+    "header.app h1 a, home link, color:inherit + no underline (invisible as a link) (:47)",
+    "header.app .spacer, flex:1 pusher, not in studio.css (:48)",
+    "a.tipbtn, pill tip-jar link, TAG-COUPLED to <a>, ~34px tall (:49)",
+    ".hero, centred intro block, text-align:center (:50)",
+    ".hero h2 to 1.4rem headline, -.02em tracking (:51)",
+    ".hero p, muted subhead (:52)",
+    "section.card, white panel, 14px radius/padding, TAG-COUPLED to <section> (:53)",
+    "section.card h2, .8rem uppercase muted eyebrow; also renders the primary status \"N to get\" (:54)",
+    "input[type=text], ATTRIBUTE-COUPLED: only text inputs styled; email/checkbox get nothing (:55-58)",
+    "input:focus-visible,button:focus-visible,a:focus-visible, 2px var(--focus) ring; excludes summary (:59)",
+    ".row, flex, 8px gap, NO flex-wrap (:60)",
+    ".row>*, flex:1; min-width:0, direct-child only (:61)",
+    "button, font-family:inherit only; no font-size/line-height reset (:62)",
+    ".btn, base button, 11px/14px pad, .95rem, ~42px computed height (:63)",
+    ".btn.primary, accent fill, bold (:64)",
+    ".btn.small, 7px/10px pad, .85rem, ~32px computed height (:65)",
+    "ul.plain, list-style:none, zero margin/padding, TAG-COUPLED to <ul> (:66)",
+    "ul.plain li, flex row, 6px gap, bottom hairline (:67)",
+    "ul.plain li:last-child, border-bottom:0 (:68)",
+    "ul.plain label, flex:1 tap row, 1.05rem, 12px vertical pad, overflow-wrap:anywhere (:69-72)",
+    "ul.plain input[type=checkbox], 22x22, accent-color (:73)",
+    "ul.plain li.done label, muted + line-through, .done set dynamically (:74)",
+    ".byline, DEAD CSS, .72rem muted, referenced nowhere (:75)",
+    ".sharecode, 1.6rem 700 weight, .28em tracking + matching padding-left recentre hack (:76)",
+    ".banner, DEAD CSS, chip-filled notice strip, referenced nowhere (:77)",
+    ".sub, muted .82rem; used for error copy and dialog \"or\" (:78)",
+    ".hint, muted .8rem; empty state, loading, help text (:79)",
+    "details.manage, share disclosure wrapper (:80)",
+    "details.manage>summary, card-styled clickable header, list-style:none (:81)",
+    "details.manage>summary::-webkit-details-marker, hides the triangle (:82)",
+    "details.manage[open]>summary, squares the bottom corners (:83)",
+    "details.manage>.inner, attached panel body, DIRECT-CHILD combinator (:84)",
+    "dialog, modal shell, min(92vw,420px) (:85)",
+    "dialog::backdrop, rgba(0,0,0,.45) scrim (:86)",
+    "dialog h3 to 1.05rem modal title (:87)",
+    "#qrBox, hardcoded #fff QR frame, must stay white in dark mode (:88)",
+    "#toast, fixed pill, bottom:24px, opacity-only hide, z-index:50 (:89-93)",
+    "#toast.show, opacity:1 (:94)",
+    "footer.colophon, centred .78rem muted, TAG-COUPLED to <footer> (:95)",
+    ".hidden, display:none !important; used by #tipLink and #emailSent (:96)",
+    "#view, main region, wholly replaced each render, carries aria-live=polite",
+    "#authBtn, header Sign in / Sign out toggle (.btn.small)",
+    "#tipLink, tip-jar anchor, unhidden by JS when CONFIG.tipUrl set",
+    "#authDlg, sign-in modal",
+    "#googleBtn, Continue with Google, inline width:100%",
+    "#emailInput, type=email, fully inline-styled because input[type=text] misses it",
+    "#authCancel / #emailBtn, dialog action row",
+    "#emailSent, hidden 'check spam' confirmation",
+    "#qrDlg / #qrCanvas / #qrClose, QR modal, canvas fixed at 300x300"
   ],
-  "dynamicMarkup": "Everything inside main#view is generated by app.js via the el() helper (app.js:12-26), which maps {class:…} to className, {text:…} to textContent, on* keys to listeners, and everything else to setAttribute. #view is cleared with replaceChildren() on every render AND on every Firestore snapshot (app.js:88, 146, 183) — no diffing, the whole subtree is rebuilt.\n\nHome (app.js:84-127) emits: div.hero > h2 + p (with nested strong) + button.btn.primary \"Start our list\"; section.card > h2 + div.row > input[type=text][aria-label=\"List code\"] (inline text-transform/letter-spacing/text-align) + button.btn (inline flex:0 0 auto) \"Open\"; when signed in, section.card > h2 \"Your lists\" + ul.plain + p.hint \"Loading…\", then li > label(inline cursor:default) + button.btn.small \"Open\" per board, or p.hint \"No lists yet…\".\n\nBoard (app.js:176-267) emits: section.card > div.row > input[type=text] (NO class, NO aria-label, placeholder only) + button.btn.primary (inline flex:0 0 auto) \"Add\"; section.card > h2 (open.length + \" to get\" | \"All done 🎉\") + optional p.hint empty state + ul.plain; per item li[class=\"done\"|\"\"] > label > input[type=checkbox] + body text, plus conditional button.btn.small[aria-label=\"Remove item\"] \"✕\"; owner-only div(inline margin-top:10px) > button.btn.small \"Clear checked (n)\"; details.manage > summary \"Share with the household\" + div.inner > div.sharecode + div.row (button.btn.primary \"Copy link\" + button.btn \"QR code\") + owner-only div.row(inline margin-top:8px) > button.btn \"Rotate link\" + button.btn.small(inline color:var(--neg)) \"Delete list\". Not-found path emits section.card > p.sub + p > a.\n\nJS also mutates: #toast textContent + .show class (app.js:29-33), #tipLink .hidden removal (app.js:326-327), #authBtn textContent (app.js:319), #emailSent .hidden removal (app.js:306), and canvas#qrCanvas pixels via 2D context (app.js:274-281). setGrowthFooter (app.js:75-82) targets #orgLine — which DOES NOT EXIST in this app's index.html (footer.colophon has no inner span), so it silently no-ops on every render; the participant \"Made with Grocery List\" growth footer never ships. Sibling apps (home-inventory:126, team-parent:167, signup-sheets:164, caregiver-log:163, seating-chart:142) all carry the span.",
+  "dynamicMarkup": "Everything inside main#view is generated by app.js via the el() helper (app.js:12-26), which maps {class:…} to className, {text:…} to textContent, on* keys to listeners, and everything else to setAttribute. #view is cleared with replaceChildren() on every render AND on every Firestore snapshot (app.js:88, 146, 183), no diffing, the whole subtree is rebuilt.\n\nHome (app.js:84-127) emits: div.hero > h2 + p (with nested strong) + button.btn.primary \"Start our list\"; section.card > h2 + div.row > input[type=text][aria-label=\"List code\"] (inline text-transform/letter-spacing/text-align) + button.btn (inline flex:0 0 auto) \"Open\"; when signed in, section.card > h2 \"Your lists\" + ul.plain + p.hint \"Loading…\", then li > label(inline cursor:default) + button.btn.small \"Open\" per board, or p.hint \"No lists yet…\".\n\nBoard (app.js:176-267) emits: section.card > div.row > input[type=text] (NO class, NO aria-label, placeholder only) + button.btn.primary (inline flex:0 0 auto) \"Add\"; section.card > h2 (open.length + \" to get\" | \"All done 🎉\") + optional p.hint empty state + ul.plain; per item li[class=\"done\"|\"\"] > label > input[type=checkbox] + body text, plus conditional button.btn.small[aria-label=\"Remove item\"] \"✕\"; owner-only div(inline margin-top:10px) > button.btn.small \"Clear checked (n)\"; details.manage > summary \"Share with the household\" + div.inner > div.sharecode + div.row (button.btn.primary \"Copy link\" + button.btn \"QR code\") + owner-only div.row(inline margin-top:8px) > button.btn \"Rotate link\" + button.btn.small(inline color:var(--neg)) \"Delete list\". Not-found path emits section.card > p.sub + p > a.\n\nJS also mutates: #toast textContent + .show class (app.js:29-33), #tipLink .hidden removal (app.js:326-327), #authBtn textContent (app.js:319), #emailSent .hidden removal (app.js:306), and canvas#qrCanvas pixels via 2D context (app.js:274-281). setGrowthFooter (app.js:75-82) targets #orgLine, which DOES NOT EXIST in this app's index.html (footer.colophon has no inner span), so it silently no-ops on every render; the participant \"Made with Grocery List\" growth footer never ships. Sibling apps (home-inventory:126, team-parent:167, signup-sheets:164, caregiver-log:163, seating-chart:142) all carry the span.",
   "comfortDefects": [
     {
-      "issue": "The card eyebrow is .8rem (12.8px) uppercase in muted grey — and it is also the app's primary status readout, rendering \"5 to get\" / \"All done\". The single most-scanned number on the board is set at the smallest size in the app.",
+      "issue": "The card eyebrow is .8rem (12.8px) uppercase in muted grey, and it is also the app's primary status readout, rendering \"5 to get\" / \"All done\". The single most-scanned number on the board is set at the smallest size in the app.",
       "where": "index.html:54 (section.card h2), populated at app.js:216",
       "fix": "Split the two roles: keep a --t-micro eyebrow for true labels, but render the item count as a real heading at --t-xl in --ink, not muted uppercase."
     },
     {
-      "issue": "All teaching and empty-state copy is .hint at .8rem (12.8px) muted — the empty list message, \"Loading…\", \"No lists yet\", and the auth dialog's key explainer about who needs to sign in.",
+      "issue": "All teaching and empty-state copy is .hint at .8rem (12.8px) muted, the empty list message, \"Loading…\", \"No lists yet\", and the auth dialog's key explainer about who needs to sign in.",
       "where": "index.html:79 (.hint); used app.js:114,119,146,235 and index.html:114,122",
       "fix": "Raise .hint to --t-sm (15px) minimum; promote the empty state to a dedicated .empty block at --t-base."
     },
     {
-      "issue": "Error messages render at .sub = .82rem (13.12px) muted — the smallest, lowest-contrast treatment in the app is reserved for the text that tells users something went wrong.",
+      "issue": "Error messages render at .sub = .82rem (13.12px) muted, the smallest, lowest-contrast treatment in the app is reserved for the text that tells users something went wrong.",
       "where": "index.html:78 (.sub); used app.js:148,152",
       "fix": "Error copy at --t-base in --ink with a --neg accent, never in the muted small style."
     },
@@ -86,22 +86,22 @@
       "fix": "Anchor the toast above the keyboard/safe area, or render add errors inline beneath the add row."
     },
     {
-      "issue": ".btn.small computes to roughly 32px tall (7px+7px padding, .85rem text at UA line-height ~1.2, 2px border) — well under the 44px minimum. It carries the header Sign in button, the per-item ✕, Clear checked, Delete list, and the Open buttons in Your lists.",
+      "issue": ".btn.small computes to roughly 32px tall (7px+7px padding, .85rem text at UA line-height ~1.2, 2px border), well under the 44px minimum. It carries the header Sign in button, the per-item ✕, Clear checked, Delete list, and the Open buttons in Your lists.",
       "where": "index.html:65",
       "fix": "Give .btn.small min-height:var(--tap); studio.css currently sets only 36px, so raise it or stop using .small for these controls."
     },
     {
-      "issue": "The per-item ✕ remove button is the smallest target in the app — roughly 30x32px — and sits only 6px from a 48px-tall label row that users tap constantly to check items off.",
+      "issue": "The per-item ✕ remove button is the smallest target in the app, roughly 30x32px, and sits only 6px from a 48px-tall label row that users tap constantly to check items off.",
       "where": "app.js:228 (.btn.small ✕), gap set at index.html:67",
       "fix": "Use studio's .btn.icon (44x44) and increase ul.plain li gap to at least --s3."
     },
     {
-      "issue": "a.tipbtn computes to about 34px tall (6px padding, .85rem) — an under-size target in the header, adjacent to the equally small auth button.",
+      "issue": "a.tipbtn computes to about 34px tall (6px padding, .85rem), an under-size target in the header, adjacent to the equally small auth button.",
       "where": "index.html:49",
       "fix": "min-height:var(--tap) on .tipbtn, matching the header row."
     },
     {
-      "issue": ".btn sets font-size but never line-height, and `button{}` at :62 only inherits font-family — so buttons fall back to UA line-height ~1.2 and compute to roughly 42px, marginally under 44px rather than the intended comfortable size.",
+      "issue": ".btn sets font-size but never line-height, and `button{}` at :62 only inherits font-family, so buttons fall back to UA line-height ~1.2 and compute to roughly 42px, marginally under 44px rather than the intended comfortable size.",
       "where": "index.html:62-63",
       "fix": "Set min-height:var(--tap) and line-height:1 on .btn instead of relying on padding math."
     },
@@ -113,10 +113,10 @@
     {
       "issue": "viewport-fit=cover is opted into but no env(safe-area-inset-*) is used anywhere. On notched iPhones the toast at bottom:24px lands inside the home-indicator strip and .wrap's flat 14px side padding is ignored in landscape.",
       "where": "index.html:5 vs :43, :41, :90",
-      "fix": "padding-inline:max(var(--s4), env(safe-area-inset-left)) on .wrap and bottom:calc(var(--s6) + env(safe-area-inset-bottom)) on #toast — both already correct in studio.css."
+      "fix": "padding-inline:max(var(--s4), env(safe-area-inset-left)) on .wrap and bottom:calc(var(--s6) + env(safe-area-inset-bottom)) on #toast, both already correct in studio.css."
     },
     {
-      "issue": "In the owner share row, \"Rotate link\" is a .btn (~42px) and \"Delete list\" is a .btn.small (~32px), yet .row>* forces both to equal width — producing two side-by-side buttons of visibly different heights.",
+      "issue": "In the owner share row, \"Rotate link\" is a .btn (~42px) and \"Delete list\" is a .btn.small (~32px), yet .row>* forces both to equal width, producing two side-by-side buttons of visibly different heights.",
       "where": "app.js:253-264 against index.html:61,63,65",
       "fix": "Use the same size class for both and express the destructive one with .btn.danger."
     },
@@ -126,46 +126,46 @@
       "fix": "Keep .btn.primary for Add on the board; demote Copy link to a secondary once the share panel is open, or vice versa."
     },
     {
-      "issue": "--line (#e3e8ee) against --card (#ffffff) is 1.23:1 and against --bg 1.15:1, while the text input's fill (--bg) against the card is about 1.07:1 — so text fields have essentially no perceivable boundary at all in light mode. Dark mode is the same story at 1.32:1.",
+      "issue": "--line (#e3e8ee) against --card (#ffffff) is 1.23:1 and against --bg 1.15:1, while the text input's fill (--bg) against the card is about 1.07:1, so text fields have essentially no perceivable boundary at all in light mode. Dark mode is the same story at 1.32:1.",
       "where": "index.html:28 (--line), :34 (dark), :57 (input border/background)",
       "fix": "Raise the field border to a --line-2 token meeting 3:1 against the card, and give fields a fill that differs from the card surface."
     },
     {
-      "issue": "Centred body copy in the hero, the colophon and the dialog's \"or\" line — centring multi-line text at 12-13px hurts scan-back on the return sweep.",
+      "issue": "Centred body copy in the hero, the colophon and the dialog's \"or\" line, centring multi-line text at 12-13px hurts scan-back on the return sweep.",
       "where": "index.html:50 (.hero), :95 (footer.colophon), :116 (p.sub inline text-align:center)",
       "fix": "Left-align hero paragraph and colophon text; keep centring for single-word separators only."
     }
   ],
   "navigationDefects": [
     {
-      "issue": "The owner's single most important next action — sharing the link — is hidden inside a collapsed <details> at the very bottom of the board. createList() even toasts \"List ready — share the link with the household\" while the share UI is closed and below the fold.",
+      "issue": "The owner's single most important next action, sharing the link, is hidden inside a collapsed <details> at the very bottom of the board. createList() even toasts \"List ready, share the link with the household\" while the share UI is closed and below the fold.",
       "where": "app.js:246 (details.manage created without the open attribute), toast at app.js:137",
       "fix": "Open the share panel by default when the board has no items yet, or surface Copy link as a persistent header action once the user is the owner."
     },
     {
-      "issue": "The board never renders the list's own title. b.title is fetched and used only as an argument to addEntry — someone opening a shared link sees an unnamed list with no confirmation they landed in the right household.",
+      "issue": "The board never renders the list's own title. b.title is fetched and used only as an argument to addEntry, someone opening a shared link sees an unnamed list with no confirmation they landed in the right household.",
       "where": "app.js:176-267 (b.title referenced only at app.js:209 via the board object)",
       "fix": "Render b.title as the board heading above the add row."
     },
     {
-      "issue": "The empty state teaches nothing. \"Empty list, full fridge — for now.\" is charming but gives a first-time visitor no instruction to add an item or share the link, and it is set in 12.8px muted.",
+      "issue": "The empty state teaches nothing. \"Empty list, full fridge, for now.\" is charming but gives a first-time visitor no instruction to add an item or share the link, and it is set in 12.8px muted.",
       "where": "app.js:235",
       "fix": "Replace with a studio .empty block: a one-line instruction pointing at the add field plus a Share button for owners."
     },
     {
-      "issue": "No undo anywhere in the app. The ✕ deletes an item permanently with no confirmation dialog at all — unlike Rotate link, Delete list and Sign out, which all use confirm().",
+      "issue": "No undo anywhere in the app. The ✕ deletes an item permanently with no confirmation dialog at all, unlike Rotate link, Delete list and Sign out, which all use confirm().",
       "where": "app.js:228-229 (deleteEntry, no confirm) vs app.js:255, 261, 291",
       "fix": "Add an undo affordance in the toast for item deletion and Clear checked, or at minimum a confirm for multi-item destruction."
     },
     {
-      "issue": "\"Clear checked (n)\" permanently deletes n items in one batch and reports only a toast count — there is no preview of what is about to vanish and no way back.",
+      "issue": "\"Clear checked (n)\" permanently deletes n items in one batch and reports only a toast count, there is no preview of what is about to vanish and no way back.",
       "where": "app.js:239-242, data.js:293-300",
       "fix": "Confirm with the count, and offer undo via the toast."
     },
     {
       "issue": "Nothing ever tells the user their work is saved. Writes are fire-and-forget to Firestore; the only feedback is an error toast when something fails, and the offline case surfaces only as a caught error string.",
       "where": "app.js:209-210 (add), app.js:221-222 (toggle); friendly() at app.js:39-44",
-      "fix": "Add a persistent sync/offline indicator — the unused .banner class at index.html:77 appears to have been intended for exactly this."
+      "fix": "Add a persistent sync/offline indicator, the unused .banner class at index.html:77 appears to have been intended for exactly this."
     },
     {
       "issue": "There is no visible way back to home from a board. The only route is the h1 anchor, which is deliberately styled color:inherit with text-decoration:none, so it does not read as a link.",
@@ -173,12 +173,12 @@
       "fix": "Give the header title a visible affordance, or add an explicit back/home control on the board view."
     },
     {
-      "issue": "On a long list the add box is only at the top and the share panel only at the bottom, with no sticky add bar, no back-to-top and no anchors — adding an item at the store means scrolling the full list up.",
+      "issue": "On a long list the add box is only at the top and the share panel only at the bottom, with no sticky add bar, no back-to-top and no anchors, adding an item at the store means scrolling the full list up.",
       "where": "app.js:212 (add card appended first), app.js:266 (share appended last)",
       "fix": "Sticky add row (studio has .actionbar), or duplicate the add control at the list foot."
     },
     {
-      "issue": "setGrowthFooter is dead code in this app: it looks up #orgLine, which does not exist in grocery-list's markup (the footer is a bare footer.colophon), so the guard returns early on every call. Participants never see the \"Made with Grocery List — Start yours\" invitation the function exists to produce.",
+      "issue": "setGrowthFooter is dead code in this app: it looks up #orgLine, which does not exist in grocery-list's markup (the footer is a bare footer.colophon), so the guard returns early on every call. Participants never see the \"Made with Grocery List, Start yours\" invitation the function exists to produce.",
       "where": "app.js:75-82, called at app.js:85 and app.js:181; footer at index.html:109",
       "fix": "Wrap the colophon text in <span id=\"orgLine\">…</span> as every sibling app does (see home-inventory/index.html:126)."
     },
@@ -193,14 +193,14 @@
       "fix": "Reword the CTA or hero to scope the promise to the people receiving the link."
     },
     {
-      "issue": "\"Delete list\" is distinguished from the adjacent non-destructive \"Rotate link\" by text colour alone, and both are equal-width siblings in the same row — a colour-only distinction for the most destructive action in the app.",
+      "issue": "\"Delete list\" is distinguished from the adjacent non-destructive \"Rotate link\" by text colour alone, and both are equal-width siblings in the same row, a colour-only distinction for the most destructive action in the app.",
       "where": "app.js:260 (inline style color:var(--neg))",
       "fix": "Use .btn.danger (border + hover state, not just colour) and separate it from Rotate link with spacing or a divider."
     }
   ],
   "a11yDefects": [
     {
-      "issue": "main#view carries aria-live=\"polite\" while its entire subtree is destroyed and rebuilt via replaceChildren() on every Firestore snapshot. When any household member checks an item off, every other user's screen reader re-announces the whole page — add box, full item list, share panel.",
+      "issue": "main#view carries aria-live=\"polite\" while its entire subtree is destroyed and rebuilt via replaceChildren() on every Firestore snapshot. When any household member checks an item off, every other user's screen reader re-announces the whole page, add box, full item list, share panel.",
       "where": "index.html:108; replaceChildren at app.js:88, 146, 183; drawBoard called from watchBoard app.js:157 and watchEntries app.js:171",
       "fix": "Remove aria-live from #view. #toast already has role=status; route transient status there and announce item-count changes via a small dedicated live region."
     },
@@ -210,27 +210,27 @@
       "fix": "Preserve and restore document.activeElement by a stable key across redraws, or diff the list instead of rebuilding it."
     },
     {
-      "issue": "The add-item input — the primary control of the entire app — has no accessible name. It has only a placeholder; no label element, no aria-label, unlike the home code field which does get one.",
+      "issue": "The add-item input, the primary control of the entire app, has no accessible name. It has only a placeholder; no label element, no aria-label, unlike the home code field which does get one.",
       "where": "app.js:189-196 (compare app.js:98 which sets aria-label 'List code')",
       "fix": "Add aria-label=\"Add an item\" (or a visually hidden label) and keep the placeholder as an example only."
     },
     {
-      "issue": "#emailInput has no label and no aria-label — only a placeholder of \"you@example.com\".",
+      "issue": "#emailInput has no label and no aria-label, only a placeholder of \"you@example.com\".",
       "where": "index.html:117",
       "fix": "Add a <label for=\"emailInput\"> or aria-label=\"Your email address\"."
     },
     {
       "issue": "The focus ring is effectively invisible in light mode: --focus #5eead4 against --bg #f6f7f9 computes to 1.38:1 and against --card #ffffff to 1.48:1, far below the 3:1 required for focus indicators. Keyboard users cannot see where they are.",
       "where": "index.html:29 (--focus) applied at index.html:59",
-      "fix": "Use a focus colour meeting 3:1 against both surfaces plus a contrasting halo — studio.css's --focus + --focus-halo box-shadow pattern at design/studio.css:522-531 solves this."
+      "fix": "Use a focus colour meeting 3:1 against both surfaces plus a contrasting halo, studio.css's --focus + --focus-halo box-shadow pattern at design/studio.css:522-531 solves this."
     },
     {
-      "issue": "Dark mode has the inverse failure: --focus #0f766e against --card #1a2129 is 2.97:1 and against the primary button fill #2dd4bf is 2.94:1 — both below 3:1.",
+      "issue": "Dark mode has the inverse failure: --focus #0f766e against --card #1a2129 is 2.97:1 and against the primary button fill #2dd4bf is 2.94:1, both below 3:1.",
       "where": "index.html:34",
       "fix": "Pick per-scheme focus colours validated against card, canvas and accent fill."
     },
     {
-      "issue": "The focus-visible rule lists only input, button and a — it omits summary, which is a natively focusable control here (the \"Share with the household\" disclosure), so it falls back to whatever the UA draws.",
+      "issue": "The focus-visible rule lists only input, button and a, it omits summary, which is a natively focusable control here (the \"Share with the household\" disclosure), so it falls back to whatever the UA draws.",
       "where": "index.html:59; summary created at app.js:246",
       "fix": "Use a bare :focus-visible rule rather than an element allowlist."
     },
@@ -240,39 +240,39 @@
       "fix": "Interpolate the item body: aria-label: 'Remove ' + e.body."
     },
     {
-      "issue": "canvas#qrCanvas has no role, no aria-label and no text fallback, and the QR dialog shows no textual URL — so the entire share-by-QR path is empty for a non-visual user. The share code is rendered in .sharecode on the board but not inside the dialog.",
+      "issue": "canvas#qrCanvas has no role, no aria-label and no text fallback, and the QR dialog shows no textual URL, so the entire share-by-QR path is empty for a non-visual user. The share code is rendered in .sharecode on the board but not inside the dialog.",
       "where": "index.html:127; painted at app.js:274-281",
       "fix": "Give the canvas role=\"img\" and an aria-label carrying the share URL, and print the URL as selectable text beneath it."
     },
     {
-      "issue": "Neither dialog is associated with its heading (no aria-labelledby on #authDlg or #qrDlg), and the showDlg fallback degrades to setAttribute('open') — a non-modal dialog with no backdrop, no focus trap and no Escape handling.",
+      "issue": "Neither dialog is associated with its heading (no aria-labelledby on #authDlg or #qrDlg), and the showDlg fallback degrades to setAttribute('open'), a non-modal dialog with no backdrop, no focus trap and no Escape handling.",
       "where": "index.html:112, 125; fallback at app.js:285-286",
       "fix": "Add aria-labelledby pointing at each h3; if the fallback path is retained, add manual focus trapping and an Escape listener."
     },
     {
-      "issue": "#toast hides by animating opacity to 0 only — it is never set to visibility:hidden or display:none, so the stale message text remains in the accessibility tree indefinitely and can be read long after it visually disappeared.",
+      "issue": "#toast hides by animating opacity to 0 only, it is never set to visibility:hidden or display:none, so the stale message text remains in the accessibility tree indefinitely and can be read long after it visually disappeared.",
       "where": "index.html:89-94 (opacity:0 default, .show toggles opacity only)",
       "fix": "Add visibility:hidden to the base rule and visibility:visible to .show, as studio.css does at design/studio.css:500-503."
     },
     {
-      "issue": "UI component boundaries fail non-text contrast: --line against --card is 1.23:1 in light mode and 1.32:1 in dark, and the text field's fill differs from the card by roughly 1.07:1 — the input's edge is not perceivable by the 3:1 threshold.",
+      "issue": "UI component boundaries fail non-text contrast: --line against --card is 1.23:1 in light mode and 1.32:1 in dark, and the text field's fill differs from the card by roughly 1.07:1, the input's edge is not perceivable by the 3:1 threshold.",
       "where": "index.html:28, :34 (--line), :55-58 (input border and background)",
       "fix": "Introduce a stronger --line-2 for interactive boundaries and give fields a distinct surface token."
     }
   ],
-  "printSupport": "There is no @media print block anywhere — index.html:31 contains the only @media rule in the file (prefers-color-scheme), and grep for \"print\" across index.html, app.js, data.js, helpers.js and sw.js returns nothing.\n\nPrint is NOT a core use case here. The product thesis is explicitly the opposite of paper: the hero reads \"The list is always in your pocket\" and the whole architecture is live multi-device sync. Nobody buys this app to print.\n\nBut it is a plausible secondary use — printing the list for a household member without a phone, or as a fallback at a store with no signal — and today that path is broken in specific ways: (1) the header, Sign in button, tip-jar pill, footer colophon and the #toast pill all print; (2) the add-item row and its Add button print as an empty box; (3) details.manage is collapsed by default, so the share code, Copy link and QR controls print as a bare grey bar with the code hidden; (4) section.card backgrounds and borders are dropped by default UA print settings, so the card grouping vanishes and the list runs together; (5) the ✕ remove buttons print next to every item; (6) native checkboxes often render as empty or filled boxes inconsistently and the .done line-through is the only completion signal; (7) no @page margin, no break-inside:avoid on li, so items split across pages.\n\nAdopting design/studio.css gets most of this free — its print block at design/studio.css:579-608 already hides header.app, footer.colophon, .tipbtn and #toast, forces white surfaces, sets @page margin:14mm, and applies break-inside:avoid to li and .card. The grocery-specific work remaining is small: mark the add-row card and the ✕ buttons .noprint, force details.manage[open] in print (or move the code out of the disclosure), print the board title and share code in a header, and render a real printed checkbox square rather than relying on the form control.",
+  "printSupport": "There is no @media print block anywhere, index.html:31 contains the only @media rule in the file (prefers-color-scheme), and grep for \"print\" across index.html, app.js, data.js, helpers.js and sw.js returns nothing.\n\nPrint is NOT a core use case here. The product thesis is explicitly the opposite of paper: the hero reads \"The list is always in your pocket\" and the whole architecture is live multi-device sync. Nobody buys this app to print.\n\nBut it is a plausible secondary use, printing the list for a household member without a phone, or as a fallback at a store with no signal, and today that path is broken in specific ways: (1) the header, Sign in button, tip-jar pill, footer colophon and the #toast pill all print; (2) the add-item row and its Add button print as an empty box; (3) details.manage is collapsed by default, so the share code, Copy link and QR controls print as a bare grey bar with the code hidden; (4) section.card backgrounds and borders are dropped by default UA print settings, so the card grouping vanishes and the list runs together; (5) the ✕ remove buttons print next to every item; (6) native checkboxes often render as empty or filled boxes inconsistently and the .done line-through is the only completion signal; (7) no @page margin, no break-inside:avoid on li, so items split across pages.\n\nAdopting design/studio.css gets most of this free, its print block at design/studio.css:579-608 already hides header.app, footer.colophon, .tipbtn and #toast, forces white surfaces, sets @page margin:14mm, and applies break-inside:avoid to li and .card. The grocery-specific work remaining is small: mark the add-row card and the ✕ buttons .noprint, force details.manage[open] in print (or move the code out of the disclosure), print the board title and share code in a header, and render a real printed checkbox square rather than relying on the form control.",
   "riskyToRestyle": [
-    "CASCADE TRAP — the biggest one. design/apply.mjs:70 splices the generated base ABOVE the existing app CSS (`<style>{base}\\n\\n{APP_LAYER}\\n{existing}</style>`). grocery-list's current stylesheet redefines almost every name studio.css owns — .wrap, .row, .row>*, .btn, .btn.primary, .btn.small, .card/section.card, section.card h2, .hero, .hero h2, .hero p, .hint, .hidden, header.app, footer.colophon, a.tipbtn, #toast, #toast.show. All of these sit BELOW the base at equal specificity and will silently override the new design system. Migration must DELETE these rules from the app layer, not append to them.",
+    "CASCADE TRAP, the biggest one. design/apply.mjs:70 splices the generated base ABOVE the existing app CSS (`<style>{base}\\n\\n{APP_LAYER}\\n{existing}</style>`). grocery-list's current stylesheet redefines almost every name studio.css owns, .wrap, .row, .row>*, .btn, .btn.primary, .btn.small, .card/section.card, section.card h2, .hero, .hero h2, .hero p, .hint, .hidden, header.app, footer.colophon, a.tipbtn, #toast, #toast.show. All of these sit BELOW the base at equal specificity and will silently override the new design system. Migration must DELETE these rules from the app layer, not append to them.",
     "studio.css sets `.row{flex-wrap:wrap}` and `.row > *{flex:1 1 12rem}` (design/studio.css:~/.row), while grocery's .row (index.html:60-61) is nowrap with flex:1. Under the new base the 12rem (192px) basis plus wrapping will drop the \"Add\" button below the input on narrow phones, breaking the single most-used control. Both the board add row (app.js:212-213) and the home code row (app.js:109) need .row.nowrap.",
-    "JS sets inline `style:'flex:0 0 auto'` on the Add and Open buttons (app.js:101, 202). Inline styles beat any stylesheet, so a .row reimplemented as grid — or any change to how children are sized — will fight these. Same for the inline color:var(--neg) on Delete list (app.js:260), which should become .btn.danger, and width:100% on #googleBtn (index.html:115), which should become .btn.block.",
-    "Heavily TAG-COUPLED selectors: section.card, ul.plain, ul.plain li, ul.plain label, ul.plain input[type=checkbox], ul.plain li.done label, details.manage>summary, details.manage>.inner, a.tipbtn, footer.colophon, header.app. Changing any element's tag — section→div, ul→div, a→button — silently drops all styling. The el() calls in app.js hardcode these tags (app.js:107, 112, 121, 212, 215, 217, 246).",
+    "JS sets inline `style:'flex:0 0 auto'` on the Add and Open buttons (app.js:101, 202). Inline styles beat any stylesheet, so a .row reimplemented as grid, or any change to how children are sized, will fight these. Same for the inline color:var(--neg) on Delete list (app.js:260), which should become .btn.danger, and width:100% on #googleBtn (index.html:115), which should become .btn.block.",
+    "Heavily TAG-COUPLED selectors: section.card, ul.plain, ul.plain li, ul.plain label, ul.plain input[type=checkbox], ul.plain li.done label, details.manage>summary, details.manage>.inner, a.tipbtn, footer.colophon, header.app. Changing any element's tag, section→div, ul→div, a→button, silently drops all styling. The el() calls in app.js hardcode these tags (app.js:107, 112, 121, 212, 215, 217, 246).",
     "`input[type=text]` (index.html:55) is an attribute selector, so #emailInput (type=email, index.html:117) receives NOTHING from the stylesheet and is fully hand-styled inline with duplicated padding/border/radius/background. Restyling the text-input rule will leave the email field visually orphaned unless its inline style block is removed and the selector broadened.",
     "QR generation does exact pixel math against a fixed 300x300 canvas: `cell = Math.floor(size/(count+8))` and `off = Math.floor((size - cell*count)/2)` (app.js:274-276) with size hardcoded to 300 while the canvas element declares width/height 300 (index.html:127). Changing the canvas attributes, or CSS-scaling the canvas without matching the backing store, produces a blurred or mis-registered code that scanners may reject.",
-    "#qrBox is hardcoded background:#fff (index.html:88) and the canvas paints its own white quiet zone. This must survive dark mode — a themed surface behind or under the QR breaks scanning. Do not tokenise this one.",
+    "#qrBox is hardcoded background:#fff (index.html:88) and the canvas paints its own white quiet zone. This must survive dark mode, a themed surface behind or under the QR breaks scanning. Do not tokenise this one.",
     ".sharecode (index.html:76) uses letter-spacing:.28em plus a compensating padding-left:.28em to re-centre the trailing letter gap. Changing the font, the tracking, or switching to a flex/gap treatment breaks the optical centring of the share code.",
-    "sw.js precaches './index.html' under VERSION 'grocery-v4' (sw.js:2-8) with a cache-first fetch handler (sw.js:20-26). Because studio.css is inlined into index.html rather than linked, the new design ships inside index.html — so returning PWA users will keep the OLD inline CSS until VERSION is bumped. Bump to grocery-v5 as part of the restyle or the overhaul appears not to have deployed.",
-    ".hidden uses display:none !important (index.html:96) and is load-bearing for #tipLink (app.js:326-327) and #emailSent (app.js:306), both toggled via classList. Keep the !important — studio.css retains .hidden, but verify it wins over any new display rules on .tipbtn.",
-    "#view is rebuilt with replaceChildren() on every Firestore snapshot (app.js:183), which fires whenever any household member changes anything. Any entrance transition, animation or transform added to .card, ul.plain li or .btn will re-trigger continuously during normal use, and the addFocused hack (app.js:48, 198-201) is the ONLY thing preserving focus — a restyle that introduces animated mount states will make the board visibly thrash.",
-    "Tests are safe: grocery-list has no test/ directory, and the only coverage — /workspaces/SWS-apps/apps/signup-sheets/test/grocery.test.mjs — drives data.js against the emulators and asserts nothing about DOM structure, class names or markup. Nothing in the test suite constrains the restyle."
+    "sw.js precaches './index.html' under VERSION 'grocery-v4' (sw.js:2-8) with a cache-first fetch handler (sw.js:20-26). Because studio.css is inlined into index.html rather than linked, the new design ships inside index.html, so returning PWA users will keep the OLD inline CSS until VERSION is bumped. Bump to grocery-v5 as part of the restyle or the overhaul appears not to have deployed.",
+    ".hidden uses display:none !important (index.html:96) and is load-bearing for #tipLink (app.js:326-327) and #emailSent (app.js:306), both toggled via classList. Keep the !important, studio.css retains .hidden, but verify it wins over any new display rules on .tipbtn.",
+    "#view is rebuilt with replaceChildren() on every Firestore snapshot (app.js:183), which fires whenever any household member changes anything. Any entrance transition, animation or transform added to .card, ul.plain li or .btn will re-trigger continuously during normal use, and the addFocused hack (app.js:48, 198-201) is the ONLY thing preserving focus, a restyle that introduces animated mount states will make the board visibly thrash.",
+    "Tests are safe: grocery-list has no test/ directory, and the only coverage, /workspaces/SWS-apps/apps/signup-sheets/test/grocery.test.mjs, drives data.js against the emulators and asserts nothing about DOM structure, class names or markup. Nothing in the test suite constrains the restyle."
   ]
 }

@@ -1,4 +1,4 @@
-// Bracket Maker — tap winners through a seeded single-elimination bracket.
+// Bracket Maker, tap winners through a seeded single-elimination bracket.
 import {
   entrantInfo, roundCount, nextPow2, contender, winnerOf, setPick,
   champion, encodeBracket, decodeBracket, carryPicks, sameBracket,
@@ -28,7 +28,7 @@ function el(tag, attrs, ...kids) {
 }
 
 /* The studio toast runtime carries Undo, holds while the pointer or focus is
-   inside it, and is already loaded on the page — this app used to call none
+   inside it, and is already loaded on the page, this app used to call none
    of it and guard a full wipe with confirm(). */
 function toast(msg, opts) {
   if (window.SWS && window.SWS.toast) return window.SWS.toast(msg, opts);
@@ -91,7 +91,7 @@ function load() {
 
   if (raw && (!fromHash || !fromHash.names.length)) {
     // The normal failure mode is a chat client breaking a long URL in half.
-    setTimeout(() => toast('That link did not arrive in one piece — ask for it again, or start a bracket here.', { ms: 7000 }), 400);
+    setTimeout(() => toast('That link did not arrive in one piece, ask for it again, or start a bracket here.', { ms: 7000 }), 400);
   }
 
   if (fromHash && fromHash.names.length) {
@@ -196,7 +196,7 @@ function renderBracket() {
   box.append(inner);
 
   const c = champion(state);
-  if (c !== null) $('champ').textContent = '🏆 ' + state.names[c] + ' — champion';
+  if (c !== null) $('champ').textContent = '🏆 ' + state.names[c] + ', champion';
 
   // Focus used to land on <body> after every pick: 49 Tab presses for a
   // 7-match tournament. Put it back on the same slot.
@@ -282,7 +282,7 @@ function renderTitle() {
   const h = $('eventTitle');
   h.textContent = t;
   h.hidden = !t;
-  document.title = t ? t + ' — Bracket Maker' : BASE_TITLE;
+  document.title = t ? t + ', Bracket Maker' : BASE_TITLE;
   $('printTitle').textContent = t || 'Tournament bracket';
   const when = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   $('printMeta').textContent = state.names.length
@@ -296,13 +296,13 @@ function renderCounts(info) {
   count.replaceChildren();
   if (!info.total) { count.textContent = 'No entrants yet'; }
   else if (info.dropped) {
-    count.append(document.createTextNode(n + ' of ' + MAX_ENTRANTS + ' entrants — '));
+    count.append(document.createTextNode(n + ' of ' + MAX_ENTRANTS + ' entrants, '));
     count.append(el('span', { class: 'over', text: info.dropped + ' more ' + (info.dropped === 1 ? 'line is' : 'lines are') + ' not in the bracket' }));
   } else {
     count.textContent = n + ' of ' + MAX_ENTRANTS + ' entrants';
   }
   const bits = [];
-  if (info.dropped) bits.push('This bracket holds ' + MAX_ENTRANTS + ' entrants. The last ' + info.dropped + ' ' + (info.dropped === 1 ? 'line is' : 'lines are') + ' still in the box above but are not playing — delete them, or split into two brackets.');
+  if (info.dropped) bits.push('This bracket holds ' + MAX_ENTRANTS + ' entrants. The last ' + info.dropped + ' ' + (info.dropped === 1 ? 'line is' : 'lines are') + ' still in the box above but are not playing, delete them, or split into two brackets.');
   if (info.truncated) bits.push(info.truncated + ' ' + (info.truncated === 1 ? 'name was' : 'names were') + ' shortened to 40 characters so they fit a match card.');
   const warn = $('capWarn');
   warn.textContent = bits.join(' ');
@@ -344,7 +344,7 @@ async function copyLink(url, okMsg) {
     toast(okMsg);
     return true;
   } catch (e) {
-    toast('Could not reach the clipboard — the link is in the address bar.', { assertive: true });
+    toast('Could not reach the clipboard, the link is in the address bar.', { assertive: true });
     return false;
   }
 }
@@ -356,14 +356,14 @@ async function doShare() {
   const name = (state.title || '').trim() || 'Bracket';
   if (navigator.share) {
     try {
-      await navigator.share({ title: name, text: name + ' — the whole bracket is in this link', url });
+      await navigator.share({ title: name, text: name + ', the whole bracket is in this link', url });
       shared = true; linkStale = false;
       return;
     } catch (e) {
       if (e && e.name === 'AbortError') return;
     }
   }
-  copyLink(url, 'Snapshot link copied — it carries every entrant and every result so far');
+  copyLink(url, 'Snapshot link copied, it carries every entrant and every result so far');
 }
 
 /* Undo baseline for entrant-list edits. One keystroke is one edit, so a burst
@@ -527,15 +527,14 @@ function preparePrint() {
   inner.style.zoom = prev;
   const h = Math.max(1, Math.ceil(inner.getBoundingClientRect().height));
   // The printable box of US Letter at 96dpi, less the base layer's 14mm
-  // margins: 710 × 950 portrait, 950 × 710 landscape. Portrait first —
-  // landscape only when the bracket genuinely needs it.
+  // margins: 710 × 950 portrait, 950 × 710 landscape. Portrait first, // landscape only when the bracket genuinely needs it.
   const SHORT = 710, LONG = 950;
   const landscape = w > SHORT;
   style.textContent = '@media print{@page{size:' + (landscape ? 'landscape' : 'portrait') + '; margin:14mm}}';
   const availW = landscape ? LONG : SHORT;
   const availH = (landscape ? SHORT : LONG)
     - 100 - $('eventTitle').offsetHeight - $('champ').offsetHeight;   // header, title, champion line
-  // Fit the height too where that still leaves the names readable — a bracket
+  // Fit the height too where that still leaves the names readable, a bracket
   // on one sheet is the whole point of taping it to a wall. Below 0.65 the
   // names stop being readable across a room, so take the extra page instead.
   const scale = Math.min(1, availW / w, Math.max(availH / h, 0.65));
@@ -554,7 +553,7 @@ function showQr(url) {
     const canvas = $('qrCanvas');
     // Draw at device resolution and size in CSS px, so a module is always a
     // whole number of device pixels. The old arithmetic floored to 1 CSS px
-    // per module at 32 realistic names — below what a camera resolves.
+    // per module at 32 realistic names, below what a camera resolves.
     const mod = Math.max(2, Math.floor((300 * dpr) / (count + 8)));
     const px = mod * (count + 8);
     canvas.width = px;
@@ -571,14 +570,14 @@ function showQr(url) {
     const cssMod = Math.floor((300 * dpr) / (count + 8)) / dpr;
     $('qrDense').hidden = cssMod >= 2.2;
   } catch (e) {
-    toast('Could not draw the QR — use the link in the box instead.', { assertive: true });
+    toast('Could not draw the QR, use the link in the box instead.', { assertive: true });
     $('qrDense').hidden = true;
   }
   $('qrUrl').value = url;
   $('qrUrl').scrollTop = 0;
   const d = $('qrDlg');
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
-  // Focus the action, not the link box — a textarea taking focus scrolls
+  // Focus the action, not the link box, a textarea taking focus scrolls
   // itself to the end and reads as an edit field the user is expected to fix.
   try { $('qrCopy').focus(); } catch (e) {}
 }
@@ -603,7 +602,7 @@ $('qrClose').addEventListener('click', () => {
   const d = $('qrDlg');
   try { d.close(); } catch (e) { d.removeAttribute('open'); }
 });
-$('qrCopy').addEventListener('click', () => copyLink($('qrUrl').value, 'Link copied — paste it into the group chat'));
+$('qrCopy').addEventListener('click', () => copyLink($('qrUrl').value, 'Link copied, paste it into the group chat'));
 $('qrBtn').addEventListener('click', () => {
   if (state.names.length < 2) { toast('Add the entrants first'); return; }
   save();

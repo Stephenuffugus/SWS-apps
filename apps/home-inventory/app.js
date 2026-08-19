@@ -1,4 +1,4 @@
-// Home Inventory — Engine 2, skin B. Local-first: IndexedDB + vendored pdf-lib.
+// Home Inventory, Engine 2, skin B. Local-first: IndexedDB + vendored pdf-lib.
 // Fast-capture is the heart: point, shoot, name, next. Detail can come later.
 // All user data reaches the DOM via textContent; images only as data:image/* URLs.
 import {
@@ -12,12 +12,12 @@ import {
 } from './store.js';
 
 const CONFIG = {
-  // Stripe payment link for the tip jar — button stays hidden while empty.
+  // Stripe payment link for the tip jar, button stays hidden while empty.
   tipUrl: 'https://buy.stripe.com/9B6bJ2b5TfpJg2959T7EQ06',
 };
 
 /* Capture pipelines. Both numbers are stated to the user at the moment they
-   apply — a 3.7px serial plate discovered a year later is the whole complaint. */
+   apply, a 3.7px serial plate discovered a year later is the whole complaint. */
 const WIDE = { maxSide: 1280, quality: 0.8, label: 'room and object shots' };
 const CLOSE = { maxSide: 2400, quality: 0.92, label: 'close-ups: serial plates, hallmarks, receipts' };
 
@@ -58,7 +58,7 @@ function undoToast(msg, restore) {
   return toast(msg, { ms: 9000 });
 }
 const noted = Object.create(null);
-/** Say a limit out loud, once per session — a cap found later is a betrayal. */
+/** Say a limit out loud, once per session, a cap found later is a betrayal. */
 function noteOnce(key, msg) {
   if (noted[key]) return;
   noted[key] = 1;
@@ -66,7 +66,7 @@ function noteOnce(key, msg) {
 }
 function capNote(max, what) {
   return (ev) => {
-    if (ev.target.value.length >= max) noteOnce('cap-' + what, what + ' stop at ' + max + ' characters — anything past that is not saved.');
+    if (ev.target.value.length >= max) noteOnce('cap-' + what, what + ' stop at ' + max + ' characters, anything past that is not saved.');
   };
 }
 
@@ -74,7 +74,7 @@ function showDlg(d) { try { d.showModal(); } catch (e) { d.setAttribute('open', 
 function closeDlg(d) { try { d.close(); } catch (e) { d.removeAttribute('open'); } }
 const safeSrc = (u) => (typeof u === 'string' && u.startsWith('data:image/')) ? u : null;
 
-/* Compress on capture — a 40-room house would otherwise eat gigabytes. */
+/* Compress on capture, a 40-room house would otherwise eat gigabytes. */
 async function compressImage(file, maxSide, quality) {
   const bmp = await createImageBitmap(file);
   const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
@@ -101,7 +101,7 @@ function pickImage(mode) {
       if (!file) return resolve(null);
       try { resolve(await compressImage(file, p.maxSide, p.quality)); }
       catch (e) {
-        // no canvas/bitmap support — fall back to the raw file (may be large)
+        // no canvas/bitmap support, fall back to the raw file (may be large)
         const reader = new FileReader();
         reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
         reader.onerror = () => resolve(null);
@@ -127,7 +127,7 @@ let captureDraft = { photo: null, name: '', value: '', qty: '' };
 let installEvt = null;
 
 /* ---------- saving, said out loud ----------
-   The old code fired "Saved — next one" the instant the item hit the array and
+   The old code fired "Saved, next one" the instant the item hit the array and
    throttled the FAILURE to one message a minute, so a full phone reported four
    lost items as saved. Now: nothing claims to be saved until the write has
    resolved AND the row has been read back, and a failure raises a banner that
@@ -186,13 +186,13 @@ function renderSaveBanner() {
   const n = Math.max(1, pendingChanges);
   b.replaceChildren(
     el('strong', { text: '⚠ NOT saved to this device' }),
-    el('span', { text: ' — ' + n + (n === 1 ? ' change is' : ' changes are') +
+    el('span', { text: ', ' + n + (n === 1 ? ' change is' : ' changes are') +
       ' only in this browser tab and will be lost when you close it. This device may be out of room. (' + saveError + ')' }),
     el('span', { class: 'bannerbtns' },
       el('button', { class: 'btn small', type: 'button', onclick: () => exportBackup(true) }, 'Export backup now'),
       el('button', { class: 'btn small', type: 'button', onclick: async () => {
         const ok = await flush();
-        toast(ok ? 'Saved — the device accepted it this time.' : 'Still refusing to save. Export the backup.', { assertive: !ok, ms: 5000 });
+        toast(ok ? 'Saved, the device accepted it this time.' : 'Still refusing to save. Export the backup.', { assertive: !ok, ms: 5000 });
       } }, 'Try again')));
   b.classList.remove('hidden');
 }
@@ -272,9 +272,9 @@ function route() {
 window.addEventListener('hashchange', render);
 
 /* ---------- a dialog instead of prompt()/confirm() ----------
-   window.prompt() was the app's front door. With dialogs suppressed — the
+   window.prompt() was the app's front door. With dialogs suppressed, the
    automation default, Firefox's "prevent additional dialogs", some managed
-   devices — "Start an inventory" did nothing at all, silently. */
+   devices, "Start an inventory" did nothing at all, silently. */
 let askResolve = null;
 function ask(opts) {
   const d = $('askDlg');
@@ -315,7 +315,7 @@ async function renderHome() {
   v.replaceChildren();
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'Photograph it before you need it'),
-    el('p', {}, 'After the fire is the wrong time to remember what was in the house. Walk each room, point, shoot, name it — and export a PDF your insurer will accept, or a spreadsheet their software can read. ',
+    el('p', {}, 'After the fire is the wrong time to remember what was in the house. Walk each room, point, shoot, name it, and export a PDF your insurer will accept, or a spreadsheet their software can read. ',
       el('strong', {}, 'Free. No account. Nothing leaves your device.')),
     el('button', { class: 'btn primary', type: 'button', 'data-fk': 'start', onclick: createInventory }, 'Start an inventory')));
 
@@ -329,13 +329,13 @@ async function renderHome() {
   try { rows = (await allInventories()) || []; } catch (e) {}
   rows = rows.filter(r => r && typeof r === 'object');
   rows.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  if (rows.length === 0) sec.append(el('p', { class: 'hint', text: 'Nothing here yet. Everything you add is stored on this device only — export the PDF and the backup file somewhere safe.' }));
+  if (rows.length === 0) sec.append(el('p', { class: 'hint', text: 'Nothing here yet. Everything you add is stored on this device only, export the PDF and the backup file somewhere safe.' }));
   for (const r of rows) {
     try {
       list.append(homeRow(r));
     } catch (e) {
-      // one unreadable record must never take the page — and the Restore
-      // button — down with it.
+      // one unreadable record must never take the page, and the Restore
+      // button, down with it.
       list.append(el('li', {},
         el('div', { class: 'grow' },
           el('div', { text: (typeof r.name === 'string' && r.name) ? r.name : 'Unreadable inventory' }),
@@ -350,7 +350,7 @@ async function renderHome() {
     onchange: (ev) => { if (ev.target.files[0]) importFile(ev.target.files[0]); ev.target.value = ''; } });
   v.append(el('section', { class: 'card' },
     el('h2', {}, 'Restore'),
-    el('p', { class: 'hint', text: 'Importing never overwrites an inventory without asking first — if the file matches one already here, you choose to keep both or replace.' }),
+    el('p', { class: 'hint', text: 'Importing never overwrites an inventory without asking first, if the file matches one already here, you choose to keep both or replace.' }),
     el('button', { class: 'btn', type: 'button', 'data-fk': 'import', onclick: () => file.click() }, 'Import a backup file'),
     file));
 
@@ -373,7 +373,7 @@ function homeRow(r) {
 
 function daysSince(ms) { return Math.floor((Date.now() - ms) / 86400000); }
 function lastExportLine(r) {
-  if (!r.lastExportAt) return 'Never exported — it exists only on this device.';
+  if (!r.lastExportAt) return 'Never exported, it exists only on this device.';
   const d = daysSince(r.lastExportAt);
   if (d <= 0) return 'Last exported today.';
   return 'Last exported ' + d + ' day' + (d === 1 ? '' : 's') + ' ago.';
@@ -386,9 +386,9 @@ async function removeInventory(r) {
   const snap = JSON.parse(JSON.stringify(r));
   let t = { count: 0, photos: 0 };
   try { t = totals(r); } catch (e) {}
-  try { await deleteInventory(r.id); } catch (e) { toast('Could not delete that — the database refused.', { assertive: true }); return; }
+  try { await deleteInventory(r.id); } catch (e) { toast('Could not delete that, the database refused.', { assertive: true }); return; }
   await renderHome();
-  undoToast('Deleted “' + r.name + '” — ' + t.count + ' items and ' + t.photos + ' photos.', async () => {
+  undoToast('Deleted “' + r.name + '”, ' + t.count + ' items and ' + t.photos + ' photos.', async () => {
     try { await saveInventory(snap); } catch (e) {}
     renderHome();
     toast('Restored “' + snap.name + '”');
@@ -399,7 +399,7 @@ function installCard() {
   if (isInstalled()) return null;
   const card = el('section', { class: 'card' }, el('h2', {}, 'Keep it for three years'));
   card.append(el('p', { class: 'hint' },
-    'Browsers delete the storage of sites you have not opened in a while — Safari clears it after about seven days of not visiting. Installing this to your home screen exempts it, and it still works with no signal.'));
+    'Browsers delete the storage of sites you have not opened in a while, Safari clears it after about seven days of not visiting. Installing this to your home screen exempts it, and it still works with no signal.'));
   if (installEvt) {
     card.append(el('button', { class: 'btn primary', type: 'button', onclick: async () => {
       const e = installEvt; installEvt = null;
@@ -414,7 +414,7 @@ function installCard() {
   storageFacts().then((f) => {
     const bits = [];
     bits.push(f.persisted ? 'This browser has marked your inventory as durable storage.'
-      : 'This browser has not (yet) promised to keep the data — install to the home screen and export often.');
+      : 'This browser has not (yet) promised to keep the data, install to the home screen and export often.');
     if (f.supported && f.quota) bits.push('Using ' + mb(f.usage || 0) + ' of about ' + mb(f.quota) + ' this browser allows this site.');
     line.textContent = bits.join(' ');
   });
@@ -424,7 +424,7 @@ function installCard() {
 async function createInventory() {
   const r = await ask({
     title: 'Name this inventory',
-    body: ['An address works well — you may end up with more than one.'],
+    body: ['An address works well, you may end up with more than one.'],
     input: { label: 'Name', value: '', placeholder: '148 Oak Street', maxlength: LIMITS.name },
     buttons: [{ label: 'Create', value: 'ok', kind: 'primary' }],
   });
@@ -456,8 +456,8 @@ async function importFile(file) {
     const r = await ask({
       title: 'That backup matches an inventory already on this device',
       body: [
-        'On this device: “' + existing.name + '” — ' + mine.count + ' items, ' + fmtCents(mine.valueCents) + '.',
-        'In the file: “' + clean.name + '” — ' + theirs.count + ' items, ' + fmtCents(theirs.valueCents) + '.',
+        'On this device: “' + existing.name + '”, ' + mine.count + ' items, ' + fmtCents(mine.valueCents) + '.',
+        'In the file: “' + clean.name + '”, ' + theirs.count + ' items, ' + fmtCents(theirs.valueCents) + '.',
         'Replacing throws away everything added since that backup was made.',
       ],
       buttons: [
@@ -480,7 +480,7 @@ async function importFile(file) {
         inv = null;
         location.hash = '#/i/' + backup.id;
         render();
-        toast('Put “' + backup.name + '” back — ' + mine.count + ' items.');
+        toast('Put “' + backup.name + '” back, ' + mine.count + ' items.');
       });
       return;
     }
@@ -490,7 +490,7 @@ async function importFile(file) {
   inv = null;
   location.hash = '#/i/' + clean.id;
   render();
-  toast('Imported “' + clean.name + '” — ' + clean.items.length + ' items' +
+  toast('Imported “' + clean.name + '”, ' + clean.items.length + ' items' +
     (skipped ? '. ' + skipped + ' unreadable row' + (skipped === 1 ? ' was' : 's were') + ' skipped.' : '.'),
     { ms: skipped ? 7000 : 4000 });
 }
@@ -515,7 +515,7 @@ async function leaveGuard() {
   const r = await ask({
     title: 'This device would not save your last changes',
     body: [n + (n === 1 ? ' change is' : ' changes are') + ' only in this browser tab. Going back forgets them.',
-      'Export a backup file first — it contains everything, including the changes that would not store.'],
+      'Export a backup file first, it contains everything, including the changes that would not store.'],
     buttons: [
       { label: 'Export a backup first', value: 'export', kind: 'primary' },
       { label: 'Leave anyway', value: 'leave', kind: 'danger' },
@@ -525,7 +525,7 @@ async function leaveGuard() {
   if (r.choice === 'export') { exportBackup(true); return false; }
   saveError = null; pendingChanges = 0; dirty = false;
   renderSaveBanner();
-  toast('Left without saving — those changes are gone.', { assertive: true, ms: 6000 });
+  toast('Left without saving, those changes are gone.', { assertive: true, ms: 6000 });
   return true;
 }
 
@@ -595,7 +595,7 @@ function drawEditor(focusKey) {
 
 /* ----- fast capture ----- */
 function renderCapture() {
-  const card = el('section', { class: 'card' }, el('h2', {}, 'Fast capture — point, shoot, name, next'));
+  const card = el('section', { class: 'card' }, el('h2', {}, 'Fast capture, point, shoot, name, next'));
   if (inv.rooms.length === 0) {
     card.append(el('p', { class: 'hint', text: 'Add a room first (Rooms tab).' }));
     return card;
@@ -629,8 +629,8 @@ function renderCapture() {
     onchange: (ev) => { closeUp = ev.target.checked; } });
   closeBox.checked = closeUp;
   card.append(el('label', { class: 'checkline' }, closeBox,
-    el('span', {}, 'Close-up (serial plate, hallmark, receipt) — keeps 2400px detail')));
-  card.append(el('p', { class: 'hint', text: 'That button opens the camera AND the photo library — receipts you already photographed can be attached from there. Photos are resized to ' + WIDE.maxSide + 'px, about 100 KB each, so a whole house fits on the device. A serial plate inside a wide shot will not survive that — tick Close-up and fill the frame with the plate, and it is kept at ' + CLOSE.maxSide + 'px (roughly 8× the storage).' }));
+    el('span', {}, 'Close-up (serial plate, hallmark, receipt), keeps 2400px detail')));
+  card.append(el('p', { class: 'hint', text: 'That button opens the camera AND the photo library, receipts you already photographed can be attached from there. Photos are resized to ' + WIDE.maxSide + 'px, about 100 KB each, so a whole house fits on the device. A serial plate inside a wide shot will not survive that, tick Close-up and fill the frame with the plate, and it is kept at ' + CLOSE.maxSide + 'px (roughly 8× the storage).' }));
 
   const nameIn = el('input', { type: 'text', id: 'capName', maxlength: String(LIMITS.name),
     placeholder: 'e.g. “65-inch TV”', 'data-fk': 'cap-name',
@@ -648,7 +648,7 @@ function renderCapture() {
 
   const saveBtn = el('button', { class: 'btn primary block', type: 'button', 'data-fk': 'cap-save', onclick: async () => {
     const name = nameIn.value.trim();
-    if (!name) { toast('Give it a name — that’s the one required field', { assertive: true }); nameIn.focus(); return; }
+    if (!name) { toast('Give it a name, that’s the one required field', { assertive: true }); nameIn.focus(); return; }
     const cents = readMoney(valueIn.value, valueIn);
     if (cents === null) return;
     const qty = readQty(qtyIn.value, qtyIn);
@@ -662,8 +662,8 @@ function renderCapture() {
     touch();
     drawEditor('cap-name');
     const ok = await flush();
-    if (ok) toast('Saved — next one', { ms: 1600 });
-    else toast('NOT saved — read the red warning at the top of the page.', { assertive: true, ms: 6000 });
+    if (ok) toast('Saved, next one', { ms: 1600 });
+    else toast('NOT saved, read the red warning at the top of the page.', { assertive: true, ms: 6000 });
   } }, 'Save & next');
 
   card.append(
@@ -679,18 +679,18 @@ function renderCapture() {
     const list = el('ul', { class: 'plain', style: 'margin-top:8px' });
     for (const item of recent) list.append(renderItemRow(item));
     card.append(el('h2', { style: 'margin-top:14px' },
-      'Last ' + recent.length + ' added in this room' + (roomItems(inv, captureRoomId).length > recent.length ? ' (of ' + roomItems(inv, captureRoomId).length + ' — see the Items tab for all of them)' : '')), list);
+      'Last ' + recent.length + ' added in this room' + (roomItems(inv, captureRoomId).length > recent.length ? ' (of ' + roomItems(inv, captureRoomId).length + ', see the Items tab for all of them)' : '')), list);
   }
   return card;
 }
 
-/** Reads money, and says so out loud when it cannot — never stores a silent 0. */
+/** Reads money, and says so out loud when it cannot, never stores a silent 0. */
 function readMoney(raw, input) {
   const s = String(raw || '').trim();
   if (!s) return 0;
   const cents = parseValue(s);
   if (cents === null) {
-    toast('“' + s.slice(0, 20) + '” isn’t an amount I can read. Use digits — 1200, 1,234.56 or 1.234,56 — up to $' + LIMITS.valueDollars.toLocaleString() + '. Nothing was saved with a wrong value.',
+    toast('“' + s.slice(0, 20) + '” isn’t an amount I can read. Use digits, 1200, 1,234.56 or 1.234,56, up to $' + LIMITS.valueDollars.toLocaleString() + '. Nothing was saved with a wrong value.',
       { assertive: true, ms: 7000 });
     if (input) input.focus();
     return null;
@@ -707,7 +707,7 @@ function readQty(raw, input) {
     return null;
   }
   if (n > LIMITS.quantity) {
-    toast('Quantity stops at ' + LIMITS.quantity + ' — saved as ' + LIMITS.quantity + '.', { ms: 5000 });
+    toast('Quantity stops at ' + LIMITS.quantity + ', saved as ' + LIMITS.quantity + '.', { ms: 5000 });
     return LIMITS.quantity;
   }
   return Math.round(n);
@@ -749,7 +749,7 @@ function renderItems() {
     onchange: (ev) => { itemSort = ev.target.value; drawEditor('sort'); } },
     el('option', { value: 'recent', text: 'Most recent' }),
     el('option', { value: 'value', text: 'Highest value' }),
-    el('option', { value: 'name', text: 'Name A–Z' }),
+    el('option', { value: 'name', text: 'Name A-Z' }),
     el('option', { value: 'room', text: 'Room' }));
   sortSel.value = itemSort;
   card.append(el('div', { class: 'row noprint' },
@@ -784,7 +784,7 @@ function renderItems() {
   for (const item of items) list.append(renderItemRow(item));
   if (shown === 0) {
     card.append(el('p', { class: 'hint', text: total === 0
-      ? 'Nothing here yet — the Capture tab is the fast way in.'
+      ? 'Nothing here yet, the Capture tab is the fast way in.'
       : 'No item matches that. Clear the search or the filters to see all ' + total + '.' }));
   }
   card.append(list);
@@ -851,7 +851,7 @@ function renderRooms() {
         const before = inv.rooms.slice();
         inv.rooms = inv.rooms.filter(x => x.id !== r.id);
         touch(); drawEditor(); flush();
-        undoToast('Deleted “' + r.name + '”' + (n ? ' — its ' + n + ' items are now under the Unsorted filter.' : '.'), () => {
+        undoToast('Deleted “' + r.name + '”' + (n ? ', its ' + n + ' items are now under the Unsorted filter.' : '.'), () => {
           inv.rooms = before;
           touch(); drawEditor(); flush();
           toast('Room restored');
@@ -867,7 +867,7 @@ function renderExport() {
   const out = [];
   out.push(el('div', { class: 'warnbanner' },
     'A local-only inventory that burns up with the house is a cruel joke. ',
-    el('strong', {}, 'After exporting, email the files to yourself'), ' or save them to cloud storage — anywhere that isn’t this device.'));
+    el('strong', {}, 'After exporting, email the files to yourself'), ' or save them to cloud storage, anywhere that isn’t this device.'));
 
   const card = el('section', { class: 'card' }, el('h2', {}, 'Exports'));
   card.append(el('p', { class: 'sub', text: lastExportLine(inv) }));
@@ -890,8 +890,8 @@ function renderExport() {
   }
 
   const pdfs = [
-    ['Full report (PDF)', 'Cover summary, then a page per room with photo grid and values. Long names are shortened with an ellipsis to fit the paper — the CSV keeps them in full.', makeInventoryPdf, 'inventory'],
-    ['Items by value (PDF)', 'Every item sorted by value, highest first — the human-readable exhibit to attach to a claim. Carriers’ software wants the CSV below.', makeAdjusterPdf, 'by-value'],
+    ['Full report (PDF)', 'Cover summary, then a page per room with photo grid and values. Long names are shortened with an ellipsis to fit the paper, the CSV keeps them in full.', makeInventoryPdf, 'inventory'],
+    ['Items by value (PDF)', 'Every item sorted by value, highest first, the human-readable exhibit to attach to a claim. Carriers’ software wants the CSV below.', makeAdjusterPdf, 'by-value'],
   ];
   for (const [title, desc, fn, slug] of pdfs) {
     card.append(el('div', { class: 'exportcard' },
@@ -911,7 +911,7 @@ function renderExport() {
 
   card.append(el('div', { class: 'exportcard' },
     el('div', { class: 'grow' }, el('b', {}, 'Spreadsheet (CSV)'),
-      el('span', {}, 'Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo file, Notes — the columns carriers and the Xactimate family ingest. Opens in Excel, Numbers and Sheets.')),
+      el('span', {}, 'Quantity, Description, Brand/Make, Model, Serial, Room, Purchase date, Condition, Original cost, Replacement cost, Photo file, Notes, the columns carriers and the Xactimate family ingest. Opens in Excel, Numbers and Sheets.')),
     el('button', { class: 'btn primary small', type: 'button', 'aria-label': 'Download spreadsheet CSV', onclick: () => {
       const text = toCsv(inv);
       downloadBytes(new TextEncoder().encode('\ufeff' + text), slugify(inv.name) + '.csv', 'text/csv');
@@ -959,11 +959,11 @@ function renderExport() {
     if (f.supported && f.quota) {
       const pct = Math.round(((f.usage || 0) / f.quota) * 100);
       bits.push('This inventory and its photos use ' + mb(f.usage || 0) + ' of the ' + mb(f.quota) + ' this browser allows the site (' + pct + '%).');
-      if (pct > 80) bits.push('That is close to the limit — saving may start to fail. Export now.');
+      if (pct > 80) bits.push('That is close to the limit, saving may start to fail. Export now.');
     }
     bits.push(f.persisted
       ? 'The browser has marked this storage durable, so it will not be cleared for being idle.'
-      : 'The browser has NOT marked this storage durable. Safari clears an uninstalled site after about seven days of not visiting it — add this to your home screen.');
+      : 'The browser has NOT marked this storage durable. Safari clears an uninstalled site after about seven days of not visiting it, add this to your home screen.');
     line.textContent = bits.join(' ');
   });
   const inst = installCard();
@@ -976,7 +976,7 @@ function markExported() {
   if (!inv) return;
   inv.lastExportAt = Date.now();
   touch();
-  toast('Exported ✓ — now email it to yourself or drop it in cloud storage.', { ms: 5000 });
+  toast('Exported ✓, now email it to yourself or drop it in cloud storage.', { ms: 5000 });
   flush();
 }
 
@@ -989,7 +989,7 @@ function exportBackup(urgent) {
   const a = el('a', { href: URL.createObjectURL(blob), download: slugify(inv.name) + '.inventory.json' });
   document.body.append(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  if (urgent) toast('Backup written to your downloads — everything, including the changes this device would not store.', { ms: 7000 });
+  if (urgent) toast('Backup written to your downloads, everything, including the changes this device would not store.', { ms: 7000 });
   else markExported();
 }
 
@@ -1019,7 +1019,7 @@ function openItemDlg(item) {
   const roomSel = $('iRoom');
   roomSel.replaceChildren(...inv.rooms.map(r => el('option', { value: r.id, text: r.name })));
   if (inv.rooms.some(r => r.id === item.roomId)) roomSel.value = item.roomId;
-  // full precision — rounding here would corrupt the value on save
+  // full precision, rounding here would corrupt the value on save
   $('iValue').value = item.valueCents ? String(item.valueCents / 100) : '';
   $('iReplace').value = item.replacementCents ? String(item.replacementCents / 100) : '';
   $('iQty').value = String(item.quantity || 1);
@@ -1081,7 +1081,7 @@ function wire() {
   $('iRephoto').addEventListener('click', async () => {
     const dataUrl = await pickImage($('iCloseUp').checked ? 'close' : 'wide');
     if (dataUrl && itemEditing) {
-      dlgPhotos.photo = dataUrl;          // staged — Cancel discards it
+      dlgPhotos.photo = dataUrl;          // staged, Cancel discards it
       $('iPhoto').src = dataUrl;
       $('iPhoto').classList.remove('hidden');
     }
@@ -1091,7 +1091,7 @@ function wire() {
     // photo library rather than the camera.
     const dataUrl = await pickImage('close');
     if (dataUrl && itemEditing) {
-      dlgPhotos.receipt = dataUrl;        // staged — Cancel discards it
+      dlgPhotos.receipt = dataUrl;        // staged, Cancel discards it
       $('iReceiptImg').src = dataUrl;
       $('iReceiptImg').classList.remove('hidden');
     }

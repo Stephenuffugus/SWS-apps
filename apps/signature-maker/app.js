@@ -1,6 +1,6 @@
 /* Signature Maker.
-   Three routes to one artefact — draw it, type it, or photograph the one you
-   signed on paper — and an export whose exact pixels, format and byte size are
+   Three routes to one artefact, draw it, type it, or photograph the one you
+   signed on paper, and an export whose exact pixels, format and byte size are
    on screen before you commit to it.
 
    Two invariants worth knowing before changing anything here:
@@ -9,7 +9,7 @@
       to the pad's box remaps them uniformly (see remap). That is what stops a
       landscape signature being cropped when the phone is rotated back, and it
       is why fitCanvas is driven by a ResizeObserver rather than window.resize
-      — the comfort panel's Spacing dial changes the pad's box without ever
+      - the comfort panel's Spacing dial changes the pad's box without ever
       firing a resize event.
    2. Nothing is written to localStorage, and the only thing written to
       sessionStorage is a draft of the geometry so a reflex reload is
@@ -217,7 +217,7 @@ function redraw() {
   paint(ctx, DPR, 0, 0, box);
 }
 
-/* The ink's bounding box in pad CSS pixels — the export is sized from this,
+/* The ink's bounding box in pad CSS pixels, the export is sized from this,
    never from pad.clientWidth. */
 function sourceBBox(b) {
   if (mode === 'draw') {
@@ -258,7 +258,7 @@ function pos(ev) {
   return { x: cx, y: cy };
 }
 
-let activePointer = null;   // one pen at a time — a resting palm must not zigzag the stroke
+let activePointer = null;   // one pen at a time, a resting palm must not zigzag the stroke
 let offEdge = false;
 
 pad.addEventListener('pointerdown', (ev) => {
@@ -298,7 +298,7 @@ const endStroke = (ev) => {
   scheduleReadout();
   if (offEdge) {
     offEdge = false;
-    sayOnce('offedge', 'That stroke ran off the edge of the pad, so it stops at the border — nothing past the edge is kept. “Sign big” gives you the whole screen to write across.');
+    sayOnce('offedge', 'That stroke ran off the edge of the pad, so it stops at the border, nothing past the edge is kept. “Sign big” gives you the whole screen to write across.');
   }
 };
 pad.addEventListener('pointerup', endStroke);
@@ -402,7 +402,7 @@ function renderExport(s) {
     bytes = dataUrlBytes(url);
   }
   if (s.maxBytes && bytes > s.maxBytes) {
-    notes.push(`this came out ${kb(bytes)}, over the ${kb(s.maxBytes)} the portal allows — a simpler, thinner signature will fit`);
+    notes.push(`this came out ${kb(bytes)}, over the ${kb(s.maxBytes)} the portal allows, a simpler, thinner signature will fit`);
   }
 
   return { url, w: out.width, h: out.height, bytes, notes, type: s.type };
@@ -426,12 +426,12 @@ function updateReadout() {
   if (!el) return;
   let text;
   if (!hasInk()) {
-    text = 'Nothing on the pad yet — the exact size and weight of the file will appear here.';
+    text = 'Nothing on the pad yet, the exact size and weight of the file will appear here.';
   } else {
     let r = null;
     try { r = renderExport(spec()); } catch (e) { r = null; }
     if (!r) {
-      text = 'Nothing on the pad yet — the exact size and weight of the file will appear here.';
+      text = 'Nothing on the pad yet, the exact size and weight of the file will appear here.';
     } else {
       const inches = (r.w / 300).toFixed(1);
       const bits = [`${spec().name} · ${r.w} × ${r.h} px · ${kb(r.bytes)}`,
@@ -469,7 +469,7 @@ function tooSmall() {
   const bb = sourceBBox(padBox());
   if (!bb) return null;
   if (bb.w >= MIN_INK_PX || bb.h >= MIN_INK_PX) return null;
-  return `That mark is only ${Math.round(bb.w)} × ${Math.round(bb.h)} px across — smaller than the ${MIN_INK_PX} px floor for something a form can read.`;
+  return `That mark is only ${Math.round(bb.w)} × ${Math.round(bb.h)} px across, smaller than the ${MIN_INK_PX} px floor for something a form can read.`;
 }
 
 function withImage(fn) {
@@ -479,7 +479,7 @@ function withImage(fn) {
       ? 'Type your name above first.'
       : mode === 'photo'
         ? 'Choose a picture of your signature first.'
-        : 'Sign on the pad above first — big and confident.');
+        : 'Sign on the pad above first, big and confident.');
     return;
   }
   const small = tooSmall();
@@ -516,7 +516,7 @@ function download() {
       a.click();
       setTimeout(() => a.remove(), 300);
       const extra = r.notes.length ? ` ${r.notes.join('; ')}.` : '';
-      toast(`Saved ${a.download} — ${r.w} × ${r.h} px, ${kb(r.bytes)}${s.bg ? ', white background' : ', transparent background'}.${extra}`, { ms: 6000 });
+      toast(`Saved ${a.download}, ${r.w} × ${r.h} px, ${kb(r.bytes)}${s.bg ? ', white background' : ', transparent background'}.${extra}`, { ms: 6000 });
       updateReadout();
     } finally {
       exporting = false;
@@ -546,9 +546,9 @@ async function copyImage() {
       const r = runExport();
       if (!r) return;
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': dataUrlToBlob(r.url) })]);
-      toast(`Copied — ${r.w} × ${r.h} px, ${kb(r.bytes)}. Paste it straight into a document.`, { ms: 5000 });
+      toast(`Copied, ${r.w} × ${r.h} px, ${kb(r.bytes)}. Paste it straight into a document.`, { ms: 5000 });
     } catch (e) {
-      toast('This browser refused the clipboard. Use Download instead — the file is identical.', { ms: 6000 });
+      toast('This browser refused the clipboard. Use Download instead, the file is identical.', { ms: 6000 });
     } finally {
       exporting = false;
     }
@@ -558,7 +558,7 @@ async function copyImage() {
 /* ── The tab draft ────────────────────────────────────────────────────────────
    Storing nothing is the right default and the page says so. But losing the one
    artefact a person cannot reproduce to a reflex refresh is not privacy, it is
-   just loss — so the geometry lives in sessionStorage, which dies with the tab
+   just loss, so the geometry lives in sessionStorage, which dies with the tab
    exactly as the promise on the page describes. An imported photo is never
    written anywhere. */
 const DRAFT_KEY = 'sig.draft';
@@ -576,7 +576,7 @@ function saveDraft() {
     });
     if (json.length > MAX_DRAFT_BYTES) {
       sessionStorage.removeItem(DRAFT_KEY);
-      sayOnce('draftbig', `This signature is ${(json.length / 1e6).toFixed(1)} MB of geometry — over the 1.5 MB the tab draft holds — so a reload would lose it. Download it now.`);
+      sayOnce('draftbig', `This signature is ${(json.length / 1e6).toFixed(1)} MB of geometry, over the 1.5 MB the tab draft holds, so a reload would lose it. Download it now.`);
       return;
     }
     sessionStorage.setItem(DRAFT_KEY, json);
@@ -776,17 +776,17 @@ function setState() {
   for (const b of document.querySelectorAll('.sizes button')) press(b, Number(b.dataset.size) === size);
   for (const b of $('styleSeg').children) press(b, b.dataset.style === typed.style);
 
-  off($('undoBtn'), !strokes.length, 'There is no stroke to undo yet — the pad is empty.');
+  off($('undoBtn'), !strokes.length, 'There is no stroke to undo yet, the pad is empty.');
   off($('clearBtn'), !ink, 'The pad is already empty.');
   off($('dlBtn'), !ink, mode === 'type' ? 'Type your name above and this will save it.' : 'Sign on the pad above and this will save it.');
   off($('copyBtn'), !ink, 'Sign or type something above first.');
 
   pad.setAttribute('aria-label',
     mode === 'draw'
-      ? (strokes.length ? `Signature pad — ${strokes.length} stroke${strokes.length === 1 ? '' : 's'} drawn` : 'Signature pad — empty')
+      ? (strokes.length ? `Signature pad, ${strokes.length} stroke${strokes.length === 1 ? '' : 's'} drawn` : 'Signature pad, empty')
       : mode === 'type'
-        ? (typed.text.trim() ? `Signature preview — typed “${typed.text.trim()}”` : 'Signature preview — nothing typed yet')
-        : (photo ? 'Signature preview — imported picture' : 'Signature preview — no picture chosen yet'));
+        ? (typed.text.trim() ? `Signature preview, typed “${typed.text.trim()}”` : 'Signature preview, nothing typed yet')
+        : (photo ? 'Signature preview, imported picture' : 'Signature preview, no picture chosen yet'));
 }
 
 function wire() {
@@ -825,7 +825,7 @@ function wire() {
   const ti = $('typeText');
   ti.addEventListener('input', () => {
     if (ti.value.length >= MAX_NAME) {
-      sayOnce('namecap', `${MAX_NAME} characters is the most that fits on one line of signature — anything past that is not accepted.`);
+      sayOnce('namecap', `${MAX_NAME} characters is the most that fits on one line of signature, anything past that is not accepted.`);
     }
     typed.text = ti.value.slice(0, MAX_NAME);
     redraw();
@@ -907,7 +907,7 @@ function wire() {
 
   if (navigator.clipboard && window.ClipboardItem) $('copyBtn').hidden = false;
 
-  /* The pad's box changes without a window resize — the comfort panel's
+  /* The pad's box changes without a window resize, the comfort panel's
      Spacing dial, browser zoom, the mobile address bar, "Sign big". Binding to
      window.resize left the backing store stale and put the ink up to 5% away
      from the finger. */

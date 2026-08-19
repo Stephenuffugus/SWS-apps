@@ -1,6 +1,6 @@
-/* Bill Splitter service worker — cache-first so the app works fully offline.
+/* Bill Splitter service worker, cache-first so the app works fully offline.
    Bump VERSION on any deploy to invalidate old caches. */
-const VERSION = 'billsplit-v22';
+const VERSION = 'billsplit-v23';
 const ASSETS = [
   './',
   './index.html',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so a fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets stay cache-first; only the document leads with the network, and it

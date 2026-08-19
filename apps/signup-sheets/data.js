@@ -1,5 +1,4 @@
-// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly —
-// the counter-coupled batches are not optional; the rules reject anything else.
+// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly, // the counter-coupled batches are not optional; the rules reject anything else.
 // Imported via an import map: the browser resolves 'firebase/*' to gstatic ESM
 // builds; node tests resolve it to the npm package against the emulator.
 import { initializeApp } from 'firebase/app';
@@ -54,7 +53,7 @@ export async function signInGoogle() {
   } catch (e) {
     const code = (e && e.code) || '';
     // Popup blocked or closed (embedded browsers, strict blockers):
-    // fall back to a full-page redirect — the page comes back signed in.
+    // fall back to a full-page redirect, the page comes back signed in.
     if (code.includes('popup') || code.includes('cancelled')) {
       await signInWithRedirect(auth, new GoogleAuthProvider());
       return null; // navigating away
@@ -166,7 +165,7 @@ export const setLocked = (boardId, settings, locked) =>
 export const setApproval = (boardId, settings, approvalRequired) =>
   updateDoc(doc(db, 'boards', boardId), { settings: { ...settings, approvalRequired } });
 
-/* `wanted` lets the caller ask for a specific code — which is how "Undo" puts
+/* `wanted` lets the caller ask for a specific code, which is how "Undo" puts
    the previous share link back after a rotation. */
 export async function rotateCode(boardId, oldCode, wanted) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -260,7 +259,7 @@ export const deleteSlot = (boardId, slotId) =>
   deleteDoc(doc(db, 'boards', boardId, 'slots', slotId));
 
 /* Undo for deleteSlot. Deleting a slot document does NOT touch its claims
-   subcollection — those docs are merely orphaned — so re-creating the slot at
+   subcollection, those docs are merely orphaned, so re-creating the slot at
    the same id brings the signups back with it. The rules insist a new slot is
    created with claimedCount 0 (a participant must never be able to conjure a
    pre-filled slot), so the real count is restored in a second owner write. */

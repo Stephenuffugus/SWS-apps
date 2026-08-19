@@ -1,4 +1,4 @@
-// The three print outputs. "The PDF is the entire product" — vector text,
+// The three print outputs. "The PDF is the entire product", vector text,
 // explicit page sizes and margins, Letter and A4, embedded standard fonts.
 // PDFLib is injected (window.PDFLib in the browser, require('pdf-lib') in tests).
 import { lastNameOf, occupancy, mealSummary } from './model.js';
@@ -11,26 +11,26 @@ export const PAGE = {
 /* Standard-14 fonts use WinAnsi encoding, which covers Latin-1 and little
  * else. The old rule replaced every codepoint outside it with '?', so
  * "Zoë Ångström" survived but "Kateřina Nováková" printed as "Kate?ina" and
- * "子安 花子" as "?? ??" — on the escort card sitting at that guest's place.
+ * "子安 花子" as "?? ??", on the escort card sitting at that guest's place.
  * Handing someone a card with their name replaced by question marks is worse
  * than handing them nothing.
  *
  * Two-step now, per character:
  *   1. Keep it if WinAnsi can express it. "ü" and "é" print as themselves.
  *   2. Otherwise decompose and drop the combining marks. "ř" becomes "r",
- *      "ā" becomes "a", "ł" becomes "l" — imperfect, but a readable name
+ *      "ā" becomes "a", "ł" becomes "l", imperfect, but a readable name
  *      rather than a redaction, and it rescues most of Central Europe,
  *      Scandinavia, the Baltics, Turkish and romanised Vietnamese.
  *   3. Only what survives neither step becomes '?', and the caller is told
  *      exactly whose name that happened to.
  *
- * Non-Latin scripts — CJK, Arabic, Hebrew, Cyrillic, Greek, Thai — still
+ * Non-Latin scripts, CJK, Arabic, Hebrew, Cyrillic, Greek, Thai, still
  * cannot be drawn with a standard-14 font at all. `unprintableNames()` exists
  * so the app can name those guests BEFORE the export rather than let the
  * couple discover it at the reception. Printing them properly needs an
  * embedded Unicode font, which is a much larger change than this one.
  */
-const WINANSI_EXTRA = '–—‘’“”…';
+const WINANSI_EXTRA = '-, ‘’“”…';
 
 /* Letters NFD cannot help with: the stroke and bar forms are atomic
    codepoints, not base + combining mark, so decomposition returns them
@@ -48,7 +48,7 @@ function inWinAnsi(ch) {
   return (c >= 0x20 && c <= 0x7e) || (c >= 0xa0 && c <= 0xff) || WINANSI_EXTRA.includes(ch);
 }
 
-/** { text, lost } — `lost` is the characters no amount of folding could keep. */
+/** { text, lost }, `lost` is the characters no amount of folding could keep. */
 export function toWinAnsi(s) {
   let text = '';
   let lost = 0;
@@ -69,7 +69,7 @@ function safe(s) {
 
 /**
  * The guests whose names cannot be printed with a standard-14 font, so the app
- * can say so up front. Returns [{ name }] — empty when everything will render.
+ * can say so up front. Returns [{ name }], empty when everything will render.
  */
 export function unprintableNames(project) {
   const out = [];
@@ -84,7 +84,7 @@ function attending(project) {
   return project.guests.filter(g => g.rsvp !== 'no');
 }
 
-/* ---------- 1. entrance display — big, pretty, by table ---------- */
+/* ---------- 1. entrance display, big, pretty, by table ---------- */
 
 export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -157,7 +157,7 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
   return doc.save();
 }
 
-/* ---------- 2. escort cards — alphabetical, cut-line grid ---------- */
+/* ---------- 2. escort cards, alphabetical, cut-line grid ---------- */
 
 export async function makeEscortCardsPdf(PDFLib, project, size = 'letter') {
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -209,7 +209,7 @@ export async function makeEscortCardsPdf(PDFLib, project, size = 'letter') {
   return doc.save();
 }
 
-/* ---------- 3. caterer's sheet — the one nobody does well ---------- */
+/* ---------- 3. caterer's sheet, the one nobody does well ---------- */
 
 export async function makeCatererPdf(PDFLib, project, size = 'letter') {
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -229,7 +229,7 @@ export async function makeCatererPdf(PDFLib, project, size = 'letter') {
     y -= gap;
   };
 
-  line(project.name + ' — kitchen & service sheet', { size: 15, font: sansBold, gap: 22 });
+  line(project.name + ', kitchen & service sheet', { size: 15, font: sansBold, gap: 22 });
   const today = new Date();
   line('Generated ' + today.toLocaleDateString() + ' · counts include only guests not marked as declined', { size: 8.5, color: soft, gap: 18 });
 
@@ -241,9 +241,9 @@ export async function makeCatererPdf(PDFLib, project, size = 'letter') {
     for (const g of [...guests].sort((a, b) => a.name.localeCompare(b.name))) {
       const flags = (g.tags || []).join(', ');
       /* "⚠" is not in WinAnsi, so safe() rendered the allergy marker as a bare
-         "?" — the one glyph on this sheet a kitchen must not misread. Spelled
+         "?", the one glyph on this sheet a kitchen must not misread. Spelled
          out, it survives any encoding and reads correctly aloud. */
-      line('   ' + g.name + ' — ' + (g.meal || 'Unspecified') + (flags ? '   ** ' + flags : ''), { gap: 14 });
+      line('   ' + g.name + ', ' + (g.meal || 'Unspecified') + (flags ? '   ** ' + flags : ''), { gap: 14 });
     }
     const counts = Object.entries(meals).map(([m, n]) => m + ' ×' + n).join('   ');
     line('   ' + counts, { size: 9, color: soft, gap: 18 });
@@ -251,8 +251,8 @@ export async function makeCatererPdf(PDFLib, project, size = 'letter') {
 
   line(' ', { gap: 10 });
   line('Totals', { size: 13, font: sansBold, gap: 19 });
-  for (const [m, n] of Object.entries(totals)) line('   ' + m + ' — ' + n, { gap: 14 });
-  line('   All meals — ' + total, { font: sansBold, gap: 16 });
+  for (const [m, n] of Object.entries(totals)) line('   ' + m + ', ' + n, { gap: 14 });
+  line('   All meals, ' + total, { font: sansBold, gap: 16 });
 
   const flagged = attending(project).filter(g => (g.tags || []).length > 0);
   if (flagged.length) {
@@ -262,7 +262,7 @@ export async function makeCatererPdf(PDFLib, project, size = 'letter') {
     for (const t of project.tables) tableLabelById[t.id] = t.label;
     for (const g of flagged) {
       const where = tableLabelById[project.assignments[g.id]] || 'unseated';
-      line('   ' + g.name + ' (' + where + ') — ' + g.tags.join(', '), { gap: 14 });
+      line('   ' + g.name + ' (' + where + '), ' + g.tags.join(', '), { gap: 14 });
     }
   }
   return doc.save();

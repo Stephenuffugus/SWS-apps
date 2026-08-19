@@ -27,7 +27,7 @@ function cls() {
     { id: 'stu_2', first: 'Ada', last: 'Nguyen', sid: '', tag: '', note: '', active: true },
   ];
   c.assignments = [{
-    id: 'asg_1', categoryId: 'cat_1', name: 'Participation — 16 Sep', date: '2026-09-16',
+    id: 'asg_1', categoryId: 'cat_1', name: 'Participation, 16 Sep', date: '2026-09-16',
     pointsPossible: 4, scheme: 'levels4', extraCredit: false, neverDrop: false, includeInGrade: true,
   }];
   c.scores = {
@@ -58,7 +58,7 @@ ok('79  a foreign backup is refused by name, not half-loaded', () => {
 ok('74  no derived value reaches the file', () => {
   const json = JSON.stringify(serialize(book(), [cls()], NOW));
   for (const k of ['"pct"', '"letter"', '"display"', '"percent"', '"average"', '"subtotal"', '"dropped"']) {
-    assert.ok(!json.includes(k), `${k} must not be persisted — it goes stale on a cutoff edit`);
+    assert.ok(!json.includes(k), `${k} must not be persisted, it goes stale on a cutoff edit`);
   }
 });
 
@@ -66,7 +66,7 @@ ok('the file is readable by a human who no longer has the app', () => {
   const s = serialize(book(), [cls()], NOW);
   assert.ok(Array.isArray(s.readme) && s.readme.length >= 4);
   const row = s.classes[0].scores.find((r) => r.student === 'stu_1');
-  assert.equal(row.assignmentName, 'Participation — 16 Sep');
+  assert.equal(row.assignmentName, 'Participation, 16 Sep');
   assert.equal(row.studentName, 'Jacob Moreno', 'a name on every row, so Notepad is enough');
 });
 
@@ -83,8 +83,8 @@ ok('CSV writes an empty score for every non-graded state', () => {
   const rows = toCSV([cls()]).split('\n');
   const missing = rows.find((r) => r.includes('missing'));
   const cells = missing.split(',');
-  // ...,Points possible,Score,State,... — Score must be blank, not 0
-  assert.ok(/,,missing,/.test(missing), 'a missing cell has no score, it has a state');
+  // ...,Points possible,Score,State,..., Score must be blank, not 0
+  assert.ok(/,missing,/.test(missing), 'a missing cell has no score, it has a state');
   assert.ok(cells.length >= 13);
 });
 

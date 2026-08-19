@@ -1,8 +1,8 @@
-// QR maker — pure payload builders + SVG rendering. Tested in test/helpers.test.mjs.
+// QR maker, pure payload builders + SVG rendering. Tested in test/helpers.test.mjs.
 
 /* ── UTF-8 ────────────────────────────────────────────────────────────────
    vendor-qrcode.js ships `stringToBytes` as `bytes.push(charCodeAt(i) & 0xff)`,
-   which turns 'Café' into an illegal lone 0xE9 and '日本語' into junk — a
+   which turns 'Café' into an illegal lone 0xE9 and '日本語' into junk, a
    perfectly valid, perfectly scannable code containing the wrong string. Every
    byte the app encodes goes through here instead. app.js installs it on the
    vendor object before the first encode; the tests use it directly. */
@@ -33,8 +33,7 @@ export function escapeWifi(s) {
 
 /* ── Phone numbers ────────────────────────────────────────────────────────
    The old rule was `replace(/[^\d+]/g, '')`, which silently turned
-   '1-800-FLOWERS' into tel:1800 and '555.010.1234 x22' into tel:555010123422 —
-   an extension welded onto the number, dialling a stranger. Both scanned
+   '1-800-FLOWERS' into tel:1800 and '555.010.1234 x22' into tel:555010123422, an extension welded onto the number, dialling a stranger. Both scanned
    perfectly. This parses instead of stripping, and reports every change. */
 const KEYPAD = { a:2,b:2,c:2, d:3,e:3,f:3, g:4,h:4,i:4, j:5,k:5,l:5,
                  m:6,n:6,o:6, p:7,q:7,r:7,s:7, t:8,u:8,v:8, w:9,x:9,y:9,z:9 };
@@ -46,7 +45,7 @@ export function parseTel(raw) {
 
   let s = src;
   let ext = '';
-  // ' x22', ' ext. 22', ',22', ';22' at the very end — an extension, not digits
+  // ' x22', ' ext. 22', ',22', ';22' at the very end, an extension, not digits
   // to dial. RFC 3966 spells it ;ext=.
   const m = s.match(/\s*(?:[,;]|(?:x|ext|extn|extension)\.?)\s*(\d{1,8})\s*$/i);
   if (m) { ext = m[1]; s = s.slice(0, m.index).trim(); }
@@ -70,16 +69,16 @@ export function parseTel(raw) {
   const digits = s.replace(/\D/g, '');
   if (digits.length < 3) {
     return { number: '', ext: '', notes,
-      problem: 'A phone number needs at least 3 digits — “' + src + '” has ' + digits.length + '.' };
+      problem: 'A phone number needs at least 3 digits, “' + src + '” has ' + digits.length + '.' };
   }
   const number = (plus ? '+' : '') + digits;
   if (ext) {
     notes.push({ level: 'info', text: 'Extension ' + ext + ' encoded as ;ext=' + ext +
-      ' — the phone dials ' + number + ' first, then the extension. It is not part of the number.' });
+      ', the phone dials ' + number + ' first, then the extension. It is not part of the number.' });
   }
   if (!plus && digits.length > 7) {
     notes.push({ level: 'warn', text: 'No country code. A phone abroad cannot dial ' + number +
-      ' — start with + and the country code (+1, +44, +61…) if this code will travel.' });
+      ', start with + and the country code (+1, +44, +61…) if this code will travel.' });
   }
   return { number, ext, notes, problem: '' };
 }
@@ -87,7 +86,7 @@ export function parseTel(raw) {
 /* ── Payloads ─────────────────────────────────────────────────────────────
    Returns { payload, problem, notes }. `notes` is every rewrite the app made
    to what the user typed, so the readout under the preview can show them.
-   `problem` means no code at all, and says why — the old code returned '' and
+   `problem` means no code at all, and says why, the old code returned '' and
    left the canvas blank with no explanation. */
 export function buildPayloadInfo(type, f) {
   f = f || {};
@@ -100,16 +99,15 @@ export function buildPayloadInfo(type, f) {
     const u0 = raw.trim();
     if (!u0) return ok('');
     let u = u0;
-    // Only recognized link schemes pass through untouched. Everything else —
-    // including "example.com:8080/menu" (a colon is NOT a scheme here) and
-    // javascript:/data: payloads (neutralized) — gets https:// prepended.
+    // Only recognized link schemes pass through untouched. Everything else, // including "example.com:8080/menu" (a colon is NOT a scheme here) and
+    // javascript:/data: payloads (neutralized), gets https:// prepended.
     if (!/^(https?|mailto|tel|sms|ftp|geo):/i.test(u)) {
       const scheme = (u.match(/^([a-z][a-z0-9+.-]*):(?![\d/])/i) || [])[1];
       u = 'https://' + u;
       if (scheme) {
         notes.push({ level: 'warn', text: '“' + scheme + ':” is not something a phone camera will open, so it was left as ordinary text behind https://. The code opens ' + u + ', which will not go anywhere.' });
       } else {
-        notes.push({ level: 'info', text: 'https:// added — the code opens ' + u + '.' });
+        notes.push({ level: 'info', text: 'https:// added, the code opens ' + u + '.' });
       }
     }
     if (u0 !== raw) notes.push({ level: 'info', text: 'Spaces at the start or end were removed.' });
@@ -122,7 +120,7 @@ export function buildPayloadInfo(type, f) {
     const ssid = rawSsid.trim();
     if (!ssid) return ok('');
     if (ssid !== rawSsid) {
-      notes.push({ level: 'warn', text: 'Spaces at the start or end of the network name were removed. Wi-Fi names are exact — if yours really ends in a space, this code will not connect.' });
+      notes.push({ level: 'warn', text: 'Spaces at the start or end of the network name were removed. Wi-Fi names are exact, if yours really ends in a space, this code will not connect.' });
     }
     const auth = f.auth === 'nopass' ? 'nopass' : (f.auth === 'WEP' ? 'WEP' : 'WPA');
     const pass = String(f.pass || '');
@@ -134,10 +132,10 @@ export function buildPayloadInfo(type, f) {
       notes.push({ level: 'warn', text: 'No password typed. With ' + auth + ' selected the code says the password is empty (P:;), and the phone will refuse to join. Type the password, or choose “Open (no password)”.' });
     }
     if (f.hidden) {
-      notes.push({ level: 'info', text: 'Marked hidden (H:true) — required when the router does not broadcast the name.' });
+      notes.push({ level: 'info', text: 'Marked hidden (H:true), required when the router does not broadcast the name.' });
     }
     if (escapeWifi(ssid) !== ssid || escapeWifi(pass) !== pass) {
-      notes.push({ level: 'info', text: 'Backslashes added in front of ; : , and " — that is how the Wi-Fi card format quotes them, and the phone takes them back out.' });
+      notes.push({ level: 'info', text: 'Backslashes added in front of ; : , and ", that is how the Wi-Fi card format quotes them, and the phone takes them back out.' });
     }
     return ok(out);
   }
@@ -172,7 +170,7 @@ export function buildPayload(type, f) {
 /* ── Rendering ───────────────────────────────────────────────────────────── */
 
 /* Render a made qr object (vendored qrcode-generator API) to a standalone SVG.
-   One path of module squares — crisp at any size, black on white.
+   One path of module squares, crisp at any size, black on white.
    opts.mm stamps a real physical width on the file, so a print shop opening it
    gets the size we promised rather than 96 DPI of nothing. */
 export function qrToSvg(qr, opts) {
@@ -194,7 +192,7 @@ export function qrToSvg(qr, opts) {
 
 /* The exported PNG has to be a whole number of modules per side or the squares
    come out uneven, so the pixel count is always rounded to a whole cell. It
-   used to round DOWN, which is why '2048 px' shipped 1947 px files — short by
+   used to round DOWN, which is why '2048 px' shipped 1947 px files, short by
    up to 31%, worst exactly when the code is densest. Rounding up keeps the
    promise; `fit` rounds down and is only for the on-screen preview, which has
    a box it must not overflow. */
@@ -228,10 +226,10 @@ export function drawQrToCanvas(qr, canvas, px, fit) {
    the DPI it actually achieved and how wide one module lands on paper. Below
    about 0.4 mm a module stops scanning reliably on a phone camera. */
 export const SIZES = [
-  { id: 'card',   mm: 20,  dpi: 600, label: 'Business card — 2 cm' },
-  { id: 'tent',   mm: 40,  dpi: 600, label: 'Table tent — 4 cm' },
-  { id: 'flyer',  mm: 80,  dpi: 400, label: 'Flyer or sign — 8 cm' },
-  { id: 'poster', mm: 150, dpi: 300, label: 'Poster — 15 cm' },
+  { id: 'card',   mm: 20,  dpi: 600, label: 'Business card, 2 cm' },
+  { id: 'tent',   mm: 40,  dpi: 600, label: 'Table tent, 4 cm' },
+  { id: 'flyer',  mm: 80,  dpi: 400, label: 'Flyer or sign, 8 cm' },
+  { id: 'poster', mm: 150, dpi: 300, label: 'Poster, 15 cm' },
 ];
 
 export function sizeById(id) {

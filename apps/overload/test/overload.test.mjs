@@ -34,7 +34,7 @@ const prog = (over = {}) => ({
 
 async function main() {
 
-console.log('\n— engine: the verdict table —');
+console.log('\n,  engine: the verdict table , ');
 {
   const w = boot();
   const j = (reps, over) => w.eval(`judge(${JSON.stringify(prog(over))}, ${JSON.stringify(reps)})`);
@@ -56,7 +56,7 @@ console.log('\n— engine: the verdict table —');
   ok(r.nw === 52.5, 'per-exercise 2.5 increment respected');
 }
 
-console.log('\n— plate math —');
+console.log('\n,  plate math , ');
 {
   const w = boot();
   ok(w.eval(`plateMath(45)`) === 'empty bar', '45 lbs is the empty bar');
@@ -65,7 +65,7 @@ console.log('\n— plate math —');
   ok(w.eval(`plateMath(190)`) === '45 + 25 + 2.5 / side', 'mixed plates resolve greedily');
 }
 
-console.log('\n— create a lift, run a session, schedule +3 days —');
+console.log('\n,  create a lift, run a session, schedule +3 days , ');
 {
   const w = boot();
   ok(/No lifts yet/.test(w.document.getElementById('dueList').textContent), 'empty state speaks');
@@ -93,7 +93,7 @@ console.log('\n— create a lift, run a session, schedule +3 days —');
   ok(/ADD WEIGHT/.test(w.document.getElementById('resultCard').textContent), 'with the fixed verdict vocabulary');
 }
 
-console.log('\n— the ± weight is session-only until finish —');
+console.log('\n,  the ± weight is session-only until finish , ');
 {
   const w = boot({ programs: [prog()], weighins: [] });
   w.eval(`startWorkout('p1')`);
@@ -104,7 +104,7 @@ console.log('\n— the ± weight is session-only until finish —');
   ok(w.eval('S.programs[0].w') === 135 && stored(w).programs[0].w === 135, 'closing discards the adjustment');
 }
 
-console.log('\n— stall → swap —');
+console.log('\n,  stall → swap , ');
 {
   const w = boot({ programs: [prog({ stall: 2 })], weighins: [] });
   w.eval(`startWorkout('p1')`);
@@ -121,7 +121,7 @@ console.log('\n— stall → swap —');
   ok(p.w === Math.max(2.5, Math.round(135 * 0.85 / 2.5) * 2.5), 'the new lift starts conservative at 85%');
 }
 
-console.log('\n— lift settings sheet: steppers, zero typing —');
+console.log('\n,  lift settings sheet: steppers, zero typing , ');
 {
   const w = boot({ programs: [prog()], weighins: [] });
   w.document.querySelector('[data-gear]').click();
@@ -141,7 +141,7 @@ console.log('\n— lift settings sheet: steppers, zero typing —');
   ok(w.eval('S.programs.length') === 1, 'and undo brings it back, history intact');
 }
 
-console.log('\n— weekly volume glance —');
+console.log('\n,  weekly volume glance , ');
 {
   const now = new Date().toISOString();
   const old = new Date(Date.now() - 9 * 864e5).toISOString();
@@ -156,7 +156,7 @@ console.log('\n— weekly volume glance —');
   ok(w.eval(`weekCount('Chest')`) === 1 && w.eval(`weekCount('Back')`) === 0, 'only the last 7 days count');
 }
 
-console.log('\n— backup shape and restore —');
+console.log('\n,  backup shape and restore , ');
 {
   const w = boot({ programs: [prog()], weighins: [{ date: new Date().toISOString(), bw: 180, bf: null }] });
   const b = JSON.parse(w.eval('backupJSON()'));
@@ -167,7 +167,7 @@ console.log('\n— backup shape and restore —');
   ok(w2.eval(`applyImportedText('{"nope":1}')`) === false, 'a non-backup file is refused');
 }
 
-console.log('\n— corrupt storage cannot brick the app —');
+console.log('\n,  corrupt storage cannot brick the app , ');
 {
   const dom = new JSDOM(html, {
     runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
@@ -181,7 +181,7 @@ console.log('\n— corrupt storage cannot brick the app —');
   ok(p[0].rest <= 600 && p[0].sets <= 6 && p[0].repMin <= p[0].repMax && typeof p[0].w === 'number', 'hand-edited numbers are clamped sane');
 }
 
-console.log('\n— edge: repMin equals repMax, one set —');
+console.log('\n,  edge: repMin equals repMax, one set , ');
 {
   const w = boot({ programs: [prog({ repMin: 10, repMax: 10, sets: 1 })], weighins: [] });
   w.eval(`startWorkout('p1')`);
@@ -191,7 +191,7 @@ console.log('\n— edge: repMin equals repMax, one set —');
   ok(stored(w).programs[0].history[0].verdict === 'progress', 'and still gets judged');
 }
 
-console.log('\n— warm-up ramp: written by the prescription —');
+console.log('\n,  warm-up ramp: written by the prescription , ');
 {
   const w = boot();
   const ramp = (over, wt) => w.eval(`warmupRamp(${JSON.stringify(prog(over))}, ${wt})`);
@@ -218,7 +218,7 @@ console.log('\n— warm-up ramp: written by the prescription —');
   ok(w2.document.getElementById('wkWarm').hidden, 'the ramp steps aside after the first set');
 }
 
-console.log('\n— e1RM: the line that goes up —');
+console.log('\n,  e1RM: the line that goes up , ');
 {
   const now = Date.now();
   const hist = [
@@ -240,7 +240,7 @@ console.log('\n— e1RM: the line that goes up —');
   ok(!w2.document.querySelector('#sheet .e1-spark'), 'a single session shows no chart yet');
 }
 
-console.log('\n— weigh-in and trend —');
+console.log('\n,  weigh-in and trend , ');
 {
   const w = boot();
   w.document.querySelector('nav button[data-v="trend"]').click();

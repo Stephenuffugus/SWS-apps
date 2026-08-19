@@ -7,17 +7,17 @@
         "who": "54, the adult child who became the coordinator overnight. Comfortable with a phone, not with software. Her mother came home yesterday after five days in hospital; three pharmacy bags, two discharge sheets and a specialist letter are fanned out on the table. Straight from the research's THE OPERATOR: 'tired, frightened, slightly guilty, and operating on borrowed time', and from PMC7752204 on post-discharge medicines management.",
         "context": "Kitchen table, 21:40, iPhone SE held in one hand at 320x568 CSS px, overhead light, phone at 34%. Her own drive home is 40 minutes. She has maybe twenty minutes before she has to leave.",
         "task": "Get eleven medications onto one printable card and stick it on the fridge before she goes, so the morning aide and her brother both know what is happening.",
-        "verdict": "She got a card, and it was legible and correct — but it came out as two sheets of paper when the app had told her twice it would be one, and the second sheet has no name on it. She also could not see what she was making until the print dialog opened, so she printed three times.",
+        "verdict": "She got a card, and it was legible and correct, but it came out as two sheets of paper when the app had told her twice it would be one, and the second sheet has no name on it. She also could not see what she was making until the print dialog opened, so she printed three times.",
         "delights": [
           "Typing a medication is genuinely four taps: name, one time-of-day tile, Add. No account, no wizard, no interstitial. She never once had to dismiss anything.",
-          "'Stays on this device. No account, no ads, nothing uploaded — and the printed card keeps working even if this site disappears' is sitting next to the very first field she touches. She read it out loud. This is the CareZone/Medisafe argument from the research, in the right place.",
+          "'Stays on this device. No account, no ads, nothing uploaded, and the printed card keeps working even if this site disappears' is sitting next to the very first field she touches. She read it out loud. This is the CareZone/Medisafe argument from the research, in the right place.",
           "She mistyped a dose, hit Remove, and the toast said 'Removed Lisinopril' with an Undo she could actually hit (measured 72x44px). Nothing asked her 'are you sure?' eleven times."
         ],
         "frictions": [
           {
             "what": "The app promises one page and cannot deliver it. app.js:137 refuses a 31st row with 'That's the one-page limit (30 rows)' and index.html:1436 says 'One page: every med with its dose and times'. Measured by generating real Letter PDFs: the card spills onto page 2 at 18 rows with no notes, and at 16 rows with realistic notes. Her eleven medications came to 19 rows and printed 2 pages. A 30-row card is always 2 pages; a link-imported 120-row card is 7.",
             "severity": "blocker",
-            "whyItMatters": "The one-page fridge card IS the product — it is the entire differentiator against Medisafe's phone-first model and against the free PDF templates. Being told 'one page' and getting two, with no warning at the moment of printing, is the app failing at its only job. Worse, page 2 carries no patient name, no title and no page number (verified in the extracted PDF text — only the repeated column header survives), so the sheet that ends up half-under a magnet is unattributed medication instructions."
+            "whyItMatters": "The one-page fridge card IS the product, it is the entire differentiator against Medisafe's phone-first model and against the free PDF templates. Being told 'one page' and getting two, with no warning at the moment of printing, is the app failing at its only job. Worse, page 2 carries no patient name, no title and no page number (verified in the extracted PDF text, only the repeated column header survives), so the sheet that ends up half-under a magnet is unattributed medication instructions."
           },
           {
             "what": "There is no preview. #sheet is display:none on screen (index.html:1354) and is only rendered by renderSheet() on print. The only way to see the card is to open the OS print dialog.",
@@ -25,9 +25,9 @@
             "whyItMatters": "The research is explicit that this is a document generator, not a health app, and that a live preview at true proportions is table stakes. She printed, saw the notes column crowding, went back, edited, printed again. Three sheets of paper and eight minutes of her twenty."
           },
           {
-            "what": "On a 320px phone the Medication field starts at y=575 with a 568px fold, and 'Print the weekly card' is at y=1605 — 2.8 screens down. The design system ships an unused .actionbar (index.html:800). The tip jar, meanwhile, wraps onto its own header row and sits at y=64, above the fold, before she has created anything.",
+            "what": "On a 320px phone the Medication field starts at y=575 with a 568px fold, and 'Print the weekly card' is at y=1605 to 2.8 screens down. The design system ships an unused .actionbar (index.html:800). The tip jar, meanwhile, wraps onto its own header row and sits at y=64, above the fold, before she has created anything.",
             "severity": "major",
-            "whyItMatters": "She scrolled past 575px of preamble to type the first drug name, and the button she came for is three thumb-flings away. The research's own note — 'consider showing the tip jar only after the card has printed, never before' — is inverted here: the ask is the first thing above the fold and the deliverable is the last thing below it."
+            "whyItMatters": "She scrolled past 575px of preamble to type the first drug name, and the button she came for is three thumb-flings away. The research's own note, 'consider showing the tip jar only after the card has printed, never before', is inverted here: the ask is the first thing above the fold and the deliverable is the last thing below it."
           },
           {
             "what": "No edit. A row renders a name, a dose, times and a Remove button (app.js:91-98) and nothing else. Her mother's warfarin dose changed from 3 mg to 2.5 mg while she was typing; she had to delete the row and retype four fields including the note.",
@@ -35,7 +35,7 @@
             "whyItMatters": "The research names the secondary operator explicitly: 'the same person six weeks later making a one-line dose change, who must not have to rebuild the card.' Right now every change is a delete-and-retype, which is also the moment a note gets dropped."
           },
           {
-            "what": "She typed Norvasc from the hospital sheet and amlodipine from the pharmacy label, then Norvasc again from the specialist letter. Verified: three rows, no flag of any kind, no .warn, no alert — and the exact same string twice raises nothing.",
+            "what": "She typed Norvasc from the hospital sheet and amlodipine from the pharmacy label, then Norvasc again from the specialist letter. Verified: three rows, no flag of any kind, no .warn, no alert, and the exact same string twice raises nothing.",
             "severity": "major",
             "whyItMatters": "Look-alike/sound-alike name confusion is behind roughly 25% of reported medication errors (PA Patient Safety Advisory, PBA Health), and the research calls a purely local duplicate check 'a genuine safety feature nobody else in the free-printable tier has'. The app currently prints the double dose without comment."
           },
@@ -48,12 +48,12 @@
       },
       {
         "name": "Harriet Vance",
-        "who": "78, manages her own nine medications. Macular changes plus cataracts in one eye; reads at about 20/70 corrected and uses 18pt large print for everything the library gives her. Confident with an iPad, hostile to anything that looks like a form. She is the TechEnhancedLife panel's exact complaint — 'teeny tiny icons not suitable for the eyes of an older adult'. THIS IS THE COMFORT-PANEL PERSONA.",
+        "who": "78, manages her own nine medications. Macular changes plus cataracts in one eye; reads at about 20/70 corrected and uses 18pt large print for everything the library gives her. Confident with an iPad, hostile to anything that looks like a form. She is the TechEnhancedLife panel's exact complaint, 'teeny tiny icons not suitable for the eyes of an older adult'. THIS IS THE COMFORT-PANEL PERSONA.",
         "context": "Her sitting room, mid-morning, iPad in portrait propped on a cushion at 414 CSS px, one hand (the other holds a magnifier she would rather not use). Bright window behind her. No time pressure, low patience.",
         "task": "Make a card she can read from the kitchen doorway without her reading glasses, and print it.",
-        "verdict": "The screen half worked beautifully. The paper half — the only half she actually needed — ignored her completely. She printed it, held it at arm's length, could not read the dose line, and said the library's large-print books manage this fine.",
+        "verdict": "The screen half worked beautifully. The paper half, the only half she actually needed, ignored her completely. She printed it, held it at arm's length, could not read the dose line, and said the library's large-print books manage this fine.",
         "delights": [
-          "She found the comfort control in the header unprompted and set Text size to Largest and Contrast to High. It worked properly: root font 16px to 24px, the whole layout scaled with it, zero horizontal overflow at both 414px and 320px, and axe returned zero violations in every comfort state I tested. Nothing was left behind at 13px — the field labels went 13 to 19.5px, the hints 15 to 22.5px, the time tiles 15 to 22.5px and 44px to 66px tall.",
+          "She found the comfort control in the header unprompted and set Text size to Largest and Contrast to High. It worked properly: root font 16px to 24px, the whole layout scaled with it, zero horizontal overflow at both 414px and 320px, and axe returned zero violations in every comfort state I tested. Nothing was left behind at 13px, the field labels went 13 to 19.5px, the hints 15 to 22.5px, the time tiles 15 to 22.5px and 44px to 66px tall.",
           "The time-of-day tiles carry a tick glyph as well as a colour fill (index.html:1280, 1294), so she can tell what is selected without relying on the blue.",
           "The safety sentence is now a readable 15px with a left rule instead of the 12.8px grey italic the previous audit found."
         ],
@@ -61,15 +61,15 @@
           {
             "what": "Largest text does nothing to the printed card. Measured in print media at default and at Largest + High contrast: the table body stays 9.5pt, the dose/time line stays 8.5pt, the title 17pt, the tick box 10pt (3.5mm) and the grid rules #999 in both. The print block deliberately resets --ui-scale to 1 (index.html:1196) and #sheet is specified entirely in pt (index.html:1355-1368), so the comfort panel cannot reach it by design.",
             "severity": "blocker",
-            "whyItMatters": "The research's single headline differentiator is to 'own the words large print as an actual, measured feature' with 18/22/28pt output presets — 18pt is the APH / ACB / Library of Congress NLS floor and 20pt bold sans is the preferred spec. The app ships an excellent screen-comfort system and a 9.5pt output, which is half the large-print floor. The person the card is FOR never touches the app, so scaling the operator's screen serves the wrong reader entirely."
+            "whyItMatters": "The research's single headline differentiator is to 'own the words large print as an actual, measured feature' with 18/22/28pt output presets, 18pt is the APH / ACB / Library of Congress NLS floor and 20pt bold sans is the preferred spec. The app ships an excellent screen-comfort system and a 9.5pt output, which is half the large-print floor. The person the card is FOR never touches the app, so scaling the operator's screen serves the wrong reader entirely."
           },
           {
-            "what": "At Largest text, 'Carbidopa/Levodopa' renders in the schedule list as 'Carbidopa/Levo' / 'dopa' — a mid-word break, because ul.plain .grow sets overflow-wrap:anywhere (index.html:688) and the Remove button holds its width beside it.",
+            "what": "At Largest text, 'Carbidopa/Levodopa' renders in the schedule list as 'Carbidopa/Levo' / 'dopa', a mid-word break, because ul.plain .grow sets overflow-wrap:anywhere (index.html:688) and the Remove button holds its width beside it.",
             "severity": "major",
             "whyItMatters": "For a low-vision reader a drug name split mid-syllable is a genuine identification hazard, and this is the app's own list of what she is about to take. It happens precisely at the setting she needs."
           },
           {
-            "what": "Everything scaled with her text size except the buttons that matter. Measured at Largest: the Remove buttons stay 36px tall (index.html:584 hardcodes min-height:36px instead of var(--tap)), the comfort-panel trigger itself is a fixed 36x36 (index.html:1003) and the tip jar 36px (index.html:391) — while the time tiles grew to 66px.",
+            "what": "Everything scaled with her text size except the buttons that matter. Measured at Largest: the Remove buttons stay 36px tall (index.html:584 hardcodes min-height:36px instead of var(--tap)), the comfort-panel trigger itself is a fixed 36x36 (index.html:1003) and the tip jar 36px (index.html:391), while the time tiles grew to 66px.",
             "severity": "major",
             "whyItMatters": "The one destructive control in the app is the one that refuses to grow for the user who most needs it to, and the button that opens the accessibility settings is itself under the 44px floor. Five targets under 44px at every comfort setting; the standard battery's 32px threshold misses all of them."
           },
@@ -79,7 +79,7 @@
             "whyItMatters": "This is the previous audit's number-one comfort defect and it is still live. The uplift exists because THIS app is read by ageing eyes; it is the one app in the portfolio where a 14% type reduction is a product failure rather than a cosmetic one. Root cause is the build order in design/build.mjs, so it silently affects every app whose skin sets scale, radius or wrap."
           },
           {
-            "what": "Printed grid rules are 1pt #999 — 2.85:1 against white paper, below the 3:1 WCAG requires for a graphical object. The tick boxes are 10pt (3.53mm) and the disclaimer is 8pt italic.",
+            "what": "Printed grid rules are 1pt #999 to 2.85:1 against white paper, below the 3:1 WCAG requires for a graphical object. The tick boxes are 10pt (3.53mm) and the disclaimer is 8pt italic.",
             "severity": "minor",
             "whyItMatters": "She marks the boxes with a ballpoint and the sheet gets photocopied for her daughter. Both operations make faint rules fainter, and a 3.5mm box is small for an unsteady pen."
           }
@@ -87,14 +87,14 @@
       },
       {
         "name": "Marcus Delgado",
-        "who": "41, type 2 diabetes plus hypertension, six daily medications — right in the research's '4-5 daily meds' band that Medisafe's 2-medication free tier made useless. Left Medisafe when the paywall landed on 1 Jan 2026 and has been looking for something free that does not want his data.",
+        "who": "41, type 2 diabetes plus hypertension, six daily medications, right in the research's '4-5 daily meds' band that Medisafe's 2-medication free tier made useless. Left Medisafe when the paywall landed on 1 Jan 2026 and has been looking for something free that does not want his data.",
         "context": "Bus stop then office, Android phone at 414px, one thumb, ten minutes. Wants this done and never thought about again.",
         "task": "Get his six meds onto a card, print one at the office printer, and send the same thing to his sister who does his refills.",
-        "verdict": "Sold within a minute — no cap, no account, no ads — and the card printed. Then the sharing half fell apart in his hand and he could not tell whether it was his phone or the app.",
+        "verdict": "Sold within a minute, no cap, no account, no ads, and the card printed. Then the sharing half fell apart in his hand and he could not tell whether it was his phone or the app.",
         "delights": [
           "No medication counter, no upgrade prompt, no trial clock. He added six and kept going to eight to test it. Exactly the flex the research asked for.",
           "'Copy link' genuinely round-trips. I verified it end to end: copied a 258-char link from one profile, opened it in a completely fresh browser context with empty storage, and it landed as 'Mom', 2 medications, 4 sheet rows, saved locally, hash cleaned off the URL, zero console errors. Nothing was uploaded to anything.",
-          "It works with the network off — the service worker registers and the whole app plus the QR library are local."
+          "It works with the network off, the service worker registers and the whole app plus the QR library are local."
         ],
         "frictions": [
           {
@@ -103,12 +103,12 @@
             "whyItMatters": "His six-medication card is already past the point where a phone camera can resolve it, and the app presents the result as a finished, scannable code. He held it up to his sister's phone for thirty seconds in a bus shelter and concluded her camera was broken. The failure at the top end is worse: 'Could not draw the QR' names no cause, no limit and no alternative, on a screen where Copy link would have worked fine."
           },
           {
-            "what": "The QR dialog is not hidden in print. I opened it and printed: the PDF contains the dialog — title, QR, 'Point another phone's camera at it', and a 'Close' button — and nothing else. The medication card is entirely absent. Neither the base print block (index.html:1191) nor the app's (index.html:1355) lists #qrDlg.",
+            "what": "The QR dialog is not hidden in print. I opened it and printed: the PDF contains the dialog, title, QR, 'Point another phone's camera at it', and a 'Close' button, and nothing else. The medication card is entirely absent. Neither the base print block (index.html:1191) nor the app's (index.html:1355) lists #qrDlg.",
             "severity": "major",
             "whyItMatters": "He tapped Show QR, then hit the browser's print from the same screen, and got a sheet of paper with a QR code and the word Close on it. On a phone, print is often reached through a share sheet without ever closing what is on screen. Rendered proof at design/out/ps-qropen.pdf."
           },
           {
-            "what": "There is no export of any kind beyond the link — no JSON, no CSV, no 'save a copy'. The footer and the trust panel both promise the data is his and that the card survives the site disappearing, but the only machine-readable copy lives in this origin's localStorage.",
+            "what": "There is no export of any kind beyond the link, no JSON, no CSV, no 'save a copy'. The footer and the trust panel both promise the data is his and that the card survives the site disappearing, but the only machine-readable copy lives in this origin's localStorage.",
             "severity": "major",
             "whyItMatters": "The research's second complaint is precisely 'you cannot view, export or transfer your own data', and the recommended answer is 'an explicit Export everything button ... printable card, PDF, and a plain JSON/CSV file'. Clearing site data on his phone, or switching phones, loses everything except whatever paper survived."
           },
@@ -121,19 +121,19 @@
       },
       {
         "name": "Rosalba Iglesias",
-        "who": "47, paid home-health aide, five clients. Spanish first language, reads English well but not fast. Never opens the app herself — she is the READER the research describes, plus the person who inherits whatever the family printed. The one who found the aide-and-family shared-kitchen case in the research.",
+        "who": "47, paid home-health aide, five clients. Spanish first language, reads English well but not fast. Never opens the app herself, she is the READER the research describes, plus the person who inherits whatever the family printed. The one who found the aide-and-family shared-kitchen case in the research.",
         "context": "Client's kitchen, 07:15, standing, card taped to the fridge at eye height, winter light. Gloves half off. She has eleven minutes before the next client.",
         "task": "Confirm which pills go out with breakfast and tick Tuesday.",
-        "verdict": "The card is honestly good at what it does — bold names, a real check-off grid, plain words. She got breakfast right. But she was working from page 1 of 2 and had no idea, and there is nothing on the card that tells her when it was last correct.",
+        "verdict": "The card is honestly good at what it does, bold names, a real check-off grid, plain words. She got breakfast right. But she was working from page 1 of 2 and had no idea, and there is nothing on the card that tells her when it was last correct.",
         "delights": [
           "The grid is a real grid: bold medication name and dose on one line, time-of-day and note beneath it, seven day columns with tick boxes. No colour is load-bearing, so the monochrome office printer lost nothing (rendered proof at design/out/p30-1.png).",
-          "'Morning — empty stomach, 30 minutes before breakfast' printed in full rather than being truncated. Notes at 120 characters survive the cell."
+          "'Morning, empty stomach, 30 minutes before breakfast' printed in full rather than being truncated. Notes at 120 characters survive the cell."
         ],
         "frictions": [
           {
             "what": "Nothing on the printed card says when it was made. renderSheet (app.js:104-105) prints the title and 'Week of ______________ · check each box when taken' and no date stamp at all.",
             "severity": "major",
-            "whyItMatters": "Post-discharge, doses change weekly — up to 40% of seniors leave hospital with an incorrect dosage somewhere in the list. She has no way to tell whether the card on the fridge is this week's or from before the hospital stay. The research asks for a revision date and a 'replaces card dated ___' line for exactly this."
+            "whyItMatters": "Post-discharge, doses change weekly, up to 40% of seniors leave hospital with an incorrect dosage somewhere in the list. She has no way to tell whether the card on the fridge is this week's or from before the hospital stay. The research asks for a revision date and a 'replaces card dated ___' line for exactly this."
           },
           {
             "what": "Page 2 is anonymous. Chrome repeats the column header row, but the patient name, the title and any page numbering appear only on page 1 (verified in the extracted text of a 30-row card).",
@@ -146,7 +146,7 @@
             "whyItMatters": "Every one of those is on the research's table-stakes list, present on the FDA, AHRQ, ASHP and VA caregiver forms without exception, and on the Vial of Life form this card is competing with. An aide who finds an unresponsive client needs the allergy line and the prescriber's number on that same sheet; PRN medications mixed into a scheduled grid is how someone takes six of something."
           },
           {
-            "what": "All fixed chrome is English only — 'Medication & when', 'Mon'-'Sun', 'check each box when taken', and the disclaimer.",
+            "what": "All fixed chrome is English only, 'Medication & when', 'Mon'-'Sun', 'check each box when taken', and the disclaimer.",
             "severity": "minor",
             "whyItMatters": "The research's bilingual side-by-side idea is pure client-side string tables and targets exactly this kitchen. Her own med names would stay verbatim; only the scaffolding would translate."
           }
@@ -154,35 +154,35 @@
       },
       {
         "name": "Trevor Lynn",
-        "who": "33, son two states away, coordinates his father's meds by phone. Ulnar neuropathy — drives everything from the keyboard and uses a trackball sparingly. Technical enough to notice when an app breaks.",
+        "who": "33, son two states away, coordinates his father's meds by phone. Ulnar neuropathy, drives everything from the keyboard and uses a trackball sparingly. Technical enough to notice when an app breaks.",
         "context": "Desk, 1280px window, headset on, on a call with his father's pharmacy while he types. Both hands on the keyboard for a 20-minute stretch.",
         "task": "Take the link his sister texted, merge in two dose changes the pharmacy just gave him, and send it back.",
-        "verdict": "The keyboard path through the app is genuinely complete — better than most of the portfolio. He lost the shared link instead, twice, and lost an undo to a timer.",
+        "verdict": "The keyboard path through the app is genuinely complete, better than most of the portfolio. He lost the shared link instead, twice, and lost an undo to a timer.",
         "delights": [
-          "Full keyboard operation, verified end to end: 14 Tab stops from load in a sensible order (skip link, comfort, tip jar, Whose meds, Medication, Dose, Morning, Noon, Evening, Bedtime, Notes, Add, Add-the-first, Print), and Space toggles the time tiles. He built a two-time medication without touching the trackball. The previous audit's blocking defect — display:none on the checkboxes taking the whole control out of the tab order — is genuinely fixed at index.html:1281-1288, and the focus ring on the tile is drawn from :has(input:focus-visible).",
-          "After Add, focus returns to the Medication field, so entering nine medications is a clean loop. After Remove, focus lands on the next row's Remove button, or on 'Add the first medication' when the list empties — never on <body>.",
+          "Full keyboard operation, verified end to end: 14 Tab stops from load in a sensible order (skip link, comfort, tip jar, Whose meds, Medication, Dose, Morning, Noon, Evening, Bedtime, Notes, Add, Add-the-first, Print), and Space toggles the time tiles. He built a two-time medication without touching the trackball. The previous audit's blocking defect, display:none on the checkboxes taking the whole control out of the tab order, is genuinely fixed at index.html:1281-1288, and the focus ring on the tile is drawn from :has(input:focus-visible).",
+          "After Add, focus returns to the Medication field, so entering nine medications is a clean loop. After Remove, focus lands on the next row's Remove button, or on 'Add the first medication' when the list empties, never on <body>.",
           "Escape closes the QR dialog and the comfort dialog properly, and axe returns clean after interaction in every state I ran."
         ],
         "frictions": [
           {
-            "what": "Declining a shared link destroys it. history.replaceState at app.js:202 sits outside the accept branch, so dismissing the confirm still strips the hash. Verified: after dismissing, location.hash is empty and the URL is back to the bare app — the payload is gone and cannot be recovered without asking the sender to resend.",
+            "what": "Declining a shared link destroys it. history.replaceState at app.js:202 sits outside the accept branch, so dismissing the confirm still strips the hash. Verified: after dismissing, location.hash is empty and the URL is back to the bare app, the payload is gone and cannot be recovered without asking the sender to resend.",
             "severity": "major",
-            "whyItMatters": "He opened his sister's link on the machine that already had his own working copy, read a native confirm() saying his current schedule 'will be replaced', pressed Cancel to be safe — which is the correct instinct — and lost her card. Then he asked her to resend and did it again on a different tab. The confirm text also reads 'Your current one (1 medications) will be replaced.'"
+            "whyItMatters": "He opened his sister's link on the machine that already had his own working copy, read a native confirm() saying his current schedule 'will be replaced', pressed Cancel to be safe, which is the correct instinct, and lost her card. Then he asked her to resend and did it again on a different tab. The confirm text also reads 'Your current one (1 medications) will be replaced.'"
           },
           {
-            "what": "Undo evaporates on a timer even while it has keyboard focus. app.js:26-39 defines a local toast() with a bare setTimeout; the app ignores the shared SWS.toast in sws-ui.js, which exists specifically to hold the clock on focusin/pointerenter. Measured: focus the Undo button, wait — at 7s the toast hides, document.activeElement becomes BODY, and the medication stays deleted. It takes 4 Tab presses to reach Undo from where focus lands after Remove.",
+            "what": "Undo evaporates on a timer even while it has keyboard focus. app.js:26-39 defines a local toast() with a bare setTimeout; the app ignores the shared SWS.toast in sws-ui.js, which exists specifically to hold the clock on focusin/pointerenter. Measured: focus the Undo button, wait, at 7s the toast hides, document.activeElement becomes BODY, and the medication stays deleted. It takes 4 Tab presses to reach Undo from where focus lands after Remove.",
             "severity": "major",
             "whyItMatters": "A keyboard or screen-reader user is told there is a way back, spends four Tab stops getting to it, and the button disappears out from under the caret with focus dumped to the top of the document. sws-ui.js is already loaded on the page (index.html:1372) and solves this; app.js just does not call it."
           },
           {
-            "what": "A shared link bypasses the row cap entirely. decodeCard caps meds at 30 (app.js:172) but never counts rows, while addMed caps rows at 30 (app.js:137). Verified: a link holding 30 medications x 4 times imports whole — 30 list rows, 120 sheet rows — and prints a SEVEN page card. Adding one more medication by hand is then refused as over the one-page limit.",
+            "what": "A shared link bypasses the row cap entirely. decodeCard caps meds at 30 (app.js:172) but never counts rows, while addMed caps rows at 30 (app.js:137). Verified: a link holding 30 medications x 4 times imports whole, 30 list rows, 120 sheet rows, and prints a SEVEN page card. Adding one more medication by hand is then refused as over the one-page limit.",
             "severity": "major",
             "whyItMatters": "Two different limits on two different paths into the same data, and the generous one produces the worst possible artifact. Proof at design/out/ps-import.pdf."
           },
           {
-            "what": "Any saved record whose shape is not exactly right takes the app down. load() (app.js:50-55) validates only Array.isArray(d.meds). Verified with {\"who\":\"Mom\",\"meds\":[{\"name\":\"Lisinopril\"}]}: uncaught TypeError 'times is not iterable' out of renderList, and because init() throws, module evaluation stops before app.js:229-240 — so Show QR, Copy link and the dialog's Close button have no listeners at all. The schedule card shows the empty state while the data is still in storage.",
+            "what": "Any saved record whose shape is not exactly right takes the app down. load() (app.js:50-55) validates only Array.isArray(d.meds). Verified with {\"who\":\"Mom\",\"meds\":[{\"name\":\"Lisinopril\"}]}: uncaught TypeError 'times is not iterable' out of renderList, and because init() throws, module evaluation stops before app.js:229-240, so Show QR, Copy link and the dialog's Close button have no listeners at all. The schedule card shows the empty state while the data is still in storage.",
             "severity": "major",
-            "whyItMatters": "Today it needs a hand-edited record to trigger. It becomes routine the moment the schema moves — and the research's own roadmap (clock times, PRN, brand/generic, NEW/STOPPED tags) all change the shape of a med. On that day every card already saved on a device shows 'No medications on the card yet' over data that is still there, and three of the app's buttons go dead with no error the user can see."
+            "whyItMatters": "Today it needs a hand-edited record to trigger. It becomes routine the moment the schema moves, and the research's own roadmap (clock times, PRN, brand/generic, NEW/STOPPED tags) all change the shape of a med. On that day every card already saved on a device shows 'No medications on the card yet' over data that is still there, and three of the app's buttons go dead with no error the user can see."
           }
         ]
       }
@@ -190,25 +190,25 @@
     "consensus": {
       "worksWell": [
         "The core loop is as short as the research demanded: type a name, tap a time tile, Add. Four taps from cold open to a medication on the card, no account, no wizard, no modal, no interstitial, no medication cap.",
-        "Keyboard and screen-reader operation is complete and correct — 14 ordered tab stops, Space-toggled time tiles with a real fieldset/legend, focus deliberately re-homed after both Add and Remove, axe clean in every state tested (default, Largest, Largest+Roomy+High contrast, Easier reading, after interaction, with the QR dialog open).",
+        "Keyboard and screen-reader operation is complete and correct, 14 ordered tab stops, Space-toggled time tiles with a real fieldset/legend, focus deliberately re-homed after both Add and Remove, axe clean in every state tested (default, Largest, Largest+Roomy+High contrast, Easier reading, after interaction, with the QR dialog open).",
         "The comfort panel does its job on screen: 16px to 24px root, everything scaling in proportion, zero horizontal overflow at 320px and 414px in every combination tried.",
-        "The privacy promise is real and provable — no network requests, the share link keeps the data in the fragment, the round trip into a fresh browser profile works exactly as advertised, and the claim sits next to the first field instead of buried in the footer.",
+        "The privacy promise is real and provable, no network requests, the share link keeps the data in the fragment, the round trip into a fresh browser profile works exactly as advertised, and the claim sits next to the first field instead of buried in the footer.",
         "Nothing user-typed can break out: 60/40/120-char hostile strings, RTL overrides, <img onerror> and <script> payloads all render as text on screen and on paper, zero injected nodes, zero overflow.",
         "Undo instead of a confirm dialog on delete is the right call for this user, and the toast names what was removed."
       ],
       "hurts": [
         "The one-page promise is false. Measured max is 17 rows (15 with realistic notes) against a 30-row cap the app describes as 'the one-page limit', and page 2 carries no name, no title and no page number.",
-        "The printed card — the actual product — is untouched by the comfort system: 9.5pt body against the 18pt large-print floor, with no output type-size control of any kind.",
+        "The printed card, the actual product, is untouched by the comfort system: 9.5pt body against the 18pt large-print floor, with no output type-size control of any kind.",
         "You cannot see what you are making. No preview on screen; the print dialog is the first look.",
         "The QR is silently unscannable from about 4 medications and throws outright at about 20, and printing while it is open prints the QR instead of the card.",
         "You cannot edit a row, cannot export anything but a link, and get no warning when the same drug is on the card twice under two names.",
         "Three separate paths lose the user's work or someone else's: declining a shared link destroys the payload, a wrong-shape saved record blanks the schedule and kills the share buttons, and an undo can expire while focused."
       ],
       "mostWantedNext": [
-        "A live preview of the actual sheet on screen, with an honest page-fit meter — 'fits on one page' / '19 rows: this will print on 2 pages'.",
+        "A live preview of the actual sheet on screen, with an honest page-fit meter, 'fits on one page' / '19 rows: this will print on 2 pages'.",
         "Output type-size presets at 18 / 22 / 28pt, wired to the printed card rather than to the operator's screen, with the fit meter reacting to them.",
         "Edit a row in place, and a visible 'x of 30 rows' counter that warns before it refuses.",
-        "An allergies block, prescriber and pharmacy phone numbers, and a separate as-needed section — the table stakes every clinical form has and this card does not.",
+        "An allergies block, prescriber and pharmacy phone numbers, and a separate as-needed section, the table stakes every clinical form has and this card does not.",
         "A printed-on date on the card, and the name repeated on every page.",
         "A duplicate-name flag before printing, worded as 'double-check with your pharmacist'.",
         "Export and re-import a plain file, so the promise that the data is theirs is something they can hold."
@@ -222,7 +222,7 @@
       {
         "name": "Standard battery",
         "method": "node design/stress.mjs pill-schedule",
-        "result": "0 hard failures. Layout clean at 320/414/1280 and at largest-text and roomy; no touch targets under its 32px threshold; hostile text produced 0 injected scripts/imgs and no title hijack; numeric edges clean; keyboard reachability 18 focusable, 0 unreachable, 0 unnamed; axe after interaction clean; print reported 2 dark fills (a.skip, div); no console errors over the whole run. IMPORTANT CAVEAT I verified by reading design/stress.mjs:186-204: the bulk and rapid-click scenarios are no-ops for this app. The generic driver types into the first text input (#whoInput) and clicks .btn.primary (#addMed) without ever checking a time-of-day box, so all 200 adds were refused by the guard at app.js:134 — hence nodes:0 and storage=73B. 'Rapid clicking, 30 clicks' and 'survives reload, 944 to 914 chars' are measuring toast text, not data.",
+        "result": "0 hard failures. Layout clean at 320/414/1280 and at largest-text and roomy; no touch targets under its 32px threshold; hostile text produced 0 injected scripts/imgs and no title hijack; numeric edges clean; keyboard reachability 18 focusable, 0 unreachable, 0 unnamed; axe after interaction clean; print reported 2 dark fills (a.skip, div); no console errors over the whole run. IMPORTANT CAVEAT I verified by reading design/stress.mjs:186-204: the bulk and rapid-click scenarios are no-ops for this app. The generic driver types into the first text input (#whoInput) and clicks .btn.primary (#addMed) without ever checking a time-of-day box, so all 200 adds were refused by the guard at app.js:134, hence nodes:0 and storage=73B. 'Rapid clicking, 30 clicks' and 'survives reload, 944 to 914 chars' are measuring toast text, not data.",
         "severity": "none",
         "defect": null
       },
@@ -250,13 +250,13 @@
       {
         "name": "Printing with the QR dialog open",
         "method": "Opened #qrDlg, dispatched beforeprint, generated a Letter PDF and rendered it to PNG.",
-        "result": "The PDF contains the dialog only — heading, QR canvas, hint paragraph and the Close button — and no medication card at all. getComputedStyle(#qrDlg).display is 'block' in print. Neither print block lists #qrDlg: base at index.html:1191, app at index.html:1355. Proof at design/out/ps-qropen.pdf.",
+        "result": "The PDF contains the dialog only, heading, QR canvas, hint paragraph and the Close button, and no medication card at all. getComputedStyle(#qrDlg).display is 'block' in print. Neither print block lists #qrDlg: base at index.html:1191, app at index.html:1355. Proof at design/out/ps-qropen.pdf.",
         "severity": "major",
         "defect": "Print from the QR screen produces a sheet of paper with a QR code and the word Close on it."
       },
       {
         "name": "Link import versus the row cap",
-        "method": "Built share hashes for 10x1, 30x1, 30x4 and 40x1 medications-by-times, cleared storage, loaded each as a real document navigation (a hash-only goto does NOT re-run init — that masked the first attempt), then printed.",
+        "method": "Built share hashes for 10x1, 30x1, 30x4 and 40x1 medications-by-times, cleared storage, loaded each as a real document navigation (a hash-only goto does NOT re-run init, that masked the first attempt), then printed.",
         "result": "10x1 imports 10 meds / 10 rows / 1 page. 30x1 imports 30 rows / 2 pages. 30x4 imports 30 meds and 120 SHEET ROWS and prints 7 PAGES. 40x1 is correctly clamped to 30 meds by the slice at app.js:172. Adding one more medication by hand afterwards is refused as over the 30-row limit.",
         "severity": "major",
         "defect": "decodeCard caps medications, addMed caps rows. The import path can produce a card seven times larger than the app will let you build."
@@ -264,28 +264,28 @@
       {
         "name": "Declining a shared link",
         "method": "Seeded a local schedule, loaded a share URL for a different person as a fresh navigation, dismissed the native confirm, then inspected location and storage.",
-        "result": "Confirm reads 'Open the shared schedule for Grandma? Your current one (1 medications) will be replaced.' After dismissing: the local schedule survives (correct), but location.hash is empty and the URL is the bare app — history.replaceState at app.js:202 runs outside the accept branch. The sender's payload is unrecoverable from that tab.",
+        "result": "Confirm reads 'Open the shared schedule for Grandma? Your current one (1 medications) will be replaced.' After dismissing: the local schedule survives (correct), but location.hash is empty and the URL is the bare app, history.replaceState at app.js:202 runs outside the accept branch. The sender's payload is unrecoverable from that tab.",
         "severity": "major",
         "defect": "Cancel destroys the incoming card. Also 'Your current one (1 medications)'."
       },
       {
         "name": "Structurally valid but wrong-shape saved data",
         "method": "Wrote four hand-plausible records to localStorage and reloaded: meds:[{}], meds:[null], a med missing times, and a med whose times is the string 'Morning'. Captured page errors and probed whether the module-tail listeners attached.",
-        "result": "meds:[{}] and the missing-times record throw uncaught 'TypeError: times is not iterable'; meds:[null] throws 'Cannot read properties of null'. In every throwing case the schedule card renders the empty state over data that is still in storage, and because init() throws, module evaluation never reaches app.js:229-240 — Show QR, Copy link and the QR Close button have no listeners (verified: clicking them does nothing, no toast, no dialog). The string-times record does not throw but renders a row with no times. load() at app.js:50-55 validates only Array.isArray(d.meds).",
+        "result": "meds:[{}] and the missing-times record throw uncaught 'TypeError: times is not iterable'; meds:[null] throws 'Cannot read properties of null'. In every throwing case the schedule card renders the empty state over data that is still in storage, and because init() throws, module evaluation never reaches app.js:229-240, Show QR, Copy link and the QR Close button have no listeners (verified: clicking them does nothing, no toast, no dialog). The string-times record does not throw but renders a row with no times. load() at app.js:50-55 validates only Array.isArray(d.meds).",
         "severity": "major",
         "defect": "One malformed record blanks the schedule and silently disables three buttons. Any future change to the med shape does this to every already-saved card."
       },
       {
         "name": "Undo lifetime under keyboard focus",
         "method": "Removed a medication, focused the toast's Undo button, waited past the 7,000ms timer, then read activeElement and the row count. Separately counted Tab presses from post-remove focus to the Undo button.",
-        "result": "Undo is present and correctly sized (72x44px) and is reachable in 4 Tab presses. At 7s the toast hides regardless: classList 'show' removed, document.activeElement becomes BODY, the medication stays deleted. app.js:26-39 uses a local setTimeout toast; the shared SWS.toast in sws-ui.js — already loaded at index.html:1372 — implements hold-on-focusin/pointerenter and is never called.",
+        "result": "Undo is present and correctly sized (72x44px) and is reachable in 4 Tab presses. At 7s the toast hides regardless: classList 'show' removed, document.activeElement becomes BODY, the medication stays deleted. app.js:26-39 uses a local setTimeout toast; the shared SWS.toast in sws-ui.js, already loaded at index.html:1372, implements hold-on-focusin/pointerenter and is never called.",
         "severity": "major",
         "defect": "The way back expires while the user is standing on it, and dumps focus to the top of the document."
       },
       {
-        "name": "Comfort matrix — 320/414 x default/Largest/Largest+Roomy+High/Easier reading",
+        "name": "Comfort matrix, 320/414 x default/Largest/Largest+Roomy+High/Easier reading",
         "method": "Four full runs with prefs seeded before first paint; measured computed sizes on every text role, tap boxes, gaps, page height, horizontal overflow and axe.",
-        "result": "Zero horizontal overflow and zero axe violations in all four. Root 16px to 24px at Largest; field labels 13 to 19.5px; card h2 12 to 18px; time tiles 15 to 22.5px and 44 to 66px tall; hints, disclaimer and trust 15 to 22.5px. Page height 2,161 to 3,395px at 320px. FAILURES: --t-base computes to 1rem, --wrap to 42rem and --r to 14px, against the skin's 1.140rem / 52rem / 10px at index.html:26-32 (overridden by the base :root at 224/239/262). Five targets under 44px in every state — #swsPrefsBtn 36x36, a#tipLink 36px tall, and each Remove button 36px tall — because index.html:584, 391 and 1003 hardcode 36px instead of var(--tap). At Largest, 'Carbidopa/Levodopa' breaks mid-word in the list (index.html:688, overflow-wrap:anywhere).",
+        "result": "Zero horizontal overflow and zero axe violations in all four. Root 16px to 24px at Largest; field labels 13 to 19.5px; card h2 12 to 18px; time tiles 15 to 22.5px and 44 to 66px tall; hints, disclaimer and trust 15 to 22.5px. Page height 2,161 to 3,395px at 320px. FAILURES: --t-base computes to 1rem, --wrap to 42rem and --r to 14px, against the skin's 1.140rem / 52rem / 10px at index.html:26-32 (overridden by the base :root at 224/239/262). Five targets under 44px in every state, #swsPrefsBtn 36x36, a#tipLink 36px tall, and each Remove button 36px tall, because index.html:584, 391 and 1003 hardcode 36px instead of var(--tap). At Largest, 'Carbidopa/Levodopa' breaks mid-word in the list (index.html:688, overflow-wrap:anywhere).",
         "severity": "major",
         "defect": "Skin type uplift dead portfolio-wide; the destructive control and the accessibility trigger never scale; drug names break mid-word at the setting a low-vision user needs."
       },
@@ -313,21 +313,21 @@
       {
         "name": "Non-Latin and RTL names on paper",
         "method": "Seeded Japanese, Cyrillic, Arabic (including Arabic-Indic digits) and Greek medication names and a non-Latin patient name, printed to PDF, and round-tripped the same record through encodeCard/decodeCard.",
-        "result": "No tofu and no '??' — the seating-chart failure mode does not occur here. The sheet's textContent carries the scripts intact and the base64 round trip through unescape/encodeURIComponent preserves them exactly (verified equal on the way back). PDF at design/out/ps-i18n.pdf.",
+        "result": "No tofu and no '??', the seating-chart failure mode does not occur here. The sheet's textContent carries the scripts intact and the base64 round trip through unescape/encodeURIComponent preserves them exactly (verified equal on the way back). PDF at design/out/ps-i18n.pdf.",
         "severity": "none",
         "defect": null
       },
       {
         "name": "Double-tap Add, duplicate medications, and the cap boundary",
         "method": "Double-clicked #addMed on a filled form; added Norvasc, amlodipine and Norvasc again; then loaded a 28-row card and tried to add a medication with 3 times.",
-        "result": "Double-tap produces exactly 1 row — the fields are cleared synchronously. Duplicates: 4 rows, names ['Warfarin','Norvasc','amlodipine','Norvasc'], no .warn, no role=alert, no toast beyond 'Norvasc added to the card' — the identical string twice is not flagged. At 28 rows, adding 3 more is refused with the one-page toast; the typed values stay in the fields so nothing is lost, but there is no counter anywhere on the page (regex for 'n of 30' over body text: no match).",
+        "result": "Double-tap produces exactly 1 row, the fields are cleared synchronously. Duplicates: 4 rows, names ['Warfarin','Norvasc','amlodipine','Norvasc'], no .warn, no role=alert, no toast beyond 'Norvasc added to the card', the identical string twice is not flagged. At 28 rows, adding 3 more is refused with the one-page toast; the typed values stay in the fields so nothing is lost, but there is no counter anywhere on the page (regex for 'n of 30' over body text: no match).",
         "severity": "major",
         "defect": "No duplicate check at all, and the row budget is invisible until it refuses."
       },
       {
         "name": "Printing an empty card, and where the controls sit on a small phone",
         "method": "Fired beforeprint with zero medications and generated a PDF; then measured document offsets of the key controls at 320x568, 414x896 and 320x568 at Largest text.",
-        "result": "Empty print emits a 1-page sheet with the title 'Medication Schedule', the 'Week of' line, a full header row and no body rows — a usable blank grid, though the title has no name and nothing tells the user that is what they are getting. Offsets at 320x568: header 112px tall (the tip jar wraps to its own row and sits at y=64), #medName at y=575 — below the 568px fold — #addMed at y=1074 and #printBtn at y=1605 on a 2,138px page. At Largest text: #medName y=907, #printBtn y=2372 on a 3,217px page. The design system's .actionbar (index.html:800) is unused.",
+        "result": "Empty print emits a 1-page sheet with the title 'Medication Schedule', the 'Week of' line, a full header row and no body rows, a usable blank grid, though the title has no name and nothing tells the user that is what they are getting. Offsets at 320x568: header 112px tall (the tip jar wraps to its own row and sits at y=64), #medName at y=575, below the 568px fold, #addMed at y=1074 and #printBtn at y=1605 on a 2,138px page. At Largest text: #medName y=907, #printBtn y=2372 on a 3,217px page. The design system's .actionbar (index.html:800) is unused.",
         "severity": "minor",
         "defect": "On the most common small phone the first input is below the fold and the primary action is 2.8 screens down, while the tip jar is above the fold before anything exists."
       }
@@ -336,7 +336,7 @@
   "fixes": [
     {
       "title": "Make the one-page promise true, or stop making it",
-      "rationale": "Measured on real Letter PDFs: 17 rows fit with no notes, 15 with realistic ones, yet app.js:137 refuses row 31 as 'the one-page limit (30 rows)' and index.html:1436 repeats it. Denise printed 2 pages for 11 medications after being told twice it would be 1. Set an explicit line-height on #sheet (it currently inherits 1.55 from the screen body rule, which the print block never resets), tighten cell padding, drop td.day to 6% so the medication column gets 58% instead of 44%, then re-derive the real cap, lower it, and rewrite the message string. Add a live row budget in the UI ('19 of 24 rows — this will print on 1 page') so the limit is visible before it bites.",
+      "rationale": "Measured on real Letter PDFs: 17 rows fit with no notes, 15 with realistic ones, yet app.js:137 refuses row 31 as 'the one-page limit (30 rows)' and index.html:1436 repeats it. Denise printed 2 pages for 11 medications after being told twice it would be 1. Set an explicit line-height on #sheet (it currently inherits 1.55 from the screen body rule, which the print block never resets), tighten cell padding, drop td.day to 6% so the medication column gets 58% instead of 44%, then re-derive the real cap, lower it, and rewrite the message string. Add a live row budget in the UI ('19 of 24 rows, this will print on 1 page') so the limit is visible before it bites.",
       "where": "apps/pill-schedule/app.js:136-137; apps/pill-schedule/index.html:1359-1362, 1436",
       "severity": "blocker",
       "effort": "M"
@@ -357,7 +357,7 @@
     },
     {
       "title": "Stop one malformed record from bricking the page",
-      "rationale": "load() validates only Array.isArray(d.meds) (app.js:50-55). A record like {\"meds\":[{\"name\":\"Lisinopril\"}]} throws 'times is not iterable' out of renderList, init() dies, and module evaluation never reaches app.js:229-240 — so Show QR, Copy link and the dialog's Close button silently have no listeners, while the schedule card shows 'No medications on the card yet' over data still sitting in storage. It needs a hand-edited record today; it becomes routine the day the med shape changes for clock times, PRN or NEW/STOPPED tags. Normalise every med on load through the same coercion decodeCard already uses (app.js:172-178), drop unusable rows, and tell the user what was dropped.",
+      "rationale": "load() validates only Array.isArray(d.meds) (app.js:50-55). A record like {\"meds\":[{\"name\":\"Lisinopril\"}]} throws 'times is not iterable' out of renderList, init() dies, and module evaluation never reaches app.js:229-240, so Show QR, Copy link and the dialog's Close button silently have no listeners, while the schedule card shows 'No medications on the card yet' over data still sitting in storage. It needs a hand-edited record today; it becomes routine the day the med shape changes for clock times, PRN or NEW/STOPPED tags. Normalise every med on load through the same coercion decodeCard already uses (app.js:172-178), drop unusable rows, and tell the user what was dropped.",
       "where": "apps/pill-schedule/app.js:50-55, 86-99, 210",
       "severity": "blocker",
       "effort": "S"
@@ -371,7 +371,7 @@
     },
     {
       "title": "Hide the QR dialog in print",
-      "rationale": "Verified: with #qrDlg open, the printed PDF contains the dialog and the Close button and no medication card at all (design/out/ps-qropen.pdf). Neither print block lists it — base at index.html:1191, app at index.html:1355. On a phone, print is often reached from a share sheet without closing what is on screen. One selector.",
+      "rationale": "Verified: with #qrDlg open, the printed PDF contains the dialog and the Close button and no medication card at all (design/out/ps-qropen.pdf). Neither print block lists it, base at index.html:1191, app at index.html:1355. On a phone, print is often reached from a share sheet without closing what is on screen. One selector.",
       "where": "apps/pill-schedule/index.html:1191 and 1355",
       "severity": "major",
       "effort": "S"
@@ -385,14 +385,14 @@
     },
     {
       "title": "Use the shared toast so Undo cannot expire while it is focused",
-      "rationale": "app.js:26-39 rolls its own setTimeout toast. sws-ui.js — already loaded at index.html:1372 — implements exactly the missing behaviour: hold the clock on focusin and pointerenter, release on leave. Measured: focus the Undo button, and at 7s the toast hides anyway, focus lands on BODY and the medication stays deleted. It takes 4 Tab presses to reach Undo in the first place. Call SWS.undo() and delete the local implementation.",
+      "rationale": "app.js:26-39 rolls its own setTimeout toast. sws-ui.js, already loaded at index.html:1372, implements exactly the missing behaviour: hold the clock on focusin and pointerenter, release on leave. Measured: focus the Undo button, and at 7s the toast hides anyway, focus lands on BODY and the medication stays deleted. It takes 4 Tab presses to reach Undo in the first place. Call SWS.undo() and delete the local implementation.",
       "where": "apps/pill-schedule/app.js:22-39, 76-83",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Count rows on import, and never destroy an incoming link the user declined",
-      "rationale": "Two defects on the same path. decodeCard caps medications at 30 (app.js:172) but not rows, so a 30x4 link imports 120 rows and prints a 7-page card (design/out/ps-import.pdf) that the app itself would refuse to let you build. And history.replaceState at app.js:202 runs outside the accept branch, so pressing Cancel on the confirm strips the hash and loses the sender's card permanently — Trevor did it twice. Cap rows on import with an honest message, keep the hash until the user has explicitly accepted or dismissed, and replace the native confirm (which also reads '1 medications') with an in-page choice built from the design system.",
+      "rationale": "Two defects on the same path. decodeCard caps medications at 30 (app.js:172) but not rows, so a 30x4 link imports 120 rows and prints a 7-page card (design/out/ps-import.pdf) that the app itself would refuse to let you build. And history.replaceState at app.js:202 runs outside the accept branch, so pressing Cancel on the confirm strips the hash and loses the sender's card permanently, Trevor did it twice. Cap rows on import with an honest message, keep the hash until the user has explicitly accepted or dismissed, and replace the native confirm (which also reads '1 medications') with an in-page choice built from the design system.",
       "where": "apps/pill-schedule/app.js:172-179, 193-203",
       "severity": "major",
       "effort": "S"
@@ -406,35 +406,35 @@
     },
     {
       "title": "Flag the same drug twice before it prints",
-      "rationale": "Verified: Norvasc, amlodipine and Norvasc again all print with no warning of any kind — not even for the identical string. Look-alike/sound-alike confusion is behind roughly 25% of reported medication errors (PA Patient Safety Advisory, PBA Health), and safety guidance says put both brand and generic on the label. Start with exact/case-insensitive name matching plus a small bundled brand-to-generic table, surface it in the unused .warn component worded as 'two rows look like the same medicine — double-check with your pharmacist', never as clinical advice. Pair it with a second name field so both names print.",
+      "rationale": "Verified: Norvasc, amlodipine and Norvasc again all print with no warning of any kind, not even for the identical string. Look-alike/sound-alike confusion is behind roughly 25% of reported medication errors (PA Patient Safety Advisory, PBA Health), and safety guidance says put both brand and generic on the label. Start with exact/case-insensitive name matching plus a small bundled brand-to-generic table, surface it in the unused .warn component worded as 'two rows look like the same medicine, double-check with your pharmacist', never as clinical advice. Pair it with a second name field so both names print.",
       "where": "apps/pill-schedule/app.js:130-150 (add path); apps/pill-schedule/index.html:1418-1427 (schedule card)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Stamp the card with a date and repeat the name on every page",
-      "rationale": "renderSheet (app.js:104-105) prints the title and 'Week of ______________' and no date at all, and the extracted text of a 2-page card shows page 2 carrying only the repeated column header — no name, no title, no page number. Rosalba had no way to tell whether the sheet taped to the fridge predated the hospital stay, and no way to know a page 2 existed. Add 'Printed 9 Aug 2026 · page 1 of 2' in the running head with the patient name, using a repeating thead cell or a fixed running element.",
+      "rationale": "renderSheet (app.js:104-105) prints the title and 'Week of ______________' and no date at all, and the extracted text of a 2-page card shows page 2 carrying only the repeated column header, no name, no title, no page number. Rosalba had no way to tell whether the sheet taped to the fridge predated the hospital stay, and no way to know a page 2 existed. Add 'Printed 9 Aug 2026 · page 1 of 2' in the running head with the patient name, using a repeating thead cell or a fixed running element.",
       "where": "apps/pill-schedule/app.js:101-124; apps/pill-schedule/index.html:1356-1358",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Add the clinical blocks every med-list form has and this card does not",
-      "rationale": "No allergies block, no prescriber or pharmacy phone, no as-needed (PRN) section, no strength-plus-count split, no brand/generic pairing, and four fixed time buckets with no clock times. Every one is on the research's table-stakes list and present on the FDA, AHRQ, ASHP and VA caregiver forms without exception, and the allergy line plus ICE contacts are what make the card Vial-of-Life compatible — the free, EMS-endorsed convention this artifact is competing with on the fridge. Allergies first: visually dominant, with the reaction, never colour-only. PRN must be physically separate from the scheduled grid with a max-per-day, because mixing them is how someone takes six of something.",
+      "rationale": "No allergies block, no prescriber or pharmacy phone, no as-needed (PRN) section, no strength-plus-count split, no brand/generic pairing, and four fixed time buckets with no clock times. Every one is on the research's table-stakes list and present on the FDA, AHRQ, ASHP and VA caregiver forms without exception, and the allergy line plus ICE contacts are what make the card Vial-of-Life compatible, the free, EMS-endorsed convention this artifact is competing with on the fridge. Allergies first: visually dominant, with the reaction, never colour-only. PRN must be physically separate from the scheduled grid with a max-per-day, because mixing them is how someone takes six of something.",
       "where": "apps/pill-schedule/app.js:101-124 (renderSheet); apps/pill-schedule/index.html:1386-1416 (input cards)",
       "severity": "major",
       "effort": "L"
     },
     {
       "title": "Make the destructive and accessibility controls scale, and stop breaking drug names mid-word",
-      "rationale": "At Largest text the time tiles reach 66px while three controls stay pinned at 36px: the Remove button (index.html:584, min-height:36px), the comfort-panel trigger itself (index.html:1003, 36x36) and the tip jar (index.html:391). Five sub-44px targets in every comfort state — the standard battery's 32px threshold misses all of them. Separately, ul.plain .grow sets overflow-wrap:anywhere (index.html:688) and 'Carbidopa/Levodopa' renders as 'Carbidopa/Levo' / 'dopa' at Largest, which is an identification hazard on a medication list. Use var(--tap) for all three, and switch the row text to overflow-wrap:break-word with hyphens off so names break only at existing separators.",
+      "rationale": "At Largest text the time tiles reach 66px while three controls stay pinned at 36px: the Remove button (index.html:584, min-height:36px), the comfort-panel trigger itself (index.html:1003, 36x36) and the tip jar (index.html:391). Five sub-44px targets in every comfort state, the standard battery's 32px threshold misses all of them. Separately, ul.plain .grow sets overflow-wrap:anywhere (index.html:688) and 'Carbidopa/Levodopa' renders as 'Carbidopa/Levo' / 'dopa' at Largest, which is an identification hazard on a medication list. Use var(--tap) for all three, and switch the row text to overflow-wrap:break-word with hyphens off so names break only at existing separators.",
       "where": "apps/pill-schedule/index.html:584, 391, 1001-1003, 688",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Darken the printed grid, grow the tick boxes, and unbury the print button",
-      "rationale": "Printed rules are 1pt #999 = 2.85:1 on white, under the 3:1 floor for a graphical object, and they fade further on the photocopy a sibling gets; tick boxes are 10pt (3.53mm) for a daily pen mark; the printed disclaimer is 8pt italic. On screen at 320x568 the first input sits at y=575 against a 568px fold and Print is at y=1605 while the tip jar is above the fold at y=64 — the ask before the deliverable, which the research explicitly warns against. Rules to #666 or darker with print-color-adjust on the header fill (#f0f0ee currently drops entirely when background graphics are off, which is the default), boxes to 14pt, disclaimer to 9pt roman, and put Print in the unused .actionbar (index.html:800) once a medication exists.",
+      "rationale": "Printed rules are 1pt #999 = 2.85:1 on white, under the 3:1 floor for a graphical object, and they fade further on the photocopy a sibling gets; tick boxes are 10pt (3.53mm) for a daily pen mark; the printed disclaimer is 8pt italic. On screen at 320x568 the first input sits at y=575 against a 568px fold and Print is at y=1605 while the tip jar is above the fold at y=64, the ask before the deliverable, which the research explicitly warns against. Rules to #666 or darker with print-color-adjust on the header fill (#f0f0ee currently drops entirely when background graphics are off, which is the default), boxes to 14pt, disclaimer to 9pt roman, and put Print in the unused .actionbar (index.html:800) once a medication exists.",
       "where": "apps/pill-schedule/index.html:1360, 1361, 1363, 1367, 800, 1430; apps/pill-schedule/index.html:1381 (tip jar placement)",
       "severity": "minor",
       "effort": "S"

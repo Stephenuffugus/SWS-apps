@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRADE SHEET — the app
+   GRADE SHEET, the app
 
    Everything that can be wrong here is wrong about a real child, so the whole
    thing is arranged around two rules:
@@ -12,7 +12,7 @@
 
    The interaction is built around the act that happens most: marking one class,
    tired, at the end of a period. That path is keyboard-first and commits on
-   every keystroke that moves — a half-typed value silently discarded is worse
+   every keystroke that moves, a half-typed value silently discarded is worse
    than a committed one that undo can reverse.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -147,7 +147,7 @@ function renderKeepline() {
   const shield = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   const line = persisted
     ? 'This browser has promised to keep your gradebook. Export a backup file every week anyway.'
-    : '<b>This browser has not promised to keep your gradebook — export a backup file every week.</b>';
+    : '<b>This browser has not promised to keep your gradebook, export a backup file every week.</b>';
   const when = book.lastBackupAt
     ? (days === 0 ? 'Last backup: today.' : `Last backup: ${days} day${days === 1 ? '' : 's'} ago.`)
     : 'You have never exported a backup.';
@@ -205,7 +205,7 @@ function vWiped(m) {
     el('div', { class: 'keepline warn' },
       el('div', {},
         el('p', { style: 'margin:0 0 8px' }, el('b', {}, 'This browser has erased your gradebook.')),
-        el('p', { style: 'margin:0 0 8px' }, 'Grade Sheet has been used on this computer before, but the marks are gone. That usually means the browser was set to clear website data when you sign out — a setting a school often applies to shared and managed computers.'),
+        el('p', { style: 'margin:0 0 8px' }, 'Grade Sheet has been used on this computer before, but the marks are gone. That usually means the browser was set to clear website data when you sign out, a setting a school often applies to shared and managed computers.'),
         el('p', { style: 'margin:0 0 8px' }, 'We cannot get it back. Nothing was ever sent to us, so there is no copy anywhere but yours.'),
         el('p', { style: 'margin:0' }, 'If you have a backup file, restore it now. Then export a backup every week, and keep it somewhere the computer does not control.'))),
     el('div', { class: 'rowline', style: 'margin-top:16px' },
@@ -221,7 +221,7 @@ function vToday(m) {
   const mine = book.classIndex.filter((c) => !c.days || !c.days.length || c.days.includes(dow));
   mine.sort((a, b) => (a.period ?? 99) - (b.period ?? 99));
 
-  m.append(el('h2', {}, `Today — ${dow}`));
+  m.append(el('h2', {}, `Today, ${dow}`));
   if (!mine.length) m.append(el('p', { class: 'muted' }, 'Nothing scheduled for today. All your classes are under Classes.'));
   const grid = el('div', { class: 'cards' });
   for (const c of mine) {
@@ -232,8 +232,8 @@ function vToday(m) {
   m.append(grid);
 }
 
-/* The studio badge. This app earns it — after the strip there is no network
-   code at all — but the wording is this app's own, because the standard line
+/* The studio badge. This app earns it, after the strip there is no network
+   code at all, but the wording is this app's own, because the standard line
    is about the reader's data and this holds somebody else's children's. The
    sentence it must never say is any form of "FERPA compliant": a product
    cannot be, only a practice can, and a teacher relying on that would be
@@ -270,7 +270,7 @@ function vWelcome(m) {
 /* ── classes ────────────────────────────────────────────────────────────── */
 async function addClass() {
   const r = await ask('Add a class', [
-    { key: 'name', label: 'What is this class called?', required: true, hint: '“Grade — teacher” works well, e.g. 2 Kowalski.' },
+    { key: 'name', label: 'What is this class called?', required: true, hint: '“Grade, teacher” works well, e.g. 2 Kowalski.' },
     { key: 'period', label: 'Period (optional)', type: 'number', min: '0' },
   ]);
   if (!r || !r.name) return;
@@ -483,7 +483,7 @@ async function newAssignment(full) {
     if (!r || !r.name) return;
     name = r.name; pts = Number(r.pts);
   } else {
-    name = `Lesson — ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`;
+    name = `Lesson, ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`;
     pts = 4;
   }
   if (!isFinite(pts) || pts < 0) { say('That is not a number of points.'); return; }
@@ -566,7 +566,7 @@ function vRoster(m) {
   if (!pasteState) {
     m.append(
       el('h3', {}, 'Paste anything with names in it'),
-      el('p', { class: 'muted' }, 'Select your class list — in your school system, in a spreadsheet, in an email — copy it, and paste it here. It does not have to be tidy.'),
+      el('p', { class: 'muted' }, 'Select your class list, in your school system, in a spreadsheet, in an email, copy it, and paste it here. It does not have to be tidy.'),
       el('textarea', {
         class: 'paste', autofocus: true, 'aria-label': 'Paste your class list',
         onpaste: (e) => {
@@ -641,7 +641,7 @@ function pickerUI() {
     box.append(el('div', { class: 'keepline warn' }, el('div', {},
       el('p', { style: 'margin:0 0 6px' }, el('b', {}, 'Two students would look the same on screen.')),
       el('p', { style: 'margin:0 0 6px' }, collisions.map((x) => x.name).join(', '),
-        ' — marks put on the wrong one are invisible until a report card goes home.'),
+        ', marks put on the wrong one are invisible until a report card goes home.'),
       el('p', { style: 'margin:0' }, 'Show full names, or add a middle initial to one of them after they are added.'),
       el('button', { class: 'btn ghost', style: 'margin-top:8px', onclick: async () => { book.nameDisplay = 'full'; await saveBook(); render(); } }, 'Show full names'))));
   }
@@ -716,7 +716,7 @@ function vSetup(m) {
     box.append(el('label', {}, 'Drop this many lowest scores',
       el('input', { type: 'number', min: '0', value: c.dropLowest || 0, onchange: async (e) => { c.dropLowest = Math.max(0, Number(e.target.value) || 0); await saveClass(c); render(); } }),
       el('span', { class: 'muted', style: 'display:block;font-size:.85rem' },
-        'Grade Sheet drops whichever scores leave the student best off — not simply the smallest number.')));
+        'Grade Sheet drops whichever scores leave the student best off, not simply the smallest number.')));
   }
 
   box.append(el('fieldset', {}, el('legend', {}, 'Show grades as'),
@@ -724,7 +724,7 @@ function vSetup(m) {
       el('input', { type: 'radio', name: 'dp', checked: c.dp === dp, onchange: async () => { c.dp = dp; await saveClass(c); render(); } }),
       ' ', ['90', '89.7', '89.72'][dp])),
     el('p', { class: 'muted', style: 'font-size:.85rem' },
-      'This also decides borderline letters. At whole numbers 89.5 shows as 90 and earns an A. At one decimal it stays 89.5 and earns a B. If you round up to the next letter, change the cutoff instead — that is exact, and it is what you will tell a parent.')));
+      'This also decides borderline letters. At whole numbers 89.5 shows as 90 and earns an A. At one decimal it stays 89.5 and earns a B. If you round up to the next letter, change the cutoff instead, that is exact, and it is what you will tell a parent.')));
 
   const scaleSel = el('select', {
     'aria-label': 'Letter scale',
@@ -736,7 +736,7 @@ function vSetup(m) {
   const errs = validateScale(c.scale, c.dp);
   box.append(el('fieldset', {}, el('legend', {}, 'Letter scale'), scaleSel,
     el('p', { class: 'muted', style: 'font-size:.85rem' },
-      c.scale.length ? c.scale.map((b) => `${b.label} from ${b.min}`).join(' · ') : 'No letters — percentages only.'),
+      c.scale.length ? c.scale.map((b) => `${b.label} from ${b.min}`).join(' · ') : 'No letters, percentages only.'),
     errs.length ? el('p', { class: 'err' }, errs[0].msg) : ''));
 
   box.append(el('button', {
@@ -797,15 +797,14 @@ function vBackup(m) {
   ));
 
   /* The screen she shows her principal. Every sentence here has to survive
-     being read aloud in a conference room, so it states mechanism and stops —
-     no compliance claims, no reassurance we cannot back. */
+     being read aloud in a conference room, so it states mechanism and stops, no compliance claims, no reassurance we cannot back. */
   m.append(el('section', { style: 'margin-top:28px' },
     el('h3', {}, 'What Grade Sheet holds, and where'),
-    el('p', {}, 'Everything you type — class names, student names, assignments and marks — is stored by this browser, on this computer, in a database called ', el('code', {}, 'sws-gradesheet'), '. Nowhere else.'),
+    el('p', {}, 'Everything you type, class names, student names, assignments and marks, is stored by this browser, on this computer, in a database called ', el('code', {}, 'sws-gradesheet'), '. Nowhere else.'),
     el('p', {}, el('b', {}, 'What leaves this device:'), ' nothing. There is no network code in this app. No upload, no analytics, no fonts fetched from anywhere, no update check. The only copy that exists elsewhere is the backup file you save yourself.'),
     el('p', {}, el('b', {}, 'How to check that, in thirty seconds:'), ' turn off the Wi-Fi, reload the page, and keep working. Everything still works, because the whole app is cached on your device. An app that runs with the network off is an app that cannot be sending your grades anywhere.'),
     el('p', {}, el('b', {}, 'What this app is not:'), ' it is your working gradebook. Your school’s student information system is still the official record, and if our number and theirs disagree, theirs wins.'),
-    el('p', {}, el('b', {}, 'What it does not do:'), ' it does not lock your grades behind a password. Anyone who can use this computer while you are signed in can read them. Lock your computer — that is the control your school already relies on.'),
+    el('p', {}, el('b', {}, 'What it does not do:'), ' it does not lock your grades behind a password. Anyone who can use this computer while you are signed in can read them. Lock your computer, that is the control your school already relies on.'),
     el('p', {}, 'Before you type real student names into this, or into anything else, check your school’s policy on classroom software.'),
     el('div', { class: 'rowline', style: 'margin-top:16px' },
       el('button', {

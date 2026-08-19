@@ -1,4 +1,4 @@
-// Bracket maker — pure single-elimination logic. Tested in test/helpers.test.mjs.
+// Bracket maker, pure single-elimination logic. Tested in test/helpers.test.mjs.
 // State: { names: string[], picks: { "r-m": entrantIndex } }
 // Round 0 pairs follow standard seeding (1v8, 4v5, 2v7, 3v6 …) so the top two
 // seeds can only meet in the final; byes auto-advance.
@@ -25,7 +25,7 @@ export const MAX_ENTRANTS = 32;
 export const MAX_NAME = 40;
 
 /* Parse, but also report what the caps threw away. The app has to be able to
-   SAY "you pasted 40, I kept 32" — a cap discovered after the work is done is
+   SAY "you pasted 40, I kept 32", a cap discovered after the work is done is
    the single angriest thing in this category's reviews. */
 export function entrantInfo(text) {
   if (typeof text !== 'string') return { names: [], total: 0, dropped: 0, truncated: 0 };
@@ -53,15 +53,14 @@ export function round0Slot(names, slot) {
   return seed <= names.length ? seed - 1 : null;
 }
 
-/* Who stands in match m of round r on side 0/1 — resolved through picks and
+/* Who stands in match m of round r on side 0/1, resolved through picks and
    byes; null when not yet decided. */
 export function contender(state, r, m, side) {
   if (r === 0) return round0Slot(state.names, m * 2 + side);
   return winnerOf(state, r - 1, m * 2 + side);
 }
 
-/* A side is a true bye only when its entire feeding subtree holds no entrants —
-   "opponent not decided yet" must NOT auto-advance anyone. */
+/* A side is a true bye only when its entire feeding subtree holds no entrants, "opponent not decided yet" must NOT auto-advance anyone. */
 function sideEmpty(state, r, m, side) {
   if (r === 0) return round0Slot(state.names, m * 2 + side) === null;
   const fm = m * 2 + side;
@@ -116,7 +115,7 @@ export function champion(state) {
    pairing is dropped, and the caller offers an undo for that. */
 
 /** oldIndex → newIndex. Same name in the same slot first, then same name
-    anywhere, then leftovers paired in order — which is what a rename is. */
+    anywhere, then leftovers paired in order, which is what a rename is. */
 export function mapEntrants(oldNames, newNames) {
   const map = new Array(oldNames.length).fill(-1);
   const takenNew = new Array(newNames.length).fill(false);

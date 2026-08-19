@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the privacy page, one per app
+   SWS STUDIO, the privacy page, one per app
 
    Google Play will not accept a listing without a reachable privacy policy
    URL, and the Data Safety form has to match what the page says. Twenty of
    the twenty-three apps had no page at all.
 
    Writing 23 of these by hand guarantees they drift apart, and a privacy
-   policy that contradicts a sibling app is worse than none — it is the exact
+   policy that contradicts a sibling app is worse than none, it is the exact
    thing that makes a reviewer look harder. So the page is generated: the
    structure and the promises are invariant, and the app-specific facts come
    from privacy-facts.json, which is derived by reading each app's actual code
@@ -77,7 +77,7 @@ function page(slug) {
   const pal = palette[slug];
   const voice = VOICES[skin.voice];
   const mf = JSON.parse(readFileSync(join(APPS, slug, 'manifest.webmanifest'), 'utf8'));
-  const name = mf.name.split(/[—-]/)[0].trim();
+  const name = mf.name.split(/[, -]/)[0].trim();
 
   const ink = solveInk(slug, 11);
   const muted = solveInk(slug, 4.6);
@@ -93,7 +93,7 @@ function page(slug) {
     ? `<h2>Where your data goes</h2>
   <p>${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.</p>
   <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> ${esc(f.leavesDevice)}</p>
-  <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds — no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>`
+  <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds, no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>`
     : `<h2>Where your data goes</h2>
   <p>Nowhere. ${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.</p>
   <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>`;
@@ -116,7 +116,7 @@ function page(slug) {
   const perms = (f.permissions || []).filter((p) => p && !/^none$/i.test(p));
   const permission = perms.length
     ? `<h2>Permissions</h2>
-  <p>The app asks for ${perms.map(esc).join(', ')}, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse — the rest of the app keeps working.</p>`
+  <p>The app asks for ${perms.map(esc).join(', ')}, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse, the rest of the app keeps working.</p>`
     : `<h2>Permissions</h2>
   <p>None. The app asks for no camera, no microphone, no location, no contacts and no notifications.</p>`;
 
@@ -126,8 +126,8 @@ function page(slug) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="${pal.accentDeep}">
-<meta name="description" content="Privacy and accessibility for ${esc(name)} — ${esc(f.oneLine)}">
-<title>Privacy &amp; Accessibility — ${esc(name)}</title>
+<meta name="description" content="Privacy and accessibility for ${esc(name)}, ${esc(f.oneLine)}">
+<title>Privacy &amp; Accessibility: ${esc(name)}</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
   :root{--bg:${pal.canvas};--ink:${ink};--muted:${muted};--line:${line};--accent:${pal.accentDeep}}
@@ -171,10 +171,10 @@ function page(slug) {
   ${third}
 
   <h2>Tips</h2>
-  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app — every feature is free either way.</p>
+  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app, every feature is free either way.</p>
 
   <h2>Hosting</h2>
-  <p>The app's files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. ${leaves ? 'It is separate from the shared data described above.' : 'It cannot record anything you type, because what you type is never sent to the host.'}</p>
+  <p>The app's files are served by Google's Firebase Hosting, which, like any web host, keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. ${leaves ? 'It is separate from the shared data described above.' : 'It cannot record anything you type, because what you type is never sent to the host.'}</p>
 
   <h2>Children</h2>
   <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
@@ -198,7 +198,7 @@ function page(slug) {
 }
 
 /* Play requires the privacy policy to be reachable from inside the app itself,
-   not only from the Console listing field — and in a TWA "inside the app" is
+   not only from the Console listing field, and in a TWA "inside the app" is
    this page. The colophon already carries the studio link and Feedback, so the
    policy goes in the same row, in the same voice, rather than becoming a new
    piece of chrome. Idempotent: an app that already links it is left alone. */
@@ -213,8 +213,8 @@ function linkFromColophon(slug) {
      differently-coloured word in the footer.
 
      Two constraints learned the hard way. The colophon is not always literal
-     markup — bill-splitter builds it in JS as a single-quoted string inside
-     applyConfig() — so the match cannot require a <footer> tag around it, and
+     markup, bill-splitter builds it in JS as a single-quoted string inside
+     applyConfig(), so the match cannot require a <footer> tag around it, and
      the inserted text must contain NO NEWLINE, or it terminates that string
      literal and takes the whole app's script down with it. Keep this on one
      line however tempting it is to wrap. */

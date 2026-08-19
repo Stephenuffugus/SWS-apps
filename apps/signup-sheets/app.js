@@ -1,5 +1,5 @@
-// Signup Sheets — Engine 1, skin A. UI layer.
-// All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
+// Signup Sheets, Engine 1, skin A. UI layer.
+// All user data reaches the DOM via textContent (the el() helper), never innerHTML.
 import {
   normalizeCode, parseBulkSlotsReport, dateRangeSlotsReport,
   fillStats, nudgeMessage, shareUrl, stillNeededSentence, MAX_SLOTS,
@@ -61,7 +61,7 @@ function showDlg(d) {
   const opener = document.activeElement;
   if (opener && opener !== document.body) {
     // The board redraws while a dialog is open, so remember WHAT the opener was
-    // (a stable key) as well as which node it was — the node may be gone.
+    // (a stable key) as well as which node it was, the node may be gone.
     dlgOpener.set(d, { node: opener, key: opener.getAttribute && opener.getAttribute('data-fk') });
   }
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
@@ -87,8 +87,8 @@ async function copyText(text, okMsg) {
 }
 function friendly(e) {
   const code = (e && (e.code || e.message)) || '';
-  if (String(code).includes('permission-denied')) return 'That didn’t go through — the spot may have just filled, or the sheet is locked.';
-  if (String(code).includes('unavailable')) return 'You look offline — the change is queued and will sync when you reconnect.';
+  if (String(code).includes('permission-denied')) return 'That didn’t go through, the spot may have just filled, or the sheet is locked.';
+  if (String(code).includes('unavailable')) return 'You look offline, the change is queued and will sync when you reconnect.';
   return 'Something went wrong. Try again?';
 }
 /* Some failures have already spoken for themselves in the exact words the
@@ -114,7 +114,7 @@ const live = {           // active board subscriptions
     this.slots = []; this.entries = []; this.claims = new Map();
   },
 };
-// Owner console state that must survive a redraw — it used to be thrown away
+// Owner console state that must survive a redraw, it used to be thrown away
 // on every Firestore snapshot, i.e. whenever anyone anywhere claimed anything.
 const ui = { manageOpen: false, addMode: 'single', openOnly: false };
 
@@ -130,14 +130,14 @@ window.addEventListener('hashchange', render);
 const isOwner = () => !!(user && live.board && live.board.ownerUid === user.uid);
 
 /* ---------- home ---------- */
-// Participants see an invitation instead of the standard colophon — every
+// Participants see an invitation instead of the standard colophon, every
 // shared board doubles as the product's own ad. Owners and home keep the default.
 function setGrowthFooter(participant) {
   const o = document.getElementById('orgLine');
   if (!o) return;
   if (!o.dataset.home) o.dataset.home = o.innerHTML;
   o.innerHTML = participant
-    ? 'Made with <a href="./" style="color:inherit">Signup Sheets</a> — free, no ads. <a href="./" style="color:inherit">Start yours</a>'
+    ? 'Made with <a href="./" style="color:inherit">Signup Sheets</a>, free, no ads. <a href="./" style="color:inherit">Start yours</a>'
     : o.dataset.home;
 }
 
@@ -149,7 +149,7 @@ async function renderHome() {
 
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'Signup sheets that take 15 seconds'),
-    el('p', {}, 'Potlucks, volunteer shifts, meal trains, snack duty. Share a link — people tap a spot, type their name, done. ',
+    el('p', {}, 'Potlucks, volunteer shifts, meal trains, snack duty. Share a link, people tap a spot, type their name, done. ',
       el('strong', {}, 'No accounts for participants. No ads. Free.')),
     el('button', { class: 'btn primary', type: 'button', onclick: startCreate }, 'Create a sheet'),
   ));
@@ -165,14 +165,14 @@ async function renderHome() {
     class: 'btn', type: 'button', style: 'flex:0 0 auto',
     onclick: () => {
       const c = normalizeCode(codeInput.value);
-      if (!c) { toast('Codes are 6 letters/numbers — check the link you were sent'); return; }
+      if (!c) { toast('Codes are 6 letters/numbers, check the link you were sent'); return; }
       location.hash = '#/b/' + c;
     },
   }, 'Open');
   v.append(el('section', { class: 'card' },
     el('h2', {}, 'Got a code?'),
     el('div', { class: 'row' }, codeInput, openBtn),
-    el('p', { class: 'hint', text: 'If someone shared a link with you, just tap it — this box is for codes read out loud.' })));
+    el('p', { class: 'hint', text: 'If someone shared a link with you, just tap it, this box is for codes read out loud.' })));
 
   if (user && !D.isAnon(user)) {
     const sec = el('section', { class: 'card' }, el('h2', {}, 'Your sheets'));
@@ -185,7 +185,7 @@ async function renderHome() {
       if (boards.length === 0) {
         sec.append(el('div', { class: 'empty' },
           el('div', { class: 'glyph', 'aria-hidden': 'true' }, '📋'),
-          el('p', {}, 'No sheets yet — create your first one above. It takes about fifteen seconds.')));
+          el('p', {}, 'No sheets yet, create your first one above. It takes about fifteen seconds.')));
       }
       for (const b of boards) {
         list.append(el('li', {},
@@ -217,8 +217,8 @@ function renderGone(badCode, code) {
   v.replaceChildren(el('section', { class: 'card' },
     el('h2', {}, badCode ? 'No sheet with that code' : 'This sheet is gone'),
     el('p', {}, badCode
-      ? 'Nothing is here at code ' + (code || live.code || '') + '. Codes are six letters and numbers, and they never contain the letters O, I or L or the digits 0 and 1 — those get mistaken for each other. Check the link you were sent, or ask whoever sent it for a fresh one.'
-      : 'The organizer deleted this sheet, so there is nothing left to sign up for. If you had claimed a spot, that commitment no longer exists — check with whoever sent you the link.'),
+      ? 'Nothing is here at code ' + (code || live.code || '') + '. Codes are six letters and numbers, and they never contain the letters O, I or L or the digits 0 and 1, those get mistaken for each other. Check the link you were sent, or ask whoever sent it for a fresh one.'
+      : 'The organizer deleted this sheet, so there is nothing left to sign up for. If you had claimed a spot, that commitment no longer exists, check with whoever sent you the link.'),
     el('p', {}, el('a', { class: 'btn', href: '#/' }, 'Go to the front page'))));
 }
 
@@ -277,10 +277,10 @@ function syncClaimWatchers() {
    sheet: 73 full rebuilds in six seconds, 102 during one bulk add. That
    collapsed the owner's Manage panel on every keystroke-adjacent action, wiped
    any half-typed note, and threw focus to <body>. Three defences:
-     1. coalesce — at most one rebuild per DRAW_MS, trailing edge;
-     2. remember — every field that can hold typed text carries data-keep, and
+     1. coalesce, at most one rebuild per DRAW_MS, trailing edge;
+     2. remember, every field that can hold typed text carries data-keep, and
         its value, selection and focus survive the rebuild;
-     3. remember open state — details.manage and the add-mode segment too. */
+     3. remember open state, details.manage and the add-mode segment too. */
 const DRAW_MS = 60;
 let drawTimer = null, drawLast = 0;
 function drawBoard() {
@@ -357,27 +357,27 @@ function drawBoardNow() {
     // the fold instead of seven screenfuls down.
     const need = stillNeededSentence(live.slots);
     if (need) head.append(el('p', { class: 'stillneeded', text: need }));
-    else head.append(el('p', { class: 'stillneeded', text: 'Every spot is taken — thank you.' }));
+    else head.append(el('p', { class: 'stillneeded', text: 'Every spot is taken, thank you.' }));
   }
   v.append(head);
   v.append(trustBadge(true));
 
-  // Owners get sharing front and center — it's the whole point of the product.
+  // Owners get sharing front and center, it's the whole point of the product.
   if (own) {
     const url = shareUrl(live.code, baseUrl());
     v.append(el('section', { class: 'card noprint' },
       el('h2', {}, 'Share this sheet'),
       el('div', { class: 'sharecode', text: live.code }),
       el('div', { class: 'row' },
-        el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied — send it anywhere') }, 'Copy link'),
+        el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied, send it anywhere') }, 'Copy link'),
         el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
-      el('p', { class: 'hint', text: 'Send the link any way you like. The big code is for telling someone out loud — they type it on the app’s front page.' })));
+      el('p', { class: 'hint', text: 'Send the link any way you like. The big code is for telling someone out loud, they type it on the app’s front page.' })));
   }
 
   if (locked) v.append(el('div', { class: 'banner', text: own
-    ? 'This sheet is locked — participants can look but not sign up. Unlock it in Manage.'
-    : 'This sheet is locked by the organizer — read-only for now.' }));
-  if (!navigator.onLine) v.append(el('div', { class: 'banner', text: 'You’re offline — you can read the sheet; claims will sync when you’re back.' }));
+    ? 'This sheet is locked, participants can look but not sign up. Unlock it in Manage.'
+    : 'This sheet is locked by the organizer, read-only for now.' }));
+  if (!navigator.onLine) v.append(el('div', { class: 'banner', text: 'You’re offline, you can read the sheet; claims will sync when you’re back.' }));
 
   // --- slots ---
   const slotsCard = el('section', { class: 'card' }, el('h2', {}, 'Spots'));
@@ -385,7 +385,7 @@ function drawBoardNow() {
     slotsCard.append(el('div', { class: 'empty' },
       el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🗒'),
       el('p', {}, own
-        ? 'No spots yet — open Manage below to add them. You can paste a whole list at once.'
+        ? 'No spots yet, open Manage below to add them. You can paste a whole list at once.'
         : 'The organizer hasn’t added spots yet.')));
   }
   const openSlots = live.slots.filter(s => (s.claimedCount || 0) < (s.capacity || 1));
@@ -404,7 +404,7 @@ function drawBoardNow() {
   const filtering = ui.openOnly && hidden > 0;
   for (const s of live.slots) {
     const row = renderSlot(s, own, locked);
-    // Filtered out on screen only — the printed sheet is always the whole sheet.
+    // Filtered out on screen only, the printed sheet is always the whole sheet.
     if (filtering && (s.claimedCount || 0) >= (s.capacity || 1)) row.classList.add('filtered');
     slotsCard.append(row);
   }
@@ -447,7 +447,7 @@ function printFooter() {
     el('div', {}, 'Sign up online, or write your name on a blank line above.'),
     el('div', { class: 'pf-url', text: url })));
   foot.append(row);
-  foot.append(el('div', { class: 'pf-url', text: 'Printed ' + new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) + ' — spots may have been taken since.' }));
+  foot.append(el('div', { class: 'pf-url', text: 'Printed ' + new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) + ', spots may have been taken since.' }));
   return foot;
 }
 
@@ -467,10 +467,10 @@ function trustBadge(onBoard) {
   const p = el('p', { class: 'trust noprint' }, svg);
   if (onBoard) {
     p.append(el('b', {}, 'No account, no email, no ads.'),
-      ' The name and note you type are saved to this sheet so everyone with the link can see them — that is the whole point. Nothing else is taken: no email address, no phone number, no contacts, no trackers, and nothing is ever sold or advertised against.');
+      ' The name and note you type are saved to this sheet so everyone with the link can see them, that is the whole point. Nothing else is taken: no email address, no phone number, no contacts, no trackers, and nothing is ever sold or advertised against.');
   } else {
     p.append(el('b', {}, 'No ads, ever. No email addresses collected.'),
-      ' Only organizers sign in, and only to find their own sheets again. People claiming a spot type a first name and nothing else — no account, no verification, no reminder emails. There are no trackers and no third-party scripts on any sheet.');
+      ' Only organizers sign in, and only to find their own sheets again. People claiming a spot type a first name and nothing else, no account, no verification, no reminder emails. There are no trackers and no third-party scripts on any sheet.');
   }
   return p;
 }
@@ -518,8 +518,8 @@ function renderSlot(s, own, locked) {
           else await D.ownerRemoveClaim(live.boardId, s.id, c.uid);
           if (isMine) {
             undoToast('You gave back “' + s.label + '”', async () => {
-              try { await D.claimSlot(live.boardId, s.id, snapshot.name, snapshot.note); toast('Back in — ' + s.label); }
-              catch (e2) { toast('Couldn’t take it back — someone else has it now.', 5000); }
+              try { await D.claimSlot(live.boardId, s.id, snapshot.name, snapshot.note); toast('Back in, ' + s.label); }
+              catch (e2) { toast('Couldn’t take it back, someone else has it now.', 5000); }
             });
           } else {
             toast('Removed ' + c.name + ' from ' + s.label);
@@ -559,7 +559,7 @@ function openClaim(slot) {
 }
 
 /* Retarget the open dialog at another spot without losing a character of what
-   was typed — this is the one-tap recovery from a lost race. */
+   was typed, this is the one-tap recovery from a lost race. */
 function retargetClaim(slot) {
   claimTarget = slot;
   $('nameDlgSlot').textContent = slot.label;
@@ -621,7 +621,7 @@ function renderEntries(b, own, locked) {
   // meal train as if it were content. Screen only, and quieter.
   if (live.entries.length === 0) {
     card.append(el('div', { class: 'empty printhide' },
-      el('p', {}, 'Anything that isn’t a listed spot goes here — what you’re bringing, when you’ll arrive, a dietary note.')));
+      el('p', {}, 'Anything that isn’t a listed spot goes here, what you’re bringing, when you’ll arrive, a dietary note.')));
   }
   card.append(list);
   if (!locked) {
@@ -637,7 +637,7 @@ function renderEntries(b, own, locked) {
         try {
           const status = await D.addEntry(live.boardId, b, { authorName: name, body });
           bodyIn.value = '';
-          toast(status === 'pending' ? 'Added — the organizer will approve it shortly' : 'Added');
+          toast(status === 'pending' ? 'Added, the organizer will approve it shortly' : 'Added');
         } catch (e) { toast(friendly(e), 4500); }
         finally { addBtn.disabled = false; }
       } }, 'Add');
@@ -649,7 +649,7 @@ function renderEntries(b, own, locked) {
 /* ---------- owner manage panel ---------- */
 function renderManage(b) {
   const url = shareUrl(live.code, baseUrl());
-  // The open state lives in `ui`, not in the element — the element is thrown
+  // The open state lives in `ui`, not in the element, the element is thrown
   // away and rebuilt every time anyone, anywhere, claims a spot.
   const wrap = el('details', {
     class: 'manage noprint',
@@ -663,9 +663,9 @@ function renderManage(b) {
   inner.append(el('h2', {}, 'Share'),
     el('p', { class: 'sub', style: 'overflow-wrap:anywhere;margin:0 0 8px', text: url }),
     el('div', { class: 'row', style: 'flex-wrap:wrap' },
-      el('button', { class: 'btn', type: 'button', onclick: () => copyText(url, 'Link copied — paste it anywhere') }, 'Copy link'),
+      el('button', { class: 'btn', type: 'button', onclick: () => copyText(url, 'Link copied, paste it anywhere') }, 'Copy link'),
       el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
-      el('button', { class: 'btn', type: 'button', onclick: () => copyText(nudgeMessage(b.title, live.slots, url), 'Nudge copied — paste into the group chat') }, 'Copy nudge'),
+      el('button', { class: 'btn', type: 'button', onclick: () => copyText(nudgeMessage(b.title, live.slots, url), 'Nudge copied, paste into the group chat') }, 'Copy nudge'),
       el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print')));
 
   // add slots
@@ -684,7 +684,7 @@ function renderManage(b) {
         const label = lab.value.trim();
         if (!label) { toast('Give the spot a label'); return; }
         try {
-          // Only clear the field if the spot was actually accepted — a rejected
+          // Only clear the field if the spot was actually accepted, a rejected
           // label used to be deleted out from under the person who typed it.
           await addSlotsChecked([{ label, capacity: parseInt(cap.value, 10) || 1 }], null,
             (added) => { if (added > 0) lab.value = ''; });
@@ -692,7 +692,7 @@ function renderManage(b) {
       } }, 'Add')));
   } else if (ui.addMode === 'bulk') {
     const ta = el('textarea', { 'data-keep': 'bulk', 'aria-label': 'Paste your list of spots',
-      placeholder: 'One spot per line — add ×N for multiples:\nMain dish x3\nSide or salad x4\nDessert x2\nDrinks & ice' });
+      placeholder: 'One spot per line, add ×N for multiples:\nMain dish x3\nSide or salad x4\nDessert x2\nDrinks & ice' });
     inner.append(ta, el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
         const rep = parseBulkSlotsReport(ta.value);
@@ -702,7 +702,7 @@ function renderManage(b) {
             const missed = rep.dropped + (rep.rows.length - added);
             const notes = [];
             if (missed > 0) notes.push(missed + ' more ' + (missed === 1 ? 'line is' : 'lines are') +
-              ' still in the box — a sheet holds ' + MAX_SLOTS + ' spots, so they were not imported.');
+              ' still in the box, a sheet holds ' + MAX_SLOTS + ' spots, so they were not imported.');
             if (rep.skipped.length) notes.push(rep.skipped.length + ' ' + (rep.skipped.length === 1 ? 'line' : 'lines') + ' had no label and ' + (rep.skipped.length === 1 ? 'was' : 'were') + ' skipped.');
             return notes.join(' ');
           }, (added) => {
@@ -718,7 +718,7 @@ function renderManage(b) {
   } else {
     const start = el('input', { type: 'date', 'data-keep': 'r-start' });
     const end = el('input', { type: 'date', 'data-keep': 'r-end' });
-    const time = el('input', { type: 'text', placeholder: '3–5pm (optional)', maxlength: '40', 'data-keep': 'r-time' });
+    const time = el('input', { type: 'text', placeholder: '3 to 5pm (optional)', maxlength: '40', 'data-keep': 'r-time' });
     const prefix = el('input', { type: 'text', placeholder: 'Label, e.g. “Concession stand” (optional)', maxlength: '60', 'data-keep': 'r-prefix' });
     const cap = el('input', { type: 'number', value: '1', min: '1', max: '999', 'aria-label': 'People needed per date', 'data-keep': 'r-cap' });
     // A <fieldset> with a real <legend>, not a <label> wrapping seven controls.
@@ -745,7 +745,7 @@ function renderManage(b) {
         try {
           await addSlotsChecked(rep.rows, (added) => {
             const missed = rep.dropped + (rep.rows.length - added);
-            return missed ? missed + ' later ' + (missed === 1 ? 'date' : 'dates') + ' did not fit — a sheet holds ' + MAX_SLOTS + ' spots.' : '';
+            return missed ? missed + ' later ' + (missed === 1 ? 'date' : 'dates') + ' did not fit, a sheet holds ' + MAX_SLOTS + ' spots.' : '';
           });
         } catch (e) { reportError(e, 6000); }
       } }, 'Generate spots'));
@@ -764,7 +764,7 @@ function renderManage(b) {
     el('label', { class: 'f', style: 'display:flex;align-items:center;gap:8px' },
       el('input', { type: 'checkbox', style: 'width:auto', ...(s.locked ? { checked: '' } : {}),
         onchange: (ev) => D.setLocked(live.boardId, s, ev.target.checked)
-          .then(() => toast(ev.target.checked ? 'Locked — the sheet is read-only' : 'Unlocked'))
+          .then(() => toast(ev.target.checked ? 'Locked, the sheet is read-only' : 'Unlocked'))
           .catch(e => toast(friendly(e))) }),
       el('span', { style: 'margin:0' }, 'Lock the sheet (read-only)')),
     el('div', { class: 'row', style: 'margin-top:8px' },
@@ -773,18 +773,18 @@ function renderManage(b) {
         try {
           const code = await D.rotateCode(live.boardId, oldCode);
           live.code = code; location.hash = '#/b/' + code;
-          undoToast('New link ready — the old one is dead', async () => {
+          undoToast('New link ready, the old one is dead', async () => {
             try {
               await D.rotateCode(live.boardId, code, oldCode);
               live.code = oldCode; location.hash = '#/b/' + oldCode;
               toast('The old link works again');
-            } catch (e2) { toast('Couldn’t put the old link back — that code has been taken.', 5000); }
+            } catch (e2) { toast('Couldn’t put the old link back, that code has been taken.', 5000); }
           });
         } catch (e) { toast(friendly(e), 4500); }
       } }, 'Rotate link'),
       el('button', { class: 'btn danger', type: 'button', onclick: async () => {
         // Snapshot, delete, hand the snapshot back. Only the board and code
-        // documents are deleted — the slots, claims and notes survive orphaned,
+        // documents are deleted, the slots, claims and notes survive orphaned,
         // so restoring the board at the same id revives the whole sheet.
         const gone = { ...b, id: live.boardId };
         const code = live.code;
@@ -816,12 +816,12 @@ function renderManage(b) {
 
 /* Adds what fits, says exactly what did not, and offers an Undo for the lot.
    `noteFn(added)` supplies the honest tail of the message; `afterFn(added)`
-   is where the caller decides what — if anything — to clear. */
+   is where the caller decides what, if anything, to clear. */
 async function addSlotsChecked(rows, noteFn, afterFn) {
   const room = Math.max(0, MAX_SLOTS - live.slots.length);
   if (room === 0) {
     // Throwing, not returning: the callers used to clear their field either way.
-    toast('This sheet is full at ' + MAX_SLOTS + ' spots — nothing was added, and what you typed is still here. Start a second sheet for the rest.', 8000);
+    toast('This sheet is full at ' + MAX_SLOTS + ' spots, nothing was added, and what you typed is still here. Start a second sheet for the rest.', 8000);
     if (afterFn) afterFn(0);
     const err = new Error('sheet-full'); err.handled = true; throw err;
   }
@@ -832,7 +832,7 @@ async function addSlotsChecked(rows, noteFn, afterFn) {
   if (afterFn) afterFn(take.length);
   const head = take.length === 1 ? 'Spot added' : take.length + ' spots added';
   const tail = noteFn ? noteFn(take.length) : '';
-  undoToast(tail ? head + ' — ' + tail : head, async () => {
+  undoToast(tail ? head + ', ' + tail : head, async () => {
     try { await D.deleteSlots(live.boardId, ids); toast(take.length === 1 ? 'Spot removed' : 'Those ' + take.length + ' spots were removed'); }
     catch (e) { toast(friendly(e), 4500); }
   });
@@ -882,32 +882,32 @@ function saveQR() {
   const canvas = $('qrCanvas');
   try {
     canvas.toBlob((blob) => {
-      if (!blob) { toast('Couldn’t make the image — screenshot the code instead.'); return; }
+      if (!blob) { toast('Couldn’t make the image, screenshot the code instead.'); return; }
       const a = el('a', { href: URL.createObjectURL(blob), download: 'signup-sheet-' + live.code + '.png' });
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 10000);
       toast('QR saved as an image');
     }, 'image/png');
-  } catch (e) { toast('Couldn’t make the image — screenshot the code instead.'); }
+  } catch (e) { toast('Couldn’t make the image, screenshot the code instead.'); }
 }
 
 /* ---------- wiring ---------- */
 function wire() {
   $('authBtn').addEventListener('click', async () => {
-    if (user && !D.isAnon(user)) { await D.signOutUser(); toast('Signed out — tap Sign in to come back'); }
+    if (user && !D.isAnon(user)) { await D.signOutUser(); toast('Signed out, tap Sign in to come back'); }
     else showDlg($('authDlg'));
   });
   $('googleBtn').addEventListener('click', async () => {
     try {
       const u = await D.signInGoogle();
-      if (u === null) return; // redirect flow — page is navigating away
+      if (u === null) return; // redirect flow, page is navigating away
       closeDlg($('authDlg')); toast('Signed in');
     }
     catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized-domain')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Google sign-in didn’t complete (' + (code || 'unknown') + ') — try again or use the email link.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Google sign-in didn’t complete (' + (code || 'unknown') + '), try again or use the email link.', 7000);
     }
   });
   $('emailBtn').addEventListener('click', async () => {
@@ -917,15 +917,15 @@ function wire() {
     catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Couldn’t send the link (' + (code || 'unknown') + ') — check the address and try again.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Couldn’t send the link (' + (code || 'unknown') + '), check the address and try again.', 7000);
     }
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
 
   /* The dialog used to close 53ms after the tap and THEN await the write, so a
      lost race stranded the typed note inside a closed dialog that blanked it on
-     next open — the most humiliating moment in the category, shipped. Now the
+     next open, the most humiliating moment in the category, shipped. Now the
      dialog stays put until the write settles, the button says what it is doing,
      and a collision keeps every character and offers another spot in one tap. */
   $('nameOk').addEventListener('click', async () => {
@@ -943,8 +943,8 @@ function wire() {
       const r = await D.claimSlot(live.boardId, target.id, name, $('noteInput').value);
       closeDlg($('nameDlg'));
       toast(r === 'note-dropped'
-        ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
-        : 'You’re in — ' + target.label, r === 'note-dropped' ? 6000 : 3500);
+        ? 'You’re in! (Your note couldn’t be attached, the organizer’s setup needs a refresh.)'
+        : 'You’re in, ' + target.label, r === 'note-dropped' ? 6000 : 3500);
     } catch (e) {
       const denied = String((e && (e.code || e.message)) || '').includes('permission-denied');
       const locked = !!(live.board && live.board.settings && live.board.settings.locked);
@@ -990,7 +990,7 @@ function wire() {
       closeDlg($('slotDlg'));
       // A number the organizer typed being silently replaced by a different one
       // is how a sheet's capacity quietly stops meaning what they meant.
-      if (String(cap) !== String(typed).trim()) toast('Saved — “' + typed + '” isn’t a number of people, so this spot is set to ' + cap + '.', 6000);
+      if (String(cap) !== String(typed).trim()) toast('Saved, “' + typed + '” isn’t a number of people, so this spot is set to ' + cap + '.', 6000);
       else saved();
     } catch (e) { toast(friendly(e), 4500); }
   });
@@ -1015,12 +1015,12 @@ function wire() {
 
   $('createOk').addEventListener('click', async () => {
     const title = $('createTitle').value.trim();
-    if (!title) { toast('Give it a name — you can change it later'); return; }
+    if (!title) { toast('Give it a name, you can change it later'); return; }
     closeDlg($('createDlg'));
     try {
       const { code } = await D.createBoard({ title, description: $('createDesc').value.trim() });
       location.hash = '#/b/' + code;
-      toast('Sheet created — add spots, then share the link');
+      toast('Sheet created, add spots, then share the link');
     } catch (e) { toast(friendly(e), 5000); }
   });
   $('createCancel').addEventListener('click', () => closeDlg($('createDlg')));
@@ -1051,7 +1051,7 @@ async function init() {
   }
   try {
     await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:'));
-  } catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
+  } catch (e) { toast('That sign-in link didn’t work, request a fresh one.', 6000); }
   try { await D.completeRedirect(); }
   catch (e) { toast('Google sign-in didn’t complete (' + ((e && e.code) || '?') + ')', 6000); }
   D.onAuth((u) => { user = u; refreshAuthBtn(); render(); });

@@ -52,7 +52,7 @@ await ok('makeZip produces an archive a real unzip can read', async () => {
   try {
     listing = execFileSync('unzip', ['-l', path], { encoding: 'utf8' });
   } catch (e) {
-    if (e.code === 'ENOENT') { console.log('  (unzip not installed — skipped the external check)'); return; }
+    if (e.code === 'ENOENT') { console.log('  (unzip not installed, skipped the external check)'); return; }
     throw new Error('unzip rejected the archive: ' + String(e.stdout || e.message));
   }
   assert.match(listing, /3 files/);

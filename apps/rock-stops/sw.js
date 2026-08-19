@@ -1,14 +1,14 @@
-/* Float service worker — the only sanctioned sibling of index.html.
+/* Float service worker, the only sanctioned sibling of index.html.
    Bump VERSION on every deploy.
 
    Cache-first for the shell, and the shell is the whole app: one HTML file,
-   one manifest, one icon. There is nothing else to fetch, ever — no CDN, no
-   fonts, no tiles, no analytics — so "offline" here means genuinely offline,
+   one manifest, one icon. There is nothing else to fetch, ever, no CDN, no
+   fonts, no tiles, no analytics, so "offline" here means genuinely offline,
    in a gravel pit with no bars, which is where this app is used.
 
    Photos and finds are NOT cached here. They live in IndexedDB, which the
    service worker never touches and never needs to. */
-const VERSION = 'float-v9';
+const VERSION = 'float-v10';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './privacy.html'];
 
 self.addEventListener('install', (e) => {
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return;   // nothing off-origin should exist; if it does, do not cache it
 
   /* A navigation always resolves to the shell, so a deep link like #/map
-     opens offline exactly as it does online — but it asks the NETWORK first.
+     opens offline exactly as it does online, but it asks the NETWORK first.
      Serving the cached shell first meant the previous build was handed back on
      the first load after every deploy, because the browser only discovers a
      new sw.js during that same navigation. Offline is unchanged: the moment

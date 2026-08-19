@@ -1,4 +1,4 @@
-// Image Compressor — canvas resize + re-encode, entirely on-device.
+// Image Compressor, canvas resize + re-encode, entirely on-device.
 import {
   fmtBytes, scaleDims, fitBox, coverRect, sizeDelta, fmtGrowth, outName,
   dupeKey, preflight, decodeFailure, kbToBytes,
@@ -157,7 +157,7 @@ function reportIngest(added, overCap, dupes, notImages) {
     blocks.push([
       'The list holds ' + MAX_ITEMS + ' images at a time and it is full, so ' +
       plural(overCap.length, 'file') + ' could not be added. Nothing is uploaded, so the ' +
-      'limit is your device’s memory rather than a plan — compress and download these, ' +
+      'limit is your device’s memory rather than a plan, compress and download these, ' +
       'clear the list, and the rest will go straight in.',
       nameList(overCap),
     ]);
@@ -166,7 +166,7 @@ function reportIngest(added, overCap, dupes, notImages) {
     blocks.push([plural(dupes.length, 'file') + ' already in the list, so not added again.', nameList(dupes)]);
   }
   if (notImages.length) {
-    blocks.push([plural(notImages.length, 'file') + ' skipped — not an image.', nameList(notImages)]);
+    blocks.push([plural(notImages.length, 'file') + ' skipped, not an image.', nameList(notImages)]);
   }
 
   for (const [head, names] of blocks) {
@@ -177,7 +177,7 @@ function reportIngest(added, overCap, dupes, notImages) {
   if (!added && !blocks.length) return;
   let msg = added ? 'Added ' + plural(added, 'image') : 'Nothing added';
   const tail = [];
-  if (failed) tail.push(plural(failed, 'file') + ' this browser cannot open — each says why on its row');
+  if (failed) tail.push(plural(failed, 'file') + ' this browser cannot open, each says why on its row');
   if (overCap.length) tail.push(overCap.length + ' over the ' + MAX_ITEMS + ' limit');
   if (dupes.length) tail.push(dupes.length + ' already here');
   if (notImages.length) tail.push(notImages.length + ' not images');
@@ -210,7 +210,7 @@ function readSettings() {
     const sel = $('target').value;
     cfg.targetBytes = sel === 'custom' ? kbToBytes($('targetKb').value) : parseInt(sel, 10);
     if (!cfg.targetBytes) {
-      toast('Type how many KB it has to fit under — a whole number, at least 1.', { assertive: true });
+      toast('Type how many KB it has to fit under, a whole number, at least 1.', { assertive: true });
       $('targetKb').focus();
       return null;
     }
@@ -371,8 +371,7 @@ async function compressOne(item, cfg, onAttempt) {
     let good = false;
 
     /* THE HARD PROMISE: this app never hands back something worse than it was
-       given. Canvas PNG is unquantised lossless RGBA and routinely inflates —
-       measured at 6.4 MB → 21.5 MB — and the old code printed "Done" over it. */
+       given. Canvas PNG is unquantised lossless RGBA and routinely inflates, measured at 6.4 MB → 21.5 MB, and the old code printed "Done" over it. */
     if (blob.size >= item.file.size) {
       const advice = await betterOption(bmp, res.plan, cfg, item.file.size);
       const delta = sizeDelta(item.file.size, blob.size);
@@ -380,7 +379,7 @@ async function compressOne(item, cfg, onAttempt) {
         delta.dir === 'bigger'
           ? 'Kept your original: re-encoding as ' + cfg.format.toUpperCase() + ' would have made it ' +
             fmtGrowth(delta.times) + ' (' + fmtBytes(blob.size) + ').'
-          : 'Kept your original — it is already as small as this browser can make it.');
+          : 'Kept your original, it is already as small as this browser can make it.');
       if (advice) notes.push(advice);
       const origExt = (item.file.name.match(/\.([^.]+)$/) || [, 'jpg'])[1];
       item.out = {
@@ -394,12 +393,12 @@ async function compressOne(item, cfg, onAttempt) {
     if (res.missed) {
       notes.push('Could not reach ' + targetLabel(cfg) + '. This is the smallest this browser can ' +
         'produce at ' + res.plan.dw + '×' + res.plan.dh + ': ' + fmtBytes(blob.size) + '. ' +
-        (cfg.format === 'jpeg' ? 'WebP usually gets 25–35% further.'
+        (cfg.format === 'jpeg' ? 'WebP usually gets 25 to 35% further.'
           : cfg.sizeMode === 'exact' ? 'The pixel size is pinned, so quality is the only lever left.'
             : 'Try a smaller pixel size.'));
     } else if (cfg.mode === 'target') {
       good = true;
-      notes.push('Under ' + targetLabel(cfg) + ' as asked — landed at ' + fmtBytes(blob.size) +
+      notes.push('Under ' + targetLabel(cfg) + ' as asked, landed at ' + fmtBytes(blob.size) +
         (res.quality ? ' at quality ' + res.quality + '%' : '') + '.');
     }
     if (res.plan.upscaled) {
@@ -461,11 +460,11 @@ async function downloadAll() {
       (d, t) => setStatus('Packing ' + d + ' of ' + t + '…'));
     download(zip, zipName());
     toast(plural(ready.length, 'image') + ' in one ZIP, ' + fmtBytes(zip.size) +
-      ' — a single download, so the browser never asks you to allow anything.', { ms: 6000 });
+      ', a single download, so the browser never asks you to allow anything.', { ms: 6000 });
   } catch (e) {
     toast(String(e && e.message) === 'ZIP_TOO_LARGE'
       ? 'That batch is over 4 GB, which is more than a plain ZIP can hold. Save them in two halves, or use Save on each row.'
-      : 'Could not build the ZIP. Use Save on each row instead — the files themselves are fine.',
+      : 'Could not build the ZIP. Use Save on each row instead, the files themselves are fine.',
       { assertive: true, ms: 8000 });
   } finally {
     busy = false;
@@ -503,12 +502,12 @@ async function run() {
   for (const item of queue) {
     if (job.cancel) break;
     setStatus(queue.length > 1
-      ? 'Compressing ' + (done + 1) + ' of ' + queue.length + ' — ' + item.file.name
+      ? 'Compressing ' + (done + 1) + ' of ' + queue.length + ', ' + item.file.name
       : 'Compressing ' + item.file.name + '…');
     try {
       await compressOne(item, cfg, (n) => {
         if (n > 1) setStatus('Compressing ' + (done + 1) + ' of ' + queue.length +
-          ' — trying settings to fit under ' + targetLabel(cfg) + ' (attempt ' + n + ')');
+          ', trying settings to fit under ' + targetLabel(cfg) + ' (attempt ' + n + ')');
       });
     } catch {
       item.out = null;
@@ -541,7 +540,7 @@ function summarise(handled, stopped, remaining) {
 
   const parts = [];
   if (stopped) parts.push('Stopped after ' + plural(handled.length, 'image'));
-  else parts.push('Done — ' + plural(handled.length, 'image'));
+  else parts.push('Done, ' + plural(handled.length, 'image'));
   if (shrunk.length) parts.push(fmtBytes(before) + ' → ' + fmtBytes(after) + ' (' + d.pct + '% smaller)');
   if (kept.length) parts.push(kept.length + ' left untouched, because compressing would have made ' +
     (kept.length === 1 ? 'it' : 'them') + ' bigger');
@@ -550,7 +549,7 @@ function summarise(handled, stopped, remaining) {
 
   const late = items.filter((i) => !i.error && !i.out).length - Math.max(0, remaining);
   if (!stopped && late > 0) {
-    parts.push(plural(late, 'image') + ' arrived mid-run and were not touched — press Compress again');
+    parts.push(plural(late, 'image') + ' arrived mid-run and were not touched, press Compress again');
   }
   toast(parts.join(' · '), { ms: 8000 });
 }
@@ -573,8 +572,8 @@ function focusKey() {
 }
 
 /**
- * Everything a row displays, as one string. Rebuilding 200 rows — each with a
- * data-URL thumbnail to decode — on every tick of a run is what turns a smooth
+ * Everything a row displays, as one string. Rebuilding 200 rows, each with a
+ * data-URL thumbnail to decode, on every tick of a run is what turns a smooth
  * batch into a stuttering one, so a row whose signature has not moved keeps the
  * node it already has.
  */
@@ -775,7 +774,7 @@ function comparePanel(item) {
       }, c.zoom ? 'Fit to width' : 'Actual pixels')),
     el('p', { class: 'hint', text: 'The grey behind the photograph is a fixed mid-grey in both themes, ' +
       'because a tinted surround changes how you judge colour. The divider opens over the busiest part ' +
-      'of the picture — that is where compression shows first.' }));
+      'of the picture, that is where compression shows first.' }));
 }
 
 /* ── Queue editing ────────────────────────────────────────────────────────── */
@@ -854,7 +853,7 @@ function saveSettings() {
     const out = { mode: $('modeSeg').querySelector('[aria-pressed="true"]').dataset.mode };
     for (const id of PERSISTED) out[id] = $(id).value;
     localStorage.setItem(PREF_KEY, JSON.stringify(out));
-  } catch { /* private mode, a full disk — the app still works */ }
+  } catch { /* private mode, a full disk, the app still works */ }
 }
 
 function loadSettings() {
@@ -889,7 +888,7 @@ function syncSettingsUI() {
   $('dimRow').classList.toggle('hidden', !custom);
   $('dimHint').classList.toggle('hidden', !custom);
   $('dimHint').textContent = sizeMode === 'exact'
-    ? 'The picture is centred and cropped to fill exactly these pixels — this is what passport, ' +
+    ? 'The picture is centred and cropped to fill exactly these pixels, this is what passport, ' +
       'visa and avatar forms mean when they say 600×600.'
     : 'The picture is scaled to fit inside this box and keeps its shape, so one side is usually smaller ' +
       'than the number you typed. Nothing is cropped and nothing is enlarged.';
@@ -900,10 +899,10 @@ function syncSettingsUI() {
   $('formatHint').classList.remove('hidden');
   $('formatHint').textContent = fmt === 'png'
     ? 'PNG here is lossless and unquantised, so for photographs it is usually LARGER than the original. ' +
-      'It is the right choice only for flat graphics with transparency — and if it does inflate, ' +
+      'It is the right choice only for flat graphics with transparency, and if it does inflate, ' +
       'this app keeps your original file instead and says so on the row.'
     : fmt === 'webp'
-      ? 'WebP is typically 25–35% smaller than JPEG at the same quality and keeps transparency. ' +
+      ? 'WebP is typically 25 to 35% smaller than JPEG at the same quality and keeps transparency. ' +
         'Every current browser reads it; a few very old apps do not.'
       : 'JPEG is understood by everything and is the safe answer for photographs and for forms. ' +
         'It has no transparency, so any transparent area is filled with white.';
@@ -912,7 +911,7 @@ function syncSettingsUI() {
     ? 'The date the photo was taken is copied into the new JPEG so your photo library still sorts it ' +
       'correctly instead of filing every copy under today. Location, camera make and model are still ' +
       'removed. WebP and PNG output carry nothing either way.'
-    : 'GPS coordinates, camera make and model, serial numbers and the date are all dropped — the ' +
+    : 'GPS coordinates, camera make and model, serial numbers and the date are all dropped, the ' +
       're-encode simply does not carry them. Safest for a passport scan; it is also why compressed ' +
       'photos can land in a camera roll under today’s date.';
 
@@ -986,7 +985,7 @@ function wire() {
     ingest(files);
   });
 
-  /* Session-only is the correct privacy posture — but it should be a choice,
+  /* Session-only is the correct privacy posture, but it should be a choice,
      not a surprise on an accidental back-swipe. */
   window.addEventListener('beforeunload', (e) => {
     if (!items.length) return;

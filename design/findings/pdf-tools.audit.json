@@ -1,72 +1,72 @@
 {
   "slug": "pdf-tools",
-  "purpose": "A fully client-side PDF workbench: load one or more PDFs, see every page as a row in output order, reorder/rotate/drop individual pages, then either save the assembled result as one PDF or split a single source into one file per page — nothing is uploaded and nothing is persisted.",
-  "structure": "body > div.wrap holds everything except the toast and footer. Inside .wrap: header.app (icon.svg alt=\"\", h1 \"PDF Tools\", span.spacer, a#tipLink.tipbtn.hidden) at index.html:781-786; div.hero (h2 + one <p>) at 788-793; then three unlabelled-by-landmark section.card blocks — card 1 (index.html:795-799) is button#addBtn.btn.primary.big + hidden input#fileInput[type=file][multiple] + p.hint; card 2 (801-805) is h2#pagesHead + ul#pageList.plain (empty in source, filled by JS) + p.hint#emptyHint; card 3 (807-812) is a bare div.row with button#mergeBtn.btn.primary and button#splitBtn.btn — no heading at all. Outside .wrap: div#toast[role=status][aria-live=polite] at 815 and footer.colophon at 816. There is no <main>, no skip link, no nav, no modal, no sticky bar, and no tabs/segmented control. The page has no fixed height: card 2 grows one 44px-min row per page, so a 200-page PDF produces a ~9000px page with the primary actions at the very bottom. Flow: click Add → OS file picker → pages append to the tail of `order` → manipulate rows → click Save (or Split) → browser download. Everything is in-memory; a reload is a total reset. index.html:17-777 is one inline <style>: lines 18-766 are the GENERATED SWS studio base (skin palette 24-128, shared base 130-754, texture 757-765) and only lines 768-776 are this app's own layer.",
+  "purpose": "A fully client-side PDF workbench: load one or more PDFs, see every page as a row in output order, reorder/rotate/drop individual pages, then either save the assembled result as one PDF or split a single source into one file per page, nothing is uploaded and nothing is persisted.",
+  "structure": "body > div.wrap holds everything except the toast and footer. Inside .wrap: header.app (icon.svg alt=\"\", h1 \"PDF Tools\", span.spacer, a#tipLink.tipbtn.hidden) at index.html:781-786; div.hero (h2 + one <p>) at 788-793; then three unlabelled-by-landmark section.card blocks, card 1 (index.html:795-799) is button#addBtn.btn.primary.big + hidden input#fileInput[type=file][multiple] + p.hint; card 2 (801-805) is h2#pagesHead + ul#pageList.plain (empty in source, filled by JS) + p.hint#emptyHint; card 3 (807-812) is a bare div.row with button#mergeBtn.btn.primary and button#splitBtn.btn, no heading at all. Outside .wrap: div#toast[role=status][aria-live=polite] at 815 and footer.colophon at 816. There is no <main>, no skip link, no nav, no modal, no sticky bar, and no tabs/segmented control. The page has no fixed height: card 2 grows one 44px-min row per page, so a 200-page PDF produces a ~9000px page with the primary actions at the very bottom. Flow: click Add → OS file picker → pages append to the tail of `order` → manipulate rows → click Save (or Split) → browser download. Everything is in-memory; a reload is a total reset. index.html:17-777 is one inline <style>: lines 18-766 are the GENERATED SWS studio base (skin palette 24-128, shared base 130-754, texture 757-765) and only lines 768-776 are this app's own layer.",
   "cssClasses": [
-    "wrap — page column, max-width var(--wrap)",
-    "header.app — flex header row, min-height 60px",
-    "header.app .mark — 32px logo slot alternative to img",
-    "spacer — flex:1 pusher inside header",
-    "tipbtn — pill tip-jar link, 36px tall",
-    "hidden — display:none !important; load-bearing in JS",
-    "hero — intro block above the cards",
-    "hero h2 — 1.5rem display headline",
-    "card / section.card — the three main panels",
-    "card > h2 — 12px uppercase micro-label, ink-2",
-    "card .sub — 15px subtitle under a card heading",
-    "btn — base control, 44px min-height, 15px",
-    "btn.primary — filled accent, main action",
-    "btn.big — 52px tall variant, used on addBtn",
-    "btn.small — 36px tall, 13px; the four row controls",
-    "btn.danger — negative outline; the remove-page X",
-    "btn.ghost / btn.plain — transparent tertiary (unused here)",
-    "btn.block — full-width variant (unused here)",
-    "btn.icon — square 44px icon-only variant (unused here)",
-    "row — equal-flex wrapping button row, 12rem basis",
-    "row.tight / row.nowrap — gap and wrap modifiers (unused)",
-    "frow — form field row, 9rem basis (unused)",
-    "cluster — wrapping inline group (unused)",
-    "stack / stack-sm / stack-lg — vertical rhythm helpers (unused)",
-    "hint — 13px helper text under a control",
-    "footnote / small — same 13px small-type family (unused)",
-    "muted — ink-2 text colour helper (unused)",
-    "em — emphasised ink text helper (unused)",
-    "sub — 15px secondary line (unused here)",
-    "plain (ul.plain) — reset list wrapper; #pageList uses it",
-    "ul.plain > li — page row: flex, 44px min, bottom rule",
-    "grow — flexing middle column inside a plain-list row",
-    "pagetag — app layer: index badge, 34px min-width, 8px radius",
-    "doclabel — app layer: source filename line, 12.5px muted",
-    "rot — app layer: rotation degrees, accent, 12px bold",
-    "empty — centred empty-state block (DEFINED, NOT USED)",
-    "empty .glyph — 2rem icon for empty state (unused)",
-    "empty h3 — empty-state headline (unused)",
-    "empty p — empty-state body, 34ch (unused)",
-    "well — inset surface-2 panel (unused)",
-    "trust — privacy stamp component (unused; app has the claim in prose)",
-    "chip / chip.on / chips — pill tag family (unused)",
-    "warn — warning callout with left rule (unused)",
-    "seg / seg button / seg .tab / .active — segmented control (unused)",
-    "tablewrap — horizontally scrolling table box (unused)",
-    "actionbar — sticky bottom action bar (DEFINED, NOT USED — biggest miss)",
-    "skip — keyboard skip link (DEFINED, NO ELEMENT EXISTS)",
-    "sr-only — visually hidden text (unused; no element uses it)",
-    "label.f / .field — field label conventions (unused)",
-    "nowrap — white-space helper",
-    "tnum — tabular figures helper (unused; page numbers would want it)",
-    "noprint / no-print / screenonly — print-hidden hooks (unused)",
-    "printonly — print-only reveal hook (unused)",
-    "colophon (footer.colophon) — centred footer, ink-3 13px",
-    "#toast + #toast.show — fixed transient status bubble",
-    "#pageList — the ul the JS fills",
-    "#pagesHead — h2 whose text JS rewrites with the count",
-    "#emptyHint — the p JS toggles .hidden on",
-    "#addBtn / #fileInput / #mergeBtn / #splitBtn / #tipLink — wired ids"
+    "wrap, page column, max-width var(--wrap)",
+    "header.app, flex header row, min-height 60px",
+    "header.app .mark, 32px logo slot alternative to img",
+    "spacer, flex:1 pusher inside header",
+    "tipbtn, pill tip-jar link, 36px tall",
+    "hidden, display:none !important; load-bearing in JS",
+    "hero, intro block above the cards",
+    "hero h2 to 1.5rem display headline",
+    "card / section.card, the three main panels",
+    "card > h2 to 12px uppercase micro-label, ink-2",
+    "card .sub, 15px subtitle under a card heading",
+    "btn, base control, 44px min-height, 15px",
+    "btn.primary, filled accent, main action",
+    "btn.big, 52px tall variant, used on addBtn",
+    "btn.small, 36px tall, 13px; the four row controls",
+    "btn.danger, negative outline; the remove-page X",
+    "btn.ghost / btn.plain, transparent tertiary (unused here)",
+    "btn.block, full-width variant (unused here)",
+    "btn.icon, square 44px icon-only variant (unused here)",
+    "row, equal-flex wrapping button row, 12rem basis",
+    "row.tight / row.nowrap, gap and wrap modifiers (unused)",
+    "frow, form field row, 9rem basis (unused)",
+    "cluster, wrapping inline group (unused)",
+    "stack / stack-sm / stack-lg, vertical rhythm helpers (unused)",
+    "hint, 13px helper text under a control",
+    "footnote / small, same 13px small-type family (unused)",
+    "muted, ink-2 text colour helper (unused)",
+    "em, emphasised ink text helper (unused)",
+    "sub, 15px secondary line (unused here)",
+    "plain (ul.plain), reset list wrapper; #pageList uses it",
+    "ul.plain > li, page row: flex, 44px min, bottom rule",
+    "grow, flexing middle column inside a plain-list row",
+    "pagetag, app layer: index badge, 34px min-width, 8px radius",
+    "doclabel, app layer: source filename line, 12.5px muted",
+    "rot, app layer: rotation degrees, accent, 12px bold",
+    "empty, centred empty-state block (DEFINED, NOT USED)",
+    "empty .glyph, 2rem icon for empty state (unused)",
+    "empty h3, empty-state headline (unused)",
+    "empty p, empty-state body, 34ch (unused)",
+    "well, inset surface-2 panel (unused)",
+    "trust, privacy stamp component (unused; app has the claim in prose)",
+    "chip / chip.on / chips, pill tag family (unused)",
+    "warn, warning callout with left rule (unused)",
+    "seg / seg button / seg .tab / .active, segmented control (unused)",
+    "tablewrap, horizontally scrolling table box (unused)",
+    "actionbar, sticky bottom action bar (DEFINED, NOT USED, biggest miss)",
+    "skip, keyboard skip link (DEFINED, NO ELEMENT EXISTS)",
+    "sr-only, visually hidden text (unused; no element uses it)",
+    "label.f / .field, field label conventions (unused)",
+    "nowrap, white-space helper",
+    "tnum, tabular figures helper (unused; page numbers would want it)",
+    "noprint / no-print / screenonly, print-hidden hooks (unused)",
+    "printonly, print-only reveal hook (unused)",
+    "colophon (footer.colophon), centred footer, ink-3 13px",
+    "#toast + #toast.show, fixed transient status bubble",
+    "#pageList, the ul the JS fills",
+    "#pagesHead, h2 whose text JS rewrites with the count",
+    "#emptyHint, the p JS toggles .hidden on",
+    "#addBtn / #fileInput / #mergeBtn / #splitBtn / #tipLink, wired ids"
   ],
-  "dynamicMarkup": "All runtime markup comes from `render()` in app.js:40-63 via the `el()` helper (app.js:7-21). `el()` maps the `class` key to `n.className` (a full overwrite, not a token add) and everything else to `setAttribute`, so class strings in JS are the literal contract.\n\nPer page in `order`, render() appends to #pageList exactly this shape, and note the outer element carries NO class:\n`<li>` (bare, styled only by the `ul.plain > li` descendant selector at index.html:564)\n ├ `<span class=\"pagetag\">` — 1-based output position (app.js:49)\n ├ `<div class=\"grow\">` (app.js:50)\n │  ├ `<div>` — bare, text \"Page N\", optionally followed by `<span class=\"rot\">` holding \"  ⟳90°\" (app.js:51-52). The two leading spaces are a text-node spacing hack that HTML collapses to one — there is no CSS margin on `.rot`.\n │  └ `<div class=\"doclabel\">` — the source filename (app.js:53)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Move up\">↑</button>` (app.js:54)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Move down\">↓</button>` (app.js:56)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Rotate 90 degrees\">⟳</button>` (app.js:58)\n └ `<button class=\"btn small danger\" type=\"button\" aria-label=\"Remove page\">✕</button>` (app.js:60)\n\nrender() also: calls `list.replaceChildren()` (app.js:42) — a full teardown and rebuild on EVERY interaction, including a single reorder; toggles `.hidden` on #emptyHint (app.js:43); and rewrites #pagesHead's textContent between \"Pages (in output order)\" and \"N pages (in output order)\" (app.js:44-46).\n\nOutside render(): `download()` (app.js:30-35) injects a bare, unclassed `<a href=blob download=…>` into document.body, clicks it and removes it 500ms later — an unstyled element that briefly exists as the last child of body. `toast()` (app.js:23-29) sets #toast.textContent and toggles the `show` class only. init() (app.js:118-122) sets #tipLink.href and removes `hidden` from it. #mergeBtn/#splitBtn have their textContent overwritten to \"Working…\" and back to the literal strings \"Save as one PDF\" / \"Split into one file per page\" (app.js:87, 93, 101, 112).",
+  "dynamicMarkup": "All runtime markup comes from `render()` in app.js:40-63 via the `el()` helper (app.js:7-21). `el()` maps the `class` key to `n.className` (a full overwrite, not a token add) and everything else to `setAttribute`, so class strings in JS are the literal contract.\n\nPer page in `order`, render() appends to #pageList exactly this shape, and note the outer element carries NO class:\n`<li>` (bare, styled only by the `ul.plain > li` descendant selector at index.html:564)\n ├ `<span class=\"pagetag\">`, 1-based output position (app.js:49)\n ├ `<div class=\"grow\">` (app.js:50)\n │  ├ `<div>`, bare, text \"Page N\", optionally followed by `<span class=\"rot\">` holding \"  ⟳90°\" (app.js:51-52). The two leading spaces are a text-node spacing hack that HTML collapses to one, there is no CSS margin on `.rot`.\n │  └ `<div class=\"doclabel\">`, the source filename (app.js:53)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Move up\">↑</button>` (app.js:54)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Move down\">↓</button>` (app.js:56)\n ├ `<button class=\"btn small\" type=\"button\" aria-label=\"Rotate 90 degrees\">⟳</button>` (app.js:58)\n └ `<button class=\"btn small danger\" type=\"button\" aria-label=\"Remove page\">✕</button>` (app.js:60)\n\nrender() also: calls `list.replaceChildren()` (app.js:42), a full teardown and rebuild on EVERY interaction, including a single reorder; toggles `.hidden` on #emptyHint (app.js:43); and rewrites #pagesHead's textContent between \"Pages (in output order)\" and \"N pages (in output order)\" (app.js:44-46).\n\nOutside render(): `download()` (app.js:30-35) injects a bare, unclassed `<a href=blob download=…>` into document.body, clicks it and removes it 500ms later, an unstyled element that briefly exists as the last child of body. `toast()` (app.js:23-29) sets #toast.textContent and toggles the `show` class only. init() (app.js:118-122) sets #tipLink.href and removes `hidden` from it. #mergeBtn/#splitBtn have their textContent overwritten to \"Working…\" and back to the literal strings \"Save as one PDF\" / \"Split into one file per page\" (app.js:87, 93, 101, 112).",
   "comfortDefects": [
     {
-      "issue": "The four per-row controls (↑ ↓ ⟳ ✕) are `.btn.small`: 36px tall and roughly 32px wide (padding 0 12px around one 13px glyph). That is below the studio's own declared `--tap:44px` standard and these are the app's most-used controls — a user reordering 40 pages hits them hundreds of times.",
+      "issue": "The four per-row controls (↑ ↓ ⟳ ✕) are `.btn.small`: 36px tall and roughly 32px wide (padding 0 12px around one 13px glyph). That is below the studio's own declared `--tap:44px` standard and these are the app's most-used controls, a user reordering 40 pages hits them hundreds of times.",
       "where": "index.html:483 (.btn.small) applied at app.js:54,56,58,60",
       "fix": "Give row controls a 44×44 target. Either use the existing `.btn.icon` (index.html:489, already sized to --tap) instead of `.small`, or add a row-scoped rule `#pageList .btn.small{min-height:var(--tap);min-width:var(--tap);padding:0}`."
     },
@@ -76,22 +76,22 @@
       "fix": "Below ~30rem, make the row a two-line grid: pagetag + .grow on line one, the four controls as a right-aligned 44px cluster on line two. Add `flex-wrap:wrap` to the row and `flex:none` to the buttons so they never shrink below their target size."
     },
     {
-      "issue": "`.doclabel` is 0.78rem (12.5px). It is the only thing distinguishing a page of contract.pdf from a page of w2.pdf during a merge — the single piece of information the merge use case depends on — rendered smaller than any other text on the page.",
+      "issue": "`.doclabel` is 0.78rem (12.5px). It is the only thing distinguishing a page of contract.pdf from a page of w2.pdf during a merge, the single piece of information the merge use case depends on, rendered smaller than any other text on the page.",
       "where": "index.html:775",
       "fix": "Raise to var(--t-sm) (15px) or at minimum var(--t-xs) (13px), and drop the hard-coded rem in favour of the scale token."
     },
     {
-      "issue": "`.rot` is 0.75rem (12px) — the smallest text in the app, and it is state, not decoration: it is the only indication that a page will come out rotated.",
+      "issue": "`.rot` is 0.75rem (12px), the smallest text in the app, and it is state, not decoration: it is the only indication that a page will come out rotated.",
       "where": "index.html:776",
       "fix": "Use var(--t-xs) minimum and give it a real chip treatment (background var(--accent-soft), padding, radius) so rotated pages are scannable down the list rather than needing to be read."
     },
     {
-      "issue": "`p.hint` at 0.8125rem (13px) with line-height 1.35 carries the app's entire instruction set — both the 'add one file vs several' explanation and the 'use ↑ ↓ ⟳ ✕' legend. Under-15px body copy at sub-1.45 line-height for the text that teaches the product.",
+      "issue": "`p.hint` at 0.8125rem (13px) with line-height 1.35 carries the app's entire instruction set, both the 'add one file vs several' explanation and the 'use ↑ ↓ ⟳ ✕' legend. Under-15px body copy at sub-1.45 line-height for the text that teaches the product.",
       "where": "index.html:798 and index.html:804; rule at index.html:524-530",
       "fix": "Promote instructional copy to var(--t-sm)/1.5. Keep `.hint` at 13px only for genuine asides; introduce a `.lede` or reuse `.card .sub` (index.html:368, already 15px) for teaching text."
     },
     {
-      "issue": "`.pagetag` hard-codes padding:6px 8px, border-radius:8px and font-size:.8rem — three magic numbers that ignore the spacing scale and will not follow the new `--r` when the geometry changes, leaving one stubbornly 8px-radius element in a restyled page.",
+      "issue": "`.pagetag` hard-codes padding:6px 8px, border-radius:8px and font-size:.8rem, three magic numbers that ignore the spacing scale and will not follow the new `--r` when the geometry changes, leaving one stubbornly 8px-radius element in a restyled page.",
       "where": "index.html:771-774",
       "fix": "Rewrite as `padding:var(--s1) var(--s2); border-radius:var(--r-sm); font-size:var(--t-xs)` and add `.tnum` (index.html:701) so multi-digit positions stay aligned down the column."
     },
@@ -103,7 +103,7 @@
     {
       "issue": "Each row is a wall of four undifferentiated 13px glyph buttons with identical geometry, and the destructive ✕ sits 12px from ⟳ with no separation, colour weight aside. Rotate and delete are one thumb-width apart.",
       "where": "app.js:54-61; gap from index.html:564",
-      "fix": "Group ↑↓ as a pair, then a gap, then ⟳, then a wider gap and the ✕ pushed to the far edge with `margin-left:auto`. Consider replacing the glyphs with real 20px SVG icons — ⟳ and ✕ render inconsistently across platform fonts."
+      "fix": "Group ↑↓ as a pair, then a gap, then ⟳, then a wider gap and the ✕ pushed to the far edge with `margin-left:auto`. Consider replacing the glyphs with real 20px SVG icons, ⟳ and ✕ render inconsistently across platform fonts."
     },
     {
       "issue": "Type sizes disagree between neighbouring elements: body is 1.0625rem (17px) at ≥30rem, `ul.plain > li` forces 0.9375rem (15px), `.doclabel` 12.5px, `.rot` 12px, `.btn.small` 13px. Five sizes inside one 44px row.",
@@ -111,7 +111,7 @@
       "fix": "Collapse to two: 15-17px for the page identity line, 13px for the filename. Remove the size override on `ul.plain > li` for this app or accept it as the row baseline and derive the rest from it."
     },
     {
-      "issue": "Footer copy renders at --ink-3 13px because the inline `style=\"color:inherit\"` on both links pulls them down to the footer's own ink-3 rather than the base's ink-2 — small, low-contrast, and it contains the app's only statement about data lifetime ('Close it and nothing existed').",
+      "issue": "Footer copy renders at --ink-3 13px because the inline `style=\"color:inherit\"` on both links pulls them down to the footer's own ink-3 rather than the base's ink-2, small, low-contrast, and it contains the app's only statement about data lifetime ('Close it and nothing existed').",
       "where": "index.html:816; base rules index.html:316-325",
       "fix": "Delete both inline `style=\"color:inherit\"` attributes so `footer.colophon a{color:var(--ink-2)}` applies, and lift the footer body itself to var(--ink-2)."
     },
@@ -121,12 +121,12 @@
       "fix": "Add `.block`, or better, make card 1 a drop zone: a dashed-border target of ~140px height with the button centred inside it, which also invites the drag-and-drop that is currently missing."
     },
     {
-      "issue": "On a long list there is no anchor of any kind — no group header per source document, no every-10th-row marker, no sticky column header. Scrolling 200 identical rows to find page 137 means reading every pagetag.",
+      "issue": "On a long list there is no anchor of any kind, no group header per source document, no every-10th-row marker, no sticky column header. Scrolling 200 identical rows to find page 137 means reading every pagetag.",
       "where": "app.js:47-62 (flat forEach, no grouping)",
       "fix": "Insert a sticky sub-header row whenever `item.doc` changes from the previous entry, showing the filename once instead of repeating it in every `.doclabel`. Position:sticky on that header inside the scrolling page gives a persistent 'you are in contract.pdf' cue."
     },
     {
-      "issue": "`.card > h2` is 12px uppercase with 0.075em tracking, and it is the only label the pages list gets. It also doubles as the live page counter ('40 pages (in output order)') — a number the user checks constantly, set in the smallest, most tracked-out style in the system.",
+      "issue": "`.card > h2` is 12px uppercase with 0.075em tracking, and it is the only label the pages list gets. It also doubles as the live page counter ('40 pages (in output order)'), a number the user checks constantly, set in the smallest, most tracked-out style in the system.",
       "where": "index.html:357-365, content set at app.js:44-46",
       "fix": "Split the concerns: keep the micro-label for the section name, and render the count as a `.chip` beside it at var(--t-sm) with `.tnum`."
     },
@@ -148,22 +148,22 @@
       "fix": "Replace #emptyHint with the `.empty` block: glyph, 'No pages yet', one sentence, and a secondary 'Add PDF file(s)' button that fires the same click as #addBtn. Move the control legend to first-row-rendered state, not empty state."
     },
     {
-      "issue": "There is no undo. ✕ splices the entry out of `order` immediately with no confirmation and no restore, and re-adding the file appends a whole new document with all its pages to the tail rather than restoring the one page — so a mis-tap after 20 minutes of ordering is unrecoverable.",
+      "issue": "There is no undo. ✕ splices the entry out of `order` immediately with no confirmation and no restore, and re-adding the file appends a whole new document with all its pages to the tail rather than restoring the one page, so a mis-tap after 20 minutes of ordering is unrecoverable.",
       "where": "app.js:60-61 (splice + render)",
-      "fix": "Keep the removed entry in a `lastRemoved` variable and show 'Page 7 removed — Undo' in the toast with an actual button, or mark rows as excluded (struck through, dimmed, restorable) instead of deleting them from `order`."
+      "fix": "Keep the removed entry in a `lastRemoved` variable and show 'Page 7 removed, Undo' in the toast with an actual button, or mark rows as excluded (struck through, dimmed, restorable) instead of deleting them from `order`."
     },
     {
       "issue": "Nothing is persisted and nothing warns you. `order` and `docs` are plain module-level arrays (app.js:37-38) with no storage layer; an accidental refresh, a tab discard on mobile, or a crash destroys arbitrary amounts of arranging work in silence. There is no beforeunload guard.",
       "where": "app.js:37-38; no storage code anywhere in the app",
-      "fix": "Add `window.addEventListener('beforeunload', e => { if (order.length) e.preventDefault(); })`. Full persistence is genuinely hard (the file bytes cannot go to localStorage), so also state the constraint in the UI — a `.trust`-style stamp reading 'Held in this tab only — a refresh starts over' next to the page count."
+      "fix": "Add `window.addEventListener('beforeunload', e => { if (order.length) e.preventDefault(); })`. Full persistence is genuinely hard (the file bytes cannot go to localStorage), so also state the constraint in the UI, a `.trust`-style stamp reading 'Held in this tab only, a refresh starts over' next to the page count."
     },
     {
-      "issue": "Split silently refuses in the most common multi-file scenario. With two files loaded it fires a toast saying 'reload with just that file' and does nothing — but the button gave no prior indication it was unavailable, and 'reload' means losing everything.",
+      "issue": "Split silently refuses in the most common multi-file scenario. With two files loaded it fires a toast saying 'reload with just that file' and does nothing, but the button gave no prior indication it was unavailable, and 'reload' means losing everything.",
       "where": "app.js:97",
       "fix": "Disable #splitBtn with `title`/`aria-describedby` explaining why whenever docs.length !== 1, and add a per-document 'Split this file' affordance instead of a global one."
     },
     {
-      "issue": "Every error surfaces only in a toast that disappears after 5 seconds — including 'Failed:' from a merge that consumed a minute of work, and the password-protected-PDF message from core.js:55 which is a paragraph of instruction the user cannot possibly read and act on in 5s at the bottom of the screen.",
+      "issue": "Every error surfaces only in a toast that disappears after 5 seconds, including 'Failed:' from a merge that consumed a minute of work, and the password-protected-PDF message from core.js:55 which is a paragraph of instruction the user cannot possibly read and act on in 5s at the bottom of the screen.",
       "where": "app.js:92, app.js:111, app.js:79",
       "fix": "Render failures into a persistent `.warn` block (index.html:546-554) inside the relevant card, dismissable by the user. Reserve the toast for confirmations."
     },
@@ -173,17 +173,17 @@
       "fix": "Add a document-level drop zone on card 1. For long-distance moves add 'Move to top'/'Move to bottom' or a number input on the pagetag; full drag-reorder is the ideal but keyboard-accessible alternatives must ship with it."
     },
     {
-      "issue": "Splitting a 60-page file fires 60 sequential downloads spaced 350ms apart — 21 seconds during which the only feedback is a button reading 'Working…' and a toast about browser permissions. No count, no progress, no cancel.",
+      "issue": "Splitting a 60-page file fires 60 sequential downloads spaced 350ms apart, 21 seconds during which the only feedback is a button reading 'Working…' and a toast about browser permissions. No count, no progress, no cancel.",
       "where": "app.js:105-110",
       "fix": "Update the button or a status line to 'Saving 14 of 60…' inside the loop, and offer a cancel. Consider offering a single ZIP instead, which removes the multi-download permission problem entirely."
     },
     {
-      "issue": "Loaded documents are invisible as objects. `docs` is never rendered — there is no list of the files in play, no way to remove a whole file, and no way to see that you accidentally added the same PDF twice (which silently appends a duplicate doc and a second full set of pages).",
+      "issue": "Loaded documents are invisible as objects. `docs` is never rendered, there is no list of the files in play, no way to remove a whole file, and no way to see that you accidentally added the same PDF twice (which silently appends a duplicate doc and a second full set of pages).",
       "where": "app.js:70-77 (push with no dedupe); docs never rendered",
       "fix": "Add a compact file list above the page list: name, page count, and a remove-file button that drops all its entries from `order`. Warn on adding a file whose name and size already exist."
     },
     {
-      "issue": "Card 3 — the card containing both terminal actions — has no heading, so there is no label explaining the difference between the two paths or that they are alternatives rather than steps.",
+      "issue": "Card 3, the card containing both terminal actions, has no heading, so there is no label explaining the difference between the two paths or that they are alternatives rather than steps.",
       "where": "index.html:807",
       "fix": "Add an `<h2>` such as 'Finish' plus a one-line `.sub` distinguishing 'one combined file' from 'one file per page'."
     },
@@ -193,7 +193,7 @@
       "fix": "The sticky `.actionbar` fix largely resolves this; if the list stays long, add a 'Top' ghost button inside the bar."
     },
     {
-      "issue": "The success toast 'Saved — and it never left your device' is the entire completion state. There is no record of what was produced, no filename shown, no way to re-download without re-running the merge.",
+      "issue": "The success toast 'Saved, and it never left your device' is the entire completion state. There is no record of what was produced, no filename shown, no way to re-download without re-running the merge.",
       "where": "app.js:91",
       "fix": "Render a small results `.well` listing the produced filename with a re-download link, kept until the next action."
     }
@@ -215,7 +215,7 @@
       "fix": "Interpolate position and source: `aria-label: 'Move page ' + (i+1) + ' of ' + order.length + ' up'`, etc. Also give the li an accessible name via the pagetag/label content so row context is announced on entry."
     },
     {
-      "issue": "No <main> landmark. Body contains header.app, a bare div.wrap of content, #toast and footer.colophon — screen reader landmark navigation offers banner and contentinfo and nothing for the actual application.",
+      "issue": "No <main> landmark. Body contains header.app, a bare div.wrap of content, #toast and footer.colophon, screen reader landmark navigation offers banner and contentinfo and nothing for the actual application.",
       "where": "index.html:779-816",
       "fix": "Wrap the hero and three cards in `<main id=\"main\">` (keeping div.wrap as the layout column, or putting the class on main itself)."
     },
@@ -225,34 +225,34 @@
       "fix": "Add `<a class=\"skip\" href=\"#main\">Skip to content</a>` as the first child of body, paired with the <main id=\"main\"> above."
     },
     {
-      "issue": "Footer links fail contrast in light mode. The inline `style=\"color:inherit\"` overrides `footer.colophon a{color:var(--ink-2)}` and inherits --ink-3 (#858898) on --canvas (#f5f7ff) = 3.37:1 at 13px — below the 4.5:1 requirement. (Dark mode computes to 4.99:1 and passes, so this is a light-mode-only failure and easy to miss.) The surrounding footer prose is the same 3.37:1.",
+      "issue": "Footer links fail contrast in light mode. The inline `style=\"color:inherit\"` overrides `footer.colophon a{color:var(--ink-2)}` and inherits --ink-3 (#858898) on --canvas (#f5f7ff) = 3.37:1 at 13px, below the 4.5:1 requirement. (Dark mode computes to 4.99:1 and passes, so this is a light-mode-only failure and easy to miss.) The surrounding footer prose is the same 3.37:1.",
       "where": "index.html:816 (both inline styles) against tokens at index.html:49 and index.html:40",
       "fix": "Remove both `style=\"color:inherit\"` attributes and set `footer.colophon{color:var(--ink-2)}` for this app, giving 5.99:1."
     },
     {
-      "issue": "`.rot` fails contrast in light mode: --accent (#6d78d1) on --surface (#fdfeff) = 3.91:1, below 4.5:1, at 12px. It is state information — whether a page comes out rotated — not decoration. (Dark mode is 7.75:1 and passes.)",
+      "issue": "`.rot` fails contrast in light mode: --accent (#6d78d1) on --surface (#fdfeff) = 3.91:1, below 4.5:1, at 12px. It is state information, whether a page comes out rotated, not decoration. (Dark mode is 7.75:1 and passes.)",
       "where": "index.html:776; tokens index.html:50 and index.html:42",
       "fix": "Use --accent-deep (#555fb5, 5.57:1 on surface) rather than --accent for any text, or render it as a `.chip` with an --accent-soft background. Worth auditing portfolio-wide: --accent is a UI/border colour in this palette, not a text colour."
     },
     {
-      "issue": "List mutations are never announced. Reorder, rotate and remove all rebuild the list silently — no toast, no live region on #pageList, and the h2 text change to 'N pages (in output order)' is not announced because heading text mutation is not a live-region event. A screen reader user has no confirmation that ⟳ or ✕ did anything.",
+      "issue": "List mutations are never announced. Reorder, rotate and remove all rebuild the list silently, no toast, no live region on #pageList, and the h2 text change to 'N pages (in output order)' is not announced because heading text mutation is not a live-region event. A screen reader user has no confirmation that ⟳ or ✕ did anything.",
       "where": "app.js:44-46 and app.js:55-61 (no toast() call on any row action); #pageList at index.html:803 has no aria-live",
-      "fix": "Call the existing toast() (already role=status/aria-live=polite at index.html:815) on every row action — 'Page 3 moved up, now position 2', 'Page 3 rotated 90 degrees', 'Page 3 removed, 39 pages remain'. Add aria-atomic=\"true\" to #toast so repeated identical messages re-announce."
+      "fix": "Call the existing toast() (already role=status/aria-live=polite at index.html:815) on every row action, 'Page 3 moved up, now position 2', 'Page 3 rotated 90 degrees', 'Page 3 removed, 39 pages remain'. Add aria-atomic=\"true\" to #toast so repeated identical messages re-announce."
     },
     {
       "issue": "Decorative emoji are inside accessible names: #addBtn announces as 'page facing up Add PDF file(s)' and the tip link as 'black heart suit Tip jar' (wording varies by screen reader).",
       "where": "index.html:796 and index.html:785",
-      "fix": "Wrap the glyph in `<span aria-hidden=\"true\">` — or replace with inline SVG carrying aria-hidden=\"true\" and focusable=\"false\"."
+      "fix": "Wrap the glyph in `<span aria-hidden=\"true\">`, or replace with inline SVG carrying aria-hidden=\"true\" and focusable=\"false\"."
     },
     {
       "issue": "#tipLink opens a new tab (target=\"_blank\") with no programmatic or visible warning, and it is an external payment destination.",
       "where": "index.html:785",
-      "fix": "Append `<span class=\"sr-only\"> (opens in a new tab)</span>` — `.sr-only` already exists at index.html:679."
+      "fix": "Append `<span class=\"sr-only\"> (opens in a new tab)</span>`, `.sr-only` already exists at index.html:679."
     },
     {
-      "issue": "Heading structure is thin and mismatched to the visual hierarchy. The document has h1 'PDF Tools', h2 'Merge, split, rotate' (hero, 24px display) and h2 'Pages (in output order)' (card micro-label, 12px uppercase) — two very different roles at the same level — while cards 1 and 3 have no heading at all, so heading navigation cannot reach the Add control or the Save/Split controls.",
+      "issue": "Heading structure is thin and mismatched to the visual hierarchy. The document has h1 'PDF Tools', h2 'Merge, split, rotate' (hero, 24px display) and h2 'Pages (in output order)' (card micro-label, 12px uppercase), two very different roles at the same level, while cards 1 and 3 have no heading at all, so heading navigation cannot reach the Add control or the Save/Split controls.",
       "where": "index.html:783, 789, 802; unheaded sections at index.html:795 and index.html:807",
-      "fix": "Give cards 1 and 3 h2s ('Add files', 'Finish'). If the hero headline should not compete, make it part of the h1 block or restyle rather than re-level it — do not skip levels."
+      "fix": "Give cards 1 and 3 h2s ('Add files', 'Finish'). If the hero headline should not compete, make it part of the h1 block or restyle rather than re-level it, do not skip levels."
     },
     {
       "issue": "The 200-row page list is a flat <ul> with no count exposed to assistive tech beyond the mutating h2, and rows carry no role or position information, so 'page 7 of 40' is only inferable by reading the pagetag span.",
@@ -260,19 +260,19 @@
       "fix": "Add `aria-label=\"Output page order\"` to #pageList, and either use aria-setsize/aria-posinset on each li or ensure the pagetag text is part of an accessible row name."
     }
   ],
-  "printSupport": "Print styles exist but are inherited entirely from the shared base at index.html:725-754 (@page margin 14mm, palette forced to black-on-white, shadows off, header/footer/tipbtn/actionbar/#toast/.seg/.skip and .noprint/.no-print/.screenonly hidden, break-inside:avoid on cards/rows/list items). The app layer at index.html:768-776 adds nothing print-specific.\n\nPrint is NOT a core use case here: the deliverable is a downloaded .pdf produced by pdf-lib, and nothing on screen is a document meant for paper. Printing the page is a dead end — you would be printing the tool, not the output.\n\nWhat is broken today if someone does hit Ctrl+P: the base hides the header and footer, but every interactive control survives. You get the hero paragraph, a live-looking '📄 Add PDF file(s)' button, and N rows each ending in four inert ↑ ↓ ⟳ ✕ buttons with borders and box-shadow-stripped outlines — a printed picture of a UI. On a 200-page document that is ~10 sheets of junk. `.hidden` correctly keeps #emptyHint/#fileInput out.\n\nMinimum fix (cheap, and worth doing): add `.noprint` to card 1 (index.html:795), card 3 (index.html:807), and to the four row buttons in app.js:54-60, so the print output degrades to the hero plus a clean numbered manifest of the output order. That manifest is arguably worth having deliberately — a checklist of 'page 7 of contract.pdf, rotated 90°' is a plausible reason to print in an assembly workflow — but it should be an explicit design decision, not the accident of what the base failed to hide. If the overhaul does pursue it, add `#pageList{column-count:2}` in print and set `.doclabel` to a real size, since 12.5px is ~9pt on paper.",
+  "printSupport": "Print styles exist but are inherited entirely from the shared base at index.html:725-754 (@page margin 14mm, palette forced to black-on-white, shadows off, header/footer/tipbtn/actionbar/#toast/.seg/.skip and .noprint/.no-print/.screenonly hidden, break-inside:avoid on cards/rows/list items). The app layer at index.html:768-776 adds nothing print-specific.\n\nPrint is NOT a core use case here: the deliverable is a downloaded .pdf produced by pdf-lib, and nothing on screen is a document meant for paper. Printing the page is a dead end, you would be printing the tool, not the output.\n\nWhat is broken today if someone does hit Ctrl+P: the base hides the header and footer, but every interactive control survives. You get the hero paragraph, a live-looking '📄 Add PDF file(s)' button, and N rows each ending in four inert ↑ ↓ ⟳ ✕ buttons with borders and box-shadow-stripped outlines, a printed picture of a UI. On a 200-page document that is ~10 sheets of junk. `.hidden` correctly keeps #emptyHint/#fileInput out.\n\nMinimum fix (cheap, and worth doing): add `.noprint` to card 1 (index.html:795), card 3 (index.html:807), and to the four row buttons in app.js:54-60, so the print output degrades to the hero plus a clean numbered manifest of the output order. That manifest is arguably worth having deliberately, a checklist of 'page 7 of contract.pdf, rotated 90°' is a plausible reason to print in an assembly workflow, but it should be an explicit design decision, not the accident of what the base failed to hide. If the overhaul does pursue it, add `#pageList{column-count:2}` in print and set `.doclabel` to a real size, since 12.5px is ~9pt on paper.",
   "riskyToRestyle": [
     "index.html lines 18-766 are GENERATED and must not be hand-edited. `design/apply.mjs:35-37` splices between the markers `/* ▼▼▼ SWS STUDIO BASE … ▼▼▼ */` and `/* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */`; only what follows `/* ═══ APP LAYER … ═══ */` at index.html:768 survives a rebuild. Any change to shared components belongs in /workspaces/SWS-apps/design/studio.css, any palette change in design/skins.mjs (pdf-tools entry at skins.mjs:155-159), then `node design/build.mjs && node design/apply.mjs`.",
-    "PORTFOLIO-WIDE TOKEN BUG, fix before anything else: the skin's `--r` and `--wrap` are dead. build.mjs emits the skin :root first (build.mjs:337) then concatenates studio.css (build.mjs:366), whose own :root re-declares `--r:14px` (studio.css:45) and `--wrap:42rem` (studio.css:61). Equal specificity, later wins. So pdf-tools renders at 42rem/14px, not the intended 48rem/10px 'crisp workbench' — visible in index.html:34-35 vs 174,190, and identically in scan-to-pdf and image-compressor. Every per-app radius and column width in the portfolio is currently silently discarded. Remove those two declarations from studio.css's :root, or emit the skin block after the base.",
-    "`.hidden` is load-bearing in three places and renaming it breaks the app, not just its looks: #fileInput (index.html:797) becomes a visible raw file input, #tipLink (index.html:785) renders before init() sets its href — a tip-jar button that goes nowhere — and #emptyHint's toggle (app.js:43) stops working. Keep `.hidden{display:none !important}` verbatim at index.html:699.",
+    "PORTFOLIO-WIDE TOKEN BUG, fix before anything else: the skin's `--r` and `--wrap` are dead. build.mjs emits the skin :root first (build.mjs:337) then concatenates studio.css (build.mjs:366), whose own :root re-declares `--r:14px` (studio.css:45) and `--wrap:42rem` (studio.css:61). Equal specificity, later wins. So pdf-tools renders at 42rem/14px, not the intended 48rem/10px 'crisp workbench', visible in index.html:34-35 vs 174,190, and identically in scan-to-pdf and image-compressor. Every per-app radius and column width in the portfolio is currently silently discarded. Remove those two declarations from studio.css's :root, or emit the skin block after the base.",
+    "`.hidden` is load-bearing in three places and renaming it breaks the app, not just its looks: #fileInput (index.html:797) becomes a visible raw file input, #tipLink (index.html:785) renders before init() sets its href, a tip-jar button that goes nowhere, and #emptyHint's toggle (app.js:43) stops working. Keep `.hidden{display:none !important}` verbatim at index.html:699.",
     "`btn.textContent = 'Working…'` then back to a hard-coded literal (app.js:87/93 and app.js:101/112) wipes any child markup. If the overhaul puts an SVG icon inside #mergeBtn or #splitBtn, the icon is destroyed on first click and never returns, and the restored label must still exactly match 'Save as one PDF' / 'Split into one file per page'. Add a `<span class=\"label\">` and target that, or store/restore innerHTML.",
     "Both handlers use `ev.target` as the button (app.js:86, 100). Wrapping either button's text in a span makes ev.target the span: `.disabled = true` on a span is a no-op (so double-submit becomes possible) and the 'Working…' swap lands on the inner node. Switch to `ev.currentTarget` before adding any child elements.",
     "JS emits a bare `<li>` with no class (app.js:48). All row geometry comes from the descendant selector `ul.plain > li` (index.html:564-567). If the overhaul renames `ul.plain` to `.list`, introduces a wrapper div, or moves to a class-per-element convention, every page row loses its flex layout, min-height and rule and collapses into stacked inline spans. Either keep `ul.plain > li` intact or add an explicit class in app.js:48.",
-    "`.grow` is styled only when scoped under a plain list — `ul.plain .grow{flex:1;min-width:0;overflow-wrap:anywhere}` (index.html:569). Lose that scoping and the middle column stops flexing AND stops breaking long filenames, which pushes the four control buttons off the right edge of the card on any real-world filename.",
-    "The exact JS-applied class strings are the contract: 'pagetag' (app.js:49), 'grow' (app.js:50), 'rot' (app.js:52), 'doclabel' (app.js:53), 'btn small' (app.js:54,56,58), 'btn small danger' (app.js:60), 'show' on #toast (app.js:26,28), 'hidden' (app.js:43,121). Note `el()` sets className by overwrite (app.js:11), so these are whole-attribute values — a BEM rename like `.btn--sm` requires editing app.js in lockstep.",
+    "`.grow` is styled only when scoped under a plain list, `ul.plain .grow{flex:1;min-width:0;overflow-wrap:anywhere}` (index.html:569). Lose that scoping and the middle column stops flexing AND stops breaking long filenames, which pushes the four control buttons off the right edge of the card on any real-world filename.",
+    "The exact JS-applied class strings are the contract: 'pagetag' (app.js:49), 'grow' (app.js:50), 'rot' (app.js:52), 'doclabel' (app.js:53), 'btn small' (app.js:54,56,58), 'btn small danger' (app.js:60), 'show' on #toast (app.js:26,28), 'hidden' (app.js:43,121). Note `el()` sets className by overwrite (app.js:11), so these are whole-attribute values, a BEM rename like `.btn--sm` requires editing app.js in lockstep.",
     "`:focus-visible{box-shadow:0 0 0 4px var(--focus-halo)}` (index.html:672) REPLACES box-shadow rather than adding to it, so `.btn.primary` (--shadow-1) and `.card` lose their elevation while focused. If the overhaul leans harder on box-shadow for depth, this becomes a visible pop on every Tab. Either append the resting shadow into the focus rule or move elevation to a filter/pseudo-element.",
-    "sw.js is cache-first — `return cached || fetched` (sw.js:19) — over a hard-coded asset list including ./index.html, keyed on `const VERSION = 'pdftools-v5'` (sw.js:2). Ship the restyle without bumping VERSION and every returning user keeps the old page indefinitely; the network copy is only used to refill the cache in the background. Bump VERSION on deploy, and add any new asset (icon sprite, extra font) to the ASSETS array at sw.js:3 or it will 404 offline.",
+    "sw.js is cache-first, `return cached || fetched` (sw.js:19), over a hard-coded asset list including ./index.html, keyed on `const VERSION = 'pdftools-v5'` (sw.js:2). Ship the restyle without bumping VERSION and every returning user keeps the old page indefinitely; the network copy is only used to refill the cache in the background. Bump VERSION on deploy, and add any new asset (icon sprite, extra font) to the ASSETS array at sw.js:3 or it will 404 offline.",
     "The palette is hard-coded in four places outside the stylesheet and they must move together: the two `<meta name=\"theme-color\">` values #f5f7ff / #12141c (index.html:12-13), and manifest.webmanifest `background_color:#f5f7ff` / `theme_color:#555fb5` (manifest lines 8-9). Miss them and the installed PWA splash and Android status bar keep the old identity. marketing/stripe-thumbnail.png and marketing/thumb-256.png also freeze the current look and feed the OG image at index.html:10 and the studio hub card (design/hub.mjs).",
-    "SAFE, so don't over-engineer around it: test/core.test.mjs asserts nothing about the DOM, class names, or markup — it imports buildOutput/splitAll/loadPdf from core.js and checks page counts, rotation wrapping and byte sizes only. There is no canvas, no CSS-derived page geometry, and no contenteditable anywhere in the app; rotation is data passed to pdf-lib (core.js:26-29), never a CSS transform, so output PDF geometry is fully decoupled from layout. The one non-obvious coupling is textual, not visual: the two leading spaces in `'  ⟳' + item.rotate + '°'` (app.js:52) are the only gap between the page label and the rotation badge — style `.rot` with a real margin and delete them."
+    "SAFE, so don't over-engineer around it: test/core.test.mjs asserts nothing about the DOM, class names, or markup, it imports buildOutput/splitAll/loadPdf from core.js and checks page counts, rotation wrapping and byte sizes only. There is no canvas, no CSS-derived page geometry, and no contenteditable anywhere in the app; rotation is data passed to pdf-lib (core.js:26-29), never a CSS transform, so output PDF geometry is fully decoupled from layout. The one non-obvious coupling is textual, not visual: the two leading spaces in `'  ⟳' + item.rotate + '°'` (app.js:52) are the only gap between the page label and the rotation badge, style `.rot` with a real margin and delete them."
   ]
 }

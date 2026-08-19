@@ -1,4 +1,4 @@
-// Export + hostile-backup tests — node test/export.test.mjs
+// Export + hostile-backup tests, node test/export.test.mjs
 // These cover the three things the review found were silently destructive:
 // a malformed backup, a PDF that mangles names or runs off the paper, and a
 // spreadsheet that does not exist.

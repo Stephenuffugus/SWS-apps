@@ -1,4 +1,4 @@
-// Unit tests for pure helpers — run: node test/helpers.test.mjs
+// Unit tests for pure helpers, run: node test/helpers.test.mjs
 import assert from 'node:assert/strict';
 import {
   CODE_CHARS, genCode, normalizeCode, parseBulkSlots, dateRangeSlots,
@@ -81,14 +81,14 @@ ok('stillNeededSentence says what is left in one line', () => {
   const many = Array.from({ length: 10 }, (_, i) => ({ label: 'S' + i, capacity: 1, claimedCount: 0 }));
   assert.match(stillNeededSentence(many), /and 4 more\.$/);
 });
-ok('dateRangeSlots: every Tuesday Sept–Nov 2026', () => {
+ok('dateRangeSlots: every Tuesday Sept-Nov 2026', () => {
   const rows = dateRangeSlots({
     start: '2026-09-01', end: '2026-11-30', weekdays: [2],
-    timeText: '3–5pm', prefix: 'Practice', capacity: 2,
+    timeText: '3 to 5pm', prefix: 'Practice', capacity: 2,
   });
   assert.equal(rows.length, 13); // Tuesdays: Sep 1..29 (5), Oct 6..27 (4), Nov 3..24 (4)
-  assert.ok(rows[0].label.startsWith('Practice — Tue'));
-  assert.ok(rows[0].label.includes('3–5pm'));
+  assert.ok(rows[0].label.startsWith('Practice, Tue'));
+  assert.ok(rows[0].label.includes('3 to 5pm'));
   assert.ok(rows.every(r => r.capacity === 2));
 });
 ok('dateRangeSlots rejects bad input', () => {

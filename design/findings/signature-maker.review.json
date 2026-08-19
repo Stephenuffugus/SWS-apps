@@ -4,28 +4,28 @@
     "personas": [
       {
         "name": "Denise Okonkwo-Hart",
-        "who": "44, operations manager, the designated computer person for her family. Handling her mother's insurance claim after a fall. Competent with software, no access needs, deeply suspicious of free document sites since her employer circulated the FBI advisory about malicious free file tools — the exact distrust the research names in emotionalContext.",
+        "who": "44, operations manager, the designated computer person for her family. Handling her mother's insurance claim after a fall. Competent with software, no access needs, deeply suspicious of free document sites since her employer circulated the FBI advisory about malicious free file tools, the exact distrust the research names in emotionalContext.",
         "context": "Locked-down Windows work laptop, 1280px window, trackpad only, no stylus, eleven minutes of a lunch break. The claim PDF is already open in the next tab. Overhead office light, someone talking to her.",
         "task": "Get one transparent signature PNG and drop it into the claim form before her 13:00 call.",
-        "verdict": "Got the file in about four minutes and the file itself is genuinely good. She also lost her best attempt twice — once to a mis-tap and once to a reflex reload — and both losses were completely silent.",
+        "verdict": "Got the file in about four minutes and the file itself is genuinely good. She also lost her best attempt twice, once to a mis-tap and once to a reflex reload, and both losses were completely silent.",
         "delights": [
           "No email field, no modal, no counter, no wait timer, no tip prompt anywhere on the export path. Eight rapid clicks on Download produced eight clean files with no double-submit corruption and no leftover DOM (verified: 0 residual a[download] nodes). After Signaturely's 'Sign 1 documents for free' footer this read as a different category of thing.",
-          "The output is exactly what the hero promised. Decoded pixel by pixel: 93.9% fully transparent, corner alpha 0, exactly one opaque colour — rgb(17,19,24) — plus 1,902 antialiased edge pixels, auto-cropped from a 942x780 buffer down to 632x216. It dropped onto the claim PDF with no white box, which is complaint #3 in the research solved properly.",
+          "The output is exactly what the hero promised. Decoded pixel by pixel: 93.9% fully transparent, corner alpha 0, exactly one opaque colour, rgb(17,19,24), plus 1,902 antialiased edge pixels, auto-cropped from a 942x780 buffer down to 632x216. It dropped onto the claim PDF with no white box, which is complaint #3 in the research solved properly.",
           "Palm and stray-pointer rejection works. A second pointer arriving mid-stroke left 0 ink in the palm zone (measured). Resizing the window mid-stroke kept the stroke and resynced the buffer with no error."
         ],
         "frictions": [
           {
-            "what": "Her fourth attempt was the good one. Reaching for Download PNG she hit Clear — the two are identical 316x44 full-width .btn elements stacked 8px apart at phone and narrow-window widths (measured at 390px: Undo 605-649, Clear 657-701, Download 709-753). Clear runs `strokes = []; current = null; redraw()` with no confirm, no toast, no undo. Measured: 1,773 ink pixels to 0, toast text empty, toast not shown, no undo button, and pressing Undo afterwards restores nothing.",
+            "what": "Her fourth attempt was the good one. Reaching for Download PNG she hit Clear, the two are identical 316x44 full-width .btn elements stacked 8px apart at phone and narrow-window widths (measured at 390px: Undo 605-649, Clear 657-701, Download 709-753). Clear runs `strokes = []; current = null; redraw()` with no confirm, no toast, no undo. Measured: 1,773 ink pixels to 0, toast text empty, toast not shown, no undo button, and pressing Undo afterwards restores nothing.",
             "severity": "blocker",
-            "whyItMatters": "This is the one artefact in the whole portfolio the user cannot reproduce — the research says outright to assume 'the user is slightly embarrassed by how their mouse signature looks, and will draw it four or five times: undo, clear and redraw must be immediate and unjudgemental.' Instead the destructive control is styled identically to the primary one, sits 8px from it in the thumb zone, and is the only irreversible action in the app. sws-ui.js is loaded and window.SWS.undo exists (verified true at runtime); app.js never calls it once. .btn.danger is defined at index.html:580 and never used."
+            "whyItMatters": "This is the one artefact in the whole portfolio the user cannot reproduce, the research says outright to assume 'the user is slightly embarrassed by how their mouse signature looks, and will draw it four or five times: undo, clear and redraw must be immediate and unjudgemental.' Instead the destructive control is styled identically to the primary one, sits 8px from it in the thumb zone, and is the only irreversible action in the app. sws-ui.js is loaded and window.SWS.undo exists (verified true at runtime); app.js never calls it once. .btn.danger is defined at index.html:580 and never used."
           },
           {
             "what": "She hit refresh out of habit when the page felt stuck. Everything went. Measured: 1,092 ink pixels before reload, 0 after; localStorage holds 0 bytes and no keys for this app at any point.",
             "severity": "blocker",
-            "whyItMatters": "There is no autosave, no draft, no 'you have unsaved work' guard on beforeunload, and — worse — no sentence anywhere saying nothing is kept. The research asks for exactly the opposite of silence: 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.' Right now ephemerality is an absent feature rather than a stated choice, so it reads as the app losing her work rather than protecting her. The standard battery reports this app as 'persisted' because it counts text characters; the artefact is a canvas, so the battery cannot see the loss."
+            "whyItMatters": "There is no autosave, no draft, no 'you have unsaved work' guard on beforeunload, and, worse, no sentence anywhere saying nothing is kept. The research asks for exactly the opposite of silence: 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.' Right now ephemerality is an absent feature rather than a stated choice, so it reads as the app losing her work rather than protecting her. The standard battery reports this app as 'persisted' because it counts text characters; the artefact is a canvas, so the battery cannot see the loss."
           },
           {
-            "what": "Nothing tells her what she is about to get. She had no idea whether 633x218 was big enough for a form that would be printed. There is no dimension readout, no KB figure, no dpi note, no filename preview — and the same gesture exports at 633x218 at 414px and 1529x248 at 1280px.",
+            "what": "Nothing tells her what she is about to get. She had no idea whether 633x218 was big enough for a form that would be printed. There is no dimension readout, no KB figure, no dpi note, no filename preview, and the same gesture exports at 633x218 at 414px and 1529x248 at 1280px.",
             "severity": "major",
             "whyItMatters": "Research complaint #4 is Adobe's own documented Fill & Sign blur bug; the only defence the app controls is giving people more pixels than they think they need and saying so. The output resolution is currently an accident of the browser window and she cannot even see the number."
           },
@@ -41,16 +41,16 @@
         "who": "71, retired school secretary. Macular changes in her right eye plus essential tremor in her writing hand. Uses an iPad daily, distrusts anything that looks like software. This is the comfort-panel persona.",
         "context": "Her kitchen, 09:40, iPad in portrait at 414 CSS px propped against the fruit bowl, bright window behind it, one hand steadying the tablet and one finger drawing. Her daughter emailed a care-home admission form and is waiting on it. No hard deadline, very little patience.",
         "task": "Sign the admission form and send the picture back to her daughter.",
-        "verdict": "She found the comfort panel unprompted and set it up correctly. It then made the app actively worse: the signing pad refused to grow, the Download button dropped below the fold, and — the part that made her stop — the ink stopped landing where her finger was.",
+        "verdict": "She found the comfort panel unprompted and set it up correctly. It then made the app actively worse: the signing pad refused to grow, the Download button dropped below the fold, and, the part that made her stop, the ink stopped landing where her finger was.",
         "delights": [
           "She found the gear beside the app name straight away, and the panel is a genuine fieldset of real radios with a permanent tick slot. axe on the open panel: 0 violations. Largest took the root font from 16px to 24px and the hint paragraph from 15px to 22.5px; page overflow stayed at 0px at both 320px and 414px.",
           "The pad is a true white rectangle in dark mode too (verified: rgb(255,255,255) with the OS in dark), so the black ink she picked really is the black ink she gets. That is the right call and the research names it as a hard constraint."
         ],
         "frictions": [
           {
-            "what": "After she set Spacing to Roomy, the pen started drawing to the left of her finger. Measured and isolated: setting density=roomy alone takes the pad's CSS width from 338px to 320px while the canvas backing store stays at 338 — fitCanvas() only runs on window resize (app.js:117), and a comfort-panel attribute change fires no resize event. Pen down at 288px into the pad, ink landed at 274px: a 14px offset, 4.9%, growing linearly toward the right edge. The signature already on the pad squashed 14px to the left at the same moment. It only corrects itself if the window is resized. Setting text=xxl or reading=easy alone does NOT trigger it — only Spacing does.",
+            "what": "After she set Spacing to Roomy, the pen started drawing to the left of her finger. Measured and isolated: setting density=roomy alone takes the pad's CSS width from 338px to 320px while the canvas backing store stays at 338, fitCanvas() only runs on window resize (app.js:117), and a comfort-panel attribute change fires no resize event. Pen down at 288px into the pad, ink landed at 274px: a 14px offset, 4.9%, growing linearly toward the right edge. The signature already on the pad squashed 14px to the left at the same moment. It only corrects itself if the window is resized. Setting text=xxl or reading=easy alone does NOT trigger it, only Spacing does.",
             "severity": "blocker",
-            "whyItMatters": "With a tremor she is already fighting her own hand; a pen that is systematically 14px off is unusable, and she blamed herself. The one comfort dial most likely to be reached for by someone with a dexterity need is the one dial that breaks the core interaction, and the app's own hint tells her to 'sign larger than feels natural' — which pushes her toward the right-hand side of the pad where the error is worst."
+            "whyItMatters": "With a tremor she is already fighting her own hand; a pen that is systematically 14px off is unusable, and she blamed herself. The one comfort dial most likely to be reached for by someone with a dexterity need is the one dial that breaks the core interaction, and the app's own hint tells her to 'sign larger than feels natural', which pushes her toward the right-hand side of the pad where the error is worst."
           },
           {
             "what": "The signing pad is the only thing on the page that does not respond to Largest text. Measured at 320px: pad 244x260 at Default and 244x260 at Largest; at 414px + Roomy it is 320x260. #pad is hardcoded `height:260px` (index.html:1257) and fitCanvas hardcodes `cssH = 260` (app.js:27). The signable band above the ruled line is 198px.",
@@ -60,10 +60,10 @@
           {
             "what": "At Largest the Download PNG button falls below the fold. Measured: dlVisibleWithoutScroll false at 320px/xxl and at 414px/xxl+roomy (pad bottom 785 and 736 respectively in a 900px viewport, with the three buttons below that).",
             "severity": "major",
-            "whyItMatters": "The comfort setting she needs pushes the app's only output off screen. There is no sticky action bar — .actionbar is defined at index.html:805 and unused — so the button that finishes the job is the one thing Largest text hides."
+            "whyItMatters": "The comfort setting she needs pushes the app's only output off screen. There is no sticky action bar, .actionbar is defined at index.html:805 and unused, so the button that finishes the job is the one thing Largest text hides."
           },
           {
-            "what": "She could not see where to sign. The ruled line is a hardcoded #d7dde5 hairline — 1.37:1 against the white pad — and the ✕ mark is #b9c2cc at 1.80:1. Turning Contrast to High changes neither, because both are literal hex values in the app layer (index.html:1258-1259) rather than tokens.",
+            "what": "She could not see where to sign. The ruled line is a hardcoded #d7dde5 hairline, 1.37:1 against the white pad, and the ✕ mark is #b9c2cc at 1.80:1. Turning Contrast to High changes neither, because both are literal hex values in the app layer (index.html:1258-1259) rather than tokens.",
             "severity": "major",
             "whyItMatters": "The ✕-and-rule is the entire wayfinding of the signing surface, and it is the lowest-contrast thing on the page. High contrast raised the hint paragraph from 5.95:1 to 16.05:1 and left the two marks she actually needed at 1.37 and 1.80."
           },
@@ -75,7 +75,7 @@
           {
             "what": "She turned Warm tint to High for the glare from the window, and the signing pad turned peach. Measured: the pad renders as rgb(255,214,177) because body::after paints rgba(255,166,86,0.46) at z-index 9999 over everything including the hardcoded-white .padwrap. The ruled line drops to 1.01:1 and the ✕ to 1.33:1, and the blue ink swatch reads as navy-black.",
             "severity": "major",
-            "whyItMatters": "The research states this as a hard constraint that overrides fashion: 'the signing pad must be a true white rectangle in every theme, because it is a WYSIWYG preview of ink on a document — a tinted pad turns the exported ink colour into a guess.' Dark mode is handled correctly and warm tint is not. She is choosing an ink colour against a background the exported file will never have."
+            "whyItMatters": "The research states this as a hard constraint that overrides fashion: 'the signing pad must be a true white rectangle in every theme, because it is a WYSIWYG preview of ink on a document, a tinted pad turns the exported ink colour into a guess.' Dark mode is handled correctly and warm tint is not. She is choosing an ink colour against a background the exported file will never have."
           },
           {
             "what": "Inside the comfort panel, the 'Roomy' option can end up underneath the panel's own sticky footer and stop responding to taps. Measured at 414x900: dialog 736px tall, body scroll height 1,132px against a 576px viewport, footer top at y=740; with the body scrolled to bring Roomy just into view, the .sws-foot element sits over it and swallows the click (the automated driver retried for 30 seconds and never landed it).",
@@ -89,42 +89,42 @@
         "who": "34, backend developer with severe RSI. Drives everything from the keyboard; a trackball comes out for maybe ten minutes a day and drawing is not one of the things he spends it on. Would use a switch on a bad week.",
         "context": "Standing desk, Chromebook at 1280px, keyboard only, mid-afternoon, no time pressure and no tolerance for being told to use a mouse.",
         "task": "Sign a freelance contract addendum so he can email it back before the client's day ends.",
-        "verdict": "Could not produce a signature. Not slowly, not awkwardly — there is no keyboard path to the app's only output at all.",
+        "verdict": "Could not produce a signature. Not slowly, not awkwardly, there is no keyboard path to the app's only output at all.",
         "delights": [
           "The tab order is short and completely orderly: Display settings → Tip jar → Black ink → Blue ink → Fine → Medium → Bold → Undo stroke → Clear → Download PNG → Sky Wolf Studio → Feedback → body. 12 focusables, 0 unreachable, 0 unnamed. Nothing is trapped.",
           "Focus rings are real and legible: 2px solid rgb(96,113,149) at 2px offset, 4.77:1 against the card. There is a <main id=\"main\"> landmark.",
-          "axe returned zero violations in every configuration tested — light, dark, warm tint 3, high contrast, Largest + Roomy, and after drawing. Zero console errors across the entire run."
+          "axe returned zero violations in every configuration tested, light, dark, warm tint 3, high contrast, Largest + Roomy, and after drawing. Zero console errors across the entire run."
         ],
         "frictions": [
           {
             "what": "<canvas id=\"pad\"> at index.html:1291 has tabindex null, role null, aria-label null and zero fallback content, and drawing on it is the only route to an output. Verified at runtime. There is no typed path, no photo import, no file input and no drop target anywhere in index.html or app.js.",
             "severity": "blocker",
-            "whyItMatters": "A flat WCAG 2.1.1 failure on the app's single verb, and the research quotes Section508.gov and ADA practice naming typing and image upload as the required alternatives: 'There is no way to make a signature without a working pointing device, which is an ADA and Section 508 problem, not a nice-to-have.' Everything else in the app is keyboard-perfect, which makes it worse — he can select black ink, choose Bold, tab to Download, press Enter, and get a toast telling him to 'Sign above first.' The app is fully operable except for the part that produces the product."
+            "whyItMatters": "A flat WCAG 2.1.1 failure on the app's single verb, and the research quotes Section508.gov and ADA practice naming typing and image upload as the required alternatives: 'There is no way to make a signature without a working pointing device, which is an ADA and Section 508 problem, not a nice-to-have.' Everything else in the app is keyboard-perfect, which makes it worse, he can select black ink, choose Bold, tab to Download, press Enter, and get a toast telling him to 'Sign above first.' The app is fully operable except for the part that produces the product."
           },
           {
             "what": "The ink and pen controls communicate their state only through a CSS class. Verified: both .dot buttons and all three .sizes buttons have aria-pressed null and role null; selection lives entirely in `classList.toggle('sel', ...)` at app.js:105 and app.js:111.",
             "severity": "major",
-            "whyItMatters": "With a screen reader on he hears five buttons — 'Black ink, Blue ink, Fine, Medium, Bold' — and is never told which ink or which weight is currently active. They should be aria-pressed toggle buttons."
+            "whyItMatters": "With a screen reader on he hears five buttons, 'Black ink, Blue ink, Fine, Medium, Bold', and is never told which ink or which weight is currently active. They should be aria-pressed toggle buttons."
           },
           {
-            "what": "'Fine', 'Medium' and 'Bold' have no group name. The word 'Pen' that labels them is a plain <span class=\"label\"> (index.html:1299), as is 'Ink' (index.html:1296) — neither is a legend, a fieldset, an aria-label or an aria-labelledby target.",
+            "what": "'Fine', 'Medium' and 'Bold' have no group name. The word 'Pen' that labels them is a plain <span class=\"label\"> (index.html:1299), as is 'Ink' (index.html:1296), neither is a legend, a fieldset, an aria-label or an aria-labelledby target.",
             "severity": "major",
             "whyItMatters": "Out of context 'Fine / Medium / Bold' could be anything. The two groups are visually labelled and programmatically anonymous."
           },
           {
-            "what": "The ✕ guide mark is a live text node — <div class=\"padx\">✕</div> at index.html:1293 with no aria-hidden (verified null).",
+            "what": "The ✕ guide mark is a live text node, <div class=\"padx\">✕</div> at index.html:1293 with no aria-hidden (verified null).",
             "severity": "minor",
             "whyItMatters": "A screen reader reads a bare 'multiplication X' in the middle of the app's main region, where it means nothing without the visual context."
           },
           {
-            "what": "Undo stroke with nothing drawn is a completely silent no-op — `strokes.pop()` on an empty array (app.js:114). Measured: toast text empty, nothing announced. No control is ever disabled (undoBtn, clearBtn and dlBtn all report disabled false at every state), even though .btn[disabled] styling exists at index.html:1261.",
+            "what": "Undo stroke with nothing drawn is a completely silent no-op, `strokes.pop()` on an empty array (app.js:114). Measured: toast text empty, nothing announced. No control is ever disabled (undoBtn, clearBtn and dlBtn all report disabled false at every state), even though .btn[disabled] styling exists at index.html:1261.",
             "severity": "minor",
             "whyItMatters": "Three buttons that always look and announce as available, one of which does nothing and one of which destroys everything."
           },
           {
             "what": "No skip link and no <noscript>. Verified: document.querySelector('.skip') is null and there is no noscript element, while the .skip component sits fully styled and unused at index.html:840-849.",
             "severity": "minor",
-            "whyItMatters": "Minor here because the page is short, but with JS off the page renders a hero, a blank white rectangle and three dead buttons — indistinguishable from a broken site, on an app whose whole pitch is trustworthiness."
+            "whyItMatters": "Minor here because the page is short, but with JS off the page renders a hero, a blank white rectangle and three dead buttons, indistinguishable from a broken site, on an app whose whole pitch is trustworthiness."
           }
         ]
       },
@@ -142,7 +142,7 @@
           {
             "what": "PNG is the only output. app.js:165 ends at `out.toDataURL('image/png')` and there is no format control anywhere. Her file came out 632x216 transparent PNG at 16.9 KB.",
             "severity": "blocker",
-            "whyItMatters": "The research's second complaint quotes the portals' own ranked rejection list, top of which is 'Format not JPEG — PNG is commonly rejected,' followed by 'Coloured background instead of white.' A transparent PNG is precisely the two things that get rejected, and this app produces nothing else. This is the highest-volume signature-upload workflow in the world and the app is 100% incompatible with it."
+            "whyItMatters": "The research's second complaint quotes the portals' own ranked rejection list, top of which is 'Format not JPEG, PNG is commonly rejected,' followed by 'Coloured background instead of white.' A transparent PNG is precisely the two things that get rejected, and this app produces nothing else. This is the highest-volume signature-upload workflow in the world and the app is 100% incompatible with it."
           },
           {
             "what": "No dimension or file-size control and no readout. SCALE is hardcoded to 3 at app.js:123 over `pad.clientWidth`, so the output size is whatever her phone's viewport happened to be. Measured across viewports with the same gesture: 632x216 / 16.9 KB at 390px, 633x218 / 14.2 KB at 414px, 1529x248 / 34.5 KB at 1280px.",
@@ -150,9 +150,9 @@
             "whyItMatters": "She needs exactly 140x60 at under 30 KB. She cannot see any of those three numbers before or after download, cannot set any of them, and the 1280px case would have blown the 30 KB ceiling on its own. The research's whole 'own the export nobody else designs for' differentiator is a live px/KB readout plus named presets, and there is currently not even a readout."
           },
           {
-            "what": "She tapped once on the pad to test it, then hit Download. She got a 38x38 PNG of a single dot, 411 bytes, with a cheerful 'Saved — transparent background, cropped to the ink' toast. The only guard is `strokes.length === 0` at app.js:121.",
+            "what": "She tapped once on the pad to test it, then hit Download. She got a 38x38 PNG of a single dot, 411 bytes, with a cheerful 'Saved, transparent background, cropped to the ink' toast. The only guard is `strokes.length === 0` at app.js:121.",
             "severity": "major",
-            "whyItMatters": "At 23:20 with a deadline, an app that confidently exports a 38px dot as your signature is worse than one that refuses. A minimum-ink or minimum-extent check costs nothing — trimBounds already computes the bounding box."
+            "whyItMatters": "At 23:20 with a deadline, an app that confidently exports a 38px dot as your signature is worse than one that refuses. A minimum-ink or minimum-extent check costs nothing, trimBounds already computes the bounding box."
           },
           {
             "what": "The signable area on her phone is 316 x 198 CSS px (measured at 390px: pad 316x262, ruled line 198px down from the top). The app's own hint tells her to 'sign larger than feels natural'.",
@@ -168,24 +168,24 @@
         "task": "Make one signature image and paste it into everything he has to sign this month.",
         "verdict": "Got a clean file in two minutes and used it on both. The app was flawless and told him nothing that would have stopped him forfeiting a USCIS filing fee.",
         "delights": [
-          "Both inks export exactly as shown — verified: black is a single opaque rgb(17,19,24) and blue is a single opaque rgb(29,63,143), no colour drift, no fringing beyond the antialias band.",
-          "'Drawn and saved on your device — your signature never touches a server' in the hero, plus 'Runs entirely in your browser. Nothing uploaded, ever.' in the footer, was enough for him to keep going where a site with an email box would not have been."
+          "Both inks export exactly as shown, verified: black is a single opaque rgb(17,19,24) and blue is a single opaque rgb(29,63,143), no colour drift, no fringing beyond the antialias band.",
+          "'Drawn and saved on your device, your signature never touches a server' in the hero, plus 'Runs entirely in your browser. Nothing uploaded, ever.' in the footer, was enough for him to keep going where a site with an email box would not have been."
         ],
         "frictions": [
           {
             "what": "Nothing anywhere in index.html or app.js says where a drawn signature is not valid. There is no warning block, no caveat, no .warn instance (the component sits unused at index.html:670).",
             "severity": "blocker",
-            "whyItMatters": "This is the research's number-one complaint and its number-one differentiator, and it is now time-critical: the DHS interim final rule published 11 May 2026 and effective 10 July 2026 lets USCIS reject OR DENY a filing found to lack a valid signature after it has cleared the Lockbox — keeping the fee, with no post-filing correction — and USCIS explicitly rejects signatures 'generated by software.' Signature-related denials went from 300 in FY2021 to 2,953 in FY2025. Hal is about to lose a filing fee and months of waiting because a free tool was polite. Every competitor's incentive is to get him to sign; ours is not, and this is the single most valuable thing that asymmetry buys."
+            "whyItMatters": "This is the research's number-one complaint and its number-one differentiator, and it is now time-critical: the DHS interim final rule published 11 May 2026 and effective 10 July 2026 lets USCIS reject OR DENY a filing found to lack a valid signature after it has cleared the Lockbox, keeping the fee, with no post-filing correction, and USCIS explicitly rejects signatures 'generated by software.' Signature-related denials went from 300 in FY2021 to 2,953 in FY2025. Hal is about to lose a filing fee and months of waiting because a free tool was polite. Every competitor's incentive is to get him to sign; ours is not, and this is the single most valuable thing that asymmetry buys."
           },
           {
-            "what": "He picked black because it was already selected, for a mortgage package where the title company expects blue. The two swatches carry aria-label 'Black ink' and 'Blue ink' and nothing else — no title, no caption, no explanation (verified: title null on both).",
+            "what": "He picked black because it was already selected, for a mortgage package where the title company expects blue. The two swatches carry aria-label 'Black ink' and 'Blue ink' and nothing else, no title, no caption, no explanation (verified: title null on both).",
             "severity": "major",
             "whyItMatters": "The research is specific: blue proves an original against a photocopy and is 'not just preferred but functionally required by most lenders and title companies,' while exam portals mandate black on white. One clause per swatch turns a two-button picker into visible expertise. It is free, it is true, and it is the difference between his closing going through and being sent back."
           },
           {
             "what": "There is no way to get the image anywhere except the Downloads folder. app.js:164-169 builds an <a download> and clicks it; there is no clipboard path, no Web Share, no 'place it on a PDF' handoff, and no initials.",
             "severity": "major",
-            "whyItMatters": "His actual goal is a signed document, not a PNG. The research notes Online PNG Tools reserves copy-to-clipboard for paying customers — which is exactly why it should be a first-class button here, and it costs one ClipboardItem call. The mortgage package also asked him to initial nine pages and he had to come back and draw a second, smaller mark."
+            "whyItMatters": "His actual goal is a signed document, not a PNG. The research notes Online PNG Tools reserves copy-to-clipboard for paying customers, which is exactly why it should be a first-class button here, and it costs one ClipboardItem call. The mortgage package also asked him to initial nine pages and he had to come back and draw a second, smaller mark."
           },
           {
             "what": "He signed once, disliked it, and pressed Clear. Then he wanted the first one back. There is no redo, no history, no last-three-attempts strip.",
@@ -196,18 +196,18 @@
       },
       {
         "name": "Yusuf Adeyemi",
-        "who": "31, warehouse team leader, signing a tenancy agreement the letting agent emailed. Phone-only household — no laptop. Not nervous about tech, just doing this on the move.",
+        "who": "31, warehouse team leader, signing a tenancy agreement the letting agent emailed. Phone-only household, no laptop. Not nervous about tech, just doing this on the move.",
         "context": "On the bus at 17:50, phone at 390x844, one thumb, low winter light through a window. He read the hint, rotated the phone to landscape to sign bigger the way it told him to, then rotated back to reach the buttons.",
         "task": "Sign the tenancy agreement and email it back before the agent closes at 18:00.",
         "verdict": "The file he emailed had his surname missing. He did not find out until the agent replied.",
         "delights": [
-          "Rotating to landscape does make the pad much bigger — 588px wide against 316px in portrait — and the existing stroke is redrawn rather than wiped, which is more care than the signature_pad issues the research cites ('after you draw your signature and scroll down a little, if you go back up, it vanishes from the canvas')."
+          "Rotating to landscape does make the pad much bigger, 588px wide against 316px in portrait, and the existing stroke is redrawn rather than wiped, which is more care than the signature_pad issues the research cites ('after you draw your signature and scroll down a little, if you go back up, it vanishes from the canvas')."
         ],
         "frictions": [
           {
-            "what": "He signed across a 588px-wide landscape pad, rotated back to portrait to reach Download, and the export silently cropped everything past the new pad width. Measured: signed across ~700 CSS px in landscape, rotated to 390px where the pad is 314px, exported 885x185 — roughly 295 CSS px of ink, so about 57% of the signature was discarded. download() builds its offscreen canvas as `pad.clientWidth * SCALE` (app.js:125) while the stroke points are stored in absolute CSS pixels from whatever width they were drawn at (app.js:22, 80).",
+            "what": "He signed across a 588px-wide landscape pad, rotated back to portrait to reach Download, and the export silently cropped everything past the new pad width. Measured: signed across ~700 CSS px in landscape, rotated to 390px where the pad is 314px, exported 885x185, roughly 295 CSS px of ink, so about 57% of the signature was discarded. download() builds its offscreen canvas as `pad.clientWidth * SCALE` (app.js:125) while the stroke points are stored in absolute CSS pixels from whatever width they were drawn at (app.js:22, 80).",
             "severity": "blocker",
-            "whyItMatters": "The app tells him to sign big, landscape is the only way to do that, and rotating back to reach the export button — which is off-screen in landscape anyway (measured at 740x360: pad bottom at 472 against a 360px viewport, padVisible false) — truncates the result. The truncation is visible on the pad for a second before the buttons scroll into view, and the toast still says 'Saved — transparent background, cropped to the ink,' which reads as reassurance. The research asks for exactly this: 'rescale stored strokes proportionally on rotation instead of leaving them in absolute CSS pixels, so a portrait signature is not clipped by a landscape crop.'"
+            "whyItMatters": "The app tells him to sign big, landscape is the only way to do that, and rotating back to reach the export button, which is off-screen in landscape anyway (measured at 740x360: pad bottom at 472 against a 360px viewport, padVisible false), truncates the result. The truncation is visible on the pad for a second before the buttons scroll into view, and the toast still says 'Saved, transparent background, cropped to the ink,' which reads as reassurance. The research asks for exactly this: 'rescale stored strokes proportionally on rotation instead of leaving them in absolute CSS pixels, so a portrait signature is not clipped by a landscape crop.'"
           },
           {
             "what": "In landscape the whole bottom of the signing pad and all three buttons are below the fold (measured at 740x360: pad top 212, pad bottom 472, viewport height 360). There is no full-bleed 'Sign big' mode.",
@@ -220,7 +220,7 @@
             "whyItMatters": "On a 316px-wide pad with a long surname, running off the edge is the normal case, and the feedback is a stroke that appears to stop rather than a boundary he can feel."
           },
           {
-            "what": "He switched from Medium to Bold after drawing, to see if it looked better, and the exported image changed size without the drawing changing. Measured: same strokes exported 504x180 with Bold selected and 476x152 with Fine selected — a 28px difference — because `padPx = Math.round(size * SCALE * 1.5)` at app.js:159 reads the currently selected pen, not the pens the strokes were actually drawn with.",
+            "what": "He switched from Medium to Bold after drawing, to see if it looked better, and the exported image changed size without the drawing changing. Measured: same strokes exported 504x180 with Bold selected and 476x152 with Fine selected, a 28px difference, because `padPx = Math.round(size * SCALE * 1.5)` at app.js:159 reads the currently selected pen, not the pens the strokes were actually drawn with.",
             "severity": "minor",
             "whyItMatters": "The export is not a deterministic function of the drawing. Changing a control that visibly does nothing quietly changes the file."
           }
@@ -229,40 +229,40 @@
     ],
     "consensus": {
       "worksWell": [
-        "The core artefact is genuinely excellent and nobody else in the category gets it this right. Decoded pixel by pixel: 93.9% fully transparent, corner alpha 0, exactly one opaque colour (rgb(17,19,24) for black, rgb(29,63,143) for blue — the markup values, unchanged), 1,902 antialiased edge pixels, cropped tight from a 942x780 buffer to 632x216. The research's 'white box' complaint (#3) is solved properly, and trimBounds is unit-tested.",
+        "The core artefact is genuinely excellent and nobody else in the category gets it this right. Decoded pixel by pixel: 93.9% fully transparent, corner alpha 0, exactly one opaque colour (rgb(17,19,24) for black, rgb(29,63,143) for blue, the markup values, unchanged), 1,902 antialiased edge pixels, cropped tight from a 942x780 buffer to 632x216. The research's 'white box' complaint (#3) is solved properly, and trimBounds is unit-tested.",
         "It is a real offline PWA, not a claim. sw.js VERSION sig-v14 precaches all 10 assets; with the network cut the page reloads, draws and exports successfully. 'Turn your Wi-Fi off. It still works' is a statement this app can currently make and prove.",
-        "Nothing stands between finishing and the file. No email field, no modal, no rating prompt, no wait timer, no counter, no tip prompt on the export path — the tip link is a header link and stays there. Eight rapid Download clicks produced eight clean files, no double-submit, no corruption, 0 leftover a[download] nodes.",
+        "Nothing stands between finishing and the file. No email field, no modal, no rating prompt, no wait timer, no counter, no tip prompt on the export path, the tip link is a header link and stays there. Eight rapid Download clicks produced eight clean files, no double-submit, no corruption, 0 leftover a[download] nodes.",
         "Pointer handling is careful. A second pointer arriving mid-stroke leaves 0 ink in the palm zone. pointercancel commits the in-progress stroke rather than eating it. Resizing the window mid-stroke keeps the stroke and resyncs the backing store. This is more care than most competitors take.",
-        "Accessibility of the chrome is clean. axe returned 0 violations in every configuration tested — light, dark, warm tint 3, high contrast, Largest + Roomy, comfort panel open, and after drawing. 12 focusables, 0 unreachable, 0 unnamed, orderly tab order, no traps, real focus rings at 2px solid rgb(96,113,149) / 4.77:1, a <main> landmark, and reduced motion honoured.",
+        "Accessibility of the chrome is clean. axe returned 0 violations in every configuration tested, light, dark, warm tint 3, high contrast, Largest + Roomy, comfort panel open, and after drawing. 12 focusables, 0 unreachable, 0 unnamed, orderly tab order, no traps, real focus rings at 2px solid rgb(96,113,149) / 4.77:1, a <main> landmark, and reduced motion honoured.",
         "Speed is a non-issue. 600 pointer moves in one stroke, full redraw 0.2ms, export 72ms, no jank, zero console errors across every run in this review.",
         "The pad stays a true white rectangle in dark mode (verified rgb(255,255,255) against a rgb(16,20,29) page), which is the correct and deliberate call the research names as a hard constraint."
       ],
       "hurts": [
         "The one artefact the user cannot reproduce has no safety net at all: reload loses everything (1,092 ink pixels → 0, 0 bytes of storage), and Clear is an identical-looking full-width button 8px above Download that wipes it instantly with no toast, no confirm and no undo. window.SWS.undo is loaded and never called.",
         "The comfort panel's Spacing control desynchronises the canvas: density=roomy takes the pad from 338px to 320px CSS while the backing store stays 338px, so the pen draws 14px (4.9%) left of the finger and the existing signature squashes. Only Spacing triggers it; only a window resize heals it.",
-        "There is no keyboard, switch or screen-reader route to a signature. The canvas has no tabindex, role, label or fallback, and there is no typed path and no photo import — a flat WCAG 2.1.1 failure on the app's only verb.",
-        "Rotating from landscape to portrait after signing silently crops the export — measured 57% of the signature discarded — because stroke points are absolute CSS pixels and download() sizes its canvas from the current pad width.",
+        "There is no keyboard, switch or screen-reader route to a signature. The canvas has no tabindex, role, label or fallback, and there is no typed path and no photo import, a flat WCAG 2.1.1 failure on the app's only verb.",
+        "Rotating from landscape to portrait after signing silently crops the export, measured 57% of the signature discarded, because stroke points are absolute CSS pixels and download() sizes its canvas from the current pad width.",
         "The app never says where a drawn signature is invalid. With the DHS rule effective 10 July 2026 letting USCIS deny a filing and keep the fee, this is the difference between a helpful free tool and one that costs someone real money.",
         "Export is PNG-only with no dimension, dpi or KB control and no readout of any kind. The same gesture yields 633x218 at 414px and 1529x248 at 1280px. The highest-volume signature-upload workflow on earth requires JPG-on-white at exact sizes and this app cannot produce it.",
         "Warm tint paints rgba(255,166,86,0.46) over the WYSIWYG signing pad, rendering it rgb(255,214,177). The user picks an ink colour against a background the file will never have, and the guide marks drop to 1.01:1.",
         "The signing pad is the only element that ignores the comfort settings: hardcoded 260px tall and 244-320px wide at every text size and density, while Largest text pushes the Download button below the fold.",
-        "The ruled line and the ✕ — the only wayfinding on the signing surface — are hardcoded hex at 1.37:1 and 1.80:1, and High contrast does not touch them.",
+        "The ruled line and the ✕, the only wayfinding on the signing surface, are hardcoded hex at 1.37:1 and 1.80:1, and High contrast does not touch them.",
         "In dark mode the black ink swatch is 1.12:1 against the card (invisible as a colour) and the pad is a 18.42:1 white slab.",
         "Ink and pen selection is class-only: no aria-pressed, no group name for 'Ink' and 'Pen', no control ever disabled.",
         "The 30x30px ink swatches never scale and sit 14px under the system's own 44px --tap floor; the pen-weight buttons are 32-33px at default.",
-        "Research table stakes entirely absent: typed signature, photo import, SVG export, JPG-on-white, size presets, copy to clipboard, redo, initials, and any persistence — opt-in or otherwise.",
+        "Research table stakes entirely absent: typed signature, photo import, SVG export, JPG-on-white, size presets, copy to clipboard, redo, initials, and any persistence, opt-in or otherwise.",
         "The .trust component is defined in this app's own CSS (index.html:437) and never instantiated, in the app where privacy IS the product. No skip link, no <noscript>."
       ],
       "mostWantedNext": [
-        "A 'Where this works — and where it does not' block, permanently on the page: fine for leases, school forms, vendor paperwork and email footers; not for USCIS filings, wills, adoption papers or court orders, with the print-sign-scan route and a handoff to scan-to-pdf.",
-        "Undo on Clear via the SWS.undo runtime that is already loaded, plus a session draft of the strokes array so a reload does not erase the work — paired with a stated, visible 'nothing is kept, on purpose' and a one-tap wipe.",
-        "Recompute the canvas on anything that changes its box — a ResizeObserver on the pad rather than a window resize listener — and store stroke points normalised to the pad so rotation rescales instead of cropping.",
+        "A 'Where this works, and where it does not' block, permanently on the page: fine for leases, school forms, vendor paperwork and email footers; not for USCIS filings, wills, adoption papers or court orders, with the print-sign-scan route and a handoff to scan-to-pdf.",
+        "Undo on Clear via the SWS.undo runtime that is already loaded, plus a session draft of the strokes array so a reload does not erase the work, paired with a stated, visible 'nothing is kept, on purpose' and a one-tap wipe.",
+        "Recompute the canvas on anything that changes its box, a ResizeObserver on the pad rather than a window resize listener, and store stroke points normalised to the pad so rotation rescales instead of cropping.",
         "A typed-signature route with real handwriting faces plus a photo-import route with a threshold control: three keyboard-reachable ways to the same output, which is simultaneously the Section 508 fix, the 'it looks nothing like my signature' fix, and the two biggest table-stakes gaps.",
-        "An export panel with a live readout — output px, KB and effective print size in inches at 300 dpi — plus named presets (transparent PNG for documents; 140x60 JPG at 30 KB; 160x60; 3.5 x 1.5 cm; a print preset), and copy-to-clipboard beside Download.",
+        "An export panel with a live readout, output px, KB and effective print size in inches at 300 dpi, plus named presets (transparent PNG for documents; 140x60 JPG at 30 KB; 160x60; 3.5 x 1.5 cm; a print preset), and copy-to-clipboard beside Download.",
         "A full-bleed 'Sign big' sheet, and a signing pad that grows with the comfort settings instead of staying at a hardcoded 260px.",
         "Tokenise the pad guides and exempt the pad from the warm-tint overlay, so the ruled line and the ✕ respond to High contrast and the pad stays true white in every theme.",
         "aria-pressed on both control groups, a real group name for Ink and Pen, 44px swatches, aria-hidden on the ✕, a reason attached to each ink colour, and disabled states on Undo and Download when there is nothing to act on.",
-        "Variable stroke width from velocity and ev.pressure — which pointermove already receives and discards (app.js:86) — and SVG export from the geometry helpers.js:23 already computes."
+        "Variable stroke width from velocity and ev.pressure, which pointermove already receives and discards (app.js:86), and SVG export from the geometry helpers.js:23 already computes."
       ]
     }
   },
@@ -271,16 +271,16 @@
     "batteryClean": true,
     "scenarios": [
       {
-        "name": "Standard battery — node design/stress.mjs signature-maker",
+        "name": "Standard battery, node design/stress.mjs signature-maker",
         "method": "Ran the shared battery: layout at 320/414/1280 and at largest-text and roomy, touch targets, hostile text and injection, numeric edges, 30 rapid clicks on the primary action, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
         "result": "0 hard failures. Layout clean at every width. Touch targets flagged two button.dot at 30x30. Hostile text: 0 injected scripts, 0 injected imgs, no title hijack. Rapid clicking: 30 clicks in 669ms, content 539→576 chars. Bulk adds: did not run (no list to add to). Keyboard: 12 focusable, 0 unreachable, 0 unnamed. axe clean. No console output over the whole run.",
-        "defect": "Two of its verdicts are false negatives for this app and must not be trusted. 'survives reload — content 539→539 chars (persisted)' counts text characters; the artefact is a canvas bitmap and it is destroyed by reload. 'keyboard reachability 0 unreachable' counts focusable elements; the drawing surface is not one, so the app's only verb is invisible to that check. The battery is app-agnostic by design and this app's payload is a canvas — everything below is what it cannot see.",
+        "defect": "Two of its verdicts are false negatives for this app and must not be trusted. 'survives reload, content 539→539 chars (persisted)' counts text characters; the artefact is a canvas bitmap and it is destroyed by reload. 'keyboard reachability 0 unreachable' counts focusable elements; the drawing surface is not one, so the app's only verb is invisible to that check. The battery is app-agnostic by design and this app's payload is a canvas, everything below is what it cannot see.",
         "severity": "none"
       },
       {
-        "name": "Draw and export on a real phone profile (390px, DPR 3) — decode the actual PNG",
+        "name": "Draw and export on a real phone profile (390px, DPR 3), decode the actual PNG",
         "method": "withApp at 390x844 with deviceScaleFactor 3. Drew a cursive stroke with real pointer events, captured the download, then re-decoded the saved PNG inside the page and counted alpha and colour across every pixel.",
-        "result": "Pad CSS 314px, backing store 942x780, DPR 3. Export 632x216, 16,934 bytes. 128,119 fully transparent pixels (93.9%), 6,491 fully opaque, 1,902 antialiased. Corner alpha 0. Exactly one opaque colour: rgb(17,19,24) — the markup's #111318, unmodified. Blue run separately: single opaque rgb(29,63,143) = #1d3f8f. Zero errors.",
+        "result": "Pad CSS 314px, backing store 942x780, DPR 3. Export 632x216, 16,934 bytes. 128,119 fully transparent pixels (93.9%), 6,491 fully opaque, 1,902 antialiased. Corner alpha 0. Exactly one opaque colour: rgb(17,19,24), the markup's #111318, unmodified. Blue run separately: single opaque rgb(29,63,143) = #1d3f8f. Zero errors.",
         "defect": null,
         "severity": "none"
       },
@@ -292,16 +292,16 @@
         "severity": "blocker"
       },
       {
-        "name": "Comfort panel changes desynchronise the canvas — isolated per control",
+        "name": "Comfort panel changes desynchronise the canvas, isolated per control",
         "method": "Signed the pad, then applied one comfort attribute at a time (density=roomy, text=xxl, reading=easy) exactly as the panel does, measured pad CSS width against the canvas backing store, put the pen down at a known pad-relative x and located the resulting ink, then resized the window to see whether it self-heals. Also drove the real panel end to end (open from the header, pick options, Done).",
-        "result": "density=roomy alone: pad CSS width 338 → 320 while canvas.width stays 338. The existing signature rendered 14px narrower. Pen down at x=288 inside the pad; rightmost ink landed at x=274 — a 14px, 4.9% offset that grows linearly toward the right edge. text=xxl alone: no change (offset -1px). reading=easy alone: no change (offset -1px). A 1px window resize corrects it completely (338/338 → 321/321). Driving the real panel to Largest + Roomy reproduced it: pad 320px CSS against a 338px buffer, pen at screen x 347 landing at 332. axe on the open panel: 0 violations; page overflow 0.",
-        "defect": "fitCanvas() is bound only to window resize (app.js:117), so any comfort change that alters the pad's box leaves the backing store stale. The pen then draws up to 5% left of the finger and any signature already on the pad is silently rescaled. The trigger is Spacing — the dial most likely to be used by someone with a dexterity or vision need.",
+        "result": "density=roomy alone: pad CSS width 338 → 320 while canvas.width stays 338. The existing signature rendered 14px narrower. Pen down at x=288 inside the pad; rightmost ink landed at x=274, a 14px, 4.9% offset that grows linearly toward the right edge. text=xxl alone: no change (offset -1px). reading=easy alone: no change (offset -1px). A 1px window resize corrects it completely (338/338 → 321/321). Driving the real panel to Largest + Roomy reproduced it: pad 320px CSS against a 338px buffer, pen at screen x 347 landing at 332. axe on the open panel: 0 violations; page overflow 0.",
+        "defect": "fitCanvas() is bound only to window resize (app.js:117), so any comfort change that alters the pad's box leaves the backing store stale. The pen then draws up to 5% left of the finger and any signature already on the pad is silently rescaled. The trigger is Spacing, the dial most likely to be used by someone with a dexterity or vision need.",
         "severity": "blocker"
       },
       {
         "name": "Rotate landscape → portrait after signing: silent crop in the export",
         "method": "Set the viewport to 900x500, signed across a 588px-wide pad spanning ~700 CSS px, then set the viewport to 390x844 (pad 314px) and exported.",
-        "result": "Export came out 885x185 — about 295 CSS px of ink from a ~700 CSS px signature, so roughly 57% was discarded. On-screen ink pixel count dropped to 1,182. download() sizes the offscreen canvas as pad.clientWidth * SCALE (app.js:125-126) while stroke points are stored in absolute CSS pixels from the width they were drawn at (app.js:22, app.js:71). The toast still reads 'Saved — transparent background, cropped to the ink.'",
+        "result": "Export came out 885x185, about 295 CSS px of ink from a ~700 CSS px signature, so roughly 57% was discarded. On-screen ink pixel count dropped to 1,182. download() sizes the offscreen canvas as pad.clientWidth * SCALE (app.js:125-126) while stroke points are stored in absolute CSS pixels from the width they were drawn at (app.js:22, app.js:71). The toast still reads 'Saved, transparent background, cropped to the ink.'",
         "defect": "Rotating the phone after signing truncates the downloaded signature with a success message. The app's own hint pushes users toward landscape ('sign larger than feels natural'), and the Download button is below the fold in landscape (measured at 740x360: pad bottom 472, viewport 360), so rotating back is the normal path.",
         "severity": "blocker"
       },
@@ -309,62 +309,62 @@
         "name": "Reload and storage",
         "method": "Signed the pad, read localStorage via the harness, reloaded, and counted ink pixels on the canvas before and after.",
         "result": "1,092 ink pixels before, 0 after. localStorage: 0 bytes, no keys (sws.prefs only appears once the comfort panel is used). There is no beforeunload guard, no draft, no session restore, and no sentence anywhere on the page stating that nothing is kept.",
-        "defect": "Total, silent loss of the one artefact the user cannot reproduce. Ephemerality is the right default for this app but it is currently an absent feature rather than a stated position — the research asks for 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.'",
+        "defect": "Total, silent loss of the one artefact the user cannot reproduce. Ephemerality is the right default for this app but it is currently an absent feature rather than a stated position, the research asks for 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.'",
         "severity": "blocker"
       },
       {
         "name": "Keyboard and assistive-technology reachability of the actual job",
         "method": "Enumerated focusables, inspected the canvas element's attributes and fallback content, tabbed 14 stops logging activeElement, and read the ARIA state of every ink and pen control.",
-        "result": "12 focusables, 0 unreachable, 0 unnamed. Tab order: swsPrefsBtn → tipLink → Black ink → Blue ink → Fine → Medium → Bold → undoBtn → clearBtn → dlBtn → Sky Wolf Studio → Feedback → body. <canvas id=\"pad\">: tabindex null, role null, aria-label null, 0 characters of fallback content. Both .dot buttons and all three .sizes buttons: aria-pressed null, role null — selection is `classList.toggle('sel', ...)` only (app.js:105, 111). 'Ink' and 'Pen' are plain spans (index.html:1296, 1299), not legends or labels. .padx '✕' has aria-hidden null. No .skip element, no <noscript>, no .trust instance. <main> is present.",
-        "defect": "There is no keyboard, switch or screen-reader path to producing a signature — the sole verb is pointer-only, with no typed path and no image import. Everything else on the page is keyboard-perfect, which makes the gap starker. Section 508 guidance names typing and image upload as the required alternatives.",
+        "result": "12 focusables, 0 unreachable, 0 unnamed. Tab order: swsPrefsBtn → tipLink → Black ink → Blue ink → Fine → Medium → Bold → undoBtn → clearBtn → dlBtn → Sky Wolf Studio → Feedback → body. <canvas id=\"pad\">: tabindex null, role null, aria-label null, 0 characters of fallback content. Both .dot buttons and all three .sizes buttons: aria-pressed null, role null, selection is `classList.toggle('sel', ...)` only (app.js:105, 111). 'Ink' and 'Pen' are plain spans (index.html:1296, 1299), not legends or labels. .padx '✕' has aria-hidden null. No .skip element, no <noscript>, no .trust instance. <main> is present.",
+        "defect": "There is no keyboard, switch or screen-reader path to producing a signature, the sole verb is pointer-only, with no typed path and no image import. Everything else on the page is keyboard-perfect, which makes the gap starker. Section 508 guidance names typing and image upload as the required alternatives.",
         "severity": "blocker"
       },
       {
         "name": "Reversibility: Undo, Clear, and the loaded-but-unused undo runtime",
         "method": "Pressed Undo with an empty pad; drew three separate strokes; pressed Undo; pressed Clear; pressed Undo again; read the toast and every button's disabled state; checked for window.SWS.undo.",
-        "result": "Undo on an empty pad: silent no-op, toast text empty (app.js:114 pops an empty array). Three strokes = 1,773 ink pixels; Undo → 1,182 (correct, one stroke removed). Clear → 0 ink pixels, toast text empty, toast not shown, no undo affordance, and a subsequent Undo restores nothing. undoBtn, clearBtn and dlBtn all report disabled false at every state despite .btn[disabled] styling existing at index.html:1261. window.SWS.undo exists at runtime and app.js calls it zero times. Geometry at 390px: Undo 316x44 at y 605-649, Clear 316x44 at y 657-701, Download 316x44 at y 709-753 — three identical full-width .btn elements, 8px apart, and .btn.danger (index.html:580) is unused.",
+        "result": "Undo on an empty pad: silent no-op, toast text empty (app.js:114 pops an empty array). Three strokes = 1,773 ink pixels; Undo → 1,182 (correct, one stroke removed). Clear → 0 ink pixels, toast text empty, toast not shown, no undo affordance, and a subsequent Undo restores nothing. undoBtn, clearBtn and dlBtn all report disabled false at every state despite .btn[disabled] styling existing at index.html:1261. window.SWS.undo exists at runtime and app.js calls it zero times. Geometry at 390px: Undo 316x44 at y 605-649, Clear 316x44 at y 657-701, Download 316x44 at y 709-753, three identical full-width .btn elements, 8px apart, and .btn.danger (index.html:580) is unused.",
         "defect": "The most destructive action in the app is visually identical to the primary one, 8px away in the thumb zone, instant, silent and irreversible, on the one artefact that cannot be reproduced.",
         "severity": "blocker"
       },
       {
-        "name": "Themes over the WYSIWYG signing pad — light, dark, warm tint, high contrast",
+        "name": "Themes over the WYSIWYG signing pad, light, dark, warm tint, high contrast",
         "method": "Five runs. Signed the pad, screenshotted a 60x40 region of the pad and read the actual rendered pixel back, then computed contrast ratios against that measured pad colour rather than against the declared background.",
-        "result": "Light: pad rgb(255,255,255). Dark: pad still rgb(255,255,255) (correct) but 18.42:1 against the rgb(16,20,29) page, and the black ink swatch rgb(17,19,24) is 1.12:1 against the rgb(26,31,40) card. Warm tint High: pad renders rgb(255,214,177) — body::after paints rgba(255,166,86,0.46) at z-index 9999 over the hardcoded-white .padwrap. Ruled line #d7dde5: 1.37:1 on white, 1.01:1 under warm tint. ✕ mark #b9c2cc: 1.80:1 on white, 1.33:1 under warm tint. Contrast=more raised the hint from 5.95:1 to 16.05:1 and left the ruled line at 1.37 and the ✕ at 1.80 unchanged — both are literal hex in the app layer (index.html:1258-1259), not tokens. axe: 0 violations in every theme, including after drawing.",
-        "defect": "Warm tint breaks the app's one hard constraint — the pad must be true white in every theme because it is a WYSIWYG preview of ink on paper. The two guide marks that constitute all the wayfinding on the signing surface are the lowest-contrast elements on the page and are unreachable by the High contrast setting. In dark mode the black swatch is invisible as a colour.",
+        "result": "Light: pad rgb(255,255,255). Dark: pad still rgb(255,255,255) (correct) but 18.42:1 against the rgb(16,20,29) page, and the black ink swatch rgb(17,19,24) is 1.12:1 against the rgb(26,31,40) card. Warm tint High: pad renders rgb(255,214,177), body::after paints rgba(255,166,86,0.46) at z-index 9999 over the hardcoded-white .padwrap. Ruled line #d7dde5: 1.37:1 on white, 1.01:1 under warm tint. ✕ mark #b9c2cc: 1.80:1 on white, 1.33:1 under warm tint. Contrast=more raised the hint from 5.95:1 to 16.05:1 and left the ruled line at 1.37 and the ✕ at 1.80 unchanged, both are literal hex in the app layer (index.html:1258-1259), not tokens. axe: 0 violations in every theme, including after drawing.",
+        "defect": "Warm tint breaks the app's one hard constraint, the pad must be true white in every theme because it is a WYSIWYG preview of ink on paper. The two guide marks that constitute all the wayfinding on the signing surface are the lowest-contrast elements on the page and are unreachable by the High contrast setting. In dark mode the black swatch is invisible as a colour.",
         "severity": "major"
       },
       {
         "name": "Layout and target size at 320, at Largest, at Roomy and in landscape",
         "method": "Four runs measuring pad geometry, whether the Download button is above the fold, and smallTargets() at each.",
-        "result": "320px: pad 244x260, root 16px, Download visible. 320px + Largest: pad still 244x260, root 24px, Download NOT visible without scrolling. 414px + Largest + Roomy: pad 320x260, Download NOT visible without scrolling. 740x360 landscape: pad 588x260 but pad bottom at y=472 against a 360px viewport — the bottom of the signing box and all three buttons are below the fold. Page overflow 0px in all four. smallTargets at every size: button.dot 30x30 (never scales — hardcoded at index.html:1264), .sizes buttons 32-33px at Default rising to 43px at Largest, #swsPrefsBtn 36px, a#tipLink 36px. The system floor is --tap: max(44px, calc(44px * var(--ui-scale))) at index.html:265. Signable band above the ruled line at 390px: 316x198 CSS px.",
+        "result": "320px: pad 244x260, root 16px, Download visible. 320px + Largest: pad still 244x260, root 24px, Download NOT visible without scrolling. 414px + Largest + Roomy: pad 320x260, Download NOT visible without scrolling. 740x360 landscape: pad 588x260 but pad bottom at y=472 against a 360px viewport, the bottom of the signing box and all three buttons are below the fold. Page overflow 0px in all four. smallTargets at every size: button.dot 30x30 (never scales, hardcoded at index.html:1264), .sizes buttons 32-33px at Default rising to 43px at Largest, #swsPrefsBtn 36px, a#tipLink 36px. The system floor is --tap: max(44px, calc(44px * var(--ui-scale))) at index.html:265. Signable band above the ruled line at 390px: 316x198 CSS px.",
         "defect": "The signing pad is the only element on the page that ignores the comfort settings (#pad height:260px at index.html:1257, cssH hardcoded 260 at app.js:27), and turning text up pushes the app's only output control off screen. The ink swatches are 14px under the tap floor at every setting.",
         "severity": "major"
       },
       {
         "name": "Palm rejection, drawing off the pad edge, and pointer-capture robustness",
         "method": "Dispatched a primary pointer stroke with a second pointer landing mid-stroke in the palm zone; drew past the right edge with capture engaged; separately dispatched a pointerdown for a pointer id the browser does not consider active.",
-        "result": "Palm: 0 ink pixels in the lower 40% of the pad while the primary stroke drew normally — activePointer (app.js:74, 77) does its job. Off-edge: ink stops at buffer x 337 of 338, points keep accumulating off-canvas, and the export discards them; page overflow stayed 0. Pointer capture: `pad.setPointerCapture(ev.pointerId)` at app.js:79 threw NotFoundError as an uncaught pageerror, and because it sits BEFORE `current = {...}` on app.js:80, the whole stroke was lost (0 ink) while activePointer had already been set on app.js:78. The matching releasePointerCapture at app.js:95 IS wrapped in try/catch — the author guarded one of the two.",
-        "defect": "A latent robustness bug: if setPointerCapture ever throws for real input (a pointer the browser has already released — reported on iOS Safari and some Android stacks), the stroke is silently discarded, an uncaught error hits the console, and activePointer is left non-null until a matching pointerup arrives to clear it. Reproduced here with a synthetic pointer, not with a real finger, so it is latent rather than observed in the wild — but the asymmetric try/catch shows the call is known to throw.",
+        "result": "Palm: 0 ink pixels in the lower 40% of the pad while the primary stroke drew normally, activePointer (app.js:74, 77) does its job. Off-edge: ink stops at buffer x 337 of 338, points keep accumulating off-canvas, and the export discards them; page overflow stayed 0. Pointer capture: `pad.setPointerCapture(ev.pointerId)` at app.js:79 threw NotFoundError as an uncaught pageerror, and because it sits BEFORE `current = {...}` on app.js:80, the whole stroke was lost (0 ink) while activePointer had already been set on app.js:78. The matching releasePointerCapture at app.js:95 IS wrapped in try/catch, the author guarded one of the two.",
+        "defect": "A latent robustness bug: if setPointerCapture ever throws for real input (a pointer the browser has already released, reported on iOS Safari and some Android stacks), the stroke is silently discarded, an uncaught error hits the console, and activePointer is left non-null until a matching pointerup arrives to clear it. Reproduced here with a synthetic pointer, not with a real finger, so it is latent rather than observed in the wild, but the asymmetric try/catch shows the call is known to throw.",
         "severity": "minor"
       },
       {
         "name": "Export edge cases: a single tap, and changing the pen after drawing",
         "method": "Single click on the pad then Download. Then Clear, select Bold, draw, export; without redrawing select Fine and export again; compared IHDR dimensions.",
-        "result": "Single tap: a 38x38 PNG, 411 bytes, with the toast 'Saved — transparent background, cropped to the ink'. The only guard is `strokes.length === 0` at app.js:121. Bold export 504x180; the identical strokes with the pen switched to Fine exported 476x152 — a 28px difference (14px per side) because `padPx = Math.round(size * SCALE * 1.5)` at app.js:159 reads the currently selected pen rather than the strokes' own sizes.",
-        "defect": "The app will confidently export a 38px dot as a signature, and the exported image is not a deterministic function of the drawing — a control that appears to do nothing changes the file's margins.",
+        "result": "Single tap: a 38x38 PNG, 411 bytes, with the toast 'Saved, transparent background, cropped to the ink'. The only guard is `strokes.length === 0` at app.js:121. Bold export 504x180; the identical strokes with the pen switched to Fine exported 476x152, a 28px difference (14px per side) because `padPx = Math.round(size * SCALE * 1.5)` at app.js:159 reads the currently selected pen rather than the strokes' own sizes.",
+        "defect": "The app will confidently export a 38px dot as a signature, and the exported image is not a deterministic function of the drawing, a control that appears to do nothing changes the file's margins.",
         "severity": "minor"
       },
       {
         "name": "Browser print (emulateMedia print) and a generated PDF",
         "method": "Signed the pad, switched to print media, read the computed display of every block, and generated an A4 PDF.",
-        "result": "Correctly hidden by the base sheet: header.app, #tipLink, #swsPrefsBtn, footer.colophon, the warm-tint overlay. Still VISIBLE on paper: .hero (headline plus the marketing paragraph), the .opts toolbar including the ✕ and the Ink/Pen controls, all three buttons, the .hint tip paragraph, and the dashed .padwrap border. Both .dot swatches print as solid dark filled circles — computed background rgb(17,19,24) — because the print override at index.html:1221 targets .btn/.chip/.seg and .dot is none of those. Printed body text begins: 'Draw it once, use it everywhere A clean transparent PNG of your signature for contracts, PDFs, and forms… ✕ Ink Pen Fine Medium Bold Undo stroke Clear Download PNG The download is auto-cro…'",
+        "result": "Correctly hidden by the base sheet: header.app, #tipLink, #swsPrefsBtn, footer.colophon, the warm-tint overlay. Still VISIBLE on paper: .hero (headline plus the marketing paragraph), the .opts toolbar including the ✕ and the Ink/Pen controls, all three buttons, the .hint tip paragraph, and the dashed .padwrap border. Both .dot swatches print as solid dark filled circles, computed background rgb(17,19,24), because the print override at index.html:1221 targets .btn/.chip/.seg and .dot is none of those. Printed body text begins: 'Draw it once, use it everywhere A clean transparent PNG of your signature for contracts, PDFs, and forms… ✕ Ink Pen Fine Medium Bold Undo stroke Clear Download PNG The download is auto-cro…'",
         "defect": "Ctrl+P yields a page of marketing copy, dead controls and two solid ink-wasting circles around the signature. Print is not this app's real output path, but it is what a confused user reaches for and it is entirely unhandled at the app layer.",
         "severity": "minor"
       },
       {
         "name": "Rapid export clicks, toast placement and DOM hygiene",
         "method": "Signed, then clicked Download PNG eight times with zero delay; counted downloads, inspected the toast geometry against the pad, and counted residual anchors.",
-        "result": "8 downloads, all suggesting the filename signature.png. Toast: role=status, aria-live=polite, text 'Saved — transparent background, cropped to the ink', rect top 782 / bottom 876 in a 900px viewport, coversPad false. 0 leftover a[download] nodes (the 300ms cleanup at app.js:169 works). No errors, no corruption.",
+        "result": "8 downloads, all suggesting the filename signature.png. Toast: role=status, aria-live=polite, text 'Saved, transparent background, cropped to the ink', rect top 782 / bottom 876 in a 900px viewport, coversPad false. 0 leftover a[download] nodes (the 300ms cleanup at app.js:169 works). No errors, no corruption.",
         "defect": "No debounce and no busy state on the export button, and every file has the same name, so eight attempts land as signature.png through signature(7).png with no way to tell them apart. The toast itself is well-placed and never covers the signing surface.",
         "severity": "minor"
       },
@@ -387,48 +387,48 @@
   "audit": {
     "slug": "signature-maker",
     "purpose": "Draw a signature on a canvas with a finger, stylus or mouse; pick black or blue ink and one of three pen weights; undo the last stroke or clear everything; download a transparent PNG rendered at 3x and auto-cropped tight to the ink. Nothing is stored, nothing is sent, nothing persists past the tab. Drawing is the only input route and PNG is the only output.",
-    "structure": "One short page, no routes, no tabs, no modals of its own (the comfort dialog is injected by the shared sws-prefs.js). body > div.wrap containing: (1) header.app — 32px icon.svg alt=\"\" (index.html:1275), h1 'Signature Maker' (1276), span.spacer (1277), a#tipLink.tipbtn.hidden un-hidden by JS (1278); sws-prefs.js injects button#swsPrefsBtn into this header at runtime. (2) main#main (1281) containing div.hero — h2 'Draw it once, use it everywhere' plus one marketing p carrying the privacy promise as prose (1283-1287) — and a single section.card (1289-1312) with NO h2 and therefore no accessible name, holding: div.padwrap (1290) > canvas#pad (1291) + div.padline (1292) + div.padx '✕' (1293); div.opts (1295-1305) = span.label 'Ink', two button.dot swatches with inline background colours and aria-labels (1297-1298), span.label 'Pen' with an inline margin-left, span.sizes with three unlabelled buttons carrying data-size (1300-1304); div.row (1306-1310) with #undoBtn, #clearBtn and #dlBtn.primary; p.hint (1311). (3) Outside .wrap: div#toast[role=status][aria-live=polite] (1316) and footer.colophon with two links carrying inline style=\"color:inherit\" (1317). Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head> (1269-1270), app.js as a module at the end of body (1319). There is NO skip link, NO <noscript>, NO .trust instance, and no h2 over the working area. Flow: init() (app.js:173) calls wire(), reveals the tip link, calls fitCanvas() and registers sw.js. All drawing state lives in three module-scoped variables — color, size and strokes (app.js:20-22).",
+    "structure": "One short page, no routes, no tabs, no modals of its own (the comfort dialog is injected by the shared sws-prefs.js). body > div.wrap containing: (1) header.app, 32px icon.svg alt=\"\" (index.html:1275), h1 'Signature Maker' (1276), span.spacer (1277), a#tipLink.tipbtn.hidden un-hidden by JS (1278); sws-prefs.js injects button#swsPrefsBtn into this header at runtime. (2) main#main (1281) containing div.hero, h2 'Draw it once, use it everywhere' plus one marketing p carrying the privacy promise as prose (1283-1287), and a single section.card (1289-1312) with NO h2 and therefore no accessible name, holding: div.padwrap (1290) > canvas#pad (1291) + div.padline (1292) + div.padx '✕' (1293); div.opts (1295-1305) = span.label 'Ink', two button.dot swatches with inline background colours and aria-labels (1297-1298), span.label 'Pen' with an inline margin-left, span.sizes with three unlabelled buttons carrying data-size (1300-1304); div.row (1306-1310) with #undoBtn, #clearBtn and #dlBtn.primary; p.hint (1311). (3) Outside .wrap: div#toast[role=status][aria-live=polite] (1316) and footer.colophon with two links carrying inline style=\"color:inherit\" (1317). Scripts: sws-prefs.js and sws-ui.js as classic blocking scripts in <head> (1269-1270), app.js as a module at the end of body (1319). There is NO skip link, NO <noscript>, NO .trust instance, and no h2 over the working area. Flow: init() (app.js:173) calls wire(), reveals the tip link, calls fitCanvas() and registers sw.js. All drawing state lives in three module-scoped variables, color, size and strokes (app.js:20-22).",
     "cssClasses": [
-      ".wrap — max-width var(--wrap)=40rem page gutter (index.html:331)",
-      "header.app — flex app bar (356); img 32x32 (368); h1 --t-xl (376); .spacer flex:1 (390); .tagline SHIPPED BUT UNUSED (381)",
-      "a.tipbtn — pill tip link, min-height 36px, under the 44px floor (~394); instanced as #tipLink (1278)",
-      ".hero / .hero h2 / .hero p — intro block (413-416); carries the privacy promise as ordinary prose",
-      "section.card,.card — surface panel (451-459); the single instance at 1289 has no > h2, so the micro-label rule at 463 never fires here",
-      ".trust,.trust svg,.trust b — the studio privacy stamp (437-448) — DEFINED AND UNUSED, in the one app where privacy is the product",
-      ".well — inset preview surface (477) — UNUSED; .padwrap reinvents it with hardcoded values",
-      "label.f,.field,.frow — field components (521-532) — UNUSED (no form controls in this app)",
-      ".btn — 44px control (550); .btn.primary accent fill (572) on #dlBtn; .btn.danger (580) UNUSED although Clear is the app's destructive action; .btn.ghost/.plain (583) UNUSED; .btn.small/.big/.block/.icon (589-595) — only .icon is used, by the injected #swsPrefsBtn",
-      ".seg,.seg button (598-623) — UNUSED; the Fine/Medium/Bold group reinvents a segmented control from scratch at 1266-1267",
-      ".hint,.footnote,.small (635-641) — .hint instanced once at 1311, computed 15px / 23.25px line-height",
-      ".chip,.chip.on,.chips (645-655) — UNUSED (--chip is still read by .sizes button.sel at 1267)",
-      ".warn (670) — UNUSED, and it is exactly the component the missing wet-signature warning needs",
-      ".sub (697) — UNUSED",
-      ".empty,.empty .glyph,.empty h3,.empty p (702-718) — UNUSED; there is no empty state on the blank pad",
-      "#toast (753-773), #toast.act (784), #toast .undo (789-802) — the toast is used; the .act/.undo undo affordance is never triggered because app.js uses its own local toast() rather than SWS.toast/SWS.undo",
-      ".actionbar (805) — UNUSED; it is what would keep Download PNG on screen at Largest text",
-      ".sr-only (832) — UNUSED",
-      ".skip (840-849) — UNUSED; no anchor exists even though <main id=\"main\"> is present at 1281",
-      ".hidden (852) — used on #tipLink, removed by app.js:178",
-      ".noprint/.no-print/.screenonly/.printonly — print toggles in the base; .noprint appears only on the injected #swsPrefsBtn",
+      ".wrap, max-width var(--wrap)=40rem page gutter (index.html:331)",
+      "header.app, flex app bar (356); img 32x32 (368); h1 --t-xl (376); .spacer flex:1 (390); .tagline SHIPPED BUT UNUSED (381)",
+      "a.tipbtn, pill tip link, min-height 36px, under the 44px floor (~394); instanced as #tipLink (1278)",
+      ".hero / .hero h2 / .hero p, intro block (413-416); carries the privacy promise as ordinary prose",
+      "section.card,.card, surface panel (451-459); the single instance at 1289 has no > h2, so the micro-label rule at 463 never fires here",
+      ".trust,.trust svg,.trust b, the studio privacy stamp (437-448), DEFINED AND UNUSED, in the one app where privacy is the product",
+      ".well, inset preview surface (477), UNUSED; .padwrap reinvents it with hardcoded values",
+      "label.f,.field,.frow, field components (521-532), UNUSED (no form controls in this app)",
+      ".btn, 44px control (550); .btn.primary accent fill (572) on #dlBtn; .btn.danger (580) UNUSED although Clear is the app's destructive action; .btn.ghost/.plain (583) UNUSED; .btn.small/.big/.block/.icon (589-595), only .icon is used, by the injected #swsPrefsBtn",
+      ".seg,.seg button (598-623), UNUSED; the Fine/Medium/Bold group reinvents a segmented control from scratch at 1266-1267",
+      ".hint,.footnote,.small (635-641), .hint instanced once at 1311, computed 15px / 23.25px line-height",
+      ".chip,.chip.on,.chips (645-655), UNUSED (--chip is still read by .sizes button.sel at 1267)",
+      ".warn (670), UNUSED, and it is exactly the component the missing wet-signature warning needs",
+      ".sub (697), UNUSED",
+      ".empty,.empty .glyph,.empty h3,.empty p (702-718), UNUSED; there is no empty state on the blank pad",
+      "#toast (753-773), #toast.act (784), #toast .undo (789-802), the toast is used; the .act/.undo undo affordance is never triggered because app.js uses its own local toast() rather than SWS.toast/SWS.undo",
+      ".actionbar (805), UNUSED; it is what would keep Download PNG on screen at Largest text",
+      ".sr-only (832), UNUSED",
+      ".skip (840-849), UNUSED; no anchor exists even though <main id=\"main\"> is present at 1281",
+      ".hidden (852), used on #tipLink, removed by app.js:178",
+      ".noprint/.no-print/.screenonly/.printonly, print toggles in the base; .noprint appears only on the injected #swsPrefsBtn",
       "APP LAYER (everything from index.html:1252):",
-      ".padwrap (1253-1256) — hardcoded background:#ffffff, dashed var(--line) border, radius 12px (off the --r 8px skin), touch-action:none, overflow:hidden",
-      "#pad (1257) — display:block, width:100%, HARDCODED height:260px, cursor:crosshair",
-      ".padline (1258) — absolutely positioned rule, hardcoded 1.5px solid #d7dde5, 1.37:1 on white",
-      ".padx (1259) — hardcoded #b9c2cc at 1.2rem, 1.80:1 on white, real text content '✕' with no aria-hidden",
-      ".btn[disabled] (1261) — styling exists; nothing in app.js ever sets disabled",
-      ".opts (1262) — flex row, hardcoded gap:14px and margin-top:10px (both off the 4px scale)",
-      ".opts .label (1263) — hardcoded .85rem (computed 13.6px) via the legacy --muted alias rather than --t-xs / --ink-2",
-      ".dot (1264) — 30x30 hardcoded, 14px under --tap; border 2px var(--line)",
-      ".dot.sel (1265) — double ring via box-shadow using var(--card) and var(--ink); the only selection signal, with no ARIA counterpart",
-      ".sizes button (1266) — hardcoded 1px border, radius 8px, padding 4px 10px → 32-33px tall at default text",
-      ".sizes button.sel (1267) — var(--chip) fill plus font-weight 700; the bold weight is the only cue that survives High contrast"
+      ".padwrap (1253-1256), hardcoded background:#ffffff, dashed var(--line) border, radius 12px (off the --r 8px skin), touch-action:none, overflow:hidden",
+      "#pad (1257), display:block, width:100%, HARDCODED height:260px, cursor:crosshair",
+      ".padline (1258), absolutely positioned rule, hardcoded 1.5px solid #d7dde5, 1.37:1 on white",
+      ".padx (1259), hardcoded #b9c2cc at 1.2rem, 1.80:1 on white, real text content '✕' with no aria-hidden",
+      ".btn[disabled] (1261), styling exists; nothing in app.js ever sets disabled",
+      ".opts (1262), flex row, hardcoded gap:14px and margin-top:10px (both off the 4px scale)",
+      ".opts .label (1263), hardcoded .85rem (computed 13.6px) via the legacy --muted alias rather than --t-xs / --ink-2",
+      ".dot (1264), 30x30 hardcoded, 14px under --tap; border 2px var(--line)",
+      ".dot.sel (1265), double ring via box-shadow using var(--card) and var(--ink); the only selection signal, with no ARIA counterpart",
+      ".sizes button (1266), hardcoded 1px border, radius 8px, padding 4px 10px → 32-33px tall at default text",
+      ".sizes button.sel (1267), var(--chip) fill plus font-weight 700; the bold weight is the only cue that survives High contrast"
     ],
-    "dynamicMarkup": "Almost nothing is JS-built — this app's markup is honest, which makes it unusually safe to restyle. What the JS DOES own at runtime is state and geometry, and both are invisible in the source.\n\n(A) Canvas geometry is JS-owned and viewport-dependent. fitCanvas() (app.js:25-31) writes pad.width = round(pad.clientWidth * DPR) and pad.height = round(260 * DPR) as raw attributes; DPR is min(devicePixelRatio, 3) (app.js:18). The element in source carries no width/height attributes at all, so the backing store is 100% a runtime value (measured: 338x260 at 414px/DPR1; 942x780 at 390px/DPR3). It is recomputed ONLY on window resize (app.js:117). Any CSS change that alters the pad's box without a window resize — a padding change, a new max-width, and today the comfort panel's Spacing dial — leaves the backing store stale and puts the ink up to 5% away from the pointer.\n\n(B) Selection state is class-only. wire() (app.js:101-113) does `document.querySelectorAll('.dot').forEach(d => d.classList.toggle('sel', d === dot))` and the same for `.sizes button`. There is no aria-pressed, no aria-checked, no data attribute. Renaming `.sel` in CSS silently removes every selection indicator with no error. Renaming `.dot` or `.sizes` breaks the wiring itself.\n\n(C) The ink palette lives in the markup, not in a palette. `data-color=\"#111318\"` and `data-color=\"#1d3f8f\"` at index.html:1297-1298 are read straight into the drawing state (app.js:104) and are ALSO duplicated as inline `style=\"background:#111318\"` on the same elements. Changing the swatch appearance in CSS without changing data-color makes the preview lie about the export. Pen weights are likewise `data-size=\"2|3|5\"` parsed at app.js:110.\n\n(D) Transient anchor: download() (app.js:164-169) appends a bare <a href download> to document.body, clicks it, and removes it after 300ms. A new `body > *:last-child` or global `a{}` layout rule can make it flash.\n\n(E) The tip link is revealed by removing .hidden (app.js:178), which depends on `.hidden{display:none !important}` at index.html:852 keeping its !important, because .tipbtn sets display:inline-flex.\n\n(F) The comfort chrome is injected, not authored. sws-prefs.js builds button#swsPrefsBtn and inserts it into the first matching header spot (sws-prefs.js:367, 404), and builds the whole <dialog id=\"swsPrefs\"> and appends it to body (sws-prefs.js:331). Neither appears in index.html. sws-prefs.js also writes data-theme / data-text / data-density / data-reading / data-warmth / data-contrast / data-motion onto <html> before first paint.\n\n(G) app.js declares its OWN module-scoped toast() (app.js:8-14) that sets textContent and toggles .show directly, bypassing the shared SWS.toast/SWS.undo runtime that sws-ui.js loads. That is why the toast never carries an Undo even though #toast.act and #toast .undo are fully styled at index.html:784-802.",
+    "dynamicMarkup": "Almost nothing is JS-built, this app's markup is honest, which makes it unusually safe to restyle. What the JS DOES own at runtime is state and geometry, and both are invisible in the source.\n\n(A) Canvas geometry is JS-owned and viewport-dependent. fitCanvas() (app.js:25-31) writes pad.width = round(pad.clientWidth * DPR) and pad.height = round(260 * DPR) as raw attributes; DPR is min(devicePixelRatio, 3) (app.js:18). The element in source carries no width/height attributes at all, so the backing store is 100% a runtime value (measured: 338x260 at 414px/DPR1; 942x780 at 390px/DPR3). It is recomputed ONLY on window resize (app.js:117). Any CSS change that alters the pad's box without a window resize, a padding change, a new max-width, and today the comfort panel's Spacing dial, leaves the backing store stale and puts the ink up to 5% away from the pointer.\n\n(B) Selection state is class-only. wire() (app.js:101-113) does `document.querySelectorAll('.dot').forEach(d => d.classList.toggle('sel', d === dot))` and the same for `.sizes button`. There is no aria-pressed, no aria-checked, no data attribute. Renaming `.sel` in CSS silently removes every selection indicator with no error. Renaming `.dot` or `.sizes` breaks the wiring itself.\n\n(C) The ink palette lives in the markup, not in a palette. `data-color=\"#111318\"` and `data-color=\"#1d3f8f\"` at index.html:1297-1298 are read straight into the drawing state (app.js:104) and are ALSO duplicated as inline `style=\"background:#111318\"` on the same elements. Changing the swatch appearance in CSS without changing data-color makes the preview lie about the export. Pen weights are likewise `data-size=\"2|3|5\"` parsed at app.js:110.\n\n(D) Transient anchor: download() (app.js:164-169) appends a bare <a href download> to document.body, clicks it, and removes it after 300ms. A new `body > *:last-child` or global `a{}` layout rule can make it flash.\n\n(E) The tip link is revealed by removing .hidden (app.js:178), which depends on `.hidden{display:none !important}` at index.html:852 keeping its !important, because .tipbtn sets display:inline-flex.\n\n(F) The comfort chrome is injected, not authored. sws-prefs.js builds button#swsPrefsBtn and inserts it into the first matching header spot (sws-prefs.js:367, 404), and builds the whole <dialog id=\"swsPrefs\"> and appends it to body (sws-prefs.js:331). Neither appears in index.html. sws-prefs.js also writes data-theme / data-text / data-density / data-reading / data-warmth / data-contrast / data-motion onto <html> before first paint.\n\n(G) app.js declares its OWN module-scoped toast() (app.js:8-14) that sets textContent and toggles .show directly, bypassing the shared SWS.toast/SWS.undo runtime that sws-ui.js loads. That is why the toast never carries an Undo even though #toast.act and #toast .undo are fully styled at index.html:784-802.",
     "comfortDefects": [
       {
-        "issue": "The signing pad — the only thing on the page a user has to aim inside — ignores every comfort setting. Measured 244x260 at 320px at both Default and Largest text, and 320x260 at 414px + Roomy. #pad is `height:260px` and fitCanvas hardcodes cssH = 260.",
+        "issue": "The signing pad, the only thing on the page a user has to aim inside, ignores every comfort setting. Measured 244x260 at 320px at both Default and Largest text, and 320x260 at 414px + Roomy. #pad is `height:260px` and fitCanvas hardcodes cssH = 260.",
         "where": "index.html:1257 and app.js:27",
-        "fix": "Drive the pad's height from the scale — height:clamp(200px, calc(260px * var(--ui-scale)), 60vh) — and read the real box in fitCanvas (pad.clientHeight) instead of the literal 260. Then a Largest-text user gets a bigger place to sign, which is the whole point of the setting."
+        "fix": "Drive the pad's height from the scale, height:clamp(200px, calc(260px * var(--ui-scale)), 60vh), and read the real box in fitCanvas (pad.clientHeight) instead of the literal 260. Then a Largest-text user gets a bigger place to sign, which is the whole point of the setting."
       },
       {
         "issue": "Changing Spacing to Roomy resizes the pad's CSS box but not its backing store, because fitCanvas is bound only to window resize. Measured: pad 338px → 320px CSS with canvas.width stuck at 338; the pen then draws 14px (4.9%) left of the finger and the existing signature squashes to match.",
@@ -436,7 +436,7 @@
         "fix": "Replace the window listener with `new ResizeObserver(fitCanvas).observe(pad)`. It is a one-line change and it also fixes container-query, zoom and address-bar cases the resize event misses."
       },
       {
-        "issue": "The ruled line and the ✕ are hardcoded hex — #d7dde5 at 1.37:1 and #b9c2cc at 1.80:1 against the white pad — so they are the lowest-contrast elements on the page AND unreachable by the Contrast=High setting, which raised the hint paragraph from 5.95:1 to 16.05:1 and left both of these untouched.",
+        "issue": "The ruled line and the ✕ are hardcoded hex, #d7dde5 at 1.37:1 and #b9c2cc at 1.80:1 against the white pad, so they are the lowest-contrast elements on the page AND unreachable by the Contrast=High setting, which raised the hint paragraph from 5.95:1 to 16.05:1 and left both of these untouched.",
         "where": "index.html:1258 and index.html:1259",
         "fix": "Introduce two pad-local tokens (e.g. --pad-rule, --pad-mark) defined against the white pad rather than the page, and redefine them under :root[data-contrast=\"more\"] to something at 3:1 or better. These are non-text graphical objects, so 3:1 is the WCAG floor and 1.37:1 is not close."
       },
@@ -446,17 +446,17 @@
         "fix": "Exempt the signing surface. Either give .padwrap a higher stacking context than the overlay, or paint the tint with a mask that excludes the pad. The research names a true-white pad in every theme as a hard constraint that overrides fashion, because the pad is a WYSIWYG preview of ink on paper."
       },
       {
-        "issue": "In dark mode the black ink swatch (#111318) is 1.12:1 against the rgb(26,31,40) card — invisible as a colour — and the pad is a 320x260 pure-white slab at 18.42:1 against the page.",
+        "issue": "In dark mode the black ink swatch (#111318) is 1.12:1 against the rgb(26,31,40) card, invisible as a colour, and the pad is a 320x260 pure-white slab at 18.42:1 against the page.",
         "where": "index.html:1264 (.dot) and index.html:1253 (.padwrap background:#ffffff)",
         "fix": "Give .dot a light inner hairline in dark mode so a near-black swatch still reads as a disc, and inset the pad in a --surface-2 frame so the white rectangle is a sheet on a desk rather than a glare panel. Do NOT tint the pad itself."
       },
       {
-        "issue": "The ink swatches are 30x30px and never scale — measured 30x30 at Default, Largest and Roomy on every viewport — against a system floor of --tap: max(44px, calc(44px * var(--ui-scale))). The pen-weight buttons are 32-33px at Default and only reach 43px at Largest.",
+        "issue": "The ink swatches are 30x30px and never scale, measured 30x30 at Default, Largest and Roomy on every viewport, against a system floor of --tap: max(44px, calc(44px * var(--ui-scale))). The pen-weight buttons are 32-33px at Default and only reach 43px at Largest.",
         "where": "index.html:1264 (.dot) and index.html:1266 (.sizes button), floor defined at index.html:265",
         "fix": "width/height:var(--tap) on .dot with the colour drawn as an inner disc, and min-height:var(--tap) on .sizes button. Both are 30px of CSS away from correct."
       },
       {
-        "issue": "At Largest text the Download PNG button falls below the fold — measured at 320px/xxl and 414px/xxl+roomy — and in landscape (740x360) the bottom of the signing pad itself is below the fold at y=472.",
+        "issue": "At Largest text the Download PNG button falls below the fold, measured at 320px/xxl and 414px/xxl+roomy, and in landscape (740x360) the bottom of the signing pad itself is below the fold at y=472.",
         "where": "index.html:1306-1310 (the .row of three buttons); the unused .actionbar sits at index.html:805",
         "fix": "Put Download PNG in the .actionbar so it stays pinned, or make the button row position:sticky at the bottom on short viewports. The comfort setting a low-vision user needs currently hides the app's only output."
       },
@@ -466,26 +466,26 @@
         "fix": "gap:var(--s3); margin-top:var(--s3); padding:var(--s2) var(--s3); border-radius:var(--r-ctl); font-size:var(--t-xs); color:var(--ink-2). Then the whole toolbar tracks the density and type dials instead of sitting outside them."
       },
       {
-        "issue": "Clear and Download PNG are visually identical — three 316x44 full-width .btn elements 8px apart at 390px — and .btn.danger exists and is unused. The destructive action sits directly in the thumb path to the primary one.",
+        "issue": "Clear and Download PNG are visually identical, three 316x44 full-width .btn elements 8px apart at 390px, and .btn.danger exists and is unused. The destructive action sits directly in the thumb path to the primary one.",
         "where": "index.html:1306-1310, .btn.danger defined at index.html:580",
         "fix": "Give Clear .btn.ghost or .btn.danger, move it out of the primary row (a small text control beside Undo), and never let it share a full-width stack with Download."
       },
       {
         "issue": "A cold open shows a blank white rectangle with a faint rule and a faint ✕ and no instruction of any kind. The .empty component (glyph, h3, body) is fully styled and unused.",
         "where": "index.html:1290-1294; unused component at index.html:702-718",
-        "fix": "The pad cannot hold an .empty block without covering the drawing surface, but it can hold a single high-contrast prompt line inside the pad — 'Sign here with your finger' — that clears on first pointerdown. Right now the only onboarding is a 15px hint paragraph BELOW the pad."
+        "fix": "The pad cannot hold an .empty block without covering the drawing surface, but it can hold a single high-contrast prompt line inside the pad, 'Sign here with your finger', that clears on first pointerdown. Right now the only onboarding is a 15px hint paragraph BELOW the pad."
       },
       {
         "issue": "The working card has no heading, so the page's heading outline is h1 → h2 (hero) and nothing over the tool itself. The base's micro-label rule at index.html:463 never fires.",
         "where": "index.html:1289 (section.card with no > h2)",
-        "fix": "Add an h2 ('Sign here') — the base renders it as the standard uppercase micro-label and it gives the card an accessible name."
+        "fix": "Add an h2 ('Sign here'), the base renders it as the standard uppercase micro-label and it gives the card an accessible name."
       }
     ],
     "navigationDefects": [
       {
         "issue": "Nothing is saved and nothing says so. Measured: 1,092 ink pixels before reload, 0 after; localStorage 0 bytes, no keys. No beforeunload guard, no draft, no restore, and no sentence stating that the app keeps nothing.",
         "where": "app.js:22 (strokes is module-scoped only); the whole of app.js has no storage call",
-        "fix": "Keep the default — store nothing — but SAY it, as a deliberate position rather than an absent feature: 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.' Then add a session-only draft (sessionStorage of the strokes array) so an accidental reload is survivable, with a one-tap wipe."
+        "fix": "Keep the default, store nothing, but SAY it, as a deliberate position rather than an absent feature: 'This app never keeps your signature. Close the tab and it is gone. That is on purpose.' Then add a session-only draft (sessionStorage of the strokes array) so an accidental reload is survivable, with a one-tap wipe."
       },
       {
         "issue": "Clear is instant, silent and irreversible on the one artefact the user cannot reproduce. Verified: 1,773 ink pixels → 0, empty toast, no undo affordance, and Undo afterwards restores nothing. window.SWS.undo exists at runtime and is never called.",
@@ -495,7 +495,7 @@
       {
         "issue": "No redo and no history. The research's own emotional read is that people draw this four or five times; every discarded attempt is unrecoverable even though the geometry is trivially small.",
         "where": "app.js:114 (`strokes.pop()` with no redo stack)",
-        "fix": "Keep a redo stack fed by pop() and by Clear, and consider a strip of the last three attempts as thumbnails — the strokes arrays are a few KB each."
+        "fix": "Keep a redo stack fed by pop() and by Clear, and consider a strip of the last three attempts as thumbnails, the strokes arrays are a few KB each."
       },
       {
         "issue": "Undo on an empty pad is a silent no-op and no control is ever disabled, despite .btn[disabled] styling being present. undoBtn, clearBtn and dlBtn all report disabled false at every state.",
@@ -515,20 +515,20 @@
       {
         "issue": "There is no statement anywhere about where a drawn signature is not valid. No .warn instance exists on the page (the component is defined at index.html:670 and unused).",
         "where": "index.html:1283-1287 (the hero, which is the only place the app talks about itself)",
-        "fix": "A permanent 'Where this works — and where it does not' block: fine for leases, school forms, vendor paperwork and email footers; NOT for USCIS filings, wills, adoption papers or court orders. Give the correct route (print, sign in ink, scan) and hand off to scan-to-pdf. The DHS interim final rule effective 10 July 2026 lets USCIS deny a filing for an invalid signature after intake and keep the fee."
+        "fix": "A permanent 'Where this works, and where it does not' block: fine for leases, school forms, vendor paperwork and email footers; NOT for USCIS filings, wills, adoption papers or court orders. Give the correct route (print, sign in ink, scan) and hand off to scan-to-pdf. The DHS interim final rule effective 10 July 2026 lets USCIS deny a filing for an invalid signature after intake and keep the fee."
       },
       {
-        "issue": "The two ink colours carry no explanation — aria-label 'Black ink' / 'Blue ink' and nothing else, title null on both. Users pick the default and find out later.",
+        "issue": "The two ink colours carry no explanation, aria-label 'Black ink' / 'Blue ink' and nothing else, title null on both. Users pick the default and find out later.",
         "where": "index.html:1297-1298",
         "fix": "One clause per swatch: black for scanning, printing and exam portals; blue because it proves an original against a photocopy, which lenders and title companies expect. It is free, it is true, and it turns a two-button picker into visible expertise."
       },
       {
-        "issue": "No <noscript>. With JS off the page renders a hero, a blank white rectangle and three dead buttons — indistinguishable from a broken site, on the app whose whole pitch is trustworthiness.",
+        "issue": "No <noscript>. With JS off the page renders a hero, a blank white rectangle and three dead buttons, indistinguishable from a broken site, on the app whose whole pitch is trustworthiness.",
         "where": "index.html:1281-1313 (no noscript anywhere)",
         "fix": "A <noscript> .warn inside the card: 'This tool runs entirely in your browser and needs JavaScript on. That is also why nothing is uploaded.'"
       },
       {
-        "issue": "The .trust component — the studio's privacy stamp — is defined in this app's own CSS and never used. The privacy promise appears only as hero prose and a grey footer line.",
+        "issue": "The .trust component, the studio's privacy stamp, is defined in this app's own CSS and never used. The privacy promise appears only as hero prose and a grey footer line.",
         "where": "defined at index.html:437-448 (with a print override at 1227); the body never instantiates it",
         "fix": "Instantiate .trust directly above the pad with a falsifiable claim rather than an adjective: 'Turn your Wi-Fi off. It still works.' That is verifiable in five seconds and it is currently true (sig-v14 caches all 10 assets; a fully offline reload, draw and export all succeeded)."
       },
@@ -545,9 +545,9 @@
     ],
     "a11yDefects": [
       {
-        "issue": "There is no keyboard, switch or assistive-technology route to producing a signature. <canvas id=\"pad\"> has tabindex null, role null, aria-label null and zero fallback content, and drawing on it is the only path to an output — there is no typed path, no photo import, no file input and no drop target anywhere in the app.",
+        "issue": "There is no keyboard, switch or assistive-technology route to producing a signature. <canvas id=\"pad\"> has tabindex null, role null, aria-label null and zero fallback content, and drawing on it is the only path to an output, there is no typed path, no photo import, no file input and no drop target anywhere in the app.",
         "where": "index.html:1291; the pointer handlers at app.js:75-99 are the only input path",
-        "fix": "A flat WCAG 2.1.1 failure. Ship the typed-signature route with real handwriting faces and a photo-import route, both keyboard-reachable, and give the canvas role=\"img\" with a live accessible name that describes its current state ('Signature pad — 3 strokes drawn' / 'Signature pad — empty'). Section 508 guidance and ADA practice both name typing and image upload as the required alternatives."
+        "fix": "A flat WCAG 2.1.1 failure. Ship the typed-signature route with real handwriting faces and a photo-import route, both keyboard-reachable, and give the canvas role=\"img\" with a live accessible name that describes its current state ('Signature pad, 3 strokes drawn' / 'Signature pad, empty'). Section 508 guidance and ADA practice both name typing and image upload as the required alternatives."
       },
       {
         "issue": "Ink and pen selection is invisible to assistive technology. Verified: both .dot buttons and all three .sizes buttons have aria-pressed null and role null; state lives only in a CSS class toggled at app.js:105 and app.js:111.",
@@ -555,7 +555,7 @@
         "fix": "aria-pressed=\"true|false\" on all five, set in the same toggle. Cheapest correct fix in the app."
       },
       {
-        "issue": "Neither control group has a programmatic name. 'Ink' (index.html:1296) and 'Pen' (index.html:1299) are plain <span class=\"label\"> elements — not legends, not fieldsets, not aria-label or aria-labelledby targets — so a screen reader hears 'Fine, Medium, Bold' with no indication of what they modify.",
+        "issue": "Neither control group has a programmatic name. 'Ink' (index.html:1296) and 'Pen' (index.html:1299) are plain <span class=\"label\"> elements, not legends, not fieldsets, not aria-label or aria-labelledby targets, so a screen reader hears 'Fine, Medium, Bold' with no indication of what they modify.",
         "where": "index.html:1295-1305",
         "fix": "Wrap each group in role=\"group\" with aria-labelledby pointing at the existing span, or use two real fieldsets with legends."
       },
@@ -570,7 +570,7 @@
         "fix": "<a class=\"skip\" href=\"#main\">Skip to the signing pad</a> as the first child of body. One line."
       },
       {
-        "issue": "The working card has no accessible name — section.card with no heading — so landmark and heading navigation offer only banner, main, contentinfo and one hero h2.",
+        "issue": "The working card has no accessible name, section.card with no heading, so landmark and heading navigation offer only banner, main, contentinfo and one hero h2.",
         "where": "index.html:1289",
         "fix": "Add an h2 to the card, or aria-label the section."
       },
@@ -605,61 +605,61 @@
         "fix": "Wrap it the same way the release is wrapped, and move `current = {...}` above the capture call so a capture failure degrades to drawing-without-capture rather than to no drawing at all."
       }
     ],
-    "printSupport": "There is a print block, but it is entirely the shared base layer (index.html:~1180-1237); this app adds zero print CSS of its own and has no Print button.\n\nIs print a core use case? Not directly — the artefact is a PNG that gets pasted into someone else's document. But it matters twice. First, a confused user on a locked-down machine reaches for Ctrl+P. Second, the research's most valuable differentiator (the wet-signature warning) ends with 'print, sign in ink, scan' — so the app should eventually own a print path, just not this one.\n\nWhat the base gives you, verified under emulateMedia({media:'print'}): header.app hidden, #tipLink hidden, #swsPrefsBtn hidden, footer.colophon hidden, the warm-tint overlay disabled, --ui-scale and --density reset to 1, @page margin 14mm.\n\nWhat is broken if a user just hits Ctrl+P, all measured:\n1. .hero prints — the headline 'Draw it once, use it everywhere' plus the full marketing paragraph, roughly the top third of the sheet.\n2. .opts prints — the Ink and Pen toolbar, so the page carries the words 'Ink Pen Fine Medium Bold' next to the signature.\n3. Both .dot swatches print as SOLID DARK FILLED CIRCLES. Computed background in print media is rgb(17,19,24). The base's print override at index.html:1221 flattens .btn, .btn.primary, .chip, .seg button — .dot is none of those, so it slips through and wastes ink.\n4. All three buttons print as dead controls; none carries .noprint.\n5. p.hint prints ('Tip: sign larger than feels natural…').\n6. The dashed .padwrap border and its 12px radius print around the signature.\n7. The ✕ guide mark prints on top of the signature.\n8. The canvas prints at its CSS size — roughly 316 CSS px ≈ 3.3in at 96dpi — from a backing store that may be 3x that, so the printed signature is softer than it needs to be.\n\nWhat to add: an app-level @media print that hides .hero, .opts, the button row and .hint (add .noprint to each), strips the dashed border and the ✕, and adds a .printonly caption line. Better still, define what printing this page is FOR — the honest answer is a 'sign this in ink' sheet with a ruled box and the document name, which is the wet-signature path the research asks for.",
+    "printSupport": "There is a print block, but it is entirely the shared base layer (index.html:~1180-1237); this app adds zero print CSS of its own and has no Print button.\n\nIs print a core use case? Not directly, the artefact is a PNG that gets pasted into someone else's document. But it matters twice. First, a confused user on a locked-down machine reaches for Ctrl+P. Second, the research's most valuable differentiator (the wet-signature warning) ends with 'print, sign in ink, scan', so the app should eventually own a print path, just not this one.\n\nWhat the base gives you, verified under emulateMedia({media:'print'}): header.app hidden, #tipLink hidden, #swsPrefsBtn hidden, footer.colophon hidden, the warm-tint overlay disabled, --ui-scale and --density reset to 1, @page margin 14mm.\n\nWhat is broken if a user just hits Ctrl+P, all measured:\n1. .hero prints, the headline 'Draw it once, use it everywhere' plus the full marketing paragraph, roughly the top third of the sheet.\n2. .opts prints, the Ink and Pen toolbar, so the page carries the words 'Ink Pen Fine Medium Bold' next to the signature.\n3. Both .dot swatches print as SOLID DARK FILLED CIRCLES. Computed background in print media is rgb(17,19,24). The base's print override at index.html:1221 flattens .btn, .btn.primary, .chip, .seg button, .dot is none of those, so it slips through and wastes ink.\n4. All three buttons print as dead controls; none carries .noprint.\n5. p.hint prints ('Tip: sign larger than feels natural…').\n6. The dashed .padwrap border and its 12px radius print around the signature.\n7. The ✕ guide mark prints on top of the signature.\n8. The canvas prints at its CSS size, roughly 316 CSS px ≈ 3.3in at 96dpi, from a backing store that may be 3x that, so the printed signature is softer than it needs to be.\n\nWhat to add: an app-level @media print that hides .hero, .opts, the button row and .hint (add .noprint to each), strips the dashed border and the ✕, and adds a .printonly caption line. Better still, define what printing this page is FOR, the honest answer is a 'sign this in ink' sheet with a ruled box and the document name, which is the wet-signature path the research asks for.",
     "riskyToRestyle": [
-      "The canvas backing store is JS-owned and depends on the pad's rendered CSS width. fitCanvas (app.js:25-31) sets pad.width = round(pad.clientWidth * DPR) and pad.height = round(260 * DPR), and it runs ONLY on window resize (app.js:117). Any restyle that changes the pad's box without a window resize — new card padding, a max-width, a container query, a density token — desynchronises the pointer from the ink by exactly that ratio. This is not theoretical: the shipped comfort panel's Spacing dial already does it, and the measured error is 14px at 4.9%. Add a ResizeObserver in the same commit as any layout change to .padwrap or section.card.",
+      "The canvas backing store is JS-owned and depends on the pad's rendered CSS width. fitCanvas (app.js:25-31) sets pad.width = round(pad.clientWidth * DPR) and pad.height = round(260 * DPR), and it runs ONLY on window resize (app.js:117). Any restyle that changes the pad's box without a window resize, new card padding, a max-width, a container query, a density token, desynchronises the pointer from the ink by exactly that ratio. This is not theoretical: the shipped comfort panel's Spacing dial already does it, and the measured error is 14px at 4.9%. Add a ResizeObserver in the same commit as any layout change to .padwrap or section.card.",
       "#pad{height:260px} (index.html:1257) is duplicated as the literal 260 in app.js:27 and again as `off.height = 260 * SCALE` in app.js:126. Change the CSS height alone and the export is drawn against the wrong vertical extent. All three must move together, or better, app.js should read pad.clientHeight.",
-      ".padwrap must stay a true white rectangle in every theme (index.html:1253). It is a WYSIWYG preview of ink on paper: a tinted, dimmed or dark-inverted pad makes the exported ink colour a lie. Do not apply filter, opacity, mix-blend-mode or an accent tint to .padwrap or #pad, and note that the base's warm-tint body::after ALREADY violates this at z-index 9999 — fixing that is a fix, not a regression.",
-      "The ink palette is hardcoded in the markup in two places on the same elements: data-color=\"#111318\"/\"#1d3f8f\" (read by app.js:104 and written into every stroke) and inline style=\"background:#111318\"/\"#1d3f8f\" (what the user sees). Restyling the swatch without changing data-color makes the preview disagree with the file. If the skin's accent becomes the pen — which the research's colorRecommendation asks for — both attributes and app.js's `let color = '#111318'` default (app.js:20) must change together.",
-      "Class names the JS depends on: .dot and .sizes button as query targets (app.js:102, 108), .sel as the ONLY selection state (app.js:105, 111), and .hidden with its !important (index.html:852) for the tip link (app.js:178). Renaming any of them breaks behaviour silently with no console error — a permanently unselectable ink or an invisible tip jar.",
+      ".padwrap must stay a true white rectangle in every theme (index.html:1253). It is a WYSIWYG preview of ink on paper: a tinted, dimmed or dark-inverted pad makes the exported ink colour a lie. Do not apply filter, opacity, mix-blend-mode or an accent tint to .padwrap or #pad, and note that the base's warm-tint body::after ALREADY violates this at z-index 9999, fixing that is a fix, not a regression.",
+      "The ink palette is hardcoded in the markup in two places on the same elements: data-color=\"#111318\"/\"#1d3f8f\" (read by app.js:104 and written into every stroke) and inline style=\"background:#111318\"/\"#1d3f8f\" (what the user sees). Restyling the swatch without changing data-color makes the preview disagree with the file. If the skin's accent becomes the pen, which the research's colorRecommendation asks for, both attributes and app.js's `let color = '#111318'` default (app.js:20) must change together.",
+      "Class names the JS depends on: .dot and .sizes button as query targets (app.js:102, 108), .sel as the ONLY selection state (app.js:105, 111), and .hidden with its !important (index.html:852) for the tip link (app.js:178). Renaming any of them breaks behaviour silently with no console error, a permanently unselectable ink or an invisible tip jar.",
       "IDs reached by getElementById: pad, toast, undoBtn, clearBtn, dlBtn, tipLink (app.js:6 and throughout). Wrapping them is safe; renaming or removing any is a hard break.",
-      "app.js ships its own toast() (app.js:8-14) that writes textContent and toggles .show directly. It does NOT use the shared SWS.toast, so #toast.act and #toast .undo (index.html:784-802) are dead styling today. If the overhaul changes the toast markup contract, this app will not follow — migrate app.js to SWS.toast in the same commit.",
-      "The stylesheet is generated and spliced. Everything between index.html:18 ('▼▼▼ SWS STUDIO BASE') and index.html:1250 ('▲▲▲ END SWS STUDIO BASE ▲▲▲') is written by design/apply.mjs from design/studio.css and design/skins.mjs. Hand-edits inside the markers are destroyed on the next build; app rules must stay below index.html:1252. Note that the app-layer block currently ends the file, so the texture rules at 1240-1249 sit INSIDE the markers while .padwrap sits outside — a restyle that moves the texture must respect that boundary.",
-      "Palette values are duplicated outside the stylesheet and will drift: index.html:12-13 (two theme-color metas, #fef6ea / #10141d), manifest.webmanifest (background_color #fef6ea, theme_color #626976 — note this is --accent-fill, not the canvas), icon.svg, apple-touch-icon.png and marketing/thumb-256.png. This app's skin is the near-achromatic one (hue 264 / chroma 0.022) that the research flags as colliding with caregiver-log (250 / 0.035, same warm paper, same editorial voice, same grain texture) — any recolour has to resolve that collision, and the research's recommendation is to separate by value, not hue.",
-      "The service worker will serve stale CSS after deploy. sw.js:3 lists a fixed ASSETS array and sw.js:20 is cache-first (`return cached || fetched`), so returning users get the OLD index.html on the first load after a deploy. Any new file — a handwriting font for the typed path, an external stylesheet — must be appended to ASSETS AND VERSION bumped from 'sig-v14' (sw.js:2), or it is never fetched at all offline. Verified in this review: 10 entries cached, full offline reload and export work.",
-      "Tests give you almost no safety net. test/helpers.test.mjs covers only the two pure functions in helpers.js — trimBounds and smoothSegments. Nothing touches the DOM, the class names, the stylesheet or the canvas pipeline, so a restyle cannot break the suite and the suite cannot catch a restyle regression. Do not 'simplify' trimBounds' alphaThreshold of 8 (helpers.js:5) — it is what keeps antialiased edge pixels inside the crop, and this review verified 1,902 semi-transparent pixels survive in a real export.",
+      "app.js ships its own toast() (app.js:8-14) that writes textContent and toggles .show directly. It does NOT use the shared SWS.toast, so #toast.act and #toast .undo (index.html:784-802) are dead styling today. If the overhaul changes the toast markup contract, this app will not follow, migrate app.js to SWS.toast in the same commit.",
+      "The stylesheet is generated and spliced. Everything between index.html:18 ('▼▼▼ SWS STUDIO BASE') and index.html:1250 ('▲▲▲ END SWS STUDIO BASE ▲▲▲') is written by design/apply.mjs from design/studio.css and design/skins.mjs. Hand-edits inside the markers are destroyed on the next build; app rules must stay below index.html:1252. Note that the app-layer block currently ends the file, so the texture rules at 1240-1249 sit INSIDE the markers while .padwrap sits outside, a restyle that moves the texture must respect that boundary.",
+      "Palette values are duplicated outside the stylesheet and will drift: index.html:12-13 (two theme-color metas, #fef6ea / #10141d), manifest.webmanifest (background_color #fef6ea, theme_color #626976, note this is --accent-fill, not the canvas), icon.svg, apple-touch-icon.png and marketing/thumb-256.png. This app's skin is the near-achromatic one (hue 264 / chroma 0.022) that the research flags as colliding with caregiver-log (250 / 0.035, same warm paper, same editorial voice, same grain texture), any recolour has to resolve that collision, and the research's recommendation is to separate by value, not hue.",
+      "The service worker will serve stale CSS after deploy. sw.js:3 lists a fixed ASSETS array and sw.js:20 is cache-first (`return cached || fetched`), so returning users get the OLD index.html on the first load after a deploy. Any new file, a handwriting font for the typed path, an external stylesheet, must be appended to ASSETS AND VERSION bumped from 'sig-v14' (sw.js:2), or it is never fetched at all offline. Verified in this review: 10 entries cached, full offline reload and export work.",
+      "Tests give you almost no safety net. test/helpers.test.mjs covers only the two pure functions in helpers.js, trimBounds and smoothSegments. Nothing touches the DOM, the class names, the stylesheet or the canvas pipeline, so a restyle cannot break the suite and the suite cannot catch a restyle regression. Do not 'simplify' trimBounds' alphaThreshold of 8 (helpers.js:5), it is what keeps antialiased edge pixels inside the crop, and this review verified 1,902 semi-transparent pixels survive in a real export.",
       "touch-action:none on .padwrap (index.html:1255) is functional, not cosmetic: it is what stops the page scrolling instead of drawing, which is the research's most-cited mobile complaint. Never move it, never let a restyle drop it, and never let a new scroll container swallow it."
     ]
   },
   "fixes": [
     {
       "title": "Make Clear reversible and stop losing the signature on reload",
-      "rationale": "Denise lost her best attempt twice — once to a mis-tap on Clear, once to a reflex refresh. Measured: Clear takes 1,773 ink pixels to 0 with an empty toast, no confirm and no undo, and a subsequent Undo restores nothing; reload takes 1,092 ink pixels to 0 with 0 bytes of storage and no warning. Clear is a 316x44 full-width .btn sitting 8px above the identically styled Download PNG at 390px, and .btn.danger is defined and unused. sws-ui.js is loaded and window.SWS.undo exists at runtime — app.js calls it zero times. Snapshot strokes, clear, then SWS.undo('Cleared', restore); add a sessionStorage draft of the strokes array; restyle Clear out of the primary row; and state the ephemerality out loud rather than leaving it as an absent feature ('This app never keeps your signature. Close the tab and it is gone. That is on purpose.').",
+      "rationale": "Denise lost her best attempt twice, once to a mis-tap on Clear, once to a reflex refresh. Measured: Clear takes 1,773 ink pixels to 0 with an empty toast, no confirm and no undo, and a subsequent Undo restores nothing; reload takes 1,092 ink pixels to 0 with 0 bytes of storage and no warning. Clear is a 316x44 full-width .btn sitting 8px above the identically styled Download PNG at 390px, and .btn.danger is defined and unused. sws-ui.js is loaded and window.SWS.undo exists at runtime, app.js calls it zero times. Snapshot strokes, clear, then SWS.undo('Cleared', restore); add a sessionStorage draft of the strokes array; restyle Clear out of the primary row; and state the ephemerality out loud rather than leaving it as an absent feature ('This app never keeps your signature. Close the tab and it is gone. That is on purpose.').",
       "where": "apps/signature-maker/app.js:115 (clearBtn handler), app.js:22 (strokes, in-memory only), apps/signature-maker/index.html:1306-1310 (the three-button row), .btn.danger at index.html:580",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Recompute the canvas whenever the pad's box changes, not only on window resize",
-      "rationale": "Marguerite set Spacing to Roomy and the pen started drawing 14px left of her finger. Isolated and measured: density=roomy alone takes the pad from 338px to 320px CSS while canvas.width stays 338; pen down at x=288 lands ink at x=274, a 4.9% error growing toward the right edge, and any signature already on the pad squashes to match. text=xxl and reading=easy do not trigger it; only Spacing does; only a window resize heals it. This is the comfort panel actively breaking the core interaction for exactly the user it exists to serve. Replace the window listener with a ResizeObserver on the pad — one line — and it also fixes zoom, container-query and address-bar cases.",
+      "rationale": "Marguerite set Spacing to Roomy and the pen started drawing 14px left of her finger. Isolated and measured: density=roomy alone takes the pad from 338px to 320px CSS while canvas.width stays 338; pen down at x=288 lands ink at x=274, a 4.9% error growing toward the right edge, and any signature already on the pad squashes to match. text=xxl and reading=easy do not trigger it; only Spacing does; only a window resize heals it. This is the comfort panel actively breaking the core interaction for exactly the user it exists to serve. Replace the window listener with a ResizeObserver on the pad, one line, and it also fixes zoom, container-query and address-bar cases.",
       "where": "apps/signature-maker/app.js:117 (window.addEventListener('resize', fitCanvas)), fitCanvas at app.js:25-31",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Stop the export cropping the signature when the phone is rotated",
-      "rationale": "Yusuf signed in landscape because the app's own hint told him to sign big, rotated back to reach the Download button (which is below the fold in landscape — measured pad bottom 472 against a 360px viewport), and emailed a file with 57% of his signature missing. Measured: signed across ~700 CSS px on a 588px pad, exported at 390px to 885x185 — about 295 CSS px of ink — with the toast still reading 'Saved'. Stroke points are stored as absolute CSS pixels (app.js:22, app.js:71) while download() sizes its offscreen canvas from the CURRENT pad width. Store points normalised to the pad (0-1) so rotation rescales instead of cropping, or size the export canvas from the actual stroke extent rather than pad.clientWidth.",
+      "rationale": "Yusuf signed in landscape because the app's own hint told him to sign big, rotated back to reach the Download button (which is below the fold in landscape, measured pad bottom 472 against a 360px viewport), and emailed a file with 57% of his signature missing. Measured: signed across ~700 CSS px on a 588px pad, exported at 390px to 885x185, about 295 CSS px of ink, with the toast still reading 'Saved'. Stroke points are stored as absolute CSS pixels (app.js:22, app.js:71) while download() sizes its offscreen canvas from the CURRENT pad width. Store points normalised to the pad (0-1) so rotation rescales instead of cropping, or size the export canvas from the actual stroke extent rather than pad.clientWidth.",
       "where": "apps/signature-maker/app.js:125-126 (off.width = pad.clientWidth * SCALE), app.js:69-72 (pos()), app.js:80 and 86 (points pushed in absolute CSS px)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Give the app a route to a signature that does not require a pointing device",
-      "rationale": "Ilya could select black ink, choose Bold, tab to Download and press Enter — and get a toast telling him to sign first. Verified: <canvas id=\"pad\"> has tabindex null, role null, aria-label null and zero fallback content, and there is no typed path, no photo import, no file input and no drop target anywhere in the app. Everything else is keyboard-perfect (12 focusables, 0 unreachable, 0 unnamed, real focus rings, axe clean), which makes the one gap total. Flat WCAG 2.1.1 failure; Section 508 guidance names typing and image upload as the required alternatives, and the research's tableStakes lists both as verified gaps. Ship type-a-signature with real handwriting faces plus photo import with a threshold control, both keyboard-reachable, and give the canvas role=\"img\" with a live accessible name.",
+      "rationale": "Ilya could select black ink, choose Bold, tab to Download and press Enter, and get a toast telling him to sign first. Verified: <canvas id=\"pad\"> has tabindex null, role null, aria-label null and zero fallback content, and there is no typed path, no photo import, no file input and no drop target anywhere in the app. Everything else is keyboard-perfect (12 focusables, 0 unreachable, 0 unnamed, real focus rings, axe clean), which makes the one gap total. Flat WCAG 2.1.1 failure; Section 508 guidance names typing and image upload as the required alternatives, and the research's tableStakes lists both as verified gaps. Ship type-a-signature with real handwriting faces plus photo import with a threshold control, both keyboard-reachable, and give the canvas role=\"img\" with a live accessible name.",
       "where": "apps/signature-maker/index.html:1291 (the bare canvas), pointer-only handlers at apps/signature-maker/app.js:75-99",
       "severity": "blocker",
       "effort": "L"
     },
     {
       "title": "Say where a drawn signature is not valid",
-      "rationale": "Hal produced a clean signature and used it on an I-130. Nothing in index.html or app.js says a word about validity, and .warn is defined at index.html:670 and never instantiated. The DHS interim final rule published 11 May 2026 and effective 10 July 2026 amends 8 CFR 103.2(a)(7)(ii)(A) so USCIS may reject OR DENY a filing found to lack a valid signature after it has cleared the Lockbox — retaining the fee, with no post-filing correction — and USCIS explicitly rejects signatures 'generated by software'. Signature-related denials went from 300 in FY2021 to 2,953 in FY2025. A permanent 'Where this works — and where it does not' block: fine for leases, school forms, vendor paperwork and email footers; not for USCIS filings, wills, adoption papers or court orders, with the print-sign-scan route and a handoff to our own scan-to-pdf. Every competitor's incentive is to make you sign; ours is not, and this is the whole value of that asymmetry.",
+      "rationale": "Hal produced a clean signature and used it on an I-130. Nothing in index.html or app.js says a word about validity, and .warn is defined at index.html:670 and never instantiated. The DHS interim final rule published 11 May 2026 and effective 10 July 2026 amends 8 CFR 103.2(a)(7)(ii)(A) so USCIS may reject OR DENY a filing found to lack a valid signature after it has cleared the Lockbox, retaining the fee, with no post-filing correction, and USCIS explicitly rejects signatures 'generated by software'. Signature-related denials went from 300 in FY2021 to 2,953 in FY2025. A permanent 'Where this works, and where it does not' block: fine for leases, school forms, vendor paperwork and email footers; not for USCIS filings, wills, adoption papers or court orders, with the print-sign-scan route and a handoff to our own scan-to-pdf. Every competitor's incentive is to make you sign; ours is not, and this is the whole value of that asymmetry.",
       "where": "apps/signature-maker/index.html:1283-1287 (the hero is the only place the app talks about itself); unused .warn component at index.html:670",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Show what the file will be, and offer JPG-on-white with size presets",
-      "rationale": "Priyanka needed 140x60 JPG on white under 30 KB and got a 632x216 transparent PNG at 16.9 KB, with no number shown anywhere. Measured spread for one gesture: 632x216 / 16.9 KB at 390px, 633x218 / 14.2 KB at 414px, 1529x248 / 34.5 KB at 1280px — output size is purely an accident of the browser window, and the 1280px case alone blows the portals' 30 KB ceiling. SCALE is hardcoded to 3 over pad.clientWidth and toDataURL('image/png') is the only output. The research's ranked rejection list is topped by 'Format not JPEG — PNG is commonly rejected' and 'Coloured background instead of white', and complaint #4 (Adobe's documented Fill & Sign blur) means the only defence we control is giving people more pixels and telling them the number. Add a live readout (px, KB, inches at 300 dpi) recomputed on every stroke change, plus named presets and a JPG-on-white variant labelled with why.",
+      "rationale": "Priyanka needed 140x60 JPG on white under 30 KB and got a 632x216 transparent PNG at 16.9 KB, with no number shown anywhere. Measured spread for one gesture: 632x216 / 16.9 KB at 390px, 633x218 / 14.2 KB at 414px, 1529x248 / 34.5 KB at 1280px, output size is purely an accident of the browser window, and the 1280px case alone blows the portals' 30 KB ceiling. SCALE is hardcoded to 3 over pad.clientWidth and toDataURL('image/png') is the only output. The research's ranked rejection list is topped by 'Format not JPEG, PNG is commonly rejected' and 'Coloured background instead of white', and complaint #4 (Adobe's documented Fill & Sign blur) means the only defence we control is giving people more pixels and telling them the number. Add a live readout (px, KB, inches at 300 dpi) recomputed on every stroke change, plus named presets and a JPG-on-white variant labelled with why.",
       "where": "apps/signature-maker/app.js:120-171 (download()), SCALE at app.js:123, format at app.js:165",
       "severity": "major",
       "effort": "M"
@@ -673,56 +673,56 @@
     },
     {
       "title": "Make the ink and pen controls speak, and attach a reason to each colour",
-      "rationale": "Ilya heard five anonymous buttons; Hal picked black for a mortgage package the title company wants in blue. Verified: both .dot buttons and all three .sizes buttons have aria-pressed null and role null, with selection living only in classList.toggle('sel'); 'Ink' and 'Pen' are plain spans, not legends; title is null on both swatches. Add aria-pressed to all five in the same toggle, wrap each group in role=\"group\" with aria-labelledby pointing at the existing span, aria-hidden the ✕, and add one clause per swatch — black for scanning, printing and exam portals; blue because it proves an original against a photocopy, which lenders and title companies expect. The research calls this free, true, and the thing that turns a two-button picker into visible expertise.",
+      "rationale": "Ilya heard five anonymous buttons; Hal picked black for a mortgage package the title company wants in blue. Verified: both .dot buttons and all three .sizes buttons have aria-pressed null and role null, with selection living only in classList.toggle('sel'); 'Ink' and 'Pen' are plain spans, not legends; title is null on both swatches. Add aria-pressed to all five in the same toggle, wrap each group in role=\"group\" with aria-labelledby pointing at the existing span, aria-hidden the ✕, and add one clause per swatch, black for scanning, printing and exam portals; blue because it proves an original against a photocopy, which lenders and title companies expect. The research calls this free, true, and the thing that turns a two-button picker into visible expertise.",
       "where": "apps/signature-maker/index.html:1295-1305 (the .opts group), apps/signature-maker/app.js:102-113 (the class-only toggles), index.html:1293 (.padx)",
       "severity": "major",
       "effort": "S"
     },
     {
-      "title": "Keep the signing pad true white in every theme — warm tint currently paints it peach",
-      "rationale": "Marguerite turned Warm tint up for window glare and the pad rendered rgb(255,214,177) — measured off a real screenshot — because body::after paints rgba(255,166,86,0.46) at z-index 9999 over the hardcoded-white .padwrap. The ruled line drops from 1.37:1 to 1.01:1, the ✕ from 1.80:1 to 1.33:1, and the blue swatch reads as navy-black. The research names this as the app's one hard constraint that overrides fashion: the pad is a WYSIWYG preview of ink on paper, so a tinted pad makes the exported colour a guess. Dark mode already gets this right (pad verified rgb(255,255,255) against a rgb(16,20,29) page); warm tint does not. Exempt .padwrap from the overlay's stacking context or mask the tint around it.",
+      "title": "Keep the signing pad true white in every theme, warm tint currently paints it peach",
+      "rationale": "Marguerite turned Warm tint up for window glare and the pad rendered rgb(255,214,177), measured off a real screenshot, because body::after paints rgba(255,166,86,0.46) at z-index 9999 over the hardcoded-white .padwrap. The ruled line drops from 1.37:1 to 1.01:1, the ✕ from 1.80:1 to 1.33:1, and the blue swatch reads as navy-black. The research names this as the app's one hard constraint that overrides fashion: the pad is a WYSIWYG preview of ink on paper, so a tinted pad makes the exported colour a guess. Dark mode already gets this right (pad verified rgb(255,255,255) against a rgb(16,20,29) page); warm tint does not. Exempt .padwrap from the overlay's stacking context or mask the tint around it.",
       "where": "apps/signature-maker/index.html:1253 (.padwrap background:#ffffff) against the base warm-tint body::after overlay",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Take the ruled line and the ✕ to a legible contrast and let High contrast reach them",
-      "rationale": "These two marks are the entire wayfinding of the signing surface and they are the lowest-contrast elements on the page: #d7dde5 at 1.37:1 and #b9c2cc at 1.80:1 against the white pad, against a WCAG 1.4.11 floor of 3:1 for non-text graphical objects. Setting Contrast to High raised the hint paragraph from 5.95:1 to 16.05:1 and left both of these unchanged, because they are literal hex in the app layer rather than tokens. axe reported zero violations in every configuration — this is the clearest case in the app of a real failure a clean axe run does not surface. Marguerite could not see where to sign.",
+      "rationale": "These two marks are the entire wayfinding of the signing surface and they are the lowest-contrast elements on the page: #d7dde5 at 1.37:1 and #b9c2cc at 1.80:1 against the white pad, against a WCAG 1.4.11 floor of 3:1 for non-text graphical objects. Setting Contrast to High raised the hint paragraph from 5.95:1 to 16.05:1 and left both of these unchanged, because they are literal hex in the app layer rather than tokens. axe reported zero violations in every configuration, this is the clearest case in the app of a real failure a clean axe run does not surface. Marguerite could not see where to sign.",
       "where": "apps/signature-maker/index.html:1258 (.padline #d7dde5) and index.html:1259 (.padx #b9c2cc)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Bring the ink swatches and pen buttons up to the tap floor",
-      "rationale": "The standard battery flagged both button.dot at 30x30, and this review measured them at 30x30 at Default, at Largest and at Roomy on every viewport — they are hardcoded and never scale, 14px under the system's own --tap: max(44px, calc(44px * var(--ui-scale))) at index.html:265. The .sizes buttons are 32-33px at Default, reaching 43px only at Largest. Marguerite is aiming at two adjacent 30px circles with a tremor. Give .dot width/height:var(--tap) with the colour as an inner disc, and .sizes button min-height:var(--tap).",
+      "rationale": "The standard battery flagged both button.dot at 30x30, and this review measured them at 30x30 at Default, at Largest and at Roomy on every viewport, they are hardcoded and never scale, 14px under the system's own --tap: max(44px, calc(44px * var(--ui-scale))) at index.html:265. The .sizes buttons are 32-33px at Default, reaching 43px only at Largest. Marguerite is aiming at two adjacent 30px circles with a tremor. Give .dot width/height:var(--tap) with the colour as an inner disc, and .sizes button min-height:var(--tap).",
       "where": "apps/signature-maker/index.html:1264 (.dot) and index.html:1266 (.sizes button)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Add copy-to-clipboard beside Download, and give exports distinguishable names",
-      "rationale": "Hal's real goal was a signed document, not a file in Downloads; Denise ended up with signature.png through signature(7).png from eight rapid clicks (measured: 8 downloads, all suggesting the same filename, no debounce, no busy state). download() only builds an <a download> at app.js:164-169. The research points out Online PNG Tools reserves clipboard for paying customers — 'a paywall on a computation that costs the operator nothing' — which is the strongest argument for making it a first-class button here. It costs one ClipboardItem call. Also add a Web Share path and a timestamped filename.",
+      "rationale": "Hal's real goal was a signed document, not a file in Downloads; Denise ended up with signature.png through signature(7).png from eight rapid clicks (measured: 8 downloads, all suggesting the same filename, no debounce, no busy state). download() only builds an <a download> at app.js:164-169. The research points out Online PNG Tools reserves clipboard for paying customers, 'a paywall on a computation that costs the operator nothing', which is the strongest argument for making it a first-class button here. It costs one ClipboardItem call. Also add a Web Share path and a timestamped filename.",
       "where": "apps/signature-maker/app.js:164-169 (anchor construction), filename at app.js:166",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Instantiate the trust stamp with a claim the user can test, and add the missing skip link and noscript",
-      "rationale": "In the one app where privacy IS the product, the studio's .trust component is defined in this app's own CSS at index.html:437-448 and never used — the promise lives only in hero prose and a grey footer line, which is exactly the boilerplate the clone swarm writes. Meanwhile the offline claim is verifiably TRUE right now: sw.js sig-v14 caches all 10 assets and this review reloaded, drew and exported with the network cut. Put 'Turn your Wi-Fi off. It still works.' above the pad in a .trust block. In the same pass add the skip link (.skip is styled at index.html:840-849 and <main id=\"main\"> already exists as a target) and a <noscript> .warn, since with JS off the page is a hero, a blank rectangle and three dead buttons.",
+      "rationale": "In the one app where privacy IS the product, the studio's .trust component is defined in this app's own CSS at index.html:437-448 and never used, the promise lives only in hero prose and a grey footer line, which is exactly the boilerplate the clone swarm writes. Meanwhile the offline claim is verifiably TRUE right now: sw.js sig-v14 caches all 10 assets and this review reloaded, drew and exported with the network cut. Put 'Turn your Wi-Fi off. It still works.' above the pad in a .trust block. In the same pass add the skip link (.skip is styled at index.html:840-849 and <main id=\"main\"> already exists as a target) and a <noscript> .warn, since with JS off the page is a hero, a blank rectangle and three dead buttons.",
       "where": "apps/signature-maker/index.html:1289-1290 (top of the card); unused components at index.html:437-448, 840-849, 670",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Guard setPointerCapture, refuse to export a stray dot, and stop the pen size changing the exported margins",
-      "rationale": "Three small correctness bugs found by driving the export. (1) setPointerCapture at app.js:79 is unguarded while the matching release at app.js:95 IS wrapped in try/catch; when it throws, execution aborts before `current` is created on the next line, so the stroke is silently lost, an uncaught NotFoundError hits the console, and activePointer stays set until a matching pointerup clears it. Reproduced with a synthetic pointer, latent for real input. (2) A single tap exports a 38x38 / 411-byte PNG with the toast 'Saved — transparent background, cropped to the ink' — the only guard is strokes.length === 0 at app.js:121, and Priyanka got one at 23:20 with a deadline. (3) padPx reads the CURRENTLY selected pen rather than the strokes' own sizes, so the same drawing exported 504x180 with Bold selected and 476x152 with Fine selected — a 28px difference from a control that appears to do nothing.",
+      "rationale": "Three small correctness bugs found by driving the export. (1) setPointerCapture at app.js:79 is unguarded while the matching release at app.js:95 IS wrapped in try/catch; when it throws, execution aborts before `current` is created on the next line, so the stroke is silently lost, an uncaught NotFoundError hits the console, and activePointer stays set until a matching pointerup clears it. Reproduced with a synthetic pointer, latent for real input. (2) A single tap exports a 38x38 / 411-byte PNG with the toast 'Saved, transparent background, cropped to the ink', the only guard is strokes.length === 0 at app.js:121, and Priyanka got one at 23:20 with a deadline. (3) padPx reads the CURRENTLY selected pen rather than the strokes' own sizes, so the same drawing exported 504x180 with Bold selected and 476x152 with Fine selected, a 28px difference from a control that appears to do nothing.",
       "where": "apps/signature-maker/app.js:78-80 and app.js:95 (capture asymmetry), app.js:121 (empty guard), app.js:159 (padPx from `size`)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Handle print at the app layer, or decide print means the wet-signature sheet",
-      "rationale": "Measured under print media: header, tip link, prefs button and footer are correctly hidden by the base, but .hero (headline plus marketing paragraph), the Ink/Pen toolbar, all three buttons, the tip paragraph, the dashed border and the ✕ all print — and both .dot swatches print as solid dark filled circles (computed background rgb(17,19,24)) because the base's print flattening at index.html:1221 targets .btn/.chip/.seg and .dot is none of those. The printed page begins 'Draw it once, use it everywhere…' and includes 'Fine Medium Bold Undo stroke Clear Download PNG'. The higher-value move is to make print mean something: the wet-signature route the USCIS fix hands people ends in 'print, sign in ink, scan', and this app is where that sheet should come from.",
+      "rationale": "Measured under print media: header, tip link, prefs button and footer are correctly hidden by the base, but .hero (headline plus marketing paragraph), the Ink/Pen toolbar, all three buttons, the tip paragraph, the dashed border and the ✕ all print, and both .dot swatches print as solid dark filled circles (computed background rgb(17,19,24)) because the base's print flattening at index.html:1221 targets .btn/.chip/.seg and .dot is none of those. The printed page begins 'Draw it once, use it everywhere…' and includes 'Fine Medium Bold Undo stroke Clear Download PNG'. The higher-value move is to make print mean something: the wet-signature route the USCIS fix hands people ends in 'print, sign in ink, scan', and this app is where that sheet should come from.",
       "where": "apps/signature-maker/index.html:1252-1267 (no app-level @media print), base flattening rule at index.html:1221",
       "severity": "minor",
       "effort": "S"

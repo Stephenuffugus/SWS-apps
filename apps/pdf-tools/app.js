@@ -1,4 +1,4 @@
-// PDF Tools — merge, reorder, rotate, delete, split. All in-browser.
+// PDF Tools, merge, reorder, rotate, delete, split. All in-browser.
 import {
   buildOutput, buildSplit, planOutput, splitGroups, splitNames,
   loadPdf, sourceAngles, finalAngle, formatBytes, zipStore, isHuman, SPLIT_MODES,
@@ -58,7 +58,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 let docs = [];     // { id, name, pdf, size, pages, angles: number[] }
 let order = [];    // { doc: index into docs, page, rotate }
-let issues = [];   // { kind:'bad'|'note', name, reason } — survives until dismissed
+let issues = [];   // { kind:'bad'|'note', name, reason }, survives until dismissed
 let nextDocId = 1;
 let nameTouched = false;
 let busy = false;
@@ -179,7 +179,7 @@ function renderIssues() {
       ? bad + ' of the files you added could not be used:'
       : 'Worth a look before you save:' }),
     el('ul', { class: 'warnlist' }, issues.map(i =>
-      el('li', {}, el('b', { text: i.name }), ' — ' + i.reason))),
+      el('li', {}, el('b', { text: i.name }), ', ' + i.reason))),
     el('button', {
       class: 'btn', type: 'button',
       onclick: () => { issues = []; renderIssues(); $('addBtn').focus(); },
@@ -208,8 +208,8 @@ function renderPages(hint) {
   $('emptyState').classList.toggle('hidden', n > 0);
   list.classList.toggle('hidden', n === 0);
   $('pagesHead').textContent = n
-    ? n + (n === 1 ? ' page' : ' pages') + ' — in output order'
-    : 'Pages — in output order';
+    ? n + (n === 1 ? ' page' : ' pages') + ', in output order'
+    : 'Pages, in output order';
 
   order.forEach((item, i) => {
     const d = docs[item.doc];
@@ -259,7 +259,7 @@ function moveRow(i, dir) {
   if (busy) return;
   const j = i + dir;
   if (j < 0 || j >= order.length) {
-    say('Page is already ' + (dir < 0 ? 'first' : 'last') + ' — nothing moved.', { ms: 1800 });
+    say('Page is already ' + (dir < 0 ? 'first' : 'last') + ', nothing moved.', { ms: 1800 });
     return;
   }
   const item = order[i];
@@ -320,16 +320,16 @@ function renderSplit() {
     out.append(el('p', { class: 'hint', text: 'Add a PDF and the file names will be listed here before anything is written.' }));
     bar.textContent = '';
     btn.textContent = 'Split';
-    btn.setAttribute('aria-label', 'Split — add a PDF first');
+    btn.setAttribute('aria-label', 'Split, add a PDF first');
     btn.disabled = true;
     return;
   }
   const plan = currentSplit();
   if (plan.error) {
     out.append(el('p', { class: 'warn', text: plan.error }));
-    bar.textContent = '— settings need a fix';
+    bar.textContent = ',  settings need a fix';
     btn.textContent = 'Split';
-    btn.setAttribute('aria-label', 'Split — ' + plan.error);
+    btn.setAttribute('aria-label', 'Split, ' + plan.error);
     btn.title = plan.error;
     btn.disabled = true;
     return;
@@ -340,7 +340,7 @@ function renderSplit() {
   const shown = names.slice(0, 4).join(', ') + (names.length > 4 ? ', … ' + names[names.length - 1] : '');
   out.append(el('p', { class: 'previewline' },
     el('b', { text: names.length + (names.length === 1 ? ' file' : ' files') }),
-    ' — ' + shown));
+    ', ' + shown));
   if (zip) {
     out.append(el('p', { class: 'hint', text: 'Delivered as one download, ' + zipName() +
       '. Your browser will not ask permission for multiple downloads.' }));
@@ -348,7 +348,7 @@ function renderSplit() {
     out.append(el('p', { class: 'warn', text: names.length + ' separate downloads, about ' +
       Math.ceil(names.length * 0.25) + ' seconds of saving. Your browser will ask permission for multiple downloads, and they land in your Downloads folder one at a time.' }));
   }
-  bar.textContent = '— ' + names.length + (zip ? ' files in one .zip' : ' separate downloads');
+  bar.textContent = ',  ' + names.length + (zip ? ' files in one .zip' : ' separate downloads');
   btn.textContent = 'Split (' + names.length + ')';
   const spoken = 'Split into ' + names.length + (names.length === 1 ? ' file' : ' files') +
     (zip ? ', delivered as one zip file called ' + zipName() : ', saved as separate downloads') + '.';
@@ -372,8 +372,8 @@ function renderBar() {
     (order.length === 1 ? ' page' : ' pages') + ' · about ' + formatBytes(est);
   bm.title = outName();
   $('sizeNote').textContent = est > 20 * 1000 * 1000
-    ? 'About ' + formatBytes(est) + '. Big enough that some upload forms will refuse it — many cap somewhere between 5 MB and 25 MB.'
-    : 'About ' + formatBytes(est) + ' — the exact size is shown once it is written.';
+    ? 'About ' + formatBytes(est) + '. Big enough that some upload forms will refuse it, many cap somewhere between 5 MB and 25 MB.'
+    : 'About ' + formatBytes(est) + ', the exact size is shown once it is written.';
 }
 
 /* Publish the sticky bar's real height so the toast can sit above it instead
@@ -422,7 +422,7 @@ async function addFiles(fileList) {
       if (dup) {
         issues.push({
           kind: 'note', name: f.name,
-          reason: 'added twice — same name and same size. The list now holds ' +
+          reason: 'added twice, same name and same size. The list now holds ' +
             (dup.pages + doc.pages) + ' pages from it. Remove one copy below if that was not intended.',
         });
       }
@@ -438,17 +438,17 @@ async function addFiles(fileList) {
   renderAll();
 
   if (added) {
-    sayUndo(added + (added === 1 ? ' file' : ' files') + ' added — ' + pagesAdded +
+    sayUndo(added + (added === 1 ? ' file' : ' files') + ' added, ' + pagesAdded +
       (pagesAdded === 1 ? ' page' : ' pages') + ', ' +
       formatBytes(fresh.reduce((a, d) => a + d.size, 0)) + '. Nothing was uploaded.',
     () => restore(snap));
   } else {
-    say('Nothing was added — see the note above the Add button.', { assertive: true, ms: 6000 });
+    say('Nothing was added, see the note above the Add button.', { assertive: true, ms: 6000 });
   }
   if (order.length > 400) {
     issues.push({
       kind: 'note', name: order.length + ' pages',
-      reason: 'this list is long, so scrolling and redraws may feel slow. Nothing is capped — every page will be written.',
+      reason: 'this list is long, so scrolling and redraws may feel slow. Nothing is capped, every page will be written.',
     });
     renderIssues();
   }
@@ -469,14 +469,14 @@ function failMessage(e) {
   if (isHuman(e)) return e.message;
   const raw = String((e && e.message) || '');
   if (/memory|allocat|Array buffer allocation/i.test(raw)) {
-    return 'This browser tab ran out of memory before it finished. Try fewer or smaller files in one go — nothing was uploaded and nothing was lost.';
+    return 'This browser tab ran out of memory before it finished. Try fewer or smaller files in one go, nothing was uploaded and nothing was lost.';
   }
   return 'Something went wrong while writing the PDF. Your files are untouched and still listed here.';
 }
 
 async function runMerge() {
   if (busy) return;
-  if (!order.length) { say('Add a PDF first — there is nothing assembled yet.'); return; }
+  if (!order.length) { say('Add a PDF first, there is nothing assembled yet.'); return; }
   const btn = $('mergeBtn');
   const loaded = docs.map(d => d.pdf);
   const { dropped } = planOutput(loaded, order);
@@ -487,8 +487,8 @@ async function runMerge() {
     const bytes = await buildOutput(window.PDFLib, loaded, order);
     const name = outName();
     download(bytes, name);
-    $('sizeNote').textContent = name + ' — ' + formatBytes(bytes.length) + ', written just now.';
-    say('Saved ' + name + ' — ' + (order.length - dropped.length) + ' pages, ' +
+    $('sizeNote').textContent = name + ', ' + formatBytes(bytes.length) + ', written just now.';
+    say('Saved ' + name + ', ' + (order.length - dropped.length) + ' pages, ' +
       formatBytes(bytes.length) + '. It never left your device.' +
       (dropped.length ? ' ' + dropped.length + ' row(s) pointed at pages that no longer exist and were left out.' : ''),
     { ms: 7000 });
@@ -527,13 +527,13 @@ async function runSplit() {
       await frame();
       const bytes = zipStore(outs.map((b, i) => ({ name: names[i], bytes: b })));
       download(bytes, zipName(), 'application/zip');
-      say('Saved ' + zipName() + ' — ' + names.length + ' PDFs, ' + formatBytes(bytes.length) +
+      say('Saved ' + zipName() + ', ' + names.length + ' PDFs, ' + formatBytes(bytes.length) +
         '. Nothing left your device.', { ms: 7000 });
     } else {
       let saved = 0;
       for (let i = 0; i < outs.length; i++) {
         if (cancelRequested) break;
-        $('progressText').textContent = 'Saving ' + (i + 1) + ' of ' + outs.length + ' — ' + names[i];
+        $('progressText').textContent = 'Saving ' + (i + 1) + ' of ' + outs.length + ', ' + names[i];
         download(outs[i], names[i]);
         saved++;
         await sleep(250);
@@ -614,7 +614,7 @@ function wire() {
     $('addBtn').focus();
   });
 
-  /* Nothing here is persisted — deliberately, it is the privacy promise — so
+  /* Nothing here is persisted, deliberately, it is the privacy promise, so
      the arrangement dies with the tab. Say so before it happens. */
   window.addEventListener('beforeunload', (e) => {
     if (order.length === 0) return;

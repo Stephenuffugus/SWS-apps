@@ -1,4 +1,4 @@
-// Signature maker — pure logic. Tested in test/helpers.test.mjs.
+// Signature maker, pure logic. Tested in test/helpers.test.mjs.
 
 /* Find the tight bounding box of non-transparent pixels in an RGBA buffer.
    Returns null when the canvas is empty. */

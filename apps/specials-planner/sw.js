@@ -1,6 +1,6 @@
-/* Specials Planner service worker — cache-first shell for offline use.
+/* Specials Planner service worker, cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'specials-planner-v31';
+const CACHE = 'specials-planner-v32';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'fonts/fraunces-latin.woff2', 'fonts/spline-sans-latin.woff2', "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so the fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets below stay cache-first; only the document leads with the network,

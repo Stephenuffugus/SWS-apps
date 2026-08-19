@@ -1,5 +1,4 @@
-/* The board driver. design/stress.mjs only ever reaches the home screen —
-   the board lives behind a Firebase sign-in, so the standard battery exercises
+/* The board driver. design/stress.mjs only ever reaches the home screen, the board lives behind a Firebase sign-in, so the standard battery exercises
    roughly 5% of this app. This swaps data.js for an in-memory stub (which
    mirrors the deployed firestore.rules on the write path, so a test fails if a
    change would be rejected in production) and drives the real board UI.
@@ -69,7 +68,7 @@ export const releaseClaim = async () => {};
 export const ownerRemoveClaim = async () => {};
 export const renameClaim = async () => {};
 export const addEntry = async (id, board, { authorName, body, type }) => {
-  if (body.length > 2000) throw new Error('body too long — rules cap is 2000');
+  if (body.length > 2000) throw new Error('body too long, rules cap is 2000');
   if (authorName.length < 1 || authorName.length > 60) throw new Error('rules reject authorName of ' + authorName.length);
   if (!['note','appointment','medication','question','announcement'].includes(type)) throw new Error('rules reject type ' + type);
   // The deployed rules cap a board at 500 entries ever created, batch-coupled
@@ -109,7 +108,7 @@ export async function board(fn, opts = {}) {
     // The harness's own first load runs the REAL app, which registers the real
     // service worker; it then serves data.js from cache and page.route never
     // sees the request. Kill it, and keep killing it until nothing controls
-    // the page — otherwise this run is a coin toss.
+    // the page, otherwise this run is a coin toss.
     const killSW = () => ctx.page.evaluate(async () => {
       if (navigator.serviceWorker) {
         const rs = await navigator.serviceWorker.getRegistrations();

@@ -6,7 +6,7 @@
      node design/test-all.mjs qr-maker seating-chart
 
    Tests that need the Firebase emulator are listed and skipped rather than
-   counted as failures — they cannot run here, and burying five permanent reds
+   counted as failures, they cannot run here, and burying five permanent reds
    in the output is how a real regression gets missed.
    ═══════════════════════════════════════════════════════════════════════════ */
 

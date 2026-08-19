@@ -1,4 +1,4 @@
-// PDF pipeline smoke tests — run from a dir where pdf-lib resolves:
+// PDF pipeline smoke tests, run from a dir where pdf-lib resolves:
 //   node test/pdf.test.mjs   (uses the node_modules symlink)
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -10,7 +10,7 @@ const PDFLib = require('pdf-lib');
 
 let seq = 0;
 const ids = () => 'g' + (++seq);
-const p = newProject('Rivera–Okafor Wedding');
+const p = newProject('Rivera-Okafor Wedding');
 p.guests = parseGuestPaste(
   Array.from({ length: 43 }, (_, i) =>
     `Guest ${String.fromCharCode(65 + (i % 26))}${i} Surname${i % 12}, party${i % 9}, ${['Beef', 'Fish', 'Veg'][i % 3]}${i % 7 === 0 ? ', nut allergy' : ''}`
@@ -56,7 +56,7 @@ await t('empty project still produces valid PDFs', async () => {
 
 await t('unicode guest names are sanitized, not fatal', async () => {
   const u = newProject('Unicode');
-  u.guests = parseGuestPaste('Zoë Müller—García �docume, fam, Beef', ids);
+  u.guests = parseGuestPaste('Zoë Müller, García �docume, fam, Beef', ids);
   u.tables = [{ id: 'T1', label: 'Table 1', shape: 'round', seats: 4, x: 0, y: 0 }];
   u.assignments = { [u.guests[0].id]: 'T1' };
   for (const fn of [makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf]) {

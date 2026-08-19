@@ -120,7 +120,7 @@ ok('display defaults to the form that is safe to project', () => {
   assert.equal(displayName({ first: 'Jacob', last: 'Moreno', tag: 'R.' }), 'Jacob M. (R.)');
 });
 
-ok('two Jacob M.s are detected — this blocks the commit', () => {
+ok('two Jacob M.s are detected, this blocks the commit', () => {
   const c = findCollisions([
     { first: 'Jacob', last: 'Moreno' },
     { first: 'Jacob', last: 'Mendez' },

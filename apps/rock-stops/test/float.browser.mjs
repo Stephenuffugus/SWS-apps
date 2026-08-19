@@ -1,7 +1,7 @@
 /* Float, driven in a real browser.
  *
  * float.test.mjs covers the pure functions in jsdom. Everything here needs a
- * real engine — canvas layout, IndexedDB, Blobs — and every assertion below
+ * real engine, canvas layout, IndexedDB, Blobs, and every assertion below
  * exists because something actually broke:
  *
  *  - fit() keyed its scale off `pins.length === 1` rather than the extent, so
@@ -105,7 +105,7 @@ await withApp('float', async ({ page, errors }) => {
   check('the map loaded the walk', fit.tracks === 1, fit.tracks);
   check('the canvas has real layout when fit runs', fit.w > 100 && fit.h > 100, fit);
   check('the whole walk is on screen horizontally', fit.minx >= 0 && fit.maxx <= fit.w, fit);
-  check('the whole walk is on screen vertically — the regression',
+  check('the whole walk is on screen vertically, the regression',
     fit.miny >= 0 && fit.maxy <= fit.h, fit);
 
   /* ── a photo, then backup → wipe → restore ── */

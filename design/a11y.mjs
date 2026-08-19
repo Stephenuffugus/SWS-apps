@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — accessibility audit
+   SWS STUDIO, accessibility audit
 
    Runs axe-core against every app, in both colour schemes, in a real browser.
 
@@ -8,7 +8,7 @@
      node design/a11y.mjs qr-maker       one app
      node design/a11y.mjs --json         machine-readable, for CI
 
-   The build already proves the PALETTE is accessible — it solves every colour
+   The build already proves the PALETTE is accessible, it solves every colour
    against a WCAG target. This proves the MARKUP is: labels, accessible names,
    heading order, landmarks, live regions, and the contrast of anything an app
    hardcoded outside the token system.
@@ -46,7 +46,7 @@ const server = createServer(async (req, res) => {
     if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
     /* Read BEFORE writing the header. Writing 200 first meant a missing file
        threw into a catch that could no longer set 404, and the server died
-       with ERR_HTTP_HEADERS_SENT — which stayed hidden for as long as the
+       with ERR_HTTP_HEADERS_SENT, which stayed hidden for as long as the
        service workers answered everything from cache and never asked for a
        path that does not exist. */
     const body = await readFile(file);
@@ -96,7 +96,7 @@ for (const mode of ['light', 'dark']){
       /* The comfort panel is a whole UI surface that only exists once it has
          been opened, so a page-load scan can never see it. It ships in all 23
          apps and is the one piece of chrome specifically meant for people with
-         access needs — leaving it unscanned would be the wrong thing to miss. */
+         access needs, leaving it unscanned would be the wrong thing to miss. */
       const opened = await page.evaluate(() => {
         const btn = document.getElementById('swsPrefsBtn');
         if (!btn) return false;
@@ -126,7 +126,7 @@ report.sort((a, b) => (RANK[a.impact] ?? 9) - (RANK[b.impact] ?? 9) || a.slug.lo
 
 const blocking = report.filter((r) => r.impact === 'critical' || r.impact === 'serious');
 
-/* Group by rule — the same defect usually repeats across apps because they all
+/* Group by rule, the same defect usually repeats across apps because they all
    came from one template, and a per-rule view says "fix this once". */
 const byRule = new Map();
 for (const r of report){
@@ -137,7 +137,7 @@ for (const r of report){
   e.total += r.nodes;
 }
 
-console.log(`axe-core — ${slugs.length} apps × light + dark\n`);
+console.log(`axe-core, ${slugs.length} apps × light + dark\n`);
 if (!byRule.size){ console.log('  No violations.'); }
 for (const e of [...byRule.values()].sort((a, b) => (RANK[a.impact] ?? 9) - (RANK[b.impact] ?? 9) || b.apps.size - a.apps.size)){
   console.log(`  ${String(e.impact).padEnd(9)} ${e.id.padEnd(28)} ${String(e.apps.size).padStart(2)} apps, ${String(e.total).padStart(3)} nodes  ${e.help}`);

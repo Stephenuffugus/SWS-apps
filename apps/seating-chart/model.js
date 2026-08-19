@@ -1,9 +1,9 @@
-// Seating chart — pure model logic. No DOM, no storage, no pdf-lib.
+// Seating chart, pure model logic. No DOM, no storage, no pdf-lib.
 // Everything here is data-in/data-out and unit-tested in test/model.test.mjs.
 //
 // The product insight (see 02-local-data-to-pdf.md): seating is a CONSTRAINT
 // problem re-solved a dozen times as RSVPs trickle in. The user declares rules;
-// whenever the data changes we re-validate and SURFACE what broke — we never
+// whenever the data changes we re-validate and SURFACE what broke, we never
 // silently leave a hole.
 
 export function newId() {
@@ -52,7 +52,7 @@ export function splitCsvLine(line) {
    A leading header row ("name,party,...") is skipped. */
 /* The paste cap, named rather than buried in the loop. A wedding planner who
    pastes 1,200 rows and is told "1000 guests added" has lost 200 people and
-   been congratulated for it — and "the cap is discovered, never disclosed" is
+   been congratulated for it, and "the cap is discovered, never disclosed" is
    the exact betrayal the competitor research names as this category's
    signature. If we cap, we say so. */
 export const MAX_PASTE = 1000;
@@ -179,7 +179,7 @@ export function validate(project) {
 }
 
 /* Would placing guestId at tableId introduce any NEW violation? (Clearing an
-   old violation never licenses creating a different one — comparing counts
+   old violation never licenses creating a different one, comparing counts
    would let a stale-assignment fix overfill a table.) */
 export function placementOk(project, guestId, tableId) {
   const key = (v) => v.kind + '|' + (v.tableId || '') + '|' + (v.guestIds || []).slice().sort().join(',');
@@ -226,7 +226,7 @@ export function autoArrange(project) {
     g.size++;
   }
   // merge: when a rule/party spans members of DIFFERENT existing groups,
-  // union them — otherwise "A+B", "C+D", then "B+C" leaves B and C split
+  // union them, otherwise "A+B", "C+D", then "B+C" leaves B and C split
   function mergeInto(target, other) {
     if (target === other) return;
     for (const id of other.ids) { groupOf[id] = target; target.ids.push(id); target.size++; }
@@ -289,7 +289,7 @@ export function autoArrange(project) {
       }
     }
     if (!placedAny) {
-      // no single table fits the whole group — split it across the emptiest tables
+      // no single table fits the whole group, split it across the emptiest tables
       for (const id of remaining) {
         const best = [...tables].sort((a, b) => seatsLeft[b.id] - seatsLeft[a.id])
           .find(t => seatsLeft[t.id] > 0 && !tableHasAvoided(t.id, [id], assignments));
@@ -320,7 +320,7 @@ export function mealSummary(project) {
   for (const t of project.tables) {
     countGroup(t, (occ[t.id] || []).filter(g => g.rsvp !== 'no'));
   }
-  // The kitchen cooks for everyone attending — unseated stragglers included.
+  // The kitchen cooks for everyone attending, unseated stragglers included.
   // Dropping them would make the caterer's sheet quietly undercount meals.
   const unseated = unassignedGuests(project);
   if (unseated.length) countGroup({ id: '', label: 'Not yet seated' }, unseated);

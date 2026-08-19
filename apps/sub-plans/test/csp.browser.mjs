@@ -1,12 +1,11 @@
-/* Sub Plans ships the strictest Content-Security-Policy in the portfolio —
- * `script-src 'self'`, no unsafe-inline — and that is the point of it. This
+/* Sub Plans ships the strictest Content-Security-Policy in the portfolio, * `script-src 'self'`, no unsafe-inline, and that is the point of it. This
  * test serves the app under its REAL production CSP, read out of
  * firebase.json rather than copied here, and asserts the page still works.
  *
  * It exists because it already caught one: the shared backup runtime was
  * wired by a small inline <script> per app, which this CSP silently blocked.
  * Nothing threw. The backup card rendered its heading and its paragraph and
- * simply had no buttons — the worst possible way for a backup feature to
+ * simply had no buttons, the worst possible way for a backup feature to
  * fail, since it looks finished and does nothing. The config now travels on
  * data attributes and sws-backup.js wires itself.
  *
@@ -80,7 +79,7 @@ const buttons = await page.evaluate(() => {
   const h = document.getElementById('backupControls');
   return h ? [...h.querySelectorAll('button')].map(b => b.textContent.trim()) : null;
 });
-check('the backup controls actually wired — the regression',
+check('the backup controls actually wired, the regression',
   Array.isArray(buttons) && buttons.length === 2, buttons);
 
 check('the shared runtime loaded', await page.evaluate(() => !!(window.SWS && window.SWS.backup)));

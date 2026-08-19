@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — colour engine
+   SWS STUDIO, colour engine
 
    Every colour in the portfolio is specified in OKLCH and compiled to hex.
    Two reasons that matters more than it sounds:
@@ -11,7 +11,7 @@
 
    2. It lets the build ASSERT contrast rather than hope for it. Every derived
       token is checked against WCAG 2.1, and anything that misses is nudged
-      along the L axis until it passes — so a palette cannot ship broken.
+      along the L axis until it passes, so a palette cannot ship broken.
 
    Output is plain hex, so nothing depends on browser oklch() support.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -26,7 +26,7 @@ function srgbToLinear(x){
   return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
 }
 
-/** OKLCH (L 0–1, C 0–0.4, H degrees) → [r,g,b] in 0–1 gamma sRGB, unclamped. */
+/** OKLCH (L 0 to 1, C 0 to 0.4, H degrees) → [r,g,b] in 0 to 1 gamma sRGB, unclamped. */
 function oklchToRgbRaw(L, C, H){
   const h = (H * Math.PI) / 180;
   const a = C * Math.cos(h);
@@ -78,7 +78,7 @@ export function relativeLuminance(hex){
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** WCAG 2.1 contrast ratio, 1–21. */
+/** WCAG 2.1 contrast ratio, 1 to 21. */
 export function contrast(a, b){
   const la = relativeLuminance(a), lb = relativeLuminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
@@ -89,7 +89,7 @@ export function contrast(a, b){
  * contrast against `against`. Walks away from the background, so text on a
  * light page darkens and text on a dark page lightens.
  *
- * Returns { L, hex, ok } — ok:false means even pure black/white missed, which
+ * Returns { L, hex, ok }, ok:false means even pure black/white missed, which
  * only happens for a mid-grey background and is worth failing the build over.
  */
 export function solveForContrast({ startL, C, H, against, target, direction }){
@@ -107,7 +107,7 @@ export function solveForContrast({ startL, C, H, against, target, direction }){
 /**
  * hex → OKLCH. The inverse trip, used to re-hue existing artwork.
  *
- * The app icons were drawn with the old palette baked in — a background tile
+ * The app icons were drawn with the old palette baked in, a background tile
  * plus glyph details tinted from that same accent. Decomposing each colour and
  * swapping ONLY the hue keeps the artwork's internal light/dark relationships
  * exactly as the illustrator set them, while moving the whole icon onto the
@@ -151,7 +151,7 @@ export function maxChromaAt(L, H){
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
-/** rgba() string from an OKLCH colour — used for tinted shadows and veils. */
+/** rgba() string from an OKLCH colour, used for tinted shadows and veils. */
 export function oklchA(L, C, H, alpha){
   const [r, g, b] = hexToRgb(oklch(L, C, H)).map((c) => Math.round(c * 255));
   return `rgba(${r},${g},${b},${alpha})`;

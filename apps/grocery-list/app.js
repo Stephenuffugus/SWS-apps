@@ -1,4 +1,4 @@
-// Grocery List — Engine 1 skin. One live list per household; items are entries,
+// Grocery List, Engine 1 skin. One live list per household; items are entries,
 // the done-checkbox is open to every link-holder (rules-enforced).
 import { normalizeCode, shareUrl } from './helpers.js';
 import * as D from './data.js';
@@ -66,7 +66,7 @@ function boardTrust() {
       el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
       el('span', {},
         el('b', {}, 'What leaves this phone: the item names, so the rest of the household sees them.'),
-        ' Nothing else — no contacts, no location, no account for the people you share with. ' +
+        ' Nothing else, no contacts, no location, no account for the people you share with. ' +
         'Your copy is kept on this phone too, so the list still opens in aisle 12 with no signal, ' +
         'and no brand can pay to put anything on it.')));
 }
@@ -77,8 +77,8 @@ async function copyText(text, okMsg) {
 }
 function friendly(e) {
   const code = (e && (e.code || e.message)) || '';
-  if (String(code).includes('permission-denied')) return 'That didn’t save — the list may be locked, or it has used all 500 of its lifetime item slots.';
-  if (String(code).includes('unavailable')) return 'You look offline — it will sync when you reconnect.';
+  if (String(code).includes('permission-denied')) return 'That didn’t save, the list may be locked, or it has used all 500 of its lifetime item slots.';
+  if (String(code).includes('unavailable')) return 'You look offline, it will sync when you reconnect.';
   return 'Something went wrong. Try again?';
 }
 /* Distinguishing "no signal" from "no such list" is the whole point of fix #4:
@@ -112,7 +112,7 @@ function commit(promise, ms) {
 
 let user = null;
 let itemDraft = '';
-let addError = '';      // inline, under the add row — a toast is under the keyboard
+let addError = '';      // inline, under the add row, a toast is under the keyboard
 let addBusy = false;    // one paste-a-blob run at a time
 const inFlight = new Set(); // normalized names being written right now
 let flashId = null;     // the row a duplicate add pointed at
@@ -165,14 +165,14 @@ function baseUrl() {
 }
 
 /* ---------- home ---------- */
-// Participants see an invitation instead of the standard colophon — every
+// Participants see an invitation instead of the standard colophon, every
 // shared board doubles as the product's own ad. Owners and home keep the default.
 function setGrowthFooter(participant) {
   const o = document.getElementById('orgLine');
   if (!o) return;
   if (!o.dataset.home) o.dataset.home = o.innerHTML;
   o.innerHTML = participant
-    ? 'Made with <a href="./">Grocery List</a> — free, no ads. <a href="./">Start yours</a>'
+    ? 'Made with <a href="./">Grocery List</a>, free, no ads. <a href="./">Start yours</a>'
     : o.dataset.home;
 }
 
@@ -183,7 +183,7 @@ async function renderHome() {
   v.replaceChildren();
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'The list is always in your pocket'),
-    el('p', {}, 'Add from the couch, check off at the store — live for the whole household from one link. ',
+    el('p', {}, 'Add from the couch, check off at the store, live for the whole household from one link. ',
       el('strong', {}, 'No app installs for family, no accounts, no ads.')),
     el('button', { class: 'btn primary big', type: 'button', onclick: startCreate }, 'Start our list'),
     trustNote('Only the person who starts the list signs in.')));
@@ -212,7 +212,7 @@ async function renderHome() {
     try {
       const boards = (await D.myBoards(user.uid)).filter(b => b.skin === 'grocery');
       sec.lastChild.remove();
-      if (boards.length === 0) sec.append(el('p', { class: 'sub', text: 'No lists yet — most households only ever need one.' }));
+      if (boards.length === 0) sec.append(el('p', { class: 'sub', text: 'No lists yet, most households only ever need one.' }));
       for (const b of boards) {
         ul.append(el('li', {},
           el('span', { class: 'grow' }, b.title),
@@ -231,7 +231,7 @@ async function createList() {
   try {
     const { code } = await D.createBoard({ title: 'Groceries', description: '' });
     location.hash = '#/b/' + code;
-    toast('List ready — share the link with the household');
+    toast('List ready, share the link with the household');
   } catch (e) { toast(friendly(e), 5000); }
 }
 
@@ -241,7 +241,7 @@ function connCard(v, code, e) {
   v.replaceChildren(el('section', { class: 'card' },
     el('h2', { class: 'lead' }, offline ? 'You look offline' : 'Couldn’t open the list'),
     el('p', { class: 'warn' }, offline
-      ? 'No signal here — that happens in aisle 12. This list opens as soon as you have one, and nothing anybody has already added is lost.'
+      ? 'No signal here, that happens in aisle 12. This list opens as soon as you have one, and nothing anybody has already added is lost.'
       : 'Something got in the way of loading this list. Nothing has been lost; try again in a moment.'),
     el('div', { class: 'row listfoot' },
       el('button', { class: 'btn primary', type: 'button',
@@ -271,7 +271,7 @@ async function renderBoard(code) {
     catch (e) { connCard(v, code, e); return; }
 
     // resolveCode used to be `.catch(() => null)`, which turned every network
-    // failure into "that list does not exist" — the worst possible answer for
+    // failure into "that list does not exist", the worst possible answer for
     // a category whose defining environment is a supermarket dead zone.
     let boardId = null;
     try { boardId = await D.resolveCode(code); }
@@ -320,9 +320,9 @@ function flash(id) {
  * Add one item. Returns { state:'ok'|'dup'|'error', err }.
  *
  * Never loses what was typed: the caller frees the box immediately so the next
- * item can be typed without waiting on a network, and every rejection — the
+ * item can be typed without waiting on a network, and every rejection, the
  * fast one and the one that only arrives when the queued write reaches the
- * server — hands the exact text back through lateFailure().
+ * server, hands the exact text back through lateFailure().
  */
 async function addOne(body, quiet) {
   const key = normName(body);
@@ -330,10 +330,10 @@ async function addOne(body, quiet) {
   if (dup) {
     flash(dup.id);
     if (dup.done) {
-      // Already bought, needed again — put it back rather than making a twin.
+      // Already bought, needed again, put it back rather than making a twin.
       try { await D.toggleDone(live.boardId, dup.id, false); }
       catch (e) { return { state: 'error', err: e }; }
-      if (!quiet) toast('“' + dup.body + '” was in the cart — back on the list');
+      if (!quiet) toast('“' + dup.body + '” was in the cart, back on the list');
     } else if (!quiet) {
       toast('“' + dup.body + '” is already on the list');
     }
@@ -354,7 +354,7 @@ async function addOne(body, quiet) {
 /* A rejected write used to cost the user their typing and return a message
    naming none of the causes. The text comes back into the box if the box is
    free, and is quoted in the error if the user has already started the next
-   item — either way it is still on screen and still recoverable. */
+   item, either way it is still on screen and still recoverable. */
 function lateFailure(body, e) {
   const i = addInput();
   const boxFree = !!i && !i.value.trim();
@@ -375,7 +375,7 @@ function submitAdd() {
   const body = input.value.trim();
   if (!body) return;
   const key = normName(body);
-  // Three synchronous taps on Add are one item, not three — and two devices
+  // Three synchronous taps on Add are one item, not three, and two devices
   // racing the same word cannot make a twin either.
   if (inFlight.has(key)) return;
   inFlight.add(key);
@@ -390,7 +390,7 @@ function submitAdd() {
   }, (e) => { inFlight.delete(key); lateFailure(body, e); });
 }
 
-/* Paste a recipe's ingredient block and it becomes items, one per line — the
+/* Paste a recipe's ingredient block and it becomes items, one per line, the
    reliable answer to the flaky voice-assistant complaint in the research. */
 function onPaste(ev) {
   const dt = ev.clipboardData || window.clipboardData;
@@ -470,9 +470,9 @@ async function clearChecked(doneList) {
 /* ---------- naming the list ---------- */
 /* Tomasz could not tell whether the link he had been sent was his household's
    list or a stranger's, because nothing on the page named it. The name is on
-   the board, the print and the share text now — and the one person who can
+   the board, the print and the share text now, and the one person who can
    change it is the one the rules let: firestore.rules allows the owner to touch
-   `title` and holds it to 1–100 characters, so those are the only limits here.
+   `title` and holds it to 1 to 100 characters, so those are the only limits here.
    No new field, no migration; every board already has a title. */
 function focusKey(k) {
   const n = document.querySelector('#view [data-fkey="' + k + '"]');
@@ -564,7 +564,7 @@ function drawBoard() {
   const v = $('view');
 
   // A snapshot from anyone in the household rebuilds this whole subtree, so
-  // remember where the keyboard was — and the caret inside it — and put both
+  // remember where the keyboard was, and the caret inside it, and put both
   // back afterwards. The add field carries data-fkey like every other control.
   const active = document.activeElement;
   const keepFocus = active && active.dataset ? active.dataset.fkey : null;
@@ -582,7 +582,7 @@ function drawBoard() {
 
   /* ONE list, ONE stable order, for every row whatever its state.
      Checking something used to move its row to the bottom and slide everything
-     below it up 61px — under a thumb that was already descending on the next
+     below it up 61px, under a thumb that was already descending on the next
      item. Nothing re-sorts here any more: a checked row goes grey and struck
      through exactly where it has always been. */
   const at = (e) => (e.createdAt && e.createdAt.toMillis) ? e.createdAt.toMillis() : Number.MAX_SAFE_INTEGER;
@@ -596,7 +596,7 @@ function drawBoard() {
   v.append(el('p', { class: 'printonly printhead' },
     'Share code ' + (live.code || '') + ' · printed ' + new Date().toLocaleDateString()));
 
-  // add box first — it's the most-used control
+  // add box first, it's the most-used control
   const input = el('input', {
     type: 'text', maxlength: '120', placeholder: 'Add something… “milk”, “the good coffee”',
     'aria-label': 'Add an item to the list',
@@ -616,7 +616,7 @@ function drawBoard() {
   addCard.append(el('div', { class: 'addfoot' },
     el('span', { 'data-saved-flag': '' }),
     navigator.onLine === false
-      ? el('span', { class: 'netpill' }, 'Offline — kept on this phone, syncs when you have signal')
+      ? el('span', { class: 'netpill' }, 'Offline, kept on this phone, syncs when you have signal')
       : null));
   v.append(addCard);
 
@@ -650,21 +650,21 @@ function drawBoard() {
     listCard.append(el('div', { class: 'empty' },
       el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🧺'),
       el('h3', {}, 'Nothing here yet'),
-      el('p', {}, 'Type the first thing in the box above. It lands on everyone’s phone straight away — ' +
+      el('p', {}, 'Type the first thing in the box above. It lands on everyone’s phone straight away, ' +
         'and it keeps working in the aisle where your signal does not.'),
       own ? el('button', { class: 'btn noprint', type: 'button',
-        onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') },
+        onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied, text it once, done forever') },
         'Copy the link to share') : null));
   }
   listCard.append(ul);
 
   /* Everything that changes as items get ticked off lives BELOW the rows.
-     Anything above them — a count, a banner, a hint — would push the whole
+     Anything above them, a count, a banner, a hint, would push the whole
      list down the instant the first box was ticked, which is the same defect
      wearing a different hat. */
   if (done.length) listCard.append(el('p', { class: 'sub incart' },
     done.length + (done.length === 1 ? ' item in the cart' : ' items in the cart') +
-    ' — ticked off, still listed where you left it.'));
+    ', ticked off, still listed where you left it.'));
 
   const foot = el('div', { class: 'listfoot row noprint' });
   if (done.length && own) {
@@ -686,7 +686,7 @@ function drawBoard() {
   // every control he might tidy up with, and said nothing about why.
   if (done.length && !own) {
     listCard.append(el('p', { class: 'hint listfoot' },
-      'Anything you added, you can remove. Emptying the cart is the job of whoever started the list — ' +
+      'Anything you added, you can remove. Emptying the cart is the job of whoever started the list, ' +
       'untick something if you put it back on the shelf.'));
   }
   const used = typeof b.entryCount === 'number' ? b.entryCount : null;
@@ -705,11 +705,11 @@ function drawBoard() {
     el('div', { class: 'row' },
       // Add stays the board's only primary; inside the panel these are peers.
       el('button', { class: 'btn', type: 'button',
-        onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied — text it once, done forever') }, 'Copy link'),
+        onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Link copied, text it once, done forever') }, 'Copy link'),
       el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
       // For the household member who will never open a link.
       el('button', { class: 'btn', type: 'button',
-        onclick: () => copyText(listAsText(b, items), 'List copied as text — paste it into the family chat') },
+        onclick: () => copyText(listAsText(b, items), 'List copied as text, paste it into the family chat') },
         'Copy as text')),
     trustNote('Whoever you send this to just opens it.'));
   if (own) inner.append(el('div', { class: 'row listfoot' },
@@ -799,7 +799,7 @@ function wire() {
   // Connectivity was invisible: no listener anywhere, and the only signal the
   // app ever gave was an error toast. Now the state is on screen, and coming
   // back online retries a list that failed to open in the dead zone.
-  window.addEventListener('online', () => { toast('Back online — syncing'); render(); });
+  window.addEventListener('online', () => { toast('Back online, syncing'); render(); });
   window.addEventListener('offline', () => { drawBoard(); });
 }
 
@@ -822,7 +822,7 @@ async function init() {
     t.classList.remove('hidden');
   }
   try { await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:')); }
-  catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
+  catch (e) { toast('That sign-in link didn’t work, request a fresh one.', 6000); }
   try { await D.completeRedirect(); }
   catch (e) { toast('Google sign-in didn’t complete (' + ((e && e.code) || '?') + ')', 6000); }
   D.onAuth((u) => { user = u; refreshAuthBtn(); render(); });

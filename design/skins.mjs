@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the 23 skins
+   SWS STUDIO, the 23 skins
 
    Every app is one row here. The row is small on purpose: if identity needed
    fifty knobs, the apps would drift apart and stop looking like one studio.
@@ -7,7 +7,7 @@
    Five axes carry all the variation:
 
      hue      where the app sits on the colour wheel
-     chroma   how saturated it is — a muted app and a vivid app 15° apart
+     chroma   how saturated it is, a muted app and a vivid app 15° apart
               still read as different products
      paper    'warm' pulls the page toward cream regardless of accent hue, so
               the app feels like stationery; 'cool' tints the page with its own
@@ -18,12 +18,12 @@
               is genuinely the right answer)
      texture  one background signature from a fixed vocabulary
 
-   Hue crowding is unavoidable at 23 apps — the wheel only has 360°. Where two
+   Hue crowding is unavoidable at 23 apps, the wheel only has 360°. Where two
    sit close, they are pushed apart on the other four axes instead, and apps
    from the same hub category are always far apart on hue.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/** Hue used for "warm paper" canvases — the cream of good stationery. */
+/** Hue used for "warm paper" canvases, the cream of good stationery. */
 export const PAPER_HUE = 78;
 
 export const SKINS = {
@@ -34,14 +34,14 @@ export const SKINS = {
     r: 14, wrap: '66rem', support: 190,
     // Terracotta on cream. This app already had a real identity and teachers
     // responded to it; the system inherits it rather than overwriting it.
-    note: 'terracotta on cream — the app the whole design language was reverse-engineered from',
+    note: 'terracotta on cream, the app the whole design language was reverse-engineered from',
   },
 
   'sub-plans': {
     hue: 174, chroma: 0.095, paper: 'warm', voice: 'editorial', texture: 'rule',
     r: 12, wrap: '48rem', support: 38,
     extra: { 'line-strong': { role: 'line', l: 0.62, c: 0.02, dl: 0.52 } },
-    note: 'muted pine on cream — a binder left on a desk for someone else to pick up',
+    note: 'muted pine on cream, a binder left on a desk for someone else to pick up',
   },
 
   'grade-sheet': {
@@ -52,10 +52,10 @@ export const SKINS = {
     // front of children and opened in front of principals, and something
     // saturated holding other people's children's marks reads wrong.
     // `support` is pinned to honey rather than the default complement, which
-    // for hue 226 would compute to ~16 — a red. Red must never turn up as
+    // for hue 226 would compute to ~16, a red. Red must never turn up as
     // ambient decoration on a screen full of grades; --neg is solved
     // separately and is what carries the Missing marker.
-    note: 'deep blue-black ink on cream ledger paper — quiet enough to project, adult enough for a principal',
+    note: 'deep blue-black ink on cream ledger paper, quiet enough to project, adult enough for a principal',
   },
 
   /* ── Family & Home ────────────────────────────────────────────────────── */
@@ -63,7 +63,7 @@ export const SKINS = {
   'sitter-sheet': {
     hue: 86, chroma: 0.12, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 16, wrap: '44rem',  support: 12,
-    note: 'honey on cream — you are handing a stranger your house and your kids; warmth is the job',
+    note: 'honey on cream, you are handing a stranger your house and your kids; warmth is the job',
   },
 
   'baby-log': {
@@ -74,7 +74,7 @@ export const SKINS = {
     darkCanvasL: 0.155,
     scale: 1.06,
     // These three are button fills, and the audit found the old sleep button
-    // shipped white-on-#60a5fa in the dark (2.54:1) — unreadable in exactly
+    // shipped white-on-#60a5fa in the dark (2.54:1), unreadable in exactly
     // the condition the app exists for. role:'fill' makes the build emit a
     // contrast-solved --<name>-ink to sit on each one.
     extra: {
@@ -82,7 +82,7 @@ export const SKINS = {
       sleep:  { role: 'fill', l: 0.52, c: 0.12, h: 262, dl: 0.72 },
       diaper: { role: 'fill', l: 0.52, c: 0.11, h: 62,  dl: 0.72 },
     },
-    note: 'twilight violet — the only light in the room at 3am should not be a white screen',
+    note: 'twilight violet, the only light in the room at 3am should not be a white screen',
   },
 
   'pill-schedule': {
@@ -91,11 +91,10 @@ export const SKINS = {
     // Research is blunt about this category: an older-adult test panel rejected
     // 17 of the medication apps they tried, and the quoted complaint is "teeny
     // tiny icons not suitable for the eyes of an older adult". Legibility beats
-    // personality here by a wide margin, so the whole scale runs up 14% —
-    // roughly 18px body — and the app should ship a real type-size control on
+    // personality here by a wide margin, so the whole scale runs up 14%, // roughly 18px body, and the app should ship a real type-size control on
     // top of that rather than shrugging at browser zoom.
     scale: 1.14,
-    note: 'clear blue, crisp corners — reads like a chart because it becomes one',
+    note: 'clear blue, crisp corners, reads like a chart because it becomes one',
   },
 
   'caregiver-log': {
@@ -104,7 +103,7 @@ export const SKINS = {
     // Deliberately the least colourful app in the portfolio. Families use this
     // while someone they love is declining; cheerfulness would be an insult.
     extra: { mine: { role: 'tint', l: 0.94, c: 0.02, dl: 0.30 } },
-    note: 'near-neutral slate on linen — quiet on purpose',
+    note: 'near-neutral slate on linen, quiet on purpose',
   },
 
   'grocery-list': {
@@ -112,7 +111,7 @@ export const SKINS = {
     r: 16, wrap: '38rem',
     // Used standing in an aisle holding something in the other hand.
     scale: 1.06,
-    note: 'grass green, generous targets — a list you can hit while holding a melon',
+    note: 'grass green, generous targets, a list you can hit while holding a melon',
   },
 
   /* ── Events & Groups ──────────────────────────────────────────────────── */
@@ -121,38 +120,38 @@ export const SKINS = {
     hue: 58, chroma: 0.155, paper: 'warm', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 200,
     extra: { mine: { role: 'tint', l: 0.93, c: 0.045, dl: 0.32 } },
-    note: 'marigold — the flagship; an open invitation, not a form to fill in',
+    note: 'marigold, the flagship; an open invitation, not a form to fill in',
   },
 
   'team-parent': {
     hue: 258, chroma: 0.15, paper: 'cool', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 58,
     extra: { mine: { role: 'tint', l: 0.93, c: 0.045, dl: 0.32 } },
-    note: 'royal blue with a marigold band — team colours without picking a team',
+    note: 'royal blue with a marigold band, team colours without picking a team',
   },
 
   'secret-santa': {
     hue: 8, chroma: 0.145, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 14, wrap: '42rem', support: 152,
     extra: { pine: { role: 'fill', l: 0.44, c: 0.10, h: 152, dl: 0.72 } },
-    note: 'cranberry and pine on paper — christmas without the tinsel gradient',
+    note: 'cranberry and pine on paper, christmas without the tinsel gradient',
   },
 
   'wedding-timeline': {
     hue: 336, chroma: 0.085, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 18, wrap: '46rem', support: 86,
-    note: 'dusty rose on cream — the invitation-suite register, not the bridal-app register',
+    note: 'dusty rose on cream, the invitation-suite register, not the bridal-app register',
   },
 
   'seating-chart': {
     hue: 310, chroma: 0.115, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 14, wrap: '64rem', support: 174,
     extra: { sel: { role: 'tint', l: 0.93, c: 0.05, dl: 0.32 } },
-    note: 'plum on cream — deeper and more formal than the wedding timeline it sits beside',
+    note: 'plum on cream, deeper and more formal than the wedding timeline it sits beside',
   },
 
   'bracket-maker': {
-    // Was hue 104, which is where yellow has already turned toward green — it
+    // Was hue 104, which is where yellow has already turned toward green, it
     // read olive rather than trophy, and had done since the palette landed.
     // 86 is the yellow-gold band, and `fill: bright` keeps the button a
     // saturated gold with dark ink on it instead of dragging the hue down to
@@ -161,13 +160,13 @@ export const SKINS = {
     fill: 'bright',
     r: 8, wrap: '64rem',
     extra: { win: { role: 'fill', l: 0.48, c: 0.12, h: 152, dl: 0.72 } },
-    note: 'trophy gold, hard corners — a bracket is a diagram, so it should look drawn',
+    note: 'trophy gold, hard corners, a bracket is a diagram, so it should look drawn',
   },
 
   'wheel-picker': {
     hue: 350, chroma: 0.175, paper: 'cool', voice: 'technical', texture: 'wash',
     r: 22, wrap: '38rem', support: 58,
-    note: 'hot magenta, very round — the one app in the portfolio allowed to be loud',
+    note: 'hot magenta, very round, the one app in the portfolio allowed to be loud',
   },
 
   /* ── Paper & Files ────────────────────────────────────────────────────── */
@@ -175,29 +174,29 @@ export const SKINS = {
   'scan-to-pdf': {
     hue: 202, chroma: 0.12, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 10, wrap: '44rem',
-    note: 'scanner cyan on a faint grid — looks like a device, which is the promise',
+    note: 'scanner cyan on a faint grid, looks like a device, which is the promise',
   },
 
   'pdf-tools': {
     hue: 276, chroma: 0.135, paper: 'cool', voice: 'technical', texture: 'none',
     r: 10, wrap: '48rem',
-    note: 'indigo, crisp — a workbench, no decoration',
+    note: 'indigo, crisp, a workbench, no decoration',
   },
 
   'image-compressor': {
     /* Was magenta at chroma 0.145 behind a `wash` texture. The research called
        it and the review agent agreed: this is the one app whose entire job is
        judging whether a photograph still looks right, and a saturated coloured
-       wash behind the photograph corrupts exactly that judgement — simultaneous
+       wash behind the photograph corrupts exactly that judgement, simultaneous
        contrast shifts the apparent colour of anything sitting on it.
 
        Cool graphite at very low chroma instead. It stays distinct in the
        portfolio by VALUE and NEUTRALITY rather than hue, which is the correct
        axis here: no other app is this desaturated. Texture off for the same
-       reason — a photo needs a plain ground. */
+       reason, a photo needs a plain ground. */
     hue: 258, chroma: 0.038, paper: 'cool', voice: 'technical', texture: 'none',
     r: 12, wrap: '44rem', support: 158,
-    note: 'cool graphite, no texture — a photo can only be judged against a neutral ground',
+    note: 'cool graphite, no texture, a photo can only be judged against a neutral ground',
   },
 
   'signature-maker': {
@@ -205,13 +204,13 @@ export const SKINS = {
     r: 12, wrap: '40rem',
     // Almost achromatic on purpose. The app is ink on paper; anything else
     // competes with the thing the user is drawing.
-    note: 'blue-black ink on laid paper — restraint is the identity here',
+    note: 'blue-black ink on laid paper, restraint is the identity here',
   },
 
   'qr-maker': {
     hue: 142, chroma: 0.13, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 8, wrap: '40rem',
-    note: 'signal green on a module grid — the page echoes the thing it makes',
+    note: 'signal green on a module grid, the page echoes the thing it makes',
   },
 
   /* ── Moving & Travel ──────────────────────────────────────────────────── */
@@ -225,14 +224,14 @@ export const SKINS = {
   'packing-list': {
     hue: 188, chroma: 0.12, paper: 'cool', voice: 'plain', texture: 'none',
     r: 16, wrap: '38rem',
-    note: 'travel teal — checked off at 6am in an airport with one hand',
+    note: 'travel teal, checked off at 6am in an airport with one hand',
   },
 
   'home-inventory': {
     hue: 124, chroma: 0.085, paper: 'warm', voice: 'technical', texture: 'grid',
     r: 10, wrap: '52rem', support: 38,
     // Opened either in dull anticipation of a disaster or in the middle of one.
-    note: 'olive-green ledger — this is a record, and it should look like evidence',
+    note: 'olive-green ledger, this is a record, and it should look like evidence',
   },
 
   /* ── Money ────────────────────────────────────────────────────────────── */
@@ -240,12 +239,12 @@ export const SKINS = {
   'bill-splitter': {
     hue: 218, chroma: 0.10, paper: 'cool', voice: 'technical', texture: 'none',
     r: 12, wrap: '44rem', support: 152,
-    note: 'steady slate-blue — money apps earn trust by being boring',
+    note: 'steady slate-blue, money apps earn trust by being boring',
   },
 };
 
 /* ── Typographic voices ─────────────────────────────────────────────────── */
-/* One text face across all 23 (the system stack — it renders instantly, costs
+/* One text face across all 23 (the system stack, it renders instantly, costs
    nothing, and is the through-line). Only the DISPLAY face changes, and only
    three exist, because a studio with 23 typefaces is not a studio. */
 
@@ -301,14 +300,14 @@ export const TEXTURES = {
     `radial-gradient(70rem 40rem at 8% -10%, ${a}, transparent 60%),` +
     `radial-gradient(60rem 36rem at 96% 2%, ${b}, transparent 55%)`,
 
-  /** Faint graph paper — for tools that produce a diagram or a record.
+  /** Faint graph paper, for tools that produce a diagram or a record.
       Must be translucent, not a solid hairline: at full --line strength the
       page reads as squared maths paper and competes with the content. */
   grid: ({ rule }) =>
     `linear-gradient(${rule} 1px, transparent 1px),` +
     `linear-gradient(90deg, ${rule} 1px, transparent 1px)`,
 
-  /** Paper tooth. An SVG turbulence tile, painted almost invisibly — at
+  /** Paper tooth. An SVG turbulence tile, painted almost invisibly, at
       anything above about 4% this stops reading as paper and starts reading
       as a broken screen. */
   grain: ({ dark }) => {

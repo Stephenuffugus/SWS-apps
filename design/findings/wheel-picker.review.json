@@ -10,7 +10,7 @@
         "verdict": "She got spins out of it, but she did not finish the job as she meant to. She typed 28 names live in front of the class because there is nowhere to keep a roster, the names on the wheel were unreadable from the second row, the winner appeared in 24px text on a 1280px screen, and the elimination run dead-ended with one child left whom the app refused to pick. She would use it once and go back to popsicle sticks, which is exactly the competitor the research names as the real one.",
         "frictions": [
           {
-            "what": "Nowhere to save a class list. storage() returns 0 bytes — the app writes nothing to localStorage. State lives only in the URL hash (index.html loads it once at app.js:148). To reuse tomorrow's roster she must bookmark a link and find it again.",
+            "what": "Nowhere to save a class list. storage() returns 0 bytes, the app writes nothing to localStorage. State lives only in the URL hash (index.html loads it once at app.js:148). To reuse tomorrow's roster she must bookmark a link and find it again.",
             "severity": "blocker",
             "whyItMatters": "The research lists 'multiple named wheels that persist' as table stakes and quotes a reviewer who quit after their wheels disappeared. Maren has five sections; she gets zero. Typing 28 names in front of a class is the single documented moment a teacher closes the tab."
           },
@@ -20,17 +20,17 @@
             "whyItMatters": "Nobody past the second row can read who is on the wheel, so the wheel stops being the fairness theatre it is for. The research's whole design consequence section is 'contrast tuned for projector washout' and 'legibility at scale'."
           },
           {
-            "what": "The winner reveal is 24px at every viewport — measured 24px at 320px, 414px and 1280px (index.html:1260, #winner{font-size:1.5rem}). At Largest text it reaches 36px and stops.",
+            "what": "The winner reveal is 24px at every viewport, measured 24px at 320px, 414px and 1280px (index.html:1260, #winner{font-size:1.5rem}). At Largest text it reaches 36px and stops.",
             "severity": "blocker",
             "whyItMatters": "The research quotes a reviewer verbatim: 'Why doesn't the name pop up big after spinning... that's what I need, so people see the name pop up.' The stated target is 8-12vw, which is 102-154px at 1280. The app delivers 24px. The winner reveal is the product and it is the smallest thing on the page."
           },
           {
-            "what": "Elimination dead-ends. With 'Remove the winner' on and two names left, one spin removes one — and the next spin refuses with the toast 'Add at least two names' (app.js:78). Verified: 3 names went 3 -> 2 -> 1 and the last child was never picked.",
+            "what": "Elimination dead-ends. With 'Remove the winner' on and two names left, one spin removes one, and the next spin refuses with the toast 'Add at least two names' (app.js:78). Verified: 3 names went 3 -> 2 -> 1 and the last child was never picked.",
             "severity": "blocker",
             "whyItMatters": "The last student is the one who has been waiting the whole time. The app tells the teacher off instead of announcing them, in front of the class. The research calls elimination 'the primary classroom mode', not an edge case."
           },
           {
-            "what": "'Restore removed names' is armed by a variable that any keystroke wipes: the textarea input handler sets removed = [] (app.js:121). Verified — spin with removal on, then type one extra name, then press Restore, and it says 'Nobody has been removed yet'.",
+            "what": "'Restore removed names' is armed by a variable that any keystroke wipes: the textarea input handler sets removed = [] (app.js:121). Verified, spin with removal on, then type one extra name, then press Restore, and it says 'Nobody has been removed yet'.",
             "severity": "major",
             "whyItMatters": "Adding the late arrival is the most ordinary classroom edit there is, and it silently destroys the undo for the whole period. There is no warning."
           },
@@ -40,15 +40,15 @@
             "whyItMatters": "Mid-elimination she cannot tell how many are left without counting textarea lines, and she cannot tell that the list she pasted was silently cut (see Tom)."
           },
           {
-            "what": "Restoring reorders. After removals, Restore does names.concat(removed) (app.js:133), so an alphabetical roster comes back as B|A|C — verified.",
+            "what": "Restoring reorders. After removals, Restore does names.concat(removed) (app.js:133), so an alphabetical roster comes back as B|A|C, verified.",
             "severity": "minor",
             "whyItMatters": "A register is alphabetical for a reason; she now cannot scan it to see who is missing."
           }
         ],
         "delights": [
-          "Zero setup and zero chrome: the SPIN button is on screen at load, full width, 52px tall, with nothing to dismiss first. No cookie banner, no rating nag, no ad — exactly the promise the research says the whole category violates.",
+          "Zero setup and zero chrome: the SPIN button is on screen at load, full width, 52px tall, with nothing to dismiss first. No cookie banner, no rating nag, no ad, exactly the promise the research says the whole category violates.",
           "The removal toggle is on the main screen with plain-language copy ('great for classrooms & raffles'), not buried in settings.",
-          "The wheel and the announced winner genuinely agree. Sampled the canvas pixel directly under the pointer on four spins and it matched the winning slice's colour 4/4 — the pick is honest."
+          "The wheel and the announced winner genuinely agree. Sampled the canvas pixel directly under the pointer on four spins and it matched the winning slice's colour 4/4, the pick is honest."
         ]
       },
       {
@@ -59,7 +59,7 @@
         "verdict": "Usable as a novelty, not as a stream tool. The fixed 4.25-second spin, the absence of any hotkey, the 380px cap and the absence of a result log mean he'd keep the wheel he already has. He specifically noticed there is no receipt to point chat at.",
         "frictions": [
           {
-            "what": "Spin duration is hardcoded at dur = 4200 (app.js:85) with no UI to change it — measured 4252ms wall time, and no /speed|duration|fast/ text exists anywhere in the page.",
+            "what": "Spin duration is hardcoded at dur = 4200 (app.js:85) with no UI to change it, measured 4252ms wall time, and no /speed|duration|fast/ text exists anywhere in the page.",
             "severity": "major",
             "whyItMatters": "The research quotes exactly this: 'it wouldn't be so bad if the spin wasn't so long... it could at least go faster.' Three spins is thirteen seconds of dead air on a live stream."
           },
@@ -69,47 +69,47 @@
             "whyItMatters": "The research documents live 'is this rigged' suspicion (r/AskPC, r/UnethicalLifeProTips) and notes competitors already market 'CSPRNG' and 'provably random'. A visible timestamped log is the differentiator and it is absent."
           },
           {
-            "what": "Randomness is Math.random (app.js:82-83), not crypto.getRandomValues — confirmed by reading the shipped app.js in-page. Distribution itself is fine: 20,000 simulated spins across 10 slices gave 1903-2093 per slice, max deviation 4.9% (~2.3 sigma), no structural bias.",
+            "what": "Randomness is Math.random (app.js:82-83), not crypto.getRandomValues, confirmed by reading the shipped app.js in-page. Distribution itself is fine: 20,000 simulated spins across 10 slices gave 1903-2093 per slice, max deviation 4.9% (~2.3 sigma), no structural bias.",
             "severity": "minor",
             "whyItMatters": "Mechanically honest, rhetorically weak. He cannot answer chat with anything better than 'trust me', when the thing that would answer it is a two-line change."
           },
           {
-            "what": "No keyboard trigger he can use twice. Pressing Space on SPIN disables the button (app.js:80), which throws focus to <body> — verified, activeElement is BODY both during and after the spin. A second Space does nothing.",
+            "what": "No keyboard trigger he can use twice. Pressing Space on SPIN disables the button (app.js:80), which throws focus to <body>, verified, activeElement is BODY both during and after the spin. A second Space does nothing.",
             "severity": "major",
             "whyItMatters": "A hotkey-driven spin is the entire OBS use case. Instead every spin requires re-Tabbing three times from the top of the document."
           },
           {
-            "what": "The hub of the wheel is a hardcoded white disc, ctx.fillStyle = '#ffffff' (app.js:72-73) — sampled rgb(255,255,255) at the centre in dark mode — and the segment palette is six hardcoded hex values (helpers.js:43) with no transparent-background or theme option.",
+            "what": "The hub of the wheel is a hardcoded white disc, ctx.fillStyle = '#ffffff' (app.js:72-73), sampled rgb(255,255,255) at the centre in dark mode, and the segment palette is six hardcoded hex values (helpers.js:43) with no transparent-background or theme option.",
             "severity": "minor",
             "whyItMatters": "A blazing white dot in a dark overlay, and no way to key it out or match his scene palette. The research names the transparent OBS background as a differentiator."
           },
           {
-            "what": "The QR dialog heading is invisible in dark mode: dialog background computed rgb(18,18,18), h3 colour rgb(17,17,17) (index.html:1314, inline style=\"color:#111\") — roughly 1.0:1.",
+            "what": "The QR dialog heading is invisible in dark mode: dialog background computed rgb(18,18,18), h3 colour rgb(17,17,17) (index.html:1314, inline style=\"color:#111\"), roughly 1.0:1.",
             "severity": "minor",
             "whyItMatters": "The dialog looks broken. It is one hardcoded hex that escaped the token system."
           }
         ],
         "delights": [
-          "It really is one file that runs with no account, no login and no platform tie — the exact thing the research says third-party stream wheels lead their marketing with.",
+          "It really is one file that runs with no account, no login and no platform tie, the exact thing the research says third-party stream wheels lead their marketing with.",
           "Service worker installs cleanly (cache wheel-v14, 11 assets) and a reload with the network cut still boots the app. Verified offline. That is the 'never fails mid-stream' promise, delivered."
         ]
       },
       {
         "name": "Priya Raman",
-        "who": "55, PTA fundraising volunteer. Low vision — runs her phone at maximum system text and needs about 200% to read comfortably. Moderate tech confidence. She is the persona the comfort panel exists for.",
+        "who": "55, PTA fundraising volunteer. Low vision, runs her phone at maximum system text and needs about 200% to read comfortably. Moderate tech confidence. She is the persona the comfort panel exists for.",
         "context": "Standing at a raffle table in a school hall, phone in one hand, clipboard in the other, people waiting. Bright hall lighting, one-handed.",
         "task": "Draw six raffle winners from a list of 120 ticket-holder names she has in an email, and read each winner out loud.",
-        "verdict": "The comfort panel did its job on the page and could do nothing about the product. She turned text to Largest and the page obeyed — body 16px -> 24px, winner 24px -> 36px, and the layout held with zero horizontal overflow. But the wheel itself is a canvas the panel cannot touch, so the names she needs to read stayed at 11.9 CSS px. She ended up reading winners off the textarea, not the wheel.",
+        "verdict": "The comfort panel did its job on the page and could do nothing about the product. She turned text to Largest and the page obeyed, body 16px -> 24px, winner 24px -> 36px, and the layout held with zero horizontal overflow. But the wheel itself is a canvas the panel cannot touch, so the names she needs to read stayed at 11.9 CSS px. She ended up reading winners off the textarea, not the wheel.",
         "frictions": [
           {
-            "what": "The comfort panel cannot enlarge the one thing that matters. After setting Largest, measured: body 24px, #winner 36px, SPIN button still 52px tall, canvas still 340px wide, and the on-wheel label size unchanged at 11.9px for a 12-name wheel. The canvas font is computed in app.js:65 from name count only — it never reads the text preference or the root font size.",
+            "what": "The comfort panel cannot enlarge the one thing that matters. After setting Largest, measured: body 24px, #winner 36px, SPIN button still 52px tall, canvas still 340px wide, and the on-wheel label size unchanged at 11.9px for a 12-name wheel. The canvas font is computed in app.js:65 from name count only, it never reads the text preference or the root font size.",
             "severity": "blocker",
             "whyItMatters": "A low-vision user turns text up and the app's central object visibly ignores her. This is the comfort panel failing at its stated purpose in the one app where the content is drawn rather than typeset."
           },
           {
             "what": "Her 120-name list was silently cut to 100. parseNames slices at 100 (helpers.js:5) and truncates each name to 40 characters (helpers.js:6). Verified: 500 pasted names became exactly 100 with no message, no count, no highlight.",
             "severity": "blocker",
-            "whyItMatters": "Twenty ticket-holders who paid were never in the draw and nobody could have known. The research's loudest feature complaint is entry caps ('you can't even put ten options without paying') — this app has an invisible cap of its own."
+            "whyItMatters": "Twenty ticket-holders who paid were never in the draw and nobody could have known. The research's loudest feature complaint is entry caps ('you can't even put ten options without paying'), this app has an invisible cap of its own."
           },
           {
             "what": "The 40-character truncation makes the textarea and the wheel disagree. Verified: 'Bartholomew Fitzgerald-Wellingtonshire III' stays whole in the textarea but is stored and shared as 'Bartholomew Fitzgerald-Wellingtonshire I'.",
@@ -117,14 +117,14 @@
             "whyItMatters": "The list she is reading from and the list being drawn are different lists, and the shared link carries the mangled version."
           },
           {
-            "what": "The 'Remove the winner' checkbox is a 13x20px hit target (index.html:1298) — under the 44px floor on every viewport tested, including at Largest text where it only reaches 13x30.",
+            "what": "The 'Remove the winner' checkbox is a 13x20px hit target (index.html:1298), under the 44px floor on every viewport tested, including at Largest text where it only reaches 13x30.",
             "severity": "minor",
             "whyItMatters": "One-handed, standing, with a clipboard, she has to hit the label text instead. The label does work as a target, which saves it from being major."
           }
         ],
         "delights": [
           "The comfort panel itself is genuinely well built and she noticed. It opens from the header, focus lands on the Close button, there is a live type sample so she can see the effect without closing, Done returns focus to the trigger button, and axe reported zero violations with the panel open.",
-          "Everything held at 320px with Largest text and Roomy spacing simultaneously — overflow() returned 0 in all seven viewport/preference combinations tested. No sideways scroll anywhere.",
+          "Everything held at 320px with Largest text and Roomy spacing simultaneously, overflow() returned 0 in all seven viewport/preference combinations tested. No sideways scroll anywhere.",
           "White-on-fill labels are honestly contrasty: measured 5.02:1 to 7.58:1 against all six segment colours, all passing WCAG AA."
         ]
       },
@@ -138,22 +138,22 @@
           {
             "what": "Focus is destroyed by the main action. $('spinBtn').disabled = true (app.js:80) while the button holds focus, so the browser moves focus to <body>. Verified: activeElement is BODY during the spin and still BODY 4.5 seconds later, when the button has been re-enabled. Pressing Space then does nothing.",
             "severity": "blocker",
-            "whyItMatters": "The core job cannot be repeated by keyboard without re-traversing the whole document each time. For a switch or keyboard user this makes the app effectively single-use per page load. Nothing in axe catches it — axe returned zero violations on load, after interaction, and with the panel open."
+            "whyItMatters": "The core job cannot be repeated by keyboard without re-traversing the whole document each time. For a switch or keyboard user this makes the app effectively single-use per page load. Nothing in axe catches it, axe returned zero violations on load, after interaction, and with the panel open."
           },
           {
             "what": "No skip link. The .skip component is styled at index.html:840 and hidden in the print block at 1196, and <main id=\"main\"> exists at index.html:1280, but no skip element is ever rendered. First Tab lands on the comfort-settings button.",
             "severity": "minor",
-            "whyItMatters": "Small page, so the cost is small — but the component is already paid for and simply not used, and this app is the one where re-Tabbing happens on every spin."
+            "whyItMatters": "Small page, so the cost is small, but the component is already paid for and simply not used, and this app is the one where re-Tabbing happens on every spin."
           },
           {
-            "what": "His 31 names pasted from two class lists came to 120 lines with some blanks and got cut to 100 with no notice (helpers.js:5). Duplicates were kept silently too — 'Sam' four times stays four slices and the DOM contains no 'duplicate' notice.",
+            "what": "His 31 names pasted from two class lists came to 120 lines with some blanks and got cut to 100 with no notice (helpers.js:5). Duplicates were kept silently too, 'Sam' four times stays four slices and the DOM contains no 'duplicate' notice.",
             "severity": "major",
             "whyItMatters": "The research asks specifically for a dedupe with an undoable notice and a live count. A substitute has no way to know the wheel does not match the register."
           },
           {
             "what": "Pasting a shared wheel link into the address bar of an already-open tab does nothing. app.js:148 reads location.hash once at init and there is no hashchange listener. Verified: changing the hash to a Kim/Lee/Max wheel left the textarea showing Ana|Ben.",
             "severity": "major",
-            "whyItMatters": "The app's entire persistence story is 'the wheel lives in the link', and the most obvious way to open a link — pasting it into the tab you already have open — silently fails. After a Back press the URL and the visible wheel disagree outright."
+            "whyItMatters": "The app's entire persistence story is 'the wheel lives in the link', and the most obvious way to open a link, pasting it into the tab you already have open, silently fails. After a Back press the URL and the visible wheel disagree outright."
           }
         ],
         "delights": [
@@ -163,7 +163,7 @@
       },
       {
         "name": "Bea Lindqvist",
-        "who": "68, grandmother, essential tremor in her right hand and a history of vestibular migraine — spinning motion on screen can trigger an episode. Low tech confidence. She has 'reduce motion' switched on at the OS level because she has been told to.",
+        "who": "68, grandmother, essential tremor in her right hand and a history of vestibular migraine, spinning motion on screen can trigger an episode. Low tech confidence. She has 'reduce motion' switched on at the OS level because she has been told to.",
         "context": "iPad on the kitchen table at 320px-equivalent width in Split View, warm evening light, one finger, not in a hurry but easily knocked off target.",
         "task": "Spin a five-item chore wheel with her grandchildren after dinner.",
         "verdict": "It worked and it made her feel unwell. She had 'reduce motion' on at the OS level and Reduced set in the app's own Motion preference, and the wheel still performed a full 4.27-second rotation. She looked away from the screen for the second spin, which rather defeats the point of watching a wheel with your grandchildren.",
@@ -174,12 +174,12 @@
             "whyItMatters": "This is a health issue, not a taste issue, and the research names it as a differentiator: 'Nobody in this category treats a spinning disc as the accessibility problem it is.' The app ships the comfort panel that promises to control motion and then does not honour it in the one component that moves."
           },
           {
-            "what": "No reduced-motion alternative reveal exists at all — there is no non-rotating path to a winner in the code.",
+            "what": "No reduced-motion alternative reveal exists at all, there is no non-rotating path to a winner in the code.",
             "severity": "major",
             "whyItMatters": "Turning motion off cannot mean losing the feature. The research suggests a shuffle-and-settle; there is nothing."
           },
           {
-            "what": "Her tremor made the 13x20px removal checkbox (index.html:1298) a miss every time, and there is no undo for accidentally toggling it — toggling it mid-spin actually changed the outcome. Verified: checking 'Remove the winner' 800ms into a running spin caused that spin's winner to be deleted from the list.",
+            "what": "Her tremor made the 13x20px removal checkbox (index.html:1298) a miss every time, and there is no undo for accidentally toggling it, toggling it mid-spin actually changed the outcome. Verified: checking 'Remove the winner' 800ms into a running spin caused that spin's winner to be deleted from the list.",
             "severity": "major",
             "whyItMatters": "A stray tap during the four seconds when the user is watching the wheel silently deletes a name. The setting should be read when the spin starts, not when it ends."
           },
@@ -191,73 +191,73 @@
         ],
         "delights": [
           "The warm tint and dark theme both looked right to her, and the page background gradient is properly theme-aware.",
-          "Nothing interrupted her. No modal, no prompt, no ad, ever — the research's 'absolute no-interruption rule' is actually kept."
+          "Nothing interrupted her. No modal, no prompt, no ad, ever, the research's 'absolute no-interruption rule' is actually kept."
         ]
       },
       {
         "name": "Aisha Bello",
-        "who": "16, sixth-former running a charity raffle. High phone confidence, expects to share things the way she shares everything — a link in a group chat or a QR on a poster.",
+        "who": "16, sixth-former running a charity raffle. High phone confidence, expects to share things the way she shares everything, a link in a group chat or a QR on a poster.",
         "context": "iPhone at 414px, one thumb, in a noisy common room between lessons. Two minutes before the bell.",
         "task": "Build a 100-name raffle wheel and get it onto a poster as a QR code plus into the year-group chat as a link.",
         "verdict": "Failed at the share step, which is the step this app is built around. The QR simply refused for her real list, with an error toast and no explanation of what to do instead.",
         "frictions": [
           {
-            "what": "'Show QR' fails for real rosters. With 100 realistic-length names the URL reaches 5,788 characters, qrcode() throws, and the app shows the toast 'Could not draw the QR' and never opens the dialog (app.js:162-177). Verified — the QR canvas was left entirely blank.",
+            "what": "'Show QR' fails for real rosters. With 100 realistic-length names the URL reaches 5,788 characters, qrcode() throws, and the app shows the toast 'Could not draw the QR' and never opens the dialog (app.js:162-177). Verified, the QR canvas was left entirely blank.",
             "severity": "blocker",
             "whyItMatters": "The toast names the symptom and not the cause or the cure. She has no idea that shortening the list would fix it, so she concludes the app is broken. Measured URL growth: 4 names = 119 chars, 28 = 528, 60 = 1,083, 100 = 1,777 with short names, 5,788 with 40-char names."
           },
           {
-            "what": "Nothing warns that a link is getting too long to share before she hits the wall — no length indicator, no 'too long for a QR' hint next to the button.",
+            "what": "Nothing warns that a link is getting too long to share before she hits the wall, no length indicator, no 'too long for a QR' hint next to the button.",
             "severity": "major",
             "whyItMatters": "The failure arrives at the last possible moment, in front of an audience, which the research identifies as this category's characteristic failure mode."
           },
           {
             "what": "'Copy link to this wheel' quietly produces a 5.7KB URL. It copies fine, but a URL that long is mangled by several chat clients and cannot go on a poster at all.",
             "severity": "minor",
-            "whyItMatters": "The promise in the hint text at index.html:1305 — 'bookmark your class list, share the chore wheel' — is only true up to a size the app never states."
+            "whyItMatters": "The promise in the hint text at index.html:1305, 'bookmark your class list, share the chore wheel', is only true up to a size the app never states."
           }
         ],
         "delights": [
           "For a small wheel the share flow is genuinely delightful: four names, an 88-character URL, an instant QR, and the dialog closes on Escape with focus returning correctly to the Show QR button.",
-          "She liked that the link is the save file. No account, nothing to sign up for — the exact thing the research says mobile users praise."
+          "She liked that the link is the save file. No account, nothing to sign up for, the exact thing the research says mobile users praise."
         ]
       }
     ],
     "consensus": {
       "worksWell": [
-        "It opens spin-ready with no interruption of any kind — no ad, no rating nag, no cookie banner, no onboarding. Every persona noticed and none of them had anything to dismiss.",
+        "It opens spin-ready with no interruption of any kind, no ad, no rating nag, no cookie banner, no onboarding. Every persona noticed and none of them had anything to dismiss.",
         "The privacy and offline story is real, not marketing: storage() shows 0 bytes written, the service worker caches 11 assets as wheel-v14, and a reload with the network cut boots the full working app.",
         "Layout is genuinely bulletproof. overflow() returned 0 at 320px, 414px, 1280px, at Largest text, at Roomy spacing, at both simultaneously, in dark scheme and at warmth 3 with high contrast. Not one offender in any combination.",
         "Accessibility of the typeset UI is clean: axe found zero WCAG 2.0/2.1/2.2 A and AA violations on load, after a full spin, and with the comfort dialog open.",
         "The pick is honest and provably so. Sampling the canvas pixel under the pointer matched the winning slice's colour on 4/4 spins, and 20,000 simulated spins over 10 slices deviated at most 4.9% (~2.3 sigma) from even.",
         "Input handling is safe and fast. '<script>alert(1)</script>' round-trips as literal text via textContent, whitespace-only lines are dropped, RTL and emoji survive, and pasting 500 names costs 8.2ms in-page with a 2.59ms redraw at 100 names.",
-        "Nothing is lost on reload — the URL hash restores the roster, a half-typed name and the removal toggle — and corrupt input is handled without a single console error across seven malformed-hash cases including 5,000 names and non-base64 garbage.",
+        "Nothing is lost on reload, the URL hash restores the roster, a half-typed name and the removal toggle, and corrupt input is handled without a single console error across seven malformed-hash cases including 5,000 names and non-base64 garbage.",
         "The comfort panel is exemplary as a component: header-mounted, focus to Close on open, live type sample, focus returned to the trigger on Done, and axe-clean."
       ],
       "hurts": [
-        "The comfort panel cannot reach the wheel. Text size, contrast and motion preferences all stop at the edge of the canvas — labels stay 6-15 CSS px, the disc stays 380px, and a 4.27-second rotation runs even with Reduced motion set in the panel AND prefers-reduced-motion at the OS level.",
-        "The winner reveal — which the research calls the product — is 24px at every viewport, 36px at maximum text. On a 1280px projector that is a fifth of the size the category needs.",
+        "The comfort panel cannot reach the wheel. Text size, contrast and motion preferences all stop at the edge of the canvas, labels stay 6-15 CSS px, the disc stays 380px, and a 4.27-second rotation runs even with Reduced motion set in the panel AND prefers-reduced-motion at the OS level.",
+        "The winner reveal, which the research calls the product, is 24px at every viewport, 36px at maximum text. On a 1280px projector that is a fifth of the size the category needs.",
         "There is a hard, silent 100-name cap and a silent 40-character-per-name truncation (helpers.js:5-6). No count, no notice, and the textarea and the wheel end up showing different names.",
         "Keyboard users cannot spin twice. Disabling the focused SPIN button throws focus to <body>, and the second Space press does nothing.",
         "Elimination mode dead-ends: the last remaining person can never be picked, and the app scolds with 'Add at least two names' instead of announcing them.",
         "'Restore removed names' is silently disarmed by any keystroke in the textarea, and restoring reorders the list.",
         "The whole persistence story rests on one URL hash: no named wheels, no export, no import, and pasting a shared link into an already-open tab does nothing because there is no hashchange listener.",
         "Sharing breaks at real scale: 100 names produces a 5.7KB URL and the QR fails with 'Could not draw the QR' and no explanation.",
-        "'🎉 undefined' can reach the winner line — clear the textarea while the wheel is spinning and that is what the class sees.",
+        "'🎉 undefined' can reach the winner line, clear the textarea while the wheel is spinning and that is what the class sees.",
         "The six segment colours are all the same lightness. Adjacent-pair contrast measures 1.04:1 to 1.47:1, so the wheel reads as one mid-tone blur on a washed-out projector and to a red-green colourblind viewer.",
-        "Print produces a full-colour wheel, a SPIN button and a textarea clipped to 104px of the 718px it needs — 4 of 28 names make it onto the paper.",
+        "Print produces a full-colour wheel, a SPIN button and a textarea clipped to 104px of the 718px it needs, 4 of 28 names make it onto the paper.",
         "The QR dialog heading is invisible in dark mode: rgb(17,17,17) on rgb(18,18,18), from one inline hex at index.html:1314."
       ],
       "mostWantedNext": [
         "A presentation mode: chrome gone, wheel filling the screen, winner at 8-12vw, held until dismissed.",
-        "Saved, named wheels with rename/duplicate/delete, plus export and import to a file — the backup story that local-only storage obliges.",
+        "Saved, named wheels with rename/duplicate/delete, plus export and import to a file, the backup story that local-only storage obliges.",
         "Paste-a-spreadsheet import that splits on commas, semicolons and tabs as well as newlines, with a live count and an undoable dedupe notice.",
         "Real elimination: picked names greyed on the wheel rather than deleted, an 'X of 28 left' counter, a final spin that names the last person, and a one-tap 'Reset for next period'.",
-        "An honest reduced-motion path — a shuffle-and-settle reveal with no rotation — plus a spin-speed control.",
+        "An honest reduced-motion path, a shuffle-and-settle reveal with no rotation, plus a spin-speed control.",
         "A session log of results with timestamps, copyable as text: the fairness receipt for chat and for the staffroom.",
         "A spacebar hotkey and a transparent-background option for OBS.",
         "Printable output: a numbered roster and cut-up slips, for the day the projector bulb dies.",
-        "Group/team split ('turn these 28 into 7 groups of 4') — the one feature the research says teachers leave a wheel app to go and find.",
+        "Group/team split ('turn these 28 into 7 groups of 4'), the one feature the research says teachers leave a wheel app to go and find.",
         "The IT-approval sentence at the top of the page, copyable for a district software-request form."
       ]
     }
@@ -266,35 +266,35 @@
     "ranInBrowser": true,
     "scenarios": [
       {
-        "name": "A lot of data — 500 names",
+        "name": "A lot of data, 500 names",
         "method": "withApp('wheel-picker'): page.fill('#names', 500 lines of 'Student N Lastname'), then decode the URL hash to count what actually reached the wheel; separately timed the in-page cost by setting textarea.value and dispatching 'input' inside page.evaluate, and averaged 60 successive redraws at 100 names.",
-        "result": "Exactly 100 of 500 names reached the wheel (helpers.js:5 .slice(0,100)); the other 400 vanished with no message. No count is displayed anywhere — a /\\d+\\s+names?/ regex over document.innerText finds nothing. Performance is excellent: 8.2ms for parse+hash+draw of 500 names, 2.59ms average redraw at 100 names, overflow() still 0.",
+        "result": "Exactly 100 of 500 names reached the wheel (helpers.js:5 .slice(0,100)); the other 400 vanished with no message. No count is displayed anywhere, a /\\d+\\s+names?/ regex over document.innerText finds nothing. Performance is excellent: 8.2ms for parse+hash+draw of 500 names, 2.59ms average redraw at 100 names, overflow() still 0.",
         "defect": "Silent 100-entry cap with no notice and no visible count. Performance is not the problem; honesty is.",
         "severity": "blocker"
       },
       {
         "name": "Hostile text",
         "method": "Filled #names with a 2000-char line, a 500-char single word, '<script>alert(1)</script>', '<img src=x onerror=alert(2)>', emoji with ZWJ sequences, Arabic RTL, whitespace-only lines, tabs, accented duplicates and a 41-char name. Then spun with '<b>bold</b>' as a name and inspected #winner.innerHTML.",
-        "result": "No XSS: #winner.innerHTML came back '🎉 &lt;b&gt;bold&lt;/b&gt;' with 0 child elements — textContent is used throughout (app.js:98). Whitespace-only and tab-only lines were correctly dropped. Emoji, ZWJ sequences and RTL survived intact. The 2000-char and 500-char entries were both silently cut to 40 chars (helpers.js:6). overflow() stayed 0. Zero console errors.",
+        "result": "No XSS: #winner.innerHTML came back '🎉 &lt;b&gt;bold&lt;/b&gt;' with 0 child elements, textContent is used throughout (app.js:98). Whitespace-only and tab-only lines were correctly dropped. Emoji, ZWJ sequences and RTL survived intact. The 2000-char and 500-char entries were both silently cut to 40 chars (helpers.js:6). overflow() stayed 0. Zero console errors.",
         "defect": "Only the silent 40-char truncation, which desynchronises the textarea from the wheel and from the shared link. Escaping, whitespace, emoji and RTL all handled correctly.",
         "severity": "major"
       },
       {
         "name": "Numeric edges as entries",
         "method": "The app takes no numeric input field, so the numeric surface is entry text and the URL hash. Entered '0', '-1', '1e9', '0.0001', 'abc', 'NaN', 'Infinity', '-0' as names and spun; then scanned document.innerText for NaN/Infinity.",
-        "result": "All eight were treated as opaque strings and one was announced as '🎉 Infinity' — the literal text the user typed, correctly. No computed NaN or Infinity reached the UI from any code path. Zero console errors.",
+        "result": "All eight were treated as opaque strings and one was announced as '🎉 Infinity', the literal text the user typed, correctly. No computed NaN or Infinity reached the UI from any code path. Zero console errors.",
         "defect": null,
         "severity": "none"
       },
       {
         "name": "Duplicate and identical entries",
         "method": "Filled #names with 'Sam' four times, then with 'Zoë'/'Zoë'/'ZOË'; checked for any dedupe notice in the DOM and inspected the parsed list.",
-        "result": "All duplicates kept as separate slices, which is defensible (a raffle may want weighted repeats), but there is no dedupe notice, no count and no indication anywhere — document.innerText contains no 'duplicate'. The research asks specifically for 'removed 2 duplicates' with an undo.",
+        "result": "All duplicates kept as separate slices, which is defensible (a raffle may want weighted repeats), but there is no dedupe notice, no count and no indication anywhere, document.innerText contains no 'duplicate'. The research asks specifically for 'removed 2 duplicates' with an undo.",
         "defect": "No dedupe affordance and no count, so an accidental double-paste is invisible.",
         "severity": "minor"
       },
       {
-        "name": "Rapid interaction — SPIN clicked 30x",
+        "name": "Rapid interaction, SPIN clicked 30x",
         "method": "Five names loaded, then 30 page.click('#spinBtn', {force:true}) in a tight loop, checking button state mid-flight and after settle.",
         "result": "30 clicks dispatched in 261ms. The spinning guard (app.js:77) held perfectly: the button was disabled throughout, exactly one spin ran, and one winner ('🎉 A') was announced after settle with the button re-enabled. No double-submit, no stacked animations, no console errors.",
         "defect": null,
@@ -303,7 +303,7 @@
       {
         "name": "Editing the list while the wheel is spinning",
         "method": "Started a spin, then 900-1000ms in: (a) cleared #names entirely, (b) shrank a 20-name list to 2, (c) checked #removeMode mid-spin. Read #winner after settle each time.",
-        "result": "(a) Winner announced as '🎉 undefined' — sliceAtPointer returns -1 for count 0 (helpers.js:13) and app.js:96-98 indexes names[-1] without a guard. (b) Shrinking 20 to 2 resolved to a valid entry, 'X'. (c) Toggling removal mid-spin retroactively applied it — 'Cleo' was announced and deleted from the list even though the toggle was off when the spin began.",
+        "result": "(a) Winner announced as '🎉 undefined', sliceAtPointer returns -1 for count 0 (helpers.js:13) and app.js:96-98 indexes names[-1] without a guard. (b) Shrinking 20 to 2 resolved to a valid entry, 'X'. (c) Toggling removal mid-spin retroactively applied it, 'Cleo' was announced and deleted from the list even though the toggle was off when the spin began.",
         "defect": "'🎉 undefined' shown to the room; and removeMode is read at settle time (app.js:99) rather than at spin start, so a stray tap during the 4.2s animation deletes a name.",
         "severity": "major"
       },
@@ -317,50 +317,50 @@
       {
         "name": "320px, and 414px at text=xxl and at density=roomy",
         "method": "Seven separate withApp runs with a 28-name roster loaded: 320px; 414px prefs{text:'xxl'}; 414px prefs{density:'roomy'}; 320px with both; dark scheme; prefs{warmth:'3',contrast:'more'}; 1280px. overflow() and offenders() in each.",
-        "result": "overflow() = 0 in all seven; offenders() never invoked because nothing overflowed. Metrics — 320px: wheel 246px, SPIN 246x52, winner 24px. 414/xxl: body 16->24px, winner 24->36px, wheel unchanged at 340px, SPIN still 52px tall. 414/roomy: wheel 322px, winner 24px. 320+xxl+roomy: wheel 228px, clean. 1280px: wheel capped at 380px, winner still 24px. smallTargets is the same short list everywhere: #swsPrefsBtn 36x36, #tipLink 36 tall, #removeMode 13x20, and two 20px-tall footer links.",
+        "result": "overflow() = 0 in all seven; offenders() never invoked because nothing overflowed. Metrics, 320px: wheel 246px, SPIN 246x52, winner 24px. 414/xxl: body 16->24px, winner 24->36px, wheel unchanged at 340px, SPIN still 52px tall. 414/roomy: wheel 322px, winner 24px. 320+xxl+roomy: wheel 228px, clean. 1280px: wheel capped at 380px, winner still 24px. smallTargets is the same short list everywhere: #swsPrefsBtn 36x36, #tipLink 36 tall, #removeMode 13x20, and two 20px-tall footer links.",
         "defect": "No layout defect at all. But the canvas ignores every comfort preference, and the wheel never exceeds 380px however wide the screen (index.html:1253), so a projector gets a phone-sized wheel and 24px winner text.",
         "severity": "major"
       },
       {
         "name": "Dark scheme and warmth:'3'",
         "method": "withApp with scheme:'dark' and separately prefs{warmth:'3',contrast:'more'}; sampled canvas pixels and computed styles; opened the QR dialog in dark.",
-        "result": "Page theming is correct — body rgb(27,17,21), --chip #30242a, empty-disc pixel sampled rgba(48,36,42,255) meaning the placeholder correctly picks up the dark token. Warmth 3 + high contrast: overflow 0, no visual break. Two hardcoded values escape the system: the wheel hub is ctx.fillStyle='#ffffff' (app.js:72-73), sampled rgb(255,255,255) — a bright white disc in a dark room; and the QR dialog heading computes to rgb(17,17,17) on a rgb(18,18,18) dialog background (index.html:1314, inline color:#111), roughly 1.0:1 and unreadable.",
+        "result": "Page theming is correct, body rgb(27,17,21), --chip #30242a, empty-disc pixel sampled rgba(48,36,42,255) meaning the placeholder correctly picks up the dark token. Warmth 3 + high contrast: overflow 0, no visual break. Two hardcoded values escape the system: the wheel hub is ctx.fillStyle='#ffffff' (app.js:72-73), sampled rgb(255,255,255), a bright white disc in a dark room; and the QR dialog heading computes to rgb(17,17,17) on a rgb(18,18,18) dialog background (index.html:1314, inline color:#111), roughly 1.0:1 and unreadable.",
         "defect": "Invisible QR dialog heading in dark mode; hardcoded white wheel hub.",
         "severity": "minor"
       },
       {
         "name": "Segment colour contrast",
         "method": "Computed WCAG relative luminance and contrast ratios for the six WHEEL_COLORS (helpers.js:43) against the white label fill, and for each adjacent pair as drawn by sliceColor.",
-        "result": "Label legibility passes comfortably: #2563eb 5.17:1, #0f766e 5.47:1, #7c3aed 5.70:1, #b45309 5.02:1, #be185d 6.04:1, #475569 7.58:1 — all above 4.5:1. But adjacent wedges are near-identical in lightness: 1.06, 1.04, 1.13, 1.20, 1.26 and 1.47:1. The only separation is a 2px rgba(255,255,255,.35) stroke.",
-        "defect": "Wedge-to-wedge separation rests on hue alone, which fails for red-green colourblind viewers and washes out on a projector — exactly what the research's colorRecommendation warns against.",
+        "result": "Label legibility passes comfortably: #2563eb 5.17:1, #0f766e 5.47:1, #7c3aed 5.70:1, #b45309 5.02:1, #be185d 6.04:1, #475569 7.58:1, all above 4.5:1. But adjacent wedges are near-identical in lightness: 1.06, 1.04, 1.13, 1.20, 1.26 and 1.47:1. The only separation is a 2px rgba(255,255,255,.35) stroke.",
+        "defect": "Wedge-to-wedge separation rests on hue alone, which fails for red-green colourblind viewers and washes out on a projector, exactly what the research's colorRecommendation warns against.",
         "severity": "major"
       },
       {
         "name": "Legibility at scale",
         "method": "Loaded 6, 24, 40 and 100 names and computed each label's rendered CSS size from app.js:65's formula times the canvas display scale (760px backing canvas shown at 340px on a 414px phone).",
         "result": "6 names: 60° wedges, 34px canvas font = 15.2 CSS px. 24 names: 15° wedges, 14px = 6.3 CSS px. 40 names: 9° wedges, labels cut to 10 chars, 6.3 CSS px. 100 names: 3.6° wedges, 10 chars, 6.3 CSS px. The font formula bottoms out at 14px canvas (6.3 CSS px) from 23 names upward and never recovers.",
-        "defect": "Above ~20 names the wheel is decorative — the labels cannot be read on a phone, let alone from the back of a classroom. 'Unlimited entries' rendered as unreadable slivers is the exact failure the research names.",
+        "defect": "Above ~20 names the wheel is decorative, the labels cannot be read on a phone, let alone from the back of a classroom. 'Unlimited entries' rendered as unreadable slivers is the exact failure the research names.",
         "severity": "blocker"
       },
       {
         "name": "Reload mid-task and mid-spin",
         "method": "Typed names, started a spin, reloaded 1.2s into it; separately reloaded with a half-typed name ('Cle', no trailing newline); separately toggled #removeMode and reloaded.",
-        "result": "Everything the user typed survived: roster intact after a mid-spin reload, the half-typed 'Cle' preserved, #removeMode still checked. #winner correctly cleared (an interrupted spin should not claim a result). localStorage stayed at 0 bytes — all state is the URL hash.",
+        "result": "Everything the user typed survived: roster intact after a mid-spin reload, the half-typed 'Cle' preserved, #removeMode still checked. #winner correctly cleared (an interrupted spin should not claim a result). localStorage stayed at 0 bytes, all state is the URL hash.",
         "defect": null,
         "severity": "none"
       },
       {
         "name": "localStorage size and corruption",
-        "method": "Called storage() after heavy use; set localStorage['sws.prefs'] = '{{{not json' and reloaded; the app itself owns no localStorage key, so also corrupted its real persistence surface — seven malformed URL hashes on genuine fresh loads (about:blank between each, since a hash-only change is a same-document navigation and does not re-init).",
-        "result": "storage() = 0 bytes after every scenario — this app writes nothing to localStorage, so there is no key to corrupt and no growth to worry about. Corrupt sws.prefs: app loaded normally, data-text attribute absent, no error. Hash cases all handled cleanly with zero console errors: non-base64 garbage -> empty, valid base64 that is not JSON -> empty, {\"n\":\"Ana\"} (not an array) -> empty, mixed types [1,2,{},null,\"Real\"] -> just 'Real' kept, deep nesting -> fine, 5,000 names -> 100 kept in 247ms, bare '#' -> empty.",
+        "method": "Called storage() after heavy use; set localStorage['sws.prefs'] = '{{{not json' and reloaded; the app itself owns no localStorage key, so also corrupted its real persistence surface, seven malformed URL hashes on genuine fresh loads (about:blank between each, since a hash-only change is a same-document navigation and does not re-init).",
+        "result": "storage() = 0 bytes after every scenario, this app writes nothing to localStorage, so there is no key to corrupt and no growth to worry about. Corrupt sws.prefs: app loaded normally, data-text attribute absent, no error. Hash cases all handled cleanly with zero console errors: non-base64 garbage -> empty, valid base64 that is not JSON -> empty, {\"n\":\"Ana\"} (not an array) -> empty, mixed types [1,2,{},null,\"Real\"] -> just 'Real' kept, deep nesting -> fine, 5,000 names -> 100 kept in 247ms, bare '#' -> empty.",
         "defect": null,
         "severity": "none"
       },
       {
         "name": "Hash navigation and the Back button",
         "method": "With the app open and a wheel loaded, set location.hash to a different encoded wheel (what happens when a user pastes a shared link into the tab they already have open); then made edits and pressed Back.",
-        "result": "Hash swap changed the URL and did nothing to the app — the textarea still read 'Ana|Ben'. app.js:148 reads the hash once in init() and there is no hashchange listener. After Back, the URL showed the older encoded state while the textarea showed the newer one: the address bar and the visible wheel disagreed. syncHash uses history.replaceState (app.js:113) so Back does not act as undo either.",
-        "defect": "The app's only persistence mechanism cannot be re-entered while the app is open, and Back silently desynchronises the URL from the wheel — a bookmark taken at that moment saves the wrong list.",
+        "result": "Hash swap changed the URL and did nothing to the app, the textarea still read 'Ana|Ben'. app.js:148 reads the hash once in init() and there is no hashchange listener. After Back, the URL showed the older encoded state while the textarea showed the newer one: the address bar and the visible wheel disagreed. syncHash uses history.replaceState (app.js:113) so Back does not act as undo either.",
+        "defect": "The app's only persistence mechanism cannot be re-entered while the app is open, and Back silently desynchronises the URL from the wheel, a bookmark taken at that moment saves the wrong list.",
         "severity": "major"
       },
       {
@@ -373,14 +373,14 @@
       {
         "name": "Keyboard only, end to end",
         "method": "Tabbed through the whole document recording activeElement; typed the roster with the keyboard; pressed Space on SPIN; checked focus during and after the spin; pressed Space again.",
-        "result": "Tab order is logical: #swsPrefsBtn, #tipLink, #spinBtn, #names, #removeMode, #shareBtn, #qrBtn, #resetBtn, then the two footer links. No skip link is rendered (the .skip component is styled at index.html:840 and <main id=\"main\"> exists at 1280, but no element uses it). The core job is reachable — but only once. Disabling the focused button at app.js:80 sends focus to <body>, where it remains after the spin completes, and a second Space does nothing. Every subsequent spin needs three Tabs from the top.",
+        "result": "Tab order is logical: #swsPrefsBtn, #tipLink, #spinBtn, #names, #removeMode, #shareBtn, #qrBtn, #resetBtn, then the two footer links. No skip link is rendered (the .skip component is styled at index.html:840 and <main id=\"main\"> exists at 1280, but no element uses it). The core job is reachable, but only once. Disabling the focused button at app.js:80 sends focus to <body>, where it remains after the spin completes, and a second Space does nothing. Every subsequent spin needs three Tabs from the top.",
         "defect": "Focus is destroyed by the primary action, making repeated spinning impossible by keyboard without re-traversal. Plus the missing skip link.",
         "severity": "blocker"
       },
       {
         "name": "Reduced motion",
         "method": "withApp with prefs{motion:'less'} (confirmed data-motion=\"less\" on <html>) AND page.emulateMedia({reducedMotion:'reduce'}), then timed a spin from click to the button re-enabling.",
-        "result": "4,273ms of continuous rotation — statistically identical to the 4,252ms measured with motion at default. app.js:82-91 consults neither the media query nor the data-motion attribute, and there is no alternative reveal path in the code. There is also no UI to shorten the spin: no /speed|duration|fast/ text exists anywhere in the page.",
+        "result": "4,273ms of continuous rotation, statistically identical to the 4,252ms measured with motion at default. app.js:82-91 consults neither the media query nor the data-motion attribute, and there is no alternative reveal path in the code. There is also no UI to shorten the spin: no /speed|duration|fast/ text exists anywhere in the page.",
         "defect": "Both the OS-level preference and the app's own comfort setting are ignored by the only moving element in the app.",
         "severity": "blocker"
       },
@@ -394,21 +394,21 @@
       {
         "name": "Print",
         "method": "page.emulateMedia({media:'print'}) with a 28-name roster; inspected computed display of every region and compared the textarea's rendered height to its scrollHeight.",
-        "result": "header.app and footer.colophon are correctly hidden, as are #swsPrefsBtn and the prefs dialog (index.html:1197). But the SPIN button still prints as inline-flex, the three action buttons print, the .hint paragraph prints, the full-colour 380px wheel prints, and #names prints at 104px against a scrollHeight of 718px — roughly 4 of 28 names reach the paper, the rest clipped away with no scrollbar to hint at it.",
+        "result": "header.app and footer.colophon are correctly hidden, as are #swsPrefsBtn and the prefs dialog (index.html:1197). But the SPIN button still prints as inline-flex, the three action buttons print, the .hint paragraph prints, the full-colour 380px wheel prints, and #names prints at 104px against a scrollHeight of 718px, roughly 4 of 28 names reach the paper, the rest clipped away with no scrollbar to hint at it.",
         "defect": "Printing produces a page of dead buttons, a colour disc and a truncated list. There is no printable roster or slip output, which the research names as a differentiator ('degrade gracefully to paper').",
         "severity": "major"
       },
       {
-        "name": "Fairness — distribution and pointer truth",
+        "name": "Fairness, distribution and pointer truth",
         "method": "Ran 20,000 iterations of app.js's exact target formula through the shipped sliceAtPointer for a 10-slice wheel; then spun the real UI four times and sampled the canvas pixel directly beneath the pointer, comparing it to sliceColor(index of announced winner).",
-        "result": "Distribution [2011, 2012, 1981, 2003, 2016, 2050, 2093, 2004, 1927, 1903] — max deviation 4.9% (~2.3 sigma at n=2000), no structural bias. Pointer truth: 4/4 spins, the pixel under the pointer exactly matched the announced winner's slice colour. Randomness source is Math.random (app.js:82-83), not crypto.getRandomValues, confirmed by reading the served app.js.",
-        "defect": "Mechanically sound — no rigging, no off-by-one. What is missing is the evidence: no CSPRNG claim to make, and no session log for a streamer to point chat at or a teacher to show a parent.",
+        "result": "Distribution [2011, 2012, 1981, 2003, 2016, 2050, 2093, 2004, 1927, 1903], max deviation 4.9% (~2.3 sigma at n=2000), no structural bias. Pointer truth: 4/4 spins, the pixel under the pointer exactly matched the announced winner's slice colour. Randomness source is Math.random (app.js:82-83), not crypto.getRandomValues, confirmed by reading the served app.js.",
+        "defect": "Mechanically sound, no rigging, no off-by-one. What is missing is the evidence: no CSPRNG claim to make, and no session log for a streamer to point chat at or a teacher to show a parent.",
         "severity": "minor"
       },
       {
         "name": "Offline / service worker",
         "method": "Waited on navigator.serviceWorker.ready, enumerated the cache contents, then set the browser context offline and reloaded the app.",
-        "result": "Registered at the app scope with an active worker; cache 'wheel-v14' holds all 11 declared assets including sws-ui.js, sws-prefs.js and the woff2. With the network off, a full reload rendered the working UI. Note: sws-ui.js was regenerated into the app mid-review (15:10) — had it still been missing, cache.addAll would have rejected and offline support would have been dead, which is worth a guard.",
+        "result": "Registered at the app scope with an active worker; cache 'wheel-v14' holds all 11 declared assets including sws-ui.js, sws-prefs.js and the woff2. With the network off, a full reload rendered the working UI. Note: sws-ui.js was regenerated into the app mid-review (15:10), had it still been missing, cache.addAll would have rejected and offline support would have been dead, which is worth a guard.",
         "defect": null,
         "severity": "none"
       },
@@ -424,27 +424,27 @@
   "fixes": [
     {
       "title": "Honour reduced motion in the spin, and add a spin-speed control",
-      "rationale": "Bea has vestibular migraine, had prefers-reduced-motion set at the OS level AND Motion=Reduced in the app's own comfort panel, and still got a measured 4,273ms of continuous rotation — indistinguishable from the 4,252ms default. Shipping a comfort panel with a Motion group and then ignoring it in the only moving element is worse than not offering it. Devon separately needs the spin shorter; the research quotes 'it wouldn't be so bad if the spin wasn't so long'. Fix both with one control: read matchMedia('(prefers-reduced-motion: reduce)') and document.documentElement.dataset.motion, and when either says reduce, replace the rotation with a shuffle-and-settle reveal (rapid label cycling for ~600ms, then land) rather than removing the feature.",
+      "rationale": "Bea has vestibular migraine, had prefers-reduced-motion set at the OS level AND Motion=Reduced in the app's own comfort panel, and still got a measured 4,273ms of continuous rotation, indistinguishable from the 4,252ms default. Shipping a comfort panel with a Motion group and then ignoring it in the only moving element is worse than not offering it. Devon separately needs the spin shorter; the research quotes 'it wouldn't be so bad if the spin wasn't so long'. Fix both with one control: read matchMedia('(prefers-reduced-motion: reduce)') and document.documentElement.dataset.motion, and when either says reduce, replace the rotation with a shuffle-and-settle reveal (rapid label cycling for ~600ms, then land) rather than removing the feature.",
       "where": "apps/wheel-picker/app.js:82-91 (spin's rAF loop and const dur = 4200)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Stop destroying keyboard focus on every spin",
-      "rationale": "Verified: pressing Space on SPIN sets spinBtn.disabled = true while it holds focus, so the browser moves activeElement to <body> — and it is still <body> 4.5s later once the button is re-enabled. A second Space does nothing, so Tom had to Tab three times from the top of the document for every single spin and gave up after four names. Devon's whole OBS use case is a hotkey. axe cannot see this (it reported zero violations in all three states), so only a driven keyboard test catches it. Fix: keep the button enabled and guard on the existing `spinning` flag (it already returns early at app.js:77), setting aria-disabled and aria-busy instead of the disabled property; or move focus deliberately to #winner when the result lands. Add a document-level Space/Enter hotkey while nothing is focused in the textarea.",
+      "rationale": "Verified: pressing Space on SPIN sets spinBtn.disabled = true while it holds focus, so the browser moves activeElement to <body>, and it is still <body> 4.5s later once the button is re-enabled. A second Space does nothing, so Tom had to Tab three times from the top of the document for every single spin and gave up after four names. Devon's whole OBS use case is a hotkey. axe cannot see this (it reported zero violations in all three states), so only a driven keyboard test catches it. Fix: keep the button enabled and guard on the existing `spinning` flag (it already returns early at app.js:77), setting aria-disabled and aria-busy instead of the disabled property; or move focus deliberately to #winner when the result lands. Add a document-level Space/Enter hotkey while nothing is focused in the textarea.",
       "where": "apps/wheel-picker/app.js:80 ($('spinBtn').disabled = true) and app.js:95",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make the winner reveal projector-sized, and let the wheel grow past 380px",
-      "rationale": "Measured 24px winner text at 320px, 414px AND 1280px — the same 1.5rem everywhere (36px at Largest text), while .wheelwrap caps the disc at 380px no matter how wide the screen. Maren is 8-12 feet from a wall panel with 28 children watching; the research quotes a reviewer directly on this — 'Why doesn't the name pop up big after spinning... that's what I need, so people see the name pop up' — and sets the target at 8-12vw, which is 102-154px at 1280. Fix: clamp() the winner to something like clamp(2rem, 9vw, 9rem) as a full-bleed held card, and let .wheelwrap scale with min(90vw, 70vh) above a tablet breakpoint. This is the cheapest change with the largest effect on whether the app is usable for its primary persona.",
+      "rationale": "Measured 24px winner text at 320px, 414px AND 1280px, the same 1.5rem everywhere (36px at Largest text), while .wheelwrap caps the disc at 380px no matter how wide the screen. Maren is 8-12 feet from a wall panel with 28 children watching; the research quotes a reviewer directly on this, 'Why doesn't the name pop up big after spinning... that's what I need, so people see the name pop up', and sets the target at 8-12vw, which is 102-154px at 1280. Fix: clamp() the winner to something like clamp(2rem, 9vw, 9rem) as a full-bleed held card, and let .wheelwrap scale with min(90vw, 70vh) above a tablet breakpoint. This is the cheapest change with the largest effect on whether the app is usable for its primary persona.",
       "where": "apps/wheel-picker/index.html:1260 (#winner{font-size:1.5rem}) and index.html:1253 (.wheelwrap{max-width:380px})",
       "severity": "blocker",
       "effort": "S"
     },
     {
-      "title": "Tell the user about the 100-name cap and the 40-character truncation — or lift them",
+      "title": "Tell the user about the 100-name cap and the 40-character truncation, or lift them",
       "rationale": "Verified: 500 pasted names silently became exactly 100, and 'Bartholomew Fitzgerald-Wellingtonshire III' is stored and shared as 'Bartholomew Fitzgerald-Wellingtonshire I' while the textarea still shows it whole. Priya's 120 raffle entrants became 100 and twenty paying ticket-holders were never in the draw; nobody could have known, because no count is rendered anywhere in the DOM at any list size. The research's loudest feature complaint in the whole category is entry caps ('you can't even put ten options without paying'), and it names 'unlimited, and say the word unlimited' as the answer. Fix: raise the cap to whatever stays legible after the label fix, show a live 'N names' count next to the heading, and when anything is dropped or shortened say so in a toast with an undo (sws-ui.js's SWS.undo is now loaded and unused).",
       "where": "apps/wheel-picker/helpers.js:5-6 (.slice(0, 100) and .map(s => s.slice(0, 40))); count belongs at index.html:1292",
       "severity": "blocker",
@@ -452,84 +452,84 @@
     },
     {
       "title": "Fix elimination: announce the last person, grey instead of delete, add a counter and a reset",
-      "rationale": "Verified: with removal on, three names go 3 -> 2 -> 1 and then SPIN refuses with 'Add at least two names' — the last child is never picked and never announced, in front of the class. Related and equally bad: any keystroke in the textarea sets removed = [] (app.js:121), so Maren adding a late arrival silently disarms 'Restore removed names' ('Nobody has been removed yet'), and Restore reorders an alphabetical register to B|A|C. The research calls elimination 'the primary classroom mode, not an advanced setting' and asks for picked names greyed on the wheel, an 'X of 28 left' counter and a one-tap reset. Fix: keep one array with a picked flag instead of two arrays, draw picked slices desaturated, exempt them from the pointer, allow the final spin to name the last entry, and reconcile the textarea on edit rather than clearing state.",
+      "rationale": "Verified: with removal on, three names go 3 -> 2 -> 1 and then SPIN refuses with 'Add at least two names', the last child is never picked and never announced, in front of the class. Related and equally bad: any keystroke in the textarea sets removed = [] (app.js:121), so Maren adding a late arrival silently disarms 'Restore removed names' ('Nobody has been removed yet'), and Restore reorders an alphabetical register to B|A|C. The research calls elimination 'the primary classroom mode, not an advanced setting' and asks for picked names greyed on the wheel, an 'X of 28 left' counter and a one-tap reset. Fix: keep one array with a picked flag instead of two arrays, draw picked slices desaturated, exempt them from the pointer, allow the final spin to name the last entry, and reconcile the textarea on edit rather than clearing state.",
       "where": "apps/wheel-picker/app.js:78 (the <2 guard), app.js:99-105 (removal), app.js:119-124 (input handler clearing `removed`), app.js:130-138 (resetBtn)",
       "severity": "blocker",
       "effort": "L"
     },
     {
       "title": "Make the wheel labels obey the comfort panel and stay readable past 20 names",
-      "rationale": "Priya set text to Largest and measured: body 16 -> 24px, winner 24 -> 36px, on-wheel labels unchanged at 11.9 CSS px, canvas unchanged at 340px. The canvas font comes only from name count (app.js:65) and bottoms out at 14px canvas = 6.3 CSS px from about 23 names upward — at 24, 40 and 100 names it is 6.3px in every case, with labels cut to 10 characters. So the comfort panel cannot reach the app's central object, and 'unlimited entries' renders as unreadable slivers, which the research explicitly calls a broken promise. Fix: derive the label size from the canvas display width and the root font size (multiply by the data-text scale), drop labels entirely below a legible threshold and switch to a numbered-wedge plus legend layout above ~30 entries.",
+      "rationale": "Priya set text to Largest and measured: body 16 -> 24px, winner 24 -> 36px, on-wheel labels unchanged at 11.9 CSS px, canvas unchanged at 340px. The canvas font comes only from name count (app.js:65) and bottoms out at 14px canvas = 6.3 CSS px from about 23 names upward, at 24, 40 and 100 names it is 6.3px in every case, with labels cut to 10 characters. So the comfort panel cannot reach the app's central object, and 'unlimited entries' renders as unreadable slivers, which the research explicitly calls a broken promise. Fix: derive the label size from the canvas display width and the root font size (multiply by the data-text scale), drop labels entirely below a legible threshold and switch to a numbered-wedge plus legend layout above ~30 entries.",
       "where": "apps/wheel-picker/app.js:63-67 (maxLen and the fs formula)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Guard the winner lookup so '🎉 undefined' can never be announced",
-      "rationale": "Verified: clear the textarea while the wheel is spinning and the class sees '🎉 undefined'. sliceAtPointer returns -1 when count is 0 (helpers.js:13) and app.js indexes names[-1] with no check. A teacher fixing a typo during the four-second animation is an entirely ordinary act. Same code path, same fix window: removeMode is read at settle time (app.js:99), so checking the box mid-spin retroactively deletes that spin's winner — verified, 'Cleo' was announced and removed although the toggle was off when the spin began. Snapshot the entry list and the removal setting when the spin starts and resolve against that snapshot.",
+      "rationale": "Verified: clear the textarea while the wheel is spinning and the class sees '🎉 undefined'. sliceAtPointer returns -1 when count is 0 (helpers.js:13) and app.js indexes names[-1] with no check. A teacher fixing a typo during the four-second animation is an entirely ordinary act. Same code path, same fix window: removeMode is read at settle time (app.js:99), so checking the box mid-spin retroactively deletes that spin's winner, verified, 'Cleo' was announced and removed although the toggle was off when the spin began. Snapshot the entry list and the removal setting when the spin starts and resolve against that snapshot.",
       "where": "apps/wheel-picker/app.js:96-99 (const idx = sliceAtPointer(...); const winner = names[idx])",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Give the app a real save story: named wheels, autosave, export and import",
-      "rationale": "storage() returns 0 bytes — the app persists nothing beyond the URL hash. Maren has five sections and gets one bookmark-able link; the research lists multiple named wheels with working rename/duplicate/delete as table stakes and quotes a reviewer who left after 'my wheels disappeared. I'm not going to redo my wheels again.' It also insists that with local-only storage, an explicit export-to-file plus matching import is the backup story, not a power feature. Fix: autosave the current wheel to localStorage on every edit, add a saved-wheels list with rename/duplicate/delete, keep the hash as the share format, and add Export all / Import from the same row as the share buttons.",
+      "rationale": "storage() returns 0 bytes, the app persists nothing beyond the URL hash. Maren has five sections and gets one bookmark-able link; the research lists multiple named wheels with working rename/duplicate/delete as table stakes and quotes a reviewer who left after 'my wheels disappeared. I'm not going to redo my wheels again.' It also insists that with local-only storage, an explicit export-to-file plus matching import is the backup story, not a power feature. Fix: autosave the current wheel to localStorage on every edit, add a saved-wheels list with rename/duplicate/delete, keep the hash as the share format, and add Export all / Import from the same row as the share buttons.",
       "where": "apps/wheel-picker/app.js:111-115 (syncHash is the entire persistence layer); UI belongs at index.html:1300-1304",
       "severity": "major",
       "effort": "L"
     },
     {
       "title": "Fail gracefully when the share link outgrows a QR, and warn before it does",
-      "rationale": "Verified: 100 forty-character names produce a 5,788-character URL, qrcode() throws, and Aisha gets the toast 'Could not draw the QR' with a blank canvas, no dialog and no explanation — at the moment she is standing in front of her poster deadline. Measured growth: 4 names 119 chars, 28 = 528, 60 = 1,083, 100 short = 1,777. Small wheels work beautifully (88-char URL, instant QR, correct focus return on Escape), so the fix is the ceiling, not the feature. Fix: compute the payload length before generating, and above the practical QR limit either compress the payload or say the useful thing — 'This wheel is too big for a QR (100 names). Copy the link instead, or share a shorter list.'",
+      "rationale": "Verified: 100 forty-character names produce a 5,788-character URL, qrcode() throws, and Aisha gets the toast 'Could not draw the QR' with a blank canvas, no dialog and no explanation, at the moment she is standing in front of her poster deadline. Measured growth: 4 names 119 chars, 28 = 528, 60 = 1,083, 100 short = 1,777. Small wheels work beautifully (88-char URL, instant QR, correct focus return on Escape), so the fix is the ceiling, not the feature. Fix: compute the payload length before generating, and above the practical QR limit either compress the payload or say the useful thing, 'This wheel is too big for a QR (100 names). Copy the link instead, or share a shorter list.'",
       "where": "apps/wheel-picker/app.js:162-177 (showQr and its catch), toast at app.js:174",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Listen for hashchange, and stop Back from desynchronising the URL from the wheel",
-      "rationale": "Verified: with the app open, changing location.hash to a different encoded wheel does nothing — the textarea still showed the old names, because app.js:148 reads the hash once in init() and nothing listens afterwards. Pasting a shared link into the tab you already have open is the most natural way to open a link, and this app's entire persistence pitch is 'the whole wheel lives inside the link' (index.html:1305). Worse, after Back the address bar showed one encoded state while the textarea showed another, so a bookmark taken at that moment saves the wrong list. Fix: add a hashchange listener that reloads state (guarding against the app's own replaceState writes), and consider pushState on meaningful changes so Back is a real undo.",
+      "rationale": "Verified: with the app open, changing location.hash to a different encoded wheel does nothing, the textarea still showed the old names, because app.js:148 reads the hash once in init() and nothing listens afterwards. Pasting a shared link into the tab you already have open is the most natural way to open a link, and this app's entire persistence pitch is 'the whole wheel lives inside the link' (index.html:1305). Worse, after Back the address bar showed one encoded state while the textarea showed another, so a bookmark taken at that moment saves the wrong list. Fix: add a hashchange listener that reloads state (guarding against the app's own replaceState writes), and consider pushState on meaningful changes so Back is a real undo.",
       "where": "apps/wheel-picker/app.js:148-153 (init reads the hash once) and app.js:111-115 (history.replaceState)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Rebuild the segment palette so adjacent wedges differ in lightness, not just hue",
-      "rationale": "Measured adjacent-pair contrast across the six WHEEL_COLORS: 1.06, 1.04, 1.13, 1.20, 1.26 and 1.47:1 — every wedge is essentially the same lightness, separated only by a 2px 35%-white stroke. On Maren's washed-out wall panel with room lights on, and for the roughly 8% of boys in any classroom with red-green deficiency, the wheel reads as one mid-tone blur. The research's colorRecommendation is explicit: 'build the segment ramp by index-with-stride so adjacent wedges always differ in both hue and lightness'. Label contrast is already fine (5.02:1 to 7.58:1 white-on-fill) so keep white labels and vary the fills' luminance instead.",
+      "rationale": "Measured adjacent-pair contrast across the six WHEEL_COLORS: 1.06, 1.04, 1.13, 1.20, 1.26 and 1.47:1, every wedge is essentially the same lightness, separated only by a 2px 35%-white stroke. On Maren's washed-out wall panel with room lights on, and for the roughly 8% of boys in any classroom with red-green deficiency, the wheel reads as one mid-tone blur. The research's colorRecommendation is explicit: 'build the segment ramp by index-with-stride so adjacent wedges always differ in both hue and lightness'. Label contrast is already fine (5.02:1 to 7.58:1 white-on-fill) so keep white labels and vary the fills' luminance instead.",
       "where": "apps/wheel-picker/helpers.js:43-49 (WHEEL_COLORS and sliceColor)",
       "severity": "major",
       "effort": "M"
     },
     {
-      "title": "Add a session result log — the fairness receipt",
-      "rationale": "Devon's chat is primed to shout 'rigged' and he has nothing to point at: #winner is overwritten on the next spin (app.js:81) and no history is kept. The mechanics are actually clean — 20,000 simulated spins deviated at most 4.9% from even, and the pixel under the pointer matched the announced winner 4/4 — but the app keeps no evidence of it. The research documents live rigging suspicion (r/AskPC, r/UnethicalLifeProTips) and notes competitors already market 'CSPRNG' and 'provably random' as purchase criteria. Fix: an ordered, timestamped list of results below the wheel, copyable as plain text, plus switching Math.random (app.js:82-83) to crypto.getRandomValues so the claim can honestly be made in the copy.",
+      "title": "Add a session result log, the fairness receipt",
+      "rationale": "Devon's chat is primed to shout 'rigged' and he has nothing to point at: #winner is overwritten on the next spin (app.js:81) and no history is kept. The mechanics are actually clean, 20,000 simulated spins deviated at most 4.9% from even, and the pixel under the pointer matched the announced winner 4/4, but the app keeps no evidence of it. The research documents live rigging suspicion (r/AskPC, r/UnethicalLifeProTips) and notes competitors already market 'CSPRNG' and 'provably random' as purchase criteria. Fix: an ordered, timestamped list of results below the wheel, copyable as plain text, plus switching Math.random (app.js:82-83) to crypto.getRandomValues so the claim can honestly be made in the copy.",
       "where": "apps/wheel-picker/app.js:81 and 96-98 (winner assignment); randomness at app.js:82-83",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Make print produce a roster, not a wheel and three dead buttons",
-      "rationale": "Verified under emulateMedia({media:'print'}) with 28 names: header and footer correctly hidden, but #spinBtn still prints as inline-flex, the three action buttons print, the .hint prints, the full-colour 380px canvas prints, and #names renders at 104px against a scrollHeight of 718px — about 4 of 28 names reach the paper and the rest are clipped away invisibly. The research names 'degrade gracefully to paper' as a differentiator and specifically asks for cut-up slips and a numbered roster: 'the move that says we understand the popsicle-stick user'. Fix: add #spinBtn, .row and #wheel to the existing noprint set, and render the entry list as a real numbered <ol> (plus an optional cut-slips grid) for print.",
+      "rationale": "Verified under emulateMedia({media:'print'}) with 28 names: header and footer correctly hidden, but #spinBtn still prints as inline-flex, the three action buttons print, the .hint prints, the full-colour 380px canvas prints, and #names renders at 104px against a scrollHeight of 718px, about 4 of 28 names reach the paper and the rest are clipped away invisibly. The research names 'degrade gracefully to paper' as a differentiator and specifically asks for cut-up slips and a numbered roster: 'the move that says we understand the popsicle-stick user'. Fix: add #spinBtn, .row and #wheel to the existing noprint set, and render the entry list as a real numbered <ol> (plus an optional cut-slips grid) for print.",
       "where": "apps/wheel-picker/index.html:1197 (the print display:none list) and the @media print block starting index.html:1181",
       "severity": "minor",
       "effort": "M"
     },
     {
       "title": "Fix the two hardcoded colours that escape the token system",
-      "rationale": "Sampled in dark mode: the QR dialog computes a rgb(18,18,18) background while its heading is rgb(17,17,17) from an inline style=\"color:#111\" — roughly 1.0:1, so 'Scan to open this wheel' is invisible and the dialog reads as broken. And the wheel hub is ctx.fillStyle = '#ffffff', sampled rgb(255,255,255) — a bright white disc at the centre of the wheel in Devon's dark room. Everything else in the app themes correctly (body rgb(27,17,21), --chip #30242a, the empty disc correctly samples rgba(48,36,42,255)), which makes these two stand out as oversights rather than choices.",
+      "rationale": "Sampled in dark mode: the QR dialog computes a rgb(18,18,18) background while its heading is rgb(17,17,17) from an inline style=\"color:#111\", roughly 1.0:1, so 'Scan to open this wheel' is invisible and the dialog reads as broken. And the wheel hub is ctx.fillStyle = '#ffffff', sampled rgb(255,255,255), a bright white disc at the centre of the wheel in Devon's dark room. Everything else in the app themes correctly (body rgb(27,17,21), --chip #30242a, the empty disc correctly samples rgba(48,36,42,255)), which makes these two stand out as oversights rather than choices.",
       "where": "apps/wheel-picker/index.html:1314 (h3 inline color:#111) and apps/wheel-picker/app.js:70-73 (hub fillStyle)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Raise the removal checkbox to a 44px target and enlarge the empty state",
-      "rationale": "smallTargets() reports #removeMode at 13x20px on every viewport tested, and only 13x30 even at Largest text — under the 44px comfort floor. Bea's tremor made it a miss every time; Priya is one-handed with a clipboard. The wrapping label.chk does work as a hit area, which keeps this minor rather than major. Separately the empty state — the very first thing a new user sees — is canvas text drawn at 28px on the 760px backing canvas, which is 12.5 CSS px on a phone, the smallest text on the page; Bea did not see it and asked what to do.",
+      "rationale": "smallTargets() reports #removeMode at 13x20px on every viewport tested, and only 13x30 even at Largest text, under the 44px comfort floor. Bea's tremor made it a miss every time; Priya is one-handed with a clipboard. The wrapping label.chk does work as a hit area, which keeps this minor rather than major. Separately the empty state, the very first thing a new user sees, is canvas text drawn at 28px on the 760px backing canvas, which is 12.5 CSS px on a phone, the smallest text on the page; Bea did not see it and asked what to do.",
       "where": "apps/wheel-picker/index.html:1298 (input#removeMode) and index.html:1266 (label.chk); empty state at apps/wheel-picker/app.js:40-42",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Render the skip link the stylesheet already pays for",
-      "rationale": "The .skip component is fully styled at index.html:840-849 and correctly excluded from print at 1196, and <main id=\"main\"> exists at index.html:1280, but no skip element is ever rendered — verified by tabbing, where the first stop is #swsPrefsBtn. The cost is one line of markup for a component that is already built, and it matters more here than in most apps because keyboard users currently re-traverse the document after every spin.",
+      "rationale": "The .skip component is fully styled at index.html:840-849 and correctly excluded from print at 1196, and <main id=\"main\"> exists at index.html:1280, but no skip element is ever rendered, verified by tabbing, where the first stop is #swsPrefsBtn. The cost is one line of markup for a component that is already built, and it matters more here than in most apps because keyboard users currently re-traverse the document after every spin.",
       "where": "apps/wheel-picker/index.html:1272 (before header.app; component styled at 840, target at 1280)",
       "severity": "minor",
       "effort": "S"
@@ -538,49 +538,49 @@
   "audit": {
     "slug": "wheel-picker",
     "purpose": "A canvas spinning wheel for picking a name at random. Paste names into one textarea, press SPIN, watch a 4.2s eased rotation, read the winner. Optional 'remove the winner after each spin' for classroom/raffle elimination. There is no backend and no localStorage: the entire wheel state (names + removeMode) is base64url-encoded into the URL hash, so the link IS the save file, and it can be copied or shown as a QR code.",
-    "structure": "Single short page, no scrolling nav, one dialog. body > div.wrap containing: (1) header.app — 32px icon.svg alt=\"\" (index.html:1274), h1 \"Wheel Picker\" (1275), span.spacer (1276), a#tipLink.tipbtn.hidden un-hidden by JS (1277); sws-prefs.js injects button#swsPrefsBtn immediately before the tip link at runtime. (2) main#main (1280) holding two section.card. Card 1 (1282-1289): div.wheelwrap > div.pointer[aria-hidden] (1284) + canvas#wheel width=760 height=760 aria-label=\"Spinning wheel of names\" (1285); div#winner[aria-live=assertive] (1287); button#spinBtn.btn.primary.big with inline style=\"width:100%\" (1288). Card 1 has NO h2 and no accessible name. Card 2 (1291-1306): h2 \"Who's on the wheel\" (1292) rendered by the base as a 12px uppercase micro-label; textarea#names with a four-line placeholder (1293-1297); label.chk wrapping input#removeMode[type=checkbox] with inline style=\"width:auto\" (1298-1299); div.row with three equal .btn — #shareBtn, #qrBtn, #resetBtn (1300-1304); p.hint carrying the privacy/permanence promise (1305). Outside .wrap: div#toast[role=status][aria-live=polite] (1310), footer.colophon with two links carrying inline style=\"color:inherit\" (1311), and dialog#qrDlg (1313-1317) with an inline-styled h3, canvas#qrCanvas 300x300 and button#qrClose. Scripts: sws-prefs.js classic blocking in head (1268), sws-ui.js classic (1269), vendor-qrcode.js classic exposing global qrcode() (1318), app.js as a module (1319). There is NO skip link element (the .skip component is styled at 840 but never rendered), NO <noscript>, NO empty-state markup, and NO hero block. Flow: init() (app.js:141) wires events, reveals the tip link, decodes location.hash once into the textarea, calls draw(), and registers sw.js. Every keystroke in #names re-parses, clears the removal buffer, rewrites the hash via history.replaceState and repaints the canvas — no debounce (measured 2.59ms per redraw at 100 names, so none is needed).",
+    "structure": "Single short page, no scrolling nav, one dialog. body > div.wrap containing: (1) header.app, 32px icon.svg alt=\"\" (index.html:1274), h1 \"Wheel Picker\" (1275), span.spacer (1276), a#tipLink.tipbtn.hidden un-hidden by JS (1277); sws-prefs.js injects button#swsPrefsBtn immediately before the tip link at runtime. (2) main#main (1280) holding two section.card. Card 1 (1282-1289): div.wheelwrap > div.pointer[aria-hidden] (1284) + canvas#wheel width=760 height=760 aria-label=\"Spinning wheel of names\" (1285); div#winner[aria-live=assertive] (1287); button#spinBtn.btn.primary.big with inline style=\"width:100%\" (1288). Card 1 has NO h2 and no accessible name. Card 2 (1291-1306): h2 \"Who's on the wheel\" (1292) rendered by the base as a 12px uppercase micro-label; textarea#names with a four-line placeholder (1293-1297); label.chk wrapping input#removeMode[type=checkbox] with inline style=\"width:auto\" (1298-1299); div.row with three equal .btn, #shareBtn, #qrBtn, #resetBtn (1300-1304); p.hint carrying the privacy/permanence promise (1305). Outside .wrap: div#toast[role=status][aria-live=polite] (1310), footer.colophon with two links carrying inline style=\"color:inherit\" (1311), and dialog#qrDlg (1313-1317) with an inline-styled h3, canvas#qrCanvas 300x300 and button#qrClose. Scripts: sws-prefs.js classic blocking in head (1268), sws-ui.js classic (1269), vendor-qrcode.js classic exposing global qrcode() (1318), app.js as a module (1319). There is NO skip link element (the .skip component is styled at 840 but never rendered), NO <noscript>, NO empty-state markup, and NO hero block. Flow: init() (app.js:141) wires events, reveals the tip link, decodes location.hash once into the textarea, calls draw(), and registers sw.js. Every keystroke in #names re-parses, clears the removal buffer, rewrites the hash via history.replaceState and repaints the canvas, no debounce (measured 2.59ms per redraw at 100 names, so none is needed).",
     "cssClasses": [
-      ".wrap — max-width var(--wrap) page gutter (index.html:331)",
-      ".stack / .stack-sm / .stack-lg — vertical rhythm; UNUSED (338-340)",
-      ".cluster — wrapping inline group; UNUSED (343)",
-      ".row — flex row, gap --s2, wraps (347); the instance at 1300 holds the three share/reset buttons",
-      ".row.tight / .row.nowrap — gap and wrap modifiers; UNUSED (349-350)",
-      "header.app — flex app bar (356); the instance at 1273",
-      "header.app img — 32x32 icon (368); instance at 1274",
-      "header.app h1 — app name (376); instance at 1275",
-      "header.app .tagline — subtitle slot; UNUSED (381)",
-      "header.app .spacer — flex:1 push (390); instance at 1276",
-      "a.tipbtn — pill tip-jar link, 36px tall (394); instance #tipLink at 1277, href set and .hidden dropped by app.js:143-147",
-      "footer.colophon — 12px centred footer (422); instance at 1311",
-      ".trust — bordered privacy-promise banner with an icon slot (437); UNUSED, although the research names the IT-approval sentence as this app's single most defensible differentiator",
-      "section.card / .card — surface panel (451); two instances at 1282 and 1291",
-      "section.card > h2 — 12px uppercase micro-label (463); one instance at 1292, so card 1 is unnamed",
-      ".card .sub — sub-line under a card heading; UNUSED (474)",
-      "textarea — min-height 6.5rem, resize:vertical (505); instance #names at 1293",
-      "input[type=checkbox] — base checkbox sizing (535); instance #removeMode at 1298 overridden inline to width:auto, renders 13x20px",
-      "label.f / .field — block field wrapper; UNUSED (521)",
-      ".btn — 44px control (550); instances #shareBtn, #qrBtn, #resetBtn, #qrClose",
-      ".btn.primary — accent fill (572); instance #spinBtn",
-      ".btn.big — min-height 52px (590); instance #spinBtn",
-      ".btn.danger — negative variant; UNUSED (580)",
-      ".btn[disabled] — app-layer opacity:.5, cursor:default (index.html:1264)",
-      ".seg / .seg button — segmented control; UNUSED (598-623)",
-      ".hint / .footnote / .small — 13px --ink-2 helper text (635-641); one .hint instance at 1305",
-      ".muted — --ink-2 text colour (643)",
-      ".chip / .chips — UNUSED (645-655)",
-      ".warn — UNUSED (670)",
-      ".empty / .empty .glyph / .empty h3 / .empty p — the empty-state component; UNUSED (702-718), which is why the empty state is drawn as 12.5px canvas text instead",
-      "#toast — fixed bottom pill (753), .show at 773, .act and .undo variants (784-802) unused by this app's local toast()",
-      ".actionbar — sticky action bar; UNUSED (805)",
-      ".skip — skip-link component, styled (840-849) and print-hidden (1196) but NEVER RENDERED",
-      ".hidden — display:none !important (852); the initial state of #tipLink",
-      ".wheelwrap — APP LAYER: position:relative, max-width:380px, centred (1253); the hard cap on wheel size at every viewport",
-      ".pointer — APP LAYER: absolute CSS triangle at 12 o'clock, border-top 22px solid var(--ink), z-index 2 (1255-1259); correctly aria-hidden",
-      "#winner — APP LAYER: centred, font-size 1.5rem, font-weight 800, min-height 2.2rem, overflow-wrap:anywhere (1260-1263); the 24px reveal",
-      "label.chk — APP LAYER: flex row, gap 8px, font-size .9rem (a raw rem, not a token), colour var(--muted) (1266)",
-      "#swsPrefs and its .opt / .sws-sample / .sws-note internals — the comfort dialog, styled in the base and built at runtime by sws-prefs.js"
+      ".wrap, max-width var(--wrap) page gutter (index.html:331)",
+      ".stack / .stack-sm / .stack-lg, vertical rhythm; UNUSED (338-340)",
+      ".cluster, wrapping inline group; UNUSED (343)",
+      ".row, flex row, gap --s2, wraps (347); the instance at 1300 holds the three share/reset buttons",
+      ".row.tight / .row.nowrap, gap and wrap modifiers; UNUSED (349-350)",
+      "header.app, flex app bar (356); the instance at 1273",
+      "header.app img, 32x32 icon (368); instance at 1274",
+      "header.app h1, app name (376); instance at 1275",
+      "header.app .tagline, subtitle slot; UNUSED (381)",
+      "header.app .spacer, flex:1 push (390); instance at 1276",
+      "a.tipbtn, pill tip-jar link, 36px tall (394); instance #tipLink at 1277, href set and .hidden dropped by app.js:143-147",
+      "footer.colophon, 12px centred footer (422); instance at 1311",
+      ".trust, bordered privacy-promise banner with an icon slot (437); UNUSED, although the research names the IT-approval sentence as this app's single most defensible differentiator",
+      "section.card / .card, surface panel (451); two instances at 1282 and 1291",
+      "section.card > h2 to 12px uppercase micro-label (463); one instance at 1292, so card 1 is unnamed",
+      ".card .sub, sub-line under a card heading; UNUSED (474)",
+      "textarea, min-height 6.5rem, resize:vertical (505); instance #names at 1293",
+      "input[type=checkbox], base checkbox sizing (535); instance #removeMode at 1298 overridden inline to width:auto, renders 13x20px",
+      "label.f / .field, block field wrapper; UNUSED (521)",
+      ".btn, 44px control (550); instances #shareBtn, #qrBtn, #resetBtn, #qrClose",
+      ".btn.primary, accent fill (572); instance #spinBtn",
+      ".btn.big, min-height 52px (590); instance #spinBtn",
+      ".btn.danger, negative variant; UNUSED (580)",
+      ".btn[disabled], app-layer opacity:.5, cursor:default (index.html:1264)",
+      ".seg / .seg button, segmented control; UNUSED (598-623)",
+      ".hint / .footnote / .small, 13px --ink-2 helper text (635-641); one .hint instance at 1305",
+      ".muted, --ink-2 text colour (643)",
+      ".chip / .chips, UNUSED (645-655)",
+      ".warn, UNUSED (670)",
+      ".empty / .empty .glyph / .empty h3 / .empty p, the empty-state component; UNUSED (702-718), which is why the empty state is drawn as 12.5px canvas text instead",
+      "#toast, fixed bottom pill (753), .show at 773, .act and .undo variants (784-802) unused by this app's local toast()",
+      ".actionbar, sticky action bar; UNUSED (805)",
+      ".skip, skip-link component, styled (840-849) and print-hidden (1196) but NEVER RENDERED",
+      ".hidden, display:none !important (852); the initial state of #tipLink",
+      ".wheelwrap, APP LAYER: position:relative, max-width:380px, centred (1253); the hard cap on wheel size at every viewport",
+      ".pointer, APP LAYER: absolute CSS triangle at 12 o'clock, border-top 22px solid var(--ink), z-index 2 (1255-1259); correctly aria-hidden",
+      "#winner, APP LAYER: centred, font-size 1.5rem, font-weight 800, min-height 2.2rem, overflow-wrap:anywhere (1260-1263); the 24px reveal",
+      "label.chk, APP LAYER: flex row, gap 8px, font-size .9rem (a raw rem, not a token), colour var(--muted) (1266)",
+      "#swsPrefs and its .opt / .sws-sample / .sws-note internals, the comfort dialog, styled in the base and built at runtime by sws-prefs.js"
     ],
-    "dynamicMarkup": "Almost nothing is injected — this app's runtime work is canvas painting, not DOM building. (1) sws-prefs.js creates button#swsPrefsBtn and inserts it immediately before .tipbtn inside header.app, then lazily builds dialog#swsPrefs on first click with seven radio groups (theme, text, density, reading, warmth, contrast, motion), a live type sample, Reset and Done. (2) app.js sets #tipLink.href and removes .hidden (app.js:143-147). (3) app.js writes #names.value from the decoded hash at init (152) and again after each removal (102) and restore (134). (4) #winner.textContent is set to '🎉 ' + winner at app.js:98 and cleared at 81 — textContent only, which is why '<script>alert(1)</script>' as a name is inert. (5) #toast.textContent plus a .show class, on a 2.4s timer (app.js:10-16). (6) canvas#wheel is fully repainted by draw() (app.js:31-74) on every keystroke and on every animation frame of a spin: wedges via sliceColor, a 2px rgba(255,255,255,.35) stroke, right-aligned rotated white labels truncated to 16 chars (10 above 24 names) at min(34, max(14, 320/n))px, and a hardcoded #ffffff 26px hub. The empty state is canvas text, '28px system-ui' reading 'Add names below' (app.js:40-42) — 12.5 CSS px as displayed. (7) canvas#qrCanvas is painted by showQr (app.js:162-177) from the global qrcode(); on throw it toasts and leaves the canvas blank. (8) history.replaceState rewrites the hash on every input, on removeMode change, on removal, on restore and before each share (app.js:111-115). Nothing is ever written to localStorage by this app — storage() measured 0 bytes after every scenario.",
+    "dynamicMarkup": "Almost nothing is injected, this app's runtime work is canvas painting, not DOM building. (1) sws-prefs.js creates button#swsPrefsBtn and inserts it immediately before .tipbtn inside header.app, then lazily builds dialog#swsPrefs on first click with seven radio groups (theme, text, density, reading, warmth, contrast, motion), a live type sample, Reset and Done. (2) app.js sets #tipLink.href and removes .hidden (app.js:143-147). (3) app.js writes #names.value from the decoded hash at init (152) and again after each removal (102) and restore (134). (4) #winner.textContent is set to '🎉 ' + winner at app.js:98 and cleared at 81, textContent only, which is why '<script>alert(1)</script>' as a name is inert. (5) #toast.textContent plus a .show class, on a 2.4s timer (app.js:10-16). (6) canvas#wheel is fully repainted by draw() (app.js:31-74) on every keystroke and on every animation frame of a spin: wedges via sliceColor, a 2px rgba(255,255,255,.35) stroke, right-aligned rotated white labels truncated to 16 chars (10 above 24 names) at min(34, max(14, 320/n))px, and a hardcoded #ffffff 26px hub. The empty state is canvas text, '28px system-ui' reading 'Add names below' (app.js:40-42), 12.5 CSS px as displayed. (7) canvas#qrCanvas is painted by showQr (app.js:162-177) from the global qrcode(); on throw it toasts and leaves the canvas blank. (8) history.replaceState rewrites the hash on every input, on removeMode change, on removal, on restore and before each share (app.js:111-115). Nothing is ever written to localStorage by this app, storage() measured 0 bytes after every scenario.",
     "comfortDefects": [
       {
         "issue": "The comfort panel cannot touch the app's central object. With text set to Largest, body goes 16 -> 24px and #winner 24 -> 36px, but the canvas stays 340px wide and the on-wheel label size is unchanged, because it is computed from name count alone.",
@@ -593,7 +593,7 @@
         "fix": "Branch on the media query and the data-motion attribute to a non-rotating shuffle-and-settle reveal; expose a spin-length control."
       },
       {
-        "issue": "The winner reveal never grows with the viewport — 24px measured at 320px, 414px and 1280px alike; 36px at Largest.",
+        "issue": "The winner reveal never grows with the viewport, 24px measured at 320px, 414px and 1280px alike; 36px at Largest.",
         "where": "index.html:1260 (#winner{font-size:1.5rem})",
         "fix": "clamp(2rem, 9vw, 9rem), held as a full-bleed card until dismissed."
       },
@@ -608,17 +608,17 @@
         "fix": "Give the input min-width/min-height 24px with padding on the label to reach a 44px row, or use the .chip.on toggle pattern already in the stylesheet."
       },
       {
-        "issue": "Adjacent wedge colours are all the same lightness — measured pairwise contrast 1.04:1 to 1.47:1 — so the wheel reads as one mid-tone blur on a washed-out projector and for red-green colourblind viewers. Label contrast itself is fine (5.02:1 to 7.58:1 white-on-fill).",
+        "issue": "Adjacent wedge colours are all the same lightness, measured pairwise contrast 1.04:1 to 1.47:1, so the wheel reads as one mid-tone blur on a washed-out projector and for red-green colourblind viewers. Label contrast itself is fine (5.02:1 to 7.58:1 white-on-fill).",
         "where": "helpers.js:43 (WHEEL_COLORS) and helpers.js:46-50 (sliceColor)",
         "fix": "A ramp that varies lightness as well as hue, assigned by stride so neighbours never match."
       },
       {
-        "issue": "The empty state — the first thing any new user sees — is canvas text at 28px on the 760px backing canvas, which is 12.5 CSS px as displayed, the smallest text on the page. The .empty component that would do this properly is styled and unused.",
+        "issue": "The empty state, the first thing any new user sees, is canvas text at 28px on the 760px backing canvas, which is 12.5 CSS px as displayed, the smallest text on the page. The .empty component that would do this properly is styled and unused.",
         "where": "app.js:40-42; unused component at index.html:702-718",
-        "fix": "Render a real .empty block over/under the canvas: glyph, 'Nobody on the wheel yet', 'Paste your list below — one name per line'."
+        "fix": "Render a real .empty block over/under the canvas: glyph, 'Nobody on the wheel yet', 'Paste your list below, one name per line'."
       },
       {
-        "issue": "The wheel hub is hardcoded #ffffff, sampled rgb(255,255,255) in dark mode — a bright white disc in a dark room.",
+        "issue": "The wheel hub is hardcoded #ffffff, sampled rgb(255,255,255) in dark mode, a bright white disc in a dark room.",
         "where": "app.js:70-73",
         "fix": "Read --surface (or --chip) from the computed body style as the empty-state path already does at app.js:37."
       },
@@ -633,12 +633,12 @@
         "fix": "var(--t-sm)."
       },
       {
-        "issue": "#spinBtn stays 52px tall at every text size — measured unchanged from Default through Largest — while its label text grows, so the button gets visually tighter exactly when a user has asked for more room.",
+        "issue": "#spinBtn stays 52px tall at every text size, measured unchanged from Default through Largest, while its label text grows, so the button gets visually tighter exactly when a user has asked for more room.",
         "where": "index.html:590 (.btn.big{min-height:52px}) instanced at index.html:1288",
         "fix": "Express the big-button height in em or add a data-text-aware min-height."
       },
       {
-        "issue": "No spin-speed control of any kind exists — a /speed|duration|fast/ scan of the rendered page finds nothing — so the 4.2s animation is mandatory for everyone.",
+        "issue": "No spin-speed control of any kind exists, a /speed|duration|fast/ scan of the rendered page finds nothing, so the 4.2s animation is mandatory for everyone.",
         "where": "app.js:85 (const dur = 4200)",
         "fix": "A three-stop speed control beside the removal toggle, persisted with the other prefs."
       }
@@ -650,17 +650,17 @@
         "fix": "Allow a final spin that lands on and announces the sole remaining entry, then offer 'Reset for next period'."
       },
       {
-        "issue": "'Restore removed names' is disarmed by any keystroke — the input handler clears the removal buffer, so editing the list mid-period silently destroys the undo. Verified: it then reports 'Nobody has been removed yet'.",
+        "issue": "'Restore removed names' is disarmed by any keystroke, the input handler clears the removal buffer, so editing the list mid-period silently destroys the undo. Verified: it then reports 'Nobody has been removed yet'.",
         "where": "app.js:121 (removed = [] inside the #names input handler); button at index.html:1303",
         "fix": "Reconcile the edit against the removed set instead of discarding it; model picked-ness as a flag on one list."
       },
       {
-        "issue": "Restore reorders the list — names.concat(removed) turns an alphabetical A,B,C register into B|A|C.",
+        "issue": "Restore reorders the list, names.concat(removed) turns an alphabetical A,B,C register into B|A|C.",
         "where": "app.js:132-135",
         "fix": "Restore in original position, which falls out for free from the single-list-with-flags model."
       },
       {
-        "issue": "No hashchange listener. Pasting a shared wheel link into an already-open tab changes the URL and nothing else — verified, the textarea kept its old contents. This is the app's only persistence mechanism.",
+        "issue": "No hashchange listener. Pasting a shared wheel link into an already-open tab changes the URL and nothing else, verified, the textarea kept its old contents. This is the app's only persistence mechanism.",
         "where": "app.js:148-153 (init reads location.hash once)",
         "fix": "addEventListener('hashchange', …) that re-decodes, ignoring the app's own replaceState writes."
       },
@@ -670,14 +670,14 @@
         "fix": "pushState on meaningful changes plus the hashchange listener, making Back a real undo."
       },
       {
-        "issue": "No count anywhere. No entry count, no 'X of 28 left' during elimination, no notice when the 100-name cap or the 40-char truncation fires — verified, no /\\d+\\s+names?/ text exists in the DOM at any list size.",
+        "issue": "No count anywhere. No entry count, no 'X of 28 left' during elimination, no notice when the 100-name cap or the 40-char truncation fires, verified, no /\\d+\\s+names?/ text exists in the DOM at any list size.",
         "where": "index.html:1291-1305 (card 2 has no count region)",
         "fix": "A live count beside the h2 at index.html:1292 and a remaining-count beside the removal toggle."
       },
       {
         "issue": "No dedupe affordance: four identical 'Sam' entries produce four slices with no notice, and the DOM contains no 'duplicate' text.",
         "where": "helpers.js:3-7 (parseNames trims and filters but never dedupes)",
-        "fix": "Dedupe with an undoable toast — SWS.undo from the now-loaded sws-ui.js is exactly this."
+        "fix": "Dedupe with an undoable toast, SWS.undo from the now-loaded sws-ui.js is exactly this."
       },
       {
         "issue": "The share link outgrows the QR silently: at 100 forty-char names the URL is 5,788 chars, qrcode() throws, and the user gets 'Could not draw the QR' with no cause, no cure and a blank canvas.",
@@ -685,17 +685,17 @@
         "fix": "Check payload length first and say what to do instead; consider compressing the payload."
       },
       {
-        "issue": "There is no saved-wheel concept at all — no named wheels, no list, no export, no import. storage() is 0 bytes; the only save is a bookmark of a hash URL.",
+        "issue": "There is no saved-wheel concept at all, no named wheels, no list, no export, no import. storage() is 0 bytes; the only save is a bookmark of a hash URL.",
         "where": "app.js:111-115 is the entire persistence layer; UI space at index.html:1300-1304",
         "fix": "Autosave to localStorage, a named-wheel list with rename/duplicate/delete, and Export all / Import."
       },
       {
-        "issue": "Card 1 — the wheel, the winner and the primary action — has no h2 and therefore no accessible name, so a screen-reader user landmark-hopping gets an unnamed region containing the whole product.",
+        "issue": "Card 1, the wheel, the winner and the primary action, has no h2 and therefore no accessible name, so a screen-reader user landmark-hopping gets an unnamed region containing the whole product.",
         "where": "index.html:1282-1289",
         "fix": "Add an h2 (visually the micro-label style is unobtrusive) or aria-label the section."
       },
       {
-        "issue": "No result history — #winner is overwritten on the next spin and nothing is retained, so there is no fairness receipt for chat or the staffroom and no record of who has already been picked once removal mode is off.",
+        "issue": "No result history, #winner is overwritten on the next spin and nothing is retained, so there is no fairness receipt for chat or the staffroom and no record of who has already been picked once removal mode is off.",
         "where": "app.js:81 and app.js:98",
         "fix": "An ordered timestamped log below the wheel, copyable as plain text."
       },
@@ -707,7 +707,7 @@
     ],
     "a11yDefects": [
       {
-        "issue": "The primary action destroys keyboard focus. Setting spinBtn.disabled while it holds focus moves activeElement to <body> — verified still <body> after the spin completes and the button is re-enabled — so a second Space does nothing and every subsequent spin needs three Tabs from the top of the document. axe does not detect this (zero violations on load, after a spin, and with the prefs dialog open).",
+        "issue": "The primary action destroys keyboard focus. Setting spinBtn.disabled while it holds focus moves activeElement to <body>, verified still <body> after the spin completes and the button is re-enabled, so a second Space does nothing and every subsequent spin needs three Tabs from the top of the document. axe does not detect this (zero violations on load, after a spin, and with the prefs dialog open).",
         "where": "app.js:80 ($('spinBtn').disabled = true) and app.js:95 (re-enable)",
         "fix": "Keep the button focusable and guard on the existing `spinning` flag; use aria-disabled plus aria-busy, and move focus to the result when it lands."
       },
@@ -739,7 +739,7 @@
       {
         "issue": "The removal toggle's outcome is not announced. When a winner is removed the textarea is rewritten and the wheel redrawn 900ms later with no status message.",
         "where": "app.js:99-105",
-        "fix": "A polite toast, 'Marcus removed — 27 left', which doubles as the counter the research asks for."
+        "fix": "A polite toast, 'Marcus removed, 27 left', which doubles as the counter the research asks for."
       },
       {
         "issue": "input#removeMode is a 13x20px target, under the 44px floor at every viewport and preference combination tested.",
@@ -752,7 +752,7 @@
         "fix": "An h2 or aria-label."
       },
       {
-        "issue": "The QR dialog's heading is unreadable in dark mode (rgb(17,17,17) on rgb(18,18,18)) — a 1.0:1 contrast failure that axe misses because the colour comes from an inline style on a dialog that is closed at scan time.",
+        "issue": "The QR dialog's heading is unreadable in dark mode (rgb(17,17,17) on rgb(18,18,18)), a 1.0:1 contrast failure that axe misses because the colour comes from an inline style on a dialog that is closed at scan time.",
         "where": "index.html:1314",
         "fix": "Remove the inline colour; theme the dialog with tokens."
       },
@@ -762,23 +762,23 @@
         "fix": "A <noscript> line explaining that the wheel needs JavaScript."
       },
       {
-        "issue": "The 4.2-second rotation ignores both prefers-reduced-motion and the app's own Motion=Reduced setting — the clearest WCAG 2.3.3 / vestibular-safety gap in the app, and the one the research singles out as the category's blind spot.",
+        "issue": "The 4.2-second rotation ignores both prefers-reduced-motion and the app's own Motion=Reduced setting, the clearest WCAG 2.3.3 / vestibular-safety gap in the app, and the one the research singles out as the category's blind spot.",
         "where": "app.js:82-91",
         "fix": "A non-rotating reveal path (see comfortDefects)."
       }
     ],
-    "printSupport": "Partial and misleading. The shared print block (index.html:1181-1235) correctly hides header.app, footer.colophon, .tipbtn, #toast, .skip, #swsPrefsBtn and #swsPrefs (1196-1197), forces black text and flattens borders and shadows. But this app adds nothing of its own, so under emulateMedia({media:'print'}) with 28 names loaded the paper gets: the full-colour 380px canvas wheel (display:block), #spinBtn still inline-flex, all three action buttons in .row still flex, the .hint paragraph, and — the real failure — textarea#names rendered at 104px against a scrollHeight of 718px, which puts roughly 4 of 28 names on the page and clips the other 24 away with nothing to indicate they exist. There is no printable roster and no cut-slips output, which the research names as a differentiator ('degrade gracefully to paper... the move that says we understand the popsicle-stick user'). Minimum fix: add #spinBtn, .row and #wheel to the noprint set and render the entries as a numbered <ol> for print.",
+    "printSupport": "Partial and misleading. The shared print block (index.html:1181-1235) correctly hides header.app, footer.colophon, .tipbtn, #toast, .skip, #swsPrefsBtn and #swsPrefs (1196-1197), forces black text and flattens borders and shadows. But this app adds nothing of its own, so under emulateMedia({media:'print'}) with 28 names loaded the paper gets: the full-colour 380px canvas wheel (display:block), #spinBtn still inline-flex, all three action buttons in .row still flex, the .hint paragraph, and, the real failure, textarea#names rendered at 104px against a scrollHeight of 718px, which puts roughly 4 of 28 names on the page and clips the other 24 away with nothing to indicate they exist. There is no printable roster and no cut-slips output, which the research names as a differentiator ('degrade gracefully to paper... the move that says we understand the popsicle-stick user'). Minimum fix: add #spinBtn, .row and #wheel to the noprint set and render the entries as a numbered <ol> for print.",
     "riskyToRestyle": [
-      "canvas#wheel's width/height attributes are the drawing buffer, not the display size, and app.js caches CX, CY and R from them at module load (app.js:29) — before any layout runs. Changing width=\"760\" height=\"760\" at index.html:1285 changes the coordinate space every draw call assumes. Restyle the CSS width only (#wheel{width:100%;height:auto} at index.html:1252); never touch the attributes without also touching app.js:29.",
+      "canvas#wheel's width/height attributes are the drawing buffer, not the display size, and app.js caches CX, CY and R from them at module load (app.js:29), before any layout runs. Changing width=\"760\" height=\"760\" at index.html:1285 changes the coordinate space every draw call assumes. Restyle the CSS width only (#wheel{width:100%;height:auto} at index.html:1252); never touch the attributes without also touching app.js:29.",
       "Every on-wheel dimension is a magic number in canvas units, not CSS: R = width/2 - 8, the 26px hub radius, the label baseline at R - 18 and fs/3, the 2px stroke (app.js:29, 67, 71). They only look right at a 760px buffer. Changing the buffer or the aspect ratio silently misplaces all of them.",
       ".wheelwrap{max-width:380px} (index.html:1253) is load-bearing for the pointer: div.pointer is absolutely positioned at top:-6px, left:50% of .wheelwrap (1255-1259), so it only sits on the wheel's rim while the wrapper's width equals the canvas's displayed width. Any padding, border or non-100% canvas width detaches the pointer from the disc.",
       "The pointer is a CSS border triangle using border-top:22px solid var(--ink). Give .pointer a background, a border-radius or a different border-width and it stops being a triangle. It is also the only element that must read as 'on top of' the wheel, and it relies on z-index:2 against a canvas with no stacking context of its own.",
       "#winner has min-height:2.2rem (index.html:1260) precisely so the layout does not jump when a winner appears; the wheel and SPIN button would shift by a line otherwise. Removing it to 'tidy up' introduces a 4.2-second-delayed layout shift under the user's finger.",
-      "Slice fill colours are hardcoded hex in helpers.js:43 and are the only colours in the app that do not come from tokens — but they are also what the white labels' 5.02:1 to 7.58:1 contrast depends on. Swapping them for token values without re-checking label contrast will break legibility. The sliceColor wrap-around special case (helpers.js:48) assumes exactly six colours; change the array length and that guard is wrong.",
-      "The empty state reads getComputedStyle(document.body) for --chip and color on every draw (app.js:37-39). It is the one canvas path that is theme-aware, so it will follow token renames — while the hub's #ffffff and the labels' #ffffff will not. Rename tokens and the disc changes colour while the hub does not.",
+      "Slice fill colours are hardcoded hex in helpers.js:43 and are the only colours in the app that do not come from tokens, but they are also what the white labels' 5.02:1 to 7.58:1 contrast depends on. Swapping them for token values without re-checking label contrast will break legibility. The sliceColor wrap-around special case (helpers.js:48) assumes exactly six colours; change the array length and that guard is wrong.",
+      "The empty state reads getComputedStyle(document.body) for --chip and color on every draw (app.js:37-39). It is the one canvas path that is theme-aware, so it will follow token renames, while the hub's #ffffff and the labels' #ffffff will not. Rename tokens and the disc changes colour while the hub does not.",
       "dialog#qrDlg carries its layout in an inline style attribute (index.html:1313) and its heading colour in another (1314). A stylesheet rule for dialog will lose to both. Restyling the QR dialog means editing the markup, not the CSS.",
       "#spinBtn carries inline style=\"width:100%\" (index.html:1288), which beats any .btn width rule. Anything that tries to place SPIN in a row with other controls has to remove that attribute first.",
-      "#names is a plain textarea with base styling only (index.html:505) and its content IS the data model — app.js writes to .value on load, removal and restore. Replacing it with a chip/list UI is not a restyle; it rewrites the persistence path (app.js:102, 121, 134, 152).",
+      "#names is a plain textarea with base styling only (index.html:505) and its content IS the data model, app.js writes to .value on load, removal and restore. Replacing it with a chip/list UI is not a restyle; it rewrites the persistence path (app.js:102, 121, 134, 152).",
       "app.js:104 redraws the wheel on a bare setTimeout(draw, 900) after a removal, deliberately leaving the winner's slice on screen for most of a second. Any change that makes draw() dependent on freshly measured layout will run inside that orphan timer with no guarantee the element is still in its previous state.",
       "The app declares its own module-scoped toast() (app.js:9-16) while sws-ui.js now loads and exposes window.SWS.toast/undo. Both target the same #toast element (index.html:1310). Migrating to SWS.toast is worth doing for the undo affordances, but doing it halfway means two owners of one node and two competing dismiss timers."
     ]

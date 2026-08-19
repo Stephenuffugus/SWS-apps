@@ -1,4 +1,4 @@
-// Moving Boxes — numbered boxes, searchable contents, printable QR labels.
+// Moving Boxes, numbered boxes, searchable contents, printable QR labels.
 // Scanning a label opens this app with the box encoded in the URL hash.
 import {
   LIMITS, newId, nextBoxNumber, parseBoxNumber, parseItemsDetailed, searchBoxes,
@@ -24,7 +24,7 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 
-/* SWS.toast owns the toast now — it is the only one that can carry an Undo
+/* SWS.toast owns the toast now, it is the only one that can carry an Undo
    button, and undo is the answer to every destructive action in this app. */
 const toast = (msg, ms) => window.SWS.toast(msg, { ms });
 const undoToast = (msg, fn) => window.SWS.undo(msg, fn);
@@ -32,7 +32,7 @@ const undoToast = (msg, fn) => window.SWS.undo(msg, fn);
 const KEY = 'moving-boxes';
 const OPTS_KEY = 'moving-boxes-opts';
 let boxes = [];
-let editingBoxId = null;   // ✎ edits in place — the box is never deleted first
+let editingBoxId = null;   // ✎ edits in place, the box is never deleted first
 let saveWarned = 0;
 let pendingImport = null;  // boxes parsed from a file, waiting for merge/replace
 let opts = { labelContents: false };
@@ -55,7 +55,7 @@ function load() {
   try { raw = JSON.parse(text); }
   catch (e) {
     stash(text);
-    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted — import a backup to carry on.', 10000);
+    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted, import a backup to carry on.', 10000);
     return;
   }
   if (raw === null || raw === undefined) return;
@@ -66,14 +66,14 @@ function load() {
   boxes = r.boxes;
   if (r.unusable) {
     stash(text);
-    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted — import a backup to carry on.', 10000);
+    toast('Your saved list is damaged and can’t be read. It has been set aside, not deleted, import a backup to carry on.', 10000);
     return;
   }
   const notes = [];
   if (r.skipped) notes.push(plural(r.skipped, 'damaged box', 'damaged boxes') + (r.skipped === 1 ? ' was' : ' were') + ' skipped');
   if (r.repaired) notes.push(plural(r.repaired, 'box', 'boxes') + (r.repaired === 1 ? ' was' : ' were') + ' repaired');
   if (r.overflow) notes.push(plural(r.overflow, 'box', 'boxes') + ' past the ' + LIMITS.boxes + '-box limit ' + (r.overflow === 1 ? 'was' : 'were') + ' dropped');
-  if (notes.length) toast('Opened ' + plural(boxes.length, 'box', 'boxes') + ' — ' + notes.join(', ') + '.', 8000);
+  if (notes.length) toast('Opened ' + plural(boxes.length, 'box', 'boxes') + ', ' + notes.join(', ') + '.', 8000);
 }
 
 function save() {
@@ -81,7 +81,7 @@ function save() {
   catch (e) {
     if (Date.now() - saveWarned > 60000) {
       saveWarned = Date.now();
-      toast('⚠ Couldn’t save — storage may be full. Export a backup!', 7000);
+      toast('⚠ Couldn’t save, storage may be full. Export a backup!', 7000);
     }
   }
 }
@@ -105,7 +105,7 @@ function restore(snap) {
   boxes = snap;
   save();
   renderAll();
-  toast('Put back — ' + plural(boxes.length, 'box', 'boxes'));
+  toast('Put back, ' + plural(boxes.length, 'box', 'boxes'));
 }
 
 function renderAll() {
@@ -137,10 +137,10 @@ function beginEdit(b) {
   $('addBox').textContent = 'Update box #' + b.n + ' 📦';
   $('packHead').textContent = 'Editing box #' + b.n;
   $('cancelEdit').hidden = false;
-  $('cancelEdit').textContent = 'Cancel — leave box #' + b.n + ' alone';
+  $('cancelEdit').textContent = 'Cancel, leave box #' + b.n + ' alone';
   $('packCard').classList.add('editing');
   $('boxItems').focus();
-  toast('Editing box #' + b.n + ' — Cancel leaves it exactly as it is');
+  toast('Editing box #' + b.n + ', Cancel leaves it exactly as it is');
 }
 
 function endEdit(quiet) {
@@ -151,7 +151,7 @@ function endEdit(quiet) {
   $('packCard').classList.remove('editing');
   $('boxNum').value = '';
   $('boxItems').value = '';
-  if (!quiet) toast('Edit cancelled — nothing changed');
+  if (!quiet) toast('Edit cancelled, nothing changed');
 }
 
 function deleteBox(b) {
@@ -219,19 +219,19 @@ function renderSearch() {
 
   const hits = searchBoxes(boxes, q);
   if (hits.length === 0) {
-    status.textContent = 'No box has “' + q + '” — check the spelling, or it may not be packed yet.';
+    status.textContent = 'No box has “' + q + '”, check the spelling, or it may not be packed yet.';
     return;
   }
   const shown = hits.slice(0, SEARCH_SHOWN);
   status.textContent = hits.length === 1
     ? '1 box matches “' + q + '”.'
     : hits.length + ' boxes match “' + q + '”'
-      + (hits.length > shown.length ? ' — showing the first ' + shown.length + '. Type more to narrow it down.' : '.');
+      + (hits.length > shown.length ? ', showing the first ' + shown.length + '. Type more to narrow it down.' : '.');
 
   for (const { box, hitItems } of shown) {
     results.append(el('li', {},
       el('button', { class: 'btn plain hitrow', type: 'button',
-        // The name carries the answer, not just the action — a screen-reader
+        // The name carries the answer, not just the action, a screen-reader
         // user is asking "which box has the can opener", and hearing only
         // "show box 5 in the list" would make them press it to find out.
         'aria-label': 'Box #' + box.n + ', ' + (box.room || 'Unlabeled')
@@ -330,7 +330,7 @@ function renderLabels() {
     const qrNode = q
       ? el('img', { alt: 'QR label for box ' + b.n, src: q.src,
           style: 'width:' + q.mm + 'mm;height:' + q.mm + 'mm' })
-      : el('div', { class: 'li', text: '(Too much to fit in one code — print the packing list too)' });
+      : el('div', { class: 'li', text: '(Too much to fit in one code, print the packing list too)' });
     wrap.append(el('div', { class: 'label' },
       el('div', { class: 'lt' },
         el('div', { class: 'ln', text: '#' + b.n }),
@@ -350,7 +350,7 @@ function reportLabels(r) {
     const list = r.trimmed.slice(0, 6).join(', #');
     notes.push('QR contents trimmed on ' + r.trimmed.length
       + (r.trimmed.length === 1 ? ' label (#' : ' labels (#') + list
-      + (r.trimmed.length > 6 ? ' …' : '') + ') — print the packing list for the full contents');
+      + (r.trimmed.length > 6 ? ' …' : '') + '), print the packing list for the full contents');
   }
   if (r.failed) notes.push(plural(r.failed, 'label') + ' could not fit a code at all');
   const note = $('labelNote');
@@ -383,7 +383,7 @@ function renderManifest() {
     el('p', { class: 'mmeta', text: 'Printed ' + today() + ' · ' + plural(boxes.length, 'box', 'boxes')
       + ' · ' + plural(things, 'thing') }),
     el('ul', { class: 'mrooms' },
-      [...rooms.keys()].sort().map(k => el('li', { text: k + ' — '
+      [...rooms.keys()].sort().map(k => el('li', { text: k + ', '
         + plural(rooms.get(k).boxes, 'box', 'boxes') + ', ' + plural(rooms.get(k).items, 'thing') }))),
     el('p', { class: 'mmeta', text: 'Tick each number off as it comes off the van.' }));
 }
@@ -412,7 +412,7 @@ function showScanned(box) {
   for (const item of box.items) ul.append(el('li', {}, item));
   if (box.items.length === 0) ul.append(el('li', { class: 'sub' }, '(nothing listed)'));
   $('revOpen').href = baseUrl();
-  document.title = 'Box #' + box.n + (box.room ? ' · ' + box.room : '') + ' — Moving Boxes';
+  document.title = 'Box #' + box.n + (box.room ? ' · ' + box.room : '') + ', Moving Boxes';
 }
 
 function leaveScanned() {
@@ -420,7 +420,7 @@ function leaveScanned() {
   $('labels').classList.remove('hidden');
   $('app').classList.remove('hidden');
   try { history.replaceState(null, '', baseUrl()); } catch (e) {}
-  document.title = 'Moving Boxes — Free Box Inventory with QR Labels';
+  document.title = 'Moving Boxes, Free Box Inventory with QR Labels';
 }
 
 function saveScanned() {
@@ -462,7 +462,7 @@ function sealBox() {
 
   if (editingBoxId) {
     const b = boxes.find(x => x.id === editingBoxId);
-    if (!b) { endEdit(true); toast('That box is gone — nothing was changed'); return; }
+    if (!b) { endEdit(true); toast('That box is gone, nothing was changed'); return; }
     b.n = num.n === null ? b.n : num.n;
     b.room = $('boxRoom').value.trim().slice(0, LIMITS.roomChars);
     b.items = items;
@@ -470,15 +470,15 @@ function sealBox() {
     msg = 'Box #' + b.n + ' updated';
   } else {
     if (boxes.length >= LIMITS.boxes) {
-      toast('That’s ' + LIMITS.boxes + ' boxes — the limit for one list. Export a backup and start a second list.', 9000);
+      toast('That’s ' + LIMITS.boxes + ' boxes, the limit for one list. Export a backup and start a second list.', 9000);
       return;
     }
     const n = num.n === null ? nextBoxNumber(boxes) : num.n;
     const clash = boxes.some(b => b.n === n);
     boxes.push({ id: newId(), n, room: $('boxRoom').value.trim().slice(0, LIMITS.roomChars), items });
     msg = 'Box #' + n + ' sealed 📦'
-      + (clash ? ' — heads up, another box is already #' + n : '')
-      + (boxes.length === LIMITS.boxes ? ' — that is the ' + LIMITS.boxes + '-box limit' : '');
+      + (clash ? ', heads up, another box is already #' + n : '')
+      + (boxes.length === LIMITS.boxes ? ', that is the ' + LIMITS.boxes + '-box limit' : '');
     $('boxNum').value = '';
     $('boxItems').value = '';
   }
@@ -486,7 +486,7 @@ function sealBox() {
   save();
   renderAll();
   $('boxItems').focus();
-  undoToast(msg + (caps.length ? ' — ' + caps.join('; ') : ''), () => restore(snap));
+  undoToast(msg + (caps.length ? ', ' + caps.join('; ') : ''), () => restore(snap));
 }
 
 function applyImport(mode) {
@@ -498,7 +498,7 @@ function applyImport(mode) {
   let msg;
   if (mode === 'replace') {
     boxes = inc.boxes;
-    msg = 'Replaced — was ' + plural(snap.length, 'box', 'boxes') + ', now ' + boxes.length;
+    msg = 'Replaced, was ' + plural(snap.length, 'box', 'boxes') + ', now ' + boxes.length;
   } else {
     const r = mergeBoxes(boxes, inc.boxes);
     boxes = r.boxes;
@@ -507,7 +507,7 @@ function applyImport(mode) {
     if (r.updated) bits.push(r.updated + ' updated');
     if (r.unchanged) bits.push(r.unchanged + ' already matched');
     if (r.overflow) bits.push(r.overflow + ' dropped at the ' + LIMITS.boxes + '-box limit');
-    msg = 'Merged — ' + (bits.length ? bits.join(', ') : 'nothing new') + '. ' + boxes.length + ' boxes now';
+    msg = 'Merged, ' + (bits.length ? bits.join(', ') : 'nothing new') + '. ' + boxes.length + ' boxes now';
   }
   const notes = [];
   if (inc.skipped) notes.push(plural(inc.skipped, 'unreadable record') + ' skipped');
@@ -558,7 +558,7 @@ function wire() {
     opts.labelContents = e.target.checked;
     saveOpts();
     toast(opts.labelContents
-      ? 'Contents will print on the outside of the label — movers advise against it for valuables'
+      ? 'Contents will print on the outside of the label, movers advise against it for valuables'
       : 'Contents stay off the label. They are still inside the QR code.', 6000);
   });
 
@@ -578,12 +578,12 @@ function wire() {
   $('exportBtn').addEventListener('click', () => {
     const name = 'moving-boxes-' + today() + '-' + boxes.length + '-boxes.json';
     download(name, 'application/json', JSON.stringify(boxes, null, 2));
-    toast('Saved ' + name + ' — email it to yourself', 6000);
+    toast('Saved ' + name + ', email it to yourself', 6000);
   });
   $('csvBtn').addEventListener('click', () => {
     const name = 'moving-boxes-' + today() + '-' + boxes.length + '-boxes.csv';
     download(name, 'text/csv', boxesToCsv(boxes));
-    toast('Saved ' + name + ' — opens in any spreadsheet', 6000);
+    toast('Saved ' + name + ', opens in any spreadsheet', 6000);
   });
 
   $('importBtn').addEventListener('click', () => $('importFile').click());
@@ -593,7 +593,7 @@ function wire() {
     pendingImport = null;
     $('importAsk').classList.add('hidden');
     $('importBtn').focus();
-    toast('Import cancelled — your list is untouched');
+    toast('Import cancelled, your list is untouched');
   });
   $('importFile').addEventListener('change', (ev) => {
     const f = ev.target.files && ev.target.files[0];
@@ -609,7 +609,7 @@ function wire() {
         return;
       }
       if (r.boxes.length === 0) {
-        toast('Nothing usable in that file — ' + plural(r.skipped, 'record') + ' could not be read.', 7000);
+        toast('Nothing usable in that file, ' + plural(r.skipped, 'record') + ' could not be read.', 7000);
         return;
       }
       askImport(r, f.name);

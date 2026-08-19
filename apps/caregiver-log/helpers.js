@@ -1,4 +1,4 @@
-// Pure helpers — no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
+// Pure helpers, no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
 
 // Share-code alphabet from the product doc: no 0/O/1/I/l lookalikes.
 export const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -38,8 +38,8 @@ export function parseBulkSlots(text) {
   return out;
 }
 
-/* Date-range slots: "every Tue 3–5pm, Sept–Nov" style generation.
-   weekdays: Set/array of 0–6 (Sun=0). Dates are LOCAL. */
+/* Date-range slots: "every Tue 3 to 5pm, Sept-Nov" style generation.
+   weekdays: Set/array of 0 to 6 (Sun=0). Dates are LOCAL. */
 export function dateRangeSlots({ start, end, weekdays, timeText, prefix, capacity }) {
   const out = [];
   const from = new Date(start + 'T00:00:00');
@@ -53,7 +53,7 @@ export function dateRangeSlots({ start, end, weekdays, timeText, prefix, capacit
     if (!days.has(d.getDay())) continue;
     let label = fmt.format(d);
     if (timeText) label += ' · ' + String(timeText).trim().slice(0, 40);
-    if (prefix) label = String(prefix).trim().slice(0, 60) + ' — ' + label;
+    if (prefix) label = String(prefix).trim().slice(0, 60) + ', ' + label;
     out.push({ label: label.slice(0, 120), capacity: cap });
     if (out.length >= 100) break;
   }

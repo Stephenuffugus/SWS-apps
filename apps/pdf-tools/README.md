@@ -1,6 +1,6 @@
 # PDF Tools
 
-Merge PDFs, reorder pages across files, rotate, drop pages, and split — entirely
+Merge PDFs, reorder pages across files, rotate, drop pages, and split, entirely
 in the browser via vendored pdf-lib. The popular PDF sites route your tax
 returns, contracts, and medical records through their servers and then paywall
 the second merge of the day; here the documents never leave the tab, there are
@@ -15,8 +15,7 @@ honest explanation instead of a crash. A free tool by Sky Wolf Studio.
   that lands in the file. `splitGroups()` turns a mode + spec into groups of
   row indices; `splitNames()` turns those groups into the exact filenames the
   UI previews.
-- **The rotation badge shows the final angle**, source rotation included —
-  `finalAngle(sourceAngle, added)`. Showing only the user's delta lies on any
+- **The rotation badge shows the final angle**, source rotation included, `finalAngle(sourceAngle, added)`. Showing only the user's delta lies on any
   scan that already carries `/Rotate 90`.
 - **Nothing is persisted.** No localStorage, by design. `beforeunload` guards
   an unsaved arrangement and the `.trust` stamp says so out loud.

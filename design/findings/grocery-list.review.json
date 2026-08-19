@@ -4,28 +4,28 @@
     "personas": [
       {
         "name": "Dee Okonkwo",
-        "who": "41, does the weekly shop for a household of five, phone is a 390px Android. Not a power user but perfectly capable. Currently runs the list as a shared Google Keep note — the research's 'THE real competitor' — and came here because Keep has no aisle order and the checked items behave inconsistently.",
+        "who": "41, does the weekly shop for a household of five, phone is a 390px Android. Not a power user but perfectly capable. Currently runs the list as a shared Google Keep note, the research's 'THE real competitor', and came here because Keep has no aisle order and the checked items behave inconsistently.",
         "context": "The store moment the research calls dominant: Tuesday 18:40, Aldi, phone in the right hand, cart pushed with the left, a five-year-old in the seat, overhead fluorescents washing the screen, and no signal past the freezer wall. She has about 25 minutes.",
         "task": "Work down a 22-item list, checking things off as they go in the cart, and add two things she remembers on the way round.",
-        "verdict": "Did not finish cleanly. She got home with bananas and chicken thighs missing from the bags but ticked off on the list, because checking an item makes it jump to the bottom and everything below slides up under her thumb. She liked the size of the rows and she liked that it worked at all in the freezer aisle once loaded — but she does not trust the ticks any more, which is the whole job.",
+        "verdict": "Did not finish cleanly. She got home with bananas and chicken thighs missing from the bags but ticked off on the list, because checking an item makes it jump to the bottom and everything below slides up under her thumb. She liked the size of the rows and she liked that it worked at all in the freezer aisle once loaded, but she does not trust the ticks any more, which is the whole job.",
         "delights": [
           "Row targets are genuinely thumb-sized without her changing a thing: the label hit area measures 44px tall and the whole row toggles, not a 20px box at the right edge.",
-          "'7 to get' as a real heading at 20px, not a muted eyebrow — she can read the number of remaining items from arm's length without stopping the cart.",
-          "Nothing moves, animates or grows in the thumb zone. There is no banner, no interstitial, no reserved ad shelf — the exact opposite of the Cozi and Listonic complaints in the research."
+          "'7 to get' as a real heading at 20px, not a muted eyebrow, she can read the number of remaining items from arm's length without stopping the cart.",
+          "Nothing moves, animates or grows in the thumb zone. There is no banner, no interstitial, no reserved ad shelf, the exact opposite of the Cozi and Listonic complaints in the research."
         ],
         "frictions": [
           {
             "what": "Checking an item re-sorts the list under her finger. Measured: with Milk/Bananas/Sourdough/Chicken thighs/Greek yoghurt/Paprika/Kitchen roll/Frozen peas/Coffee/Cheddar on screen, tapping the five checkbox positions she could see (y = 309, 370, 431, 492, 553) checked Milk, Sourdough, Greek yoghurt, Kitchen roll and Coffee. Four of the five were the wrong item. Even at a deliberate 1.1s per tap, the spot she just tapped holds the NEXT item 1.1 seconds later, every single time. Cause: app.js:261-262 renders open items then appends done items, so a checked row leaves its slot and everything below shifts up exactly one row (measured 61px).",
             "severity": "blocker",
-            "whyItMatters": "This is the app's only verb and it silently records the wrong answer. The research's emotional context names 'the specific low-grade dread of getting home and realizing you forgot the one thing you actually came for' — this manufactures that. It also breaks the sourced Cozi rule verbatim: 'nothing may reflow under a finger that is already descending.'"
+            "whyItMatters": "This is the app's only verb and it silently records the wrong answer. The research's emotional context names 'the specific low-grade dread of getting home and realizing you forgot the one thing you actually came for', this manufactures that. It also breaks the sourced Cozi rule verbatim: 'nothing may reflow under a finger that is already descending.'"
           },
           {
-            "what": "When her partner checks something off at home, her scroll position jumps. Measured: scrolled to y=600, one remote snapshot landed, scroll ended at y=434 — a 166px lurch with no warning. drawBoard() empties #view with replaceChildren() (app.js:206) so the document momentarily collapses and the browser clamps the scroll.",
+            "what": "When her partner checks something off at home, her scroll position jumps. Measured: scrolled to y=600, one remote snapshot landed, scroll ended at y=434, a 166px lurch with no warning. drawBoard() empties #view with replaceChildren() (app.js:206) so the document momentarily collapses and the browser clamps the scroll.",
             "severity": "major",
             "whyItMatters": "She loses her place mid-aisle and has to re-find the row she was on, which is exactly when a mis-tap happens."
           },
           {
-            "what": "There is no 'in the cart' section. Checked items stay in the same <ul>, greyed and struck through, mixed into the same scroll. With 22 items she scrolls past eight ghosts to reach the four she still needs, and 'Clear checked' — the only way to tidy — is owner-only (app.js:273 `if (own && done.length)`), and she is not the owner.",
+            "what": "There is no 'in the cart' section. Checked items stay in the same <ul>, greyed and struck through, mixed into the same scroll. With 22 items she scrolls past eight ghosts to reach the four she still needs, and 'Clear checked', the only way to tidy, is owner-only (app.js:273 `if (own && done.length)`), and she is not the owner.",
             "severity": "major",
             "whyItMatters": "Research table stake #1 asks for checked items to move to a collapsed 'in the cart' section, and the person who actually did the shopping is the one person the app forbids from tidying up."
           },
@@ -35,7 +35,7 @@
             "whyItMatters": "The research names quantity-plus-note as 'the #1 reason people fall back to a text message', and aisle order as the thing an entire sub-genre of apps exists to fix."
           },
           {
-            "what": "Every row carries a 44x44 ✕ four pixels from the label she taps 22 times a trip, and it deletes instantly — no confirm, no undo. Measured: clicking it removed the item, produced no toast at all, and left the previous unrelated toast text ('2 checked item(s) cleared') sitting on screen.",
+            "what": "Every row carries a 44x44 ✕ four pixels from the label she taps 22 times a trip, and it deletes instantly, no confirm, no undo. Measured: clicking it removed the item, produced no toast at all, and left the previous unrelated toast text ('2 checked item(s) cleared') sitting on screen.",
             "severity": "major",
             "whyItMatters": "A cart bump WILL trigger one, and the research lists undo for every destructive action as table stakes. sws-ui.js:130 already ships SWS.undo in this very app and app.js never calls it."
           },
@@ -48,34 +48,34 @@
       },
       {
         "name": "Ravi Menon",
-        "who": "36, the other half of Dee's household, does most of the cooking. Comfortable with apps, impatient with them. He is the person the research describes as the one who 'keeps texting grab milk instead of adding it' — he will use this only if it is cheaper than opening the text thread.",
+        "who": "36, the other half of Dee's household, does most of the cooking. Comfortable with apps, impatient with them. He is the person the research describes as the one who 'keeps texting grab milk instead of adding it', he will use this only if it is cheaper than opening the text thread.",
         "context": "The kitchen moment: 19:05, hob on, one hand wet, phone face-up on the counter, roughly four seconds of attention. Screen at 414px, default text size.",
-        "task": "Add three things he has just noticed they are out of — paprika, chicken thighs, kitchen roll — without stopping cooking.",
+        "task": "Add three things he has just noticed they are out of, paprika, chicken thighs, kitchen roll, without stopping cooking.",
         "verdict": "Added one item and gave up on the other two. Every time he pressed Enter the keyboard closed; the second time it closed mid-word and swallowed everything he typed after that. He sent Dee a text instead, which is precisely the failure mode the research says kills this category.",
         "delights": [
-          "The shared link opened straight into a live list with no account, no tour and no 'add to home screen' nag — the 'five-second second-person onboarding' the research asks for is genuinely there.",
+          "The shared link opened straight into a live list with no account, no tour and no 'add to home screen' nag, the 'five-second second-person onboarding' the research asks for is genuinely there.",
           "The add field is the first thing on the board, above the list, with a placeholder that shows the tone ('milk', 'the good coffee') rather than instructions."
         ],
         "frictions": [
           {
-            "what": "Pressing Enter to add an item throws focus to <body>. Measured: focused the field, typed 'Oat milk', pressed Enter — item added, field cleared, and document.activeElement became BODY. On a phone that closes the software keyboard after every single item. app.js:232 calls input.focus() synchronously, then the await at app.js:233 resolves, the snapshot fires, and app.js:206 replaceChildren() destroys the focused input.",
+            "what": "Pressing Enter to add an item throws focus to <body>. Measured: focused the field, typed 'Oat milk', pressed Enter, item added, field cleared, and document.activeElement became BODY. On a phone that closes the software keyboard after every single item. app.js:232 calls input.focus() synchronously, then the await at app.js:233 resolves, the snapshot fires, and app.js:206 replaceChildren() destroys the focused input.",
             "severity": "blocker",
             "whyItMatters": "'Enter adds and keeps focus for the next item' is the literal requirement in the research's adoption-failure section. Adding three items costs three keyboard round-trips, which is more effort than sending a text."
           },
           {
-            "what": "One snapshot from another household member mid-word destroys the rest of his typing. Measured: typed 'chick' (field='chick', focus=INPUT), fired a single remote snapshot, focus became BODY, then typed 'en thighs' — the field still read 'chick'. Nine characters went nowhere. Under a 10-per-second snapshot storm, 'chicken thighs, boneless' arrived as 'c' — 1 of 24 characters. app.js:222 guards the re-focus on `addFocused`, but replaceChildren() at app.js:206 blurs the old input and flips addFocused to false (app.js:218) before that guard is ever read.",
+            "what": "One snapshot from another household member mid-word destroys the rest of his typing. Measured: typed 'chick' (field='chick', focus=INPUT), fired a single remote snapshot, focus became BODY, then typed 'en thighs', the field still read 'chick'. Nine characters went nowhere. Under a 10-per-second snapshot storm, 'chicken thighs, boneless' arrived as 'c', 1 of 24 characters. app.js:222 guards the re-focus on `addFocused`, but replaceChildren() at app.js:206 blurs the old input and flips addFocused to false (app.js:218) before that guard is ever read.",
             "severity": "blocker",
             "whyItMatters": "The comment at app.js:221 says 'a family member checking something off must not close YOUR keyboard'. The mechanism does not work, and it fails hardest in exactly the multi-writer situation this app exists for. Note the contrast: checkboxes, the ✕ buttons, the share summary and the header button all keep focus perfectly across a snapshot, because they carry data-fkey (app.js:245, 257, 287) and the add input does not."
           },
           {
             "what": "No deduplication. Measured: adding 'Milk', then 'milk', then 'Milk ' produced three separate rows. Dee had already added milk from the shop.",
             "severity": "major",
-            "whyItMatters": "Verbatim App Store complaint in the research file ('making a change results in a duplicate item'), and the fix the research prescribes — bump or flash the existing row on a normalized name match — is a few lines at app.js:227."
+            "whyItMatters": "Verbatim App Store complaint in the research file ('making a change results in a duplicate item'), and the fix the research prescribes, bump or flash the existing row on a normalized name match, is a few lines at app.js:227."
           },
           {
             "what": "No paste-a-blob. He copied an ingredient block out of a recipe and pasted it into the add field; the newlines collapsed and it became one 120-character item (maxlength truncates at 120).",
             "severity": "minor",
-            "whyItMatters": "Research differentiator #4 — 'paste a recipe's ingredient block and it splits into individual items' — is the reliable answer to the broken voice-assistant complaint."
+            "whyItMatters": "Research differentiator #4, 'paste a recipe's ingredient block and it splits into individual items', is the reliable answer to the broken voice-assistant complaint."
           }
         ]
       },
@@ -84,10 +84,10 @@
         "who": "71, macular degeneration in her left eye plus a mild essential tremor. Runs her phone at the largest system text size and taps with a knuckle because her fingertip shakes. Her daughter set the list up and texted her the link. This is the persona the comfort panel exists for.",
         "context": "10:20 on a Thursday, the small Tesco, phone in a 320px-wide case held in both hands with the cart parked, bright storefront window behind her.",
         "task": "Turn the text up until she can read it, then check off the six things she came for.",
-        "verdict": "The comfort panel did its job and she was visibly relieved — but she then hit the same reorder trap as Dee, and at Largest text the ✕ is a 66px target sitting beside every row she wants to touch with a shaking hand, with no undo behind it.",
+        "verdict": "The comfort panel did its job and she was visibly relieved, but she then hit the same reorder trap as Dee, and at Largest text the ✕ is a 66px target sitting beside every row she wants to touch with a shaking hand, with no undo behind it.",
         "delights": [
-          "She opened the panel from the header, chose Largest text and Roomy spacing, and the whole app responded properly: item labels went 17px → 25.5px, the label hit area 44px → 66px, the ✕ 44px → 66px, the heading 20px → 30px, and at 320px wide there was still zero sideways scroll. Measured across five comfort combinations (xxl, xxl+roomy+high contrast, Easier reading, xxl dark, compact) at 320 and 414 — horizontal overflow was 0px in every one.",
-          "The setting stuck across a reload and across the other Sky Wolf apps — the panel says 'Saved on this device. Every app here follows it.' and it is true.",
+          "She opened the panel from the header, chose Largest text and Roomy spacing, and the whole app responded properly: item labels went 17px → 25.5px, the label hit area 44px → 66px, the ✕ 44px → 66px, the heading 20px → 30px, and at 320px wide there was still zero sideways scroll. Measured across five comfort combinations (xxl, xxl+roomy+high contrast, Easier reading, xxl dark, compact) at 320 and 414, horizontal overflow was 0px in every one.",
+          "The setting stuck across a reload and across the other Sky Wolf apps, the panel says 'Saved on this device. Every app here follows it.' and it is true.",
           "Dark mode at Largest text kept the checked state legible (line-through plus a muted ink, not colour alone)."
         ],
         "frictions": [
@@ -97,14 +97,14 @@
             "whyItMatters": "The one control that fixes the app for her is the smallest and least legible thing in the header. Her daughter had to find it over the phone."
           },
           {
-            "what": "At Largest text on a 320px screen the add field is 126px wide — about nine characters at 24px. Measured. Typing 'kitchen roll' scrolls the text out of view as she types, so she cannot proof-read what she entered.",
+            "what": "At Largest text on a 320px screen the add field is 126px wide, about nine characters at 24px. Measured. Typing 'kitchen roll' scrolls the text out of view as she types, so she cannot proof-read what she entered.",
             "severity": "major",
             "whyItMatters": "The field is 126px because the Add button holds a fixed width beside it (app.js:226 sets inline flex:0 0 auto and the row is .row.nowrap at app.js:237). At the largest comfort setting the input and its button should stack, not share a line."
           },
           {
-            "what": "The ✕ column takes a fixed ~90px of a 320px screen at Largest text, so item names wrap to three and four lines — 'Greek yoghurt (the big pot)' rendered across four lines. The destructive control gets a guaranteed column; the content it destroys gets the remainder.",
+            "what": "The ✕ column takes a fixed ~90px of a 320px screen at Largest text, so item names wrap to three and four lines, 'Greek yoghurt (the big pot)' rendered across four lines. The destructive control gets a guaranteed column; the content it destroys gets the remainder.",
             "severity": "major",
-            "whyItMatters": "Her list becomes twice as long to scroll, and the 66px delete target now sits a few pixels from every 66px row she is trying to tap with a tremor — with no confirm and no undo behind it."
+            "whyItMatters": "Her list becomes twice as long to scroll, and the 66px delete target now sits a few pixels from every 66px row she is trying to tap with a tremor, with no confirm and no undo behind it."
           },
           {
             "what": "The header wraps to two rows and eats 112px before anything useful. Measured at 320, 360, 390 and 414: header height 112px with the Sign in/out button pushed onto a second line; it only collapses to 64px at 480px and above.",
@@ -115,13 +115,13 @@
       },
       {
         "name": "Tomasz Wierzbicki",
-        "who": "58, Dee's father-in-law, staying for two weeks. Has never installed a shopping app and will not create an account for one. He is the research's 'holdout' — 'not refusing the app itself, refusing extra effort' — and the reason the no-account link exists.",
+        "who": "58, Dee's father-in-law, staying for two weeks. Has never installed a shopping app and will not create an account for one. He is the research's 'holdout', 'not refusing the app itself, refusing extra effort', and the reason the no-account link exists.",
         "context": "Sitting in the kitchen with the tablet, 414px browser window, reading glasses on, no time pressure. Received the link in a WhatsApp message.",
         "task": "Add washing powder and rye bread to the family list, then check off the two things he picked up at the corner shop.",
-        "verdict": "Succeeded, and it was the cleanest run of the group — the link opened a live editable list with no signup, no install prompt and no interstitial. Then he tried to tidy up after himself and found the app quietly does not let him.",
+        "verdict": "Succeeded, and it was the cleanest run of the group, the link opened a live editable list with no signup, no install prompt and no interstitial. Then he tried to tidy up after himself and found the app quietly does not let him.",
         "delights": [
-          "Tapping the link put him straight into the list. No account, no app store, no 'continue in the app' banner. The colophon on his copy even reads 'Made with Grocery List — free, no ads. Start yours', which he thought was fair.",
-          "'No ads. No accounts for family. No subscription.' is stated as a visible object with a tick, not grey small print — he read it and believed it.",
+          "Tapping the link put him straight into the list. No account, no app store, no 'continue in the app' banner. The colophon on his copy even reads 'Made with Grocery List, free, no ads. Start yours', which he thought was fair.",
+          "'No ads. No accounts for family. No subscription.' is stated as a visible object with a tick, not grey small print, he read it and believed it.",
           "He can check items off despite not being the owner: the rules deliberately let any link-holder toggle done (data.js:288)."
         ],
         "frictions": [
@@ -136,14 +136,14 @@
             "whyItMatters": "A shared link that opens an anonymous list is one mis-forwarded message away from someone editing a stranger's groceries with no way to tell."
           },
           {
-            "what": "He typed the code from a screenshot as lowercase into the URL. `#/b/f6fv9k` matched nothing and silently returned him to the marketing home page with no message at all — the route regex at app.js:71 accepts uppercase only, while the join field at app.js:115 correctly normalizes case.",
+            "what": "He typed the code from a screenshot as lowercase into the URL. `#/b/f6fv9k` matched nothing and silently returned him to the marketing home page with no message at all, the route regex at app.js:71 accepts uppercase only, while the join field at app.js:115 correctly normalizes case.",
             "severity": "minor",
             "whyItMatters": "Two entry points, two different rules, and the failing one fails silently. Codes get retyped and links get lowercased by messaging apps all the time."
           },
           {
             "what": "There is no 'copy the list as text'. The share panel offers a code, Copy link and a QR code only. He wanted to paste the remaining items into the family WhatsApp for whoever went out next.",
             "severity": "minor",
-            "whyItMatters": "Research table stake #9 asks for three share routes precisely because link-only sharing fails the household member who will not open links — i.e. him."
+            "whyItMatters": "Research table stake #9 asks for three share routes precisely because link-only sharing fails the household member who will not open links, i.e. him."
           }
         ]
       },
@@ -152,9 +152,9 @@
         "who": "29, blind, VoiceOver on an iPhone and a Bluetooth keyboard for longer sessions. Shares a flat with two others and keeps the list. Has abandoned three shopping apps for unlabelled buttons.",
         "context": "22:15 at the kitchen table, keyboard on his lap, screen reader at a fast rate, no visual channel at all.",
         "task": "Add four items, check one off, and read back what is still outstanding.",
-        "verdict": "The static accessibility here is better than anything else he has tried — and then the dynamic behaviour undid it. He could not add items in a run because focus vanished after each one, and when he deleted the wrong item nothing was announced and nothing could be undone.",
+        "verdict": "The static accessibility here is better than anything else he has tried, and then the dynamic behaviour undid it. He could not add items in a run because focus vanished after each one, and when he deleted the wrong item nothing was announced and nothing could be undone.",
         "delights": [
-          "Every remove button has a distinct name — 'Remove Milk', 'Remove Greek yoghurt' — instead of twenty identical 'Remove item' strings (app.js:257). This is the single thing he checks first in any list app.",
+          "Every remove button has a distinct name, 'Remove Milk', 'Remove Greek yoghurt', instead of twenty identical 'Remove item' strings (app.js:257). This is the single thing he checks first in any list app.",
           "A dedicated polite live region (#listStatus) announces just '4 to get' / 'All done' / 'List is empty' on change, instead of re-reading the whole board every time a flatmate touches it. Verified: it updates to the count and nothing else.",
           "axe found zero WCAG 2.0/2.1/2.2 A and AA violations on the fully-populated board after interaction, and the 16-stop tab order is logical with no traps: skip link, title, comfort, tip jar, auth, add field, Add, then checkbox/remove pairs down the list.",
           "The QR dialog is not a dead end for him: the canvas carries the full URL as its accessible name and the URL is repeated as selectable text underneath (app.js:329-330)."
@@ -168,24 +168,24 @@
           {
             "what": "Deleting an item announces nothing. Measured: pressing the ✕ removed the row, fired no toast, and left the previous unrelated toast string in the live region. He had no confirmation of what he had destroyed or that anything had happened.",
             "severity": "major",
-            "whyItMatters": "A silent destructive action with no undo is the worst combination available. #toast is role=status and already in the page — app.js:258 just never speaks."
+            "whyItMatters": "A silent destructive action with no undo is the worst combination available. #toast is role=status and already in the page, app.js:258 just never speaks."
           },
           {
             "what": "The re-sort on check is invisible to him. He checks 'Sourdough' and the item silently relocates to the end of the list; the only announcement is the count going down.",
             "severity": "major",
-            "whyItMatters": "His mental model of the list order is now wrong, and the next item he arrows to is not the one he expected — the same defect Dee hits with a thumb, arriving through a different channel."
+            "whyItMatters": "His mental model of the list order is now wrong, and the next item he arrows to is not the one he expected, the same defect Dee hits with a thumb, arriving through a different channel."
           },
           {
             "what": "The only route back to the home view is the <h1> link, measured at 114x27px, styled color:inherit with the underline only on hover/focus (index.html:1267-1270). There is no back or home control on the board.",
             "severity": "minor",
-            "whyItMatters": "It is reachable by keyboard and named, so it is not a violation — but 'Grocery List' as the sole navigation is not discoverable, and at 27px tall it fails the 44px target floor the rest of the app meets."
+            "whyItMatters": "It is reachable by keyboard and named, so it is not a violation, but 'Grocery List' as the sole navigation is not discoverable, and at 27px tall it fails the 44px target floor the rest of the app meets."
           }
         ]
       }
     ],
     "consensus": {
       "worksWell": [
-        "The no-account promise is real and it is the app's strongest asset. A shared link opens a live, editable list with no signup, no install prompt, no interstitial and no ad surface anywhere — every persona who received a link was in and editing immediately, and the 'No ads. No accounts for family. No subscription.' block is stated as a visible object rather than grey footer copy.",
+        "The no-account promise is real and it is the app's strongest asset. A shared link opens a live, editable list with no signup, no install prompt, no interstitial and no ad surface anywhere, every persona who received a link was in and editing immediately, and the 'No ads. No accounts for family. No subscription.' block is stated as a visible object rather than grey footer copy.",
         "Comfort settings genuinely work end to end. Across xxl, xxl+roomy+high-contrast, Easier reading, compact and dark, at both 320px and 414px, horizontal overflow measured 0px every time; Largest text takes item labels from 17px to 25.5px and every row and button target from 44px to 66px. Nothing about the layout resists being made bigger.",
         "The static accessibility work has clearly been done and it holds: axe clean on the populated board, per-item remove labels ('Remove Milk'), a scoped live region instead of aria-live on the whole view, a labelled QR canvas with the URL in text, labelled dialogs, and focus restored by data-fkey across live snapshots for the checkbox, the ✕, the share summary and the header buttons.",
         "It is fast and it does not break. 200 adds in 4ms, a full 200-row rebuild in 32ms, two full-page scroll jumps in 12ms, zero console errors across every run. Thirteen hostile strings including script tags, an onerror img, 500 A's, RTL, combining marks and formula injection produced no injection, no poison values and no overflow; whitespace-only entries are correctly refused; triple-clicking Add on one draft produced exactly one item.",
@@ -193,20 +193,20 @@
         "The QR is correct, not merely present: re-encoding the same URL and comparing module by module against the pixels on the canvas gave 0 mismatches out of 1089 modules, with a 4.86-module quiet zone."
       ],
       "hurts": [
-        "The add field loses focus to <body> on every add and on every snapshot from another household member — so the phone keyboard closes after each item, and one snapshot arriving mid-word silently swallows every character typed after it (measured: 'chicken thighs, boneless' arrived as 'c'). This is the app's primary control failing under the app's primary condition.",
+        "The add field loses focus to <body> on every add and on every snapshot from another household member, so the phone keyboard closes after each item, and one snapshot arriving mid-word silently swallows every character typed after it (measured: 'chicken thighs, boneless' arrived as 'c'). This is the app's primary control failing under the app's primary condition.",
         "Checking an item makes it jump to the bottom of the list and everything below slides up 61px, so a shopper working down the list checks off the wrong items. Measured: five taps at five visible checkbox positions checked four wrong items. Both the thumb persona and the screen-reader persona hit it.",
-        "Every destructive path is one tap with no way back: the ✕ deletes instantly with no confirm, no toast, and no undo, even though SWS.undo is loaded in this app and never called. 'Clear checked' at least confirms — and then says out loud 'This cannot be undone.'",
+        "Every destructive path is one tap with no way back: the ✕ deletes instantly with no confirm, no toast, and no undo, even though SWS.undo is loaded in this app and never called. 'Clear checked' at least confirms, and then says out loud 'This cannot be undone.'",
         "A failed add destroys what the user typed. app.js:230-231 clears itemDraft and the field before awaiting the write, so any rejection returns an unactionable toast and an empty box (measured: 'organic free-range eggs, the big box' → '').",
-        "A network failure while opening a shared link is reported as 'That list isn't here — the link may have been rotated, or the code was mistyped.' Confirmed against real Firebase with the network cut. app.js:167 catches everything from resolveCode into null, so 'no signal' and 'no such list' are the same message — in a category whose defining environment is a supermarket dead zone.",
-        "Nothing tells anyone their work is saved, or that they are offline. There is no sync state, no 'saved on this phone', no online/offline listener anywhere in the app — the only signal is an error toast, and the research explicitly asks for the opposite.",
+        "A network failure while opening a shared link is reported as 'That list isn't here, the link may have been rotated, or the code was mistyped.' Confirmed against real Firebase with the network cut. app.js:167 catches everything from resolveCode into null, so 'no signal' and 'no such list' are the same message, in a category whose defining environment is a supermarket dead zone.",
+        "Nothing tells anyone their work is saved, or that they are offline. There is no sync state, no 'saved on this phone', no online/offline listener anywhere in the app, the only signal is an error toast, and the research explicitly asks for the opposite.",
         "The list is a flat bag of strings: no quantities, no notes, no aisle sections, no duplicate detection ('Milk', 'milk' and 'Milk ' produce three rows), no item history and no 'copy as text'. Four of the research's ten table stakes are simply absent.",
-        "Link-holders — the people who actually do the shopping — cannot clear checked items or remove anything they did not add, with no explanation given.",
+        "Link-holders, the people who actually do the shopping, cannot clear checked items or remove anything they did not add, with no explanation given.",
         "The skin's deliberate 6% type bump is dead. index.html:41-43 emits --t-base:1.060rem/--t-lg:1.126rem from `scale: 1.06` in design/skins.mjs:100, and the base layer re-declares the same tokens at index.html:232-234 at equal specificity later in the same stylesheet, so computed --t-base is 1rem. Item names render at 17px against the research's 22-24px arm's-length target. The same silent override affects every skin that sets `scale` (design/skins.mjs:61, 83, 100)."
       ],
       "mostWantedNext": [
-        "Keep checked items where they are. Fade them in place, or move them into a separate collapsed 'In the cart (6)' group below a divider — never re-sort the live list under a finger.",
+        "Keep checked items where they are. Fade them in place, or move them into a separate collapsed 'In the cart (6)' group below a divider, never re-sort the live list under a finger.",
         "Make the add field survive its own app: give it a data-fkey so the existing focus-restore path covers it, restore the caret, and never let a household member's snapshot close someone else's keyboard.",
-        "Undo on every destructive action via the SWS.undo already sitting in the page — item delete first, Clear checked second — and drop the confirm() dialogs once undo exists.",
+        "Undo on every destructive action via the SWS.undo already sitting in the page, item delete first, Clear checked second, and drop the confirm() dialogs once undo exists.",
         "Quantity and a short note per row without opening a modal, and dedupe on normalized name at add-time (bump or flash the existing row).",
         "Aisle sections with a user override that sticks, and drag-to-reorder the sections into one store's walking route.",
         "An honest saved/offline state: a persistent 'Saved on this phone' badge, a distinct offline message, and a resolveCode failure that says 'you look offline' instead of accusing the user of mistyping.",
@@ -220,15 +220,15 @@
     "batteryClean": true,
     "scenarios": [
       {
-        "name": "Standard battery — node design/stress.mjs grocery-list",
+        "name": "Standard battery, node design/stress.mjs grocery-list",
         "method": "The repo's own battery: layout at 320/414/1280 plus largest-text and roomy, touch targets, 13 hostile strings, numeric edges, 30 rapid primary clicks, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console.",
-        "result": "0 hard failures. Overflow 0px at every width and comfort setting. Keyboard reachability {focusable:10, unreachable:0, unnamed:[], placeholderOnly:[]}. axe clean. No console errors. BUT the battery never reached the board: 'bulk: 200 rapid adds' reported {ran:false}, 'boots with corrupt storage' reported 'no app storage key to corrupt', and the 30 rapid clicks only opened the sign-in dialog (168→485 chars). Creating a list requires a non-anonymous Firebase sign-in, so the battery only ever exercised the marketing home screen — the entire product is behind a control it cannot pass.",
+        "result": "0 hard failures. Overflow 0px at every width and comfort setting. Keyboard reachability {focusable:10, unreachable:0, unnamed:[], placeholderOnly:[]}. axe clean. No console errors. BUT the battery never reached the board: 'bulk: 200 rapid adds' reported {ran:false}, 'boots with corrupt storage' reported 'no app storage key to corrupt', and the 30 rapid clicks only opened the sign-in dialog (168→485 chars). Creating a list requires a non-anonymous Firebase sign-in, so the battery only ever exercised the marketing home screen, the entire product is behind a control it cannot pass.",
         "defect": "The standard battery gives this app a false clean bill of health. Everything reported below the home screen had to be driven separately.",
         "severity": "minor"
       },
       {
         "name": "Board driven end to end with a stand-in data layer",
-        "method": "Intercepted **/grocery-list/data.js with page.route() and served an in-memory module exposing the identical export surface (auth, createBoard, resolveCode, watchBoard, watchEntries, addEntry, toggleDone, clearChecked, deleteEntry, rotateCode, deleteBoard), mirroring the two real limits — body sliced to 2000 chars and the 500 entryCount cap from apps/signup-sheets/firestore.rules:277. No file under apps/ was modified. This drives the real index.html and the real app.js; only the network layer is substituted.",
+        "method": "Intercepted **/grocery-list/data.js with page.route() and served an in-memory module exposing the identical export surface (auth, createBoard, resolveCode, watchBoard, watchEntries, addEntry, toggleDone, clearChecked, deleteEntry, rotateCode, deleteBoard), mirroring the two real limits, body sliced to 2000 chars and the 500 entryCount cap from apps/signup-sheets/firestore.rules:277. No file under apps/ was modified. This drives the real index.html and the real app.js; only the network layer is substituted.",
         "result": "Owner flow, participant flow, add/check/delete/clear, share panel, QR dialog and print all reachable and stable. Zero console or page errors across every run below.",
         "defect": null,
         "severity": "none"
@@ -236,14 +236,14 @@
       {
         "name": "One remote snapshot arriving while someone is typing",
         "method": "Focused the add field, typed 'chick' at 80ms/key, fired exactly one entries snapshot (the equivalent of a flatmate adding one item), then continued typing 'en thighs'.",
-        "result": "After 'chick': value='chick', activeElement=INPUT. After the single snapshot: value='chick', activeElement=BODY. After typing nine more characters: value still 'chick'. 9 of 14 intended characters were lost. Under a 10-snapshot-per-second storm, 'chicken thighs, boneless' arrived as 'c' — 1 of 24 characters.",
+        "result": "After 'chick': value='chick', activeElement=INPUT. After the single snapshot: value='chick', activeElement=BODY. After typing nine more characters: value still 'chick'. 9 of 14 intended characters were lost. Under a 10-snapshot-per-second storm, 'chicken thighs, boneless' arrived as 'c', 1 of 24 characters.",
         "defect": "drawBoard() calls v.replaceChildren() at app.js:206, which removes the focused input and fires blur → app.js:218 sets addFocused=false. The new input is created at app.js:212 and the re-focus guard at app.js:222 reads the already-falsified flag, so it never runs. The itemDraft value is preserved but focus, the caret and the phone keyboard are not.",
         "severity": "blocker"
       },
       {
         "name": "Enter-to-add keeps focus for the next item",
         "method": "Focused the add field, typed 'Oat milk', pressed Enter, waited 400ms, read document.activeElement and the field value.",
-        "result": "Item added, field cleared, live region updated to '4 to get' — and activeElement === BODY. Same on the button path.",
+        "result": "Item added, field cleared, live region updated to '4 to get', and activeElement === BODY. Same on the button path.",
         "defect": "Identical root cause. The research's adoption requirement is 'Enter adds and keeps focus for the next item'; on a phone this closes the keyboard after every item.",
         "severity": "blocker"
       },
@@ -256,50 +256,50 @@
       },
       {
         "name": "A shopper walking down the list with a thumb",
-        "method": "Seeded 10 realistic items, read the on-screen centre of the first five checkboxes, then clicked those five fixed coordinates in order at 280ms intervals — the natural 'work down the list' motion.",
+        "method": "Seeded 10 realistic items, read the on-screen centre of the first five checkboxes, then clicked those five fixed coordinates in order at 280ms intervals, the natural 'work down the list' motion.",
         "result": "Intended: Milk, Bananas, Sourdough, Chicken thighs, Greek yoghurt. Actually checked: Milk, Sourdough, Greek yoghurt, Kitchen roll, Coffee. Four of five wrong. Repeated at a deliberate 1.1s per tap while re-reading position each time: tapped 'Bananas' at y=370, 1.1s later that spot held 'Sourdough'; tapped 'Sourdough', the spot then held 'Chicken thighs'; tapped 'Chicken thighs', the spot then held 'Greek yoghurt'. Row shift measured at exactly 61px per check.",
-        "defect": "app.js:261-262 renders `open.slice().reverse()` then appends `done`, so a checked row leaves its position and every row below moves up one. Nothing animates, nothing marks the move, and there is no 'in the cart' section. This is the sourced Cozi rule — 'nothing may reflow under a finger that is already descending' — broken by the app's only verb.",
+        "defect": "app.js:261-262 renders `open.slice().reverse()` then appends `done`, so a checked row leaves its position and every row below moves up one. Nothing animates, nothing marks the move, and there is no 'in the cart' section. This is the sourced Cozi rule, 'nothing may reflow under a finger that is already descending', broken by the app's only verb.",
         "severity": "blocker"
       },
       {
         "name": "Scroll position during someone else's edit",
         "method": "Scrolled to y=600 on a populated board, fired one remote entries snapshot, re-read window.scrollY.",
         "result": "600 → 434. A 166px lurch, caused by #view momentarily emptying during replaceChildren() so the document collapses and the browser clamps the scroll offset.",
-        "defect": "Every household member's check-off yanks every other member's place in the list. Worse on long lists — the 200-item board is 14,480px tall.",
+        "defect": "Every household member's check-off yanks every other member's place in the list. Worse on long lists, the 200-item board is 14,480px tall.",
         "severity": "major"
       },
       {
         "name": "Failed add destroys the typed text",
         "method": "Drove entryCount to the rules cap (500) so the next write is rejected, typed 'organic free-range eggs, the big box' and pressed Add.",
-        "result": "Field value after the failure: \"\". Toast: 'That didn't save — the list may be locked, or its setup needs the latest rules.' The item was neither saved nor recoverable.",
-        "defect": "app.js:230-231 clears itemDraft and input.value before the await at app.js:233. Every rejected write — cap, permission, locked list — silently eats what the user typed, and the message names none of the actual causes.",
+        "result": "Field value after the failure: \"\". Toast: 'That didn't save, the list may be locked, or its setup needs the latest rules.' The item was neither saved nor recoverable.",
+        "defect": "app.js:230-231 clears itemDraft and input.value before the await at app.js:233. Every rejected write, cap, permission, locked list, silently eats what the user typed, and the message names none of the actual causes.",
         "severity": "blocker"
       },
       {
         "name": "The 500-entry lifetime cap and the ✕ quota leak",
         "method": "Read apps/signup-sheets/firestore.rules:275-277 (`boardAfter(boardId).entryCount <= 500`, entries-ever-created), then walked entryCount to 498, 499, 500 through the real UI and attempted a 501st add. Then deleted an item with ✕ and re-read entryCount.",
-        "result": "At the cap the add fails with the generic permission message above and the typed text is lost. entryCount after a ✕ delete: 500 → 500 — data.js:302 deleteEntry() calls deleteDoc alone and never decrements the counter. Only clearChecked() (data.js:293-299) resets it, that button is owner-only (app.js:273), and it only renders when done.length > 0.",
+        "result": "At the cap the add fails with the generic permission message above and the typed text is lost. entryCount after a ✕ delete: 500 → 500, data.js:302 deleteEntry() calls deleteDoc alone and never decrements the counter. Only clearChecked() (data.js:293-299) resets it, that button is owner-only (app.js:273), and it only renders when done.length > 0.",
         "defect": "A household that removes items with ✕ rather than checking them off burns the lifetime quota permanently and has no user-reachable way to reclaim it. At ~20 items a week the list bricks itself in about six months, and the error blames the rules deployment.",
         "severity": "blocker"
       },
       {
         "name": "Offline cold open of a shared link, against real Firebase",
-        "method": "Loaded the real app online (service worker confirmed active), navigated to a board URL, then ctx.setOffline(true) and reloaded — the aisle-12 dead zone.",
-        "result": "The shell rendered from the service worker cache. The view rendered 'That list isn't here — The link may have been rotated, or the code was mistyped. / Go home', with ERR_INTERNET_DISCONNECTED on identitytoolkit.googleapis.com and firestore.googleapis.com and '[code=unavailable] Could not reach Cloud Firestore backend' in the console.",
-        "defect": "app.js:167 is `D.resolveCode(code).catch(() => null)` — every failure, including a pure network failure, collapses into 'that list does not exist'. friendly() at app.js:51 has a correct 'You look offline' branch that this path throws away. The app also registers no online/offline listener and shows no sync state anywhere (grep for onLine/offline across the app: only the unreachable string at app.js:51).",
+        "method": "Loaded the real app online (service worker confirmed active), navigated to a board URL, then ctx.setOffline(true) and reloaded, the aisle-12 dead zone.",
+        "result": "The shell rendered from the service worker cache. The view rendered 'That list isn't here, The link may have been rotated, or the code was mistyped. / Go home', with ERR_INTERNET_DISCONNECTED on identitytoolkit.googleapis.com and firestore.googleapis.com and '[code=unavailable] Could not reach Cloud Firestore backend' in the console.",
+        "defect": "app.js:167 is `D.resolveCode(code).catch(() => null)`, every failure, including a pure network failure, collapses into 'that list does not exist'. friendly() at app.js:51 has a correct 'You look offline' branch that this path throws away. The app also registers no online/offline listener and shows no sync state anywhere (grep for onLine/offline across the app: only the unreachable string at app.js:51).",
         "severity": "blocker"
       },
       {
         "name": "Layout across every comfort combination on a populated board",
         "method": "Twelve seeded items, then measured horizontal overflow and control geometry at 320/414/1280 default, 414+xxl, 414+roomy, 320+xxl, 320+xxl+roomy+high-contrast, 414+Easier reading, 414+xxl+dark and 414+compact.",
         "result": "Horizontal overflow 0px in all of them. Default 414: row 61px, label hit area 44x284, checkbox 24px, ✕ 44x44, label font 17px, heading 20px. Largest text: label 25.5px, label box 66px, ✕ 66px, heading 30px, checkbox 36px. Compact: row 58px, targets still 44px. Only three targets ever fall under 44px, at every width: the <h1> home link (114x27, 171x41 at xxl), #swsPrefsBtn (36x36, never scales), and #authBtn (36px, .btn.small).",
-        "defect": "The comfort system is sound. #swsPrefsBtn is the outlier — it is the control that fixes the app for a low-vision user and it is the one thing that stays 36px icon-only at every text size.",
+        "defect": "The comfort system is sound. #swsPrefsBtn is the outlier, it is the control that fixes the app for a low-vision user and it is the one thing that stays 36px icon-only at every text size.",
         "severity": "minor"
       },
       {
         "name": "Add row and header geometry on real phone widths",
         "method": "Measured the add input, the Add button and header height at 320/360/390/414/480, at default and Largest text.",
-        "result": "Header is 112px tall (two rows, Sign in/out wrapped onto its own line) at 320, 360, 390 and 414; it collapses to 64px only at 480+. Add field at Largest text on 320px: 126px wide at 24px type ≈ 9 visible characters, against a 40-character placeholder. Add field at Largest text on 414px: 246px ≈ 18 characters. The row never stacks — app.js:237 uses .row.nowrap and app.js:226 pins the button with inline flex:0 0 auto.",
+        "result": "Header is 112px tall (two rows, Sign in/out wrapped onto its own line) at 320, 360, 390 and 414; it collapses to 64px only at 480+. Add field at Largest text on 320px: 126px wide at 24px type ≈ 9 visible characters, against a 40-character placeholder. Add field at Largest text on 414px: 246px ≈ 18 characters. The row never stacks, app.js:237 uses .row.nowrap and app.js:226 pins the button with inline flex:0 0 auto.",
         "defect": "At the largest comfort setting on the narrowest common phone the primary input shows nine characters and cannot be proof-read.",
         "severity": "major"
       },
@@ -314,11 +314,11 @@
         "name": "Duplicates and double submission",
         "method": "Added 'Milk', then 'milk', then 'Milk ' from a clean list. Separately, filled the field with 'Eggs' and fired three synchronous clicks on Add.",
         "result": "Milk/milk/'Milk ' → three separate rows. Triple-click on 'Eggs' → exactly one row (app.js:230-231 clears the field synchronously before the await, so the second and third clicks see an empty draft and return early).",
-        "defect": "No deduplication on normalized item name — the research's verbatim OurGroceries complaint and its prescribed fix. Double-submit is genuinely safe.",
+        "defect": "No deduplication on normalized item name, the research's verbatim OurGroceries complaint and its prescribed fix. Double-submit is genuinely safe.",
         "severity": "major"
       },
       {
-        "name": "200 items — the pathological list",
+        "name": "200 items, the pathological list",
         "method": "200 adds through the real input and Add button, then measured render, scroll and a single full remote-snapshot rebuild.",
         "result": "200 adds in 4ms, 200 rows rendered, heading '200 to get', horizontal overflow 0px, two full-page scroll jumps in 12ms, one complete remote-snapshot rebuild of all 200 rows in 32ms, page height 14,480px.",
         "defect": "Performance is fine. Ergonomics are not: the add field exists only at the top and the share panel only at the bottom, with no sticky add bar and no back-to-top, so adding one item from the end of a long list is a 14,480px scroll.",
@@ -327,7 +327,7 @@
       {
         "name": "Destructive actions and their feedback",
         "method": "Deleted an item with ✕ and watched the toast and the DOM; ran 'Clear checked (2)' and read the confirm text and the resulting toast; inspected the toast for an action button.",
-        "result": "✕: item removed instantly, no confirm dialog, no new toast — the previous unrelated toast text ('2 checked item(s) cleared') was still on screen. Clear checked: confirm() reads 'Remove 2 checked item(s) from the list? This cannot be undone.', then a plain toast with zero buttons. sws-ui.js is loaded in the page and exposes SWS.undo (sws-ui.js:130) with a 7-second dwell and hover-hold; app.js declares its own local toast() at app.js:28-35 and never touches it.",
+        "result": "✕: item removed instantly, no confirm dialog, no new toast, the previous unrelated toast text ('2 checked item(s) cleared') was still on screen. Clear checked: confirm() reads 'Remove 2 checked item(s) from the list? This cannot be undone.', then a plain toast with zero buttons. sws-ui.js is loaded in the page and exposes SWS.undo (sws-ui.js:130) with a 7-second dwell and hover-hold; app.js declares its own local toast() at app.js:28-35 and never touches it.",
         "defect": "Zero undo anywhere, and one of the two destructive paths gives no feedback at all. The infrastructure to fix it is already in the page.",
         "severity": "major"
       },
@@ -335,7 +335,7 @@
         "name": "Route and share-code edge cases",
         "method": "Navigated to #/b/ZZZZZZ, #/b/abc123, #/b/AB, #/b/ZZZZZZZZZZ, #/x and a valid code lowercased.",
         "result": "ZZZZZZ → 'That list isn't here' with a Go home link (correct). ZZZZZZZZZZ → same (the regex takes the first six). #/x, #/b/AB and any lowercase code → silently renders the marketing home page with no message. The join field at app.js:113-118 normalizes case and length correctly and toasts 'Codes are 6 letters/numbers'; the hash route at app.js:71 does neither.",
-        "defect": "A lowercased share link — from a screenshot, a retype, or a messaging app — drops the recipient on the home page as though they had typed nothing.",
+        "defect": "A lowercased share link, from a screenshot, a retype, or a messaging app, drops the recipient on the home page as though they had typed nothing.",
         "severity": "minor"
       },
       {
@@ -346,7 +346,7 @@
         "severity": "minor"
       },
       {
-        "name": "QR fidelity — does the code actually scan",
+        "name": "QR fidelity, does the code actually scan",
         "method": "Opened the share panel, generated the QR, read the canvas pixel-by-pixel, independently re-encoded the same URL with qrcode-generator in Node at the same error-correction level, and compared every module.",
         "result": "33x33 modules, 7px cells, 34px quiet zone = 4.86 modules (spec minimum 4). 0 mismatches out of 1089 modules. #qrBox background computed rgb(255,255,255) in dark mode as intended (index.html:1352). Canvas backing store 300x300 matches its CSS box 300x300, so no resampling blur. Accessible name carries the full URL and the URL is repeated as selectable text.",
         "defect": null,
@@ -355,15 +355,15 @@
       {
         "name": "Link-holder (participant) capabilities",
         "method": "Created a board as the owner with four items, then switched the session to an anonymous non-owner uid and reloaded the same board.",
-        "result": "Participant sees all four rows, can toggle every checkbox, sees 0 remove buttons, no 'Clear checked' control, no Rotate link, no Delete list, and the growth colophon 'Made with Grocery List — free, no ads. Start yours'. With every item checked there is still no way for them to tidy the list.",
-        "defect": "The shopper — the person doing the work — is the one member of the household who cannot remove an item or clear the cart, with no explanation shown.",
+        "result": "Participant sees all four rows, can toggle every checkbox, sees 0 remove buttons, no 'Clear checked' control, no Rotate link, no Delete list, and the growth colophon 'Made with Grocery List, free, no ads. Start yours'. With every item checked there is still no way for them to tidy the list.",
+        "defect": "The shopper, the person doing the work, is the one member of the household who cannot remove an item or clear the cart, with no explanation shown.",
         "severity": "major"
       },
       {
         "name": "Skin type scale silently discarded",
         "method": "Read the computed values of --t-base/--t-lg/--t-sm off :root in the live page and traced them back through the generated stylesheet.",
         "result": "Computed --t-base:1rem, --t-lg:1.0625rem, --t-sm:0.9375rem. index.html:41-43 declares 1.060/1.126/0.994rem from `scale: 1.06` in design/skins.mjs:100, and index.html:232-234 re-declares all three at equal specificity later in the same <style>, so the later declaration wins. Body font is 16px on any phone under 480px (the @media bump at index.html:311 is min-width:30rem) and item labels are 17px.",
-        "defect": "The grocery skin's deliberate 6% type bump — added precisely because this list is read at arm's length — never reaches the page, and item names sit at 17px against the research's 22-24px target. design/skins.mjs:61 and :83 set a scale too and are affected identically.",
+        "defect": "The grocery skin's deliberate 6% type bump, added precisely because this list is read at arm's length, never reaches the page, and item names sit at 17px against the research's 22-24px target. design/skins.mjs:61 and :83 set a scale too and are affected identically.",
         "severity": "major"
       },
       {
@@ -378,84 +378,84 @@
   "fixes": [
     {
       "title": "Give the add input a data-fkey and stop losing the keyboard on every add and every snapshot",
-      "rationale": "Measured: pressing Enter leaves activeElement === BODY; one remote snapshot mid-word turns 'chicken thighs, boneless' into 'c'. Every other control on the board survives a redraw because it carries data-fkey and app.js:205/319-322 restores it; the add input is the only one that does not, and its bespoke substitute cannot work — v.replaceChildren() at app.js:206 blurs the old input and sets addFocused=false at app.js:218 before the guard at app.js:222 is evaluated. Delete the addFocused mechanism entirely, add `'data-fkey':'add'` to the input at app.js:212, and extend the restore block at app.js:319-322 to also reapply the caret via setSelectionRange when the restored node is a text input. Ravi and Marcus both abandoned the app on this; it is the research's stated adoption requirement ('Enter adds and keeps focus for the next item').",
+      "rationale": "Measured: pressing Enter leaves activeElement === BODY; one remote snapshot mid-word turns 'chicken thighs, boneless' into 'c'. Every other control on the board survives a redraw because it carries data-fkey and app.js:205/319-322 restores it; the add input is the only one that does not, and its bespoke substitute cannot work, v.replaceChildren() at app.js:206 blurs the old input and sets addFocused=false at app.js:218 before the guard at app.js:222 is evaluated. Delete the addFocused mechanism entirely, add `'data-fkey':'add'` to the input at app.js:212, and extend the restore block at app.js:319-322 to also reapply the caret via setSelectionRange when the restored node is a text input. Ravi and Marcus both abandoned the app on this; it is the research's stated adoption requirement ('Enter adds and keeps focus for the next item').",
       "where": "apps/grocery-list/app.js:212-225 (input creation and the addFocused hack), app.js:57 (the addFocused flag), app.js:204-206 and app.js:319-322 (the working restore path)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Stop the list re-sorting under the user's finger when an item is checked",
-      "rationale": "Measured: five taps at five visible checkbox positions checked four wrong items; even at 1.1s per tap the spot just tapped holds the next item every time; rows shift exactly 61px. app.js:261-262 renders open items then appends done items to the same <ul>, so a checked row physically relocates. Keep the row in place — render one list in stable creation order with .done styling — or, better, move checked rows into a separate collapsed 'In the cart (n)' group below a divider, after a short fade so the movement is visible rather than instant. Dee mis-shopped on this and Marcus lost his mental model of the order to the same cause; it violates the sourced Cozi rule 'nothing may reflow under a finger that is already descending' and research table stake #1.",
+      "rationale": "Measured: five taps at five visible checkbox positions checked four wrong items; even at 1.1s per tap the spot just tapped holds the next item every time; rows shift exactly 61px. app.js:261-262 renders open items then appends done items to the same <ul>, so a checked row physically relocates. Keep the row in place, render one list in stable creation order with .done styling, or, better, move checked rows into a separate collapsed 'In the cart (n)' group below a divider, after a short fade so the movement is visible rather than instant. Dee mis-shopped on this and Marcus lost his mental model of the order to the same cause; it violates the sourced Cozi rule 'nothing may reflow under a finger that is already descending' and research table stake #1.",
       "where": "apps/grocery-list/app.js:261-262 (the two render loops), app.js:208-209 (the open/done split), index.html:1278 (li.done styling)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Never clear the add field before the write is confirmed",
-      "rationale": "Measured: at the entry cap, 'organic free-range eggs, the big box' vanished from the field and was not saved. app.js:230-231 sets itemDraft='' and input.value='' before the await at app.js:233, so every rejection — cap, permission-denied, locked list — costs the user their typing and returns a message that names none of those causes. Move the clear into the success path after the await, and on failure leave the text in place, keep focus, and render the error inline under the add row rather than in a bottom-anchored toast the software keyboard covers. Keep the optimistic clear only for the offline case, where Firestore's local cache genuinely accepts the write.",
+      "rationale": "Measured: at the entry cap, 'organic free-range eggs, the big box' vanished from the field and was not saved. app.js:230-231 sets itemDraft='' and input.value='' before the await at app.js:233, so every rejection, cap, permission-denied, locked list, costs the user their typing and returns a message that names none of those causes. Move the clear into the success path after the await, and on failure leave the text in place, keep focus, and render the error inline under the add row rather than in a bottom-anchored toast the software keyboard covers. Keep the optimistic clear only for the offline case, where Firestore's local cache genuinely accepts the write.",
       "where": "apps/grocery-list/app.js:226-235 (the Add handler), app.js:48-53 (friendly)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Stop reporting a network failure as 'That list isn't here'",
-      "rationale": "Confirmed against real Firebase with the network cut: opening a board link offline renders 'That list isn't here — the link may have been rotated, or the code was mistyped', with ERR_INTERNET_DISCONNECTED and '[code=unavailable]' in the console. app.js:167 is `D.resolveCode(code).catch(() => null)`, which collapses every failure into 'no such list'. friendly() at app.js:51 already has the right words. Catch the error, branch on code — 'unavailable'/'failed-precondition' → 'You look offline. This list will open as soon as you have signal.' with a Retry button; a genuinely absent code → the existing not-found card. The research names supermarket dead zones as the defining environment of this category; telling a shopper in aisle 12 that their family's list does not exist is the worst available answer.",
+      "rationale": "Confirmed against real Firebase with the network cut: opening a board link offline renders 'That list isn't here, the link may have been rotated, or the code was mistyped', with ERR_INTERNET_DISCONNECTED and '[code=unavailable]' in the console. app.js:167 is `D.resolveCode(code).catch(() => null)`, which collapses every failure into 'no such list'. friendly() at app.js:51 already has the right words. Catch the error, branch on code, 'unavailable'/'failed-precondition' → 'You look offline. This list will open as soon as you have signal.' with a Retry button; a genuinely absent code → the existing not-found card. The research names supermarket dead zones as the defining environment of this category; telling a shopper in aisle 12 that their family's list does not exist is the worst available answer.",
       "where": "apps/grocery-list/app.js:167 (the swallowing catch), app.js:168-174 (the not-found card), app.js:48-53 (friendly)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make the ✕ refund the entry quota, and give the owner a way to reclaim it",
-      "rationale": "firestore.rules:275-277 caps entries at 500 ever created. data.js:302 deleteEntry() calls deleteDoc alone and never decrements board.entryCount — measured 500 → 500 after a delete — while data.js:293-299 clearChecked() is the only path that resets the counter, is owner-only (app.js:273), and only renders when something is checked. A household that removes items with ✕ therefore burns the quota permanently, and at ~20 items a week the list bricks itself in roughly six months with the message 'the list may be locked, or its setup needs the latest rules'. Batch-couple deleteEntry to `entryCount: increment(-1)` (the rules already model counter-coupled batches for the add path), and surface remaining headroom to the owner before it runs out.",
+      "rationale": "firestore.rules:275-277 caps entries at 500 ever created. data.js:302 deleteEntry() calls deleteDoc alone and never decrements board.entryCount, measured 500 → 500 after a delete, while data.js:293-299 clearChecked() is the only path that resets the counter, is owner-only (app.js:273), and only renders when something is checked. A household that removes items with ✕ therefore burns the quota permanently, and at ~20 items a week the list bricks itself in roughly six months with the message 'the list may be locked, or its setup needs the latest rules'. Batch-couple deleteEntry to `entryCount: increment(-1)` (the rules already model counter-coupled batches for the add path), and surface remaining headroom to the owner before it runs out.",
       "where": "apps/grocery-list/data.js:302 (deleteEntry), data.js:293-299 (clearChecked), apps/signup-sheets/firestore.rules:275-277 and :308 (the cap and the participant counter rule), apps/grocery-list/app.js:256-258 (the ✕ handler)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Undo on every destructive action, using the SWS.undo already loaded in this page",
-      "rationale": "Measured: the ✕ deletes instantly with no confirm, no new toast and a stale unrelated message left on screen; 'Clear checked' confirms and then says 'This cannot be undone.' sws-ui.js:130 is already in the document and gives a 7-second toast with an Undo button that pauses on hover and focus — app.js:28-35 declares its own local toast() and never calls it. Route item delete through SWS.undo('Removed Milk', restore) by re-adding the captured entry, do the same for Clear checked with the captured set, and drop the confirm() dialogs once undo exists. Dee's cart-bump risk, June's tremor and Marcus's silent deletion are all the same missing affordance, and undo for every destructive action is an explicit research table stake.",
+      "rationale": "Measured: the ✕ deletes instantly with no confirm, no new toast and a stale unrelated message left on screen; 'Clear checked' confirms and then says 'This cannot be undone.' sws-ui.js:130 is already in the document and gives a 7-second toast with an Undo button that pauses on hover and focus, app.js:28-35 declares its own local toast() and never calls it. Route item delete through SWS.undo('Removed Milk', restore) by re-adding the captured entry, do the same for Clear checked with the captured set, and drop the confirm() dialogs once undo exists. Dee's cart-bump risk, June's tremor and Marcus's silent deletion are all the same missing affordance, and undo for every destructive action is an explicit research table stake.",
       "where": "apps/grocery-list/app.js:256-258 (✕ delete), app.js:273-281 (Clear checked and its confirm), app.js:28-35 (the local toast that shadows SWS.toast), apps/grocery-list/sws-ui.js:96-134",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Let link-holders clear checked items and remove rows",
-      "rationale": "Measured in the participant render: 0 remove buttons, no 'Clear checked', no explanation. The person who pushed the cart and ticked twenty things off is the one household member the app forbids from tidying up, while any link-holder can already toggle done (data.js:288). Either extend the rules to let link-holders delete entries and clear checked ones — the trust model already assumes anyone with the link is family — or, at minimum, say so in the UI instead of silently omitting the controls. Tomasz hit this the moment he tried to be helpful.",
+      "rationale": "Measured in the participant render: 0 remove buttons, no 'Clear checked', no explanation. The person who pushed the cart and ticked twenty things off is the one household member the app forbids from tidying up, while any link-holder can already toggle done (data.js:288). Either extend the rules to let link-holders delete entries and clear checked ones, the trust model already assumes anyone with the link is family, or, at minimum, say so in the UI instead of silently omitting the controls. Tomasz hit this the moment he tried to be helpful.",
       "where": "apps/grocery-list/app.js:273 (`if (own && done.length)`), app.js:253 (the ✕ visibility test), apps/signup-sheets/firestore.rules entries delete rule",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Restore the skin's type scale so item names are readable at arm's length",
-      "rationale": "Computed --t-base is 1rem, not the 1.060rem the grocery skin asks for: index.html:41-43 emits the scaled tokens and index.html:232-234 re-declares the same three names later in the same stylesheet at equal specificity, so the skin loses. Item labels render at 17px and body at 16px on any phone under 480px, against the research's 22-24px arm's-length target for item names. Fix it in the generator — emit the `scale` tokens after the base structural block (or move the base scale into a lower-priority layer) — and then raise ul.plain label deliberately for this app. design/skins.mjs:61 and :83 carry a scale too and are broken the same way, so this is one change across three apps.",
+      "rationale": "Computed --t-base is 1rem, not the 1.060rem the grocery skin asks for: index.html:41-43 emits the scaled tokens and index.html:232-234 re-declares the same three names later in the same stylesheet at equal specificity, so the skin loses. Item labels render at 17px and body at 16px on any phone under 480px, against the research's 22-24px arm's-length target for item names. Fix it in the generator, emit the `scale` tokens after the base structural block (or move the base scale into a lower-priority layer), and then raise ul.plain label deliberately for this app. design/skins.mjs:61 and :83 carry a scale too and are broken the same way, so this is one change across three apps.",
       "where": "apps/grocery-list/index.html:41-43 vs :232-234 (the overriding re-declaration), design/build.mjs:312 (where the scale is emitted), design/skins.mjs:100, index.html:1276 (ul.plain label)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Stack the add row instead of crushing the field at large text",
-      "rationale": "Measured at Largest text on 320px: the add input is 126px wide at 24px type — about nine visible characters against a 40-character placeholder — because app.js:237 uses .row.nowrap and app.js:226 pins the Add button with an inline flex:0 0 auto. June could not proof-read what she had typed. Let the row wrap (or stack the button full-width) once --ui-scale is above 1 or the container is under ~360px, and drop the inline style in favour of a class so the stylesheet can win.",
+      "rationale": "Measured at Largest text on 320px: the add input is 126px wide at 24px type, about nine visible characters against a 40-character placeholder, because app.js:237 uses .row.nowrap and app.js:226 pins the Add button with an inline flex:0 0 auto. June could not proof-read what she had typed. Let the row wrap (or stack the button full-width) once --ui-scale is above 1 or the container is under ~360px, and drop the inline style in favour of a class so the stylesheet can win.",
       "where": "apps/grocery-list/app.js:226 (inline flex:0 0 auto), app.js:237 (.row.nowrap), index.html around the .row/.row.nowrap rules in the base layer",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Show a real saved/offline state instead of silence",
-      "rationale": "There is no online/offline listener anywhere in the app — grep across app.js, data.js, helpers.js and index.html finds only the unreachable 'You look offline' string at app.js:51 — and no indication that a write landed. The research asks for the opposite: a calm persistent 'Saved on this phone' badge, and an explicit line in the empty state that the list works with no signal. Add a small header or list-foot status fed by navigator.onLine plus Firestore's own connection state, and use SWS.saved() (sws-ui.js:151) for the ambient confirmation it was written for. This converts the thing every competitor hides into the reassurance the research calls free credibility.",
+      "rationale": "There is no online/offline listener anywhere in the app, grep across app.js, data.js, helpers.js and index.html finds only the unreachable 'You look offline' string at app.js:51, and no indication that a write landed. The research asks for the opposite: a calm persistent 'Saved on this phone' badge, and an explicit line in the empty state that the list works with no signal. Add a small header or list-foot status fed by navigator.onLine plus Firestore's own connection state, and use SWS.saved() (sws-ui.js:151) for the ambient confirmation it was written for. This converts the thing every competitor hides into the reassurance the research calls free credibility.",
       "where": "apps/grocery-list/app.js:195-323 (drawBoard, which has no status surface), app.js:39-43 (trustNote, the natural place for it), apps/grocery-list/sws-ui.js:151-171",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Dedupe on normalized name at add-time",
-      "rationale": "Measured: 'Milk', 'milk' and 'Milk ' produced three separate rows. This is the research's one verbatim App Store complaint ('making a change results in a duplicate item... may occur without the user's knowledge') and its prescribed fix — if a normalized match already exists, flash the existing row and bump a quantity rather than appending. In a two-writer household it happens on the first shop, and it also protects the 500-entry quota.",
+      "rationale": "Measured: 'Milk', 'milk' and 'Milk ' produced three separate rows. This is the research's one verbatim App Store complaint ('making a change results in a duplicate item... may occur without the user's knowledge') and its prescribed fix, if a normalized match already exists, flash the existing row and bump a quantity rather than appending. In a two-writer household it happens on the first shop, and it also protects the 500-entry quota.",
       "where": "apps/grocery-list/app.js:226-235 (the Add handler, before addEntry), data.js:265-282 (addEntry)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Render the list's name on the board, the share panel and the print",
-      "rationale": "b.title is fetched and used only as an argument to addEntry at app.js:233; nothing on screen ever shows it. Tomasz could not confirm he had opened the right household's list, and the printed page (verified in an A4 PDF) reads only '4 to get' followed by five item names — no name, no date, no code. Render b.title as the board heading above the add row, let the owner rename it, and add a print-only header carrying the title, the share code and the date.",
+      "rationale": "b.title is fetched and used only as an argument to addEntry at app.js:233; nothing on screen ever shows it. Tomasz could not confirm he had opened the right household's list, and the printed page (verified in an A4 PDF) reads only '4 to get' followed by five item names, no name, no date, no code. Render b.title as the board heading above the add row, let the owner rename it, and add a print-only header carrying the title, the share code and the date.",
       "where": "apps/grocery-list/app.js:195-243 (drawBoard, before the add card), app.js:239-242 (the heading), the app-layer print rules in index.html",
       "severity": "minor",
       "effort": "S"
@@ -469,7 +469,7 @@
     },
     {
       "title": "Make the comfort button findable and full-size",
-      "rationale": "#swsPrefsBtn measures 36x36 at every text size — it is the only control in the header that does not grow with --ui-scale — and it is icon-only with two small slider glyphs. It is the control that makes the app usable for June and it is the hardest thing in the header to see or hit. Give it min-height/min-width:var(--tap), and consider a short visible label at the largest text settings. It is also explicitly filtered out of the standard battery's touch-target check (design/stress.mjs:100), so nothing else will ever report it.",
+      "rationale": "#swsPrefsBtn measures 36x36 at every text size, it is the only control in the header that does not grow with --ui-scale, and it is icon-only with two small slider glyphs. It is the control that makes the app usable for June and it is the hardest thing in the header to see or hit. Give it min-height/min-width:var(--tap), and consider a short visible label at the largest text settings. It is also explicitly filtered out of the standard battery's touch-target check (design/stress.mjs:100), so nothing else will ever report it.",
       "where": "apps/grocery-list/sws-prefs.js:384-404 (button construction and insertion), design/studio.css (the #swsPrefsBtn sizing rule), design/stress.mjs:100 (the exemption that hides it)",
       "severity": "minor",
       "effort": "S"
@@ -483,7 +483,7 @@
     },
     {
       "title": "Keep the add control reachable on a long list",
-      "rationale": "The 200-item board is 14,480px tall with the add field only at the very top and the share panel only at the bottom — no sticky add bar, no back-to-top, no anchors. Rendering and scrolling are fast (32ms full rebuild, 12ms for two scroll jumps), so this is purely a reach problem. studio.css already ships .actionbar for exactly this.",
+      "rationale": "The 200-item board is 14,480px tall with the add field only at the very top and the share panel only at the bottom, no sticky add bar, no back-to-top, no anchors. Rendering and scrolling are fast (32ms full rebuild, 12ms for two scroll jumps), so this is purely a reach problem. studio.css already ships .actionbar for exactly this.",
       "where": "apps/grocery-list/app.js:236-237 (the add card, appended first), app.js:310 (the share panel, appended last)",
       "severity": "minor",
       "effort": "S"

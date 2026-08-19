@@ -1,4 +1,4 @@
-// Wedding Day Timeline — time-sorted moments, elegant print, URL sharing.
+// Wedding Day Timeline, time-sorted moments, elegant print, URL sharing.
 import {
   readTime, fmtTime, sortEvents, encodeTimeline, decodeTimeline,
   normalizeState, uid, MAX_EVENTS,
@@ -43,8 +43,7 @@ function undoToast(msg, restoreFn) {
   toast(msg);
 }
 /* A polite, visually hidden line. The toast carries confirmations a sighted
-   user also needs; this carries the thing only a screen-reader user misses —
-   where in the sorted day the moment actually landed. */
+   user also needs; this carries the thing only a screen-reader user misses, where in the sorted day the moment actually landed. */
 let sayTimer = null;
 function say(msg) {
   const n = $('liveStatus');
@@ -70,7 +69,7 @@ function persist() {
   clearTimeout(savedTimer);
   savedTimer = setTimeout(() => { const s = UI(); if (s.saved) s.saved({ text: 'Saved' }); }, 400);
 }
-/* A structural change to the schedule — the thing the version stamp counts. */
+/* A structural change to the schedule, the thing the version stamp counts. */
 function commit() {
   state.rev = (state.rev || 1) + 1;
   state.revisedAt = Date.now();
@@ -118,7 +117,7 @@ function askAmPm(ui, r, done) {
     onclick: () => { ui.input.value = fmtTime(mins); clearTimeIssue(ui); done(mins); },
   });
   ui.choose.replaceChildren(
-    el('p', { class: 'q', text: '“' + raw + '” — morning or evening?' }),
+    el('p', { class: 'q', text: '“' + raw + '”, morning or evening?' }),
     pick(r.am), pick(r.pm));
   ui.choose.classList.remove('hidden');
   say('“' + raw + '” could be ' + fmtTime(r.am) + ' or ' + fmtTime(r.pm) + '. Choose one.');
@@ -129,7 +128,7 @@ function askAmPm(ui, r, done) {
 function resolveTime(ui, done, opts) {
   const raw = ui.input.value.trim();
   if (!raw) {
-    if (opts && opts.required) { showTimeWarn(ui, 'A time is needed here — try “4:00 pm” or “16:00”.'); return; }
+    if (opts && opts.required) { showTimeWarn(ui, 'A time is needed here, try “4:00 pm” or “16:00”.'); return; }
     clearTimeIssue(ui); done(null); return;
   }
   const r = readTime(raw);
@@ -192,7 +191,7 @@ function editRow(ev) {
       const sorted = sortEvents(state.events);
       const pos = sorted.findIndex(x => x.id === ev.id) + 1;
       say('Saved. ' + target.what + (minutes === null ? ', no time' : ' at ' + fmtTime(minutes))
-        + ' — ' + pos + ' of ' + sorted.length + '.');
+        + ', ' + pos + ' of ' + sorted.length + '.');
       focusRow(ev.id);
     });
   };
@@ -263,7 +262,7 @@ function refreshShiftOptions(sorted) {
     if (ev.minutes === null) continue;
     sel.append(el('option', {
       value: String(ev.minutes),
-      text: fmtTime(ev.minutes) + ' — ' + ev.what.slice(0, 40) + ' and everything after',
+      text: fmtTime(ev.minutes) + ', ' + ev.what.slice(0, 40) + ' and everything after',
     }));
   }
   if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
@@ -294,31 +293,31 @@ function applyShift(dir) {
 
 /* ---------- the starting day ----------
    Rules of thumb straight out of the research: bride second-to-last for
-   hair and makeup, a first look buys back 45–60 minutes of portraits after
+   hair and makeup, a first look buys back 45 to 60 minutes of portraits after
    the ceremony, 15 minutes of slack between services. Every row is editable. */
 function templateRows(opts) {
   const r = [
-    [-330, 'Hair & makeup begins', 'Bridal suite — the party first, the bride second-to-last'],
-    [-180, 'Photographer arrives — detail shots', 'Dress, rings, invitations, shoes'],
+    [-330, 'Hair & makeup begins', 'Bridal suite, the party first, the bride second-to-last'],
+    [-180, 'Photographer arrives, detail shots', 'Dress, rings, invitations, shoes'],
     [-150, 'Bride’s hair & makeup', 'Bridal suite'],
   ];
   if (opts.firstLook) {
     r.push([-135, 'Into the dress', 'With mum and the maid of honour']);
-    r.push([-105, 'First look', 'Somewhere quiet — just the two of you']);
+    r.push([-105, 'First look', 'Somewhere quiet, just the two of you']);
     r.push([-85, 'Couple’s portraits', 'Photographer + videographer']);
     r.push([-55, 'Wedding party portraits', 'Everyone in the party']);
   } else {
     r.push([-105, 'Into the dress', 'With mum and the maid of honour']);
-    r.push([-70, 'Wedding party portraits — each side separately', 'Photographer']);
+    r.push([-70, 'Wedding party portraits, each side separately', 'Photographer']);
   }
-  if (opts.twoVenues) r.push([-45, 'Travel to the ceremony', 'Cars booked — leave 10 minutes of slack']);
+  if (opts.twoVenues) r.push([-45, 'Travel to the ceremony', 'Cars booked, leave 10 minutes of slack']);
   r.push([-30, 'Guests begin arriving', 'Ushers at the door, music on']);
   r.push([-10, 'Wedding party lines up', 'Out of sight of the aisle']);
   r.push([0, 'Ceremony begins', '']);
-  r.push([30, 'Ceremony ends — confetti', 'Everyone outside']);
-  r.push([40, 'Family photos', 'Shot list in somebody’s hand — 15 minutes, no more']);
+  r.push([30, 'Ceremony ends, confetti', 'Everyone outside']);
+  r.push([40, 'Family photos', 'Shot list in somebody’s hand, 15 minutes, no more']);
   r.push([60, 'Cocktail hour', 'Canapés and drinks']);
-  if (!opts.firstLook) r.push([70, 'Couple’s portraits', 'Photographer — golden hour if it lands']);
+  if (!opts.firstLook) r.push([70, 'Couple’s portraits', 'Photographer, golden hour if it lands']);
   if (opts.twoVenues) r.push([85, 'Travel to the reception', '']);
   r.push([115, 'Guests seated for dinner', 'Coordinator sweeps the bar']);
   r.push([125, 'Entrances and the first dance', 'DJ has the track']);
@@ -393,7 +392,7 @@ function renderSheet() {
   sheet.append(el('div', { class: 'foot' },
     'Breathe. Everything else is somebody else’s job today.',
     el('br'),
-    el('span', { class: 'promise', text: 'Built offline in a browser — this timeline was never uploaded anywhere.' })));
+    el('span', { class: 'promise', text: 'Built offline in a browser, this timeline was never uploaded anywhere.' })));
 }
 
 /* ---------- sharing ---------- */
@@ -417,8 +416,8 @@ function drawQr(url) {
   }
   if (!qr) {
     canvas.classList.add('hidden');
-    canvas.setAttribute('aria-label', 'No QR code — this timeline is too long to fit in one');
-    note.textContent = 'This day is too full for a QR code — ' + state.events.length
+    canvas.setAttribute('aria-label', 'No QR code, this timeline is too long to fit in one');
+    note.textContent = 'This day is too full for a QR code, ' + state.events.length
       + ' moments make a link longer than any code can hold. Copy the link below instead; it still works.';
     note.classList.remove('hidden');
     return;
@@ -440,7 +439,7 @@ function drawQr(url) {
   canvas.setAttribute('aria-label',
     'QR code for this timeline’s link, ' + count + ' by ' + count + ' squares');
   if (count > 100) {
-    note.textContent = 'A full day makes a dense code — hold the camera close and steady, '
+    note.textContent = 'A full day makes a dense code, hold the camera close and steady, '
       + 'and give it a second. If it will not read, copy the link below instead.';
     note.classList.remove('hidden');
   } else {
@@ -465,9 +464,9 @@ async function copyLink() {
   const url = shareUrl();
   try {
     await navigator.clipboard.writeText(url);
-    toast('Link copied — send it to the whole wedding party');
+    toast('Link copied, send it to the whole wedding party');
   } catch (e) {
-    openShare('Clipboard blocked here — the link is below, ready to copy by hand.');
+    openShare('Clipboard blocked here, the link is below, ready to copy by hand.');
   }
 }
 
@@ -529,7 +528,7 @@ function finishAdd(minutes) {
     ? '“' + ev.what + '” is now on the day twice'
       + (minutes === null ? '' : ' at ' + fmtTime(minutes)) + '. Remove one if that was a slip.'
     : '';
-  say('Added ' + ev.what + ' ' + when + ' — ' + pos + ' of ' + sorted.length + '. ' + dupMsg);
+  say('Added ' + ev.what + ' ' + when + ', ' + pos + ' of ' + sorted.length + '. ' + dupMsg);
   if (dup) {
     note.textContent = dupMsg;
     note.classList.remove('hidden');
@@ -545,7 +544,7 @@ function add() {
     $('evWhat').focus();
     return;
   }
-  if (state.events.length >= MAX_EVENTS) { toast('That’s a very full day — 100 moments max'); return; }
+  if (state.events.length >= MAX_EVENTS) { toast('That’s a very full day, 100 moments max'); return; }
   resolveTime(addUi(), finishAdd);
 }
 
@@ -556,7 +555,7 @@ function syncFields() {
   const note = $('originNote');
   if (state.sharedAt) {
     note.textContent = 'This day was opened from a shared link on ' + fmtStamp(state.sharedAt)
-      + ' — it is a snapshot, version ' + (state.rev || 1)
+      + ', it is a snapshot, version ' + (state.rev || 1)
       + '. Anything you change here stays on this device and does not reach whoever sent it.';
     note.classList.remove('hidden');
   } else {
@@ -600,10 +599,10 @@ function wire() {
     const box = $('qrLink');
     try {
       await navigator.clipboard.writeText(box.value);
-      toast('Link copied — send it to the whole wedding party');
+      toast('Link copied, send it to the whole wedding party');
     } catch (e) {
       box.focus(); box.select();
-      toast('Clipboard blocked — the link is selected, copy it by hand', { assertive: true });
+      toast('Clipboard blocked, the link is selected, copy it by hand', { assertive: true });
     }
   });
 
@@ -638,7 +637,7 @@ function init() {
       history.replaceState(null, '', location.pathname);
       toast('Timeline loaded from the link');
     } else {
-      toast('Kept your own timeline — the link is still in the address bar.', { ms: 6000 });
+      toast('Kept your own timeline, the link is still in the address bar.', { ms: 6000 });
     }
   } else if (shared) {
     history.replaceState(null, '', location.pathname);

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — comfort preferences
+   SWS STUDIO, comfort preferences
    Sky Wolf Studio · SWS Strategic Media LLC
 
    Copied to apps/<slug>/sws-prefs.js by design/apply.mjs. Do not edit the
@@ -28,7 +28,7 @@
   var root = document.documentElement;
 
   /* Each group: the attribute it writes, its default, and the options.
-     `def` is the value that means "leave it alone" — when a group is at its
+     `def` is the value that means "leave it alone", when a group is at its
      default the attribute is REMOVED rather than written, so the plain media
      queries in the stylesheet stay in charge and the DOM stays honest about
      what has actually been overridden. */
@@ -111,8 +111,7 @@
   });
 
   /* ── State ──────────────────────────────────────────────────────────────
-     localStorage throws rather than returning null in a few real situations —
-     Safari private browsing, storage disabled by policy, an origin the user
+     localStorage throws rather than returning null in a few real situations, Safari private browsing, storage disabled by policy, an origin the user
      has blocked. None of those should cost someone the ability to turn the
      text up for this session, so every access is guarded and the in-memory
      copy is the source of truth. */
@@ -179,7 +178,7 @@
 
     if (state.theme === 'system') {
       // Only the media query was ever changed, so putting it back restores
-      // exactly what the build wrote — nothing has to be reconstructed.
+      // exactly what the build wrote, nothing has to be reconstructed.
       for (i = 0; i < pair.length; i++) restoreMedia(pair[i]);
       if (themeMeta) { themeMeta.remove(); themeMeta = null; }
       return;
@@ -211,7 +210,7 @@
   }
 
   /* ── Cross-tab and cross-app sync ───────────────────────────────────────
-     Two of these apps open in two tabs is normal — a grocery list on the phone
+     Two of these apps open in two tabs is normal, a grocery list on the phone
      and a recipe on the laptop, a sitter sheet beside a calendar. The storage
      event fires in every OTHER tab on the origin, so a change made in one is
      live in the rest without a reload. */
@@ -250,7 +249,7 @@
 
     body.appendChild(el('div', { class: 'sws-sample' }, [
       el('p', { text: 'The quick brown fox jumps over the lazy dog.' }),
-      el('p', { class: 'sub', text: 'Secondary text looks like this — hints, timestamps and captions.' }),
+      el('p', { class: 'sub', text: 'Secondary text looks like this, hints, timestamps and captions.' }),
     ]));
 
     GROUPS.forEach(function (g) {
@@ -322,8 +321,7 @@
     ]);
 
     // Clicking the backdrop closes. The dialog element itself is the click
-    // target when the backdrop is hit, so comparing against it is enough —
-    // no coordinate maths, and it cannot misfire on a child.
+    // target when the backdrop is hit, so comparing against it is enough, // no coordinate maths, and it cannot misfire on a child.
     dialog.addEventListener('click', function (e) {
       if (e.target === dialog) dialog.close();
     });
@@ -356,7 +354,7 @@
     var appHeader = document.querySelector('header.app');
     if (appHeader) return { parent: appHeader, before: null };
 
-    /* Apps with their own header shape — land in the TITLE ROW, beside the
+    /* Apps with their own header shape, land in the TITLE ROW, beside the
        name, not merely somewhere inside the header.
      *
      * Tried one at a time rather than as one comma-separated selector:
@@ -399,7 +397,7 @@
     });
 
     // Left of the tip jar when there is one. The tip jar stays the rightmost
-    // thing in every app — it is the one piece of chrome whose position people
+    // thing in every app, it is the one piece of chrome whose position people
     // learn, and a settings button is not a reason to move it.
     at.parent.insertBefore(btn, at.before);
   }

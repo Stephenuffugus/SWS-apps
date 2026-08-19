@@ -19,7 +19,7 @@ function makeCtx({ withCompression = true } = {}) {
   }
   const ctx = vm.createContext(sandbox);
   vm.runInContext(pureSrc, ctx);
-  // const-declared modules are lexical, not globals — surface them for tests
+  // const-declared modules are lexical, not globals, surface them for tests
   vm.runInContext('globalThis.Pay = Pay; globalThis.B64U = B64U;', ctx);
   return ctx;
 }

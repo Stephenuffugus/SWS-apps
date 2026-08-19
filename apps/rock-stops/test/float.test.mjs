@@ -1,7 +1,7 @@
-/* Float — logic assertions, runnable from this repo.
+/* Float, logic assertions, runnable from this repo.
  *
  * The handoff's original harness concatenated p1..p5.js and appended t_post.js.
- * Those source files do not exist here — index.html IS the app — so this runs
+ * Those source files do not exist here, index.html IS the app, so this runs
  * the real shipped script inside jsdom and asserts against the same functions.
  * The rule from the handoff still stands: KEEP THIS GREEN, and add assertions
  * whenever the colour maths or the backup format is touched.
@@ -15,7 +15,7 @@ import { JSDOM } from 'jsdom';
 /* The app's script is a classic <script> using top-level `const`, so its
    bindings live in script scope and never land on `window`. A second classic
    script in the same document shares that scope, so this appends one that
-   hands the functions out — testing the real shipped code without altering
+   hands the functions out, testing the real shipped code without altering
    the file or exporting anything into production. */
 const EXPOSE = [
   'rgbToLab', 'labToBin', 'histFromPixels', 'packHist', 'unpackHist', 'histSimilarity',
@@ -38,7 +38,7 @@ window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListe
 window.structuredClone = window.structuredClone || ((v) => JSON.parse(JSON.stringify(v)));
 
 /* The gate would stop boot() before anything is defined, and every function
-   under test is defined at script top level regardless — but unlock anyway so
+   under test is defined at script top level regardless, but unlock anyway so
    the harness exercises the same path a user does. */
 window.localStorage.setItem('float.dev.unlocked', 'wolfden');
 
@@ -67,7 +67,7 @@ check('version exposed', typeof w.FLOAT_VERSION === 'string' && /^\d+\./.test(w.
   check('black is L*≈0', near(bL, 0, 0.5), bL);
   const [, ra] = w.rgbToLab(255, 0, 0);
   check('red has +a*', ra > 50, ra);
-  const [, , bb] = w.rgbToLab(0, 0, 255);
+  const [, bb] = w.rgbToLab(0, 0, 255);
   check('blue has -b*', bb < -50, bb);
 }
 
@@ -76,7 +76,7 @@ check('version exposed', typeof w.FLOAT_VERSION === 'string' && /^\d+\./.test(w.
   const bin = w.labToBin(...w.rgbToLab(255, 255, 255));
   check('bin index in range', Number.isInteger(bin) && bin >= 0 && bin < 512, bin);
 
-  /* histFromPixels(data, width, height) — it samples centre-weighted, so the
+  /* histFromPixels(data, width, height), it samples centre-weighted, so the
      dimensions are not optional. */
   const flat = (r, g, b, n = 32) => {
     const px = new Uint8ClampedArray(n * n * 4);
@@ -204,8 +204,8 @@ check('version exposed', typeof w.FLOAT_VERSION === 'string' && /^\d+\./.test(w.
 /* ── 8. palette contrast ───────────────────────────────────────────
    Float sits outside the studio design system, so nothing solves its
    colours against a WCAG target and `npm run design:check` never sees
-   it. axe found --mist failing on every view in both themes — 3.18:1
-   on limestone and 3.9:1 on basalt2 — because one grey was being asked
+   it. axe found --mist failing on every view in both themes, 3.18:1
+   on limestone and 3.9:1 on basalt2, because one grey was being asked
    to serve as secondary text on both a light and a dark ground, which
    no single value can do above 4.5:1. It is now two values. This is
    the guard so it stays that way. */

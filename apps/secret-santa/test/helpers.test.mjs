@@ -54,7 +54,7 @@ ok('parseRoster reports what it threw away instead of doing it silently', () => 
 });
 ok('a tight-but-solvable draw is solved, not reported impossible', () => {
   // 4 people, 2 couples: only the two "swap across" derangements work, and a
-  // random shuffle can miss them. Exactness matters — an organizer cannot
+  // random shuffle can miss them. Exactness matters, an organizer cannot
   // check our arithmetic.
   const names = ['A', 'B', 'C', 'D'];
   const excl = [[0, 1], [2, 3]];

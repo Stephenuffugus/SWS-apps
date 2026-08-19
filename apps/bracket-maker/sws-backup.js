@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the shared backup runtime
+   SWS STUDIO, the shared backup runtime
 
    Every app in this portfolio keeps its data on the device and nowhere else.
    That is the promise, and the cost of it is that the backup problem belongs
@@ -12,7 +12,7 @@
 
      SWS.backup.wire({ keys, name, version })
 
-   `keys` are the localStorage keys the app owns. Nothing else is read — this
+   `keys` are the localStorage keys the app owns. Nothing else is read, this
    deliberately cannot scoop up another app's data or the shared comfort
    settings, even though they live on the same origin.
 
@@ -50,7 +50,7 @@
 
   /**
    * The file format, shared by every app. `app` is checked on import so a
-   * Grocery List backup cannot be restored into Pill Schedule — silently
+   * Grocery List backup cannot be restored into Pill Schedule, silently
    * loading the wrong file would look like data loss.
    */
   backup.serialize = function (cfg) {
@@ -67,7 +67,7 @@
   backup.download = function (cfg) {
     var payload = backup.serialize(cfg);
     if (!Object.keys(payload.data).length) {
-      say('Nothing saved yet — make something first');
+      say('Nothing saved yet, make something first');
       return false;
     }
     var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
@@ -117,7 +117,7 @@
           localStorage.setItem(keys[i], obj.data[keys[i]]);
         }
       } catch (e) {
-        say('This browser refused to save — it may be out of room');
+        say('This browser refused to save, it may be out of room');
         return;
       }
       say('Restored');
@@ -169,8 +169,8 @@
 
   /* ── self-wiring, because an inline <script> is not always allowed ────────
      The first version had the installer inject a small inline script per app
-     to call wire(). Sub Plans ships a strict CSP — `script-src 'self'`, no
-     unsafe-inline — so that script was silently blocked and its backup card
+     to call wire(). Sub Plans ships a strict CSP, `script-src 'self'`, no
+     unsafe-inline, so that script was silently blocked and its backup card
      rendered as a heading, a paragraph and no buttons. Nothing threw; the
      card just quietly did nothing, which is the worst way for a backup
      feature to fail.

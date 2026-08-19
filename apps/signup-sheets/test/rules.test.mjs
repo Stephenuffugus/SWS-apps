@@ -1,4 +1,4 @@
-// Attack-matrix tests for firestore.rules — run via:
+// Attack-matrix tests for firestore.rules, run via:
 //   npx firebase emulators:exec --only firestore --project demo-signup "node test/rules.test.mjs"
 // Every failure mode of this product category is a rules failure, so this suite
 // tries to break the rules the way a hostile link-holder would.

@@ -2,8 +2,8 @@
 
 Make a signature image and put it on a document, without handing the single
 most forgeable piece of personal data you own to somebody else's server. Three
-routes to the same artefact — **draw** it, **type** it, or **photograph** the
-one you already signed on paper — and an export that tells you its exact pixel
+routes to the same artefact, **draw** it, **type** it, or **photograph** the
+one you already signed on paper, and an export that tells you its exact pixel
 size, byte size and print size *before* you commit to it.
 
 Nothing is uploaded and nothing is stored on the device. A draft of the stroke
@@ -15,7 +15,7 @@ the tab erases it, and the page says so out loud.
 - **Draw / Type / Photo.** The typed route uses a handwriting face already on
   the device; the photo route drops the paper with a soft luminance threshold
   you control. Both are keyboard-reachable, which the pointer-only pad was not.
-- **Export presets with a live readout** — transparent PNG at about 1200 px or
+- **Export presets with a live readout**, transparent PNG at about 1200 px or
   300 px, JPG on white, and exactly 140 × 60 or 160 × 60 JPG under 30 KB for
   exam portals. The readout states px, KB and inches at 300 dpi and updates as
   you draw. Output size no longer depends on the browser window.
@@ -31,7 +31,7 @@ the tab erases it, and the page says so out loud.
   uniformly whenever the pad's box changes (`remap`). That is what stops a
   landscape signature being cropped on rotation.
 - `fitCanvas` is driven by a **ResizeObserver on the pad**, not `window.resize`
-  — the comfort panel's Spacing dial resizes the pad without firing a resize
+  - the comfort panel's Spacing dial resizes the pad without firing a resize
   event, which used to leave the ink 14 px from the finger.
 - `.padwrap` is a true white rectangle in every theme and is lifted above the
   base's warm-tint overlay (`z-index:10000`), because the pad is a WYSIWYG
@@ -43,6 +43,6 @@ the tab erases it, and the page says so out loud.
   draw instead of scroll.
 
 `CONFIG.tipUrl` in `app.js` for the tip jar. Bump `VERSION` in `sw.js` on any
-deploy — it is cache-first.
+deploy, it is cache-first.
 
 Test: `node test/helpers.test.mjs`

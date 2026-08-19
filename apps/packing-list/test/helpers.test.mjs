@@ -87,7 +87,7 @@ ok('sanitizeItems survives every shape that used to brick the app', () => {
     null,
     { done: true },                        // no label
     { label: 42, done: 'yes' },            // numeric label, non-boolean done
-    { label: { a: 1 } },                   // object label — used to print [object Object]
+    { label: { a: 1 } },                   // object label, used to print [object Object]
     { label: '  Tent  ', done: true },
     'not an object',
   ]);
@@ -121,7 +121,7 @@ ok('list round-trips through the hash with checks reset', () => {
 ok('decodeList tells "no link" apart from "broken link"', () => {
   assert.equal(decodeList(''), null, 'no hash at all');
   assert.equal(decodeList('#main'), null, 'the skip link is not a share link');
-  assert.equal(decodeList('#!!bad'), null, 'too short and not base64url — not ours');
+  assert.equal(decodeList('#!!bad'), null, 'too short and not base64url, not ours');
   const good = encodeList('Beach', Array.from({ length: 26 }, (_, i) => ({ label: 'Item number ' + i })));
   assert.ok(good.length > 100);
   for (const frac of [0.98, 0.9, 0.5]) {

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#007d4d">
-<meta name="description" content="Privacy and accessibility for Grocery List — a shared household grocery list that updates live for everyone holding the link.">
-<title>Privacy &amp; Accessibility — Grocery List</title>
+<meta name="description" content="Privacy and accessibility for Grocery List, a shared household grocery list that updates live for everyone holding the link.">
+<title>Privacy &amp; Accessibility: Grocery List</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
   :root{--bg:#f1faf4;--ink:#0a4027;--muted:#306146;--line:#bae3ca;--accent:#007d4d}
@@ -34,11 +34,11 @@
 
   <h2>Where your data goes</h2>
   <p>The list's title and description, every item anyone adds, the author name typed with it, whether it has been ticked into the cart, and any slots and claims is kept in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the list still opens in a supermarket dead zone. The only localStorage key this app writes is `gl-signin-email`, and only if you sign in by email link.</p>
-  <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> Everything on a list is stored on Google's Firestore servers, because that is the only way the whole household sees the same list. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the list title and description, every item body (capped at 2000 characters) and the author name (capped at 60) are written to Firestore and readable and editable by anyone holding the 6-character share link. The list owner is signed in — anonymously by default, or with Google or an email link if they choose — and Firebase Authentication issues a user id stored alongside each item.</p>
-  <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds — no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>
+  <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> Everything on a list is stored on Google's Firestore servers, because that is the only way the whole household sees the same list. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the list title and description, every item body (capped at 2000 characters) and the author name (capped at 60) are written to Firestore and readable and editable by anyone holding the 6-character share link. The list owner is signed in, anonymously by default, or with Google or an email link if they choose, and Firebase Authentication issues a user id stored alongside each item.</p>
+  <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds, no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>
 
   <h2>How to check that for yourself</h2>
-  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a list and you will see requests to firestore.googleapis.com — that is the shared list itself, and it is the only thing sent. There is no analytics call: apps/grocery-list/firebase-config.js has no measurementId, so Google Analytics is never initialised.</p>
+  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a list and you will see requests to firestore.googleapis.com, that is the shared list itself, and it is the only thing sent. There is no analytics call: apps/grocery-list/firebase-config.js has no measurementId, so Google Analytics is never initialised.</p>
 
   <h2>What we do not do</h2>
   <ul>
@@ -49,16 +49,16 @@
   </ul>
 
   <h2>Permissions</h2>
-  <p>The app asks for write-only clipboard access when you tap Copy link — most browsers show no prompt, and the app cannot read your clipboard, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse — the rest of the app keeps working.</p>
+  <p>The app asks for write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse, the rest of the app keeps working.</p>
 
   <h2>Who else is involved</h2>
-  <ul><li>Google Firebase Firestore (firestore.googleapis.com) — stores every list and every item.</li><li>Google Firebase Authentication (identitytoolkit.googleapis.com) — issues the anonymous or signed-in user id attached to items.</li><li>Google gstatic.com — the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.</li><li>Google Sign-In (accounts.google.com) — only if the owner chooses 'Sign in with Google' instead of staying anonymous.</li><li>Stripe — only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.</li></ul>
+  <ul><li>Google Firebase Firestore (firestore.googleapis.com), stores every list and every item.</li><li>Google Firebase Authentication (identitytoolkit.googleapis.com), issues the anonymous or signed-in user id attached to items.</li><li>Google gstatic.com, the Firebase SDK modules are fetched from https://www.gstatic.com/firebasejs/12.17.1/ on the first visit, then cached by the service worker.</li><li>Google Sign-In (accounts.google.com), only if the owner chooses 'Sign in with Google' instead of staying anonymous.</li><li>Stripe, only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.</li></ul>
 
   <h2>Tips</h2>
-  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app — every feature is free either way.</p>
+  <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app, every feature is free either way.</p>
 
   <h2>Hosting</h2>
-  <p>The app's files are served by Google's Firebase Hosting, which — like any web host — keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It is separate from the shared data described above.</p>
+  <p>The app's files are served by Google's Firebase Hosting, which, like any web host, keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It is separate from the shared data described above.</p>
 
   <h2>Children</h2>
   <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>

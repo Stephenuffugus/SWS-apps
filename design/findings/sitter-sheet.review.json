@@ -4,9 +4,9 @@
     "personas": [
       {
         "name": "Priya Raghunathan",
-        "who": "34, mother of three (6, 3, 11 months). Left Cozi after the 2024 paywall — the research's 'bait and switch … families who had used it for 8-10 years suddenly couldn't access their own data without paying.' Competent with phones, has zero patience for signup walls, and is carrying the ordinary low-grade guilt the parenting literature describes about leaving the baby.",
+        "who": "34, mother of three (6, 3, 11 months). Left Cozi after the 2024 paywall, the research's 'bait and switch … families who had used it for 8-10 years suddenly couldn't access their own data without paying.' Competent with phones, has zero patience for signup walls, and is carrying the ordinary low-grade guilt the parenting literature describes about leaving the baby.",
         "context": "18:47 on a Friday. iPhone at 414px, one thumb, Amara on the other hip, the sitter already taking her shoes off in the hall. Kitchen downlights on. She has maybe four minutes.",
-        "task": "Get something printable on the fridge before she walks out the door — she has never written any of this down before.",
+        "task": "Get something printable on the fridge before she walks out the door, she has never written any of this down before.",
         "verdict": "Finished, and the paper that came out genuinely impressed her. But she printed a sheet with no home address and no allergy information on it and the app did not say a word, and she came away unable to tell which boxes she had actually filled.",
         "delights": [
           "First paint is the first field. No splash, no onboarding carousel, no account, no template chooser. Measured cold: 20 focusable elements on the page and 11 of them are the fields themselves. This is the direct answer to the research's leading 1-star cause ('login walls before the user has experienced any value').",
@@ -15,29 +15,29 @@
         ],
         "frictions": [
           {
-            "what": "No completeness check of any kind. The only guard is 'is literally every field empty' (app.js:167 and app.js:248). Verified end to end: with only kids / bedtime / parents / wifi filled, she printed a sheet whose blocks were ['Names & ages','Bedtime & routine','Us (the parents)','WiFi'] — no address, no allergies, no backup contact, no doctor — and got no warning, no nudge, nothing.",
+            "what": "No completeness check of any kind. The only guard is 'is literally every field empty' (app.js:167 and app.js:248). Verified end to end: with only kids / bedtime / parents / wifi filled, she printed a sheet whose blocks were ['Names & ages','Bedtime & routine','Us (the parents)','WiFi'], no address, no allergies, no backup contact, no doctor, and got no warning, no nudge, nothing.",
             "severity": "blocker",
-            "whyItMatters": "The research names this precisely as the winning move: 'a completeness check that names the missing high-stakes fields specifically — No allergy info. No backup contact. No cross street. — instead of a generic 87% progress ring.' Sitters and nanny agencies keep flagging the same three omissions and this app ships the emergency document with all three missing and calls it done. It is also the one thing the free printables cannot do, and it costs one paragraph of code."
+            "whyItMatters": "The research names this precisely as the winning move: 'a completeness check that names the missing high-stakes fields specifically, No allergy info. No backup contact. No cross street., instead of a generic 87% progress ring.' Sitters and nanny agencies keep flagging the same three omissions and this app ships the emergency document with all three missing and calls it done. It is also the one thing the free printables cannot do, and it costs one paragraph of code."
           },
           {
-            "what": "Every empty field shows a fully-written fake answer as its placeholder — app.js:57 puts 'Maya: peanuts (EpiPen on the counter!). No meds tonight.' in the allergies box, app.js:64 puts '412 Maple Ct' in the 911 address box, app.js:63 puts 'Dr. Chen — 555-0177' in the doctor box. Measured contrast of the ghost text against the field: 3.38:1, at 16px, in the same typeface as real content.",
+            "what": "Every empty field shows a fully-written fake answer as its placeholder, app.js:57 puts 'Maya: peanuts (EpiPen on the counter!). No meds tonight.' in the allergies box, app.js:64 puts '412 Maple Ct' in the 911 address box, app.js:63 puts 'Dr. Chen, 555-0177' in the doctor box. Measured contrast of the ghost text against the field: 3.38:1, at 16px, in the same typeface as real content.",
             "severity": "major",
-            "whyItMatters": "At speed, in a hurry, she could not tell filled from unfilled. She scrolled past 'Dr. Chen — 555-0177' twice believing she had entered a doctor. The research's spec is 'must look complete at 40% filled'; this looks complete at 0% filled, which is the same bug with the sign flipped. (On the sitter's phone the same placeholders become actively dangerous — see Kayleigh.)"
+            "whyItMatters": "At speed, in a hurry, she could not tell filled from unfilled. She scrolled past 'Dr. Chen, 555-0177' twice believing she had entered a doctor. The research's spec is 'must look complete at 40% filled'; this looks complete at 0% filled, which is the same bug with the sign flipped. (On the sitter's phone the same placeholders become actively dangerous, see Kayleigh.)"
           },
           {
             "what": "One flat 'Names & ages' textarea for three children, and one 'Allergies & medications' textarea for all of them. app.js:52 and app.js:57.",
             "severity": "major",
-            "whyItMatters": "The research lists per-child sections as the first table stake: 'A single set of fields for the children reads instantly amateur to a parent of two.' She has three kids with three different allergy pictures and had to invent her own formatting inside one box — which is exactly the wall-of-text failure of the Notes app that this product exists to beat."
+            "whyItMatters": "The research lists per-child sections as the first table stake: 'A single set of fields for the children reads instantly amateur to a parent of two.' She has three kids with three different allergy pictures and had to invent her own formatting inside one box, which is exactly the wall-of-text failure of the Notes app that this product exists to beat."
           },
           {
             "what": "The 2000-character cap at app.js:124 truncates silently and only reveals itself on reload. Verified: typed 2,172 characters, the textarea still showed all 2,172, localStorage held 2,000; after a reload the field contained 2,000 characters ending mid-word at '…that a chatty parent would absolutel'.",
             "severity": "major",
-            "whyItMatters": "Nothing warns her, nothing counts down, and the loss happens to the field most likely to run long — the bedtime routine or the medication instructions. She would discover it, if ever, on the printed page."
+            "whyItMatters": "Nothing warns her, nothing counts down, and the loss happens to the field most likely to run long, the bedtime routine or the medication instructions. She would discover it, if ever, on the printed page."
           },
           {
-            "what": "There is no way to clear, reset or delete anything. The complete button inventory of the app is: gear, Tip jar, Babysitter, Pet sitter, Print / Save as PDF, Copy link, Show QR, Close. And there is no export — no 'download my sheet' file, no import.",
+            "what": "There is no way to clear, reset or delete anything. The complete button inventory of the app is: gear, Tip jar, Babysitter, Pet sitter, Print / Save as PDF, Copy link, Show QR, Close. And there is no export, no 'download my sheet' file, no import.",
             "severity": "major",
-            "whyItMatters": "She came here because Cozi held her data hostage; the research's exact quote is 'If you decide to leave Cozi, you can't take your data with you.' This app has the opposite problem in the same family: her children's medications and her alarm-adjacent house notes are in a browser store she cannot empty from the UI, and cannot take with her either. The research explicitly wants the export button 'in the main UI, not buried in settings — it is a trust signal as much as a feature.'"
+            "whyItMatters": "She came here because Cozi held her data hostage; the research's exact quote is 'If you decide to leave Cozi, you can't take your data with you.' This app has the opposite problem in the same family: her children's medications and her alarm-adjacent house notes are in a browser store she cannot empty from the UI, and cannot take with her either. The research explicitly wants the export button 'in the main UI, not buried in settings, it is a trust signal as much as a feature.'"
           },
           {
             "what": "'Copy link' has one failure message and no fallback. With the clipboard granted it works and copies an 85-character URL; with the write rejected the entire response is a toast reading 'Could not copy' (app.js:43). The URL is never rendered anywhere she could select it by hand.",
@@ -51,24 +51,24 @@
         "who": "16, the babysitter. Second year of doing this, no training, no first-aid course. Cracked Android at 414px, screen brightness turned down to save battery. She has never seen this app before and will never see it again.",
         "context": "19:05, standing in the Raghunathans' hallway. Overhead light off, one lamp on. Amara is crying on her left arm; the phone is in her right hand and she is reading with her thumb. Later that evening she needs the allergy line in a hurry.",
         "task": "Open the link Priya texted her, find out what she is not allowed to feed anyone, and know where she is if she has to phone 999/911.",
-        "verdict": "She got the sheet, and it did load — but what she got was Priya's data-entry form, not a sheet. She could not find the address without two full screens of scrolling, she could not tap a single phone number, and the one piece of information she was most confident about — the peanut allergy — was invented by the app.",
+        "verdict": "She got the sheet, and it did load, but what she got was Priya's data-entry form, not a sheet. She could not find the address without two full screens of scrolling, she could not tap a single phone number, and the one piece of information she was most confident about, the peanut allergy, was invented by the app.",
         "delights": [
           "The link genuinely carries everything. Cold-loaded on a device that had never seen the app: 10 of 10 fields arrived, 611 bytes written locally, toast 'Sheet loaded from the link', hash cleaned out of the URL. No account, no download, no app install.",
-          "It then keeps working. She reloaded the bare URL later with the network cut off — the service worker was ready, the page booted, and all the fields were still populated. A dead signal in someone else's basement does not erase the address."
+          "It then keeps working. She reloaded the bare URL later with the network cut off, the service worker was ready, the page booted, and all the fields were still populated. A dead signal in someone else's basement does not erase the address."
         ],
         "frictions": [
           {
-            "what": "Blank fields show the app's example text as if it were the family's information. With Priya's allergies box left empty, Kayleigh's screen showed, inside the box labelled 'Allergies & medications', the words 'Maya: peanuts (EpiPen on the counter!). No meds tonight.' — 16px, contrast 3.38:1, in the same font as everything real. The blank 911 address box read '412 Maple Ct'. The blank doctor box read 'Dr. Chen — 555-0177'. The blank backup box read 'Grandma Pat (next door): 555-033' — a seven-digit number.",
+            "what": "Blank fields show the app's example text as if it were the family's information. With Priya's allergies box left empty, Kayleigh's screen showed, inside the box labelled 'Allergies & medications', the words 'Maya: peanuts (EpiPen on the counter!). No meds tonight.', 16px, contrast 3.38:1, in the same font as everything real. The blank 911 address box read '412 Maple Ct'. The blank doctor box read 'Dr. Chen, 555-0177'. The blank backup box read 'Grandma Pat (next door): 555-033', a seven-digit number.",
             "severity": "blocker",
-            "whyItMatters": "This is fabricated medical and emergency information rendered on a stranger's phone as though the parent had written it. It cuts both ways and both ways are bad: she may act on an allergy that does not exist, or — having read a plausible allergy line — never ask Priya the question that would have surfaced the real one. The print path already gets this right (renderSheet at app.js:141 drops empty fields); only the shared view, which is the parent's <input> form, leaks the examples. app.js:54, :57, :62, :63, :64, :67."
+            "whyItMatters": "This is fabricated medical and emergency information rendered on a stranger's phone as though the parent had written it. It cuts both ways and both ways are bad: she may act on an allergy that does not exist, or, having read a plausible allergy line, never ask Priya the question that would have surfaced the real one. The print path already gets this right (renderSheet at app.js:141 drops empty fields); only the shared view, which is the parent's <input> form, leaks the examples. app.js:54, :57, :62, :63, :64, :67."
           },
           {
-            "what": "There is no sitter view. The link hands her the parent's editing form: 11 editable inputs, #sheet still display:none (index.html:1254). Measured on a 414x896 phone: the allergy text sits 830px down a 2,390px page, and the home address sits at 1,509px — two full screens past the fold, under a heading that says 'Fill in what matters, skip what doesn't … Everything saves to this device automatically', which is instructions written to Priya.",
+            "what": "There is no sitter view. The link hands her the parent's editing form: 11 editable inputs, #sheet still display:none (index.html:1254). Measured on a 414x896 phone: the allergy text sits 830px down a 2,390px page, and the home address sits at 1,509px, two full screens past the fold, under a heading that says 'Fill in what matters, skip what doesn't … Everything saves to this device automatically', which is instructions written to Priya.",
             "severity": "blocker",
-            "whyItMatters": "The research calls this the tell of an unfinished app: 'the parent's edit form and the sitter's reference page are different documents with different layouts.' Its headline differentiator is a 3-second panel pinned to the top — street address plus cross street, allergies, and 911/Poison Control. Here the three-second information is the last thing on the page and it is inside a text box she can accidentally retype."
+            "whyItMatters": "The research calls this the tell of an unfinished app: 'the parent's edit form and the sitter's reference page are different documents with different layouts.' Its headline differentiator is a 3-second panel pinned to the top, street address plus cross street, allergies, and 911/Poison Control. Here the three-second information is the last thing on the page and it is inside a text box she can accidentally retype."
           },
           {
-            "what": "Zero tap-to-call. Measured: 0 elements matching a[href^=\"tel:\"] anywhere in the app, in either mode, on either device. Every phone number in the sheet lives inside a <textarea>, so it is not even a long-pressable data-detected number. And 911 / Poison Control 1-800-222-1222 appear nowhere on screen at all — that string exists only in the print-only emergency band (app.js:71, rendered into #sheet, which is display:none until printing).",
+            "what": "Zero tap-to-call. Measured: 0 elements matching a[href^=\"tel:\"] anywhere in the app, in either mode, on either device. Every phone number in the sheet lives inside a <textarea>, so it is not even a long-pressable data-detected number. And 911 / Poison Control 1-800-222-1222 appear nowhere on screen at all, that string exists only in the print-only emergency band (app.js:71, rendered into #sheet, which is display:none until printing).",
             "severity": "blocker",
             "whyItMatters": "Both research table stakes: 'Tap-to-call on every phone number in the sitter's view, with 911 and Poison Control always present and not removable. Poison Control appears in essentially every professional checklist; its absence is noticed.' Holding a crying baby, she has one hand. Reading a number off a screen and dialling it by hand is the difference the whole app is supposed to remove."
           },
@@ -80,7 +80,7 @@
           {
             "what": "Her own phone now permanently holds the family's home address, wifi password and children's medical notes under the key 'sitter-baby' (611 bytes measured), written silently on load, with no notice and no control in the UI to remove it.",
             "severity": "major",
-            "whyItMatters": "The app's own colophon promises 'Stays on your device — family details are nobody's business.' It stays on *a* device, and here that device belongs to a sixteen-year-old the family used once. The research is emphatic that privacy is this product's strongest asset for a document holding a child's medications and a spare-key location; silently persisting it to the recipient without a word is the one move that undercuts the claim."
+            "whyItMatters": "The app's own colophon promises 'Stays on your device, family details are nobody's business.' It stays on *a* device, and here that device belongs to a sixteen-year-old the family used once. The research is emphatic that privacy is this product's strongest asset for a document holding a child's medications and a spare-key location; silently persisting it to the recipient without a word is the one move that undercuts the claim."
           }
         ]
       },
@@ -92,23 +92,23 @@
         "verdict": "The comfort panel is the best thing in the app and it worked perfectly for her. And then it made the app lie to her more convincingly, because at High contrast the invented example text becomes exactly the same colour as her daughter's real words.",
         "delights": [
           "She found the gear in the header unprompted, opened it, and set Text size to Largest. Root font went 16px → 24px and the whole layout scaled with it: zero horizontal overflow at 414px, zero elements sticking out past the viewport, no textarea clipped (allergy box measured clientHeight 154 / scrollHeight 154). axe returned zero violations with the panel open and zero after closing it.",
-          "The panel is a real dialog with real <fieldset> radio groups — seven of them, sample text at the top, Done and Reset pinned in a footer that stayed on screen (measured bottom 736px inside a 900px viewport). The permanent tick slot on each chip meant she could see which option was on without judging a colour."
+          "The panel is a real dialog with real <fieldset> radio groups, seven of them, sample text at the top, Done and Reset pinned in a footer that stayed on screen (measured bottom 736px inside a 900px viewport). The permanent tick slot on each chip meant she could see which option was on without judging a colour."
         ],
         "frictions": [
           {
-            "what": "Turning High contrast on makes the fake placeholder text identical to real text. Measured: with contrast normal, ghost ink rgb(144,136,121) vs real ink rgb(38,32,19) — 4.61:1 apart. With data-contrast=\"more\" the base layer's rule `:root[data-contrast=\"more\"] body{--ink-3:var(--ink-2)}` (index.html:926) collapses them: ghost ink rgb(38,32,19), real ink rgb(38,32,19), ratio 1.00:1.",
+            "what": "Turning High contrast on makes the fake placeholder text identical to real text. Measured: with contrast normal, ghost ink rgb(144,136,121) vs real ink rgb(38,32,19), 4.61:1 apart. With data-contrast=\"more\" the base layer's rule `:root[data-contrast=\"more\"] body{--ink-3:var(--ink-2)}` (index.html:926) collapses them: ghost ink rgb(38,32,19), real ink rgb(38,32,19), ratio 1.00:1.",
             "severity": "blocker",
             "whyItMatters": "She read 'Maya: peanuts (EpiPen on the counter!)' as her granddaughter's allergy record. The one accessibility control aimed squarely at her removes the only cue distinguishing the app's invented example from her daughter's actual answer. Placeholder-as-content is a defect at 3.38:1; at 1.00:1 for a low-vision reader of a medical document it is the most dangerous thing in the build."
           },
           {
-            "what": "The Babysitter / Pet sitter toggle does not grow. It is 38px tall at every text size — measured 330×38 at Largest, while the fields beside it went from 16px to 24px type. The base rule is index.html:610 (.seg button{min-height:38px}), against the system's own --tap: max(44px, 44px × --ui-scale), which at Largest would be 66px.",
+            "what": "The Babysitter / Pet sitter toggle does not grow. It is 38px tall at every text size, measured 330×38 at Largest, while the fields beside it went from 16px to 24px type. The base rule is index.html:610 (.seg button{min-height:38px}), against the system's own --tap: max(44px, 44px × --ui-scale), which at Largest would be 66px.",
             "severity": "major",
             "whyItMatters": "The design system's own comment says targets are floored at 44px and grow with --ui-scale precisely because 'someone who has turned the text up is often doing it for eyesight or tremor, and shrinking their targets at the same moment would undo the help.' The one control that can wipe the whole sheet is also the one control that ignores her setting."
           },
           {
             "what": "At Largest text the page is 3,433px tall and the Print button is 2,696px down it; the allergy field starts at 1,243px. There is no sticky action bar, no jump-to-print, no table of contents.",
             "severity": "major",
-            "whyItMatters": "The base layer ships .actionbar (index.html:805) for exactly this and the app does not use it — Print / Copy link / Show QR sit in an ordinary card at the bottom of a very long scroll. For the reader most likely to be at Largest, the app's three outputs are the hardest thing on the page to reach."
+            "whyItMatters": "The base layer ships .actionbar (index.html:805) for exactly this and the app does not use it, Print / Copy link / Show QR sit in an ordinary card at the bottom of a very long scroll. For the reader most likely to be at Largest, the app's three outputs are the hardest thing on the page to reach."
           },
           {
             "what": "The gear itself is 36×36 (index.html:1008), and the Tip jar pill is 36px tall.",
@@ -124,24 +124,24 @@
         "task": "Put the QR on the screen, let her scan it, leave.",
         "verdict": "It did not work. The button he pressed produced a black toast reading 'Could not draw the QR' and no code at all, and he left having verbally told her the dog's medication.",
         "delights": [
-          "The whole sheet really does travel inside the link with nothing uploaded — he checked, and the app makes zero network requests after load. That is the exact thing Touch Stay charges a subscription for and it is free here.",
+          "The whole sheet really does travel inside the link with nothing uploaded, he checked, and the app makes zero network requests after load. That is the exact thing Touch Stay charges a subscription for and it is free here.",
           "The pet mode is a genuinely different form (10 fields: feeding, walks & litter, vet & emergency vet), not a relabelled babysitter form. The research's tenth table stake, already half-shipped."
         ],
         "frictions": [
           {
             "what": "'Show QR' fails outright on a normally-filled sheet. Measured: his sheet (11 fields, 1,767 characters stored) produced a 2,445-character URL. The bundled encoder's ceiling at ECC level M is exactly 2,331 characters (binary-searched against the real vendor-qrcode.js in the page). qrcode(0,'M').make() throws, app.js:239 catches it and shows 'Could not draw the QR', the dialog never opens, and the canvas is left blank. The break-even is 1,675 characters of plain sheet text on the production origin.",
             "severity": "blocker",
-            "whyItMatters": "One of the app's three top-level outputs simply stops existing once the user does the thing the app is asking them to do — fill it in. 1,675 characters is about 150 characters per field across eleven fields; the app's own placeholders are longer than that. Worse, the failure is silent about its cause and offers no fallback: no lower-ECC retry, no 'the sheet is too long for a QR — use Copy link', no shortening."
+            "whyItMatters": "One of the app's three top-level outputs simply stops existing once the user does the thing the app is asking them to do, fill it in. 1,675 characters is about 150 characters per field across eleven fields; the app's own placeholders are longer than that. Worse, the failure is silent about its cause and offers no fallback: no lower-ECC retry, no 'the sheet is too long for a QR, use Copy link', no shortening."
           },
           {
-            "what": "Even below the ceiling the QR is unscannable long before it throws. Module size is computed as Math.floor(300 / (count + 8)) at app.js:232. Measured: 800-character payload → version 23, 109 modules, 2px per module; 1,600 characters → version 33, 149 modules, 1px per module drawn into a 300px bitmap that is then displayed at 246 CSS px on a 414px phone — about 0.82 CSS pixels per module.",
+            "what": "Even below the ceiling the QR is unscannable long before it throws. Module size is computed as Math.floor(300 / (count + 8)) at app.js:232. Measured: 800-character payload → version 23, 109 modules, 2px per module; 1,600 characters → version 33, 149 modules, 1px per module drawn into a 300px bitmap that is then displayed at 246 CSS px on a 414px phone, about 0.82 CSS pixels per module.",
             "severity": "blocker",
-            "whyItMatters": "A phone camera needs roughly 4 device pixels per module at arm's length. From about half a filled sheet onward the app renders a code that looks like a QR, opens confidently, and cannot be scanned — which is worse than the honest failure, because the two of them will stand there trying."
+            "whyItMatters": "A phone camera needs roughly 4 device pixels per module at arm's length. From about half a filled sheet onward the app renders a code that looks like a QR, opens confidently, and cannot be scanned, which is worse than the honest failure, because the two of them will stand there trying."
           },
           {
             "what": "In dark mode the QR dialog's heading is invisible. #qrDlg has no theme rules and its <h3> is hardcoded color:#111 at index.html:1322; the dialog's own background resolves to rgb(18,18,18) under a dark color-scheme. Measured contrast: 1.005:1.",
             "severity": "major",
-            "whyItMatters": "'Scan with the sitter's phone' — the only instruction in the dialog — is literally not there for anyone whose phone is in dark mode, which at 06:20 is most people. The rest of the dialog is inline-styled too (index.html:1321-1325) and is the only part of the app that opted out of the token system."
+            "whyItMatters": "'Scan with the sitter's phone', the only instruction in the dialog, is literally not there for anyone whose phone is in dark mode, which at 06:20 is most people. The rest of the dialog is inline-styled too (index.html:1321-1325) and is the only part of the app that opted out of the token system."
           },
           {
             "what": "There is no 'Copy as text'. The only two share paths are a 2,445-character opaque base64 URL and a QR that will not render.",
@@ -155,17 +155,17 @@
         "who": "47, single father, writes at length about everything. His mother is coming for two weeks and he wants one sheet on the fridge. Reads the Etsy printable reviews the research quotes ('digital PDF files won't print') and half expects this to fail the same way.",
         "context": "Sunday evening, desk, 1280px Chrome window, mouse and keyboard, an actual inkjet printer. No time pressure. He will read the output carefully and he will be annoyed by waste.",
         "task": "A complete two-week handover on one sheet of paper.",
-        "verdict": "For a normal amount of text the output is excellent. His actual bedtime routine — twenty lines — printed as three sheets of paper, one of which held only the title and one of which held only a single red line. And a longer version quietly threw nine lines away.",
+        "verdict": "For a normal amount of text the output is excellent. His actual bedtime routine, twenty lines, printed as three sheets of paper, one of which held only the title and one of which held only a single red line. And a longer version quietly threw nine lines away.",
         "delights": [
           "For a real, sensibly-sized sheet the print is exactly what was promised. Eleven fields with three-line answers (25 lines total): one page, 1,554 characters, nothing lost, columns balanced, emergency band intact. Even at 46 lines across all eleven fields it stayed at two clean pages with all 46 lines present.",
-          "Non-Latin content survives. Cyrillic, Arabic and Latin diacritics all rendered correctly in the PDF, emoji included, with zero '??' substitutions — the failure mode the seating-chart review found is not present here.",
+          "Non-Latin content survives. Cyrillic, Arabic and Latin diacritics all rendered correctly in the PDF, emoji included, with zero '??' substitutions, the failure mode the seating-chart review found is not present here.",
           "Long unbroken strings do not clip. A 100-character URL in the address field and a 60-character wifi password both wrapped inside their column (measured: 0 overflowing elements against a 369px column)."
         ],
         "frictions": [
           {
-            "what": "Content is silently dropped from the printed sheet once a single field gets long. Measured with 40 numbered lines in 'Bedtime & routine': the PDF contained lines 1–31, line 31 was cut mid-word at 'goes on an', and lines 32–40 do not appear anywhere in the document. Nine lines gone, no ellipsis, no warning, no console error. Cause is #sheet .block{break-inside:avoid} at index.html:1264 on a block taller than a page.",
+            "what": "Content is silently dropped from the printed sheet once a single field gets long. Measured with 40 numbered lines in 'Bedtime & routine': the PDF contained lines 1 to 31, line 31 was cut mid-word at 'goes on an', and lines 32 to 40 do not appear anywhere in the document. Nine lines gone, no ellipsis, no warning, no console error. Cause is #sheet .block{break-inside:avoid} at index.html:1264 on a block taller than a page.",
             "severity": "blocker",
-            "whyItMatters": "The printed sheet is the artifact the whole app is named after, and it is the copy that will be on the fridge when nobody can reach him. It discards the end of the longest answer — which is, structurally, the medication schedule or the bedtime sequence — and tells nobody. Every other failure in this app is visible; this one is not."
+            "whyItMatters": "The printed sheet is the artifact the whole app is named after, and it is the copy that will be on the fridge when nobody can reach him. It discards the end of the longest answer, which is, structurally, the medication schedule or the bedtime sequence, and tells nobody. Every other failure in this app is visible; this one is not."
           },
           {
             "what": "Pagination falls off a cliff at 18 lines in one field. Measured: 17 lines → 1 page. 18 lines → 2 pages, the second holding 69 characters (the emergency band alone). 20 lines → 3 pages: page 1 is the title and 'Thank you for taking care of them 💛' and nothing else, page 2 is the routine, page 3 is one red line.",
@@ -175,10 +175,10 @@
           {
             "what": "There is no print preview. #sheet is display:none on screen (index.html:1254) and is only built inside the beforeprint handler (app.js:165). Nothing in the UI shows him the page before the paper comes out.",
             "severity": "major",
-            "whyItMatters": "The research makes this the headline differentiator, verbatim: 'a live print preview that is literally the printed page … The loudest complaint against the printable competitors is that the PDF wouldn't print right — we can make that our headline.' The renderer already exists and produces good output; it is simply hidden. It is also the only way any of the pagination defects above would ever be caught by a user before they matter."
+            "whyItMatters": "The research makes this the headline differentiator, verbatim: 'a live print preview that is literally the printed page … The loudest complaint against the printable competitors is that the PDF wouldn't print right, we can make that our headline.' The renderer already exists and produces good output; it is simply hidden. It is also the only way any of the pagination defects above would ever be caught by a user before they matter."
           },
           {
-            "what": "The allergy block prints identically to the wifi block. In the generated PDF every field body is 11pt regular in the same ink and every label is 8.5pt uppercase #666 (index.html:1265-1268). The home address is an ordinary 11pt line in whatever column the balancer happened to put it in — in his sheet, last in the right-hand column. The 911 / Poison Control band is a 10pt strip at the very bottom (measured top 929px of a 991px sheet).",
+            "what": "The allergy block prints identically to the wifi block. In the generated PDF every field body is 11pt regular in the same ink and every label is 8.5pt uppercase #666 (index.html:1265-1268). The home address is an ordinary 11pt line in whatever column the balancer happened to put it in, in his sheet, last in the right-hand column. The 911 / Poison Control band is a 10pt strip at the very bottom (measured top 929px of a 991px sheet).",
             "severity": "major",
             "whyItMatters": "The research's second differentiator is that allergies and medications are 'auto-promoted … the loudest element on both outputs, with a red chip', and its third is a 3-second panel of address + cross street + emergency numbers pinned to the top of the print. The page currently reads as an evenly-weighted form, which is the design of the free printables it is meant to beat. Design for the worst three seconds this document will ever have."
           },
@@ -190,33 +190,33 @@
           {
             "what": "No consent-to-treat or insurance block anywhere, and no 'Updated <date>' stamp on the printed page (verified: the string 'updated' does not appear in the rendered sheet).",
             "severity": "minor",
-            "whyItMatters": "Both are named table stakes. For a two-week grandparent stay the written authorisation for emergency medical treatment is the piece the professional guides all demand and no free one-pager includes — the research calls it 'one collapsed section' that closes a gap the printables structurally cannot. The date stamp is how the sitter knows the sheet is not two years old."
+            "whyItMatters": "Both are named table stakes. For a two-week grandparent stay the written authorisation for emergency medical treatment is the piece the professional guides all demand and no free one-pager includes, the research calls it 'one collapsed section' that closes a gap the printables structurally cannot. The date stamp is how the sitter knows the sheet is not two years old."
           }
         ]
       }
     ],
     "consensus": {
       "worksWell": [
-        "Time-to-first-field is zero. No splash, no account, no template chooser, no onboarding — the page opens on eleven real fields with real labels. Measured cold: 20 focusable elements, 11 of them the fields. This is the single most-cited 1-star cause in the research category and this app simply does not have it.",
+        "Time-to-first-field is zero. No splash, no account, no template chooser, no onboarding, the page opens on eleven real fields with real labels. Measured cold: 20 focusable elements, 11 of them the fields. This is the single most-cited 1-star cause in the research category and this app simply does not have it.",
         "The printed one-pager, at normal length, is the best artifact in the product. Eleven fields with three-line answers print as one page, 1,554 characters, columns balanced to within a pixel, empty fields dropped, real black on white, no browser chrome, correct under a dark OS theme, with Cyrillic / Arabic / diacritics / emoji all intact and long unbroken strings wrapped rather than clipped.",
         "Persistence is invisible and solid. 200 rapid inputs → 352 bytes, survived reload byte-for-byte; deliberately corrupted localStorage still booted with zero new console errors; the service worker is real, and a reload with the network cut off boots the app with all data present.",
         "The comfort panel is exemplary and this app inherits all of it correctly. Largest text takes the root from 16px to 24px with zero horizontal overflow at 414px, no clipped fields, and axe reporting zero WCAG 2.2 AA violations both with the panel open and after closing it. The standard stress battery reports 0 hard failures across all 17 checks.",
-        "The share link genuinely carries the whole sheet with nothing uploaded, re-persists on the recipient's device so a dead signal does not erase it, and — on a device that already holds a sheet — asks before overwriting rather than silently destroying it.",
+        "The share link genuinely carries the whole sheet with nothing uploaded, re-persists on the recipient's device so a dead signal does not erase it, and, on a device that already holds a sheet, asks before overwriting rather than silently destroying it.",
         "Pet-sitter mode is a real second schema (10 different fields including walks & litter and emergency vet), not a relabelled babysitter form."
       ],
       "hurts": [
         "There is no sitter view. The shared link hands the recipient the parent's editable form: allergy text 830px down a 2,390px page, home address at 1,509px, 0 tel: links, and 911 / Poison Control nowhere on screen at all because that string lives only inside the print-only markup.",
-        "Empty fields render the app's own worked examples as if they were the family's answers — a fabricated peanut allergy, a fabricated doctor's number, a fabricated address — on the sitter's phone at 3.38:1, and at exactly 1.00:1 against real ink once High contrast is on.",
+        "Empty fields render the app's own worked examples as if they were the family's answers, a fabricated peanut allergy, a fabricated doctor's number, a fabricated address, on the sitter's phone at 3.38:1, and at exactly 1.00:1 against real ink once High contrast is on.",
         "'Show QR' fails outright above 1,675 characters of sheet text (the vendor encoder's hard ceiling is 2,331 characters; a realistic filled sheet measured 2,445) and renders an unscannable 1-CSS-pixel-per-module code for a long stretch below that. Its dark-mode dialog heading is invisible at 1.005:1.",
-        "The printed sheet silently discards content: 40 lines in one field printed 31, with line 31 cut mid-word. Below that threshold it wastes paper — 18 lines forces a second page for one line of text, 20 lines forces three pages, two of them near-empty — while the UI promises 'Prints one clean page.'",
+        "The printed sheet silently discards content: 40 lines in one field printed 31, with line 31 cut mid-word. Below that threshold it wastes paper, 18 lines forces a second page for one line of text, 20 lines forces three pages, two of them near-empty, while the UI promises 'Prints one clean page.'",
         "Nothing checks whether the sheet is usable. A page with no address, no allergy line and no backup contact prints without a word of protest, and there is no export file, no clear/reset, and no per-child structure."
       ],
       "mostWantedNext": [
-        "A read-only sitter view rendered from the same data, opened automatically when the URL carries a sheet, led by a 3-second panel: street address + cross street, allergies and medications, and 911 / Poison Control 1-800-222-1222 — all as 48px tel: targets at 22px+.",
+        "A read-only sitter view rendered from the same data, opened automatically when the URL carries a sheet, led by a 3-second panel: street address + cross street, allergies and medications, and 911 / Poison Control 1-800-222-1222, all as 48px tel: targets at 22px+.",
         "Stop rendering placeholders as content: drop them from any hash-loaded sheet, and give the parent's form a visible filled/empty cue that survives High contrast.",
-        "A named completeness nudge — 'No allergy info. No backup contact. No cross street.' — shown before Print and before Copy link, silent about the other sixty fields.",
+        "A named completeness nudge, 'No allergy info. No backup contact. No cross street.', shown before Print and before Copy link, silent about the other sixty fields.",
         "Make the QR path honest: retry at lower ECC, size modules to at least 4px, and when the payload genuinely will not fit, say so and offer Copy link and Copy as text instead of a dead toast.",
-        "'Copy as text' as the third equal button, and a 'Download my sheet' JSON export with a matching import — the direct, nameable answer to the Cozi lock-in complaint.",
+        "'Copy as text' as the third equal button, and a 'Download my sheet' JSON export with a matching import, the direct, nameable answer to the Cozi lock-in complaint.",
         "A live print preview on screen that is literally the printed page, plus a fix for the two-column pagination so long answers never lose their tail.",
         "Per-child (and per-pet) repeatable blocks, and an optional collapsed consent-to-treat + insurance section with a signature line."
       ]
@@ -228,7 +228,7 @@
     "scenarios": [
       {
         "name": "Standard battery",
-        "method": "node design/stress.mjs sitter-sheet — layout at 320/414/1280 and at largest text and roomy spacing, touch targets, hostile text and injection, numeric edges, 30 rapid clicks on the primary action, 200 bulk adds, reload persistence, corrupt localStorage boot, keyboard reachability, axe after interaction, print, console over the whole run.",
+        "method": "node design/stress.mjs sitter-sheet, layout at 320/414/1280 and at largest text and roomy spacing, touch targets, hostile text and injection, numeric edges, 30 rapid clicks on the primary action, 200 bulk adds, reload persistence, corrupt localStorage boot, keyboard reachability, axe after interaction, print, console over the whole run.",
         "result": "0 hard failures. Layout clean at every width and comfort setting; touch targets []; hostile text injected 0 scripts and 0 images, title not hijacked, no poison on screen; 30 clicks in 841ms with content 744→744 chars; 200 rapid adds in 209ms, storage 352B; reload persisted 744→744 chars; corrupt storage booted with 0 new errors; 20 focusable elements, 0 unreachable, 0 unnamed, 0 placeholder-only names; axe clean after interaction; print reported 1 dark fill; no console output for the whole run.",
         "defect": null,
         "severity": "none"
@@ -243,63 +243,63 @@
       {
         "name": "QR module size vs. what a camera can resolve",
         "method": "Drove the real encoder at eight payload sizes and computed the app's own cell maths from app.js:232 (Math.floor(300/(count+8))), then measured the canvas's rendered CSS width inside the dialog at a 320px viewport.",
-        "result": "200 chars → v10, 57 modules, 4px/module. 800 → v23, 109 modules, 2px. 1,600 → v33, 149 modules, 1px. 2,331 (the ceiling) → v40, 177 modules, 1px, drawn as 177px inside a 300px bitmap that renders at 246 CSS px — roughly 0.82 CSS px per module.",
-        "defect": "From about 1,200 characters upward the code is drawn at 1–2px per module and is not scannable, but the dialog opens confidently as though it worked.",
+        "result": "200 chars → v10, 57 modules, 4px/module. 800 → v23, 109 modules, 2px. 1,600 → v33, 149 modules, 1px. 2,331 (the ceiling) → v40, 177 modules, 1px, drawn as 177px inside a 300px bitmap that renders at 246 CSS px, roughly 0.82 CSS px per module.",
+        "defect": "From about 1,200 characters upward the code is drawn at 1 to 2px per module and is not scannable, but the dialog opens confidently as though it worked.",
         "severity": "blocker"
       },
       {
         "name": "QR dialog theming and keyboard behaviour",
         "method": "Opened #qrDlg at 414px under both colour schemes; measured computed colours, dialog and canvas geometry at a 320px viewport, initial focus, Escape, and focus return.",
-        "result": "Dark: dialog background rgb(18,18,18), <h3> colour rgb(17,17,17) — contrast 1.005:1, the heading is invisible. Light: fine. Geometry at 320px is safe — dialog 282px wide, canvas 246px, page overflow 0. Keyboard is correct: focus lands on #qrClose on open, Escape closes, focus returns to #qrBtn.",
+        "result": "Dark: dialog background rgb(18,18,18), <h3> colour rgb(17,17,17), contrast 1.005:1, the heading is invisible. Light: fine. Geometry at 320px is safe, dialog 282px wide, canvas 246px, page overflow 0. Keyboard is correct: focus lands on #qrClose on open, Escape closes, focus returns to #qrBtn.",
         "defect": "Hardcoded color:#111 at index.html:1322 inside an inline-styled dialog that opted out of the token system; the only instruction in the dialog disappears in dark mode.",
         "severity": "major"
       },
       {
         "name": "Shared link, cold-loaded on a device that has never seen the app",
-        "method": "Filled a sheet in one browser context, generated the link exactly as the app does, then opened it as the FIRST navigation of a separate browser context (a genuine cold load — a same-document fragment navigation does not re-run init and was discarded as a test artifact).",
-        "result": "Works. 10/10 fields arrived, toast 'Sheet loaded from the link', hash stripped via history.replaceState, 611 bytes persisted, and a later reload of the bare URL with the network offline still booted with all fields present. But: 11 editable inputs and #sheet still display:none — the recipient gets the parent's form. Allergy text at y=830px, home address at y=1,509px on a 2,390px page at 414×896. 0 tel: links. '1-800-222-1222' present on screen: false.",
-        "defect": "No read-only sitter view, no tap-to-call, no emergency numbers on screen — three named research table stakes, all absent from the output the sitter actually holds.",
+        "method": "Filled a sheet in one browser context, generated the link exactly as the app does, then opened it as the FIRST navigation of a separate browser context (a genuine cold load, a same-document fragment navigation does not re-run init and was discarded as a test artifact).",
+        "result": "Works. 10/10 fields arrived, toast 'Sheet loaded from the link', hash stripped via history.replaceState, 611 bytes persisted, and a later reload of the bare URL with the network offline still booted with all fields present. But: 11 editable inputs and #sheet still display:none, the recipient gets the parent's form. Allergy text at y=830px, home address at y=1,509px on a 2,390px page at 414×896. 0 tel: links. '1-800-222-1222' present on screen: false.",
+        "defect": "No read-only sitter view, no tap-to-call, no emergency numbers on screen, three named research table stakes, all absent from the output the sitter actually holds.",
         "severity": "blocker"
       },
       {
         "name": "Placeholders rendered as data on the recipient's phone",
         "method": "Filled only kids / bedtime / parents / wifi, shared the link, cold-loaded it in a fresh context, then enumerated every empty field's placeholder as the sitter would see it and measured its colour against the field background.",
-        "result": "Seven fields showed the app's worked examples as apparent content: allergies → 'Maya: peanuts (EpiPen on the counter!). No meds tonight.'; address (for 911) → '412 Maple Ct'; doctor → 'Dr. Chen — 555-0177'; backup → 'Grandma Pat (next door): 555-033'; plus meals, house rules and quirks. Rendered at 16px, rgb(144,136,121) on rgb(255,250,244) = 3.38:1. The print path is correct by contrast — the same state printed only the 4 real blocks.",
+        "result": "Seven fields showed the app's worked examples as apparent content: allergies → 'Maya: peanuts (EpiPen on the counter!). No meds tonight.'; address (for 911) → '412 Maple Ct'; doctor → 'Dr. Chen, 555-0177'; backup → 'Grandma Pat (next door): 555-033'; plus meals, house rules and quirks. Rendered at 16px, rgb(144,136,121) on rgb(255,250,244) = 3.38:1. The print path is correct by contrast, the same state printed only the 4 real blocks.",
         "defect": "Fabricated allergy, address and phone data presented on a stranger's phone in the labelled field, indistinguishable at a glance from real content.",
         "severity": "blocker"
       },
       {
         "name": "High contrast erases the last cue between fake and real",
         "method": "Measured the computed --ink-3 placeholder ink and the real field ink inside #form at default, at data-contrast=\"more\", and at contrast=more + reading=easy.",
-        "result": "Default: ghost rgb(144,136,121) vs real rgb(38,32,19) — 4.61:1 apart, ghost-vs-background 3.38:1. High contrast: ghost rgb(38,32,19), real rgb(38,32,19) — 1.00:1. Identical. Caused by the base layer's `:root[data-contrast=\"more\"] body{--ink-3:var(--ink-2)}` at index.html:926, which is correct for placeholders-as-hints and catastrophic for placeholders-as-fake-data.",
+        "result": "Default: ghost rgb(144,136,121) vs real rgb(38,32,19), 4.61:1 apart, ghost-vs-background 3.38:1. High contrast: ghost rgb(38,32,19), real rgb(38,32,19), 1.00:1. Identical. Caused by the base layer's `:root[data-contrast=\"more\"] body{--ink-3:var(--ink-2)}` at index.html:926, which is correct for placeholders-as-hints and catastrophic for placeholders-as-fake-data.",
         "defect": "The accessibility setting a low-vision reader turns on makes invented medical text pixel-identical to the family's real answers.",
         "severity": "blocker"
       },
       {
         "name": "Print: silent content loss in a long field",
-        "method": "Put 40 numbered lines in 'Bedtime & routine', fired beforeprint, generated a Letter PDF with 14mm margins via page.pdf(), extracted the text with pdftotext and diffed the line numbers present against 1–40.",
-        "result": "3 pages. Lines 1–31 present, line 31 truncated mid-word at 'goes on an', lines 32–40 absent from the document entirely. No ellipsis, no warning, no console error. A 35-line run lost 3 lines from line 33 on; a 30-line run lost none. Root cause: #sheet .block{break-inside:avoid} at index.html:1264 on a block taller than one page.",
+        "method": "Put 40 numbered lines in 'Bedtime & routine', fired beforeprint, generated a Letter PDF with 14mm margins via page.pdf(), extracted the text with pdftotext and diffed the line numbers present against 1 to 40.",
+        "result": "3 pages. Lines 1 to 31 present, line 31 truncated mid-word at 'goes on an', lines 32 to 40 absent from the document entirely. No ellipsis, no warning, no console error. A 35-line run lost 3 lines from line 33 on; a 30-line run lost none. Root cause: #sheet .block{break-inside:avoid} at index.html:1264 on a block taller than one page.",
         "defect": "The printed emergency document silently discards the tail of its longest answer.",
         "severity": "blocker"
       },
       {
         "name": "Print: the pagination cliff",
         "method": "Swept a single field from 14 to 20 lines, printing each to PDF and measuring page count and characters per page.",
-        "result": "14–17 lines → 1 page. 18 lines → 2 pages, page 2 holding 69 characters (the emergency band alone). 20 lines → 3 pages: page 1 is the title and thank-you line only, page 2 the routine, page 3 one red line. The .cols flex container (index.html:1262) cannot reflow across a page break.",
+        "result": "14 to 17 lines → 1 page. 18 lines → 2 pages, page 2 holding 69 characters (the emergency band alone). 20 lines → 3 pages: page 1 is the title and thank-you line only, page 2 the routine, page 3 one red line. The .cols flex container (index.html:1262) cannot reflow across a page break.",
         "defect": "Three sheets of paper for one page of content, against the app's own promise at index.html:1309 that it 'Prints one clean page.'",
         "severity": "major"
       },
       {
         "name": "Print: realistic sheets, and what the sheet emphasises",
         "method": "Printed a full realistic sheet (11 fields, multi-line), a middling one (11 fields, 25 lines) and a chatty one (11 fields, 46 lines) to PDF; rasterised and read them; measured column balance, block ordering, type sizes and the emergency band's position.",
-        "result": "Full sheet: 1 page, columns 839px vs 839px, all content present. Middling: 1 page, 1,554 chars, 25/25 lines. Chatty: 2 clean pages, 46/46 lines. Section names ('The kids', 'Health & safety') are dropped from the printed page — only field labels print. No 'Updated <date>' stamp. All field bodies are 11pt in one ink; labels are 8.5pt uppercase #666; the allergy block is typographically identical to the wifi block; the emergency band sits at y=929 of a 991px sheet.",
-        "defect": "Output is clean and well-made but flat — the research's two loudest requirements (allergies auto-promoted, a 3-second address/allergy/emergency panel at the top) are not implemented.",
+        "result": "Full sheet: 1 page, columns 839px vs 839px, all content present. Middling: 1 page, 1,554 chars, 25/25 lines. Chatty: 2 clean pages, 46/46 lines. Section names ('The kids', 'Health & safety') are dropped from the printed page, only field labels print. No 'Updated <date>' stamp. All field bodies are 11pt in one ink; labels are 8.5pt uppercase #666; the allergy block is typographically identical to the wifi block; the emergency band sits at y=929 of a 991px sheet.",
+        "defect": "Output is clean and well-made but flat, the research's two loudest requirements (allergies auto-promoted, a 3-second address/allergy/emergency panel at the top) are not implemented.",
         "severity": "major"
       },
       {
         "name": "Print: hostile and non-Latin content",
         "method": "Filled fields with Cyrillic, Arabic, CJK, Icelandic diacritics, emoji, a 60-character unbroken wifi password and a 100-character Google Maps URL; printed to PDF and rasterised.",
-        "result": "No defect from the app. Screen overflow 0. In the print sheet, 0 elements exceeded their column (369px) — long tokens wrapped via overflow-wrap:anywhere at index.html:1269. The PDF contained 0 '??' substitutions and 0 replacement characters; Zoë, Ólafsdóttir, Лёва, محمد, ЛЁВА, аллергия, 💉 and 🧸 all rendered. CJK rendered as tofu boxes, but `fc-list` shows this container has 280 fonts and zero CJK families installed — that is the environment, not the app, and is explicitly NOT reported as a defect.",
+        "result": "No defect from the app. Screen overflow 0. In the print sheet, 0 elements exceeded their column (369px), long tokens wrapped via overflow-wrap:anywhere at index.html:1269. The PDF contained 0 '??' substitutions and 0 replacement characters; Zoë, Ólafsdóttir, Лёва, محمد, ЛЁВА, аллергия, 💉 and 🧸 all rendered. CJK rendered as tofu boxes, but `fc-list` shows this container has 280 fonts and zero CJK families installed, that is the environment, not the app, and is explicitly NOT reported as a defect.",
         "defect": null,
         "severity": "none"
       },
@@ -307,7 +307,7 @@
         "name": "The 2,000-character cap",
         "method": "Typed 2,172 characters into a textarea, read the DOM value and the stored value, then reloaded and read it back.",
         "result": "On screen 2,172 chars, in localStorage 2,000 (app.js:124 slices on every input without writing the slice back to the field). After reload the field held 2,000 characters ending mid-word at '…that a chatty parent would absolutel'. No counter, no warning, no toast.",
-        "defect": "Silent truncation of the longest answers, discovered only after a reload — and the truncated version is what prints.",
+        "defect": "Silent truncation of the longest answers, discovered only after a reload, and the truncated version is what prints.",
         "severity": "major"
       },
       {
@@ -320,14 +320,14 @@
       {
         "name": "Opening a link on a device that already holds a sheet",
         "method": "Created a sheet in a fresh context, then cold-loaded a shared link into it and dismissed the dialog.",
-        "result": "A native confirm() fires (app.js:212): 'Open the shared sheet? Your saved one will be replaced.' Dismissing correctly preserves the local sheet — 6 fields intact. But history.replaceState at app.js:217 runs unconditionally, so after Cancel the hash is stripped and the incoming sheet is unrecoverable without the sender re-sending the link; there is no 'view it anyway' and no second chance.",
+        "result": "A native confirm() fires (app.js:212): 'Open the shared sheet? Your saved one will be replaced.' Dismissing correctly preserves the local sheet, 6 fields intact. But history.replaceState at app.js:217 runs unconditionally, so after Cancel the hash is stripped and the incoming sheet is unrecoverable without the sender re-sending the link; there is no 'view it anyway' and no second chance.",
         "defect": "The guard is right and the recovery path is missing; a mis-tapped Cancel destroys the link.",
         "severity": "minor"
       },
       {
         "name": "Copy link, granted and denied",
         "method": "Granted clipboard-read/write and clicked Copy link, reading the clipboard back; then replaced navigator.clipboard.writeText with a rejecting stub and clicked again.",
-        "result": "Granted: toast 'Link copied — the whole sheet is inside it', 85 characters on the clipboard, correct URL. Denied: toast 'Could not copy' (app.js:43) and nothing else — the URL is not rendered anywhere selectable on the page (checked: no '#eyJ' string visible in body text).",
+        "result": "Granted: toast 'Link copied, the whole sheet is inside it', 85 characters on the clipboard, correct URL. Denied: toast 'Could not copy' (app.js:43) and nothing else, the URL is not rendered anywhere selectable on the page (checked: no '#eyJ' string visible in body text).",
         "defect": "No fallback when the clipboard is refused, which is common in iOS in-app browsers and over plain http.",
         "severity": "minor"
       },
@@ -341,14 +341,14 @@
       {
         "name": "Empty-sheet print via Ctrl+P, and dark-mode print",
         "method": "Cleared storage, fired beforeprint and printed. Separately, printed with the browser in dark mode and read the computed print colours off #sheet.",
-        "result": "Empty: the Print button is guarded (app.js:167) but beforeprint (app.js:165) is not, so Ctrl+P produces a page containing the title, 'Thank you for taking care of them 💛' and the emergency band, with 0 blocks. Dark mode: correct — body prints rgb(255,255,255), sheet ink rgb(17,17,17), zero painted backgrounds inside the sheet.",
+        "result": "Empty: the Print button is guarded (app.js:167) but beforeprint (app.js:165) is not, so Ctrl+P produces a page containing the title, 'Thank you for taking care of them 💛' and the emergency band, with 0 blocks. Dark mode: correct, body prints rgb(255,255,255), sheet ink rgb(17,17,17), zero painted backgrounds inside the sheet.",
         "defect": "One wasted sheet from the keyboard print path; dark-mode printing has no defect.",
         "severity": "minor"
       },
       {
         "name": "Offline operation and data retention on the recipient's device",
         "method": "Waited for the service worker, cut the network at the context level, reloaded. Then inspected what a link recipient's device retains and what UI exists to remove it.",
-        "result": "Offline: serviceWorker.ready resolved, reload booted, 2/2 fields intact. Retention: the recipient's device silently holds 611 bytes under 'sitter-baby' containing the home address, wifi password and children's medical notes. The app's complete button inventory is gear / Tip jar / Babysitter / Pet sitter / Print / Copy link / Show QR / Close — there is no clear, reset, delete or export anywhere.",
+        "result": "Offline: serviceWorker.ready resolved, reload booted, 2/2 fields intact. Retention: the recipient's device silently holds 611 bytes under 'sitter-baby' containing the home address, wifi password and children's medical notes. The app's complete button inventory is gear / Tip jar / Babysitter / Pet sitter / Print / Copy link / Show QR / Close, there is no clear, reset, delete or export anywhere.",
         "defect": "Offline is a genuine strength; the silent, unremovable copy on the sitter's phone contradicts the colophon's 'family details are nobody's business.'",
         "severity": "major"
       }
@@ -357,49 +357,49 @@
   "fixes": [
     {
       "title": "Render a read-only sitter view when the URL carries a sheet, led by a 3-second panel",
-      "rationale": "Kayleigh cold-loaded the real link and got Priya's editing form: 11 editable inputs, #sheet still display:none, allergy text 830px down a 2,390px page and the home address at 1,509px. The research's eighth table stake is explicit that 'the parent's edit form and the sitter's reference page are different documents' and its third differentiator is a panel pinned to the top of the sitter view carrying street address + cross street, allergies, and 911 / Poison Control at maximum size. renderSheet() already produces exactly the right content object — give it a screen mode instead of only a print mode, show it whenever decodeSheet() returns a sheet, and put an 'Edit this sheet' link underneath for the parent who opened their own link.",
+      "rationale": "Kayleigh cold-loaded the real link and got Priya's editing form: 11 editable inputs, #sheet still display:none, allergy text 830px down a 2,390px page and the home address at 1,509px. The research's eighth table stake is explicit that 'the parent's edit form and the sitter's reference page are different documents' and its third differentiator is a panel pinned to the top of the sitter view carrying street address + cross street, allergies, and 911 / Poison Control at maximum size. renderSheet() already produces exactly the right content object, give it a screen mode instead of only a print mode, show it whenever decodeSheet() returns a sheet, and put an 'Edit this sheet' link underneath for the parent who opened their own link.",
       "where": "apps/sitter-sheet/app.js:133-159 (renderSheet), app.js:207-218 (the decodeSheet branch in init), apps/sitter-sheet/index.html:1254 (#sheet{display:none}) and index.html:1291 (.screenonly wrapper)",
       "severity": "blocker",
       "effort": "L"
     },
     {
       "title": "Stop rendering the worked examples as if they were the family's answers",
-      "rationale": "Seven blank fields showed fabricated content on the sitter's phone, including 'Maya: peanuts (EpiPen on the counter!). No meds tonight.' in the allergies box and 'Dr. Chen — 555-0177' in the doctor box, at 16px and 3.38:1 — and at exactly 1.00:1 against real ink once High contrast is on, because index.html:926 collapses --ink-3 into --ink-2. This is invented medical and emergency data presented in the labelled field to a stranger. Minimum fix: never set placeholder when the app is showing a hash-loaded sheet. Better fix, and the one Priya and Deborah both need: shorten the examples to non-actionable form hints ('e.g. peanuts — EpiPen location'), and give filled fields a visible non-colour cue so 'filled' and 'empty' survive High contrast.",
-      "where": "apps/sitter-sheet/app.js:47-97 (the placeholder column of SCHEMAS — specifically :54, :57, :62, :63, :64, :67, :78, :79, :82, :87, :88) and app.js:123 (where placeholder is applied in renderForm)",
+      "rationale": "Seven blank fields showed fabricated content on the sitter's phone, including 'Maya: peanuts (EpiPen on the counter!). No meds tonight.' in the allergies box and 'Dr. Chen, 555-0177' in the doctor box, at 16px and 3.38:1, and at exactly 1.00:1 against real ink once High contrast is on, because index.html:926 collapses --ink-3 into --ink-2. This is invented medical and emergency data presented in the labelled field to a stranger. Minimum fix: never set placeholder when the app is showing a hash-loaded sheet. Better fix, and the one Priya and Deborah both need: shorten the examples to non-actionable form hints ('e.g. peanuts, EpiPen location'), and give filled fields a visible non-colour cue so 'filled' and 'empty' survive High contrast.",
+      "where": "apps/sitter-sheet/app.js:47-97 (the placeholder column of SCHEMAS, specifically :54, :57, :62, :63, :64, :67, :78, :79, :82, :87, :88) and app.js:123 (where placeholder is applied in renderForm)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make every phone number tappable and put 911 / Poison Control on screen",
-      "rationale": "Measured 0 elements matching a[href^=\"tel:\"] anywhere in the app, in either mode, on either device — every number lives inside a <textarea>, so it is not even long-pressable. '1-800-222-1222' is present on screen: false; it exists only in schema.emergency, which is rendered into the print-only #sheet. Two named table stakes in one fix: 'Tap-to-call on every phone number in the sitter's view, with 911 and Poison Control always present and not removable' — the research notes Poison Control's absence 'is noticed'. In the sitter view, linkify /(\\+?\\d[\\d\\-().\\s]{6,})/ inside each value as a tel: anchor at 22px+ in a 48px target, and render the emergency row as two permanent tap-to-call buttons.",
+      "rationale": "Measured 0 elements matching a[href^=\"tel:\"] anywhere in the app, in either mode, on either device, every number lives inside a <textarea>, so it is not even long-pressable. '1-800-222-1222' is present on screen: false; it exists only in schema.emergency, which is rendered into the print-only #sheet. Two named table stakes in one fix: 'Tap-to-call on every phone number in the sitter's view, with 911 and Poison Control always present and not removable', the research notes Poison Control's absence 'is noticed'. In the sitter view, linkify /(\\+?\\d[\\d\\-().\\s]{6,})/ inside each value as a tel: anchor at 22px+ in a 48px target, and render the emergency row as two permanent tap-to-call buttons.",
       "where": "apps/sitter-sheet/app.js:154 (the .v text node) and app.js:158 (the .em block), driven by the new sitter view; schema strings at app.js:71 and app.js:95",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Stop the printed sheet silently discarding content",
-      "rationale": "Gareth's 40-line bedtime routine printed lines 1–31 with line 31 cut mid-word at 'goes on an'; lines 32–40 are absent from the PDF with no ellipsis, no warning and no console error. Reproduced at 35 lines (3 lost) and clean at 30. Cause is break-inside:avoid on a .block taller than one page. Change it to break-inside:auto with orphans/widows on .v and keep break-after:avoid on the h2 so a label never strands; then verify at 40, 60 and 100 lines that the printed text round-trips exactly. This is the only failure in the app that is invisible to the person it happens to, on the copy that will be on the fridge when nobody can reach the parent.",
+      "rationale": "Gareth's 40-line bedtime routine printed lines 1 to 31 with line 31 cut mid-word at 'goes on an'; lines 32 to 40 are absent from the PDF with no ellipsis, no warning and no console error. Reproduced at 35 lines (3 lost) and clean at 30. Cause is break-inside:avoid on a .block taller than one page. Change it to break-inside:auto with orphans/widows on .v and keep break-after:avoid on the h2 so a label never strands; then verify at 40, 60 and 100 lines that the printed text round-trips exactly. This is the only failure in the app that is invisible to the person it happens to, on the copy that will be on the fridge when nobody can reach the parent.",
       "where": "apps/sitter-sheet/index.html:1264 (#sheet .block{break-inside:avoid})",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make the QR path honest: size the modules, retry lower, and fail with a useful next step",
-      "rationale": "Marcus's realistic sheet made a 2,445-character URL against the bundled encoder's hard ceiling of 2,331, so qrcode.make() threw and all he got was 'Could not draw the QR' with an unopened dialog. Below the ceiling it is no better: from ~1,200 characters the cell maths at app.js:232 produces 1–2px modules (v40 draws 177px inside a 300px bitmap, ~0.82 CSS px per module on a 414px phone) — a code that opens confidently and cannot be scanned. Three changes: size the canvas from the module count rather than cramming into 300px (target ≥4 device px per module, cap the CSS box at the dialog width); try 'L' error correction before giving up, which buys roughly 25% more payload; and when it genuinely will not fit, say what happened and offer Copy link and Copy as text in the same toast instead of a dead end.",
-      "where": "apps/sitter-sheet/app.js:227-242 (showQr — qrcode(0,'M') at :229, the cell/offset maths at :232-233, the catch at :239) and index.html:1323 (the fixed 300×300 canvas)",
+      "rationale": "Marcus's realistic sheet made a 2,445-character URL against the bundled encoder's hard ceiling of 2,331, so qrcode.make() threw and all he got was 'Could not draw the QR' with an unopened dialog. Below the ceiling it is no better: from ~1,200 characters the cell maths at app.js:232 produces 1 to 2px modules (v40 draws 177px inside a 300px bitmap, ~0.82 CSS px per module on a 414px phone), a code that opens confidently and cannot be scanned. Three changes: size the canvas from the module count rather than cramming into 300px (target ≥4 device px per module, cap the CSS box at the dialog width); try 'L' error correction before giving up, which buys roughly 25% more payload; and when it genuinely will not fit, say what happened and offer Copy link and Copy as text in the same toast instead of a dead end.",
+      "where": "apps/sitter-sheet/app.js:227-242 (showQr, qrcode(0,'M') at :229, the cell/offset maths at :232-233, the catch at :239) and index.html:1323 (the fixed 300×300 canvas)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Name the missing high-stakes fields before Print, Copy link and Show QR",
-      "rationale": "The only guard is 'is every field empty' (app.js:167, app.js:248), so Priya printed an emergency sheet with no address, no allergy line and no backup contact and the app said nothing. The research spells out the fix and the tone: 'No allergy info. No backup contact. No cross street.' — nag about the four things that matter and stay silent about the other sixty. Non-blocking: a warn strip above the action card listing only the missing high-stakes keys (allergies, address, parents, backup), and the same list echoed once in the toast if they print anyway.",
+      "rationale": "The only guard is 'is every field empty' (app.js:167, app.js:248), so Priya printed an emergency sheet with no address, no allergy line and no backup contact and the app said nothing. The research spells out the fix and the tone: 'No allergy info. No backup contact. No cross street.', nag about the four things that matter and stay silent about the other sixty. Non-blocking: a warn strip above the action card listing only the missing high-stakes keys (allergies, address, parents, backup), and the same list echoed once in the toast if they print anyway.",
       "where": "apps/sitter-sheet/app.js:166-170 (printBtn handler), app.js:247-254 (shareBtn / qrBtn handlers), rendered into apps/sitter-sheet/index.html:1302-1310",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Promote allergies, medications and the address on both outputs",
-      "rationale": "In the generated PDF the allergy block is typographically identical to the wifi block — every body is 11pt in one ink, every label 8.5pt uppercase #666 — and the address is an ordinary line wherever the column balancer dropped it (last in the right column in the measured sheet), with the 911 / Poison Control band at y=929 of a 991px page. The research's second and third differentiators are that allergies and medications render as the loudest element with a red chip, and that a 3-second panel of address + cross street + emergency numbers is pinned to the top of the print at maximum size 'even if the parent filled in nothing else'. Design for the worst three seconds this document will ever have.",
+      "rationale": "In the generated PDF the allergy block is typographically identical to the wifi block, every body is 11pt in one ink, every label 8.5pt uppercase #666, and the address is an ordinary line wherever the column balancer dropped it (last in the right column in the measured sheet), with the 911 / Poison Control band at y=929 of a 991px page. The research's second and third differentiators are that allergies and medications render as the loudest element with a red chip, and that a 3-second panel of address + cross street + emergency numbers is pinned to the top of the print at maximum size 'even if the parent filled in nothing else'. Design for the worst three seconds this document will ever have.",
       "where": "apps/sitter-sheet/app.js:140-158 (renderSheet's section loop and the .em append) and apps/sitter-sheet/index.html:1259-1274 (the #sheet print rules)",
       "severity": "major",
       "effort": "M"
@@ -413,42 +413,42 @@
     },
     {
       "title": "Show the printed page on screen instead of only inside beforeprint",
-      "rationale": "#sheet is display:none on screen (index.html:1254) and is only built when beforeprint fires (app.js:165), so nobody sees the output until paper comes out — which is how the pagination and truncation defects above stay invisible. The research makes this the headline claim, verbatim: 'a live print preview that is literally the printed page … One page. Nothing cut off. No printer required.' The renderer already exists and its output is good; it needs a screen container, a re-render on input (debounced), and a page-count line under it.",
+      "rationale": "#sheet is display:none on screen (index.html:1254) and is only built when beforeprint fires (app.js:165), so nobody sees the output until paper comes out, which is how the pagination and truncation defects above stay invisible. The research makes this the headline claim, verbatim: 'a live print preview that is literally the printed page … One page. Nothing cut off. No printer required.' The renderer already exists and its output is good; it needs a screen container, a re-render on input (debounced), and a page-count line under it.",
       "where": "apps/sitter-sheet/index.html:1254 and :1314 (#sheet), apps/sitter-sheet/app.js:133-159 (renderSheet) and app.js:124 (the oninput handler that would drive it)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Ship export, import and a way to clear the sheet",
-      "rationale": "The complete button inventory is gear / Tip jar / Babysitter / Pet sitter / Print / Copy link / Show QR / Close. Priya came from Cozi and the research quotes the complaint directly — 'If you decide to leave Cozi, you can't take your data with you' — and prescribes 'a one-tap Download my sheet producing a plain JSON file … in the main UI, not buried in settings — it is a trust signal as much as a feature.' The mirror problem is Kayleigh's: her phone silently holds 611 bytes of the family's address, wifi password and medical notes with no control to remove it, which contradicts the colophon at index.html:1319. Add Download / Load from file, and a Clear this sheet with SWS.undo — which is already loaded at index.html:1278 and never called.",
+      "rationale": "The complete button inventory is gear / Tip jar / Babysitter / Pet sitter / Print / Copy link / Show QR / Close. Priya came from Cozi and the research quotes the complaint directly, 'If you decide to leave Cozi, you can't take your data with you', and prescribes 'a one-tap Download my sheet producing a plain JSON file … in the main UI, not buried in settings, it is a trust signal as much as a feature.' The mirror problem is Kayleigh's: her phone silently holds 611 bytes of the family's address, wifi password and medical notes with no control to remove it, which contradicts the colophon at index.html:1319. Add Download / Load from file, and a Clear this sheet with SWS.undo, which is already loaded at index.html:1278 and never called.",
       "where": "apps/sitter-sheet/index.html:1302-1310 (the action card), apps/sitter-sheet/app.js:103-109 (load/save) and app.js:174-197 (the encode/decode pair to reuse)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Add 'Copy as text' as the third equal output",
-      "rationale": "Marcus's only two share paths are a 2,445-character opaque base64 URL and a QR that will not draw. The research lists plain text as a table stake — 'pastes cleanly into SMS or WhatsApp … survives a 15-year-old's cracked Android' — and lists the no-printer path as 'three equal buttons, never a menu: Print, Copy as text, QR.' It is also the only share path that has no failure mode, and renderSheet's filtered-section logic already produces the exact structure to serialise.",
+      "rationale": "Marcus's only two share paths are a 2,445-character opaque base64 URL and a QR that will not draw. The research lists plain text as a table stake, 'pastes cleanly into SMS or WhatsApp … survives a 15-year-old's cracked Android', and lists the no-printer path as 'three equal buttons, never a menu: Print, Copy as text, QR.' It is also the only share path that has no failure mode, and renderSheet's filtered-section logic already produces the exact structure to serialise.",
       "where": "apps/sitter-sheet/index.html:1304-1307 (the .row of share buttons), apps/sitter-sheet/app.js:140-142 (filledSections) and app.js:41-44 (copyText)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Stop the 2,000-character cap losing text silently",
-      "rationale": "app.js:124 slices to 2,000 on every input but never writes the slice back to the field, so 2,172 typed characters looked complete until a reload revealed 2,000 ending mid-word. The field most likely to run long is the medication schedule or the bedtime sequence. Either enforce it visibly with maxlength plus a counter that appears in the last 200 characters, or raise the cap and cap the shared payload instead — the storage cost is trivial (a full 11-field sheet measured 1,778 bytes).",
+      "rationale": "app.js:124 slices to 2,000 on every input but never writes the slice back to the field, so 2,172 typed characters looked complete until a reload revealed 2,000 ending mid-word. The field most likely to run long is the medication schedule or the bedtime sequence. Either enforce it visibly with maxlength plus a counter that appears in the last 200 characters, or raise the cap and cap the shared payload instead, the storage cost is trivial (a full 11-field sheet measured 1,778 bytes).",
       "where": "apps/sitter-sheet/app.js:124 (the oninput slice) and app.js:191 (the matching slice in decodeSheet)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Make the mode toggle honour --tap and say what it did",
-      "rationale": "Kayleigh believed she had deleted the sheet; Deborah could not reliably hit the control. Measured 330×38 at Largest text — unchanged from 38px at default — while the fields beside it scaled from 16px to 24px, against the system's own --tap which would be 66px there. The design system's comment on --tap says targets grow with --ui-scale precisely so raising the text does not shrink the help. Set min-height:var(--tap) on .seg button in this app's layer, and fire SWS.toast on the swap ('Showing your pet sitter sheet — your babysitter sheet is saved') so the switch is legible as a switch rather than a deletion.",
+      "rationale": "Kayleigh believed she had deleted the sheet; Deborah could not reliably hit the control. Measured 330×38 at Largest text, unchanged from 38px at default, while the fields beside it scaled from 16px to 24px, against the system's own --tap which would be 66px there. The design system's comment on --tap says targets grow with --ui-scale precisely so raising the text does not shrink the help. Set min-height:var(--tap) on .seg button in this app's layer, and fire SWS.toast on the swap ('Showing your pet sitter sheet, your babysitter sheet is saved') so the switch is legible as a switch rather than a deletion.",
       "where": "apps/sitter-sheet/index.html:610 (.seg button{min-height:38px}) and apps/sitter-sheet/app.js:162-163 (the two mode listeners)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Give the QR dialog the theme tokens the rest of the app uses",
-      "rationale": "index.html:1322 hardcodes color:#111 on the <h3> and the dialog is entirely inline-styled (index.html:1321-1325), so under a dark colour-scheme the dialog paints rgb(18,18,18) behind rgb(17,17,17) text — measured contrast 1.005:1, and 'Scan with the sitter's phone' is invisible. This is the only part of the app that opted out of the token system. Move it into the stylesheet using --surface / --ink / --line and drop the inline styles; keyboard behaviour is already correct (focus lands on Close, Escape closes, focus returns to #qrBtn) so nothing else needs touching.",
+      "rationale": "index.html:1322 hardcodes color:#111 on the <h3> and the dialog is entirely inline-styled (index.html:1321-1325), so under a dark colour-scheme the dialog paints rgb(18,18,18) behind rgb(17,17,17) text, measured contrast 1.005:1, and 'Scan with the sitter's phone' is invisible. This is the only part of the app that opted out of the token system. Move it into the stylesheet using --surface / --ink / --line and drop the inline styles; keyboard behaviour is already correct (focus lands on Close, Escape closes, focus returns to #qrBtn) so nothing else needs touching.",
       "where": "apps/sitter-sheet/index.html:1321-1325 (the #qrDlg markup and its inline styles)",
       "severity": "major",
       "effort": "S"
@@ -462,14 +462,14 @@
     },
     {
       "title": "Guard the keyboard print path and stamp the sheet with a date",
-      "rationale": "app.js:167 guards the Print button but the beforeprint listener at app.js:165 does not, so Ctrl+P on an empty sheet prints the title, 'Thank you for taking care of them 💛' and the emergency band across a whole page. Separately, the rendered sheet contains no 'Updated' string anywhere — the research's second table stake asks for an 'Updated [date]' stamp 'so the sitter knows it isn't stale', which matters most for the reuse case that is the app's entire reason to exist over the free printable.",
+      "rationale": "app.js:167 guards the Print button but the beforeprint listener at app.js:165 does not, so Ctrl+P on an empty sheet prints the title, 'Thank you for taking care of them 💛' and the emergency band across a whole page. Separately, the rendered sheet contains no 'Updated' string anywhere, the research's second table stake asks for an 'Updated [date]' stamp 'so the sitter knows it isn't stale', which matters most for the reuse case that is the app's entire reason to exist over the free printable.",
       "where": "apps/sitter-sheet/app.js:165 (the beforeprint listener) and app.js:137-139 (the .shead block where the stamp belongs)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Give Copy link a fallback, and give a cancelled shared link a second chance",
-      "rationale": "Two small dead ends measured. When navigator.clipboard.writeText rejects — routine in iOS in-app browsers and over plain http — the entire response is 'Could not copy' (app.js:43) and the URL appears nowhere selectable on the page; show it in a read-only, pre-selected input instead. And app.js:217 calls history.replaceState unconditionally, so a parent or sitter who taps Cancel on the 'Your saved one will be replaced' confirm loses the incoming sheet with no way back; keep the hash until the choice resolves, and offer 'View it without replacing mine'.",
+      "rationale": "Two small dead ends measured. When navigator.clipboard.writeText rejects, routine in iOS in-app browsers and over plain http, the entire response is 'Could not copy' (app.js:43) and the URL appears nowhere selectable on the page; show it in a read-only, pre-selected input instead. And app.js:217 calls history.replaceState unconditionally, so a parent or sitter who taps Cancel on the 'Your saved one will be replaced' confirm loses the incoming sheet with no way back; keep the hash until the choice resolves, and offer 'View it without replacing mine'.",
       "where": "apps/sitter-sheet/app.js:41-44 (copyText) and app.js:207-218 (the shared-link branch, especially the confirm at :212 and the replaceState at :217)",
       "severity": "minor",
       "effort": "S"
@@ -477,49 +477,49 @@
   ],
   "audit": {
     "slug": "sitter-sheet",
-    "purpose": "A one-page babysitter / pet-sitter information sheet. Two hardcoded field schemas (11 babysitter fields, 10 pet-sitter fields) grouped into four named sections each; everything typed is stored in localStorage per mode and rendered three ways — a print-only two-column sheet, a base64 URL fragment that carries the whole sheet with no upload, and a QR of that URL. No account, no network calls after load, fully offline via a service worker.",
-    "structure": "Single scrolling page, no nav, no routing. body > div.wrap containing: (1) header.app — 32px icon.svg (alt=\"\"), h1 'Sitter Sheet', .spacer, a#tipLink.tipbtn (unhidden by JS at app.js:201-205), and a runtime-injected button#swsPrefsBtn placed by sws-prefs.js; (2) main#main holding div.screenonly with three section.card blocks — a .seg toggle (button#modeBaby / button#modePet, aria-pressed, role=group aria-label='Sheet type'), an empty section.card#form that JS fills, and an action card holding button#printBtn.btn.primary (width:100% inline), a .row of button#shareBtn and button#qrBtn, and two .hint paragraphs; (3) div#sheet, empty in source and display:none until print. Outside .wrap: div#toast[role=status][aria-live=polite], footer.colophon, dialog#qrDlg (inline-styled, containing an h3, canvas#qrCanvas 300×300 and button#qrClose), then vendor-qrcode.js and app.js as a module. sws-prefs.js and sws-ui.js load in <head>. No skip link (5 of 23 apps have one), no hero, no empty state, no .actionbar.",
+    "purpose": "A one-page babysitter / pet-sitter information sheet. Two hardcoded field schemas (11 babysitter fields, 10 pet-sitter fields) grouped into four named sections each; everything typed is stored in localStorage per mode and rendered three ways, a print-only two-column sheet, a base64 URL fragment that carries the whole sheet with no upload, and a QR of that URL. No account, no network calls after load, fully offline via a service worker.",
+    "structure": "Single scrolling page, no nav, no routing. body > div.wrap containing: (1) header.app, 32px icon.svg (alt=\"\"), h1 'Sitter Sheet', .spacer, a#tipLink.tipbtn (unhidden by JS at app.js:201-205), and a runtime-injected button#swsPrefsBtn placed by sws-prefs.js; (2) main#main holding div.screenonly with three section.card blocks, a .seg toggle (button#modeBaby / button#modePet, aria-pressed, role=group aria-label='Sheet type'), an empty section.card#form that JS fills, and an action card holding button#printBtn.btn.primary (width:100% inline), a .row of button#shareBtn and button#qrBtn, and two .hint paragraphs; (3) div#sheet, empty in source and display:none until print. Outside .wrap: div#toast[role=status][aria-live=polite], footer.colophon, dialog#qrDlg (inline-styled, containing an h3, canvas#qrCanvas 300×300 and button#qrClose), then vendor-qrcode.js and app.js as a module. sws-prefs.js and sws-ui.js load in <head>. No skip link (5 of 23 apps have one), no hero, no empty state, no .actionbar.",
     "cssClasses": [
-      ".wrap — max-width var(--wrap)=44rem, page gutter (index.html:331)",
-      "header.app — flex row, wraps, min-height calc(--tap + --s4) (index.html:356)",
-      "a.tipbtn — 36px pill, flex:none so it wraps rather than crushes (index.html:394)",
-      "#swsPrefsBtn — 36×36 icon button, runtime-injected (index.html:1006)",
-      ".screenonly — hidden in print by the base layer (index.html:1197) AND again by the app layer (index.html:1257)",
-      "section.card / .card — surface, --r-card, --shadow-1, padding --s5 → --s6 above 30rem (index.html:451)",
-      "section.card > h2 — the uppercase micro-label; app.js:120 emits section names through this (index.html:463)",
-      ".seg — segmented control wrapper, flex-wrap, --surface-2 (index.html:598)",
-      ".seg button — min-height:38px, below the 44px --tap floor and not scaled by --ui-scale (index.html:608-611)",
-      ".seg button.active — --accent-fill background, --accent-ink text; toggled together with aria-pressed by setPressed (app.js:11-15)",
-      "label.f — block, margin-bottom --s4; wraps a <span> label and the control, implicit association (index.html:521)",
-      "label.f > span — 13px 600 --ink-2 label text (index.html:522)",
-      "input[type=text] / textarea — full width, min-height --tap, --field background, 16px floor to stop iOS zoom (index.html:489-505)",
-      "textarea — min-height 6.5rem, resize:vertical (index.html:505)",
-      "::placeholder — --ink-3, opacity 1; measured 3.38:1 in this skin, collapses to --ink at data-contrast=more (index.html:507, :926)",
-      ".btn / .btn.primary — --tap min-height; primary is --accent-fill on --accent-ink (index.html:550, :572)",
-      ".row — flex, children flex:1 1 12rem, wraps on narrow screens (index.html:347)",
-      ".hint — 15px --ink-2, max-width --measure (index.html:635)",
-      "#toast — fixed bottom-centre pill, --toast-bg; app.js has its own toast() and never uses SWS.toast/SWS.undo (index.html:753, app.js:32-39)",
-      "footer.colophon — carries the privacy promise and the feedback mailto (index.html:422, :1319)",
-      "dialog#qrDlg — NOT tokenised; border/radius/padding/text-align are inline and the h3 is hardcoded #111 (index.html:1321-1325)",
-      "#sheet — display:none on screen, display:block only inside @media print (index.html:1254, :1258)",
-      "#sheet .shead / .shead h1 / .shead .sub — centred title block, 2.5pt rule, 20pt display serif (index.html:1259-1261)",
-      "#sheet .cols — display:flex, gap 14pt; cannot reflow across a page break (index.html:1262)",
-      "#sheet .col — flex:1 (index.html:1263)",
-      "#sheet .block — margin-bottom 9pt, break-inside:avoid — the cause of the silent truncation (index.html:1264)",
-      "#sheet .block h2 — 8.5pt uppercase .08em #666 with a .75pt rule; inherits --font-display (index.html:1265-1268)",
-      "#sheet .block .v — white-space:pre-wrap, overflow-wrap:anywhere; this is what keeps long tokens inside the column (index.html:1269)",
-      "#sheet .em — 1.5pt #b91c1c border, 10pt; the only red on the page, and it sits last (index.html:1270-1274)",
+      ".wrap, max-width var(--wrap)=44rem, page gutter (index.html:331)",
+      "header.app, flex row, wraps, min-height calc(--tap + --s4) (index.html:356)",
+      "a.tipbtn, 36px pill, flex:none so it wraps rather than crushes (index.html:394)",
+      "#swsPrefsBtn, 36×36 icon button, runtime-injected (index.html:1006)",
+      ".screenonly, hidden in print by the base layer (index.html:1197) AND again by the app layer (index.html:1257)",
+      "section.card / .card, surface, --r-card, --shadow-1, padding --s5 → --s6 above 30rem (index.html:451)",
+      "section.card > h2, the uppercase micro-label; app.js:120 emits section names through this (index.html:463)",
+      ".seg, segmented control wrapper, flex-wrap, --surface-2 (index.html:598)",
+      ".seg button, min-height:38px, below the 44px --tap floor and not scaled by --ui-scale (index.html:608-611)",
+      ".seg button.active, --accent-fill background, --accent-ink text; toggled together with aria-pressed by setPressed (app.js:11-15)",
+      "label.f, block, margin-bottom --s4; wraps a <span> label and the control, implicit association (index.html:521)",
+      "label.f > span, 13px 600 --ink-2 label text (index.html:522)",
+      "input[type=text] / textarea, full width, min-height --tap, --field background, 16px floor to stop iOS zoom (index.html:489-505)",
+      "textarea, min-height 6.5rem, resize:vertical (index.html:505)",
+      "::placeholder, --ink-3, opacity 1; measured 3.38:1 in this skin, collapses to --ink at data-contrast=more (index.html:507, :926)",
+      ".btn / .btn.primary, --tap min-height; primary is --accent-fill on --accent-ink (index.html:550, :572)",
+      ".row, flex, children flex:1 1 12rem, wraps on narrow screens (index.html:347)",
+      ".hint, 15px --ink-2, max-width --measure (index.html:635)",
+      "#toast, fixed bottom-centre pill, --toast-bg; app.js has its own toast() and never uses SWS.toast/SWS.undo (index.html:753, app.js:32-39)",
+      "footer.colophon, carries the privacy promise and the feedback mailto (index.html:422, :1319)",
+      "dialog#qrDlg, NOT tokenised; border/radius/padding/text-align are inline and the h3 is hardcoded #111 (index.html:1321-1325)",
+      "#sheet, display:none on screen, display:block only inside @media print (index.html:1254, :1258)",
+      "#sheet .shead / .shead h1 / .shead .sub, centred title block, 2.5pt rule, 20pt display serif (index.html:1259-1261)",
+      "#sheet .cols, display:flex, gap 14pt; cannot reflow across a page break (index.html:1262)",
+      "#sheet .col, flex:1 (index.html:1263)",
+      "#sheet .block, margin-bottom 9pt, break-inside:avoid, the cause of the silent truncation (index.html:1264)",
+      "#sheet .block h2 to 8.5pt uppercase .08em #666 with a .75pt rule; inherits --font-display (index.html:1265-1268)",
+      "#sheet .block .v, white-space:pre-wrap, overflow-wrap:anywhere; this is what keeps long tokens inside the column (index.html:1269)",
+      "#sheet .em, 1.5pt #b91c1c border, 10pt; the only red on the page, and it sits last (index.html:1270-1274)",
       "Present in the base layer and unused by this app: .empty, .actionbar, .trust, .warn, .chip/.chips, ul.plain, .tablewrap, [data-saved-flag], .skip, .well, .frow, .cluster, .stack, .printonly"
     ],
-    "dynamicMarkup": "Two containers are empty in source, so a restyle that reads only index.html sees neither. (1) section.card#form is filled by renderForm (app.js:111-131) on load and on every mode switch via form.replaceChildren(): for each of the four sections it appends a bare <h2> section name, then one label.f per field containing a <span> and either an <input type=text> or a <textarea>, chosen by the schema's third column. Field values are set as .value (never as markup) and the 2,000-char slice happens in the oninput handler at app.js:124, which writes to the data object but not back to the field. (2) div#sheet is built by renderSheet (app.js:133-159), called from the beforeprint listener (app.js:165) and from the Print button (app.js:168) — never on load, never on input. It appends .shead, then a .cols wrapper holding two .col divs whose contents are assigned by a JS weight heuristic at app.js:145-156 (2 + newline count per field, whole sections placed into whichever column is lighter), then the .em band. Section names are NOT emitted into the print sheet — only field labels. All user text goes in via textContent through the el() helper (app.js:17-31), so injection is structurally impossible; the stress battery confirms 0 injected scripts and 0 injected images. canvas#qrCanvas is painted imperatively at app.js:234-238 with a cell size of Math.floor(300/(moduleCount+8)), which reaches 1px at QR version 33 and above. button#swsPrefsBtn does not exist in source at all — sws-prefs.js inserts it into header.app at runtime (sws-prefs.js:356-404).",
+    "dynamicMarkup": "Two containers are empty in source, so a restyle that reads only index.html sees neither. (1) section.card#form is filled by renderForm (app.js:111-131) on load and on every mode switch via form.replaceChildren(): for each of the four sections it appends a bare <h2> section name, then one label.f per field containing a <span> and either an <input type=text> or a <textarea>, chosen by the schema's third column. Field values are set as .value (never as markup) and the 2,000-char slice happens in the oninput handler at app.js:124, which writes to the data object but not back to the field. (2) div#sheet is built by renderSheet (app.js:133-159), called from the beforeprint listener (app.js:165) and from the Print button (app.js:168), never on load, never on input. It appends .shead, then a .cols wrapper holding two .col divs whose contents are assigned by a JS weight heuristic at app.js:145-156 (2 + newline count per field, whole sections placed into whichever column is lighter), then the .em band. Section names are NOT emitted into the print sheet, only field labels. All user text goes in via textContent through the el() helper (app.js:17-31), so injection is structurally impossible; the stress battery confirms 0 injected scripts and 0 injected images. canvas#qrCanvas is painted imperatively at app.js:234-238 with a cell size of Math.floor(300/(moduleCount+8)), which reaches 1px at QR version 33 and above. button#swsPrefsBtn does not exist in source at all, sws-prefs.js inserts it into header.app at runtime (sws-prefs.js:356-404).",
     "comfortDefects": [
       {
-        "issue": "Placeholders are fully-written fake answers, not hints — 'Maya: peanuts (EpiPen on the counter!). No meds tonight.', '412 Maple Ct', 'Dr. Chen — 555-0177', 'Grandma Pat (next door): 555-033'. Measured 3.38:1 against the field at 16px, and exactly 1.00:1 against real ink once High contrast is on, because the base layer maps --ink-3 to --ink-2 to --ink under data-contrast=more.",
+        "issue": "Placeholders are fully-written fake answers, not hints, 'Maya: peanuts (EpiPen on the counter!). No meds tonight.', '412 Maple Ct', 'Dr. Chen, 555-0177', 'Grandma Pat (next door): 555-033'. Measured 3.38:1 against the field at 16px, and exactly 1.00:1 against real ink once High contrast is on, because the base layer maps --ink-3 to --ink-2 to --ink under data-contrast=more.",
         "where": "app.js:54, :57, :62, :63, :64, :67 (and :78-:92 for pet mode), applied at app.js:123; contrast collapse at index.html:926",
-        "fix": "Shorten to non-actionable hints ('e.g. peanuts — where the EpiPen is'), suppress placeholders entirely when a hash-loaded sheet is being displayed, and add a non-colour filled/empty cue (a check glyph on the label, or a border-weight change) that survives High contrast."
+        "fix": "Shorten to non-actionable hints ('e.g. peanuts, where the EpiPen is'), suppress placeholders entirely when a hash-loaded sheet is being displayed, and add a non-colour filled/empty cue (a check glyph on the label, or a border-weight change) that survives High contrast."
       },
       {
-        "issue": "The mode toggle is 38px tall at every text size — measured 330×38 at Largest, while body type went 16px → 24px. The system's --tap would be 66px there.",
+        "issue": "The mode toggle is 38px tall at every text size, measured 330×38 at Largest, while body type went 16px → 24px. The system's --tap would be 66px there.",
         "where": "index.html:610 (.seg button{min-height:38px}), instanced at index.html:1294-1295",
         "fix": "min-height:var(--tap) on .seg button in this app's layer. The base layer's own comment on --tap says targets must grow with --ui-scale for exactly this reason."
       },
@@ -534,12 +534,12 @@
         "fix": "maxlength on the control plus a counter that appears inside the last 200 characters, or raise the cap and cap only the shared payload."
       },
       {
-        "issue": "No saved-state feedback anywhere. The hint claims 'Everything saves to this device automatically' but nothing ever confirms it — there is no [data-saved-flag] element and app.js never calls SWS.saved(), despite sws-ui.js being loaded.",
+        "issue": "No saved-state feedback anywhere. The hint claims 'Everything saves to this device automatically' but nothing ever confirms it, there is no [data-saved-flag] element and app.js never calls SWS.saved(), despite sws-ui.js being loaded.",
         "where": "index.html:1297 (the claim), index.html:1278 (sws-ui.js loaded), app.js:107-109 (save)",
         "fix": "Add a [data-saved-flag] span beside the mode toggle and call SWS.saved() on a debounced save."
       },
       {
-        "issue": "Mode switching wipes the visible sheet with no message and no undo — 6 filled fields → 0, silently.",
+        "issue": "Mode switching wipes the visible sheet with no message and no undo, 6 filled fields → 0, silently.",
         "where": "app.js:162-163",
         "fix": "SWS.toast on the swap naming what is now shown and confirming the other sheet is saved."
       },
@@ -561,7 +561,7 @@
         "fix": "Branch on decodeSheet() returning a sheet: render the read-only view with a pinned 3-second panel, and offer 'Edit this sheet' beneath it."
       },
       {
-        "issue": "No print preview. #sheet is only built inside beforeprint, so the user cannot see the page until it is printed — which is how the pagination and truncation defects stay hidden.",
+        "issue": "No print preview. #sheet is only built inside beforeprint, so the user cannot see the page until it is printed, which is how the pagination and truncation defects stay hidden.",
         "where": "index.html:1254, app.js:165",
         "fix": "Render #sheet into a screen container on input (debounced) as the research's headline feature."
       },
@@ -576,7 +576,7 @@
         "fix": "Download my sheet (JSON) + Load from file + Clear this sheet with SWS.undo."
       },
       {
-        "issue": "Cancelling the 'Your saved one will be replaced' confirm destroys the incoming link — history.replaceState runs unconditionally, so the hash is gone and the sheet cannot be recovered without the sender resending it.",
+        "issue": "Cancelling the 'Your saved one will be replaced' confirm destroys the incoming link, history.replaceState runs unconditionally, so the hash is gone and the sheet cannot be recovered without the sender resending it.",
         "where": "app.js:212 (confirm) and app.js:217 (replaceState)",
         "fix": "Resolve the choice before stripping the hash, and offer 'View it without replacing mine'."
       },
@@ -586,12 +586,12 @@
         "fix": "On failure, reveal a read-only pre-selected input holding the URL."
       },
       {
-        "issue": "'Show QR' fails hard above 1,675 characters of sheet text (encoder ceiling 2,331; a realistic sheet measured 2,445) with a dead-end toast, and draws unscannable 1–2px modules well below that.",
+        "issue": "'Show QR' fails hard above 1,675 characters of sheet text (encoder ceiling 2,331; a realistic sheet measured 2,445) with a dead-end toast, and draws unscannable 1 to 2px modules well below that.",
         "where": "app.js:227-242, especially :229 (ECC 'M'), :232 (cell maths) and :239 (the catch)",
         "fix": "Size the canvas from the module count, retry at ECC 'L', and on genuine overflow offer Copy link / Copy as text."
       },
       {
-        "issue": "No 'Copy as text' — the third of the research's three equal no-printer outputs is missing, leaving only an opaque base64 URL and a fragile QR.",
+        "issue": "No 'Copy as text', the third of the research's three equal no-printer outputs is missing, leaving only an opaque base64 URL and a fragile QR.",
         "where": "index.html:1304-1307",
         "fix": "Serialise filledSections (app.js:140-142) to plain text and copy it."
       },
@@ -608,17 +608,17 @@
     ],
     "a11yDefects": [
       {
-        "issue": "Fabricated content presented as data is an accessibility failure before it is anything else: at data-contrast=more the placeholder ink and the real ink are both rgb(38,32,19) — 1.00:1 — so the setting a low-vision user turns on removes the only distinction between the app's invented allergy example and the family's real answer.",
+        "issue": "Fabricated content presented as data is an accessibility failure before it is anything else: at data-contrast=more the placeholder ink and the real ink are both rgb(38,32,19), 1.00:1, so the setting a low-vision user turns on removes the only distinction between the app's invented allergy example and the family's real answer.",
         "where": "app.js:57 (and the other placeholders), index.html:926 (:root[data-contrast=\"more\"] body{--ink-3:var(--ink-2)})",
-        "fix": "Non-colour filled/empty cue, plus suppress placeholders in the shared view. Do not fix this by darkening the placeholder — that makes it worse."
+        "fix": "Non-colour filled/empty cue, plus suppress placeholders in the shared view. Do not fix this by darkening the placeholder, that makes it worse."
       },
       {
-        "issue": "The QR dialog's <h3> is hardcoded color:#111 against a dialog that resolves to rgb(18,18,18) under a dark colour-scheme — 1.005:1. The only instruction in the dialog is invisible.",
+        "issue": "The QR dialog's <h3> is hardcoded color:#111 against a dialog that resolves to rgb(18,18,18) under a dark colour-scheme, 1.005:1. The only instruction in the dialog is invisible.",
         "where": "index.html:1322, inside the inline-styled dialog at index.html:1321-1325",
         "fix": "Delete the inline styles and use --surface / --ink / --line."
       },
       {
-        "issue": "0 tel: links anywhere in the app, and '1-800-222-1222' / '911' never appear on screen — they exist only in schema.emergency, rendered into the print-only #sheet.",
+        "issue": "0 tel: links anywhere in the app, and '1-800-222-1222' / '911' never appear on screen, they exist only in schema.emergency, rendered into the print-only #sheet.",
         "where": "app.js:71, app.js:95, app.js:158; #sheet hidden at index.html:1254",
         "fix": "Linkify numbers as tel: anchors at 22px+ in 48px targets in the sitter view, and render the emergency row on screen permanently."
       },
@@ -628,7 +628,7 @@
         "fix": "min-height:var(--tap) on .seg button is the one that matters; the other two are shared chrome."
       },
       {
-        "issue": "Section headings inside the card are bare <h2> elements emitted by JS directly under section.card, which already has its own conventional card-label h2 slot — so 'THE KIDS', 'HEALTH & SAFETY', 'CONTACTS', 'THE HOUSE' all render as card labels and the card itself has no name. The document's heading outline is h1 → four sibling h2s with no h2 for the card or the action card.",
+        "issue": "Section headings inside the card are bare <h2> elements emitted by JS directly under section.card, which already has its own conventional card-label h2 slot, so 'THE KIDS', 'HEALTH & SAFETY', 'CONTACTS', 'THE HOUSE' all render as card labels and the card itself has no name. The document's heading outline is h1 → four sibling h2s with no h2 for the card or the action card.",
         "where": "app.js:120 (form.append(el('h2', {}, section))), index.html:1300 (the empty section.card#form)",
         "fix": "Keep the h2s but give the card a real name, or promote the section names to h2 and the field labels to a consistent level so the outline reads as a document rather than four floating groups."
       },
@@ -638,7 +638,7 @@
         "fix": "Add <a class=\"skip\" href=\"#main\">Skip to the form</a> as the first child of body."
       },
       {
-        "issue": "Phone and address fields are plain type=text with no inputmode, autocomplete or type=tel, so a phone keypad never appears and browser autofill cannot help — on the field a parent is filling one-handed with a baby on her hip.",
+        "issue": "Phone and address fields are plain type=text with no inputmode, autocomplete or type=tel, so a phone keypad never appears and browser autofill cannot help, on the field a parent is filling one-handed with a baby on her hip.",
         "where": "app.js:126 (el('input', { type: 'text', ...attrs })) for the backup / doctor / address / wifi fields at app.js:62-68",
         "fix": "Carry an input type and autocomplete token in the schema tuple: type=tel + autocomplete=tel for the contact fields, autocomplete=street-address for the address."
       },
@@ -648,12 +648,12 @@
         "fix": "SWS.toast on the swap; the live region already exists at index.html:1318."
       },
       {
-        "issue": "Not a defect, recorded for completeness: axe (wcag2a/2aa/21a/21aa/22aa) returned zero violations in every state tested — cold, after filling, with the comfort panel open, at Largest text and after closing the panel. Keyboard reachability was 20/20 with 0 unnamed and 0 placeholder-only names, focus lands correctly in the QR dialog, Escape closes it and focus returns to #qrBtn. Every defect above is one axe structurally cannot see.",
+        "issue": "Not a defect, recorded for completeness: axe (wcag2a/2aa/21a/21aa/22aa) returned zero violations in every state tested, cold, after filling, with the comfort panel open, at Largest text and after closing the panel. Keyboard reachability was 20/20 with 0 unnamed and 0 placeholder-only names, focus lands correctly in the QR dialog, Escape closes it and focus returns to #qrBtn. Every defect above is one axe structurally cannot see.",
         "where": "verified via design/harness.mjs axe() and design/stress.mjs",
         "fix": "None. The point is that a clean axe run is not evidence this app is usable by the people it is for."
       }
     ],
-    "printSupport": "The most developed part of the app and the only one with a bespoke print layer (index.html:1253-1275, 23 lines on top of the shared base at index.html:1181-1237). #sheet is display:none until @media print, then renders a centred .shead title with a 2.5pt rule, a two-column flex .cols of .block elements (8.5pt uppercase #666 label over 11pt pre-wrapped value), and a red-bordered .em emergency band. Empty fields are dropped by renderSheet (app.js:141) so a half-filled sheet looks deliberate. Verified good: a realistic 11-field sheet prints as one page with columns balanced to 839px vs 839px; a 46-line sheet prints as two clean pages with nothing lost; dark mode prints correctly (body #fff, ink #111, zero painted backgrounds); Cyrillic, Arabic, diacritics and emoji all survive with zero '??' substitutions; 60- and 100-character unbroken tokens wrap inside the 369px column rather than clipping. Three real defects: .block{break-inside:avoid} at index.html:1264 silently truncates any block taller than a page (40 lines in → 31 out, cut mid-word, 9 lines gone); the .cols flex container cannot reflow, so 18 lines in one field costs a second page holding 69 characters and 20 lines costs three pages with two nearly empty; and the sheet is typographically flat — the allergy block, the address and the wifi password are all 11pt in one ink, with 911 / Poison Control as a 10pt strip at y=929 of a 991px page, against a research brief that wants allergies auto-promoted and a 3-second panel pinned to the top. There is also no 'Updated <date>' stamp, and the four section names are dropped from the printed page entirely.",
+    "printSupport": "The most developed part of the app and the only one with a bespoke print layer (index.html:1253-1275, 23 lines on top of the shared base at index.html:1181-1237). #sheet is display:none until @media print, then renders a centred .shead title with a 2.5pt rule, a two-column flex .cols of .block elements (8.5pt uppercase #666 label over 11pt pre-wrapped value), and a red-bordered .em emergency band. Empty fields are dropped by renderSheet (app.js:141) so a half-filled sheet looks deliberate. Verified good: a realistic 11-field sheet prints as one page with columns balanced to 839px vs 839px; a 46-line sheet prints as two clean pages with nothing lost; dark mode prints correctly (body #fff, ink #111, zero painted backgrounds); Cyrillic, Arabic, diacritics and emoji all survive with zero '??' substitutions; 60- and 100-character unbroken tokens wrap inside the 369px column rather than clipping. Three real defects: .block{break-inside:avoid} at index.html:1264 silently truncates any block taller than a page (40 lines in → 31 out, cut mid-word, 9 lines gone); the .cols flex container cannot reflow, so 18 lines in one field costs a second page holding 69 characters and 20 lines costs three pages with two nearly empty; and the sheet is typographically flat, the allergy block, the address and the wifi password are all 11pt in one ink, with 911 / Poison Control as a 10pt strip at y=929 of a 991px page, against a research brief that wants allergies auto-promoted and a 3-second panel pinned to the top. There is also no 'Updated <date>' stamp, and the four section names are dropped from the printed page entirely.",
     "riskyToRestyle": [
       "#sheet is display:none on screen, so nothing in the print layer is visible to a browser inspector, to axe, or to a screenshot. Every change to index.html:1253-1275 must be verified by generating an actual PDF; the seating-chart precedent applies.",
       "The two-column split is JS-owned, not CSS-owned. app.js:145-156 assigns whole sections to colA or colB by a weight heuristic (2 + newline count per field), so column contents change with the data. Switching the print layer to CSS multi-column means deleting that heuristic, not styling around it.",
@@ -661,12 +661,12 @@
       "#sheet .block h2 inherits --font-display (Fraunces) whose @font-face declares a Latin-only unicode-range (index.html:24-31). Changing the display face or the range changes how non-Latin labels fall back in print.",
       "canvas#qrCanvas has hardcoded width/height 300 in markup (index.html:1323) and the cell maths at app.js:232 assumes that 300. Changing either one alone produces a mis-centred or clipped code.",
       "dialog#qrDlg carries all its styling inline (index.html:1321-1325) so stylesheet rules will not win against it without !important; it must be converted, not overridden.",
-      "button#swsPrefsBtn is inserted at runtime by sws-prefs.js into header.app — it is not in the source markup, so any header restructure has to keep a selector in sws-prefs.js's SPOTS list matching (sws-prefs.js:367).",
+      "button#swsPrefsBtn is inserted at runtime by sws-prefs.js into header.app, it is not in the source markup, so any header restructure has to keep a selector in sws-prefs.js's SPOTS list matching (sws-prefs.js:367).",
       "section.card#form is wholly replaced on every mode switch via replaceChildren (app.js:118); anything appended to it from outside app.js is destroyed on the next toggle.",
-      ".screenonly is hidden in print twice — once by the base layer (index.html:1197) and once by the app layer (index.html:1257). Removing either looks harmless and is not.",
+      ".screenonly is hidden in print twice, once by the base layer (index.html:1197) and once by the app layer (index.html:1257). Removing either looks harmless and is not.",
       "The share payload is raw base64 of JSON with no version field (app.js:174-180). Renaming any schema key silently breaks every link already sent, because decodeSheet filters against the current key set (app.js:188-191) and drops unknown keys without a word.",
       "The 2,000-character slice appears twice, at app.js:124 and app.js:191; changing one without the other makes stored and shared sheets disagree.",
-      "sw.js caches a hardcoded ASSETS list against VERSION 'sitter-v14' (sw.js:2-3). Adding a file to the app without adding it there and bumping the version ships an app that is broken offline in exactly the situation — someone else's basement — the app is meant to survive."
+      "sw.js caches a hardcoded ASSETS list against VERSION 'sitter-v14' (sw.js:2-3). Adding a file to the app without adding it there and bumping the version ships an app that is broken offline in exactly the situation, someone else's basement, the app is meant to survive."
     ]
   }
 }

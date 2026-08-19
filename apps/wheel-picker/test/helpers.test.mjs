@@ -58,7 +58,7 @@ ok('adjacent slice colors never clash, including the wrap', () => {
   assert.ok(WHEEL_COLORS.length >= 4);
 });
 
-/* The wedges used to be six colours of near-identical lightness — measured
+/* The wedges used to be six colours of near-identical lightness, measured
    adjacent contrast as low as 1.04:1, so the wheel read as one flat disc on a
    projector, in greyscale, and to a colour-blind viewer. Being a DIFFERENT
    colour was never the requirement; being a distinguishable one is. */

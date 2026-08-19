@@ -4,26 +4,26 @@
     "personas": [
       {
         "name": "Dana Whitcombe",
-        "who": "54, the daughter who moved back in. Runs the whole thing: pharmacy, rides, the aide's hours, the sibling group text. Comfortable with a phone, not with software. She is one of the research's 63 million, and one of the 78% reporting burnout — the log gets written after a fourteen-hour day, and the sleep disruption the research names is her normal.",
-        "context": "Kitchen table, 23:40, iPhone at 414 CSS px, phone in her left hand, dark mode on because the room light is off so her mother can sleep down the hall. Not in a hurry — just very tired, and re-reading her own sentences twice.",
+        "who": "54, the daughter who moved back in. Runs the whole thing: pharmacy, rides, the aide's hours, the sibling group text. Comfortable with a phone, not with software. She is one of the research's 63 million, and one of the 78% reporting burnout, the log gets written after a fourteen-hour day, and the sleep disruption the research names is her normal.",
+        "context": "Kitchen table, 23:40, iPhone at 414 CSS px, phone in her left hand, dark mode on because the room light is off so her mother can sleep down the hall. Not in a hurry, just very tired, and re-reading her own sentences twice.",
         "task": "Start the log, get the week's coverage on it so Marcus can stop asking, and write down three things from today she does not trust herself to remember tomorrow: the 2pm dose, the cardiology appointment, and the hour her mother did not know who she was.",
         "verdict": "Got all three written and the week posted in about eleven minutes, and the empty states genuinely taught her what the thing was for. Then she pressed 'Add the next 7 days' a second time because she was not sure the first press had worked, and now the coverage list has fourteen rows for seven days and no way to clear them except opening each one and confirming a dialog.",
         "delights": [
           "The board opens with 'Caring for Mom' in a real serif at 24px, 16:1 contrast, and a plain-English HIPAA line in its own bordered box rather than as grey italic small print. She read it. Nobody reads those.",
           "The empty coverage card says 'Add the week so nobody has to ask “who’s with her Tuesday?” in the group text again' with a primary button under it. That sentence is the product.",
-          "Her half-written note survived a full page reload — verified: the textarea came back with all 63 characters and the line under it read 'Draft kept on this device — closing the page won’t lose it.' localStorage key cl-draft-b1.",
+          "Her half-written note survived a full page reload, verified: the textarea came back with all 63 characters and the line under it read 'Draft kept on this device, closing the page won’t lose it.' localStorage key cl-draft-b1.",
           "Deleting an entry gave her an Undo inside the toast, and it worked. She used it."
         ],
         "frictions": [
           {
-            "what": "She wrote the 2pm dose at 23:40. There is no way to say it happened at 2pm. Measured: the app contains no input of type date, time or datetime-local anywhere — the full inventory of inputs on a board is text (name), two checkboxes, two settings text fields, and the dialog fields. data.js:276 stamps every entry with serverTimestamp() and nothing else.",
+            "what": "She wrote the 2pm dose at 23:40. There is no way to say it happened at 2pm. Measured: the app contains no input of type date, time or datetime-local anywhere, the full inventory of inputs on a board is text (name), two checkboxes, two settings text fields, and the dialog fields. data.js:276 stamps every entry with serverTimestamp() and nothing else.",
             "severity": "blocker",
-            "whyItMatters": "The research's first table stake is verbatim about this: 'Timestamped entries that default to now but are trivially back-datable — the 6am entry gets written at 9am, and a wrong timestamp on a medication is worse than no entry.' Her printout will tell a cardiologist that her mother got donepezil at 11:40pm. The log is described in the app's own copy as quiet evidence; a timeline where every event is stamped 'whenever someone had a free hand' is evidence of nothing."
+            "whyItMatters": "The research's first table stake is verbatim about this: 'Timestamped entries that default to now but are trivially back-datable, the 6am entry gets written at 9am, and a wrong timestamp on a medication is worse than no entry.' Her printout will tell a cardiologist that her mother got donepezil at 11:40pm. The log is described in the app's own copy as quiet evidence; a timeline where every event is stamped 'whenever someone had a free hand' is evidence of nothing."
           },
           {
-            "what": "She misspelled the drug name and there is no edit. Measured: on a board with 60 entries the only per-entry controls are 'Approve the entry by…' (owner, pending only) and 'Remove the entry by…' — zero edit buttons (app.js:615-645).",
+            "what": "She misspelled the drug name and there is no edit. Measured: on a board with 60 entries the only per-entry controls are 'Approve the entry by…' (owner, pending only) and 'Remove the entry by…', zero edit buttons (app.js:615-645).",
             "severity": "blocker",
-            "whyItMatters": "This is the single quoted complaint the research says Lotsa Helping Hands is hated for — 'You can not edit any notes or announcements if you misspelled a word' — and the weWinIf is 'Every entry is editable and deletable forever, inline, in one tap. Fixing a typo at 2am must not require deleting and re-typing the entry.' Right now fixing a typo means deleting the note and losing its (already wrong) timestamp and its place in the day."
+            "whyItMatters": "This is the single quoted complaint the research says Lotsa Helping Hands is hated for, 'You can not edit any notes or announcements if you misspelled a word', and the weWinIf is 'Every entry is editable and deletable forever, inline, in one tap. Fixing a typo at 2am must not require deleting and re-typing the entry.' Right now fixing a typo means deleting the note and losing its (already wrong) timestamp and its place in the day."
           },
           {
             "what": "'Add the next 7 days' pressed twice produced 21 slots with 14 duplicate labels and the toast said 'Week added' both times (measured). addWeek (app.js:479-488) always generates today+7 with no comparison against existing labels.",
@@ -33,7 +33,7 @@
           {
             "what": "The header takes two rows and 112px on every phone width tested (320, 360, 414, 430), collapsing to one row and 64px only at 768px. 'Sign out' sits alone on the second line under the brand.",
             "severity": "minor",
-            "whyItMatters": "17% of an iPhone viewport is spent, above the fold, on a sign-out button that only she can even use — before the title of the person she is caring for."
+            "whyItMatters": "17% of an iPhone viewport is spent, above the fold, on a sign-out button that only she can even use, before the title of the person she is caring for."
           }
         ]
       },
@@ -42,27 +42,27 @@
         "who": "49, the brother two states away, Pixel phone, will not install anything and said so. He is the research's named failure mode: 'a sibling who won’t download anything new.' He contributes money and guilt in roughly equal measure and wants to stop being the person who asks 'did she get her pill?' in the group text.",
         "context": "Parked outside his office, 14:10, one bar of signal, Android Chrome at 412px, one thumb, sun on the screen. Four minutes before a meeting.",
         "task": "Open the link Dana texted. Find out whether the 2pm donepezil has been given. If not, ring the aide; if so, log that he called the cardiology office.",
-        "verdict": "The link opened with no install, no account and no email capture — the whole thesis, delivered. Then he could not answer his one question without reading, and he logged a duplicate dose because nothing stopped him.",
+        "verdict": "The link opened with no install, no account and no email capture, the whole thesis, delivered. Then he could not answer his one question without reading, and he logged a duplicate dose because nothing stopped him.",
         "delights": [
           "Tapping a text-message link put him in a working log in one step. No sign-up wall, no app-store bounce, no 'create your care circle'. Verified: a non-owner lands on a fully functional board and can write immediately.",
-          "He could write and delete his own entries as an anonymous visitor — 3 delete buttons on his own 3 notes, no account anywhere in sight.",
+          "He could write and delete his own entries as an anonymous visitor, 3 delete buttons on his own 3 notes, no account anywhere in sight.",
           "'Print for a doctor visit' is on the head card for participants too, not buried in an owner-only panel."
         ],
         "frictions": [
           {
-            "what": "Two people logged 'Gave the 2pm donepezil' 61 minutes apart and the app said 'Saved to the log' both times. Measured: no warning text, no last-given line, no confirm — four donepezil entries on the board, all equal. The Medication type is a coloured badge on a free-text note (app.js:621) and nothing else.",
+            "what": "Two people logged 'Gave the 2pm donepezil' 61 minutes apart and the app said 'Saved to the log' both times. Measured: no warning text, no last-given line, no confirm, four donepezil entries on the board, all equal. The Medication type is a coloured badge on a free-text note (app.js:621) and nothing else.",
             "severity": "blocker",
-            "whyItMatters": "This is the app's own stated hero differentiator — 'Double-dose guard: tapping to log a medication first shows, in large type, when that med was last given and by whom' — and it is the reason the category exists. The research is blunt that preventing a double dose 'is the safety reason this category exists'. Shipping a Medication badge with no dose model is worse than shipping nothing, because it looks like the feature is there."
+            "whyItMatters": "This is the app's own stated hero differentiator, 'Double-dose guard: tapping to log a medication first shows, in large type, when that med was last given and by whom', and it is the reason the category exists. The research is blunt that preventing a double dose 'is the safety reason this category exists'. Shipping a Medication badge with no dose model is worse than shipping nothing, because it looks like the feature is there."
           },
           {
-            "what": "Nothing on the page tells him how fresh it is. Measured on a participant view: no 'last updated', no 'X minutes ago', no 'by Dana' header, no 'new since you last looked' divider — the only timestamps are per-entry times inside the day groups.",
+            "what": "Nothing on the page tells him how fresh it is. Measured on a participant view: no 'last updated', no 'X minutes ago', no 'by Dana' header, no 'new since you last looked' divider, the only timestamps are per-entry times inside the day groups.",
             "severity": "major",
-            "whyItMatters": "The research prescribes exactly this, as the answer to CaringBridge's notification failure: 'we cannot send push notifications, so we must not pretend to. Instead make the shared view self-evidently complete: a big “last updated 22 min ago by Dana” header.' Without it he has to read the top of the log and do the arithmetic to decide whether silence means nothing happened or nobody has written yet — which is the moment he reaches for the group text and the app has lost."
+            "whyItMatters": "The research prescribes exactly this, as the answer to CaringBridge's notification failure: 'we cannot send push notifications, so we must not pretend to. Instead make the shared view self-evidently complete: a big “last updated 22 min ago by Dana” header.' Without it he has to read the top of the log and do the arithmetic to decide whether silence means nothing happened or nobody has written yet, which is the moment he reaches for the group text and the app has lost."
           },
           {
-            "what": "'♥ Tip jar' sits in the header of the log he was invited into. Measured on the non-owner view: #tipLink visible, and the footer has been rewritten to 'Made with Caregiver Log — free, no ads. Start yours' (app.js:190-197, index.html:1570).",
+            "what": "'♥ Tip jar' sits in the header of the log he was invited into. Measured on the non-owner view: #tipLink visible, and the footer has been rewritten to 'Made with Caregiver Log, free, no ads. Start yours' (app.js:190-197, index.html:1570).",
             "severity": "major",
-            "whyItMatters": "The loudest sourced complaint in the whole research file is CaringBridge's Tributes link — a family discovering that the donation ask on the page they sent to forty people funded the company, described as 'shady', one user counting $650. The stated win condition is explicit: 'The tip jar never appears on the shared/read view that relatives open — only in Settings/About on the owner's device.' The app breaks its own rule on every shared board, and puts a growth ad in the footer of a page that may one day hold the last week of someone's life."
+            "whyItMatters": "The loudest sourced complaint in the whole research file is CaringBridge's Tributes link, a family discovering that the donation ask on the page they sent to forty people funded the company, described as 'shady', one user counting $650. The stated win condition is explicit: 'The tip jar never appears on the shared/read view that relatives open, only in Settings/About on the owner's device.' The app breaks its own rule on every shared board, and puts a growth ad in the footer of a page that may one day hold the last week of someone's life."
           },
           {
             "what": "The header offers him a 'Sign in' button.",
@@ -78,7 +78,7 @@
         "task": "Write the handoff: what was eaten, the 8pm pill, the bruise on the left forearm, and that the shower chair is loose.",
         "verdict": "Got it written, but had to start the sentence three times because the box kept losing her cursor, and she never noticed she had filed all four notes as 'Note' rather than 'Medication'.",
         "delights": [
-          "The composer's placeholder for Medication is a real example sentence — 'Started 5mg lisinopril, mornings. Watch for dizziness.' — which is the difference between a blank box and a model. The research calls blank-box paralysis the reason paper logs go empty.",
+          "The composer's placeholder for Medication is a real example sentence, 'Started 5mg lisinopril, mornings. Watch for dizziness.', which is the difference between a blank box and a model. The research calls blank-box paralysis the reason paper logs go empty.",
           "Everything she typed rendered exactly as typed: CJK, Arabic and Cyrillic all survive to the screen and to paper (verified in the printed page), 2000-character notes truncate cleanly, and a 204-character unbroken word caused zero horizontal overflow at 320px.",
           "Her draft was still in the box after she locked the phone and came back."
         ],
@@ -86,12 +86,12 @@
           {
             "what": "Twice, mid-sentence, the keyboard closed and her cursor vanished. Measured: with the caret inside the textarea, one remote write from another family member leaves document.activeElement === BODY. The text survives (module-level composeDraft plus the localStorage draft) but focus does not. The intended guard at app.js:584 is dead code: drawBoard() calls v.replaceChildren() at app.js:362, which fires blur on the textarea and sets composeFocused = false (app.js:558) before renderTimeline ever reads it.",
             "severity": "blocker",
-            "whyItMatters": "This app's entire premise is that several people write to the same log at once, so remote writes are not an edge case — they are the product working. Every one of them throws the writer out of the box, dismisses the mobile keyboard and drops the caret. It is worst for the person who types slowest and has the most to say, and it will read to her as her own phone being broken."
+            "whyItMatters": "This app's entire premise is that several people write to the same log at once, so remote writes are not an edge case, they are the product working. Every one of them throws the writer out of the box, dismisses the mobile keyboard and drops the caret. It is worst for the person who types slowest and has the most to say, and it will read to her as her own phone being broken."
           },
           {
-            "what": "The Note / Appointment / Medication / Question picker is 38px tall — measured at default text, at Large, at Larger and at Largest, unchanged every time (index.html:625, `min-height:38px`, a hardcoded pixel outside the scale). Every other control in the composer goes 44px → 57px → 66px as text size rises.",
+            "what": "The Note / Appointment / Medication / Question picker is 38px tall, measured at default text, at Large, at Larger and at Largest, unchanged every time (index.html:625, `min-height:38px`, a hardcoded pixel outside the scale). Every other control in the composer goes 44px → 57px → 66px as text size rises.",
             "severity": "major",
-            "whyItMatters": "It is the smallest target on the page and it is the control that decides whether tonight's dose is filed as a medication or lost in prose — which is also what makes the printout and any future dose logic work. Filing by accident is the default outcome, and the one setting that is supposed to fix small targets does not touch it."
+            "whyItMatters": "It is the smallest target on the page and it is the control that decides whether tonight's dose is filed as a medication or lost in prose, which is also what makes the printout and any future dose logic work. Filing by accident is the default outcome, and the one setting that is supposed to fix small targets does not touch it."
           },
           {
             "what": "There is no dictation path. No microphone control exists anywhere in the composer.",
@@ -103,20 +103,20 @@
       {
         "name": "Luella \"Aunt Lu\" Barrow",
         "who": "78, the patient's sister. Macular degeneration plus varifocals; reads with the iPad at arm's length and a lamp behind her. Confident with the iPad, deeply suspicious of anything that asks her to make an account. This is the comfort-panel persona.",
-        "context": "Her own front room, 10:20, iPad in portrait at 414 CSS px on a cushion, bright window behind, one hand — the other is holding tea. No time pressure, very little patience.",
+        "context": "Her own front room, 10:20, iPad in portrait at 414 CSS px on a cushion, bright window behind, one hand, the other is holding tea. No time pressure, very little patience.",
         "task": "Read what happened over the weekend, and put her name down for Thursday.",
         "verdict": "Read the weekend fine once she had made the text bigger, and the comfort panel was the best part of her morning. Claiming Thursday took four attempts because she kept hitting a small pencil that opened a dialog she did not understand.",
         "delights": [
           "She found the sliders icon in the header on her own, opened it, and set Text size to Largest. Measured: root font 16px → 24px, entry body 16px → 24px, the timestamp beside each name 15px → 22.5px, the disclaimer 22.5px, page overflow 0 at 414px, zero offenders. axe with the panel open: 0 violations. Nothing was left behind at 13px.",
           "Contrast → High applied cleanly (data-contrast=\"more\", --ink-2 solved darker, --line darkened) with axe still clean and no overflow.",
-          "The whole page is high contrast to begin with: every measurement she would care about is 13.7:1 or better — 'Covered' 14.4:1, 'Needs someone' 14.3:1, 'awaiting approval' 14.1:1, the day name 16:1. The strongest thing on the page, the primary button, is 5.3:1 white on slate.",
+          "The whole page is high contrast to begin with: every measurement she would care about is 13.7:1 or better, 'Covered' 14.4:1, 'Needs someone' 14.3:1, 'awaiting approval' 14.1:1, the day name 16:1. The strongest thing on the page, the primary button, is 5.3:1 white on slate.",
           "'Dana (you)' on a coverage day is a tinted chip at 13.7:1, not a colour-only signal."
         ],
         "frictions": [
           {
             "what": "The edit-day pencil ✎ moves. Measured at 414px: on the four 'Covered' days it sits inline at the end of the row; on the three 'Needs someone' days the wider status badge pushes it onto its own line, directly above the 'I can be there' button. At 320px it is below the label on 7 of 7 rows.",
             "severity": "major",
-            "whyItMatters": "She wanted 'I can be there' and hit the pencil, which is a 44px square with a 16px glyph and no label, sitting one line above it. It opened 'Edit coverage day' with a Label field, a 'People needed' number and a red 'Remove this day' — a destructive owner tool presented to a 78-year-old who wanted to volunteer. The same control appearing in two different places depending on whether the day is covered is the kind of instability that makes people stop trusting a page."
+            "whyItMatters": "She wanted 'I can be there' and hit the pencil, which is a 44px square with a 16px glyph and no label, sitting one line above it. It opened 'Edit coverage day' with a Label field, a 'People needed' number and a red 'Remove this day', a destructive owner tool presented to a 78-year-old who wanted to volunteer. The same control appearing in two different places depending on whether the day is covered is the kind of instability that makes people stop trusting a page."
           },
           {
             "what": "At Largest text the segmented type picker is still 38px tall while everything around it is 66px.",
@@ -124,7 +124,7 @@
             "whyItMatters": "She set Largest precisely so she could stop mis-tapping, and the app honoured that everywhere except the one control that stayed the size it was. A comfort setting that visibly skips a control teaches the user not to trust the setting."
           },
           {
-            "what": "Two different settings in the comfort panel offer an option labelled 'High' — Warm tint and Contrast — and they sit four fieldsets apart with no other distinguishing word in the option label.",
+            "what": "Two different settings in the comfort panel offer an option labelled 'High', Warm tint and Contrast, and they sit four fieldsets apart with no other distinguishing word in the option label.",
             "severity": "minor",
             "whyItMatters": "She set the amber night tint at 10:20 in the morning thinking she was raising contrast, and the page got warmer and slightly muddier. Recovering meant finding the right 'High' among two."
           }
@@ -135,18 +135,18 @@
         "who": "44, the youngest sibling, essential tremor since his thirties. Uses the keyboard for everything and a trackball sparingly; anything under about 40px is a coin toss for him. Wants to help without being the one who breaks something.",
         "context": "Home desk, 1280px window, keyboard only, mid-afternoon, no time pressure, high standards.",
         "task": "Tidy up: approve the two notes the aide left waiting, and delete a duplicate entry he added by accident this morning.",
-        "verdict": "Approved both and deleted the duplicate — and then could not undo the delete when he realised it was the wrong one. He also could not find the two pending notes without reading the entire log.",
+        "verdict": "Approved both and deleted the duplicate, and then could not undo the delete when he realised it was the wrong one. He also could not find the two pending notes without reading the entire log.",
         "delights": [
           "Tab order through the board is orderly and untrapped: skip link → brand → comfort → tip → sign out → Copy invite link → Print → per-day Edit/claim pairs → type picker → name → note → Add to the log → per-entry actions → the settings disclosure → footer.",
-          "Every repeated control names its own row — 'Edit Tuesday, Aug 11', 'I can be there — Wednesday, Aug 12', 'Remove the entry by Marcus at 2:42 AM'. There is no list of N identical buttons anywhere.",
-          "He composed and saved an entry entirely from the keyboard and focus came back to 'Add to the log' afterwards rather than to <body> — the data-fk restore mechanism (app.js:72-81) does real work.",
+          "Every repeated control names its own row, 'Edit Tuesday, Aug 11', 'I can be there, Wednesday, Aug 12', 'Remove the entry by Marcus at 2:42 AM'. There is no list of N identical buttons anywhere.",
+          "He composed and saved an entry entirely from the keyboard and focus came back to 'Add to the log' afterwards rather than to <body>, the data-fk restore mechanism (app.js:72-81) does real work.",
           "axe on the fully rendered board, and again with the comfort panel open, and again at contrast=more: 0 violations each time."
         ],
         "frictions": [
           {
-            "what": "The Undo in the toast is unreachable. Measured: after pressing a Remove button, activeElement is BODY (the button's data-fk no longer exists after the entry disappears), so Tab restarts at the top of the document — the next four stops are Copy invite link, Print, Edit Sunday, Take yourself off Sunday. #toast is the last element in the body, after everything, and the toast dismisses in 10 seconds.",
+            "what": "The Undo in the toast is unreachable. Measured: after pressing a Remove button, activeElement is BODY (the button's data-fk no longer exists after the entry disappears), so Tab restarts at the top of the document, the next four stops are Copy invite link, Print, Edit Sunday, Take yourself off Sunday. #toast is the last element in the body, after everything, and the toast dismisses in 10 seconds.",
             "severity": "blocker",
-            "whyItMatters": "Soft-delete-with-Undo is the app's answer to the category's 'nothing is reversible' complaint, and it is the only undo in the product. For a keyboard user it does not exist: roughly fifty tab stops stand between the delete and the Undo, behind a ten-second timer. The failure is silent — he pressed Tab, saw the page jump to the top, and by the time he understood what had happened the entry was gone."
+            "whyItMatters": "Soft-delete-with-Undo is the app's answer to the category's 'nothing is reversible' complaint, and it is the only undo in the product. For a keyboard user it does not exist: roughly fifty tab stops stand between the delete and the Undo, behind a ten-second timer. The failure is silent, he pressed Tab, saw the page jump to the top, and by the time he understood what had happened the entry was gone."
           },
           {
             "what": "Deleting two entries inside one ten-second window silently forfeits the first Undo. Measured: two Remove presses 300ms apart produced two 'Entry removed Undo' toasts but only ever one Undo button in the DOM; the second toast replaced the first (toast() clears toastTimer and rewrites #toast at app.js:41-54) while the first entry's 10-second commit timer kept running. Pressing Undo restored the second entry only; entries went 19 → 18 on screen and 19 → 18 in the store.",
@@ -156,7 +156,7 @@
           {
             "what": "The two entries awaiting his approval are not surfaced anywhere. Measured on a 60-entry board: three 'awaiting approval' badges exist, the first is 2,295px down an 11,555px page, and no count appears anywhere in the UI.",
             "severity": "major",
-            "whyItMatters": "Approval is opt-in and, once on, silently holds a family member's note out of the log until someone scrolls past it. There are no notifications by design — which the research supports — so the log itself has to say '2 notes are waiting for you'. It does not, and the printout is the only place that admits anything was withheld."
+            "whyItMatters": "Approval is opt-in and, once on, silently holds a family member's note out of the log until someone scrolls past it. There are no notifications by design, which the research supports, so the log itself has to say '2 notes are waiting for you'. It does not, and the printout is the only place that admits anything was withheld."
           },
           {
             "what": "Approve ✓ and Remove ✕ are adjacent 44px squares 12px apart, both icon-only, on the same row. Approve is instant and Remove is a ten-second window he cannot reach.",
@@ -167,29 +167,29 @@
       },
       {
         "name": "Nadine Okafor",
-        "who": "51, medical assistant to a geriatrician. Rooms fourteen patients a morning and reads whatever the family brings — notebooks, phone photos, printed PDFs. Never opens the app, never will. She is the audience the research says the log's 'real destination' is: NIA and Caregiver Action both treat the appointment handoff as the core artifact.",
+        "who": "51, medical assistant to a geriatrician. Rooms fourteen patients a morning and reads whatever the family brings, notebooks, phone photos, printed PDFs. Never opens the app, never will. She is the audience the research says the log's 'real destination' is: NIA and Caregiver Action both treat the appointment handoff as the core artifact.",
         "context": "Exam room, 09:12, paper on a clipboard, reading glasses, ninety seconds before the doctor walks in.",
         "task": "Get the current medication list, anything that changed since the last visit, and the family's questions, onto the encounter note.",
         "verdict": "The one-page version is the best free caregiver printout she has seen. The version Dana actually brought was 56 pages, had no medication list, and had a title she could barely see.",
         "delights": [
-          "The printed page is genuinely clean: no header, no navigation, no buttons, no invite code, no QR, no tip jar, and the coverage rota is correctly left off — verified under print media. It is a chronological, oldest-first timeline with day headings, author, type and time on each entry.",
+          "The printed page is genuinely clean: no header, no navigation, no buttons, no invite code, no QR, no tip jar, and the coverage rota is correctly left off, verified under print media. It is a chronological, oldest-first timeline with day headings, author, type and time on each entry.",
           "It says 'Printed August 9, 2026 at 4:45 PM · 1 entry is still awaiting approval and not shown.' Telling a clinician that something was withheld, rather than quietly dropping it, is better behaviour than most paid products.",
           "'Family-kept notebook. Not a medical record.' at the foot, and the HIPAA line at the head, in plain English.",
-          "Non-Latin names and text print correctly — CJK, Arabic and Cyrillic all survive into the PDF."
+          "Non-Latin names and text print correctly, CJK, Arabic and Cyrillic all survive into the PDF."
         ],
         "frictions": [
           {
             "what": "There is no date range. 'Print for a doctor visit' prints the entire log. Measured: a 500-entry log renders a 56-page Letter PDF (197,418 bytes) with no way to limit it to the last week.",
             "severity": "blocker",
-            "whyItMatters": "The research's third differentiator is the whole reason to print: '“Print the last 7 days for the doctor” — one button, one clean page: meds given, notable changes, and the questions list.' A 56-page brick is not an appointment artifact; it is a stack she will not read and the doctor will not touch. And this is the moment the app was supposed to prove it was worth using."
+            "whyItMatters": "The research's third differentiator is the whole reason to print: '“Print the last 7 days for the doctor”, one button, one clean page: meds given, notable changes, and the questions list.' A 56-page brick is not an appointment artifact; it is a stack she will not read and the doctor will not touch. And this is the moment the app was supposed to prove it was worth using."
           },
           {
-            "what": "Printed from a phone in dark mode, the document's own headings turn to ghosts. Measured under print media with the OS in dark: --surface stays #181f28 and --ink stays #e4ebf4, because the print reset at index.html:1197 is written as bare `:root` (specificity 0,1,0) and loses to the dark palette at index.html:113, `:root:not([data-theme=\"light\"])` (0,2,0). The printed title 'Timeline — Mom' comes out at rgb(228,235,244) = 1.2:1 against white paper; the 'Printed …' line, every day separator and the 'Not a medical record' notice come out at rgb(164,172,180) = 2.3:1. In the rendered PDF the title's darkest pixel is 153/255 against 0/255 for the same line printed in light mode. The card behind the timeline also keeps a #181f28 fill, so anyone who enables 'background graphics' gets a black slab.",
+            "what": "Printed from a phone in dark mode, the document's own headings turn to ghosts. Measured under print media with the OS in dark: --surface stays #181f28 and --ink stays #e4ebf4, because the print reset at index.html:1197 is written as bare `:root` (specificity 0,1,0) and loses to the dark palette at index.html:113, `:root:not([data-theme=\"light\"])` (0,2,0). The printed title 'Timeline, Mom' comes out at rgb(228,235,244) = 1.2:1 against white paper; the 'Printed …' line, every day separator and the 'Not a medical record' notice come out at rgb(164,172,180) = 2.3:1. In the rendered PDF the title's darkest pixel is 153/255 against 0/255 for the same line printed in light mode. The card behind the timeline also keeps a #181f28 fill, so anyone who enables 'background graphics' gets a black slab.",
             "severity": "blocker",
-            "whyItMatters": "Entries in this app get written at night — that is stated in the app's own design notes — so dark mode is the normal state of the phone that will print this. She got a page whose title and date separators she had to tilt toward the window to read, and whose 'not a medical record' disclaimer, the one line with legal weight, was the faintest ink on the sheet. Body text survives only because `body{color:#000}` is an element rule; everything token-coloured does not."
+            "whyItMatters": "Entries in this app get written at night, that is stated in the app's own design notes, so dark mode is the normal state of the phone that will print this. She got a page whose title and date separators she had to tilt toward the window to read, and whose 'not a medical record' disclaimer, the one line with legal weight, was the faintest ink on the sheet. Body text survives only because `body{color:#000}` is an element rule; everything token-coloured does not."
           },
           {
-            "what": "There is no medication list and no questions list on the page — only whatever prose someone happened to type. Nothing is grouped; a med change from three weeks ago is a paragraph among 400.",
+            "what": "There is no medication list and no questions list on the page, only whatever prose someone happened to type. Nothing is grouped; a med change from three weeks ago is a paragraph among 400.",
             "severity": "blocker",
             "whyItMatters": "The two things she has to extract are the two things the research says every free printable in the category already has and every guide tells families to bring: 'a standing reference block … current medications with doses, allergies, doctors and phone numbers' and 'a running “ask at the next appointment” list … that prints at the top of the doctor summary'. The app has a Question entry type and then scatters the questions chronologically through the log instead of collecting them."
           },
@@ -203,42 +203,42 @@
     ],
     "consensus": {
       "worksWell": [
-        "The zero-install invite genuinely works. A relative taps a text-message link and lands in a fully writable log with no account, no email capture, no app store and no pricing page — the research's number-one category failure mode, solved, and the one thing every funded competitor structurally cannot do.",
+        "The zero-install invite genuinely works. A relative taps a text-message link and lands in a fully writable log with no account, no email capture, no app store and no pricing page, the research's number-one category failure mode, solved, and the one thing every funded competitor structurally cannot do.",
         "Contrast and comfort are excellent and were verified, not assumed. Every measured element on the board is 5.3:1 or better and most are above 13:1: primary button 5.33, 'Covered' 14.41, 'Needs someone' 14.31, 'awaiting approval' 14.10, appointment badge 13.90, 'Dana (you)' chip 13.69, day label 16.01, toast 16.00. axe returns zero violations on the rendered board, with the comfort panel open, and at contrast=more.",
         "The comfort panel does real work: Largest takes the root from 16px to 24px and carries the entry body, the timestamps and the disclaimer with it, with 0px page overflow and no offenders at 414px or 320px, and the setting persists.",
-        "Layout is genuinely solid. Zero horizontal overflow at 320, 414, 1280, at Largest text and at Roomy spacing — with a 204-character unbroken word and 2,000-character notes in the timeline.",
+        "Layout is genuinely solid. Zero horizontal overflow at 320, 414, 1280, at Largest text and at Roomy spacing, with a 204-character unbroken word and 2,000-character notes in the timeline.",
         "Text safety is total. Nine hostile payloads through the composer and the board title produced zero injected script or img nodes, no title hijack, no NaN/undefined/[object Object] anywhere, and CJK, Arabic and Cyrillic render correctly on screen and on paper.",
         "The drafting story is better than the category's: a half-written note survives a full page reload (localStorage cl-draft-<boardId>) and a persistent 'Draft kept on this device' line says so, instead of relying on a 2.4-second toast.",
         "Accessible naming is done properly. Every repeated control names its own row ('Edit Tuesday, Aug 11', 'Remove the entry by Marcus at 2:42 AM'), the type picker is a labelled group with aria-pressed, the QR canvas has role=img and a text invite link beside it, dialogs are labelled, and <main> is no longer a live region.",
         "The printed page is well-built where it is built: no chrome, no invite code, no rota, oldest-first, day headings, break-inside on entries, and an honest 'N entries still awaiting approval and not shown' line.",
-        "Destructive actions are fenced. Delete log lives in its own bordered danger zone behind two confirms, rotate warns, and per-entry delete is a soft delete with a real Undo — when a mouse is available and only one delete is in flight.",
+        "Destructive actions are fenced. Delete log lives in its own bordered danger zone behind two confirms, rotate warns, and per-entry delete is a soft delete with a real Undo, when a mouse is available and only one delete is in flight.",
         "Performance is fine at realistic scale: 500 entries render without jank, scroll to the bottom and back costs 30ms, zero console errors across every run."
       ],
       "hurts": [
         "There is no medication model at all. 'Medication' is a coloured badge on a free-text note: no drug, no dose, no last-given, no double-dose guard. Two people logged the same 2pm donepezil an hour apart and the app said 'Saved to the log' twice. This is the app's own stated hero differentiator and the safety reason the category exists.",
-        "Every entry is stamped 'now' and can never be moved. There is no date or time control anywhere in the app, so the 6am dose written at 9am is a 9am dose forever — the research's first table stake, missed outright.",
+        "Every entry is stamped 'now' and can never be moved. There is no date or time control anywhere in the app, so the 6am dose written at 9am is a 9am dose forever, the research's first table stake, missed outright.",
         "Entries cannot be edited. Only approve and remove. This is the exact, quoted complaint that makes Lotsa Helping Hands hated, and the weWinIf was 'editable and deletable forever, inline, in one tap'.",
         "A sibling's write throws you out of the box you are typing in. Measured: one remote entry while the caret is in the composer leaves activeElement === BODY. The guard at app.js:584 is dead code, because replaceChildren() at app.js:362 fires blur and clears composeFocused before it is read.",
-        "'Print for a doctor visit' prints the whole log with no date range — 56 Letter pages at 500 entries — and carries no medication list and no collected questions, which are the two things the appointment actually needs.",
+        "'Print for a doctor visit' prints the whole log with no date range, 56 Letter pages at 500 entries, and carries no medication list and no collected questions, which are the two things the appointment actually needs.",
         "Printing from a phone in dark mode ghosts the page: the print palette reset is bare `:root` and loses on specificity to `:root:not([data-theme=\"light\"])`, so the printed title lands at 1.2:1 and every day separator, the printed-on date and the 'not a medical record' notice at 2.3:1 against white paper.",
-        "The tip jar and a 'Start yours' growth line appear on the shared read view that relatives open — the precise thing the research's loudest sourced complaint (CaringBridge Tributes) says must never happen.",
+        "The tip jar and a 'Start yours' growth line appear on the shared read view that relatives open, the precise thing the research's loudest sourced complaint (CaringBridge Tributes) says must never happen.",
         "Undo is unreachable by keyboard: delete drops focus to <body>, the toast is the last node in the document, and it dismisses in 10 seconds. Two deletes inside one window silently forfeit the first Undo.",
         "The entry-type picker is pinned at 38px (index.html:625, a hardcoded pixel) at every text size, while every neighbouring control scales 44 → 57 → 66. It is the smallest target on the page and it decides whether a dose is filed as a medication.",
         "'Add the next 7 days' has no idempotence: two presses produce 14 rows for 7 days, both toasted as success, and unwinding costs seven dialogs and seven confirms.",
-        "A hard cap of 100 coverage days, whose failure message tells a family to 'remove old weeks first' — a counter and a delete-your-history instruction, in the app whose research file says 'No counters anywhere' and 'never render a locked/greyed feature'.",
+        "A hard cap of 100 coverage days, whose failure message tells a family to 'remove old weeks first', a counter and a delete-your-history instruction, in the app whose research file says 'No counters anywhere' and 'never render a locked/greyed feature'.",
         "Nothing tells a returning relative how fresh the log is: no 'last updated 22 min ago by Dana', no 'new since you last looked' divider, both named in the research as the answer to the category's notification failure.",
         "Approvals are a quiet trap: pending entries are invisible except as an inline badge 2,295px down an 11,555px page, with no count anywhere and no notifications by design.",
-        "There is no export, no import and no backup of any kind — the research's tenth table stake — and 'Delete log' destroys the whole family's record for everyone behind two confirms and nothing else.",
+        "There is no export, no import and no backup of any kind, the research's tenth table stake, and 'Delete log' destroys the whole family's record for everyone behind two confirms and nothing else.",
         "Locking the log locks the owner out of it too: the composer disappears for everyone while the banner tells the owner 'family can read but not write'.",
-        "The edit-day pencil ✎ is inline on covered days and on its own line above 'I can be there' on days that need someone (7 of 7 rows at 320px) — the same unlabelled 44px glyph in two different places depending on state, one line from the button volunteers actually want.",
+        "The edit-day pencil ✎ is inline on covered days and on its own line above 'I can be there' on days that need someone (7 of 7 rows at 320px), the same unlabelled 44px glyph in two different places depending on state, one line from the button volunteers actually want.",
         "The header takes two rows and 112px on every phone width up to 430px, for a sign-out button most viewers cannot use."
       ],
       "mostWantedNext": [
         "A real medication action: pick the drug, show 'last given 2:05pm by Rosalie' in large type before the save, and require an explicit confirm inside the interval. Nothing else in this app is worth more.",
-        "A when field on every entry — defaulting to now, one tap to change — and inline edit of the body and the time, forever, for whoever wrote it and the owner.",
+        "A when field on every entry, defaulting to now, one tap to change, and inline edit of the body and the time, forever, for whoever wrote it and the owner.",
         "'Print the last 7 days' as the default print action, with a standing reference block (medications and doses, allergies, doctors, pharmacy, where the directive lives) and the collected open questions printed at the top.",
         "Take the tip jar and the 'Start yours' footer off any board the viewer does not own, and put the ask in the owner's settings panel only.",
-        "Fix the print palette reset to match the dark selector's specificity, in the shared base — this is a one-line change that affects all 23 apps and lands hardest here.",
+        "Fix the print palette reset to match the dark selector's specificity, in the shared base, this is a one-line change that affects all 23 apps and lands hardest here.",
         "Make Undo reachable: move focus into the toast when it carries an action, give each pending delete its own Undo instead of one shared toast slot, and keep the affordance until it is dismissed.",
         "A 'last updated N minutes ago by <name>' line at the top of the board and a locally-computed 'new since you last looked' divider in the timeline.",
         "Idempotent week-adding (skip labels already present, and say so), no 100-day cap, and a way to archive a past week in one action instead of seven dialogs.",
@@ -252,9 +252,9 @@
     "batteryClean": true,
     "scenarios": [
       {
-        "name": "The standard battery — and what it cannot see",
+        "name": "The standard battery, and what it cannot see",
         "method": "node design/stress.mjs caregiver-log, full run.",
-        "result": "0 hard failures. Layout clean at 320/414/1280 and at largest-text and roomy. Touch targets: only a#brandLink (131×25) under 32px. Hostile text: no injected imgs, no title hijack, no poison strings. Numeric edges clean. 30 rapid clicks on the primary action: 407ms, content 591→591 chars. 200 bulk adds: 13ms, 0 rows created. Corrupt storage: 'no app storage key to corrupt'. Keyboard: 10 focusable elements, 0 unnamed. axe: clean. Print: 414px wide, 2 dark fills. Console: silent. BUT the whole run happened on the home screen — the board lives behind a Firebase sign-in, so the battery's 10 focusable elements are the header, the hero button and the invite-code field. It exercised roughly 5% of the app.",
+        "result": "0 hard failures. Layout clean at 320/414/1280 and at largest-text and roomy. Touch targets: only a#brandLink (131×25) under 32px. Hostile text: no injected imgs, no title hijack, no poison strings. Numeric edges clean. 30 rapid clicks on the primary action: 407ms, content 591→591 chars. 200 bulk adds: 13ms, 0 rows created. Corrupt storage: 'no app storage key to corrupt'. Keyboard: 10 focusable elements, 0 unnamed. axe: clean. Print: 414px wide, 2 dark fills. Console: silent. BUT the whole run happened on the home screen, the board lives behind a Firebase sign-in, so the battery's 10 focusable elements are the header, the hero button and the invite-code field. It exercised roughly 5% of the app.",
         "defect": "Not an app defect: the standard battery is structurally blind to this app. Everything below was therefore run against the real board UI with data.js swapped for an in-memory stub via page.route(), plus an empty sw.js so the app's own service worker could not serve the cached real module back.",
         "severity": "none"
       },
@@ -275,49 +275,49 @@
       {
         "name": "Double-dose: the same medication logged twice by two people",
         "method": "Injected a remote 'Gave the 2pm donepezil.' entry of type medication from Marcus, then filed the same sentence as Dana through the composer with the Medication type selected. Diffed the page text before and after for any warning, and counted matching entries.",
-        "result": "Accepted with no warning of any kind. Toast: 'Saved to the log'. Four donepezil entries on the board afterwards. Searched the rendered page for /already|last given|double|again|earlier today/ — no match. There is no drug field, no dose field, no last-given display and no interval check anywhere in app.js or data.js; the Medication type only changes a badge class (app.js:621) and a placeholder.",
+        "result": "Accepted with no warning of any kind. Toast: 'Saved to the log'. Four donepezil entries on the board afterwards. Searched the rendered page for /already|last given|double|again|earlier today/, no match. There is no drug field, no dose field, no last-given display and no interval check anywhere in app.js or data.js; the Medication type only changes a badge class (app.js:621) and a placeholder.",
         "defect": "The app's stated hero differentiator and the category's core safety feature are absent, behind a UI that looks like it has them.",
         "severity": "blocker"
       },
       {
         "name": "Can an entry's time be set or corrected at all?",
         "method": "Enumerated every <input> reachable on a board including all five dialogs, and traced the write path in data.js.",
-        "result": "Inputs: text (author name), 2 checkboxes, 2 settings text fields, email, name, note, create title, create description, slot label, number (slot capacity), QR url. Zero inputs of type date, time or datetime-local. data.js:276 writes createdAt: serverTimestamp() and nothing else; updateEntry is only ever called with {status:'ok'}. There is no edit control on any entry — on a 60-entry board, 0 edit buttons against 3 approve and 60 remove.",
+        "result": "Inputs: text (author name), 2 checkboxes, 2 settings text fields, email, name, note, create title, create description, slot label, number (slot capacity), QR url. Zero inputs of type date, time or datetime-local. data.js:276 writes createdAt: serverTimestamp() and nothing else; updateEntry is only ever called with {status:'ok'}. There is no edit control on any entry, on a 60-entry board, 0 edit buttons against 3 approve and 60 remove.",
         "defect": "Entries cannot be back-dated and cannot be edited. Two named table stakes and the category's most-quoted complaint, all in one place.",
         "severity": "blocker"
       },
       {
         "name": "Undo under realistic use",
         "method": "Deleted one entry and read the toast; deleted a second 300ms later; counted Undo buttons in the DOM; pressed Undo; waited out both 10-second commit windows and compared the on-screen count with the store. Separately, pressed Remove and then Tab four times to see how far the Undo is from the keyboard.",
-        "result": "Two 'Entry removed Undo' toasts, but only ever one .undo button — the second toast overwrote the first while the first entry's 10s commit timer kept running (app.js:41-54 vs app.js:146). Entries went 19 → 18 on screen and 19 → 18 in the store: the first delete was committed with its Undo silently taken away. By keyboard: after a Remove, activeElement is BODY (the button's data-fk no longer exists), so the next four Tab stops are Copy invite link, Print, Edit Sunday, Take yourself off Sunday — #toast is the last node in the body and dismisses in 10s.",
+        "result": "Two 'Entry removed Undo' toasts, but only ever one .undo button, the second toast overwrote the first while the first entry's 10s commit timer kept running (app.js:41-54 vs app.js:146). Entries went 19 → 18 on screen and 19 → 18 in the store: the first delete was committed with its Undo silently taken away. By keyboard: after a Remove, activeElement is BODY (the button's data-fk no longer exists), so the next four Tab stops are Copy invite link, Print, Edit Sunday, Take yourself off Sunday, #toast is the last node in the body and dismisses in 10s.",
         "defect": "The only undo in the app is unreachable by keyboard and is forfeited when two deletes overlap.",
         "severity": "blocker"
       },
       {
         "name": "A year of logging: 500 entries",
         "method": "Seeded 500 entries across 167 days plus 14 coverage days, measured render, node counts, page height, a single remote-write redraw and a scroll to the bottom and back.",
-        "result": "6,906 DOM nodes; every entry rendered twice (500 on screen, 500 in the always-present hidden print card); page height 77,509px (about 86 phone screens); horizontal overflow 0; scroll bottom-and-back 30ms; zero console errors. One remote write costs a full teardown and rebuild: 284ms measured on desktop-class hardware, and it happens for every board, slot, claim and entry snapshot. No search, no filter, no jump-to-date, no pagination and no 'load more' exist — /jump|go to|search|filter|older|load more/ finds nothing in the UI.",
+        "result": "6,906 DOM nodes; every entry rendered twice (500 on screen, 500 in the always-present hidden print card); page height 77,509px (about 86 phone screens); horizontal overflow 0; scroll bottom-and-back 30ms; zero console errors. One remote write costs a full teardown and rebuild: 284ms measured on desktop-class hardware, and it happens for every board, slot, claim and entry snapshot. No search, no filter, no jump-to-date, no pagination and no 'load more' exist, /jump|go to|search|filter|older|load more/ finds nothing in the UI.",
         "defect": "Scrolling and memory hold up, but there is no way to navigate a long log, and the cost of a sibling's edit grows with the log's whole history because the render is unconditional and duplicated.",
         "severity": "major"
       },
       {
         "name": "The doctor-visit printout, light mode",
         "method": "Print media emulation on a 9-entry board, then page.pdf({format:'Letter'}), then pdftotext and a 70dpi raster.",
-        "result": "Correct and clean. Hidden: header, footer, tip jar, toast, the invite-code line, the whole coverage rota, the manage panel, the screen timeline, all buttons. Shown: 'Caring for Mom', the description, the HIPAA line, then 'Timeline — Mom', 'Printed August 9, 2026 at 4:45 PM · 1 entry is still awaiting approval and not shown', oldest-first day groups with author, type and time, and 'Family-kept notebook. Not a medical record.' Body text black at 21:1, printmeta and dayheads #333 at 12.63:1. 60,438-byte PDF.",
+        "result": "Correct and clean. Hidden: header, footer, tip jar, toast, the invite-code line, the whole coverage rota, the manage panel, the screen timeline, all buttons. Shown: 'Caring for Mom', the description, the HIPAA line, then 'Timeline, Mom', 'Printed August 9, 2026 at 4:45 PM · 1 entry is still awaiting approval and not shown', oldest-first day groups with author, type and time, and 'Family-kept notebook. Not a medical record.' Body text black at 21:1, printmeta and dayheads #333 at 12.63:1. 60,438-byte PDF.",
         "defect": null,
         "severity": "none"
       },
       {
         "name": "The same printout with the phone in dark mode",
         "method": "Identical run with colorScheme:'dark' plus print media. Read the resolved custom properties and the computed colour of every printed element, then generated the PDF with and without background graphics and sampled ink darkness in the raster.",
-        "result": "--surface stays #181f28 and --ink stays #e4ebf4 under print. The print reset at index.html:1197 is written as bare `:root` (0,1,0) and is beaten on specificity by the dark palette at index.html:113, `:root:not([data-theme=\"light\"])` (0,2,0) — and by `:root[data-theme=\"dark\"]` at :152 for anyone who picked Dark in the comfort panel. Measured against white paper: printed title rgb(228,235,244) = 1.2:1; 'Printed …' line, every day separator and the 'Not a medical record' disclaimer rgb(164,172,180) = 2.3:1. The .card.printonly keeps a rgb(24,31,40) fill. In the rendered PDF the title's darkest pixel is 153/255 versus 0/255 for the same line in light mode. Entry body text survives only because body{color:#000} is an element rule.",
-        "defect": "Printing from a dark-mode phone — the normal state for an app whose notes get written at night — ghosts the document title, the print date, every day separator and the legal disclaimer.",
+        "result": "--surface stays #181f28 and --ink stays #e4ebf4 under print. The print reset at index.html:1197 is written as bare `:root` (0,1,0) and is beaten on specificity by the dark palette at index.html:113, `:root:not([data-theme=\"light\"])` (0,2,0), and by `:root[data-theme=\"dark\"]` at :152 for anyone who picked Dark in the comfort panel. Measured against white paper: printed title rgb(228,235,244) = 1.2:1; 'Printed …' line, every day separator and the 'Not a medical record' disclaimer rgb(164,172,180) = 2.3:1. The .card.printonly keeps a rgb(24,31,40) fill. In the rendered PDF the title's darkest pixel is 153/255 versus 0/255 for the same line in light mode. Entry body text survives only because body{color:#000} is an element rule.",
+        "defect": "Printing from a dark-mode phone, the normal state for an app whose notes get written at night, ghosts the document title, the print date, every day separator and the legal disclaimer.",
         "severity": "blocker"
       },
       {
         "name": "What the doctor gets after a year",
         "method": "500-entry board, print media, page.pdf({format:'Letter'}), pdfinfo.",
-        "result": "56 pages, 197,418 bytes, produced by a single unqualified 'Print for a doctor visit' button. No date range control exists. No medication list and no collected questions section — Question-type entries stay scattered chronologically. No page numbers and no running patient identity.",
+        "result": "56 pages, 197,418 bytes, produced by a single unqualified 'Print for a doctor visit' button. No date range control exists. No medication list and no collected questions section, Question-type entries stay scattered chronologically. No page numbers and no running patient identity.",
         "defect": "The app's headline artifact degrades into an unreadable brick exactly as the log becomes valuable.",
         "severity": "blocker"
       },
@@ -332,34 +332,34 @@
         "name": "The comfort panel, driven the way a low-vision user would",
         "method": "Clicked #swsPrefsBtn on a live board, read the panel, set Text size = Largest, closed with Done, re-measured; separately set Contrast = High from the correct fieldset. Ran axe with the panel open and again after each setting.",
         "result": "Panel opens 736px tall with focus inside; axe 0 violations open, 0 after Largest, 0 at contrast=more. Largest: root 16→24px, entry body 16→24px, entry timestamp 15→22.5px, disclaimer 22.5px, page overflow 0, offenders none, persisted to sws.prefs. Contrast=high sets data-contrast=\"more\" and darkens --ink-2/--line with no overflow. Across default/lg/xl/xxl the primary button goes 44→44→57→66px and the icon buttons 44→44→57→66px, while .seg button stays 38, 38, 38, 38 (index.html:625, min-height:38px). Two fieldsets four apart both offer an option labelled 'High' (Warm tint, Contrast).",
-        "defect": "The panel is excellent and it helps — except it cannot touch the entry-type picker, which is hardcoded at 38px and stays the smallest target on the page at every setting.",
+        "defect": "The panel is excellent and it helps, except it cannot touch the entry-type picker, which is hardcoded at 38px and stays the smallest target on the page at every setting.",
         "severity": "major"
       },
       {
         "name": "Coverage days: idempotence and the cap",
         "method": "Pressed 'Add the next 7 days' twice and diffed labels. Then pushed the board to 105 slots and pressed it again.",
-        "result": "Two presses → 21 slots, 14 duplicate labels, 'Week added' toasted both times, no dedupe and no warning (app.js:479-488). At 105 slots the add is refused with 'The coverage list is full — remove old weeks first.' (app.js:494-498, cap 100). Removing a day is one edit dialog plus one native confirm each; there is no bulk or archive action.",
+        "result": "Two presses → 21 slots, 14 duplicate labels, 'Week added' toasted both times, no dedupe and no warning (app.js:479-488). At 105 slots the add is refused with 'The coverage list is full, remove old weeks first.' (app.js:494-498, cap 100). Removing a day is one edit dialog plus one native confirm each; there is no bulk or archive action.",
         "defect": "Double-pressing the empty state's own call to action silently doubles the rota, and the only stated remedy for the cap is deleting the family's history one dialog at a time.",
         "severity": "major"
       },
       {
         "name": "The participant view a relative actually opens",
         "method": "Ran the same board as an anonymous non-owner and inventoried the chrome, the footer and the freshness signals.",
-        "result": "'♥ Tip jar' visible in the header. #orgLine rewritten to 'Made with Caregiver Log — free, no ads. Start yours' (app.js:190-197). Header offers 'Sign in'. Manage panel and Copy invite link correctly hidden; Print correctly present; the composer works; they can delete their own entries. No 'last updated', no 'X ago', no 'new since you last looked' — /last updated|min ago|ago by/ and /new since|unread/ both find nothing.",
+        "result": "'♥ Tip jar' visible in the header. #orgLine rewritten to 'Made with Caregiver Log, free, no ads. Start yours' (app.js:190-197). Header offers 'Sign in'. Manage panel and Copy invite link correctly hidden; Print correctly present; the composer works; they can delete their own entries. No 'last updated', no 'X ago', no 'new since you last looked', /last updated|min ago|ago by/ and /new since|unread/ both find nothing.",
         "defect": "The donation ask and a growth line ride on the shared read view, which is the exact behaviour the research's most-cited complaint (CaringBridge Tributes, 'shady', $650) says must never happen; and the freshness header prescribed as the answer to the notification problem is absent.",
         "severity": "major"
       },
       {
         "name": "Locked log, approvals and rapid submit",
         "method": "Loaded a board with settings.locked, then a 60-entry board with three pending entries; separately clicked 'Add to the log' 12 times as fast as Playwright allows with a filled composer.",
-        "result": "Locked: the banner tells the owner 'family can read but not write. Unlock it in Settings' — but the composer is gone for the owner too, and all claim buttons disappear. Approvals: 3 pending badges, the first 2,295px down an 11,555px page, no count anywhere in the UI, 3 approve buttons. Rapid submit: 12 clicks in 926ms produced exactly 1 entry, 1 matching body, toast 'Saved to the log', zero errors — no double-submit.",
+        "result": "Locked: the banner tells the owner 'family can read but not write. Unlock it in Settings', but the composer is gone for the owner too, and all claim buttons disappear. Approvals: 3 pending badges, the first 2,295px down an 11,555px page, no count anywhere in the UI, 3 approve buttons. Rapid submit: 12 clicks in 926ms produced exactly 1 entry, 1 matching body, toast 'Saved to the log', zero errors, no double-submit.",
         "defect": "No double-submit defect. Locking silently locks the owner out while telling them otherwise, and pending entries have no surfacing beyond an inline badge buried in the timeline.",
         "severity": "major"
       },
       {
         "name": "QR invite at the narrowest phone, and draft/offline behaviour",
         "method": "Opened the manage panel and the QR dialog at 320×720 and measured the dialog, the box, the canvas and the drawn modules. Separately typed a partial note, navigated away and back, then went offline.",
-        "result": "QR: dialog 294px inside a 320px viewport, #qrBox 252px, canvas scaled to 220×220 CSS from a 300×300 bitmap, 27,146 dark subpixels drawn, page overflow 0, invite URL present as selectable text with a Copy button and role=img on the canvas. Draft: a 63-character half-note came back intact after a full document reload, with 'Draft kept on this device — closing the page won’t lose it.' under the composer and the value in localStorage cl-draft-b1. Offline: banner 'You’re offline — you can read the log; new notes will sync when you’re back.' and the composer stays available.",
+        "result": "QR: dialog 294px inside a 320px viewport, #qrBox 252px, canvas scaled to 220×220 CSS from a 300×300 bitmap, 27,146 dark subpixels drawn, page overflow 0, invite URL present as selectable text with a Copy button and role=img on the canvas. Draft: a 63-character half-note came back intact after a full document reload, with 'Draft kept on this device, closing the page won’t lose it.' under the composer and the value in localStorage cl-draft-b1. Offline: banner 'You’re offline, you can read the log; new notes will sync when you’re back.' and the composer stays available.",
         "defect": null,
         "severity": "none"
       }
@@ -368,7 +368,7 @@
   "fixes": [
     {
       "title": "Give medication a real shape, with a last-given check before the save",
-      "rationale": "Marcus logged the same 2pm donepezil an hour after Rosalie and the app said 'Saved to the log' — measured, four identical donepezil entries, no warning text anywhere on the page. Today 'Medication' only swaps a badge class and a placeholder. The research names the double-dose guard as the app's hero differentiator and says preventing a double dose 'is the safety reason this category exists'. Minimum viable: when Medication is the selected type, offer a drug field with the board's previously used names, and before writing show 'Last given 2:05pm today by Rosalie N.' in large type with an explicit confirm when it falls inside the interval. Keep it a log of doses given by a person — pill-schedule owns scheduling.",
+      "rationale": "Marcus logged the same 2pm donepezil an hour after Rosalie and the app said 'Saved to the log', measured, four identical donepezil entries, no warning text anywhere on the page. Today 'Medication' only swaps a badge class and a placeholder. The research names the double-dose guard as the app's hero differentiator and says preventing a double dose 'is the safety reason this category exists'. Minimum viable: when Medication is the selected type, offer a drug field with the board's previously used names, and before writing show 'Last given 2:05pm today by Rosalie N.' in large type with an explicit confirm when it falls inside the interval. Keep it a log of doses given by a person, pill-schedule owns scheduling.",
       "where": "apps/caregiver-log/app.js:525-613 (renderTimeline composer) and app.js:615-645 (renderEntry); write path apps/caregiver-log/data.js:265-281",
       "severity": "blocker",
       "effort": "L"
@@ -382,77 +382,77 @@
     },
     {
       "title": "Stop ejecting the writer from the composer every time a relative saves something",
-      "rationale": "Rosalie lost her cursor twice mid-sentence. Measured: with the caret in the textarea, one remote write leaves document.activeElement === BODY and closes the mobile keyboard; the text survives, the place does not. The guard written for exactly this is dead code — drawBoard()'s v.replaceChildren() at app.js:362 fires blur, which sets composeFocused=false at app.js:558, before renderTimeline reads it at app.js:584. Capture the focus state before the wipe (the data-fk machinery at app.js:72-81 already exists; the textarea and the name input simply have no data-fk), or stop re-rendering the composer subtree on remote snapshots at all.",
+      "rationale": "Rosalie lost her cursor twice mid-sentence. Measured: with the caret in the textarea, one remote write leaves document.activeElement === BODY and closes the mobile keyboard; the text survives, the place does not. The guard written for exactly this is dead code, drawBoard()'s v.replaceChildren() at app.js:362 fires blur, which sets composeFocused=false at app.js:558, before renderTimeline reads it at app.js:584. Capture the focus state before the wipe (the data-fk machinery at app.js:72-81 already exists; the textarea and the name input simply have no data-fk), or stop re-rendering the composer subtree on remote snapshots at all.",
       "where": "apps/caregiver-log/app.js:362, app.js:518, app.js:543-559, app.js:584-587",
       "severity": "blocker",
       "effort": "M"
     },
     {
-      "title": "Make the print reset win in dark mode — one selector, and it fixes all 23 apps",
-      "rationale": "Nadine got a page whose title she had to tilt toward the window. Measured under print + dark: --surface stays #181f28 and --ink #e4ebf4, because the print palette reset is written as bare `:root` (0,1,0) at index.html:1197 and loses on specificity to the dark palette at index.html:113 (`:root:not([data-theme=\"light\"])`, 0,2,0) and to `:root[data-theme=\"dark\"]` at :152. Result on white paper: printed title 1.2:1, print date / day separators / 'Not a medical record' disclaimer 2.3:1, and a #181f28 slab behind the timeline if background graphics are on. The fix is to raise the print block's selectors to match (`:root, :root:not([data-theme=\"light\"]), :root[data-theme=\"dark\"]`) in design/studio.css and rebuild — printing at night is this app's normal case.",
+      "title": "Make the print reset win in dark mode, one selector, and it fixes all 23 apps",
+      "rationale": "Nadine got a page whose title she had to tilt toward the window. Measured under print + dark: --surface stays #181f28 and --ink #e4ebf4, because the print palette reset is written as bare `:root` (0,1,0) at index.html:1197 and loses on specificity to the dark palette at index.html:113 (`:root:not([data-theme=\"light\"])`, 0,2,0) and to `:root[data-theme=\"dark\"]` at :152. Result on white paper: printed title 1.2:1, print date / day separators / 'Not a medical record' disclaimer 2.3:1, and a #181f28 slab behind the timeline if background graphics are on. The fix is to raise the print block's selectors to match (`:root, :root:not([data-theme=\"light\"]), :root[data-theme=\"dark\"]`) in design/studio.css and rebuild, printing at night is this app's normal case.",
       "where": "design/studio.css print block, regenerated into apps/caregiver-log/index.html:1196-1202 (vs the dark palettes at index.html:112-151 and :152)",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make 'Print for a doctor visit' produce the doctor's page, not the whole log",
-      "rationale": "Measured: a 500-entry log prints 56 Letter pages from one unqualified button, with no medication list and no collected questions, and Question-type entries scattered chronologically. The research's differentiator is specific — 'one button, one clean page: meds given, notable changes, and the questions list' — and the running 'ask at the next appointment' list is supposed to print at the top. Default the print to the last 7 days with an explicit range chooser, lead the page with a standing reference block (medications and doses, allergies, doctors and numbers, pharmacy, where the directive lives) and the open questions, then the timeline; add page numbers and the patient's name to a running header.",
+      "rationale": "Measured: a 500-entry log prints 56 Letter pages from one unqualified button, with no medication list and no collected questions, and Question-type entries scattered chronologically. The research's differentiator is specific, 'one button, one clean page: meds given, notable changes, and the questions list', and the running 'ask at the next appointment' list is supposed to print at the top. Default the print to the last 7 days with an explicit range chooser, lead the page with a standing reference block (medications and doses, allergies, doctors and numbers, pharmacy, where the directive lives) and the open questions, then the timeline; add page numbers and the patient's name to a running header.",
       "where": "apps/caregiver-log/app.js:649-672 (renderPrintTimeline), print buttons at app.js:380-383; needs a board-level reference block alongside data.js:87-112",
       "severity": "blocker",
       "effort": "L"
     },
     {
       "title": "Take the tip jar and the growth footer off boards the viewer does not own",
-      "rationale": "Marcus opened a log about his mother and the header offered him '♥ Tip jar' while the footer read 'Made with Caregiver Log — free, no ads. Start yours'. The research's most-cited complaint is CaringBridge's Tributes link — described as 'shady', one family counting $650 taken from the page they sent to forty people — and the stated win condition is that the tip jar 'never appears on the shared/read view that relatives open — only in Settings/About on the owner's device'. Hide #tipLink whenever the current view is a board the signed-in user does not own, and move the ask into the owner's manage panel. Leave the 'no ads, ever' promise; drop the 'Start yours' line from a board a family may be using during a death.",
+      "rationale": "Marcus opened a log about his mother and the header offered him '♥ Tip jar' while the footer read 'Made with Caregiver Log, free, no ads. Start yours'. The research's most-cited complaint is CaringBridge's Tributes link, described as 'shady', one family counting $650 taken from the page they sent to forty people, and the stated win condition is that the tip jar 'never appears on the shared/read view that relatives open, only in Settings/About on the owner's device'. Hide #tipLink whenever the current view is a board the signed-in user does not own, and move the ask into the owner's manage panel. Leave the 'no ads, ever' promise; drop the 'Start yours' line from a board a family may be using during a death.",
       "where": "apps/caregiver-log/index.html:1570 (#tipLink), apps/caregiver-log/app.js:190-197 (setGrowthFooter), app.js:893-897 (tip wiring)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Make Undo actually reachable, and stop one delete from stealing another's",
-      "rationale": "Theo deleted the wrong entry and could not get it back. Measured: after a Remove press activeElement is BODY, #toast is the last node in the document (~50 tab stops away) and it dismisses in 10 seconds; and two deletes 300ms apart produced two 'Entry removed Undo' toasts but only one Undo button, permanently committing the first entry (19 → 18 on screen and in the store). Move focus into the toast when it carries an action, keep an action toast alive until it is dismissed or its window closes, and queue pending deletes so each keeps its own Undo — or stack them as 'Undo 2 removals'.",
+      "rationale": "Theo deleted the wrong entry and could not get it back. Measured: after a Remove press activeElement is BODY, #toast is the last node in the document (~50 tab stops away) and it dismisses in 10 seconds; and two deletes 300ms apart produced two 'Entry removed Undo' toasts but only one Undo button, permanently committing the first entry (19 → 18 on screen and in the store). Move focus into the toast when it carries an action, keep an action toast alive until it is dismissed or its window closes, and queue pending deletes so each keeps its own Undo, or stack them as 'Undo 2 removals'.",
       "where": "apps/caregiver-log/app.js:38-55 (toast), app.js:135-159 (softDeleteEntry / pendingDelete), app.js:636-642 (delete button)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Tell a returning relative how fresh the log is",
-      "rationale": "Marcus's whole question was 'has anything happened since I last looked', and the participant view answers it nowhere — measured: no 'last updated', no 'X ago', no 'new since you last looked'. The research prescribes this precisely as the honest substitute for the push notifications we cannot send: 'a big “last updated 22 min ago by Dana” header and a locally-computed “new since you last looked” divider, so nobody has to ask whether they missed something.' Both are computable from data already on the client — newest entry timestamp and author, and a last-seen stamp in localStorage next to cl-myname.",
+      "rationale": "Marcus's whole question was 'has anything happened since I last looked', and the participant view answers it nowhere, measured: no 'last updated', no 'X ago', no 'new since you last looked'. The research prescribes this precisely as the honest substitute for the push notifications we cannot send: 'a big “last updated 22 min ago by Dana” header and a locally-computed “new since you last looked” divider, so nobody has to ask whether they missed something.' Both are computable from data already on the client, newest entry timestamp and author, and a last-seen stamp in localStorage next to cl-myname.",
       "where": "apps/caregiver-log/app.js:364-390 (board head card), app.js:590-612 (timeline day loop), state at app.js:122-133",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Make 'Add the next 7 days' idempotent and drop the 100-day cap",
-      "rationale": "Two presses produced 21 slots with 14 duplicate labels, both toasted as success — and the button is the empty state's own call to action, so double-pressing is the default mistake. Unwinding costs seven dialogs and seven native confirms. At 105 slots the app refuses with 'The coverage list is full — remove old weeks first.' The research is explicit that this category's users are fleeing counters: 'No counters anywhere. Unlimited medications, entries, caregivers, days.' Skip labels that already exist and say so ('5 already there, added 2'), and replace the cap with an 'archive past days' action rather than an instruction to delete history.",
+      "rationale": "Two presses produced 21 slots with 14 duplicate labels, both toasted as success, and the button is the empty state's own call to action, so double-pressing is the default mistake. Unwinding costs seven dialogs and seven native confirms. At 105 slots the app refuses with 'The coverage list is full, remove old weeks first.' The research is explicit that this category's users are fleeing counters: 'No counters anywhere. Unlimited medications, entries, caregivers, days.' Skip labels that already exist and say so ('5 already there, added 2'), and replace the cap with an 'archive past days' action rather than an instruction to delete history.",
       "where": "apps/caregiver-log/app.js:479-503 (addWeek / addSlotsChecked), rendered at app.js:400-419",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Let the entry-type picker grow with the text-size setting",
-      "rationale": "Rosalie filed four medication notes as plain notes, and Lu set Largest specifically to stop mis-tapping. Measured across default/lg/xl/xxl: the primary button and the icon buttons go 44 → 44 → 57 → 66px while .seg button stays 38, 38, 38, 38 — a hardcoded pixel at index.html:625, outside the scale. It is the smallest target on the board and it decides whether a dose is filed as a medication, which is also what any future double-dose logic and any grouped printout will key off.",
-      "where": "apps/caregiver-log/index.html:623-627 (.seg button min-height:38px, base layer — change in design/studio.css and rebuild)",
+      "rationale": "Rosalie filed four medication notes as plain notes, and Lu set Largest specifically to stop mis-tapping. Measured across default/lg/xl/xxl: the primary button and the icon buttons go 44 → 44 → 57 → 66px while .seg button stays 38, 38, 38, 38, a hardcoded pixel at index.html:625, outside the scale. It is the smallest target on the board and it decides whether a dose is filed as a medication, which is also what any future double-dose logic and any grouped printout will key off.",
+      "where": "apps/caregiver-log/index.html:623-627 (.seg button min-height:38px, base layer, change in design/studio.css and rebuild)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Surface pending entries instead of burying them",
-      "rationale": "Measured on a 60-entry board: three entries awaiting approval, the first 2,295px down an 11,555px page, and no count anywhere in the UI. Approval is opt-in and, once on, silently holds a family member's writing out of the log with no notification by design. Put a count on the board head for the owner ('2 notes are waiting for you — review'), and tell the author their note is held rather than only badging it in a timeline nobody scrolls.",
+      "rationale": "Measured on a 60-entry board: three entries awaiting approval, the first 2,295px down an 11,555px page, and no count anywhere in the UI. Approval is opt-in and, once on, silently holds a family member's writing out of the log with no notification by design. Put a count on the board head for the owner ('2 notes are waiting for you, review'), and tell the author their note is held rather than only badging it in a timeline nobody scrolls.",
       "where": "apps/caregiver-log/app.js:364-390 (head card), app.js:623 (pending badge), app.js:694-709 (the approval setting)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Give the coverage row a stable place for the edit control, and stop locking the owner out",
-      "rationale": "Lu hit the unlabelled ✎ instead of 'I can be there' — measured, the pencil sits inline on covered days and on its own line directly above the claim button on 'Needs someone' days (7 of 7 rows at 320px), because the wider status badge wraps the .top flex row. Separately, locking the log removes the composer for the owner too while the banner tells them 'family can read but not write'. Pin the edit control to the end of the row (or move it into the day's own dialog trigger) so it never lands adjacent to the volunteer button, and either let the owner keep writing while locked or reword the banner to say the log is read-only for everyone.",
+      "rationale": "Lu hit the unlabelled ✎ instead of 'I can be there', measured, the pencil sits inline on covered days and on its own line directly above the claim button on 'Needs someone' days (7 of 7 rows at 320px), because the wider status badge wraps the .top flex row. Separately, locking the log removes the composer for the owner too while the banner tells them 'family can read but not write'. Pin the edit control to the end of the row (or move it into the day's own dialog trigger) so it never lands adjacent to the volunteer button, and either let the owner keep writing while locked or reword the banner to say the log is read-only for everyone.",
       "where": "apps/caregiver-log/index.html:1318 (.slot .top) and app.js:433-477 (renderCoverageDay); lock behaviour at app.js:392-394 and app.js:532",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Add export/import, and make the long log navigable",
-      "rationale": "There is no export, no import and no backup of any kind — the research's tenth table stake — while 'Delete log' destroys the whole family's record for everyone behind two confirms. And at 500 entries the board is 6,906 nodes and 77,509px tall with no search, no filter, no jump-to-date and no pagination, while every remote write costs a full 284ms teardown and rebuild of the entire history (rendered twice, since the hidden print card duplicates every entry). Ship a JSON/text export and import, and render the timeline in date-bounded pages with a jump-to-date, building the print copy only when printing.",
+      "rationale": "There is no export, no import and no backup of any kind, the research's tenth table stake, while 'Delete log' destroys the whole family's record for everyone behind two confirms. And at 500 entries the board is 6,906 nodes and 77,509px tall with no search, no filter, no jump-to-date and no pagination, while every remote write costs a full 284ms teardown and rebuild of the entire history (rendered twice, since the hidden print card duplicates every entry). Ship a JSON/text export and import, and render the timeline in date-bounded pages with a jump-to-date, building the print copy only when printing.",
       "where": "apps/caregiver-log/app.js:590-613 (timeline render), app.js:649-672 (always-mounted print copy), app.js:733-741 (delete log), data layer at apps/caregiver-log/data.js:133-152",
       "severity": "minor",
       "effort": "L"

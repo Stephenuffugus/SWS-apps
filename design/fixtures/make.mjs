@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — screenshot fixtures
+   SWS STUDIO, screenshot fixtures
 
    The file-transform apps cannot be photographed empty: a PDF merger with no
    PDFs in it is a picture of a button. Headless Chromium has no file picker
    and no camera, so the scenes feed real files through the app's own
-   <input type=file> — and those files have to exist and be the same every run,
+   <input type=file>, and those files have to exist and be the same every run,
    or the screenshots drift between renders.
 
    Generated rather than committed as binaries, so the content is readable in
@@ -22,7 +22,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 const HERE = dirname(fileURLToPath(import.meta.url));
 mkdirSync(HERE, { recursive: true });
 
-/* Deliberately dull, realistic paperwork — the kind of thing someone actually
+/* Deliberately dull, realistic paperwork, the kind of thing someone actually
    merges. Nothing here should look like lorem ipsum in a store screenshot. */
 const DOCS = [
   {
@@ -55,8 +55,8 @@ const DOCS = [
       ['NAMED INSURED', 'Effective 1 September 2026 through 31 August 2027.',
         'The landlord named above is listed as an interested party and',
         'will be notified of cancellation or non-renewal.'],
-      ['SCHEDULED ITEMS', 'Bicycle — road, carbon frame        $1,250',
-        'Laptop — 14 inch                    $1,999', 'Jewellery — inherited, appraised     $2,200'],
+      ['SCHEDULED ITEMS', 'Bicycle, road, carbon frame        $1,250',
+        'Laptop, 14 inch                    $1,999', 'Jewellery, inherited, appraised     $2,200'],
     ],
   },
 ];

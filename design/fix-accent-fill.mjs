@@ -8,13 +8,13 @@
    --accent is the mid-tone brand colour. --accent-ink is contrast-solved by
    the build against --accent-fill, NOT against --accent, so any rule that
    paints --accent-ink onto --accent is reading off the wrong end of the
-   palette. Measured across the portfolio: 3.64–4.04:1 in light mode on five
+   palette. Measured across the portfolio: 3.64 to 4.04:1 in light mode on five
    apps, all of which clear 5.2:1 or better on --accent-fill.
 
    axe never caught these because every one of them is an .active / .sel /
    .winner state that does not exist until the user interacts.
 
-   Only rules that ALSO set color:var(--accent-ink) are touched — a bare
+   Only rules that ALSO set color:var(--accent-ink) are touched, a bare
    --accent fill with no text on it (a progress bar) is decorative and correct.
    Only the app layer is touched; the base is generated.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -38,7 +38,7 @@ for (const slug of Object.keys(SKINS)) {
   try { html = readFileSync(path, 'utf8'); } catch { continue; }
 
   const cut = html.indexOf(END);
-  if (cut === -1) { report.push(`${slug}: no base sentinel — skipped`); continue; }
+  if (cut === -1) { report.push(`${slug}: no base sentinel, skipped`); continue; }
 
   const head = html.slice(0, cut);
   let tail = html.slice(cut);

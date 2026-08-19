@@ -1,4 +1,4 @@
-// Run: node ../../design/harness.mjs — driven by design/test-all.mjs
+// Run: node ../../design/harness.mjs, driven by design/test-all.mjs
 //
 // The whole loop, in a real browser, the way a teacher does it: add a class,
 // paste a roster, mark the lesson, read the grade. Anything that only works
@@ -87,8 +87,7 @@ await withApp('grade-sheet', async ({ page, errors }) => {
 
   const rows = await page.evaluate(() => [...document.querySelectorAll('table.marks tbody tr')]
     .map((tr) => tr.children[1].innerText.replace(/\s+/g, ' ').trim()));
-  // 4/4 = 100 A ; missing = 0/4 = 0 F ; excused = nothing counted = —
-  ok('a full mark is 100%', rows[0].startsWith('100%'), rows[0]);
+  // 4/4 = 100 A ; missing = 0/4 = 0 F ; excused = nothing counted =, ok('a full mark is 100%', rows[0].startsWith('100%'), rows[0]);
   ok('a missing mark is 0%, not blank', rows[1].startsWith('0%'), rows[1]);
   ok('an excused-only student has NO grade rather than a zero',
     rows[2].startsWith('—'), `expected em dash, got ${rows[2]}`);
@@ -104,7 +103,7 @@ await withApp('grade-sheet', async ({ page, errors }) => {
   await page.waitForTimeout(200);
   ok('Escape blanks the names', await page.evaluate(() => document.body.dataset.names === 'hidden'));
   /* The class the studio base reserves for display:none must never be the one
-     this app toggles on <body> — that hid the entire app instead of the names. */
+     this app toggles on <body>, that hid the entire app instead of the names. */
   ok('and does not hide the whole app',
     await page.evaluate(() => getComputedStyle(document.body).display !== 'none'));
   ok('and says so', await page.locator('.hidebar').isVisible());

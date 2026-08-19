@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the standard stress battery
+   SWS STUDIO, the standard stress battery
 
      node design/stress.mjs                 every app
      node design/stress.mjs qr-maker        one app
@@ -15,7 +15,7 @@
    3-second render or a 40px button is acceptable for that app is a person's
    job.
 
-   Exit code is non-zero if any HARD failure is found — a console error, a
+   Exit code is non-zero if any HARD failure is found, a console error, a
    crash, NaN reaching the screen, or sideways scroll.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -114,7 +114,7 @@ async function runApp(slug) {
           await f.dispatchEvent('input');
           await f.dispatchEvent('change');
           filled++;
-        } catch { /* not fillable in this state — fine */ }
+        } catch { /* not fillable in this state, fine */ }
       }
     }
     await page.waitForTimeout(250);
@@ -144,7 +144,7 @@ async function runApp(slug) {
           await f.fill(n, { timeout: 1500 });
           await f.dispatchEvent('input');
           await f.dispatchEvent('change');
-        } catch { /* rejected by the control — fine */ }
+        } catch { /* rejected by the control, fine */ }
       }
     }
     await page.waitForTimeout(250);
@@ -189,7 +189,7 @@ async function runApp(slug) {
       if (!input || !btn) return { ran: false };
       const t0 = performance.now();
       for (let i = 0; i < 200; i++) {
-        input.value = `Stress item ${i} — a realistically long entry name`;
+        input.value = `Stress item ${i}, a realistically long entry name`;
         input.dispatchEvent(new Event('input', { bubbles: true }));
         btn.click();
       }
@@ -233,7 +233,7 @@ async function runApp(slug) {
     });
 
     /* ── 8. Corrupt storage ────────────────────────────────────────────── */
-    /* A half-written localStorage value is not exotic — it is what a tab
+    /* A half-written localStorage value is not exotic, it is what a tab
        killed mid-write leaves behind. The app must still boot. */
     const keys = Object.keys((await storage()).keys).filter((k) => k !== 'sws.prefs');
     let corrupt = 'no app storage key to corrupt';
@@ -280,8 +280,7 @@ async function runApp(slug) {
       const unnamed = focusable.filter((el) => !nameOf(el));
 
       /* A placeholder is not a label. It disappears the moment someone types,
-         which is exactly when they most need to know what the field was —
-         and it leaves anyone who paused mid-form with a row of empty boxes. */
+         which is exactly when they most need to know what the field was, and it leaves anyone who paused mid-form with a row of empty boxes. */
       const placeholderOnly = focusable.filter((el) => !nameOf(el) && el.getAttribute('placeholder'));
 
       return {
@@ -359,7 +358,7 @@ for (const r of report) {
   byApp.get(r.slug).push(r);
 }
 
-console.log(`\n\nStress battery — ${slugs.length} app(s)\n`);
+console.log(`\n\nStress battery, ${slugs.length} app(s)\n`);
 for (const [slug, rows] of byApp) {
   const bad = rows.filter((r) => r.hard);
   console.log(`\n${slug}  ${bad.length ? `${bad.length} HARD` : 'clean'}`);

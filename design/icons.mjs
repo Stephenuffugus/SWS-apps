@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — re-hue the app icons
+   SWS STUDIO, re-hue the app icons
 
    The icons were drawn against the old palette and it shows: four of them are
    the same teal, four the same purple, three the same blue. They are the most
-   public surface the studio has — browser tab, phone home screen, share card,
-   the hub grid — so leaving them behind would undo the restyle everywhere the
+   public surface the studio has, browser tab, phone home screen, share card,
+   the hub grid, so leaving them behind would undo the restyle everywhere the
    user actually looks.
 
    Rather than redraw 23 icons, each colour is decomposed into OKLCH and only
    its HUE is replaced. Lightness and chroma stay exactly as drawn, so the
-   artwork keeps its internal structure — a pale highlight stays a pale
-   highlight — while the whole tile moves onto the app's colour.
+   artwork keeps its internal structure, a pale highlight stays a pale
+   highlight, while the whole tile moves onto the app's colour.
 
      node design/icons.mjs           re-hue all, regenerate PNGs
      node design/icons.mjs --dry     print what would change

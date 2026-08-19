@@ -1,102 +1,102 @@
 {
   "slug": "baby-log",
   "purpose": "A one-thumb 3am infant tracker: giant buttons log feeds (left/right/bottle), a sleep start/stop toggle, and diapers into IndexedDB on-device only; a status card answers \"how long since the last feed / which side next\", a Today card copies a plain-text shift-handoff summary to the clipboard, and a timeline lists every entry with a per-row delete, plus JSON export/import for backup.",
-  "structure": "Single scrolling page, no routes, no modals, no sticky bars. `body > div.wrap` (max-width 560px, padding 0 14px, index.html:36) contains everything except the toast and footer. Inside `.wrap`: `header.app` (index.html:88-93) = decorative 34px `img` + `h1 \"Baby Log\"` + `span.spacer` + `a#tipLink.tipbtn.hidden` (unhidden by JS at app.js:237-241). Then five sibling `section.card` blocks: (1) index.html:95-98 an unlabeled card holding `input#nameInput` and `div#status.status` — no `h2`; (2) index.html:100-117 the log card, one card containing THREE `h2`s (Feed / Sleep / Diaper) each followed by a `div.bigbtns` — the first is a 3-col grid of `[data-kind=feed]` buttons, the second is forced to one column by an INLINE `style=\"grid-template-columns:1fr\"` (index.html:108) and holds `button#sleepBtn` wrapping `span#sleepLabel`, the third is a 3-col grid of `[data-kind=diaper]` buttons; every one of these buttons contains a `span.em` emoji followed by a bare text label; (3) index.html:119-126 \"Today\" = `div#summary.status` + `div.row > button#copyBtn.btn` + `p.hint`; (4) index.html:128-132 \"Timeline\" = `ul.plain#timeline` (JS-filled) + `p.hint#emptyHint`; (5) index.html:134-141 an unlabeled, headingless card = `div.row > button#exportBtn.btn + button#importBtn.btn + input#importFile.hidden`. Outside `.wrap`: `div#toast[role=status][aria-live=polite]` (position:fixed, bottom:24px, index.html:76-80,144) and `footer.colophon` (index.html:145) with two `color:inherit` links. Main flow: land → optionally type baby's name → tap a giant button → toast \"Logged ✓\" → status/summary/timeline re-render → at shift change tap \"Copy today's summary\" and paste to partner. Everything persists silently; a 30s `setInterval` (app.js:232) refreshes the \"Xm ago\" strings.",
+  "structure": "Single scrolling page, no routes, no modals, no sticky bars. `body > div.wrap` (max-width 560px, padding 0 14px, index.html:36) contains everything except the toast and footer. Inside `.wrap`: `header.app` (index.html:88-93) = decorative 34px `img` + `h1 \"Baby Log\"` + `span.spacer` + `a#tipLink.tipbtn.hidden` (unhidden by JS at app.js:237-241). Then five sibling `section.card` blocks: (1) index.html:95-98 an unlabeled card holding `input#nameInput` and `div#status.status`, no `h2`; (2) index.html:100-117 the log card, one card containing THREE `h2`s (Feed / Sleep / Diaper) each followed by a `div.bigbtns`, the first is a 3-col grid of `[data-kind=feed]` buttons, the second is forced to one column by an INLINE `style=\"grid-template-columns:1fr\"` (index.html:108) and holds `button#sleepBtn` wrapping `span#sleepLabel`, the third is a 3-col grid of `[data-kind=diaper]` buttons; every one of these buttons contains a `span.em` emoji followed by a bare text label; (3) index.html:119-126 \"Today\" = `div#summary.status` + `div.row > button#copyBtn.btn` + `p.hint`; (4) index.html:128-132 \"Timeline\" = `ul.plain#timeline` (JS-filled) + `p.hint#emptyHint`; (5) index.html:134-141 an unlabeled, headingless card = `div.row > button#exportBtn.btn + button#importBtn.btn + input#importFile.hidden`. Outside `.wrap`: `div#toast[role=status][aria-live=polite]` (position:fixed, bottom:24px, index.html:76-80,144) and `footer.colophon` (index.html:145) with two `color:inherit` links. Main flow: land → optionally type baby's name → tap a giant button → toast \"Logged ✓\" → status/summary/timeline re-render → at shift change tap \"Copy today's summary\" and paste to partner. Everything persists silently; a 30s `setInterval` (app.js:232) refreshes the \"Xm ago\" strings.",
   "cssClasses": [
-    ":root / @media(prefers-color-scheme:dark) :root — 13 color tokens, index.html:18-29",
-    "* — box-sizing:border-box, index.html:30",
-    "body — bg/ink/system font, line-height 1.45, padding-bottom 40px, index.html:31-35",
-    ".wrap — page container, max-width 560px, pad 0 14px, index.html:36",
-    "header.app — flex app bar, gap 10px, index.html:37",
-    "header.app img — fixed 34x34 logo, radius 8px, index.html:38",
-    "header.app h1 — app title, 1.15rem (18.4px), index.html:39",
-    "header.app .spacer — flex:1 pusher element, index.html:40",
-    "a.tipbtn — tip-jar pill link, must be an <a>, index.html:41",
-    "section.card — white card, radius 16px, pad 14px, index.html:42",
-    "section.card h2 — uppercase micro card title, .8rem muted, index.html:43",
-    ".status — status/summary text block, 1.02rem, lh 1.6, index.html:44",
-    ".status b — tabular-nums for counts/durations, index.html:45",
-    ".status .sleeping — asleep banner, sleep color, bold, index.html:46",
-    ".bigbtns — 3-column grid of log buttons, gap 8px, index.html:47",
-    ".bigbtns button — giant log button, pad 18px 6px, radius 14px, index.html:48-51",
-    ".bigbtns button .em — block emoji glyph, 1.5rem, index.html:52",
-    ".bigbtns button.feed — teal border variant, index.html:53",
-    ".bigbtns button.sleep — blue border variant, index.html:54",
-    ".bigbtns button.diaper — amber border variant, index.html:55",
-    ".bigbtns button.active — sleep-toggle ON, filled blue, white text, index.html:56",
-    "input[type=text] — full-width text field, pad 11px 12px, index.html:57-60",
-    ":focus-visible (input,button,a) — 2px focus outline, only rule, index.html:61",
-    ".row — flex button row, gap 8px, index.html:62",
-    ".row>* — equal-width flex children, index.html:63",
-    "button — inherit font-family, index.html:64",
-    ".btn — secondary button, pad 11px 14px, index.html:65",
-    ".btn.small — compact modifier, pad 6px 9px, .82rem, index.html:66",
-    ".btn.danger — destructive text color modifier, index.html:67",
-    "ul.plain — unstyled timeline list, must be a <ul>, index.html:68",
-    "ul.plain li — timeline row, flex, .92rem, bottom border, index.html:69",
-    "ul.plain li:last-child — strips trailing border, index.html:70",
-    "ul.plain .grow — flex:1 event-label cell, index.html:71",
-    ".when — timestamp cell, fixed flex:0 0 70px, .8rem, index.html:72",
-    ".dayhead — day separator, uppercase .78rem muted, index.html:73",
-    ".sub — secondary status line, .82rem muted, index.html:74",
-    ".hint — instructional caption under cards, .8rem muted, index.html:75",
-    "#toast — fixed pill toast, bottom 24px, opacity 0, index.html:76-80",
-    "#toast.show — visible toast state, JS-toggled, index.html:81",
-    "footer.colophon — page footer, .78rem muted centered, index.html:82",
-    ".hidden — display:none !important, JS-toggled, index.html:83",
-    "#nameInput — baby name field, read/written by JS, app.js:178,224,246",
-    "#status — status block, replaceChildren target, app.js:103",
-    "#sleepBtn — sleep toggle, .active toggled, app.js:119,188",
-    "#sleepLabel — nested span, textContent swapped, app.js:118",
-    "#summary — Today counts, replaceChildren target, app.js:134",
-    "#copyBtn — copy summary to clipboard, app.js:193",
-    "#timeline — <ul> rebuilt every render, app.js:142",
-    "#emptyHint — empty-state caption, .hidden toggled, app.js:145",
-    "#exportBtn — download JSON backup, app.js:200",
-    "#importBtn — proxies click to file input, app.js:207",
-    "#importFile — hidden file input, app.js:208",
-    "#tipLink — tip jar anchor, unhidden by config, app.js:238-240",
-    "[data-kind] / [data-detail] — click hook + payload for log buttons, app.js:182-184"
+    ":root / @media(prefers-color-scheme:dark) :root, 13 color tokens, index.html:18-29",
+    "*, box-sizing:border-box, index.html:30",
+    "body, bg/ink/system font, line-height 1.45, padding-bottom 40px, index.html:31-35",
+    ".wrap, page container, max-width 560px, pad 0 14px, index.html:36",
+    "header.app, flex app bar, gap 10px, index.html:37",
+    "header.app img, fixed 34x34 logo, radius 8px, index.html:38",
+    "header.app h1, app title, 1.15rem (18.4px), index.html:39",
+    "header.app .spacer, flex:1 pusher element, index.html:40",
+    "a.tipbtn, tip-jar pill link, must be an <a>, index.html:41",
+    "section.card, white card, radius 16px, pad 14px, index.html:42",
+    "section.card h2, uppercase micro card title, .8rem muted, index.html:43",
+    ".status, status/summary text block, 1.02rem, lh 1.6, index.html:44",
+    ".status b, tabular-nums for counts/durations, index.html:45",
+    ".status .sleeping, asleep banner, sleep color, bold, index.html:46",
+    ".bigbtns, 3-column grid of log buttons, gap 8px, index.html:47",
+    ".bigbtns button, giant log button, pad 18px 6px, radius 14px, index.html:48-51",
+    ".bigbtns button .em, block emoji glyph, 1.5rem, index.html:52",
+    ".bigbtns button.feed, teal border variant, index.html:53",
+    ".bigbtns button.sleep, blue border variant, index.html:54",
+    ".bigbtns button.diaper, amber border variant, index.html:55",
+    ".bigbtns button.active, sleep-toggle ON, filled blue, white text, index.html:56",
+    "input[type=text], full-width text field, pad 11px 12px, index.html:57-60",
+    ":focus-visible (input,button,a), 2px focus outline, only rule, index.html:61",
+    ".row, flex button row, gap 8px, index.html:62",
+    ".row>*, equal-width flex children, index.html:63",
+    "button, inherit font-family, index.html:64",
+    ".btn, secondary button, pad 11px 14px, index.html:65",
+    ".btn.small, compact modifier, pad 6px 9px, .82rem, index.html:66",
+    ".btn.danger, destructive text color modifier, index.html:67",
+    "ul.plain, unstyled timeline list, must be a <ul>, index.html:68",
+    "ul.plain li, timeline row, flex, .92rem, bottom border, index.html:69",
+    "ul.plain li:last-child, strips trailing border, index.html:70",
+    "ul.plain .grow, flex:1 event-label cell, index.html:71",
+    ".when, timestamp cell, fixed flex:0 0 70px, .8rem, index.html:72",
+    ".dayhead, day separator, uppercase .78rem muted, index.html:73",
+    ".sub, secondary status line, .82rem muted, index.html:74",
+    ".hint, instructional caption under cards, .8rem muted, index.html:75",
+    "#toast, fixed pill toast, bottom 24px, opacity 0, index.html:76-80",
+    "#toast.show, visible toast state, JS-toggled, index.html:81",
+    "footer.colophon, page footer, .78rem muted centered, index.html:82",
+    ".hidden, display:none !important, JS-toggled, index.html:83",
+    "#nameInput, baby name field, read/written by JS, app.js:178,224,246",
+    "#status, status block, replaceChildren target, app.js:103",
+    "#sleepBtn, sleep toggle, .active toggled, app.js:119,188",
+    "#sleepLabel, nested span, textContent swapped, app.js:118",
+    "#summary, Today counts, replaceChildren target, app.js:134",
+    "#copyBtn, copy summary to clipboard, app.js:193",
+    "#timeline, <ul> rebuilt every render, app.js:142",
+    "#emptyHint, empty-state caption, .hidden toggled, app.js:145",
+    "#exportBtn, download JSON backup, app.js:200",
+    "#importBtn, proxies click to file input, app.js:207",
+    "#importFile, hidden file input, app.js:208",
+    "#tipLink, tip jar anchor, unhidden by config, app.js:238-240",
+    "[data-kind] / [data-detail], click hook + payload for log buttons, app.js:182-184"
   ],
-  "dynamicMarkup": "All runtime DOM is built with `document.createElement` via the `el()` helper (app.js:10-24) — no innerHTML anywhere, and no template strings of markup. Four injection sites: (1) `renderStatus` app.js:102-120 clears `#status` with `replaceChildren()` then appends up to three plain `div`s — an optional `div.sleeping` (\"😴 Asleep — 1h 20m so far\"), an unclassed `div` with the last-feed sentence or the no-feeds empty copy, and an optional `div.sub` for last diaper; it also writes `#sleepLabel.textContent` (\"Fell asleep\"/\"Woke up\") and toggles `.active` on `#sleepBtn` (app.js:118-119). (2) `renderSummary` app.js:130-139 replaces `#summary` with exactly three unclassed `div`s, each an emoji + label text node plus a nested `<b>` holding the number — `.status b` (index.html:45) is the only styling hook and there is NO class on these rows. (3) `renderTimeline` app.js:141-163 empties `#timeline` and appends an interleaved sequence of `div.dayhead` (app.js:150) and `li` (app.js:154) — the day headers are DIVs appended as direct children of the `<ul>`, not `li`s. Each `li` contains, in order, `span.when` (time string), `span.grow` (label from the `KIND_TEXT` map at app.js:95-100, which embeds emoji directly in the text: \"🤱 Fed — left\", \"💩 Diaper — dirty\"), and `button.btn.small.danger[type=button][aria-label=\"Delete entry\"]` whose text is the `✕` glyph (app.js:157-161). It also toggles `.hidden` on `#emptyHint` (app.js:145). (4) `toast()` app.js:26-32 sets `#toast.textContent` and toggles `.show`. Plus two transient nodes: `init` removes `.hidden` from `#tipLink` (app.js:240), and the export handler creates an unstyled detached `<a download>` appended to `document.body`, clicked, then removed after 500ms (app.js:200-206). Restyle contract: `.dayhead`, `.when`, `.grow`, `.btn.small.danger`, `.sleeping`, `.sub`, `.active`, `.show`, `.hidden` and the `.status b` descendant are all produced or toggled by JS and must survive renaming; the summary and last-feed rows have no class at all and can only be targeted as `#summary > div` / `#status > div`.",
+  "dynamicMarkup": "All runtime DOM is built with `document.createElement` via the `el()` helper (app.js:10-24), no innerHTML anywhere, and no template strings of markup. Four injection sites: (1) `renderStatus` app.js:102-120 clears `#status` with `replaceChildren()` then appends up to three plain `div`s, an optional `div.sleeping` (\"😴 Asleep, 1h 20m so far\"), an unclassed `div` with the last-feed sentence or the no-feeds empty copy, and an optional `div.sub` for last diaper; it also writes `#sleepLabel.textContent` (\"Fell asleep\"/\"Woke up\") and toggles `.active` on `#sleepBtn` (app.js:118-119). (2) `renderSummary` app.js:130-139 replaces `#summary` with exactly three unclassed `div`s, each an emoji + label text node plus a nested `<b>` holding the number, `.status b` (index.html:45) is the only styling hook and there is NO class on these rows. (3) `renderTimeline` app.js:141-163 empties `#timeline` and appends an interleaved sequence of `div.dayhead` (app.js:150) and `li` (app.js:154), the day headers are DIVs appended as direct children of the `<ul>`, not `li`s. Each `li` contains, in order, `span.when` (time string), `span.grow` (label from the `KIND_TEXT` map at app.js:95-100, which embeds emoji directly in the text: \"🤱 Fed, left\", \"💩 Diaper, dirty\"), and `button.btn.small.danger[type=button][aria-label=\"Delete entry\"]` whose text is the `✕` glyph (app.js:157-161). It also toggles `.hidden` on `#emptyHint` (app.js:145). (4) `toast()` app.js:26-32 sets `#toast.textContent` and toggles `.show`. Plus two transient nodes: `init` removes `.hidden` from `#tipLink` (app.js:240), and the export handler creates an unstyled detached `<a download>` appended to `document.body`, clicked, then removed after 500ms (app.js:200-206). Restyle contract: `.dayhead`, `.when`, `.grow`, `.btn.small.danger`, `.sleeping`, `.sub`, `.active`, `.show`, `.hidden` and the `.status b` descendant are all produced or toggled by JS and must survive renaming; the summary and last-feed rows have no class at all and can only be targeted as `#summary > div` / `#status > div`.",
   "comfortDefects": [
     {
-      "issue": "Timeline body copy is 14.7px (.92rem), under the 15px floor — and this is the app's main reading surface, read one-handed in a dark room by a sleep-deprived adult",
+      "issue": "Timeline body copy is 14.7px (.92rem), under the 15px floor, and this is the app's main reading surface, read one-handed in a dark room by a sleep-deprived adult",
       "where": "index.html:69 (ul.plain li)",
       "fix": "Raise to 1rem/16px minimum and increase row padding from 8px to 12px; the timeline should be the most legible text on the page, not the smallest."
     },
     {
-      "issue": "All instructional copy is 12.8px muted (.hint) — 'Every tap lands here with its time. Mis-taps can be deleted.' and 'Baby data lives only on this phone' are the app's only teaching text and are the least readable thing on screen; .sub (13.1px) has the same problem for 'Last diaper'",
+      "issue": "All instructional copy is 12.8px muted (.hint), 'Every tap lands here with its time. Mis-taps can be deleted.' and 'Baby data lives only on this phone' are the app's only teaching text and are the least readable thing on screen; .sub (13.1px) has the same problem for 'Last diaper'",
       "where": "index.html:75 (.hint), index.html:74 (.sub)",
       "fix": "Take hints to 0.9375rem/15px with lh 1.5; take .sub to 1rem since it is status data, not chrome."
     },
     {
-      "issue": "Day separators are 12.5px uppercase with .05em tracking in muted color — the primary structural landmark of the timeline is smaller than everything it separates",
+      "issue": "Day separators are 12.5px uppercase with .05em tracking in muted color, the primary structural landmark of the timeline is smaller than everything it separates",
       "where": "index.html:73 (.dayhead)",
       "fix": "Make it ~0.875rem semibold in --ink with more top margin (20px) and a hairline rule; structure should outrank the rows it groups."
     },
     {
-      "issue": "Timestamp column is 12.8px locked to a rigid flex:0 0 70px basis — tabular time is the single most-scanned value in the timeline and it is set in the smallest type in the app",
+      "issue": "Timestamp column is 12.8px locked to a rigid flex:0 0 70px basis, tabular time is the single most-scanned value in the timeline and it is set in the smallest type in the app",
       "where": "index.html:72 (.when)",
-      "fix": "Raise to 0.9375rem and change the basis to min-width with flex-shrink:0 (see Risky #6 — 70px overflows once type grows)."
+      "fix": "Raise to 0.9375rem and change the basis to min-width with flex-shrink:0 (see Risky #6 to 70px overflows once type grows)."
     },
     {
-      "issue": "Card titles are 12.8px uppercase muted — smaller and lower-contrast than the body text beneath them, so cards read as a flat undifferentiated stack with no scannable headings",
+      "issue": "Card titles are 12.8px uppercase muted, smaller and lower-contrast than the body text beneath them, so cards read as a flat undifferentiated stack with no scannable headings",
       "where": "index.html:43 (section.card h2)",
       "fix": "Either commit to the micro-label (raise to 13px, use --ink, add tracking) or switch to a real 1.0625rem semibold title in --ink."
     },
     {
-      "issue": "The h1 is 18.4px against 16px body — a 1.15x ratio gives the page essentially no typographic hierarchy at the top level",
+      "issue": "The h1 is 18.4px against 16px body, a 1.15x ratio gives the page essentially no typographic hierarchy at the top level",
       "where": "index.html:39 (header.app h1)",
       "fix": "Adopt a real type scale; h1 at ~1.375rem/22px semibold."
     },
     {
-      "issue": "The per-row delete button computes to roughly 29x33px — far under the 44px minimum, and it is the one destructive control in the app, sitting where the thumb rests while scrolling",
+      "issue": "The per-row delete button computes to roughly 29x33px, far under the 44px minimum, and it is the one destructive control in the app, sitting where the thumb rests while scrolling",
       "where": "index.html:66 (.btn.small) applied at app.js:157",
       "fix": "Give it a 44x44 hit area (padding or a ::before inset overlay) while keeping the glyph small; better, move destroy behind a swipe or a row menu."
     },
     {
-      "issue": "Tip jar pill computes to ~34px tall — under the 44px tap minimum, and it sits in the header next to no other targets so there is room to grow it",
+      "issue": "Tip jar pill computes to ~34px tall, under the 44px tap minimum, and it sits in the header next to no other targets so there is room to grow it",
       "where": "index.html:41 (a.tipbtn), markup index.html:92",
       "fix": "Raise vertical padding to 11px for a 44px target."
     },
@@ -106,17 +106,17 @@
       "fix": "Take body to 1.55 and list rows to 1.5; .status already overrides to 1.6 (index.html:44), which proves the 1.45 default was too tight."
     },
     {
-      "issue": "The name field is invisible as a field: its fill is --bg on a --card parent (1.08:1 light, 1.09:1 dark) with a --line border at 1.26:1 — a first-time user cannot tell there is an input there at all",
+      "issue": "The name field is invisible as a field: its fill is --bg on a --card parent (1.08:1 light, 1.09:1 dark) with a --line border at 1.26:1, a first-time user cannot tell there is an input there at all",
       "where": "index.html:57-60 (input[type=text]) inside section.card index.html:95-98",
       "fix": "Give the input a border at >=3:1 against the card, or invert the relationship (card stays white, field gets a real outline plus a visible label)."
     },
     {
-      "issue": "Secondary buttons have a --line border at 1.26:1 against the card — Copy / Export / Import have effectively no visible boundary and read as floating text, not controls",
+      "issue": "Secondary buttons have a --line border at 1.26:1 against the card, Copy / Export / Import have effectively no visible boundary and read as floating text, not controls",
       "where": "index.html:65 (.btn), used at index.html:123,136,137",
       "fix": "Border >=3:1 against the card surface, or give .btn a filled --chip background."
     },
     {
-      "issue": "No primary/secondary distinction anywhere: 'Copy today's summary' (the payoff action of the whole app) is visually identical to 'Import' (the most destructive one) — same .btn, same border, same weight",
+      "issue": "No primary/secondary distinction anywhere: 'Copy today's summary' (the payoff action of the whole app) is visually identical to 'Import' (the most destructive one), same .btn, same border, same weight",
       "where": "index.html:123 vs 136-137 (.btn)",
       "fix": "Introduce .btn--primary (filled --accent) for Copy, keep .btn for Export, and demote Import to a quiet tertiary style."
     },
@@ -126,7 +126,7 @@
       "fix": "Raise horizontal padding to 10-12px and allow the label to wrap, or drop the label to 0.875rem with more padding; verify at 320px."
     },
     {
-      "issue": "Seven near-identical giant buttons stacked in one card, differentiated only by a 1px border color and an emoji — a wall of undifferentiated controls where feed, sleep, and diaper are three unrelated actions",
+      "issue": "Seven near-identical giant buttons stacked in one card, differentiated only by a 1px border color and an emoji, a wall of undifferentiated controls where feed, sleep, and diaper are three unrelated actions",
       "where": "index.html:100-117 (single section.card holding three .bigbtns groups)",
       "fix": "Split into three cards, or give each group a tinted surface so the border color is not the only grouping signal (see A11y: border color alone also fails for color-blind users)."
     },
@@ -138,37 +138,37 @@
   ],
   "navigationDefects": [
     {
-      "issue": "Deleting a timeline entry is instant and irreversible — one click, no confirm, no undo, no trash. The toast system that could offer 'Undo' already exists and is not used for it.",
+      "issue": "Deleting a timeline entry is instant and irreversible, one click, no confirm, no undo, no trash. The toast system that could offer 'Undo' already exists and is not used for it.",
       "where": "app.js:157-161 (delete handler), app.js:26-32 (toast)",
-      "fix": "Delete optimistically but show an 'Entry deleted — Undo' toast for ~6s holding the removed event; only then commit. Keep the target away from scroll gestures."
+      "fix": "Delete optimistically but show an 'Entry deleted, Undo' toast for ~6s holding the removed event; only then commit. Keep the target away from scroll gestures."
     },
     {
-      "issue": "Import silently REPLACES the entire log — name and all events — on any file that parses. No confirmation, no merge option, no warning text, and no undo. A parent who taps Import and picks the wrong JSON loses weeks of data permanently.",
+      "issue": "Import silently REPLACES the entire log, name and all events, on any file that parses. No confirmation, no merge option, no warning text, and no undo. A parent who taps Import and picks the wrong JSON loses weeks of data permanently.",
       "where": "app.js:217-222 (data = {...} wholesale reassign), triggered index.html:136-138",
       "fix": "Confirm before replacing ('This replaces your current log of N entries'), and keep a one-shot in-memory snapshot so the post-import toast can offer Undo. Consider merge-by-id as the default."
     },
     {
-      "issue": "Import is styled identically to Export and sits immediately beside it in the same flex row — the destructive action is visually indistinguishable from the safe one and is one thumb-width away",
+      "issue": "Import is styled identically to Export and sits immediately beside it in the same flex row, the destructive action is visually indistinguishable from the safe one and is one thumb-width away",
       "where": "index.html:135-139 (.row with #exportBtn and #importBtn both .btn)",
       "fix": "Make Export the visible action; demote Import to a quiet link or move it behind a 'Restore a backup' disclosure below the row."
     },
     {
       "issue": "The user is never told their work is saved. save() is fire-and-forget and only ever speaks on FAILURE, and even then at most once per 60 seconds. The toast after each tap says 'Logged ✓' but nothing ever confirms persistence to the device.",
       "where": "app.js:72-80 (save), app.js:186 (toast 'Logged ✓')",
-      "fix": "Await the dbPut and reflect real state — 'Saved on this device' in the Timeline card footer, or a timestamp like 'All changes saved'. The privacy promise is the product; make persistence visible."
+      "fix": "Await the dbPut and reflect real state, 'Saved on this device' in the Timeline card footer, or a timestamp like 'All changes saved'. The privacy promise is the product; make persistence visible."
     },
     {
       "issue": "The empty state does not teach. A first-time user sees an empty bordered box labeled 'Timeline' with a 12.8px caption beneath it, and 'Feeds: 0 / Sleep: 0m / Diapers: 0' in Today.",
       "where": "index.html:128-132 (#timeline empty, #emptyHint), app.js:145",
-      "fix": "Render a real empty state inside the list area — an icon, a 15px line explaining that taps land here with their time, and the delete affordance shown once. Give Today a first-run line instead of three zeros."
+      "fix": "Render a real empty state inside the list area, an icon, a 15px line explaining that taps land here with their time, and the delete affordance shown once. Give Today a first-run line instead of three zeros."
     },
     {
-      "issue": "No primary action is designated on the page. The three-across giant buttons are all equal weight, and among the utility buttons 'Copy today's summary' — the whole point of the Today card — looks like every other button.",
+      "issue": "No primary action is designated on the page. The three-across giant buttons are all equal weight, and among the utility buttons 'Copy today's summary', the whole point of the Today card, looks like every other button.",
       "where": "index.html:102-116 (.bigbtns), index.html:123 (#copyBtn)",
       "fix": "Promote #copyBtn to a filled primary. Within .bigbtns, let the most-likely-next action (alternating feed side, already computed at app.js:114) carry emphasis."
     },
     {
-      "issue": "The timeline renders up to 200 rows in one uncollapsed card with no jump-to-top, no day collapse, no filter, and no pagination — after a week the page is many screens tall and the log buttons are far above",
+      "issue": "The timeline renders up to 200 rows in one uncollapsed card with no jump-to-top, no day collapse, no filter, and no pagination, after a week the page is many screens tall and the log buttons are far above",
       "where": "app.js:144 (.slice(0, 200)), index.html:128-132",
       "fix": "Collapse to today plus 'Show earlier', or add a sticky day header and a back-to-top control. Keep the giant buttons reachable."
     },
@@ -183,7 +183,7 @@
       "fix": "Out of scope for a restyle, but reserve room in the row layout for an edit affordance so the new component contract does not have to change again."
     },
     {
-      "issue": "The name field's only label is a placeholder, which disappears on first keystroke — the purpose of the app's one text field is unrecoverable once filled, and it is the very first thing on the page",
+      "issue": "The name field's only label is a placeholder, which disappears on first keystroke, the purpose of the app's one text field is unrecoverable once filled, and it is the very first thing on the page",
       "where": "index.html:96 (input#nameInput placeholder=\"Baby's name (optional)\")",
       "fix": "Add a persistent visible <label> above the field (this also fixes the accessible-name failure)."
     },
@@ -200,7 +200,7 @@
   ],
   "a11yDefects": [
     {
-      "issue": "The name input has no accessible name — placeholder only, no <label>, no aria-label, no title. Screen readers announce 'edit text, blank' or read the placeholder inconsistently. Fails 4.1.2 and 3.3.2.",
+      "issue": "The name input has no accessible name, placeholder only, no <label>, no aria-label, no title. Screen readers announce 'edit text, blank' or read the placeholder inconsistently. Fails 4.1.2 and 3.3.2.",
       "where": "index.html:96 (input#nameInput)",
       "fix": "Add <label for=\"nameInput\">Baby's name (optional)</label> as visible text above the field."
     },
@@ -210,22 +210,22 @@
       "fix": "Light: use --accent #7c3aed (5.7:1 on card). Dark: use #c4b5fd or --accent #a78bfa (6.26:1 on card). Add outline-offset:2px so the ring clears the control's own border."
     },
     {
-      "issue": "The active sleep button puts #fff on --sleep #60a5fa in dark mode = 2.54:1, well under 4.5:1. This is the app's single most important state ('baby is asleep, tap to wake') and it is unreadable at night — the exact condition the app is built for. A focus ring on that same button computes 2.79:1.",
+      "issue": "The active sleep button puts #fff on --sleep #60a5fa in dark mode = 2.54:1, well under 4.5:1. This is the app's single most important state ('baby is asleep, tap to wake') and it is unreadable at night, the exact condition the app is built for. A focus ring on that same button computes 2.79:1.",
       "where": "index.html:56 (.bigbtns button.active), dark --sleep index.html:27",
       "fix": "In dark mode set .active color to a dark ink (e.g. #10192e on #60a5fa = 11:1) rather than #fff, or tint the surface instead of filling it."
     },
     {
-      "issue": "Every delete button in the timeline has the identical accessible name 'Delete entry'. A screen-reader user tabbing the list hears 'Delete entry' N times with no way to know which row is which — the row's time and label live in sibling spans, not in the button's name.",
+      "issue": "Every delete button in the timeline has the identical accessible name 'Delete entry'. A screen-reader user tabbing the list hears 'Delete entry' N times with no way to know which row is which, the row's time and label live in sibling spans, not in the button's name.",
       "where": "app.js:157 ('aria-label': 'Delete entry')",
       "fix": "Build the name from the row data: aria-label = `Delete ${timeOf(e.ts)} ${label}` (strip the emoji from KIND_TEXT for the label)."
     },
     {
       "issue": "Day headers are <div class=\"dayhead\"> appended as DIRECT CHILDREN of <ul id=\"timeline\">. Invalid HTML (ul permits only li/script/template); screen readers report a wrong list item count and may drop or mis-order the headers.",
       "where": "app.js:150 (list.append(el('div', {class:'dayhead'}))) into ul index.html:130",
-      "fix": "Emit <li class=\"dayhead\" role=\"presentation\"> wrapping a heading, or split into one <ul> per day preceded by a real <h3>. This is also a restyle hazard — see Risky."
+      "fix": "Emit <li class=\"dayhead\" role=\"presentation\"> wrapping a heading, or split into one <ul> per day preceded by a real <h3>. This is also a restyle hazard, see Risky."
     },
     {
-      "issue": "#status and #summary are wholly rewritten by replaceChildren on every log and every 30 seconds, but neither is a live region — a screen-reader user who logs a feed never hears that 'Last feed: just now' or that the baby is now marked asleep. The toast is the only announcement channel in the entire app.",
+      "issue": "#status and #summary are wholly rewritten by replaceChildren on every log and every 30 seconds, but neither is a live region, a screen-reader user who logs a feed never hears that 'Last feed: just now' or that the baby is now marked asleep. The toast is the only announcement channel in the entire app.",
       "where": "index.html:97 (#status), index.html:121 (#summary), app.js:103,134,232",
       "fix": "Make #status aria-live=\"polite\" but suppress announcements from the 30s interval (only announce when the rendered text changed due to user action), otherwise it will speak every 30 seconds."
     },
@@ -235,17 +235,17 @@
       "fix": "Add aria-pressed and keep it in sync in renderStatus; retain the label swap. Do not rely on background color to carry the state."
     },
     {
-      "issue": "Decorative emoji are exposed to screen readers everywhere: the .em spans announce as 'woman feeding baby Left' / 'water wave Both', and the KIND_TEXT labels embed emoji directly into timeline row text ('💩 Diaper — dirty' reads as 'pile of poo Diaper dash dirty').",
+      "issue": "Decorative emoji are exposed to screen readers everywhere: the .em spans announce as 'woman feeding baby Left' / 'water wave Both', and the KIND_TEXT labels embed emoji directly into timeline row text ('💩 Diaper, dirty' reads as 'pile of poo Diaper dash dirty').",
       "where": "index.html:103-115 (span.em), app.js:95-100 (KIND_TEXT), app.js:161 (✕ glyph)",
       "fix": "Add aria-hidden=\"true\" to every span.em; split KIND_TEXT into an emoji field and a text field and render the emoji in an aria-hidden span."
     },
     {
-      "issue": "Footer links use color:inherit with no underline, so 'Sky Wolf Studio's and 'Feedback' are pixel-identical to the muted prose around them — they are not discoverable as links by any visual means, and at 12.5px they are the smallest text on the page.",
+      "issue": "Footer links use color:inherit with no underline, so 'Sky Wolf Studio's and 'Feedback' are pixel-identical to the muted prose around them, they are not discoverable as links by any visual means, and at 12.5px they are the smallest text on the page.",
       "where": "index.html:145 (<a style=\"color:inherit\">)",
       "fix": "Underline them and use a link color at >=4.5:1; drop the inline style so the design system can own it."
     },
     {
-      "issue": "The only focus rule is :focus-visible with no plain :focus fallback, so on engines lacking :focus-visible support there is no focus indicator at all — combined with the contrast failure above, keyboard operation is effectively blind.",
+      "issue": "The only focus rule is :focus-visible with no plain :focus fallback, so on engines lacking :focus-visible support there is no focus indicator at all, combined with the contrast failure above, keyboard operation is effectively blind.",
       "where": "index.html:61",
       "fix": "Ship a :focus base rule and refine with :focus-visible, or use the :focus:not(:focus-visible){outline:none} pattern."
     },
@@ -255,24 +255,24 @@
       "fix": "Add a skip link past the timeline, name the sections with aria-labelledby so landmark navigation works, and/or collapse older days so the tab sequence stays short."
     },
     {
-      "issue": "Heading structure is muddled: two of the five cards have no heading at all, while one card contains three sibling h2s (Feed/Sleep/Diaper) for three visually separate control groups — so the h2 level describes both 'a whole card' and 'a group inside a card'.",
+      "issue": "Heading structure is muddled: two of the five cards have no heading at all, while one card contains three sibling h2s (Feed/Sleep/Diaper) for three visually separate control groups, so the h2 level describes both 'a whole card' and 'a group inside a card'.",
       "where": "index.html:95 and index.html:134 (headingless sections); index.html:101,107,111 (three h2 in one section)",
       "fix": "Give every card an h2 and add aria-labelledby on the sections; either split the log card into three cards or demote Feed/Sleep/Diaper to h3 under a single card h2."
     }
   ],
-  "printSupport": "There is NO @media print block anywhere — verified by grep; the only @media in the file is the dark-scheme token override at index.html:23. There is no window.print() call, no @page rule, no canvas, and no PDF pipeline.\n\nIs print core here? Not primary, but genuinely secondary and currently unserved. The app's stated artifact is a *copied text* summary — #copyBtn writes summaryText() to the clipboard for pasting to a partner (app.js:193-199, model.js:81-94). But the hint at index.html:125 explicitly names the other use case: \"read it to the pediatrician.\" Bringing a feed/sleep/diaper log to a well-baby or weight-check visit is a real, common errand, and a paper or PDF handout is what pediatricians actually accept. A one-week printable log is a plausible, high-value addition.\n\nWhat is broken if a parent prints today: (1) every interactive control prints — the name input box, all seven giant emoji buttons with their colored borders, Copy/Export/Import, and a ✕ next to every single timeline row, all of it meaningless ink; (2) #toast is position:fixed (index.html:76-80) so if a toast is showing when print fires it will be stamped onto page one, and fixed-position elements can repeat per page in some engines; (3) the dark-scheme tokens (index.html:23-29) apply if the user's OS is in dark mode, so the print can come out as light text on card backgrounds that mostly do not print — an unreadable page; (4) the card borders and 16px radii print as boxes around everything; (5) .wrap caps content at 560px, wasting roughly half of a Letter/A4 width, and body padding-bottom:40px is meaningless on paper; (6) no page-break control at all — .dayhead (index.html:73) can orphan at the foot of a page, splitting a day from its entries, and ul.plain li rows can break mid-row; (7) nothing identifies the printout: no baby name, no date range, no title in the printed output — the h1 is just \"Baby Log\".\n\nWhat the overhaul should add: an @media print block that hides header.app, .bigbtns and their h2s, the .row button groups, #toast, .hint, and the per-row delete buttons; forces a light palette with color-adjust:exact only where needed; drops .wrap's max-width and card chrome; sets .dayhead { break-after: avoid } and ul.plain li { break-inside: avoid }; and prints a header line composed of data.name plus the date range. A \"Print log\" button next to Copy would make the pediatrician path first-class.",
+  "printSupport": "There is NO @media print block anywhere, verified by grep; the only @media in the file is the dark-scheme token override at index.html:23. There is no window.print() call, no @page rule, no canvas, and no PDF pipeline.\n\nIs print core here? Not primary, but genuinely secondary and currently unserved. The app's stated artifact is a *copied text* summary, #copyBtn writes summaryText() to the clipboard for pasting to a partner (app.js:193-199, model.js:81-94). But the hint at index.html:125 explicitly names the other use case: \"read it to the pediatrician.\" Bringing a feed/sleep/diaper log to a well-baby or weight-check visit is a real, common errand, and a paper or PDF handout is what pediatricians actually accept. A one-week printable log is a plausible, high-value addition.\n\nWhat is broken if a parent prints today: (1) every interactive control prints, the name input box, all seven giant emoji buttons with their colored borders, Copy/Export/Import, and a ✕ next to every single timeline row, all of it meaningless ink; (2) #toast is position:fixed (index.html:76-80) so if a toast is showing when print fires it will be stamped onto page one, and fixed-position elements can repeat per page in some engines; (3) the dark-scheme tokens (index.html:23-29) apply if the user's OS is in dark mode, so the print can come out as light text on card backgrounds that mostly do not print, an unreadable page; (4) the card borders and 16px radii print as boxes around everything; (5) .wrap caps content at 560px, wasting roughly half of a Letter/A4 width, and body padding-bottom:40px is meaningless on paper; (6) no page-break control at all, .dayhead (index.html:73) can orphan at the foot of a page, splitting a day from its entries, and ul.plain li rows can break mid-row; (7) nothing identifies the printout: no baby name, no date range, no title in the printed output, the h1 is just \"Baby Log\".\n\nWhat the overhaul should add: an @media print block that hides header.app, .bigbtns and their h2s, the .row button groups, #toast, .hint, and the per-row delete buttons; forces a light palette with color-adjust:exact only where needed; drops .wrap's max-width and card chrome; sets .dayhead { break-after: avoid } and ul.plain li { break-inside: avoid }; and prints a header line composed of data.name plus the date range. A \"Print log\" button next to Copy would make the pediatrician path first-class.",
   "riskyToRestyle": [
-    "sw.js precaches an explicit ASSETS list (sw.js:3) that has no CSS entry because all CSS is inline in index.html. If the overhaul extracts styles to a shared stylesheet, it MUST be added to ASSETS and VERSION bumped from 'baby-v4' (sw.js:2) — otherwise the file is never precached and offline users (the 3am use case, per README) get an unstyled page.",
+    "sw.js precaches an explicit ASSETS list (sw.js:3) that has no CSS entry because all CSS is inline in index.html. If the overhaul extracts styles to a shared stylesheet, it MUST be added to ASSETS and VERSION bumped from 'baby-v4' (sw.js:2), otherwise the file is never precached and offline users (the 3am use case, per README) get an unstyled page.",
     "sw.js:14-20 is stale-while-revalidate (`return cached || fetched`): returning PWA users are served the OLD cached index.html on first load after deploy and only see the restyle on the SECOND launch. Expect 'the redesign didn't ship' reports. Bumping VERSION plus skipWaiting/clients.claim (already present, sw.js:5,9) mitigates but does not eliminate the one-load lag.",
     "index.html:108 carries an INLINE style=\"grid-template-columns:1fr\" that is the only reason the sleep button spans full width. It overrides .bigbtns' 3-column grid. Replacing .bigbtns with flex, or normalizing away inline styles, silently collapses the sleep button into a 1/3-width column. Convert to a .bigbtns--single modifier before touching the grid.",
     "app.js:150 appends div.dayhead as a DIRECT CHILD of ul#timeline. Any new rule using `ul.plain > li`, :nth-child/:nth-of-type striping, `display:grid` on the ul, or `li + li` borders will be thrown off by these non-li children. Fix the markup and the CSS together, never the CSS alone.",
     ".hidden is display:none !important (index.html:83) and is applied to input#importFile (index.html:138). Swapping .hidden for a visually-hidden/clip pattern makes the file input a stray keyboard tab stop AND a flex:1 child of .row (index.html:62-63), stealing a third of the export row's width.",
-    ".when is flex:0 0 70px at 12.8px (index.html:72). Raising the timestamp to 15-16px per the new type scale overflows '12:45 PM' out of a basis that cannot grow — and 24-hour or longer locale formats overflow sooner. Change to flex:0 0 auto with a min-width, not a fixed basis.",
+    ".when is flex:0 0 70px at 12.8px (index.html:72). Raising the timestamp to 15-16px per the new type scale overflows '12:45 PM' out of a basis that cannot grow, and 24-hour or longer locale formats overflow sooner. Change to flex:0 0 auto with a min-width, not a fixed basis.",
     "Six selectors are tag-qualified and break silently if the element changes: header.app (index.html:37), a.tipbtn (41), section.card (42-43), ul.plain (68-71), footer.colophon (82), and .bigbtns button (48). A component library that renders .card as a <div> or .tipbtn as a <button> loses all styling with no error.",
     "The click hook for all six log buttons is the [data-kind] ATTRIBUTE, not a class (app.js:182-184), and the payload is data-detail. Rebuilding the button markup from a design-system template will stop logging entirely unless both data attributes are preserved on the button element itself.",
-    "Twelve getElementById lookups are the JS/DOM contract: toast, status, sleepLabel, sleepBtn, summary, timeline, emptyHint, nameInput, copyBtn, exportBtn, importBtn, importFile, tipLink (app.js:9 and throughout). Renaming or wrapping any of these ids throws at init and the app renders nothing — app.js:236 wire() runs before any try/catch.",
+    "Twelve getElementById lookups are the JS/DOM contract: toast, status, sleepLabel, sleepBtn, summary, timeline, emptyHint, nameInput, copyBtn, exportBtn, importBtn, importFile, tipLink (app.js:9 and throughout). Renaming or wrapping any of these ids throws at init and the app renders nothing, app.js:236 wire() runs before any try/catch.",
     "#sleepLabel is a nested <span> inside #sleepBtn whose textContent is swapped between 'Fell asleep' and 'Woke up' (index.html:109, app.js:118). Flattening the button to a single text node, or moving the label into a ::before/content, breaks the toggle's only textual state signal.",
     "Three JS-toggled state classes carry all dynamic appearance and are not obvious from the stylesheet alone: .active on #sleepBtn (app.js:119), .show on #toast (app.js:29,31), .hidden on #emptyHint and #tipLink (app.js:145,240). Any renaming must be done in both files simultaneously.",
-    "There is NO safety net for UI changes: test/model.test.mjs (8 tests, all passing) imports only pure functions from model.js and asserts nothing about the DOM, class names, or markup. Nothing will fail if the restyle breaks the page — verify manually, especially the sleep toggle, delete, import, and the 30s re-render."
+    "There is NO safety net for UI changes: test/model.test.mjs (8 tests, all passing) imports only pure functions from model.js and asserts nothing about the DOM, class names, or markup. Nothing will fail if the restyle breaks the page, verify manually, especially the sleep toggle, delete, import, and the 30s re-render."
   ]
 }

@@ -4,25 +4,25 @@
     "personas": [
       {
         "name": "Dev Rasmussen",
-        "who": "47, runs a two-truck taco business. The research's first archetype — the burned one. Paid qr-code-generator.com $119.88 twice ('Charged for a subscription I never knew I had', Marcus D, SmartCustomer) and had a loyalty code die on 500 already-printed punch cards. Competent with software, actively hostile to anything that smells like a trial.",
+        "who": "47, runs a two-truck taco business. The research's first archetype, the burned one. Paid qr-code-generator.com $119.88 twice ('Charged for a subscription I never knew I had', Marcus D, SmartCustomer) and had a loyalty code die on 500 already-printed punch cards. Competent with software, actively hostile to anything that smells like a trial.",
         "context": "Desktop Chrome at 1280px, 11:40 on a Tuesday between prep and service, coffee going cold. He gave the last three tools about eight seconds each before closing the tab.",
         "task": "Satisfy himself that this one cannot be switched off, then remake the loyalty-card link so he can send it to the printer this afternoon.",
-        "verdict": "Stayed — the hero sentence and the absence of any pricing surface bought him the eight seconds. Made the code in under a minute. But he never got the proof he came for, and he closed the tab holding a file called qr-code.png with no record anywhere of what is inside it.",
+        "verdict": "Stayed, the hero sentence and the absence of any pricing surface bought him the eight seconds. Made the code in under a minute. But he never got the proof he came for, and he closed the tab holding a file called qr-code.png with no record anywhere of what is inside it.",
         "delights": [
-          "No card field, no plan table, no 'upgrade', no counter, no signup — verified across the whole DOM. The only money surface is a 36px '♥ Tip jar' text pill in the header, and it never appears on the download path. Exactly what the research demands of an app selling to people who arrived from a $190 surprise charge.",
+          "No card field, no plan table, no 'upgrade', no counter, no signup, verified across the whole DOM. The only money surface is a 36px '♥ Tip jar' text pill in the header, and it never appears on the download path. Exactly what the research demands of an app selling to people who arrived from a $190 surprise charge.",
           "It genuinely works with the network off. Service worker registers, and a reload with the browser context set offline came back with all five type buttons and a live canvas. That is the one claim the redirect-based competitors structurally cannot make.",
-          "Download SVG is right there as a peer of Download PNG, free, no account — the file that is behind Canva Pro and behind a signup at qr-code-generator.com. Decoded correctly from the exported SVG on every payload tested."
+          "Download SVG is right there as a peer of Download PNG, free, no account, the file that is behind Canva Pro and behind a signup at qr-code-generator.com. Decoded correctly from the exported SVG on every payload tested."
         ],
         "frictions": [
           {
             "what": "Nowhere on the page does it show what is actually encoded. Verified: `/WIFI:T:/` and the URL string appear nowhere in document.innerText, and there is no monospace readout, no byte count, no copy button. He typed `thecorner.cafe/menu`; helpers.js:16 silently rewrote it to `https://thecorner.cafe/menu` and he was never told.",
             "severity": "blocker",
-            "whyItMatters": "The research calls this the single highest-value addition and the entire product argument: 'print the exact encoded string underneath the preview, character for character, with a byte count… no competitor will copy it because for most of them it would expose their redirect host.' Without it the app makes the same unverifiable promise as the clone swarm whose page titles already read 'no sign-up, no expiry, no watermark'. It also hides every silent rewrite this app performs — see Nadia's and Tobias's findings."
+            "whyItMatters": "The research calls this the single highest-value addition and the entire product argument: 'print the exact encoded string underneath the preview, character for character, with a byte count… no competitor will copy it because for most of them it would expose their redirect host.' Without it the app makes the same unverifiable promise as the clone swarm whose page titles already read 'no sign-up, no expiry, no watermark'. It also hides every silent rewrite this app performs, see Nadia's and Tobias's findings."
           },
           {
-            "what": "The value proposition is the smallest text on the page and it is off-centre. `.promise` (index.html:1256) is hardcoded to .85rem — 13.6px, measured — while body text runs 16px. At 1280px its centre sits at x=594 against the QR code's centre at x=640: 46px off-axis, because it is text-align:center inside a max-width:64ch box with no margin-inline:auto.",
+            "what": "The value proposition is the smallest text on the page and it is off-centre. `.promise` (index.html:1256) is hardcoded to .85rem, 13.6px, measured, while body text runs 16px. At 1280px its centre sits at x=594 against the QR code's centre at x=640: 46px off-axis, because it is text-align:center inside a max-width:64ch box with no margin-inline:auto.",
             "severity": "minor",
-            "whyItMatters": "'Print it as big as a billboard — it will scan in 20 years' is the sentence he came to read, rendered smaller than the field labels and visibly misaligned under the code. The `.trust` component that exists for exactly this — a privacy stamp with an icon — is fully styled at index.html:437 and used by zero elements in the markup."
+            "whyItMatters": "'Print it as big as a billboard, it will scan in 20 years' is the sentence he came to read, rendered smaller than the field labels and visibly misaligned under the code. The `.trust` component that exists for exactly this, a privacy stamp with an icon, is fully styled at index.html:437 and used by zero elements in the markup."
           },
           {
             "what": "Nothing is saved. localStorage held 0 bytes before and after a full session; a reload wiped the SSID, the password, the error-correction level (H → M) and the PNG size (2048 → 1024), and reset the type to Link. No warning of any kind: `/nothing is saved|not saved|download before/i` matched nothing in the page text.",
@@ -30,7 +30,7 @@
             "whyItMatters": "The research quotes 'They deleted my QR code and there is no way to retrieve it… No customer service' (Stephen B, Capterra) and answers it with a device-local history. Today this app is worse than the dashboard it criticises: the dashboard at least remembers. In two years when the punch cards get reprinted, the only record is a file called qr-code.png in his Downloads folder."
           },
           {
-            "what": "Every export is named `qr-code.png` or `qr-code.svg`, regardless of type, content or label. Verified across all 40 exports in the round-trip run — the filename never varies (app.js:151, app.js:158).",
+            "what": "Every export is named `qr-code.png` or `qr-code.svg`, regardless of type, content or label. Verified across all 40 exports in the round-trip run, the filename never varies (app.js:151, app.js:158).",
             "severity": "major",
             "whyItMatters": "One code is fine. Two is `qr-code (1).png` and a coin flip. This is the mechanism by which the durable asset gets lost, which is the exact failure the research says the local history is meant to prevent."
           }
@@ -43,7 +43,7 @@
         "task": "A framed WiFi card for the guest tables, and a table-tent menu link she can print eight-up on card stock tonight.",
         "verdict": "Got two files and no confidence. She could not answer the print shop's question from anything the app told her, and when she tried Cmd+P as a shortcut she got a sheet with her own WiFi password printed on it in a box.",
         "delights": [
-          "'Toughness (survives smudges) — Standard / High / Maximum' is better wording than any competitor's raw L/M/Q/H, and changing it visibly redraws the code so she could see it getting denser.",
+          "'Toughness (survives smudges), Standard / High / Maximum' is better wording than any competitor's raw L/M/Q/H, and changing it visibly redraws the code so she could see it getting denser.",
           "The SVG export is genuinely correct: one path of module squares with shape-rendering=\"crispEdges\" and a 4-module quiet zone, and it decoded cleanly when rasterised at 1480px and 2960px. This is the file the print shop asked for and it cost nothing."
         ],
         "frictions": [
@@ -53,46 +53,46 @@
             "whyItMatters": "The research is blunt: 'Stop selling PNG by pixel count, which means nothing to anyone.' She needs 'a 2cm code at 600 DPI' (472px) and 'a 4cm table tent'. She is instead offered three numbers, one of which quietly hands her 354px when she asked for 512. Nothing in the UI states a physical size, a DPI, or the 10:1 scanning-distance rule the whole category's troubleshooting literature is built on."
           },
           {
-            "what": "Cmd+P prints the marketing copy, both dropdowns, both download buttons, the whole input form — and the WiFi password in clear text. Measured under print media at 1280px: .hero visible 1280x147, #fields visible 1230x322 with the password input still holding 'hunter2secret' as a type=\"text\" value, #pngSize 130x48, #ecLevel 1092x48, #dlPng 611x44, #dlSvg 611x44, .promise 498x21. `.seg` IS hidden (index.html:1196), so the printed sheet shows input boxes with no indication what kind of code they describe.",
+            "what": "Cmd+P prints the marketing copy, both dropdowns, both download buttons, the whole input form, and the WiFi password in clear text. Measured under print media at 1280px: .hero visible 1280x147, #fields visible 1230x322 with the password input still holding 'hunter2secret' as a type=\"text\" value, #pngSize 130x48, #ecLevel 1092x48, #dlPng 611x44, #dlSvg 611x44, .promise 498x21. `.seg` IS hidden (index.html:1196), so the printed sheet shows input boxes with no indication what kind of code they describe.",
             "severity": "blocker",
-            "whyItMatters": "The app's own copy tells her to print it — index.html:1305 'Print it as big as a billboard' and the WiFi hint at app.js:87 'Stick it on the fridge or frame it for the guest room.' The obvious gesture produces a page of sales text, dead form controls, and her network password in a bordered box she might hand to a customer. There is no .printonly element anywhere in the markup and no Print button."
+            "whyItMatters": "The app's own copy tells her to print it, index.html:1305 'Print it as big as a billboard' and the WiFi hint at app.js:87 'Stick it on the fridge or frame it for the guest room.' The obvious gesture produces a page of sales text, dead form controls, and her network password in a bordered box she might hand to a customer. There is no .printonly element anywhere in the markup and no Print button."
           },
           {
-            "what": "The printed code comes out at 96 DPI. Measured under print media: the canvas is 296 CSS px from a 296px backing store — 3.08 inches, 78mm, at an effective 96 DPI.",
+            "what": "The printed code comes out at 96 DPI. Measured under print media: the canvas is 296 CSS px from a 296px backing store, 3.08 inches, 78mm, at an effective 96 DPI.",
             "severity": "major",
-            "whyItMatters": "Every guide in the category — including qr-code-generator.com's own 'Blurred QR Code' post the research cites — says 300 DPI minimum and 600 for small codes. The browser print path silently produces a third of that, at a size nobody chose, from a canvas when a resolution-independent SVG is already sitting in helpers.js:41."
+            "whyItMatters": "Every guide in the category, including qr-code-generator.com's own 'Blurred QR Code' post the research cites, says 300 DPI minimum and 600 for small codes. The browser print path silently produces a third of that, at a size nobody chose, from a canvas when a resolution-independent SVG is already sitting in helpers.js:41."
           },
           {
             "what": "There is no batch anything. One code at a time, in-memory only. Eight table tents means eight rounds of retype-and-download, and eight files called qr-code.png.",
             "severity": "major",
-            "whyItMatters": "The research names batch generation as 'the sharpest wedge we have' — it is the paid tier at QR Code Generator Pro, QR TIGER and Uniqode, and it is pure client-side arithmetic here. 'A restaurant numbering twenty tables… hits the wall on the first afternoon' is meant to describe the competitors."
+            "whyItMatters": "The research names batch generation as 'the sharpest wedge we have', it is the paid tier at QR Code Generator Pro, QR TIGER and Uniqode, and it is pure client-side arithmetic here. 'A restaurant numbering twenty tables… hits the wall on the first afternoon' is meant to describe the competitors."
           }
         ]
       },
       {
         "name": "Nadia Haddad",
-        "who": "44, runs a community centre with a cafe attached. Signage goes out in two languages. Grounded in the research's WiFi complaint — Apple Support threads 'QR Code to join Wifi does not work' where 'even a stray space can cause inconsistent behavior across scanners' — and in the small-operator archetype.",
+        "who": "44, runs a community centre with a cafe attached. Signage goes out in two languages. Grounded in the research's WiFi complaint, Apple Support threads 'QR Code to join Wifi does not work' where 'even a stray space can cause inconsistent behavior across scanners', and in the small-operator archetype.",
         "context": "Windows laptop, 1280px, Thursday evening after the drop-in session. Phone in hand because she always tests a code by scanning it before it goes on a wall.",
         "task": "A WiFi card for the network 'Café Ñoño' and an Arabic-language sign pointing at the timetable.",
         "verdict": "Both codes are broken and the app told her they were fine. She tested with her own phone, got nothing, assumed her camera was at fault, tried three times, and left.",
         "frictions": [
           {
-            "what": "Non-ASCII characters are silently corrupted. vendor-qrcode.js:737-748 ships `qrcode.stringToBytes` as the 'default' function, which does `bytes.push(s.charCodeAt(i) & 0xff)` — it truncates every UTF-16 code unit to one byte — and app.js:120 never overrides it. Measured by decoding the rendered code and reading the raw bytes: 'Café Guest' encodes as [67,97,102,233,…] where UTF-8 requires [67,97,102,195,169,…]; a decoder returns an empty string. '日本語のメニュー' encodes as 8 junk bytes [229,44,158,110,225,203,229,252] and decodes to nothing. 'Привет' decodes as `\u001f@825B`. 'قائمة الطعام' decodes as `B'&E) 'D79'E`. '🍕 Pizza' decodes as `<U Pizza`. Only pure ASCII survives — the control 'Cafe Guest' round-tripped byte-for-byte.",
+            "what": "Non-ASCII characters are silently corrupted. vendor-qrcode.js:737-748 ships `qrcode.stringToBytes` as the 'default' function, which does `bytes.push(s.charCodeAt(i) & 0xff)`, it truncates every UTF-16 code unit to one byte, and app.js:120 never overrides it. Measured by decoding the rendered code and reading the raw bytes: 'Café Guest' encodes as [67,97,102,233,…] where UTF-8 requires [67,97,102,195,169,…]; a decoder returns an empty string. '日本語のメニュー' encodes as 8 junk bytes [229,44,158,110,225,203,229,252] and decodes to nothing. 'Привет' decodes as `\u001f@825B`. 'قائمة الطعام' decodes as `B'&E) 'D79'E`. '🍕 Pizza' decodes as `<U Pizza`. Only pure ASCII survives, the control 'Cafe Guest' round-tripped byte-for-byte.",
             "severity": "blocker",
-            "whyItMatters": "This is the seating-chart '?? Kawaguchi' defect wearing a different hat, and worse: half the cases decode to plausible-looking gibberish rather than failing, so a scanner joins nothing or opens nothing while the maker has already spent money on the laminating. The preview looks perfect — a crisp, valid, scannable QR code — because the corruption is in the payload, not the geometry. An accented café name, a German street sign, a Greek menu, a Cyrillic or Arabic notice, or a single emoji in a text code all ship broken with no warning anywhere."
+            "whyItMatters": "This is the seating-chart '?? Kawaguchi' defect wearing a different hat, and worse: half the cases decode to plausible-looking gibberish rather than failing, so a scanner joins nothing or opens nothing while the maker has already spent money on the laminating. The preview looks perfect, a crisp, valid, scannable QR code, because the corruption is in the payload, not the geometry. An accented café name, a German street sign, a Greek menu, a Cyrillic or Arabic notice, or a single emoji in a text code all ship broken with no warning anywhere."
           },
           {
-            "what": "The escaping the app does correctly is invisible, and the trimming it does silently is not. helpers.js escapes \\ ; , : \" exactly per spec — verified end-to-end: SSID 'Nest;Guest' with password 'p@ss:word,\"x\\y' round-tripped as `WIFI:T:WPA;S:Nest\\;Guest;P:p@ss\\:word\\,\\\"x\\\\y;;`. But '  Nest Guest  ' is trimmed to 'Nest Guest' (helpers.js:20) while the password '  spaced pw  ' is not (helpers.js:24), and neither is shown to her.",
+            "what": "The escaping the app does correctly is invisible, and the trimming it does silently is not. helpers.js escapes \\ ; , : \" exactly per spec, verified end-to-end: SSID 'Nest;Guest' with password 'p@ss:word,\"x\\y' round-tripped as `WIFI:T:WPA;S:Nest\\;Guest;P:p@ss\\:word\\,\\\"x\\\\y;;`. But '  Nest Guest  ' is trimmed to 'Nest Guest' (helpers.js:20) while the password '  spaced pw  ' is not (helpers.js:24), and neither is shown to her.",
             "severity": "major",
             "whyItMatters": "An SSID may legitimately carry leading or trailing spaces, and this is the single most-reported cause of a WiFi QR failing on iPhone. The app quietly changes the network name and quietly preserves password whitespace, and offers no readout to check either. It does the hard part right and gets no credit because nothing is shown."
           },
           {
-            "what": "There is no hidden-network option and no WPA3. helpers.js:25 emits `H:true;` when `f.hidden` is set, but renderFields() never renders a checkbox — verified, zero checkboxes in #fields — so the branch is unreachable dead code. The Security select offers exactly WPA/WPA2, WEP and Open; 'WPA3' appears nowhere in the page text.",
+            "what": "There is no hidden-network option and no WPA3. helpers.js:25 emits `H:true;` when `f.hidden` is set, but renderFields() never renders a checkbox, verified, zero checkboxes in #fields, so the branch is unreachable dead code. The Security select offers exactly WPA/WPA2, WEP and Open; 'WPA3' appears nowhere in the page text.",
             "severity": "major",
             "whyItMatters": "The community centre's guest SSID is hidden. Her card cannot work and the app gives her no way to say so and no explanation when it fails. The fix is a checkbox against a code path that already exists."
           },
           {
-            "what": "An empty password on a WPA network encodes happily as `WIFI:T:WPA;S:Nest;P:;;` — verified — with no prompt and no warning.",
+            "what": "An empty password on a WPA network encodes happily as `WIFI:T:WPA;S:Nest;P:;;`, verified, with no prompt and no warning.",
             "severity": "minor",
             "whyItMatters": "A card that says 'scan to join' and carries an empty credential fails at the wall with nothing on screen to have warned her."
           }
@@ -100,52 +100,52 @@
       },
       {
         "name": "Rosalind Pike",
-        "who": "71, retired district nurse, macular degeneration in one eye plus photophobia since a cataract op — bright white areas are physically uncomfortable at night. Uses an iPad daily, is wary of 'settings'. This is the comfort-panel persona.",
+        "who": "71, retired district nurse, macular degeneration in one eye plus photophobia since a cataract op, bright white areas are physically uncomfortable at night. Uses an iPad daily, is wary of 'settings'. This is the comfort-panel persona.",
         "context": "Spare bedroom she rents out, 22:15, lamp off, iPad in portrait at 414 CSS px propped against a pillow, one hand. Later she repeats it on her phone at 320px. Device is in dark mode.",
         "task": "One printable WiFi card for the guest room, tonight, before she forgets the new router password.",
-        "verdict": "Got the code made and downloaded. The comfort panel did most of what she needed and did it well — but the two things she physically struggles with, the small tab buttons and the glare, are the two things it cannot reach.",
+        "verdict": "Got the code made and downloaded. The comfort panel did most of what she needed and did it well, but the two things she physically struggles with, the small tab buttons and the glare, are the two things it cannot reach.",
         "delights": [
           "She found the gear in the header unprompted and opened it. It is a real <dialog>, focus moves inside, and the fieldsets are Appearance / Text size / Spacing / Reading / Warm tint / Contrast / Motion. axe on the open panel: 0 violations.",
-          "Largest text worked properly and worked everywhere: root font 16px → 24px, body copy to 24px, field labels to 19.5px, the hint to 22.5px, the promise line to 20.4px. Page overflow stayed at 0px at 414px, at 320px, and again with High contrast and Roomy spacing on — no element anywhere past the viewport edge in any combination. axe stayed clean at every setting.",
-          "The code itself never changed colour under any comfort setting, including Warm tint. #qrWrap stays rgb(255,255,255) and the exported file is black on white — which is correct, and is the one thing the app must never let a theme touch."
+          "Largest text worked properly and worked everywhere: root font 16px → 24px, body copy to 24px, field labels to 19.5px, the hint to 22.5px, the promise line to 20.4px. Page overflow stayed at 0px at 414px, at 320px, and again with High contrast and Roomy spacing on, no element anywhere past the viewport edge in any combination. axe stayed clean at every setting.",
+          "The code itself never changed colour under any comfort setting, including Warm tint. #qrWrap stays rgb(255,255,255) and the exported file is black on white, which is correct, and is the one thing the app must never let a theme touch."
         ],
         "frictions": [
           {
             "what": "The five type buttons stay 38px tall at every text size. Measured at default, at Largest text on 320px, and at Largest + High contrast + Roomy on 414px: [38,38,38,38,38] every time. The design system's floor is --tap 44px (index.html:610 pins min-height:38px). The prefs gear itself is 36x36 and the tip link is 82x36.",
             "severity": "major",
-            "whyItMatters": "These are the app's primary control and the one thing she must hit first. Largest text made every word on the page bigger and left the buttons exactly where they were — so the setting she went looking for solved the reading problem and not the aiming problem. At 320px with Largest text they wrap to three rows of 38px, so the page gets taller without the targets getting easier."
+            "whyItMatters": "These are the app's primary control and the one thing she must hit first. Largest text made every word on the page bigger and left the buttons exactly where they were, so the setting she went looking for solved the reading problem and not the aiming problem. At 320px with Largest text they wrap to three rows of 38px, so the page gets taller without the targets getting easier."
           },
           {
-            "what": "In dark mode #qrWrap is a pure-white slab. Measured: rgb(255,255,255) on a body of rgb(16,22,15) — roughly 18.5:1 — filling a 296px-wide, 324px-tall block plus 14px of padding on every side, at 22:15 with the lamp off.",
+            "what": "In dark mode #qrWrap is a pure-white slab. Measured: rgb(255,255,255) on a body of rgb(16,22,15), roughly 18.5:1, filling a 296px-wide, 324px-tall block plus 14px of padding on every side, at 22:15 with the lamp off.",
             "severity": "major",
-            "whyItMatters": "This is precisely the use the app invites — 'stick it on the fridge', a guest-room card made at bedtime — and the comfort panel cannot help her, because Warm tint and High contrast both leave the hardcoded #fff at index.html:1253 untouched. The canvas ground must stay white for scanners; the 14px frame around it does not have to be."
+            "whyItMatters": "This is precisely the use the app invites, 'stick it on the fridge', a guest-room card made at bedtime, and the comfort panel cannot help her, because Warm tint and High contrast both leave the hardcoded #fff at index.html:1253 untouched. The canvas ground must stay white for scanners; the 14px frame around it does not have to be."
           },
           {
-            "what": "Cold open is an unlabelled blank white 300x300 rectangle with one line of 15px grey helper text under it. The `.empty` component that exists for this — glyph, heading, body — is styled at index.html:702 and used nowhere.",
+            "what": "Cold open is an unlabelled blank white 300x300 rectangle with one line of 15px grey helper text under it. The `.empty` component that exists for this, glyph, heading, body, is styled at index.html:702 and used nowhere.",
             "severity": "minor",
             "whyItMatters": "She read the white square as an image that had failed to load and looked for a Reload button before noticing the sentence beneath it. The first card also has no heading at all, so the page's heading outline is 'QR Maker → QR codes that never expire → Your code' with the actual work area unnamed."
           },
           {
             "what": "Both download buttons look fully enabled with nothing typed. Verified: dlPng.disabled === false, dlSvg.disabled === false, no aria-disabled. Clicking gives a toast, 'Fill in the code first', which vanishes.",
             "severity": "minor",
-            "whyItMatters": "She clicked Download PNG first, on the theory that it would tell her what to do. The base already styles :disabled and the guard already exists at app.js:148 — it just runs too late to be an affordance."
+            "whyItMatters": "She clicked Download PNG first, on the theory that it would tell her what to do. The base already styles :disabled and the guard already exists at app.js:148, it just runs too late to be an affordance."
           }
         ]
       },
       {
         "name": "Tobias Amankwah",
-        "who": "35, ICT coordinator at a secondary school. Named in the research's own complaint set — 'a school labelling thirty Chromebooks' is one of the three examples given for why metered free tiers fail. No budget, no accounts, and a data-protection form that asks where pupil-adjacent data goes.",
+        "who": "35, ICT coordinator at a secondary school. Named in the research's own complaint set, 'a school labelling thirty Chromebooks' is one of the three examples given for why metered free tiers fail. No budget, no accounts, and a data-protection form that asks where pupil-adjacent data goes.",
         "context": "School office, 1280px on a Dell, Friday afternoon, 30 Chromebooks stacked on a trolley and a laminator warming up. Ninety minutes before he loses the room.",
         "task": "Thirty asset-tag codes, one per device, each encoding a different inventory URL, printed on one sheet of labels.",
-        "verdict": "Abandoned it at device four. Not because anything broke — because the loop is thirty repetitions of the same manual gesture and the output is thirty files with the same name.",
+        "verdict": "Abandoned it at device four. Not because anything broke, because the loop is thirty repetitions of the same manual gesture and the output is thirty files with the same name.",
         "delights": [
           "The privacy answer for his DPIA is genuinely clean: nothing is transmitted, localStorage stays at 0 bytes, and the app reloads fully with the network off. No competitor's dynamic code can be described that way on a form."
         ],
         "frictions": [
           {
-            "what": "There is no batch path at all — no paste-a-list, no CSV, no label sheet, no zip. app.js holds exactly one code in `currentQr` and one payload in the in-memory `fields` map.",
+            "what": "There is no batch path at all, no paste-a-list, no CSV, no label sheet, no zip. app.js holds exactly one code in `currentQr` and one payload in the in-memory `fields` map.",
             "severity": "blocker",
-            "whyItMatters": "Thirty codes means thirty cycles of select-all, retype the URL, wait for the redraw, click Download, dismiss a toast — and then a separate job in another program to lay thirty images out on a label sheet. The research puts this first among the wedges: 'it is the paid tier at four competitors, and it is pure client-side arithmetic for us.'"
+            "whyItMatters": "Thirty codes means thirty cycles of select-all, retype the URL, wait for the redraw, click Download, dismiss a toast, and then a separate job in another program to lay thirty images out on a label sheet. The research puts this first among the wedges: 'it is the paid tier at four competitors, and it is pure client-side arithmetic for us.'"
           },
           {
             "what": "All thirty files would be called qr-code.png. Verified: the download filename is the literal string at app.js:151 and never incorporates the payload, the type or a label.",
@@ -169,14 +169,14 @@
         "who": "31, accessibility engineer, drives everything from the keyboard because of an RSI flare, and runs NVDA in a second window out of habit. Helping his sister make a code for her market stall.",
         "context": "Desk, 1280px, both hands on the keyboard, no time pressure, professional standards.",
         "task": "Make a WiFi code and download the SVG without touching the mouse.",
-        "verdict": "Completed it — the app is small enough that even a broken focus model can be brute-forced — but he had to restart from the top of the document twice, and he would not describe the type selector as usable.",
+        "verdict": "Completed it, the app is small enough that even a broken focus model can be brute-forced, but he had to restart from the top of the document twice, and he would not describe the type selector as usable.",
         "delights": [
           "14 focusable elements, 0 unreachable, 0 unnamed, no placeholder-only labels, nothing trapped. axe returns 0 violations on the initial DOM and 0 after interaction, in light, in dark, at Largest text and at High contrast.",
           "Every generated form control keeps a real <label class=\"f\"> wrapper with visible text, so the fields announce properly and iOS will not zoom on focus."
         ],
         "frictions": [
           {
-            "what": "The tablist is a costume. #typeSeg declares role=\"tablist\" and app.js:46 gives all five buttons role=\"tab\", but verified at runtime: aria-selected is null on all five, tabindex is null on all five, aria-controls is null on all five, and #fields has no role. Selection exists only as the CSS class .active. ArrowRight from the first tab does not move focus — it stays on 'Link'.",
+            "what": "The tablist is a costume. #typeSeg declares role=\"tablist\" and app.js:46 gives all five buttons role=\"tab\", but verified at runtime: aria-selected is null on all five, tabindex is null on all five, aria-controls is null on all five, and #fields has no role. Selection exists only as the CSS class .active. ArrowRight from the first tab does not move focus, it stays on 'Link'.",
             "severity": "major",
             "whyItMatters": "A screen reader announces 'tab' five times and never says which is current, and the arrow keys a tab pattern promises do nothing. This is strictly worse than five plain buttons would be. axe does not catch it, which is exactly why it survived."
           },
@@ -191,14 +191,14 @@
             "whyItMatters": "Mid-interaction focus loss inside a form is the more serious of the two, because he was three keystrokes into a decision when the control vanished."
           },
           {
-            "what": "The canvas carries a static aria-label=\"Generated QR code\", never updated, with no role=\"img\" (verified: role is null). It says a code was generated when the canvas is a blank white square, and there is no live region announcing that a code has become valid or invalid — #toast only fires on the too-much-data error and on downloads.",
+            "what": "The canvas carries a static aria-label=\"Generated QR code\", never updated, with no role=\"img\" (verified: role is null). It says a code was generated when the canvas is a blank white square, and there is no live region announcing that a code has become valid or invalid, #toast only fires on the too-much-data error and on downloads.",
             "severity": "major",
             "whyItMatters": "For a non-sighted user the entire output of the app is a string that never changes. He has no way to know whether what he typed produced a code, what it encodes, or whether the app quietly rewrote it."
           },
           {
             "what": "No <noscript> and no skip link. Verified: zero noscript elements, zero .skip elements, though <main id=\"main\"> now exists and .skip is fully styled at index.html:687.",
             "severity": "minor",
-            "whyItMatters": "With JS off the page is a hero paragraph, an empty tab strip, an empty div and a blank canvas — indistinguishable from a broken site, on a tool whose whole pitch is that it runs in your browser."
+            "whyItMatters": "With JS off the page is a hero paragraph, an empty tab strip, an empty div and a blank canvas, indistinguishable from a broken site, on a tool whose whole pitch is that it runs in your browser."
           }
         ]
       }
@@ -206,37 +206,37 @@
     "consensus": {
       "worksWell": [
         "The positioning is honoured in the build, not just the copy. No payment surface of any kind exists in the DOM: no card field, no plan table, no trial, no counter, no 'upgrade'. The tip jar is a 36px text pill in the header and never appears on the download path. localStorage holds 0 bytes and nothing is transmitted. Someone arriving from a $190 surprise charge can confirm in three seconds that no charge is possible here.",
-        "Offline is real. The service worker registers, and reloading with the browser context set offline returned the full app — five type buttons, live canvas, correct title. Against a category built on server round-trips this is the claim that cannot be copied.",
-        "Both exports are correct where it counts. Across ten payloads, the preview canvas, the PNG at all three sizes and the SVG all decoded to byte-identical strings — no drift between what is previewed and what is downloaded. The SVG is a single crispEdges path with a 4-module quiet zone and decoded cleanly when rasterised at 1480px and 2960px.",
-        "WiFi escaping is done properly and is unit-tested. 'Nest;Guest' / 'p@ss:word,\"x\\y' round-tripped as `WIFI:T:WPA;S:Nest\\;Guest;P:p@ss\\:word\\,\\\"x\\\\y;;` — most free clones get this wrong.",
+        "Offline is real. The service worker registers, and reloading with the browser context set offline returned the full app, five type buttons, live canvas, correct title. Against a category built on server round-trips this is the claim that cannot be copied.",
+        "Both exports are correct where it counts. Across ten payloads, the preview canvas, the PNG at all three sizes and the SVG all decoded to byte-identical strings, no drift between what is previewed and what is downloaded. The SVG is a single crispEdges path with a 4-module quiet zone and decoded cleanly when rasterised at 1480px and 2960px.",
+        "WiFi escaping is done properly and is unit-tested. 'Nest;Guest' / 'p@ss:word,\"x\\y' round-tripped as `WIFI:T:WPA;S:Nest\\;Guest;P:p@ss\\:word\\,\\\"x\\\\y;;`, most free clones get this wrong.",
         "The comfort layer is solid on the axes it owns. Largest text takes the root from 16px to 24px and scales body, labels, hints and the promise line with it; page overflow measured 0px at 320px, 414px and 1280px, in light and dark, at Largest text, at High contrast and at Roomy spacing, with zero offending elements in every combination. axe returns 0 violations on load, after interaction, and with the panel open.",
-        "The code is never themed. #qrWrap stays #fff and helpers.js hardcodes black on white in both the SVG and canvas paths, under every comfort setting including Warm tint — the one invariant this app must not break, kept.",
+        "The code is never themed. #qrWrap stays #fff and helpers.js hardcodes black on white in both the SVG and canvas paths, under every comfort setting including Warm tint, the one invariant this app must not break, kept.",
         "Nothing crashes. Zero console errors, zero page errors and zero failed requests across every run: 40 exports, a 4,000-character payload, hostile text, rapid clicking, corrupt-storage boot, offline reload and five viewport/comfort combinations. The standard battery reports 0 hard failures.",
         "'Toughness (survives smudges)' is the best-worded error-correction control in the category, and it visibly redraws the code so the effect is legible."
       ],
       "hurts": [
         "Anything that is not plain ASCII is silently corrupted. vendor-qrcode.js truncates every character to one byte and app.js never overrides it, so 'Café' encodes as an illegal lone 0xE9, '日本語のメニュー' becomes eight junk bytes, 'Привет' decodes as `\u001f@825B`, Arabic decodes as `B'&E) 'D79'E`, and '🍕' becomes `<U`. The preview looks perfect throughout.",
-        "The app never shows what it encodes — the research's single highest-value addition, and the one readout that would have caught every silent rewrite below.",
+        "The app never shows what it encodes, the research's single highest-value addition, and the one readout that would have caught every silent rewrite below.",
         "Silent payload rewrites with no way to see them: '1-800-FLOWERS' → `tel:1800`, '555.010.1234 x22' → `tel:555010123422`, 'javascript:alert(1)' → `https://javascript:alert(1)`, a trimmed SSID, an empty WPA password accepted as `P:;;`.",
-        "Cmd+P prints the hero, both selects, both download buttons, the whole input form and the WiFi password in clear text, at 96 DPI, with no printable card and no .printonly element anywhere — on an app whose own copy says to print it.",
+        "Cmd+P prints the hero, both selects, both download buttons, the whole input form and the WiFi password in clear text, at 96 DPI, with no printable card and no .printonly element anywhere, on an app whose own copy says to print it.",
         "PNG sizes are labelled in pixels the app does not actually deliver: '512 px' yields 481, 492, 495 or 354 depending on payload. No physical size, no DPI, no scanning-distance guidance.",
-        "Nothing persists and every file is called qr-code.png, so the durable asset — the file — is the thing most likely to be lost.",
+        "Nothing persists and every file is called qr-code.png, so the durable asset, the file, is the thing most likely to be lost.",
         "No batch. One code at a time, which is the wall the research says competitors hit and this app is supposed to walk through.",
         "The type selector: 38px targets that never grow with Largest text, a role=tablist with no aria-selected, no aria-controls, no roving tabindex and no arrow keys, and focus thrown to <body> on every switch and on the WiFi Security select.",
-        "The over-capacity state contradicts itself — the canvas blanks, the hint says 'Start typing above' to someone who just typed 2,332 characters, the real explanation is a toast that disappears after four seconds, and both download buttons stay enabled.",
+        "The over-capacity state contradicts itself, the canvas blanks, the hint says 'Start typing above' to someone who just typed 2,332 characters, the real explanation is a toast that disappears after four seconds, and both download buttons stay enabled.",
         "In dark mode the QR well is a 296px pure-white slab at ~18.5:1 that no comfort setting can dim, on the exact bedtime, guest-room use the app invites.",
         "The hidden-network branch in helpers.js is unreachable dead code, and WPA3 has no honest option.",
         "The `.trust` stamp and the `.empty` component are fully styled and used by nothing, while the value proposition runs at 13.6px, 46px off-axis under the code."
       ],
       "mostWantedNext": [
-        "UTF-8 encoding — one line in app.js overriding qrcode.stringToBytes — plus a regression test that round-trips a non-ASCII payload through a decoder, not just through the SVG string.",
+        "UTF-8 encoding, one line in app.js overriding qrcode.stringToBytes, plus a regression test that round-trips a non-ASCII payload through a decoder, not just through the SVG string.",
         "The payload readout: the exact encoded string in monospace under the preview with a byte count and a copy button. It is the product argument, it is ~20 lines, and it surfaces every silent rewrite at once.",
         "A real print path: a Print button, a printable WiFi card / table tent / SCAN ME frame with the destination in legible text underneath, rendered from the SVG, with the password suppressed unless explicitly opted in.",
-        "Physical sizing instead of pixel counts — 'business card, 2cm at 600 DPI', 'table tent, 4cm', with the achieved DPI stated and a true-size on-screen preview to scan-test before paying a printer.",
-        "A device-local history: label, payload, EC level, module count, date, with byte-identical re-export and JSON export/import — and meaningful filenames derived from it.",
+        "Physical sizing instead of pixel counts, 'business card, 2cm at 600 DPI', 'table tent, 4cm', with the achieved DPI stated and a true-size on-screen preview to scan-test before paying a printer.",
+        "A device-local history: label, payload, EC level, module count, date, with byte-identical re-export and JSON export/import, and meaningful filenames derived from it.",
         "Batch from a pasted list or CSV: one printable labelled sheet plus a zip of SVGs.",
         "Fix the type selector properly: aria-pressed toggle buttons in a labelled group, 44px targets that scale with text size, and focus preserved across the rerender.",
-        "vCard/MeCard, SMS and geo types — a contact card is static by nature and is the case where 'never expires' is most obviously right.",
+        "vCard/MeCard, SMS and geo types, a contact card is static by nature and is the case where 'never expires' is most obviously right.",
         "The hidden-network checkbox against the code path that already exists, and a line telling WPA3 users what to expect."
       ]
     }
@@ -248,56 +248,56 @@
       {
         "name": "Standard battery (design/stress.mjs qr-maker)",
         "method": "Ran the shipped battery: layout at 320/414/1280 and at largest-text and roomy spacing, touch targets, hostile text and injection, numeric edges, rapid clicking, 200 bulk adds, reload persistence, corrupt localStorage, keyboard reachability, axe after interaction, print, console errors.",
-        "result": "Reported clean — 0 hard failures. Layout passed at every width and comfort setting. Touch targets under 32px: none. Hostile text: 0 injected scripts, 0 injected imgs, no title hijack, no poison on screen. Numeric edges clean. Rapid clicking: 30 clicks in 818ms, content 593→616 chars. Reload: 593→593 chars 'persisted' (the page is static — there is nothing to persist). Corrupt storage: 'no app storage key to corrupt'. Keyboard: 14 focusable, 0 unreachable, 0 unnamed, 0 placeholder-only. axe after interaction: clean. Print: 2 dark fills (button.btn, div). Console: silent. Bulk adds: not applicable, ran:false.",
-        "defect": "No hard failures — but the battery's shape flatters this app. 'Survives reload' passes because there is no state to lose, 'corrupt storage' passes because no key exists, and 'bulk adds' does not run because there is nothing to add. Three of its assertions are vacuous here, and every blocker found below is invisible to it.",
+        "result": "Reported clean, 0 hard failures. Layout passed at every width and comfort setting. Touch targets under 32px: none. Hostile text: 0 injected scripts, 0 injected imgs, no title hijack, no poison on screen. Numeric edges clean. Rapid clicking: 30 clicks in 818ms, content 593→616 chars. Reload: 593→593 chars 'persisted' (the page is static, there is nothing to persist). Corrupt storage: 'no app storage key to corrupt'. Keyboard: 14 focusable, 0 unreachable, 0 unnamed, 0 placeholder-only. axe after interaction: clean. Print: 2 dark fills (button.btn, div). Console: silent. Bulk adds: not applicable, ran:false.",
+        "defect": "No hard failures, but the battery's shape flatters this app. 'Survives reload' passes because there is no state to lose, 'corrupt storage' passes because no key exists, and 'bulk adds' does not run because there is nothing to add. Three of its assertions are vacuous here, and every blocker found below is invisible to it.",
         "severity": "none"
       },
       {
-        "name": "Decode round-trip: preview canvas, PNG at all three sizes, SVG — 10 payloads",
+        "name": "Decode round-trip: preview canvas, PNG at all three sizes, SVG, 10 payloads",
         "method": "Loaded jsQR into the page. For each of 10 payloads across all five types, read the preview canvas pixels and decoded them; then hooked HTMLAnchorElement.prototype.click to capture the real download hrefs, decoded each exported PNG at 512/1024/2048 from its data URL, and decoded the exported SVG by rasterising the blob at 800px.",
         "result": "40 exports, zero drift: preview, all three PNGs and the SVG decoded to identical strings on every payload. ASCII payloads round-tripped exactly. Confirmed silent rewrites: 'thecorner.cafe/menu' → `https://thecorner.cafe/menu`; 'javascript:alert(1)' → `https://javascript:alert(1)`; '  https://x.example/a b  ' → `https://x.example/a b` (inner space kept); '+1 (555) 010-1234 ext 5' → `tel:+155501012345`; 'not an email' → `mailto:not an email`. WiFi special characters escaped correctly. Two payloads decoded to an empty string. Every downloaded file was named `qr-code.png` or `qr-code.svg`. Zero console errors.",
         "defect": "The exports are faithful to the preview, which is right. But the two failures are both non-ASCII, and the app performs four different silent normalisations with no readout that would let a user see any of them.",
         "severity": "major"
       },
       {
-        "name": "Encoding fidelity — what bytes a scanner actually reads",
+        "name": "Encoding fidelity, what bytes a scanner actually reads",
         "method": "Encoded eight text payloads and compared jsQR's binaryData against `new TextEncoder().encode()` of the same string, byte for byte.",
-        "result": "'Cafe Guest' (ASCII control): [67,97,102,101,32,71,117,101,115,116] — matches UTF-8 exactly. 'Café Guest': code holds [67,97,102,233,…], UTF-8 requires [67,97,102,195,169,…] — decodes to ''. 'Öffnungszeiten 8–18': [214,102,102,…] vs [195,150,102,…] — decodes to ''. '日本語のメニュー': 8 bytes [229,44,158,110,225,203,229,252] against 24 UTF-8 bytes — decodes to ''. 'Привет' → [31,64,56,50,53,66], decodes as `\u001f@825B`. 'Το μενού' → decodes to ''. 'قائمة الطعام' → decodes as `B'&E) 'D79'E`. '🍕 Pizza' → [60,85,32,80,105,122,122,97], decodes as `<U Pizza`. 1 of 8 correct. Source confirmed at vendor-qrcode.js:737-748 (`bytes.push(c & 0xff)`), never overridden — app.js:120 calls `qrcode(0, ec)` and takes the default.",
+        "result": "'Cafe Guest' (ASCII control): [67,97,102,101,32,71,117,101,115,116], matches UTF-8 exactly. 'Café Guest': code holds [67,97,102,233,…], UTF-8 requires [67,97,102,195,169,…], decodes to ''. 'Öffnungszeiten 8 to 18': [214,102,102,…] vs [195,150,102,…], decodes to ''. '日本語のメニュー': 8 bytes [229,44,158,110,225,203,229,252] against 24 UTF-8 bytes, decodes to ''. 'Привет' → [31,64,56,50,53,66], decodes as `\u001f@825B`. 'Το μενού' → decodes to ''. 'قائمة الطعام' → decodes as `B'&E) 'D79'E`. '🍕 Pizza' → [60,85,32,80,105,122,122,97], decodes as `<U Pizza`. 1 of 8 correct. Source confirmed at vendor-qrcode.js:737-748 (`bytes.push(c & 0xff)`), never overridden, app.js:120 calls `qrcode(0, ec)` and takes the default.",
         "defect": "Every non-ASCII character is silently corrupted, and roughly half the cases decode to plausible gibberish rather than failing outright. The preview renders a perfect, valid, scannable code throughout.",
         "severity": "blocker"
       },
       {
         "name": "Capacity boundary per error-correction level, and the over-capacity UI",
         "method": "Binary-searched the largest ASCII payload that still produces a code at each EC level, then typed one character past it and read the full UI state; then waited out the toast.",
-        "result": "Standard (M): 2,331 characters. High (Q): 1,663. Maximum (H): 1,273. One character over, at every level: the canvas is wiped to blank white (verified pixel-wise), #emptyHint un-hides reading 'Start typing above — the code updates live.', the toast reads 'That's too much data for one QR code — shorten it a little.' and #dlPng.disabled is false. After 4.6 seconds the toast is gone and the page shows a blank white square plus 'Start typing above' to a user looking at 4,000 characters of their own text, with both download buttons still enabled.",
+        "result": "Standard (M): 2,331 characters. High (Q): 1,663. Maximum (H): 1,273. One character over, at every level: the canvas is wiped to blank white (verified pixel-wise), #emptyHint un-hides reading 'Start typing above, the code updates live.', the toast reads 'That's too much data for one QR code, shorten it a little.' and #dlPng.disabled is false. After 4.6 seconds the toast is gone and the page shows a blank white square plus 'Start typing above' to a user looking at 4,000 characters of their own text, with both download buttons still enabled.",
         "defect": "The error state tells the user the opposite of what happened and then erases its own explanation on a timer, while leaving the download buttons live. app.js:126-135 re-shows the empty hint on the catch path.",
         "severity": "major"
       },
       {
         "name": "Exported PNG dimensions against the labelled size",
         "method": "Measured naturalWidth of every exported PNG across four payload sizes at each of the three dropdown settings.",
-        "result": "'512 px' produced 481, 492, 495 and 354 px. '1024 px' produced 999, 984, 1023 and 885. '2048 px' produced 2035, 2009, 2046 and 1947. The shortfall tracks module count: drawQrToCanvas floors cell size at helpers.js:58, so output = floor(px/(modules+8)) × (modules+8). Worst case measured: a 2,000-character payload at '512 px' gives a 354px file — 177 modules at 2px each.",
+        "result": "'512 px' produced 481, 492, 495 and 354 px. '1024 px' produced 999, 984, 1023 and 885. '2048 px' produced 2035, 2009, 2046 and 1947. The shortfall tracks module count: drawQrToCanvas floors cell size at helpers.js:58, so output = floor(px/(modules+8)) × (modules+8). Worst case measured: a 2,000-character payload at '512 px' gives a 354px file, 177 modules at 2px each.",
         "defect": "The one number the app gives a user about print quality is wrong by up to 31%, and it is expressed in a unit that does not answer the question they have (will this scan at 2cm?).",
         "severity": "major"
       },
       {
-        "name": "Scanning the preview off the screen — real screenshots, five device profiles",
+        "name": "Scanning the preview off the screen, real screenshots, five device profiles",
         "method": "Filled a WiFi payload, took an element screenshot of #qrCanvas at each profile with a real device scale factor, and decoded the resulting PNG with jsQR. Profiles: 414@2x default, 320@2x default, 320@2x Largest text, 414@3x Largest+Roomy, 1280@1x.",
-        "result": "All five decoded correctly to `WIFI:T:WPA;S:Nest Guest 5G;P:correct-horse-battery-staple;;`. Geometry: at 414 and 1280 the CSS box equals the bitmap exactly (scale 1.000). At 320px the 287px bitmap is displayed at 216 CSS px — a 0.753 non-integer nearest-neighbour downscale under image-rendering:pixelated (index.html:1254) — and it still decoded from a 432px screenshot. At 414 with Largest text and Roomy the scale is 1.000; at 414 with Largest+High contrast it is 0.986.",
+        "result": "All five decoded correctly to `WIFI:T:WPA;S:Nest Guest 5G;P:correct-horse-battery-staple;;`. Geometry: at 414 and 1280 the CSS box equals the bitmap exactly (scale 1.000). At 320px the 287px bitmap is displayed at 216 CSS px, a 0.753 non-integer nearest-neighbour downscale under image-rendering:pixelated (index.html:1254), and it still decoded from a 432px screenshot. At 414 with Largest text and Roomy the scale is 1.000; at 414 with Largest+High contrast it is 0.986.",
         "defect": "No defect. The audit flagged the non-integer downscale at 320px as a possible scanning-correctness failure; it survives. Handing the phone over to a guest works at every size tested.",
         "severity": "none"
       },
       {
         "name": "Browser print path (page.emulateMedia print) with a WiFi code on screen",
         "method": "Filled SSID and password, switched to print media at 1280px, and measured the visibility and geometry of every element plus the canvas's effective resolution.",
-        "result": ".hero visible 1280x147. #typeSeg hidden (index.html:1196). #fields visible 1230x322 — including the password input, still type=\"text\", still holding 'hunter2secret'. #pngSize visible 130x48, #ecLevel 1092x48, #dlPng 611x44, #dlSvg 611x44, .promise 498x21. Header, tip link, footer and toast correctly hidden. Canvas prints at 296 CSS px from a 296px backing store: 3.08 inches / 78mm at an effective 96 DPI. Zero .printonly elements in the document.",
+        "result": ".hero visible 1280x147. #typeSeg hidden (index.html:1196). #fields visible 1230x322, including the password input, still type=\"text\", still holding 'hunter2secret'. #pngSize visible 130x48, #ecLevel 1092x48, #dlPng 611x44, #dlSvg 611x44, .promise 498x21. Header, tip link, footer and toast correctly hidden. Canvas prints at 296 CSS px from a 296px backing store: 3.08 inches / 78mm at an effective 96 DPI. Zero .printonly elements in the document.",
         "defect": "Ctrl+P yields a sheet of marketing copy, dead form controls and the user's WiFi password in a bordered box, with the type identity stripped out (the tab strip is hidden but the fields are not), a 78mm code at 96 DPI, and no human-readable caption saying what the code is for.",
         "severity": "blocker"
       },
       {
         "name": "Persistence and offline reload",
         "method": "Entered a WiFi SSID and password, set Toughness to Maximum and PNG size to 2048, read localStorage, reloaded, re-read everything; then waited for the service worker, set the browser context offline and reloaded again.",
-        "result": "localStorage: 0 bytes before and 0 bytes after. After reload: fields empty, ecLevel back to M, pngSize back to 1024, active type back to Link, and no text anywhere matching /nothing is saved|not saved|download before/i. Service worker registered. Offline reload succeeded — 5 type buttons, canvas present, correct title, no errors.",
+        "result": "localStorage: 0 bytes before and 0 bytes after. After reload: fields empty, ecLevel back to M, pngSize back to 1024, active type back to Link, and no text anywhere matching /nothing is saved|not saved|download before/i. Service worker registered. Offline reload succeeded, 5 type buttons, canvas present, correct title, no errors.",
         "defect": "A reload or a back-swipe silently destroys a typed SSID and password and both export settings, with no warning beforehand and no restore afterwards. The offline half is exactly as advertised.",
         "severity": "major"
       },
@@ -318,7 +318,7 @@
       {
         "name": "Layout and comfort across 5 viewport/preference combinations",
         "method": "withApp runs at 414 dark, 320 with Largest text, 414 with Largest + High contrast + Roomy, plus 414@3x and 1280, measuring overflow, offenders, small targets, axe and typographic scaling in each.",
-        "result": "Page overflow 0px and zero offending elements in all five. axe 0 violations in all five. Largest text: root 16px → 24px, body 24px, labels 19.5px, hint 22.5px, promise 20.4px. Type buttons measured [38,38,38,38,38] at every setting — they wrap to 2 rows at 414px and 3 rows at 320px with Largest text but never get taller. #swsPrefsBtn 36x36, a#tipLink 82x36. Dark mode: #qrWrap rgb(255,255,255) on body rgb(16,22,15). At 1280px the .promise centre is x=594 against the canvas centre x=640 — 46px off-axis, because it is a centred 498px box inside a 640px card with no margin-inline:auto.",
+        "result": "Page overflow 0px and zero offending elements in all five. axe 0 violations in all five. Largest text: root 16px → 24px, body 24px, labels 19.5px, hint 22.5px, promise 20.4px. Type buttons measured [38,38,38,38,38] at every setting, they wrap to 2 rows at 414px and 3 rows at 320px with Largest text but never get taller. #swsPrefsBtn 36x36, a#tipLink 82x36. Dark mode: #qrWrap rgb(255,255,255) on body rgb(16,22,15). At 1280px the .promise centre is x=594 against the canvas centre x=640 to 46px off-axis, because it is a centred 498px box inside a 640px card with no margin-inline:auto.",
         "defect": "Nothing overflows and nothing is unreadable, but the three interactive elements a low-vision user needs most (five type buttons at 38px, prefs gear at 36px, tip link at 36px) are all under the system's 44px floor and none of them respond to the Largest text setting. The dark-mode QR well is a ~18.5:1 white slab no comfort setting can reach.",
         "severity": "major"
       },
@@ -333,35 +333,35 @@
         "name": "Typing latency with no debounce",
         "method": "Dispatched 25 successive input events on the Text field with a 1,200-character payload already present, timing each synchronous handler, then repeated on a 5-character payload.",
         "result": "Long payload: median 42.5ms per keystroke, worst 113.4ms, 1,211ms total for 25 characters. Short payload: median 1.2ms, worst 2.0ms. update() (app.js:107) encodes and repaints the canvas synchronously on every input event with no debounce or rAF coalescing.",
-        "defect": "Visible lag while typing anything long — a paragraph of text, a long URL with tracking parameters. Not fatal, but it is the difference between an instrument and a web page.",
+        "defect": "Visible lag while typing anything long, a paragraph of text, a long URL with tracking parameters. Not fatal, but it is the difference between an instrument and a web page.",
         "severity": "minor"
       },
       {
         "name": "WiFi feature surface against the category's documented failures",
         "method": "Inspected the rendered WiFi panel and searched the whole page text.",
-        "result": "Zero checkboxes in #fields — helpers.js:25 emits `H:true;` when `f.hidden` is set but nothing can ever set it, so the branch is unreachable. Security options are exactly WPA/WPA2, WEP, Open; 'WPA3' appears nowhere in the page. Both inputs are type=\"text\", so the password is on screen and prints. The payload string appears nowhere in the document.",
-        "defect": "A hidden SSID silently produces a card that cannot connect, a WPA3 router has no honest option, and the password is permanently visible in a room where a guest is looking at the screen — three of the category's four documented WiFi-QR failure modes, on the feature the research says is this app's best consumer story.",
+        "result": "Zero checkboxes in #fields, helpers.js:25 emits `H:true;` when `f.hidden` is set but nothing can ever set it, so the branch is unreachable. Security options are exactly WPA/WPA2, WEP, Open; 'WPA3' appears nowhere in the page. Both inputs are type=\"text\", so the password is on screen and prints. The payload string appears nowhere in the document.",
+        "defect": "A hidden SSID silently produces a card that cannot connect, a WPA3 router has no honest option, and the password is permanently visible in a room where a guest is looking at the screen, three of the category's four documented WiFi-QR failure modes, on the feature the research says is this app's best consumer story.",
         "severity": "major"
       }
     ]
   },
   "fixes": [
     {
-      "title": "Encode payloads as UTF-8 — every non-ASCII character is currently corrupted",
-      "rationale": "vendor-qrcode.js ships `stringToBytes` as `bytes.push(s.charCodeAt(i) & 0xff)` and app.js never overrides it, so 'Café' encodes as an illegal lone 0xE9 and decodes to an empty string, '日本語のメニュー' becomes 8 junk bytes, 'Привет' decodes as `\\u001f@825B`, Arabic as `B'&E) 'D79'E` and '🍕' as `<U`. 1 of 8 test strings survived; the preview renders a perfect valid code in every failing case. Nadia's WiFi card and her Arabic sign both ship broken with no warning, and this is the same class of defect as seating-chart's '?? Kawaguchi' — a person's or a business's own name silently replaced on a printed object. Fix: `qrcode.stringToBytes = (s) => Array.from(new TextEncoder().encode(s));` once before the first encode, and add a decoder round-trip to test/helpers.test.mjs — the existing tests only assert on the SVG string shape and cannot see this.",
+      "title": "Encode payloads as UTF-8, every non-ASCII character is currently corrupted",
+      "rationale": "vendor-qrcode.js ships `stringToBytes` as `bytes.push(s.charCodeAt(i) & 0xff)` and app.js never overrides it, so 'Café' encodes as an illegal lone 0xE9 and decodes to an empty string, '日本語のメニュー' becomes 8 junk bytes, 'Привет' decodes as `\\u001f@825B`, Arabic as `B'&E) 'D79'E` and '🍕' as `<U`. 1 of 8 test strings survived; the preview renders a perfect valid code in every failing case. Nadia's WiFi card and her Arabic sign both ship broken with no warning, and this is the same class of defect as seating-chart's '?? Kawaguchi', a person's or a business's own name silently replaced on a printed object. Fix: `qrcode.stringToBytes = (s) => Array.from(new TextEncoder().encode(s));` once before the first encode, and add a decoder round-trip to test/helpers.test.mjs, the existing tests only assert on the SVG string shape and cannot see this.",
       "where": "apps/qr-maker/app.js:120 (`qrcode(0, $('ecLevel').value)`), defaulted at apps/qr-maker/vendor-qrcode.js:737-748",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Print the exact encoded string under the preview, with a byte count",
-      "rationale": "The research calls this the single highest-value addition and the whole product argument: 'when someone sees `WIFI:T:WPA;S:Nest;P:...;;` or their own https:// URL sitting there in full, they can see there is no third-party domain in the loop… no competitor will copy it because for most of them it would expose their redirect host.' Verified absent: the payload string appears nowhere in the document. Dev came for proof and got prose. It also, in one component, surfaces all six silent rewrites measured below — the trimmed SSID, `tel:1800`, `https://javascript:alert(1)`, `mailto:not an email`, `P:;;` — none of which any user can currently see. Monospace readout in the unused `.well` component (index.html:371), byte count, copy button.",
+      "rationale": "The research calls this the single highest-value addition and the whole product argument: 'when someone sees `WIFI:T:WPA;S:Nest;P:...;;` or their own https:// URL sitting there in full, they can see there is no third-party domain in the loop… no competitor will copy it because for most of them it would expose their redirect host.' Verified absent: the payload string appears nowhere in the document. Dev came for proof and got prose. It also, in one component, surfaces all six silent rewrites measured below, the trimmed SSID, `tel:1800`, `https://javascript:alert(1)`, `mailto:not an email`, `P:;;`, none of which any user can currently see. Monospace readout in the unused `.well` component (index.html:371), byte count, copy button.",
       "where": "apps/qr-maker/index.html:1285-1286 (under #qrWrap / #emptyHint); payload produced at apps/qr-maker/app.js:108",
       "severity": "blocker",
       "effort": "M"
     },
     {
-      "title": "Build a real print path — Cmd+P currently prints the WiFi password in clear text",
+      "title": "Build a real print path, Cmd+P currently prints the WiFi password in clear text",
       "rationale": "Measured under print media at 1280px: .hero visible 1280x147, #fields visible 1230x322 with the password input still holding 'hunter2secret' as a type=text value, both selects, both download buttons and .promise all visible, #typeSeg hidden so the printed form has no type label, the code at 296px / 78mm / effective 96 DPI, and zero .printonly elements in the document. Bea reached for Cmd+P because the app's own copy at index.html:1305 and app.js:87 tells her to print it and stick it on the fridge. Add a Print button; add .noprint to .hero, the two selects, both buttons and .promise; add a .printonly card block (SSID or URL in legible text under the code, per the FTC-quishing trust argument in the research); render from the SVG at helpers.js:41 rather than the 96 DPI canvas; never print the password unless explicitly opted in.",
       "where": "apps/qr-maker/index.html:1272-1305 (markup, no .printonly anywhere), print base at apps/qr-maker/index.html:1196-1207, password input built at apps/qr-maker/app.js:85",
       "severity": "blocker",
@@ -376,21 +376,21 @@
     },
     {
       "title": "Make the over-capacity state tell the truth and disable the downloads",
-      "rationale": "One character past the limit (2,331 at Standard, 1,663 at High, 1,273 at Maximum — measured) the canvas is wiped blank, #emptyHint un-hides reading 'Start typing above — the code updates live.', and the only correct explanation is a toast that is gone 4 seconds later. Both download buttons stay enabled the whole time (dlPng.disabled === false). Give the overflow case its own persistent `.warn` (styled at index.html:546, used by nothing) naming the limit for the current Toughness level, keep the last valid code visible or explicitly cleared, and set the disabled property on both buttons from update() — the base already styles :disabled and the runtime guard at app.js:148 already exists, it just fires too late to be an affordance.",
+      "rationale": "One character past the limit (2,331 at Standard, 1,663 at High, 1,273 at Maximum, measured) the canvas is wiped blank, #emptyHint un-hides reading 'Start typing above, the code updates live.', and the only correct explanation is a toast that is gone 4 seconds later. Both download buttons stay enabled the whole time (dlPng.disabled === false). Give the overflow case its own persistent `.warn` (styled at index.html:546, used by nothing) naming the limit for the current Toughness level, keep the last valid code visible or explicitly cleared, and set the disabled property on both buttons from update(), the base already styles :disabled and the runtime guard at app.js:148 already exists, it just fires too late to be an affordance.",
       "where": "apps/qr-maker/app.js:126-135 (catch path re-shows #emptyHint), text at apps/qr-maker/index.html:1286, guards at apps/qr-maker/app.js:148 and :155",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Keep the work: device-local history, and filenames that mean something",
-      "rationale": "localStorage holds 0 bytes; a reload wiped the SSID, the password, Toughness (H→M), PNG size (2048→1024) and the type, with no warning before and no restore after. Every export of the 40 taken was named `qr-code.png` or `qr-code.svg` (app.js:151, :158) — Tobias's thirty Chromebook labels would be `qr-code (1..30).png` with no way to tell them apart. The research answers 'They deleted my QR code and there is no way to retrieve it' (Stephen B, Capterra) with exactly this: a local list of label, payload, EC level, module count and date, byte-identical re-export, and JSON export/import so it can be filed with the artwork. Derive the filename from the payload or a user label at minimum.",
+      "rationale": "localStorage holds 0 bytes; a reload wiped the SSID, the password, Toughness (H→M), PNG size (2048→1024) and the type, with no warning before and no restore after. Every export of the 40 taken was named `qr-code.png` or `qr-code.svg` (app.js:151, :158), Tobias's thirty Chromebook labels would be `qr-code (1..30).png` with no way to tell them apart. The research answers 'They deleted my QR code and there is no way to retrieve it' (Stephen B, Capterra) with exactly this: a local list of label, payload, EC level, module count and date, byte-identical re-export, and JSON export/import so it can be filed with the artwork. Derive the filename from the payload or a user label at minimum.",
       "where": "apps/qr-maker/app.js:39 (in-memory `fields`), apps/qr-maker/app.js:147-161 (download handlers and hardcoded filenames)",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Fix the type selector: 44px targets, honest ARIA, and focus that survives",
-      "rationale": "Measured: five buttons at 38px at default, at Largest text on 320px, and at Largest+High contrast+Roomy — they never grow, so the setting Rosalind opened the comfort panel for solved her reading problem and not her aiming problem. role=\"tab\" is declared on all five with aria-selected null, tabindex null, aria-controls null and #fields role null; ArrowRight does not move focus; Enter on a tab leaves activeElement === BODY because renderTypeSeg() replaces the focused node. axe reports 0 violations throughout, which is why it survived. Cheapest correct fix: drop role=tab/tablist for aria-pressed toggle buttons in a group with aria-label, raise min-height to var(--tap) so it tracks the text-size setting, and reuse the existing buttons instead of replaceChildren().",
+      "rationale": "Measured: five buttons at 38px at default, at Largest text on 320px, and at Largest+High contrast+Roomy, they never grow, so the setting Rosalind opened the comfort panel for solved her reading problem and not her aiming problem. role=\"tab\" is declared on all five with aria-selected null, tabindex null, aria-controls null and #fields role null; ArrowRight does not move focus; Enter on a tab leaves activeElement === BODY because renderTypeSeg() replaces the focused node. axe reports 0 violations throughout, which is why it survived. Cheapest correct fix: drop role=tab/tablist for aria-pressed toggle buttons in a group with aria-label, raise min-height to var(--tap) so it tracks the text-size setting, and reuse the existing buttons instead of replaceChildren().",
       "where": "apps/qr-maker/app.js:42-51 (renderTypeSeg), apps/qr-maker/index.html:1279 (role=tablist), min-height at apps/qr-maker/index.html:610",
       "severity": "major",
       "effort": "M"
@@ -403,7 +403,7 @@
       "effort": "S"
     },
     {
-      "title": "Sell PNG in millimetres, not pixels — and deliver the pixels you promise",
+      "title": "Sell PNG in millimetres, not pixels, and deliver the pixels you promise",
       "rationale": "Measured: '512 px' produced 481, 492, 495 and 354 px files depending on payload; '2048 px' produced 2046, 2035, 2009 and 1947. drawQrToCanvas floors the cell size (helpers.js:58), so the number is short by up to 31% and worst exactly when the code is densest and needs the resolution most. Bea's print shop asked for '300dpi at final size' and the app cannot answer. Relabel in physical terms as the research prescribes ('business card, 2cm at 600 DPI' = 472px; 'table tent, 4cm'; 'poster, 15cm'), state the achieved DPI, round the canvas up to the next whole cell so the promise is kept, and make SVG the primary button with one line: for anything that goes to a printer, send the SVG.",
       "where": "apps/qr-maker/index.html:1288-1293 (#pngSize options), sizing at apps/qr-maker/helpers.js:55-61, read at apps/qr-maker/app.js:150",
       "severity": "major",
@@ -411,28 +411,28 @@
     },
     {
       "title": "Ship the hidden-network checkbox and say something honest about WPA3",
-      "rationale": "helpers.js:25 already emits `H:true;` when `f.hidden` is set and renderFields() never renders a control for it — verified, zero checkboxes in #fields — so a hidden SSID silently produces a card that cannot connect. The Security select offers only WPA/WPA2, WEP and Open, and 'WPA3' appears nowhere in the page, while the research cites Apple Developer Forums thread 652510 on iOS trouble with WPA3. Nadia's community-centre guest network is hidden. This is a checkbox against a code path that already exists, plus one line of copy.",
+      "rationale": "helpers.js:25 already emits `H:true;` when `f.hidden` is set and renderFields() never renders a control for it, verified, zero checkboxes in #fields, so a hidden SSID silently produces a card that cannot connect. The Security select offers only WPA/WPA2, WEP and Open, and 'WPA3' appears nowhere in the page, while the research cites Apple Developer Forums thread 652510 on iOS trouble with WPA3. Nadia's community-centre guest network is hidden. This is a checkbox against a code path that already exists, plus one line of copy.",
       "where": "apps/qr-maker/app.js:72-87 (renderFields WiFi branch), unreachable branch at apps/qr-maker/helpers.js:25",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Batch generation from a pasted list",
-      "rationale": "app.js holds exactly one code. Tobias abandoned thirty Chromebook labels at device four. The research puts this first among the wedges — it is the paid tier at QR Code Generator Pro, QR TIGER and Uniqode, and it is pure client-side arithmetic here: paste a list of lines or a CSV column, get one printable labelled sheet at a stated physical size plus a zip of SVGs. It also fixes the filename problem for free, because each code arrives with the line that made it.",
+      "rationale": "app.js holds exactly one code. Tobias abandoned thirty Chromebook labels at device four. The research puts this first among the wedges, it is the paid tier at QR Code Generator Pro, QR TIGER and Uniqode, and it is pure client-side arithmetic here: paste a list of lines or a CSV column, get one printable labelled sheet at a stated physical size plus a zip of SVGs. It also fixes the filename problem for free, because each code arrives with the line that made it.",
       "where": "apps/qr-maker/app.js:31-37 (TYPES) and apps/qr-maker/app.js:107-136 (single-code update loop)",
       "severity": "major",
       "effort": "L"
     },
     {
       "title": "Give the QR well a frame in dark mode, and promote the promise line to the .trust stamp",
-      "rationale": "Three small things on the same two lines of app CSS. #qrWrap paints a hardcoded #fff — measured rgb(255,255,255) on rgb(16,22,15), ~18.5:1 — a 296x324px glare slab at 22:15 with the lamp off, on exactly the bedtime guest-room use the app invites; the canvas must stay white but the 14px frame need not. Its padding:14px and border-radius:12px are off-scale and rounder than every card around it (this skin is r:8). And .promise is hardcoded to .85rem (13.6px measured, against 16px body) with its centre 46px off the canvas centre at 1280px, because it is text-align:center inside a max-width:64ch box with no margin-inline:auto — the app's entire value proposition, in the smallest and most crooked type on the page, while the `.trust` component built for it sits fully styled at index.html:437 and used by nothing.",
+      "rationale": "Three small things on the same two lines of app CSS. #qrWrap paints a hardcoded #fff, measured rgb(255,255,255) on rgb(16,22,15), ~18.5:1, a 296x324px glare slab at 22:15 with the lamp off, on exactly the bedtime guest-room use the app invites; the canvas must stay white but the 14px frame need not. Its padding:14px and border-radius:12px are off-scale and rounder than every card around it (this skin is r:8). And .promise is hardcoded to .85rem (13.6px measured, against 16px body) with its centre 46px off the canvas centre at 1280px, because it is text-align:center inside a max-width:64ch box with no margin-inline:auto, the app's entire value proposition, in the smallest and most crooked type on the page, while the `.trust` component built for it sits fully styled at index.html:437 and used by nothing.",
       "where": "apps/qr-maker/index.html:1253 (#qrWrap), :1256 (.promise), :1305 (the sentence), unused component at :437",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Coalesce the redraw, and give the app an empty state and a <noscript>",
-      "rationale": "update() encodes and repaints synchronously on every input event: measured median 42.5ms per keystroke and 113.4ms worst on a 1,200-character payload (1.2ms on a short one) — rAF-coalescing or a 120ms debounce removes it. Separately, the cold open is an unlabelled blank white 300x300 rectangle that Rosalind read as a failed image, while the `.empty` component (glyph, heading, body) is styled at index.html:702 and unused, the first card has no h2 at all, and there is no <noscript> — with JS off the page is a hero and two empty divs, indistinguishable from a broken site.",
+      "rationale": "update() encodes and repaints synchronously on every input event: measured median 42.5ms per keystroke and 113.4ms worst on a 1,200-character payload (1.2ms on a short one), rAF-coalescing or a 120ms debounce removes it. Separately, the cold open is an unlabelled blank white 300x300 rectangle that Rosalind read as a failed image, while the `.empty` component (glyph, heading, body) is styled at index.html:702 and unused, the first card has no h2 at all, and there is no <noscript>, with JS off the page is a hero and two empty divs, indistinguishable from a broken site.",
       "where": "apps/qr-maker/app.js:56 → app.js:107 (no debounce), apps/qr-maker/index.html:1278-1286 (first card, blank canvas, no noscript), unused components at index.html:702 and :687",
       "severity": "minor",
       "effort": "S"

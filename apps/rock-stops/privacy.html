@@ -59,7 +59,7 @@
     <p><strong>The map does not download map tiles, and that is deliberate.</strong> The usual way
     to build a map is to request image tiles for the rectangle you are looking at. That means the
     moment you open your map, a third-party tile server receives your IP address alongside the
-    precise coordinates of every place you have found anything — which would make
+    precise coordinates of every place you have found anything, which would make
     &ldquo;your spots never leave your device&rdquo; false at exactly the moment you looked at
     them.</p>
     <p>So Float draws the map itself, on your phone, from your own points. You lose roads and
@@ -69,7 +69,7 @@
   <h2>How to check that for yourself</h2>
   <p>Turn off Wi-Fi and mobile data, then use the app: photograph a find, name it, open the map,
   print or export. All of it works, because the whole app is stored on your device by its service
-  worker — and an app that runs with the network off is an app that is not sending your locations
+  worker, and an app that runs with the network off is an app that is not sending your locations
   anywhere.</p>
   <p>If you would rather look directly, open your browser's developer tools, go to the Network
   tab and use Float. You will see no requests at all while you work. Under Application &rarr;
@@ -79,13 +79,13 @@
   <ul>
     <li><strong>Share a find</strong> sends the photo and what you called it, through your own
     phone's share sheet, to whoever you pick. It <strong>deliberately does not include
-    coordinates</strong> — showing a friend a rock should never quietly hand over the place it
+    coordinates</strong>, showing a friend a rock should never quietly hand over the place it
     came from.</li>
     <li><strong>Export a backup</strong> writes a <code>.json</code> file, photos included, to
     your own downloads. It is not uploaded. It is also the only copy that exists off this device,
     so make one regularly.</li>
     <li><strong>Export CSV</strong> writes a spreadsheet of labels, materials, sites, zones,
-    dates and coordinates — again to your own downloads only. This one <em>does</em> contain
+    dates and coordinates, again to your own downloads only. This one <em>does</em> contain
     coordinates, because it is your record; treat the file the way you would treat a notebook
     with your spots written in it.</li>
   </ul>
@@ -95,17 +95,17 @@
     <li>No account, no sign-in, no email address collected.</li>
     <li>No ads, no analytics, no trackers, no cookies, no fingerprinting.</li>
     <li>No cloud sync, no community feed, no leaderboard, no sharing of spots with anyone.</li>
-    <li>No third-party scripts and no map tiles — Float makes no network requests in normal use.</li>
+    <li>No third-party scripts and no map tiles, Float makes no network requests in normal use.</li>
     <li>No selling or brokering of anything. There is no data here to sell.</li>
   </ul>
 
   <h2>Permissions</h2>
-  <p><strong>Camera</strong> — only in Field mode, and only to show you the viewfinder and take
+  <p><strong>Camera</strong>, only in Field mode, and only to show you the viewfinder and take
   the photo you asked for. The image is processed on your device and stored there.</p>
-  <p><strong>Location</strong> — optional, and only while Field mode is open or when you tap
+  <p><strong>Location</strong>, optional, and only while Field mode is open or when you tap
   &ldquo;use my location&rdquo; on a site. It stamps the find and places the pin. It is never
   transmitted, and the app works without it.</p>
-  <p>Your browser asks you for both, not us, and you can refuse either. Float keeps working — you
+  <p>Your browser asks you for both, not us, and you can refuse either. Float keeps working, you
   can add photos from your library and set coordinates by typing them.</p>
 
   <h2>Storage, and the honest warning that comes with it</h2>
@@ -116,7 +116,7 @@
   <strong>Export a backup regularly.</strong></p>
 
   <h2>Hosting</h2>
-  <p>Float's files are served by Google's Firebase Hosting, which — like any web host — keeps
+  <p>Float's files are served by Google's Firebase Hosting, which, like any web host, keeps
   standard, short-lived server logs such as IP addresses. That records that a browser fetched the
   page. It cannot record anything about your finds, because your finds are never sent to it.</p>
 
@@ -127,7 +127,7 @@
   <h2>Accessibility</h2>
   <p>Every text colour is checked against its background to <strong>WCAG 2.1 AA</strong> (4.5:1),
   in both the light and dark parts of the app, and that check runs in the test suite so it cannot
-  quietly regress. Tap targets are at least 44&ndash;46px, focus is always visible, reduced-motion
+  quietly regress. Tap targets are at least 44-46px, focus is always visible, reduced-motion
   is respected, and the field-mode controls are sized and placed for one thumb in bad light.</p>
   <p>If anything gets in your way, email and we will fix it:
   <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Float">stephenfurpahs@gmail.com</a>.</p>

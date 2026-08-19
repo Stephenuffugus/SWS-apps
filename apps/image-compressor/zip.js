@@ -2,7 +2,7 @@
    A store-only ZIP writer, ~100 lines, no dependency.
 
    WHY STORE-ONLY (method 0, no deflate)
-   The payload is JPEG/WebP/PNG — already entropy-coded. Deflating it buys
+   The payload is JPEG/WebP/PNG, already entropy-coded. Deflating it buys
    fractions of a percent and would cost a compressor we would have to vendor.
    A ZIP is not being used here to make things smaller; it is being used so the
    browser performs ONE download instead of fifty.
@@ -10,7 +10,7 @@
    WHY A ZIP AT ALL
    The old path fired N `<a download>` clicks 350 ms apart: 17.6 s for fifty
    files, and the app had to ask the user to grant Chrome's bulk-download
-   permission — the single worst thing a free file tool can ask a stranger for.
+   permission, the single worst thing a free file tool can ask a stranger for.
    Safari drops queued downloads outright, so an iPad batch mostly failed.
    ═══════════════════════════════════════════════════════════════════════════ */
 

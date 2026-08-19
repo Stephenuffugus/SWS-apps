@@ -1,4 +1,4 @@
-// Scan to PDF — capture, verify, reorder, rotate, export. All on-device.
+// Scan to PDF, capture, verify, reorder, rotate, export. All on-device.
 import {
   moveItem, normRot, formatBytes, estimatePdfBytes, todayStamp, safeFileName, NAME_MAX,
 } from './helpers.js';
@@ -8,7 +8,7 @@ import * as store from './store.js';
 const CONFIG = { tipUrl: 'https://buy.stripe.com/4gM28s0rfb9t7vD7i17EQ0g' };
 
 /* Every limit this app has, in one place. Each one is printed on the page
-   BEFORE it bites and named with its real number WHEN it bites — a cap you
+   BEFORE it bites and named with its real number WHEN it bites, a cap you
    discover afterwards is the thing people actually resent. */
 const LIMITS = {
   pages: 100,
@@ -47,7 +47,7 @@ function el(tag, attrs, ...kids) {
   return n;
 }
 
-/* sws-ui.js is a blocking script in <head>, so SWS is always here — but a
+/* sws-ui.js is a blocking script in <head>, so SWS is always here, but a
    missing Undo must never fail silently, so the fallback still speaks. */
 function say(msg, opts) {
   if (window.SWS && SWS.toast) return SWS.toast(msg, opts);
@@ -128,7 +128,7 @@ function whyRejected(file, err) {
   const ext = ((name.match(/\.([a-z0-9]+)$/i) || [, ''])[1] || '').toLowerCase();
   if (!file || !file.size) return name + ' is empty (0 bytes), so there was nothing to add.';
   if (ext === 'heic' || ext === 'heif' || /hei[cf]/i.test(type)) {
-    return name + ' — this browser can’t read HEIC photos. On iPhone set Settings › Camera › ' +
+    return name + ', this browser can’t read HEIC photos. On iPhone set Settings › Camera › ' +
       'Formats to “Most Compatible” and re-take it, or share the photo as JPEG first.';
   }
   if (String(err && err.message) === 'encode-failed') {
@@ -145,7 +145,7 @@ function noPersist(e) {
   const full = !!(e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || ''))));
   const msg = full
     ? 'This browser’s storage is full, so pages have stopped being saved for later. They are ' +
-      'still here until you reload or close the tab — make the PDF now.'
+      'still here until you reload or close the tab, make the PDF now.'
     : 'This browser won’t let the app keep pages for later (private windows usually block it). ' +
       'Your pages are still here until you reload or close the tab.';
   const note = $('persistNote');
@@ -154,7 +154,7 @@ function noPersist(e) {
 }
 
 /* One queue for every write. Undo is one tap and can land while the delete
-   it is undoing is still in flight — unserialised, the delete finishes last
+   it is undoing is still in flight, unserialised, the delete finishes last
    and the page comes back on screen but not in storage, so the next reload
    loses it. A chain costs nothing and makes that impossible. */
 let writes = Promise.resolve();
@@ -241,7 +241,7 @@ function card(p, i) {
     'data-act': 'open',
     'aria-label': 'Open page ' + n + ' of ' + pages.length +
       (clockOf(p) ? ', photographed at ' + clockOf(p) : '') +
-      ', full size — check it, rotate it or retake it',
+      ', full size, check it, rotate it or retake it',
     onclick: () => openViewer(p.id),
   }, img);
 
@@ -399,7 +399,7 @@ async function addFiles(list) {
 
   const notAdded = files.length - i;
   const parts = [];
-  if (added) parts.push(added + (added === 1 ? ' page added' : ' pages added') + ' — ' + pages.length + ' in this PDF');
+  if (added) parts.push(added + (added === 1 ? ' page added' : ' pages added') + ', ' + pages.length + ' in this PDF');
   if (stopped === 'pages') {
     parts.push('That is the ' + LIMITS.pages + '-page limit for one PDF, so ' + notAdded +
       ' more photo(s) were not added. Make this PDF, then start the next one.');
@@ -578,7 +578,7 @@ async function shrink(p, q) {
 async function exportPdf() {
   if (busy) return;
   if (!pages.length) {
-    say('Add at least one page first — there is nothing to put in a PDF yet.', { assertive: true });
+    say('Add at least one page first, there is nothing to put in a PDF yet.', { assertive: true });
     $('camBtn').focus();
     return;
   }
@@ -610,7 +610,7 @@ async function exportPdf() {
     a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 
-    let msg = name + ' saved — ' + made + (made === 1 ? ' page, ' : ' pages, ') +
+    let msg = name + ' saved, ' + made + (made === 1 ? ' page, ' : ' pages, ') +
       formatBytes(bytes.length) + ', no watermark.';
     if (skipped) {
       msg += ' ' + skipped + ' page(s) could not be embedded and were left out of the file.';
@@ -675,7 +675,7 @@ function wire() {
     $('viewRetake').focus();
   });
   $('viewer').addEventListener('close', () => { if (viewing) closeViewer(true); });
-  $('viewer').addEventListener('cancel', () => { /* Esc — the close handler refocuses */ });
+  $('viewer').addEventListener('cancel', () => { /* Esc, the close handler refocuses */ });
 
   $('pageSize').addEventListener('change', () => {
     updateEstimate();

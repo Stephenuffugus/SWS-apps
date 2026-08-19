@@ -1,123 +1,123 @@
 {
   "slug": "home-inventory",
-  "purpose": "A local-first, room-by-room home inventory for insurance claims: you walk the house photographing possessions (point → shoot → name → next), optionally add serials/values/receipts later, and export a pdf-lib-generated PDF report, an adjuster's value-sorted list, or a full JSON backup — with no account and no data leaving the device (IndexedDB only).",
-  "structure": "Single-page hash-routed app, all inside `.wrap` (max-width 720px, 14px side padding). index.html:116-128 is the only static chrome: `header.app` (34px icon.svg, h1 brand link `#brandLink`, `.spacer`, hidden `a.tipbtn`), then `<main id=\"view\" aria-live=\"polite\">` which is entirely JS-rendered and replaced wholesale on every state change, then `footer.colophon`. Outside `.wrap`: `<dialog id=\"itemDlg\">` (index.html:130-153) — the only hand-written UI, holding photo/receipt previews, five `label.f` fields laid out in three `.row` pairs, and a 3-button `.row` of Delete/Cancel/Save; a hidden `#fileInput` (capture=environment) reused for every photo pick; and `#toast` (position:fixed, bottom:24px, z-index:50). Two routes only (app.js:110-113): `#/` → home, `#/i/:id` → editor. Home = `.hero` (h2 + p + \"Start an inventory\" primary button) + `section.card` \"Your inventories\" (ul.plain of rows: name, item/value sub-line, Open button, ✕ delete) + `section.card` \"Restore\" (Import backup). Editor = `section.card` header (‹ Back + inventory-name input + totals `.sub`) + `nav.tabs` (4 buttons) + one tab body: Capture (room select, `.capturephoto` preview, `.btn.big` camera, name+value `.row`, Save & next, recent-4 list), Items (`.chips` room filter + full `ul.plain`), Rooms (add field + list with ✎/✕), Export (`.warnbanner` + card with page-size select and three `.exportcard` rows). Tab state lives in a module variable, NOT the URL. No modals other than `#itemDlg`; all confirmations and two text inputs use native `prompt()`/`confirm()`.",
+  "purpose": "A local-first, room-by-room home inventory for insurance claims: you walk the house photographing possessions (point → shoot → name → next), optionally add serials/values/receipts later, and export a pdf-lib-generated PDF report, an adjuster's value-sorted list, or a full JSON backup, with no account and no data leaving the device (IndexedDB only).",
+  "structure": "Single-page hash-routed app, all inside `.wrap` (max-width 720px, 14px side padding). index.html:116-128 is the only static chrome: `header.app` (34px icon.svg, h1 brand link `#brandLink`, `.spacer`, hidden `a.tipbtn`), then `<main id=\"view\" aria-live=\"polite\">` which is entirely JS-rendered and replaced wholesale on every state change, then `footer.colophon`. Outside `.wrap`: `<dialog id=\"itemDlg\">` (index.html:130-153), the only hand-written UI, holding photo/receipt previews, five `label.f` fields laid out in three `.row` pairs, and a 3-button `.row` of Delete/Cancel/Save; a hidden `#fileInput` (capture=environment) reused for every photo pick; and `#toast` (position:fixed, bottom:24px, z-index:50). Two routes only (app.js:110-113): `#/` → home, `#/i/:id` → editor. Home = `.hero` (h2 + p + \"Start an inventory\" primary button) + `section.card` \"Your inventories\" (ul.plain of rows: name, item/value sub-line, Open button, ✕ delete) + `section.card` \"Restore\" (Import backup). Editor = `section.card` header (‹ Back + inventory-name input + totals `.sub`) + `nav.tabs` (4 buttons) + one tab body: Capture (room select, `.capturephoto` preview, `.btn.big` camera, name+value `.row`, Save & next, recent-4 list), Items (`.chips` room filter + full `ul.plain`), Rooms (add field + list with ✎/✕), Export (`.warnbanner` + card with page-size select and three `.exportcard` rows). Tab state lives in a module variable, NOT the URL. No modals other than `#itemDlg`; all confirmations and two text inputs use native `prompt()`/`confirm()`.",
   "cssClasses": [
-    ":root (index.html:18-29) — 12 color tokens; overrides skin if kept",
-    ".wrap — 720px page container, 14px side padding",
-    "header.app — flex app bar, 14px top padding",
-    "header.app img — 34px brand icon, 8px radius",
-    "header.app h1 — 1.15rem brand title, link inherits color",
-    "header.app .spacer — flex:1 push spacer",
-    "a.tipbtn — pill tip-jar link, .hidden until configured",
-    "section.card — surface panel, 14px radius, 14px padding",
-    "section.card h2 — 0.8rem uppercase micro-label section heading",
-    ".hero — centered intro block, 30px top padding",
-    ".hero h2 — 1.5rem headline, tight tracking",
-    ".hero p — muted subhead above primary CTA",
-    "label.f — block form-label wrapper, 0.85rem muted",
-    "label.f span — label text line above the control",
-    "input[type=text] — shared field: 11px/12px pad, 1rem, --bg fill",
-    "input[type=date] — same field styling, used by #iDate only",
-    "input[type=search], input[type=number], textarea — all three DEAD, no such elements exist",
-    "select — shared field styling; used for room and page size",
-    ":focus-visible group — 2px --focus outline, 1px offset",
-    ".row — flex group, 8px gap, equal children",
-    ".row>* — flex:1 plus min-width:0 overflow guard",
-    "button — font-family:inherit only, no reset",
-    ".btn — base button, 11px/14px pad, 0.95rem",
-    ".btn.primary — accent fill, accent-ink text, 600 weight",
-    ".btn.small — compact 7px/10px, 0.85rem; row actions",
-    ".btn.danger — red TEXT only, no border/background change",
-    ".btn.big — 20px pad, full width, camera CTA",
-    "nav.tabs — horizontal scrolling tab strip, 5px gap",
-    "nav.tabs button — inactive tab; styled by descendant selector only",
-    "nav.tabs button.active — current tab, accent fill, visual-only state",
-    ".chips — wrapping flex row, 6px gap",
-    ".chip — room filter pill, 7px/12px, 0.88rem",
-    ".chip.sel — selected filter; note studio.css uses .chip.on",
-    "ul.plain — list-style/padding reset for all record lists",
-    "ul.plain li — flex row, 9px vertical pad, bottom hairline",
-    "ul.plain li:last-child — drops the trailing hairline",
-    "ul.plain .grow — flexible text cell, min-width:0, overflow-wrap:anywhere",
-    ".thumb — 52px square item photo, object-fit:cover",
-    ".thumb.empty — 'no photo' placeholder at 0.65rem",
-    ".sub — 0.82rem muted secondary line, used everywhere",
-    ".hint — 0.8rem muted help/empty-state text",
-    ".warnbanner — red-bordered off-device export warning",
-    ".capturephoto — full-width preview, max-height 260px, contain",
-    ".statline — DEAD, never rendered by any JS",
-    ".statline b — DEAD, tabular-nums for unused statline",
-    "dialog — modal panel, min(92vw,460px), 90vh scroll",
-    "dialog::backdrop — 45% black scrim",
-    "dialog h3 — 1.05rem modal title",
-    "#toast — fixed bottom pill, opacity-transitioned, z-index 50",
-    "#toast.show — opacity:1 visible state",
-    "footer.colophon — 0.78rem centered muted colophon",
-    ".hidden — display:none !important, toggled by JS in six places",
-    ".exportcard — export row; smoke test asserts exactly 3",
-    ".exportcard:last-child — drops trailing hairline",
-    ".exportcard .grow — flexible title+description cell",
-    ".exportcard .grow b — export title, block display",
-    ".exportcard .grow span — 0.83rem muted export description",
-    "#view — main render target AND a page-wide aria-live region",
-    "#itemDlg — the only hand-written (non-JS-generated) UI",
-    "#brandLink, #orgLine — ids never referenced by JS or CSS"
+    ":root (index.html:18-29), 12 color tokens; overrides skin if kept",
+    ".wrap, 720px page container, 14px side padding",
+    "header.app, flex app bar, 14px top padding",
+    "header.app img, 34px brand icon, 8px radius",
+    "header.app h1 to 1.15rem brand title, link inherits color",
+    "header.app .spacer, flex:1 push spacer",
+    "a.tipbtn, pill tip-jar link, .hidden until configured",
+    "section.card, surface panel, 14px radius, 14px padding",
+    "section.card h2 to 0.8rem uppercase micro-label section heading",
+    ".hero, centered intro block, 30px top padding",
+    ".hero h2 to 1.5rem headline, tight tracking",
+    ".hero p, muted subhead above primary CTA",
+    "label.f, block form-label wrapper, 0.85rem muted",
+    "label.f span, label text line above the control",
+    "input[type=text], shared field: 11px/12px pad, 1rem, --bg fill",
+    "input[type=date], same field styling, used by #iDate only",
+    "input[type=search], input[type=number], textarea, all three DEAD, no such elements exist",
+    "select, shared field styling; used for room and page size",
+    ":focus-visible group, 2px --focus outline, 1px offset",
+    ".row, flex group, 8px gap, equal children",
+    ".row>*, flex:1 plus min-width:0 overflow guard",
+    "button, font-family:inherit only, no reset",
+    ".btn, base button, 11px/14px pad, 0.95rem",
+    ".btn.primary, accent fill, accent-ink text, 600 weight",
+    ".btn.small, compact 7px/10px, 0.85rem; row actions",
+    ".btn.danger, red TEXT only, no border/background change",
+    ".btn.big, 20px pad, full width, camera CTA",
+    "nav.tabs, horizontal scrolling tab strip, 5px gap",
+    "nav.tabs button, inactive tab; styled by descendant selector only",
+    "nav.tabs button.active, current tab, accent fill, visual-only state",
+    ".chips, wrapping flex row, 6px gap",
+    ".chip, room filter pill, 7px/12px, 0.88rem",
+    ".chip.sel, selected filter; note studio.css uses .chip.on",
+    "ul.plain, list-style/padding reset for all record lists",
+    "ul.plain li, flex row, 9px vertical pad, bottom hairline",
+    "ul.plain li:last-child, drops the trailing hairline",
+    "ul.plain .grow, flexible text cell, min-width:0, overflow-wrap:anywhere",
+    ".thumb, 52px square item photo, object-fit:cover",
+    ".thumb.empty, 'no photo' placeholder at 0.65rem",
+    ".sub, 0.82rem muted secondary line, used everywhere",
+    ".hint, 0.8rem muted help/empty-state text",
+    ".warnbanner, red-bordered off-device export warning",
+    ".capturephoto, full-width preview, max-height 260px, contain",
+    ".statline, DEAD, never rendered by any JS",
+    ".statline b, DEAD, tabular-nums for unused statline",
+    "dialog, modal panel, min(92vw,460px), 90vh scroll",
+    "dialog::backdrop, 45% black scrim",
+    "dialog h3 to 1.05rem modal title",
+    "#toast, fixed bottom pill, opacity-transitioned, z-index 50",
+    "#toast.show, opacity:1 visible state",
+    "footer.colophon, 0.78rem centered muted colophon",
+    ".hidden, display:none !important, toggled by JS in six places",
+    ".exportcard, export row; smoke test asserts exactly 3",
+    ".exportcard:last-child, drops trailing hairline",
+    ".exportcard .grow, flexible title+description cell",
+    ".exportcard .grow b, export title, block display",
+    ".exportcard .grow span, 0.83rem muted export description",
+    "#view, main render target AND a page-wide aria-live region",
+    "#itemDlg, the only hand-written (non-JS-generated) UI",
+    "#brandLink, #orgLine, ids never referenced by JS or CSS"
   ],
-  "dynamicMarkup": "Nearly the entire UI is generated. `#view` is emptied via `replaceChildren()` and rebuilt on every hashchange, tab switch, item save, room add/rename/delete, and item dialog save/delete (app.js:119-120, 207-208, 222). Everything is built by the `el()` helper (app.js:17-31), which sets `class` via `n.className = v` — a full overwrite, so no class is ever additively applied. Classes emitted at runtime: `.hero`+`h2`/`p`/`strong` and `.btn.primary` (app.js:121-125); `section.card`+`h2`, `ul.plain`, `li`, `.grow`, `.sub`, `.btn.small`, `.btn.small.danger`, `.hint` (app.js:127-155); `nav.tabs` with four `<button>` whose class is `'active'` or the EMPTY STRING (app.js:220-223 — inactive tabs carry no class at all and rely solely on the `nav.tabs button` descendant selector); `.capturephoto`, `.btn.big`, `.btn.big.primary`, `label.f`+`span`, `select`, `.row`, `.btn.primary` (app.js:234-283); `.chips`, `.chip`, `.chip.sel` (app.js:289-295); `.thumb`, `.thumb.empty`, `.grow`, `.sub`, `.btn.small` (app.js:304-315); `.warnbanner`, `.exportcard`, `.grow`, `b`, `span`, `.btn.primary.small`, `.btn.small` (app.js:352-391). Four of these class strings are built by CONCATENATION and will not surface in a naive grep for class literals: `'capturephoto' + (photo ? '' : ' hidden')` (app.js:247), `'btn big' + (photo ? '' : ' primary')` (app.js:250), `'chip' + (sel ? ' sel' : '')` (app.js:291), and the tab ternary (app.js:221). Runtime class MUTATION happens via `.classList` on static elements only: `#toast` gains/loses `show` (app.js:36-38, 412-414), `#tipLink` loses `hidden` at boot (app.js:494), `#iPhoto` and `#iReceiptImg` gain/lose `hidden` (app.js:424-428, 469, 477). `#iRoom` has its `<option>` list replaced on every dialog open (app.js:431). `afterExportAsk` (app.js:405-415) injects a live `<a>` with an inline style directly into `#toast`. Two transient `<a download>` elements are appended to `document.body` and removed 500ms later (app.js:387-389, 401-403), and a hidden file `<input>` is appended into the home view (app.js:150-155). All user text reaches the DOM through `textContent`/`createTextNode` — never innerHTML — and image `src` is gated by `safeSrc()` to `data:image/*` only (app.js:42).",
+  "dynamicMarkup": "Nearly the entire UI is generated. `#view` is emptied via `replaceChildren()` and rebuilt on every hashchange, tab switch, item save, room add/rename/delete, and item dialog save/delete (app.js:119-120, 207-208, 222). Everything is built by the `el()` helper (app.js:17-31), which sets `class` via `n.className = v`, a full overwrite, so no class is ever additively applied. Classes emitted at runtime: `.hero`+`h2`/`p`/`strong` and `.btn.primary` (app.js:121-125); `section.card`+`h2`, `ul.plain`, `li`, `.grow`, `.sub`, `.btn.small`, `.btn.small.danger`, `.hint` (app.js:127-155); `nav.tabs` with four `<button>` whose class is `'active'` or the EMPTY STRING (app.js:220-223, inactive tabs carry no class at all and rely solely on the `nav.tabs button` descendant selector); `.capturephoto`, `.btn.big`, `.btn.big.primary`, `label.f`+`span`, `select`, `.row`, `.btn.primary` (app.js:234-283); `.chips`, `.chip`, `.chip.sel` (app.js:289-295); `.thumb`, `.thumb.empty`, `.grow`, `.sub`, `.btn.small` (app.js:304-315); `.warnbanner`, `.exportcard`, `.grow`, `b`, `span`, `.btn.primary.small`, `.btn.small` (app.js:352-391). Four of these class strings are built by CONCATENATION and will not surface in a naive grep for class literals: `'capturephoto' + (photo ? '' : ' hidden')` (app.js:247), `'btn big' + (photo ? '' : ' primary')` (app.js:250), `'chip' + (sel ? ' sel' : '')` (app.js:291), and the tab ternary (app.js:221). Runtime class MUTATION happens via `.classList` on static elements only: `#toast` gains/loses `show` (app.js:36-38, 412-414), `#tipLink` loses `hidden` at boot (app.js:494), `#iPhoto` and `#iReceiptImg` gain/lose `hidden` (app.js:424-428, 469, 477). `#iRoom` has its `<option>` list replaced on every dialog open (app.js:431). `afterExportAsk` (app.js:405-415) injects a live `<a>` with an inline style directly into `#toast`. Two transient `<a download>` elements are appended to `document.body` and removed 500ms later (app.js:387-389, 401-403), and a hidden file `<input>` is appended into the home view (app.js:150-155). All user text reaches the DOM through `textContent`/`createTextNode`, never innerHTML, and image `src` is gated by `safeSrc()` to `data:image/*` only (app.js:42).",
   "comfortDefects": [
     {
-      "issue": "\"no photo\" placeholder text is 0.65rem (~10.4px) — the smallest type in the app, and it appears on every item row lacking a photo, i.e. exactly the rows the user needs to notice and fix",
+      "issue": "\"no photo\" placeholder text is 0.65rem (~10.4px), the smallest type in the app, and it appears on every item row lacking a photo, i.e. exactly the rows the user needs to notice and fix",
       "where": "index.html:84 (.thumb.empty)",
       "fix": "Raise to --t-xs minimum, or drop the text entirely for a camera glyph plus an .sr-only label; the 52px box cannot hold legible words."
     },
     {
-      "issue": "`.sub` is 0.82rem (~13.1px) and is the single most repeated text in the app — it carries room, value and serial on every item row, the totals line, and every room's item count",
+      "issue": "`.sub` is 0.82rem (~13.1px) and is the single most repeated text in the app, it carries room, value and serial on every item row, the totals line, and every room's item count",
       "where": "index.html:85 (.sub); used app.js:139, 216, 313, 334",
       "fix": "Map to --t-sm (0.9375rem/15px) and set line-height:var(--lh-snug). This is primary data, not caption text."
     },
     {
-      "issue": "Item name rows are 0.93rem (~14.9px) — below a 15px body-copy floor for the app's main record list",
+      "issue": "Item name rows are 0.93rem (~14.9px), below a 15px body-copy floor for the app's main record list",
       "where": "index.html:80 (ul.plain li)",
       "fix": "Set to var(--t-base) for the name line and let .sub carry the smaller secondary text; the two currently differ by only ~1.8px so there is no hierarchy."
     },
     {
-      "issue": "Export descriptions are 0.83rem (~13.3px) running ~89 characters per line — the longest explanatory copy in the app set at nearly the smallest size",
+      "issue": "Export descriptions are 0.83rem (~13.3px) running ~89 characters per line, the longest explanatory copy in the app set at nearly the smallest size",
       "where": "index.html:112 (.exportcard .grow span)",
       "fix": "Bump to --t-sm and cap with max-width:var(--measure); these two sentences are what makes the user pick the right export."
     },
     {
-      "issue": "The critical off-device warning runs ~94 characters per line at 0.88rem — the one paragraph that must be read is the hardest to read",
+      "issue": "The critical off-device warning runs ~94 characters per line at 0.88rem, the one paragraph that must be read is the hardest to read",
       "where": "index.html:87-90 (.warnbanner)",
       "fix": "Apply max-width:var(--measure) and --t-base; --measure is already 64ch in studio.css:41."
     },
     {
-      "issue": "Hero paragraph is ~84 characters per line AND center-aligned, so every line start is ragged — worst-case for a first-time reader",
+      "issue": "Hero paragraph is ~84 characters per line AND center-aligned, so every line start is ragged, worst-case for a first-time reader",
       "where": "index.html:49-51 (.hero, .hero p)",
       "fix": "max-width:var(--measure) with margin-inline:auto; studio.css:184 already does exactly this."
     },
     {
-      "issue": "`.btn.small` computes to roughly 32px tall (13.6px text at line-height:normal + 7px padding + border) yet is used for the ✎ edit, ✕ delete and Open buttons — the most frequently tapped controls in the app, on a phone, one-handed",
+      "issue": "`.btn.small` computes to roughly 32px tall (13.6px text at line-height:normal + 7px padding + border) yet is used for the ✎ edit, ✕ delete and Open buttons, the most frequently tapped controls in the app, on a phone, one-handed",
       "where": "index.html:64 (.btn.small); used app.js:140, 141, 314, 335, 339, 385",
       "fix": "Give .btn a min-height:var(--tap) (44px) that .small does not undercut, and route the ✎/✕ glyph buttons through studio.css's .btn.icon (studio.css:360), which is exactly 44x44."
     },
     {
       "issue": "Room filter chips are ~33px tall; they are real interactive filters, not passive labels",
       "where": "index.html:74-77 (.chip); used app.js:290-294",
-      "fix": "min-height:var(--tap). Note the incoming studio.css .chip is ~26px tall — smaller still — so adopting it unchanged makes this defect worse; these need .btn.small toggle treatment instead."
+      "fix": "min-height:var(--tap). Note the incoming studio.css .chip is ~26px tall, smaller still, so adopting it unchanged makes this defect worse; these need .btn.small toggle treatment instead."
     },
     {
-      "issue": "Tab buttons are ~37px tall and the tip-jar link ~30px — both below the 44px floor, and the tabs are the app's primary navigation",
+      "issue": "Tab buttons are ~37px tall and the tip-jar link ~30px, both below the 44px floor, and the tabs are the app's primary navigation",
       "where": "index.html:68-71 (nav.tabs button), index.html:43-46 (a.tipbtn)",
       "fix": "min-height:var(--tap) on tabs; studio.css .seg sets only 38px so raise it for this app or accept a documented exception."
     },
     {
-      "issue": "Base `.btn` (~42px) and text inputs (~43px) both land just under 44px — every control in the app misses the threshold by a hair",
+      "issue": "Base `.btn` (~42px) and text inputs (~43px) both land just under 44px, every control in the app misses the threshold by a hair",
       "where": "index.html:54-57 (inputs), index.html:62 (.btn)",
       "fix": "Set min-height:var(--tap) explicitly rather than relying on padding arithmetic; padding-derived heights silently drift when the type scale changes."
     },
     {
-      "issue": "Field borders are effectively invisible: --line #e3e8ee on the #f6f7f9 input fill is 1.15:1, and 1.32:1 in dark mode — inputs read as flat blocks with no edge",
+      "issue": "Field borders are effectively invisible: --line #e3e8ee on the #f6f7f9 input fill is 1.15:1, and 1.32:1 in dark mode, inputs read as flat blocks with no edge",
       "where": "index.html:19, 25 (--line), index.html:54-57",
       "fix": "Use a dedicated --line-2 (#998a73 in the generated skin) for control borders to clear the 3:1 non-text requirement; studio.css already binds inputs to --line-2."
     },
@@ -132,41 +132,41 @@
       "fix": "Give danger a distinct border and tinted fill (--neg-soft/--neg-line exist in the skin), and stop giving it equal flex width against Save."
     },
     {
-      "issue": "The stylesheet contains exactly one media query — prefers-color-scheme. There are no responsive breakpoints, so the dialog's paired-field `.row`s never stack; on a 360px phone \"Value ($)\" and \"Purchased\" are each ~160px wide and get narrower under any type-scale increase",
+      "issue": "The stylesheet contains exactly one media query, prefers-color-scheme. There are no responsive breakpoints, so the dialog's paired-field `.row`s never stack; on a 360px phone \"Value ($)\" and \"Purchased\" are each ~160px wide and get narrower under any type-scale increase",
       "where": "index.html:23 (only @media), index.html:139-146, index.html:59-60 (.row)",
       "fix": "Add a breakpoint that collapses .row to a column below ~30rem, or adopt studio.css's .frow which is built for field pairs."
     },
     {
-      "issue": "viewport-fit=cover is set but no env(safe-area-inset-*) padding exists anywhere, so on a notched phone content runs under the home indicator and, in landscape, under the rounded corners — on a camera-first app used in both orientations",
+      "issue": "viewport-fit=cover is set but no env(safe-area-inset-*) padding exists anywhere, so on a notched phone content runs under the home indicator and, in landscape, under the rounded corners, on a camera-first app used in both orientations",
       "where": "index.html:5 vs index.html:35-37 (body padding-bottom:40px, .wrap padding:0 14px)",
       "fix": "Adopt studio.css's safe-area handling (studio.css:86, 116) which already pads body-bottom and inline edges with env() maxima."
     }
   ],
   "navigationDefects": [
     {
-      "issue": "The active tab is not in the URL — `tab` is a module-level variable (app.js:78). Browser Back from the Items tab exits the whole inventory to the home screen instead of returning to Capture, and any reload silently drops the user back on Capture",
+      "issue": "The active tab is not in the URL, `tab` is a module-level variable (app.js:78). Browser Back from the Items tab exits the whole inventory to the home screen instead of returning to Capture, and any reload silently drops the user back on Capture",
       "where": "app.js:78, app.js:110-113 (route), app.js:222",
       "fix": "Encode the tab in the hash (`#/i/:id/items`) so Back, reload, and deep links all behave. This is the single biggest orientation bug."
     },
     {
       "issue": "There is no undo anywhere in the app. Deleting an inventory permanently destroys every photo it contains, guarded only by a native confirm()",
       "where": "app.js:141-146 (deleteInventory), app.js:339-343, app.js:458-463",
-      "fix": "Soft-delete with a 10-second \"Deleted — Undo\" action in #toast, or at minimum require typing the inventory name for the whole-inventory delete."
+      "fix": "Soft-delete with a 10-second \"Deleted, Undo\" action in #toast, or at minimum require typing the inventory name for the whole-inventory delete."
     },
     {
-      "issue": "The ✕ that destroys an entire inventory sits directly beside Open in the same row, both ~32px, 10px apart — the accidental-hit geometry is as bad as it gets for the most destructive action in the app",
+      "issue": "The ✕ that destroys an entire inventory sits directly beside Open in the same row, both ~32px, 10px apart, the accidental-hit geometry is as bad as it gets for the most destructive action in the app",
       "where": "app.js:140-146",
       "fix": "Move whole-inventory delete out of the row into an overflow menu or the inventory's own screen; never place it adjacent to the primary open affordance."
     },
     {
-      "issue": "The user is never told their work is saved. touch() debounces a 400ms IndexedDB write with no indicator; the only save feedback in the entire app is the \"Saved — next one\" toast on fast capture. Editing the inventory name or any item field via the dialog produces no confirmation at all",
+      "issue": "The user is never told their work is saved. touch() debounces a 400ms IndexedDB write with no indicator; the only save feedback in the entire app is the \"Saved, next one\" toast on fast capture. Editing the inventory name or any item field via the dialog produces no confirmation at all",
       "where": "app.js:95-103, app.js:214-215, app.js:442-456",
       "fix": "Add a persistent \"All changes saved on this device\" status near the header, updated from persistSnap's resolve. For a local-only app whose whole promise is durability, this is a trust requirement, not a nicety."
     },
     {
-      "issue": "The Items tab renders every item into one unpaginated list with no search field, and neither the room-filter chips nor the tab bar is sticky — a 300-item house is ~20,000px of scroll with no way back to the controls",
+      "issue": "The Items tab renders every item into one unpaginated list with no search field, and neither the room-filter chips nor the tab bar is sticky, a 300-item house is ~20,000px of scroll with no way back to the controls",
       "where": "app.js:287-301, index.html:67 (nav.tabs, no position:sticky)",
-      "fix": "Add a search input (the stylesheet already styles input[type=search] at index.html:54 — the feature was clearly intended and never built), make nav.tabs sticky, and consider grouping by room with sticky room headers."
+      "fix": "Add a search input (the stylesheet already styles input[type=search] at index.html:54, the feature was clearly intended and never built), make nav.tabs sticky, and consider grouping by room with sticky room headers."
     },
     {
       "issue": "Capture with zero rooms is a dead end: it prints \"Add a room first (Rooms tab)\" with no button to get there, so the user must infer that the word \"Rooms\" refers to the tab above",
@@ -174,22 +174,22 @@
       "fix": "Replace the hint with a studio.css `.empty` block containing an actual button that sets tab='rooms' and re-renders."
     },
     {
-      "issue": "The Rooms tab has no empty state at all — with no rooms it renders a bare add-field above an empty list, with no explanation of why rooms matter (they drive the PDF's page-per-room structure)",
+      "issue": "The Rooms tab has no empty state at all, with no rooms it renders a bare add-field above an empty list, with no explanation of why rooms matter (they drive the PDF's page-per-room structure)",
       "where": "app.js:318-346",
       "fix": "Add an .empty block explaining that each room becomes a page in the report, with two or three one-tap starter-room suggestions."
     },
     {
-      "issue": "The home empty state teaches nothing: with zero inventories the \"Your inventories\" card shows a heading, an empty list, and a storage warning — it never says \"you have none yet\" or points at the CTA above",
+      "issue": "The home empty state teaches nothing: with zero inventories the \"Your inventories\" card shows a heading, an empty list, and a storage warning, it never says \"you have none yet\" or points at the CTA above",
       "where": "app.js:127-133",
       "fix": "Swap the .hint for a real .empty block that names the state and repeats the primary action; keep the storage warning for when inventories actually exist."
     },
     {
-      "issue": "Both text-entry moments that matter — naming a new inventory and renaming a room — use native prompt(), which is unstyleable, is suppressed entirely by some mobile browsers and by \"prevent additional dialogs\", and will look broken beside a freshly designed system",
+      "issue": "Both text-entry moments that matter, naming a new inventory and renaming a room, use native prompt(), which is unstyleable, is suppressed entirely by some mobile browsers and by \"prevent additional dialogs\", and will look broken beside a freshly designed system",
       "where": "app.js:159, app.js:336",
       "fix": "Replace with an in-app dialog reusing the #itemDlg pattern. Note prompt() returning null vs '' is already handled at app.js:160, so the control flow ports cleanly."
     },
     {
-      "issue": "Page size resets to US Letter on every load and the room filter resets on every inventory open — an A4 user re-picks the setting every single session",
+      "issue": "Page size resets to US Letter on every load and the room filter resets on every inventory open, an A4 user re-picks the setting every single session",
       "where": "app.js:80 (pageSize), app.js:79 and 200 (itemFilterRoom)",
       "fix": "Persist pageSize to localStorage; it is a device preference, not document state."
     },
@@ -199,36 +199,36 @@
       "fix": "Disable the export buttons with an explanatory hint until at least one item exists."
     },
     {
-      "issue": "No skip link, and the page is long — keyboard users tab through the header and the entire tab strip on every render",
+      "issue": "No skip link, and the page is long, keyboard users tab through the header and the entire tab strip on every render",
       "where": "index.html:116-123",
       "fix": "Add the studio.css `.skip` link (studio.css:540) targeting #view."
     }
   ],
   "a11yDefects": [
     {
-      "issue": "`<main id=\"view\" aria-live=\"polite\">` makes the ENTIRE application a live region. Because drawEditor() calls replaceChildren() and rebuilds the whole subtree, every tab switch, item save, room add and filter change re-announces the complete page — potentially hundreds of item names. This is the most damaging a11y defect in the app",
+      "issue": "`<main id=\"view\" aria-live=\"polite\">` makes the ENTIRE application a live region. Because drawEditor() calls replaceChildren() and rebuilds the whole subtree, every tab switch, item save, room add and filter change re-announces the complete page, potentially hundreds of item names. This is the most damaging a11y defect in the app",
       "where": "index.html:123, driven by app.js:120, 207-208",
       "fix": "Remove aria-live from #view entirely and announce discrete outcomes through the existing #toast (which is already role=status). Add a visually-hidden heading or move focus on route change instead."
     },
     {
-      "issue": "The ✎ edit buttons have no accessible name — on every item row and every room row, the entire button content is the pencil character U+270E, which screen readers announce as \"pencil\" or skip",
+      "issue": "The ✎ edit buttons have no accessible name, on every item row and every room row, the entire button content is the pencil character U+270E, which screen readers announce as \"pencil\" or skip",
       "where": "app.js:314 (item edit), app.js:335-338 (room rename)",
       "fix": "Add `'aria-label': 'Edit ' + item.name` and `'Rename ' + r.name`. The delete buttons nearby already show the pattern (app.js:141, 339)."
     },
     {
-      "issue": "The four tabs are plain buttons with no tablist semantics and no aria-selected or aria-current — the active tab is conveyed exclusively by the `.active` class's background color, so a screen reader user cannot tell which view they are in",
+      "issue": "The four tabs are plain buttons with no tablist semantics and no aria-selected or aria-current, the active tab is conveyed exclusively by the `.active` class's background color, so a screen reader user cannot tell which view they are in",
       "where": "index.html:67-72, app.js:218-223",
       "fix": "Either add role=tablist/role=tab with aria-selected, or keep plain buttons and set aria-current=\"true\" on the active one. Do not rely on color alone."
     },
     {
-      "issue": "The room filter chips convey selection only through the `.sel` class — no aria-pressed — so the current filter is invisible to assistive tech while silently hiding most of the list",
+      "issue": "The room filter chips convey selection only through the `.sel` class, no aria-pressed, so the current filter is invisible to assistive tech while silently hiding most of the list",
       "where": "app.js:290-292",
       "fix": "Add `'aria-pressed': String(itemFilterRoom === id)` to each chip button."
     },
     {
       "issue": "The focus ring is effectively invisible in light mode: --focus #5eead4 against --bg #f6f7f9 computes to 1.38:1 and against --card #ffffff to 1.48:1, far below the 3:1 WCAG 2.2 requires for focus indicators. In dark mode --focus #0f766e is 2.97:1 against --card and 2.94:1 against --accent, so focusing the primary Save button is nearly unreadable",
       "where": "index.html:21 and 27 (--focus), index.html:58",
-      "fix": "Adopt studio.css's two-part ring (studio.css:522-527): solid --focus outline plus a --focus-halo box-shadow, which stays visible on same-hue backgrounds — precisely the primary-button case that fails here."
+      "fix": "Adopt studio.css's two-part ring (studio.css:522-527): solid --focus outline plus a --focus-halo box-shadow, which stays visible on same-hue backgrounds, precisely the primary-button case that fails here."
     },
     {
       "issue": "Both PDF export buttons have the identical accessible name \"PDF\", so a screen reader user hears the same label for \"Full report\" and \"Adjuster's list\" with nothing to distinguish them",
@@ -236,14 +236,14 @@
       "fix": "Add `'aria-label': 'Download ' + title + ' PDF'` inside the export loop, where `title` is already in scope."
     },
     {
-      "issue": "PDF generation of a photo-heavy inventory takes many seconds. The button text swaps to '…' and it is disabled, but nothing is announced — no live-region progress on start, and success is signalled only by a file download",
+      "issue": "PDF generation of a photo-heavy inventory takes many seconds. The button text swaps to '…' and it is disabled, but nothing is announced, no live-region progress on start, and success is signalled only by a file download",
       "where": "app.js:373-380",
       "fix": "Announce 'Generating report…' and 'Report downloaded' through #toast (already role=status); avoid changing the label to a bare ellipsis, which reads as nothing."
     },
     {
       "issue": "Focus is destroyed on every re-render. drawEditor() replaceChildren()s the node the user just activated, so after saving or deleting in the dialog, after switching tabs, and after every hash navigation, focus falls back to <body> and keyboard users restart from the top of the document",
       "where": "app.js:120, 207-208, 453, 461-462",
-      "fix": "After each render, restore focus to a stable equivalent (the active tab button, or the row that was edited) — or move focus to a heading in the newly rendered view."
+      "fix": "After each render, restore focus to a stable equivalent (the active tab button, or the row that was edited), or move focus to a heading in the newly rendered view."
     },
     {
       "issue": "The item dialog has no accessible name: <dialog id=\"itemDlg\"> carries no aria-labelledby, and browsers do not derive a dialog name from a descendant heading",
@@ -251,12 +251,12 @@
       "fix": "Give the <h3> an id and add aria-labelledby to the dialog. Also add autofocus to #iName so focus lands on the primary field rather than \"Replace photo\"."
     },
     {
-      "issue": "Row-level delete buttons all share one generic name — every inventory row announces \"Delete inventory\" and every room row \"Delete room\", with no indication of which. The Open buttons are likewise all named \"Open\"",
+      "issue": "Row-level delete buttons all share one generic name, every inventory row announces \"Delete inventory\" and every room row \"Delete room\", with no indication of which. The Open buttons are likewise all named \"Open\"",
       "where": "app.js:140, 141, 339",
       "fix": "Interpolate the record name into each label: 'Delete inventory 42 Wallaby Way', 'Open 42 Wallaby Way'."
     },
     {
-      "issue": "The tip-jar link injected into #toast is focusable but lives in a position:fixed element at the end of the DOM that removes itself after 7 seconds — a keyboard user cannot realistically reach it, and it appears inside a role=status region where interactive content does not belong",
+      "issue": "The tip-jar link injected into #toast is focusable but lives in a position:fixed element at the end of the DOM that removes itself after 7 seconds, a keyboard user cannot realistically reach it, and it appears inside a role=status region where interactive content does not belong",
       "where": "app.js:408-414",
       "fix": "Put the tip CTA in the persistent page flow (the export card or footer) and keep #toast to non-interactive text."
     },
@@ -266,19 +266,19 @@
       "fix": "Adopt studio.css's reduced-motion block (studio.css:558-567), which neutralises durations globally."
     }
   ],
-  "printSupport": "There is NO `@media print` anywhere in the app — the only media query in the entire 96-line stylesheet is `prefers-color-scheme` (index.html:23). Print is a SECONDARY use case here, not the primary one: this app's printed artifact is produced by pdf-lib into a downloaded PDF (pdf.js — cover page, page-per-room photo grid, adjuster's value-sorted list), not by the browser's print path, and that PDF pipeline is entirely independent of CSS. But browser print is still meaningfully broken today, and one genuinely useful print use case is missing. Broken now: (1) a dark-mode user hitting Ctrl+P keeps prefers-color-scheme:dark, and with print-color-adjust defaulting to economy the dark backgrounds drop out while the text stays --ink #e6edf3 and --muted #8b98a5 — near-white on white, i.e. a blank-looking page; (2) nothing is hidden — nav.tabs, the ‹ Back button, the per-row ✎/✕ buttons, a.tipbtn, the page-size select and the export buttons all print; (3) #toast is position:fixed and can overlay or repeat on every page; (4) no break-inside:avoid on `ul.plain li` or `.exportcard`, so item rows split across page boundaries mid-thumbnail; (5) .wrap stays capped at 720px, wasting a third of the paper. Missing feature: the Items tab printed as a walk-the-house checklist — a sheet with blank columns you carry room to room to spot what you have not yet photographed — is exactly the artifact this app's users want and it does not exist. Good news for the overhaul: studio.css already ships a solid print block (studio.css:579-607) that forces a light palette, drops shadows, unpins .wrap, sets @page margin 14mm, adds break-inside:avoid to cards/rows/list-items, and hides header.app, footer.colophon, .tipbtn, .actionbar, #toast, .seg and .skip. Adopting it fixes items 1-5 almost entirely. Three app-specific gaps remain that studio.css cannot know about: `.warnbanner`, the ‹ Back button, and the per-row ✎/✕ buttons are not in its hide list and must be given `.no-print`; and `nav.tabs` must be renamed to `.seg` or it will not be hidden either.",
+  "printSupport": "There is NO `@media print` anywhere in the app, the only media query in the entire 96-line stylesheet is `prefers-color-scheme` (index.html:23). Print is a SECONDARY use case here, not the primary one: this app's printed artifact is produced by pdf-lib into a downloaded PDF (pdf.js, cover page, page-per-room photo grid, adjuster's value-sorted list), not by the browser's print path, and that PDF pipeline is entirely independent of CSS. But browser print is still meaningfully broken today, and one genuinely useful print use case is missing. Broken now: (1) a dark-mode user hitting Ctrl+P keeps prefers-color-scheme:dark, and with print-color-adjust defaulting to economy the dark backgrounds drop out while the text stays --ink #e6edf3 and --muted #8b98a5, near-white on white, i.e. a blank-looking page; (2) nothing is hidden, nav.tabs, the ‹ Back button, the per-row ✎/✕ buttons, a.tipbtn, the page-size select and the export buttons all print; (3) #toast is position:fixed and can overlay or repeat on every page; (4) no break-inside:avoid on `ul.plain li` or `.exportcard`, so item rows split across page boundaries mid-thumbnail; (5) .wrap stays capped at 720px, wasting a third of the paper. Missing feature: the Items tab printed as a walk-the-house checklist, a sheet with blank columns you carry room to room to spot what you have not yet photographed, is exactly the artifact this app's users want and it does not exist. Good news for the overhaul: studio.css already ships a solid print block (studio.css:579-607) that forces a light palette, drops shadows, unpins .wrap, sets @page margin 14mm, adds break-inside:avoid to cards/rows/list-items, and hides header.app, footer.colophon, .tipbtn, .actionbar, #toast, .seg and .skip. Adopting it fixes items 1-5 almost entirely. Three app-specific gaps remain that studio.css cannot know about: `.warnbanner`, the ‹ Back button, and the per-row ✎/✕ buttons are not in its hide list and must be given `.no-print`; and `nav.tabs` must be renamed to `.seg` or it will not be hidden either.",
   "riskyToRestyle": [
-    "ORDERING — the highest-risk item. design/apply.mjs:64-70 splices the generated base at the TOP of the existing <style> block and leaves the app's current rules BELOW it. Same-specificity later rules win, so index.html:30-113 will silently override the new system wholesale: .btn's 11px padding beats studio's min-height:var(--tap), .chip's 7px beats the new chip, section.card's 14px radius beats --r-card. Worst of all, the app's :root at index.html:18-29 comes after the skin's :root, so --accent:#0f766e (teal) overrides the generated olive --accent:#778a50 and the entire per-app palette is defeated. The app layer must be PRUNED to app-only selectors (.thumb, .capturephoto, .exportcard, .warnbanner, ul.plain, dialog), not merely prepended to.",
-    "TOKEN RENAMES — the app's surviving rules reference var(--bg), var(--card), var(--muted), var(--chip), var(--chip-ink), var(--neg). The generated skin does provide these as back-compat aliases (verified in design/out/home-inventory.css), so deleting the app's :root block is safe — but only if the skin is present. Deleting :root WITHOUT the skin spliced in yields transparent backgrounds and invisible text across the whole app.",
+    "ORDERING, the highest-risk item. design/apply.mjs:64-70 splices the generated base at the TOP of the existing <style> block and leaves the app's current rules BELOW it. Same-specificity later rules win, so index.html:30-113 will silently override the new system wholesale: .btn's 11px padding beats studio's min-height:var(--tap), .chip's 7px beats the new chip, section.card's 14px radius beats --r-card. Worst of all, the app's :root at index.html:18-29 comes after the skin's :root, so --accent:#0f766e (teal) overrides the generated olive --accent:#778a50 and the entire per-app palette is defeated. The app layer must be PRUNED to app-only selectors (.thumb, .capturephoto, .exportcard, .warnbanner, ul.plain, dialog), not merely prepended to.",
+    "TOKEN RENAMES, the app's surviving rules reference var(--bg), var(--card), var(--muted), var(--chip), var(--chip-ink), var(--neg). The generated skin does provide these as back-compat aliases (verified in design/out/home-inventory.css), so deleting the app's :root block is safe, but only if the skin is present. Deleting :root WITHOUT the skin spliced in yields transparent backgrounds and invisible text across the whole app.",
     "test/smoke.test.mjs:84 asserts `$('view').querySelectorAll('.exportcard').length === 3`. Renaming .exportcard, or restructuring the export rows into a different wrapper, fails the test suite.",
-    "test/smoke.test.mjs:37-39 clicks buttons by EXACT trimmed textContent: 'Start an inventory', 'Save & next', 'Items', 'Rooms', 'Export', 'Add', and '✎'. Adding an icon or emoji to the Items/Rooms/Export tab labels, or replacing the ✎ glyph with an <svg>, throws `no button \"...\"` and breaks the suite. (Capture already carries an emoji and is deliberately never clicked by text.) Wrapping labels in a <span> is safe — textContent still matches.",
+    "test/smoke.test.mjs:37-39 clicks buttons by EXACT trimmed textContent: 'Start an inventory', 'Save & next', 'Items', 'Rooms', 'Export', 'Add', and '✎'. Adding an icon or emoji to the Items/Rooms/Export tab labels, or replacing the ✎ glyph with an <svg>, throws `no button \"...\"` and breaks the suite. (Capture already carries an emoji and is deliberately never clicked by text.) Wrapping labels in a <span> is safe, textContent still matches.",
     "test/smoke.test.mjs:49, 51, 74 locates inputs by placeholder SUBSTRING: 'What is it', 'Value', 'Garage'. A copy pass that rewrites those three placeholders breaks the test with a confusing undefined-property error.",
-    "test/smoke.test.mjs:7-8 strips the two <script> tags by exact string match on `'<script src=\"vendor-pdf-lib.js\"></script>'` and `'<script type=\"module\" src=\"app.js\"></script>'`. Reformatting index.html, adding defer, or reordering those lines makes the replace a silent no-op and jsdom then executes the real scripts — a baffling failure mode. Also note the suite asserts the ungrammatical string '1 items' (smoke.test.mjs:55) plus 'cruel joke' and 'SN SN-99', so fixing pluralisation at app.js:216/288 requires updating the test.",
-    "sw.js ASSETS (lines 4-15) lists no .css file. If the overhaul extracts CSS to a shared stylesheet instead of inlining it, that path MUST be added to ASSETS and VERSION bumped from 'inventory-v4' — otherwise returning offline users get a completely unstyled app from the old cache. Keeping the CSS inline (which is what apply.mjs does) sidesteps this entirely but still needs the VERSION bump so the new index.html is fetched.",
-    "Class names are built by string concatenation in four places and will not appear as clean literals to a find-and-replace: app.js:247 `'capturephoto' + (… ' hidden')`, app.js:250 `'btn big' + (… ' primary')`, app.js:291 `'chip' + (… ' sel')`, app.js:221 tab ternary. Critically, the tab ternary assigns the EMPTY STRING to inactive tabs — they carry no class and are styled purely by the `nav.tabs button` descendant selector, so any move to a .tab/.tab--active scheme must change both the CSS and this ternary.",
-    "COMPONENT-NAME MISMATCHES against studio.css: the app uses `.chip.sel` but studio.css defines `.chip.on` (studio.css:416); the app uses `nav.tabs`/`nav.tabs button.active` but studio.css defines `.seg`/`.seg button.active`. Neither will pick up the new styling — and because studio.css's print block hides `.seg` by name, an unconverted nav.tabs also prints. Separately, studio's `.chip` is only ~26px tall versus the app's current ~33px, so adopting it verbatim makes the room-filter tap targets WORSE; these chips are interactive filters and need .btn.small/.btn.icon treatment or an explicit min-height:var(--tap).",
-    ".hidden{display:none !important} (index.html:107) is load-bearing and toggled by JS in six places — #tipLink (app.js:494), #iPhoto and #iReceiptImg (app.js:424-428, 469, 477), the capture preview (app.js:247), #fileInput (index.html:155) and the import input (app.js:150). studio.css defines an identical .hidden (studio.css:551) so the behaviour survives, but RENAMING it breaks photo previews and leaves the raw file input visible with no error. Equally load-bearing: `.row>*{min-width:0}` (index.html:60) and `ul.plain .grow{min-width:0; overflow-wrap:anywhere}` (index.html:82) are the only things preventing long item names from blowing out their flex rows — a grid-based rewrite must preserve both.",
-    "Roughly eighteen inline `style:` attributes set from JS (app.js:213, 214, 216, 257, 273, 274, 279, 281, 289, 322, 330, 357, 362, 363, 410, plus index.html:126 and 133) hardcode margins in 6/8/10/14px and will NOT follow a 4px-base spacing scale — the app will look half-converted until they are migrated to classes. Two are actively dangerous: app.js:357 `style:'flex:0 0 110px'` on the page-size select will clip 'US Letter' as soon as the type scale grows, and app.js:373 `const btn = ev.target` in the export handler assumes the button has no element children — wrapping the 'PDF' label in a <span> makes ev.target the span, so `btn.disabled` and `btn.textContent` silently target the wrong node.",
-    "BRAND COLOR LIVES IN FIVE PLACES and the generated skin changes this app from teal to olive on warm paper (--canvas:#fef6ea, --accent-fill:#5f7138). All must move together or the PWA splash, status bar and installed icon contradict the app: index.html:12-13 (two <meta name=\"theme-color\">), manifest.webmanifest theme_color #0f766e and background_color #f6f7f9, and icon.svg's two fill=\"#0f766e\" attributes. The marketing/*.png thumbnails are teal-branded rasters that also need regenerating. Note separately that pdf.js hardcodes its own rgb(0.1,0.1,0.12)/rgb(0.45,0.45,0.5) inks (pdf.js:32-33, 109-110) — CSS cannot break the PDF, but the exported report will not carry the new palette unless those are updated too, and pdf.js's exact page math (PAGE constants at pdf.js:7-10, margin 46, cellW/cellH at 73-74, adjuster column offsets 240/250/350 at 129-131) must be left alone; test/pdf.test.mjs:61-76 monkeypatches drawText to assert no off-page draws and will catch spacing edits there."
+    "test/smoke.test.mjs:7-8 strips the two <script> tags by exact string match on `'<script src=\"vendor-pdf-lib.js\"></script>'` and `'<script type=\"module\" src=\"app.js\"></script>'`. Reformatting index.html, adding defer, or reordering those lines makes the replace a silent no-op and jsdom then executes the real scripts, a baffling failure mode. Also note the suite asserts the ungrammatical string '1 items' (smoke.test.mjs:55) plus 'cruel joke' and 'SN SN-99', so fixing pluralisation at app.js:216/288 requires updating the test.",
+    "sw.js ASSETS (lines 4-15) lists no .css file. If the overhaul extracts CSS to a shared stylesheet instead of inlining it, that path MUST be added to ASSETS and VERSION bumped from 'inventory-v4', otherwise returning offline users get a completely unstyled app from the old cache. Keeping the CSS inline (which is what apply.mjs does) sidesteps this entirely but still needs the VERSION bump so the new index.html is fetched.",
+    "Class names are built by string concatenation in four places and will not appear as clean literals to a find-and-replace: app.js:247 `'capturephoto' + (… ' hidden')`, app.js:250 `'btn big' + (… ' primary')`, app.js:291 `'chip' + (… ' sel')`, app.js:221 tab ternary. Critically, the tab ternary assigns the EMPTY STRING to inactive tabs, they carry no class and are styled purely by the `nav.tabs button` descendant selector, so any move to a .tab/.tab--active scheme must change both the CSS and this ternary.",
+    "COMPONENT-NAME MISMATCHES against studio.css: the app uses `.chip.sel` but studio.css defines `.chip.on` (studio.css:416); the app uses `nav.tabs`/`nav.tabs button.active` but studio.css defines `.seg`/`.seg button.active`. Neither will pick up the new styling, and because studio.css's print block hides `.seg` by name, an unconverted nav.tabs also prints. Separately, studio's `.chip` is only ~26px tall versus the app's current ~33px, so adopting it verbatim makes the room-filter tap targets WORSE; these chips are interactive filters and need .btn.small/.btn.icon treatment or an explicit min-height:var(--tap).",
+    ".hidden{display:none !important} (index.html:107) is load-bearing and toggled by JS in six places, #tipLink (app.js:494), #iPhoto and #iReceiptImg (app.js:424-428, 469, 477), the capture preview (app.js:247), #fileInput (index.html:155) and the import input (app.js:150). studio.css defines an identical .hidden (studio.css:551) so the behaviour survives, but RENAMING it breaks photo previews and leaves the raw file input visible with no error. Equally load-bearing: `.row>*{min-width:0}` (index.html:60) and `ul.plain .grow{min-width:0; overflow-wrap:anywhere}` (index.html:82) are the only things preventing long item names from blowing out their flex rows, a grid-based rewrite must preserve both.",
+    "Roughly eighteen inline `style:` attributes set from JS (app.js:213, 214, 216, 257, 273, 274, 279, 281, 289, 322, 330, 357, 362, 363, 410, plus index.html:126 and 133) hardcode margins in 6/8/10/14px and will NOT follow a 4px-base spacing scale, the app will look half-converted until they are migrated to classes. Two are actively dangerous: app.js:357 `style:'flex:0 0 110px'` on the page-size select will clip 'US Letter' as soon as the type scale grows, and app.js:373 `const btn = ev.target` in the export handler assumes the button has no element children, wrapping the 'PDF' label in a <span> makes ev.target the span, so `btn.disabled` and `btn.textContent` silently target the wrong node.",
+    "BRAND COLOR LIVES IN FIVE PLACES and the generated skin changes this app from teal to olive on warm paper (--canvas:#fef6ea, --accent-fill:#5f7138). All must move together or the PWA splash, status bar and installed icon contradict the app: index.html:12-13 (two <meta name=\"theme-color\">), manifest.webmanifest theme_color #0f766e and background_color #f6f7f9, and icon.svg's two fill=\"#0f766e\" attributes. The marketing/*.png thumbnails are teal-branded rasters that also need regenerating. Note separately that pdf.js hardcodes its own rgb(0.1,0.1,0.12)/rgb(0.45,0.45,0.5) inks (pdf.js:32-33, 109-110), CSS cannot break the PDF, but the exported report will not carry the new palette unless those are updated too, and pdf.js's exact page math (PAGE constants at pdf.js:7-10, margin 46, cellW/cellH at 73-74, adjuster column offsets 240/250/350 at 129-131) must be left alone; test/pdf.test.mjs:61-76 monkeypatches drawText to assert no off-page draws and will catch spacing edits there."
   ]
 }

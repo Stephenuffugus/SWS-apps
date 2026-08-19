@@ -21,7 +21,7 @@ ok('url payload adds https:// unless a known link scheme is present', () => {
   assert.equal(buildPayload('url', { url: 'https://a.b/c?d=e' }), 'https://a.b/c?d=e');
   assert.equal(buildPayload('url', { url: 'mailto:x@y.z' }), 'mailto:x@y.z');
   assert.equal(buildPayload('url', { url: '  ' }), '');
-  // a host:port is NOT a scheme — this used to produce a broken QR
+  // a host:port is NOT a scheme, this used to produce a broken QR
   assert.equal(buildPayload('url', { url: 'example.com:8080/menu' }), 'https://example.com:8080/menu');
   assert.equal(buildPayload('url', { url: 'localhost:3000' }), 'https://localhost:3000');
   // hostile schemes are neutralized rather than encoded verbatim
@@ -82,7 +82,7 @@ ok('round-trips every alphabet through a real decode of the modules', () => {
     'Привет',
     'مطاعم القرية',
     '🍕',
-    'Nadia Ünlü — Straße 7',
+    'Nadia Ünlü, Straße 7',
     'WIFI:T:WPA;S:Café Nest;P:naïve;;',
     'tel:+15550101234;ext=22',
     'https://café.example/menü',

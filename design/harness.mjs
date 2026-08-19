@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — app driving harness
+   SWS STUDIO, app driving harness
 
    Serves apps/ over HTTP and hands you a live page, so a test can do the thing
    a user would rather than reason about the source. Everything that drives a
@@ -63,7 +63,7 @@ export async function serveApps() {
 /**
  * Open one app and hand it to `fn`.
  *
- * `errors` accumulates page errors and console errors for the whole run — read
+ * `errors` accumulates page errors and console errors for the whole run, read
  * it at the END of your callback, not the start. In these apps a console error
  * is a real defect, not noise.
  */
@@ -126,7 +126,7 @@ export async function withApp(slug, fn, opts = {}) {
      * Interactive elements whose hit area is under the 44px comfort floor.
      *
      * Skips links sitting inline inside a sentence. WCAG 2.2 Target Size
-     * exempts those explicitly, and it is the right call — a link inside a
+     * exempts those explicitly, and it is the right call, a link inside a
      * paragraph is as tall as its line and cannot be made 44px without
      * wrecking the prose. Counting them buries the real findings under the
      * colophon's "Privacy" link on all 23 apps.
@@ -144,7 +144,7 @@ export async function withApp(slug, fn, opts = {}) {
           el.closest('p,li,footer,.hint,.footnote,.small,.sub');
         if (inlineInProse) return;
 
-        /* A checkbox inside its own <label> is not a 22px target — the label
+        /* A checkbox inside its own <label> is not a 22px target, the label
            is clickable too, so the real hit area is the label's box. Measuring
            the input alone reports a false positive on every app that does the
            correct thing. */

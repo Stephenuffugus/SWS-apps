@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRADE SHEET — getting the names in
+   GRADE SHEET, getting the names in
 
    This is the wall every gradebook loses its users at, and it loses them
    before they ever see a grade. Three teachers, three different apps, three
@@ -20,7 +20,7 @@
 
    Paste is primary and file is secondary on purpose. On a locked-down school
    machine she may have no SIS export role, no permission to save a file of
-   children's names to disk, and nothing she can install — but she can nearly
+   children's names to disk, and nothing she can install, but she can nearly
    always SEE a roster on a screen. Select, Ctrl+C, Ctrl+V. It also leaves no
    file of student names sitting in Downloads afterwards.
 
@@ -33,7 +33,7 @@ export const FIELDS = ['last', 'first', 'full', 'sid', 'ignore'];
 /* ── 1. the HTML clipboard path ─────────────────────────────────────────────
    Selecting a roster table in an SIS web page and pressing Ctrl+C puts a real
    HTML table on the clipboard alongside the plain text. Reading it gives clean
-   rows and cells with no delimiter guessing at all — which makes it the single
+   rows and cells with no delimiter guessing at all, which makes it the single
    highest-value path on exactly the machine our teacher is stuck with, and
    almost nobody implements it.
 
@@ -57,7 +57,7 @@ export function rowsFromHTML(html, DP) {
 /* ── 2. the plain-text path ─────────────────────────────────────────────────
    Delimiter is detected per line and then taken as the mode across lines, not
    decided from the first line. A roster's first line is very often the one
-   irregular line in the paste — a title, a header, a stray count — and letting
+   irregular line in the paste, a title, a header, a stray count, and letting
    it choose the delimiter for everything below is how "it still does not load"
    happens.
 
@@ -76,7 +76,7 @@ const DELIMS = [
 const stripOrnament = (line) =>
   line
     .replace(/^\s*\d+\s*[.)\]-]\s+/, '')
-    .replace(/^\s*[•·*–—-]\s+/, '')
+    .replace(/^\s*[•·*-, -]\s+/, '')
     .trim();
 
 export function detectDelimiter(lines) {
@@ -101,7 +101,7 @@ export function looksLikeHeader(row) {
   const joined = row.join(' ');
   if (!HEADER_WORDS.test(joined)) return false;
   /* A real header is words, not data. If most cells contain a digit it is far
-     more likely to be a row of student IDs than a header row — and silently
+     more likely to be a row of student IDs than a header row, and silently
      eating a child's record is worse than showing one extra row she deletes. */
   const digity = row.filter((c) => /\d/.test(c)).length;
   return digity <= row.length / 2;
@@ -125,7 +125,7 @@ export function parsePaste(text, html, DP) {
     via = d || 'single';
   }
 
-  /* Ragged rows are normal — a trailing empty cell, a merged cell. Pad to the
+  /* Ragged rows are normal, a trailing empty cell, a merged cell. Pad to the
      modal width rather than rejecting, because rejecting is the behaviour the
      reviews above are complaining about. */
   const widths = new Map();
@@ -157,7 +157,7 @@ export function guessColumns(rows, header) {
   const hasComma = (i) => col(i).filter((v) => v.includes(',')).length > col(i).length / 2;
   const avgWords = (i) => { const c = col(i); return c.length ? c.reduce((s, v) => s + v.split(/\s+/).length, 0) / c.length : 0; };
 
-  /* A header, when there is one, beats content heuristics — she told us. */
+  /* A header, when there is one, beats content heuristics, she told us. */
   const byHeader = (i) => {
     if (!header) return null;
     const h = (header[i] || '').toLowerCase();
@@ -230,7 +230,7 @@ export function buildStudents(rows, cols, order = 'firstLast') {
 /* ── 5. two children with the same name ─────────────────────────────────────
    There are always two Jacob M.s. Marks entered on the wrong one are invisible
    until a report card goes home, which is the worst possible moment to find
-   out — so this BLOCKS the commit rather than warning. The disambiguator she
+   out, so this BLOCKS the commit rather than warning. The disambiguator she
    supplies then shows everywhere in the app, not just in the roster editor,
    because the ambiguity is at the moment of entry. */
 export function displayName(s, mode = 'firstLast1') {
@@ -254,7 +254,7 @@ export function findCollisions(students, mode = 'firstLast1') {
     .map(([name, idx]) => ({ name, indexes: idx }));
 }
 
-/* Already in this class — counted so the summary line can say so, and skipped
+/* Already in this class, counted so the summary line can say so, and skipped
    on commit. Re-pasting the same roster is a thing people do when they are not
    sure the first one worked. */
 export function partitionExisting(incoming, existing) {

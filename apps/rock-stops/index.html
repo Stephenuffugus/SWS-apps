@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Rock Stops · field log</title>
-<meta name="description" content="A private field log for rockhounding, fossils and sea glass. Local-first — no account, no server.">
+<meta name="description" content="A private field log for rockhounding, fossils and sea glass. Local-first, no account, no server.">
 <meta name="theme-color" content="#161B19">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -14,7 +14,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20fill%3D%27%23161B19%27/%3E%3Ccircle%20cx%3D%27256%27%20cy%3D%27290%27%20r%3D%27140%27%20fill%3D%27%233E7A6B%27/%3E%3Ccircle%20cx%3D%27210%27%20cy%3D%27245%27%20r%3D%2740%27%20fill%3D%27%23EDEEEA%27/%3E%3C/svg%3E">
 <style>
-/* ═══ Float — design tokens ═══
+/* ═══ Float, design tokens ═══
    limestone #EDEEEA · basalt #161B19 · basalt-2 #232B28
    serpentine #3E7A6B · agate #C9873B · iron #A64B3C
    display: system serif (field journal) · data: monospace */
@@ -48,7 +48,7 @@ a{color:var(--serp-deep)}
 .view{padding:14px 16px calc(24px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
 /* --mist is solved against limestone (4.53:1). On the dark surfaces it would
    invert to 3.9:1, so those scopes re-solve it upward against basalt2, the
-   lighter of the two dark grounds — 5.41:1 on basalt, 4.50:1 on basalt2.
+   lighter of the two dark grounds, 5.41:1 on basalt, 4.50:1 on basalt2.
    One grey cannot clear 4.5:1 against both ends; that is why there are two. */
 .view.dark,#tabbar{--mist:#889289}
 .view.dark{background:var(--basalt);color:var(--limestone);max-width:none;margin:0;
@@ -288,7 +288,7 @@ body.gated #tabbar{display:none}
 <nav id="tabbar" aria-label="Sections"></nav>
 <script>
 /* ═══════════════════════════════════════════════════════════════════
-   FLOAT — rockhounding field log · v2
+   FLOAT, rockhounding field log · v2
    Single-file PWA. Local-first. No account, no server, no tracking.
    Every record lives in IndexedDB on this device.
    ═══════════════════════════════════════════════════════════════════ */
@@ -390,7 +390,7 @@ const dbOpen = () => new Promise(res => {
     for (const s of STORES) if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: 'id' });
   };
   req.onsuccess = e => { idb = e.target.result; res(); };
-  req.onerror = () => { useMem = true; console.warn('IndexedDB unavailable — using in-memory store (data will not persist)'); res(); };
+  req.onerror = () => { useMem = true; console.warn('IndexedDB unavailable, using in-memory store (data will not persist)'); res(); };
 });
 
 const db = {
@@ -458,7 +458,7 @@ const MATERIALS = [
   'sea glass', 'pottery', 'concretion', 'granite', 'slate', 'pyrite',
   'calcite', 'petrified wood', 'unknown', 'other'
 ];
-const LAND_TYPES = ['public — check rules', 'private — permission', 'creek/waterway', 'beach/shore', 'quarry/pit', 'roadcut', 'own property', 'unknown'];
+const LAND_TYPES = ['public, check rules', 'private, permission', 'creek/waterway', 'beach/shore', 'quarry/pit', 'roadcut', 'own property', 'unknown'];
 const COLLECT_STATUS = ['ok to collect', 'limited/permit', 'look only', 'unknown'];
 
 /* ── record constructors (sync-ready: id, createdAt, updatedAt, deleted) ── */
@@ -468,7 +468,7 @@ const newSite = (name) => ({
 });
 const newTrip = (siteId) => ({
   id: uid(), siteId: siteId || null, startedAt: nowISO(), endedAt: null, notes: '',
-  /* [[lat, lon, isoTime], …] — where you actually walked, recorded only while
+  /* [[lat, lon, isoTime], …], where you actually walked, recorded only while
      Field mode is open on an active trip. Local like everything else, and the
      single most sensitive array in the app: it is the route to your spots, not
      just the spots. */
@@ -490,7 +490,7 @@ const newFind = (o = {}) => ({
    - sqrt-compressed to Uint8 for storage (peaked histograms from
      uniformly coloured rocks clip badly on a linear byte scale)
    - Bhattacharyya coefficient for similarity (robust for sparse hists)
-   Stage 2 (DINOv2 embeddings) is a documented seam — see HANDOFF.
+   Stage 2 (DINOv2 embeddings) is a documented seam, see HANDOFF.
 ──────────────────────────────────────────────────────────────────── */
 'use strict';
 const HBINS = 8, HDIM = HBINS * HBINS * HBINS;
@@ -710,7 +710,7 @@ const field = {
 
   /* Append to the active trip's track, but only when the walk has actually
      moved. A stationary phone emits a fix every few seconds and would other-
-     wise fill the record with a thousand copies of the same spot — noise in
+     wise fill the record with a thousand copies of the same spot, noise in
      storage, noise on the map, and a slower backup for nothing.
 
      A wild fix is worse than a missing one, so anything with accuracy over
@@ -728,7 +728,7 @@ const field = {
                          { lat: coords.latitude, lon: coords.longitude }) < 15) return;
 
     /* ~30km of walking at 15m spacing. Past that, drop the oldest rather than
-       refuse to record — a long day should not silently stop being logged. */
+       refuse to record, a long day should not silently stop being logged. */
     trip.track.push([+coords.latitude.toFixed(6), +coords.longitude.toFixed(6), nowISO()]);
     if (trip.track.length > 2000) trip.track.splice(0, trip.track.length - 2000);
 
@@ -737,7 +737,7 @@ const field = {
   },
   gpsStop() {
     if (this.watchId !== null) { navigator.geolocation.clearWatch(this.watchId); this.watchId = null; }
-    /* Do not let a debounced write die with the view — that would lose the
+    /* Do not let a debounced write die with the view, that would lose the
        last stretch of every walk. */
     if (this._trackSave) {
       clearTimeout(this._trackSave); this._trackSave = null;
@@ -823,7 +823,7 @@ const field = {
     this.sessionFinds.unshift(find);
     bus.emit('finds-changed');
     this.paintSession();
-    toast(material ? `Logged — ${material}` : 'Logged');
+    toast(material ? `Logged, ${material}` : 'Logged');
   },
 
   paintSession() {
@@ -879,7 +879,7 @@ const field = {
     }
     host.appendChild(chips);
 
-    /* Zone picker — only when the active trip's site actually has zones, so
+    /* Zone picker, only when the active trip's site actually has zones, so
        nobody who has not set any ever sees a control that does nothing. The
        zone sticks between shots: you work one part of a site at a time, and
        re-picking it for every rock is exactly the tax that would stop anyone
@@ -984,7 +984,7 @@ const queue = {
        Stage 0: if this find carries a zone, rank inside that zone first.
        Most wrong matches are between rocks from different places that happen
        to share a colour, so narrowing the field before comparing beats any
-       amount of tuning on the comparison itself — measured at 12/12 against
+       amount of tuning on the comparison itself, measured at 12/12 against
        9/12. Fall back to the whole collection when the zone is too thin to
        say anything, and label which pool the answer came from so a suggestion
        is never mistaken for more evidence than it is. */
@@ -1117,7 +1117,7 @@ const collection = {
   },
 
   /* Every thumbnail is an ObjectURL, and an ObjectURL is a reference the
-     browser holds until it is explicitly revoked — not when the <img> is
+     browser holds until it is explicitly revoked, not when the <img> is
      removed. Re-rendering the grid on every keystroke of the search box used
      to leak one per card per render, which at 120 cards is a few hundred
      megabytes of pinned Blobs in a minute of typing. Track them and revoke
@@ -1141,7 +1141,7 @@ const collection = {
       (!this.filter.fav || f.favorite));
     if (!shown.length) {
       grid.appendChild(el('div', { class: 'empty' },
-        el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet — Field mode is where it starts.'),
+        el('p', {}, finds.length ? 'Nothing matches those filters.' : 'No finds yet, Field mode is where it starts.'),
         finds.length ? null
           : el('button', { class: 'btn btn-primary', onclick: () => router.go('field') }, 'Open field mode')));
       return;
@@ -1149,7 +1149,7 @@ const collection = {
 
     /* Paged rather than capped. The old hard 120 silently hid everything past
        it, which for an app whose whole promise is "your collection" is the
-       wrong failure — you would think finds had been lost. A sentinel at the
+       wrong failure, you would think finds had been lost. A sentinel at the
        end of the grid pulls the next page as it comes into view, so the
        collection is complete however large it gets. */
     const PAGE = 60;
@@ -1210,7 +1210,7 @@ const collection = {
 
 /* ── specimen detail ────────────────────────────────────────────── */
 const detail = {
-  /* Share one specimen — the photo plus what you called it. Deliberately does
+  /* Share one specimen, the photo plus what you called it. Deliberately does
      NOT include coordinates: sharing a rock with a friend should never quietly
      hand over the location it came from. That is the one piece of data this
      whole app exists to keep, and a share sheet is exactly where it would leak
@@ -1282,7 +1282,7 @@ const detail = {
     matSel.addEventListener('change', async () => { f.material = matSel.value; await db.put('finds', f); });
     host.appendChild(matSel);
 
-    const notes = el('textarea', { class: 'text-input', rows: 3, placeholder: 'Notes — texture, weight, where in the creek…' }, f.notes || '');
+    const notes = el('textarea', { class: 'text-input', rows: 3, placeholder: 'Notes, texture, weight, where in the creek…' }, f.notes || '');
     notes.addEventListener('change', async () => { f.notes = notes.value; await db.put('finds', f); });
     host.appendChild(notes);
 
@@ -1291,7 +1291,7 @@ const detail = {
     host.appendChild(el('div', { class: 'meta-block mono' },
       el('div', {}, 'logged  ' + fmtDate(f.createdAt) + ' ' + fmtTime(f.createdAt)),
       site ? el('div', {}, 'site    ' + site.name) : null,
-      coord ? el('a', { href: `https://maps.google.com/?q=${f.lat},${f.lon}`, target: '_blank', rel: 'noopener' }, 'gps     ' + coord + ' ↗') : el('div', {}, 'gps     —')));
+      coord ? el('a', { href: `https://maps.google.com/?q=${f.lat},${f.lon}`, target: '_blank', rel: 'noopener' }, 'gps     ' + coord + ' ↗') : el('div', {}, 'gps     , ')));
 
     /* similar finds */
     if (f.hist) {
@@ -1423,7 +1423,7 @@ const trips = {
           const t = newTrip(s.id);
           await db.put('trips', t);
           app.state.activeTrip = t;
-          toast(`Trip started — ${s.name}`);
+          toast(`Trip started, ${s.name}`);
           router.go('field');
         }
       }, el('strong', {}, s.name), el('span', { class: 'mono dim-t' }, s.landType)));
@@ -1435,7 +1435,7 @@ const trips = {
         app.state.activeTrip = t;
         router.go('field');
       }
-    }, el('strong', {}, 'No site — just log')));
+    }, el('strong', {}, 'No site, just log')));
     host.appendChild(list);
     host.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => this.render(host) }, 'Cancel'));
   },
@@ -1455,7 +1455,7 @@ const trips = {
        A site could always derive a centre from its finds, but that only
        works once you have logged something. Setting it explicitly is what
        lets you pin the pullout, the gate, or the spot you have not worked
-       yet — and it is the difference between planning a trip and recording
+       yet, and it is the difference between planning a trip and recording
        one. Captured from GPS on the spot, or typed in from a map at home. */
     const coordRow = el('div', { class: 'coord-row' });
     const latIn = el('input', {
@@ -1494,7 +1494,7 @@ const trips = {
 
     /* ── zones ────────────────────────────────────────────────────
        Stage 0 of the match pipeline. A zone is a part of a site you can
-       tell apart on the ground — the north wall, the tailings, the creek
+       tell apart on the ground, the north wall, the tailings, the creek
        bend. Testing showed matching scoped to a zone got 12 of 12 against
        9 of 12 across the whole collection, because most look-alike errors
        are between rocks from different places that happen to share a
@@ -1529,10 +1529,10 @@ const trips = {
       el('button', { class: 'btn btn-ghost', onclick: addZone }, 'Add')));
     host.appendChild(el('p', { class: 'dim-t small' },
       'Parts of the site you can tell apart on the ground. When a zone is picked in '
-      + 'field mode, colour matching looks there first — which is where most of its '
+      + 'field mode, colour matching looks there first, which is where most of its '
       + 'accuracy comes from.'));
 
-    host.appendChild(el('p', { class: 'dim-t small' }, 'Land type and collecting status are your own notes — always confirm the rules for a site yourself.'));
+    host.appendChild(el('p', { class: 'dim-t small' }, 'Land type and collecting status are your own notes, always confirm the rules for a site yourself.'));
     host.appendChild(el('div', { class: 'q-actions' },
       el('button', { class: 'btn btn-ghost', onclick: () => this.render(host) }, 'Cancel'),
       el('button', {
@@ -1545,7 +1545,7 @@ const trips = {
           s.lat = Number.isFinite(la) && Math.abs(la) <= 90 ? la : null;
           s.lon = Number.isFinite(lo) && Math.abs(lo) <= 180 ? lo : null;
           if ((latIn.value.trim() || lonIn.value.trim()) && (s.lat === null || s.lon === null)) {
-            toast('Coordinates look wrong — saved without them');
+            toast('Coordinates look wrong, saved without them');
           }
           await db.put('sites', s);
           toast('Saved'); this.render(host);
@@ -1616,7 +1616,7 @@ const more = {
     host.appendChild(nav);
 
     host.appendChild(el('h3', { class: 'eyebrow' }, 'Backup'));
-    host.appendChild(el('p', { class: 'dim-t small' }, 'Everything lives on this device only. Export regularly — a backup file is the whole collection, photos included.'));
+    host.appendChild(el('p', { class: 'dim-t small' }, 'Everything lives on this device only. Export regularly, a backup file is the whole collection, photos included.'));
     host.appendChild(el('div', { class: 'q-actions' },
       el('button', { class: 'btn btn-primary', onclick: () => backup.exportAll() }, 'Export backup'),
       el('button', { class: 'btn btn-ghost', onclick: () => $('#restore-input').click() }, 'Restore')));
@@ -1626,7 +1626,7 @@ const more = {
 
     host.appendChild(el('h3', { class: 'eyebrow' }, 'Spreadsheet export'));
     host.appendChild(el('p', { class: 'dim-t small' },
-      'A CSV of labels, materials, sites, zones, dates and coordinates — no photos. '
+      'A CSV of labels, materials, sites, zones, dates and coordinates, no photos. '
       + 'For anyone who would rather work in a spreadsheet, and a second copy of the '
       + 'catalogue that will still open in fifty years.'));
     host.appendChild(el('button', { class: 'btn btn-ghost', onclick: () => backup.exportCSV() }, 'Export CSV'));
@@ -1639,7 +1639,7 @@ const more = {
       el('span', { class: 'dim-t' }, ' · what is stored, what never leaves, and how to check.')));
     host.appendChild(el('p', { class: 'small' },
       el('a', { href: 'https://buy.stripe.com/8x2cN60rf3H13fn6dX7EQ0r', target: '_blank', rel: 'noopener' }, '\u2665 Tip jar')));
-    if (useMem) host.appendChild(el('p', { class: 'warn small' }, '⚠ Storage unavailable in this browser — data will not survive a reload.'));
+    if (useMem) host.appendChild(el('p', { class: 'warn small' }, '⚠ Storage unavailable in this browser, data will not survive a reload.'));
   }
 };
 
@@ -1676,7 +1676,7 @@ const backup = {
 
   /* CSV of the catalogue, no photos. Deliberately a separate thing from the
      JSON backup: the backup is for restoring this app, the CSV is for leaving
-     it — a copy of the record that outlives the format and opens anywhere. */
+     it, a copy of the record that outlives the format and opens anywhere. */
   async exportCSV() {
     const [finds, sites] = await Promise.all([db.all('finds'), db.all('sites')]);
     const live = finds.filter(f => !f.deleted)
@@ -1686,7 +1686,7 @@ const backup = {
     const siteById = Object.fromEntries(sites.map(s => [s.id, s]));
     /* Excel and Sheets both treat a leading = + - @ as a formula, so a note
        beginning with one becomes executable on open. Prefix with an apostrophe
-       — the same defence home-inventory uses on its CSV. */
+       - the same defence home-inventory uses on its CSV. */
     const cell = (v) => {
       let s = v == null ? '' : String(v);
       if (/^[=+\-@]/.test(s)) s = "'" + s;
@@ -1760,7 +1760,7 @@ const backup = {
 
    The obvious way to build this is Leaflet over OpenStreetMap tiles.
    It is also the one thing this app must not do. A tile map works by
-   requesting images for the exact rectangle you are looking at — so
+   requesting images for the exact rectangle you are looking at, so
    the moment you open your map, a third-party server receives your IP
    alongside the precise coordinates of every spot you have found
    anything at. Rockhounding locations are the thing people guard most
@@ -1770,11 +1770,11 @@ const backup = {
 
    So the map is drawn here, from your own points, in a real Web
    Mercator projection with a true scale bar. What you lose is the
-   basemap — no roads, no rivers, no terrain. What you keep is that the
+   basemap, no roads, no rivers, no terrain. What you keep is that the
    map of your spots exists only on your phone.
 
    If a basemap is ever wanted, the honest shape is an explicit opt-in
-   that says plainly what it sends and to whom, defaulting off — never
+   that says plainly what it sends and to whom, defaulting off, never
    a silent tile fetch.
    ─────────────────────────────────────────────────────────────────── */
 const R_EARTH = 6378137;
@@ -1789,7 +1789,7 @@ const geo = {
       y: R_EARTH * Math.log(Math.tan(Math.PI / 4 + (la * Math.PI / 180) / 2))
     };
   },
-  /* Great-circle metres — used for the scale bar and "how far away am I". */
+  /* Great-circle metres, used for the scale bar and "how far away am I". */
   dist(a, b) {
     const t = Math.PI / 180;
     const dLat = (b.lat - a.lat) * t, dLon = (b.lon - a.lon) * t;
@@ -1804,8 +1804,8 @@ const geo = {
   }
 };
 
-/* A site's position on the map. Sites are created without coordinates — you
-   name the place before you know where the middle of it is — so fall back to
+/* A site's position on the map. Sites are created without coordinates, you
+   name the place before you know where the middle of it is, so fall back to
    the centroid of everything found there. That is usually a truer centre than
    the point where you happened to park. */
 const siteCoord = (site, finds) => {
@@ -1842,7 +1842,7 @@ const mapview = {
       return { kind: 'site', site: s, ...c, count: mine.length, finds: mine };
     }).filter(Boolean);
 
-    /* Finds logged with no site still deserve to appear — they are the
+    /* Finds logged with no site still deserve to appear, they are the
        "I found this somewhere and never named the place" case, and seeing
        them on the map is usually how a place ends up getting named. */
     const loose = live.filter(f => !f.siteId && f.lat != null && f.lon != null)
@@ -1854,7 +1854,7 @@ const mapview = {
         el('p', {}, 'No coordinates yet.'),
         el('p', { class: 'sub' },
           'Log a find in Field mode with GPS on, or set a site’s coordinates on the '
-          + 'Sites screen, and it appears here. Nothing you pin is ever uploaded — the '
+          + 'Sites screen, and it appears here. Nothing you pin is ever uploaded, the '
           + 'map is drawn on this device from your own points.'),
         el('button', { class: 'btn btn-primary', onclick: () => router.go('field') }, 'Open field mode')));
       return;
@@ -1908,7 +1908,7 @@ const mapview = {
   },
 
   fit() {
-    /* Fit the walks as well as the pins — a track that runs off the edge on
+    /* Fit the walks as well as the pins, a track that runs off the edge on
        first paint reads as a bug, and the walk is often wider than the finds. */
     const pts = this.pins.map(p => ({ lat: p.lat, lon: p.lon }))
       .concat((this.tracks || []).flat().map(([lat, lon]) => ({ lat, lon })));
@@ -1923,7 +1923,7 @@ const mapview = {
 
     /* Decide on the EXTENT, not on the number of pins. The first version keyed
        this off `pins.length === 1` and pinned the scale to a fixed
-       neighbourhood — so a site with one pin and a kilometre of walked track
+       neighbourhood, so a site with one pin and a kilometre of walked track
        drew the track straight off the top of the map, because the track was
        never in the calculation. One pin does not mean nothing to fit. */
     const degenerate = spanX < 1 && spanY < 1;
@@ -2140,7 +2140,7 @@ const mapview = {
         ctx.arc(s.sx, s.sy - r, r, Math.PI * 0.15, Math.PI * 0.85, true);
         ctx.closePath();
       } else {
-        /* No moveTo here — starting a circle from the centre leaves a spoke
+        /* No moveTo here, starting a circle from the centre leaves a spoke
            from the middle to the arc's start and the dot renders as a pac-man. */
         ctx.arc(s.sx, s.sy, r, 0, Math.PI * 2);
       }
@@ -2221,7 +2221,7 @@ const tripdetail = {
     }
 
     /* A timeline rather than a grid: the interesting thing about a trip is the
-       order and the gaps — where you slowed down is usually where the good
+       order and the gaps, where you slowed down is usually where the good
        material was. */
     const zoneName = {};
     for (const z of (site?.zones || [])) zoneName[z.id] = z.name;
@@ -2295,7 +2295,7 @@ const sitedetail = {
    goes afterwards.
 
    Shown once, then never again. It says the loop, the promise, and
-   gets out of the way — no account step, no tour, no carousel. Both
+   gets out of the way, no account step, no tour, no carousel. Both
    buttons start you doing the thing; there is no "skip" because
    neither option is a commitment. */
 const welcome = {
@@ -2335,7 +2335,7 @@ const welcome = {
 
         el('p', { class: 'wc-promise' },
           'Every photo, note and coordinate stays in this browser, on this device. '
-          + 'There is no account and no server — not even the map, which is drawn '
+          + 'There is no account and no server, not even the map, which is drawn '
           + 'here rather than fetched, so your spots are never sent anywhere.'),
 
         el('div', { class: 'wc-actions' },
@@ -2356,7 +2356,7 @@ const welcome = {
    Be clear about what this is and is not. It is NOT security: the
    passphrase is in the source of a file anyone can read, and a gate
    written in the page it guards can always be walked around. It does
-   not need to be security — every find, photo and coordinate lives in
+   not need to be security, every find, photo and coordinate lives in
    IndexedDB on this device and has never been anywhere else, so there
    is nothing here for a stranger to reach even if they get past it.
    What it buys is that an unfinished app does not look shipped.
@@ -2408,7 +2408,7 @@ const devgate = {
       err,
       el('p', { class: 'gate-note', id: 'devhint' },
         'Sky Wolf Studio · this one is not finished yet. Your finds, photos and '
-        + 'coordinates stay in this browser on this device either way — the gate is here so an '
+        + 'coordinates stay in this browser on this device either way, the gate is here so an '
         + 'unfinished app does not look shipped, not to protect the data.')
     ));
     input.focus();
@@ -2468,8 +2468,8 @@ const app = {
   rerender() { router.go(router.parse().join('/') || 'field'); const p = router.parse(); this.route(p[0] || 'field', p.slice(1)); },
 
   /* Everything after the gate. Split out of boot() so the gate can call it
-     without a reload — and so deleting the gate later is one line, not surgery. */
-  /* Offline is not a nicety here — the app is used in places with no bars, and
+     without a reload, and so deleting the gate later is one line, not surgery. */
+  /* Offline is not a nicety here, the app is used in places with no bars, and
      without a service worker some platforms need one online load per session
      before they will open an installed PWA at all. */
   registerSW() {
@@ -2481,7 +2481,7 @@ const app = {
 
   /* Ask the browser to stop treating this origin as evictable. Photos are the
      bulk of the data and the browser will clear "best effort" storage under
-     pressure without asking — losing a season of finds. Asked once, on the
+     pressure without asking, losing a season of finds. Asked once, on the
      first find, because a permission prompt before anything exists reads as a
      shakedown and gets denied. */
   async askPersist() {

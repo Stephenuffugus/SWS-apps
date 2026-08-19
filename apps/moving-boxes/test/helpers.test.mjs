@@ -166,7 +166,7 @@ ok('label payload obeys a caller-supplied fit test, not a magic number', () => {
     'the marker points at a document that now exists: ' + d.items[d.items.length - 1]);
 
   // It finds the LARGEST list that fits, not just any list that fits.
-  const oneMore = encodeBox({ ...monster, items: monster.items.slice(0, fit.kept + 1).concat(['…plus ' + (99 - fit.kept) + ' more — on the packing list']) });
+  const oneMore = encodeBox({ ...monster, items: monster.items.slice(0, fit.kept + 1).concat(['…plus ' + (99 - fit.kept) + ' more, on the packing list']) });
   assert.ok(oneMore.length > budget, 'one more item would not have fitted');
 
   // Small boxes are untouched and report nothing dropped.

@@ -82,10 +82,10 @@ ok('sortEvents: time order, untimed last, stable', () => {
     { minutes: null, what: 'sometime' },
     { minutes: 900, what: 'ceremony' },
     { minutes: 540, what: 'hair' },
-    { minutes: 900, what: 'also 3pm — second' },
+    { minutes: 900, what: 'also 3pm, second' },
   ];
   const s = sortEvents(evs).map(e => e.what);
-  assert.deepEqual(s, ['hair', 'ceremony', 'also 3pm — second', 'sometime']);
+  assert.deepEqual(s, ['hair', 'ceremony', 'also 3pm, second', 'sometime']);
 });
 ok('timeline round-trips through the hash', () => {
   const state = {

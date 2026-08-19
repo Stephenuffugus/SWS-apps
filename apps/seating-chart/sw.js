@@ -1,6 +1,6 @@
-/* Seating Chart service worker — the app is local-first; cache everything,
+/* Seating Chart service worker, the app is local-first; cache everything,
    including the vendored pdf-lib, so exports work fully offline. */
-const VERSION = 'seating-v23';
+const VERSION = 'seating-v24';
 const ASSETS = [
   './',
   './index.html',
@@ -32,7 +32,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so a fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets stay cache-first; only the document leads with the network, and it

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — the Google Play packaging layer
+   SWS STUDIO, the Google Play packaging layer
 
    23 apps means 23 Play listings, and none of them should be assembled by
    hand. Everything Play needs that a machine can derive is derived here, from
@@ -39,7 +39,7 @@
    2. DIGITAL ASSET LINKS MUST ACTUALLY BE SERVED. All 23 apps share one
       origin, so one /.well-known/assetlinks.json carries a statement per app.
       firebase.json carries a dotfile ignore glob, which silently swallows any
-      dotted directory — the file would deploy to nothing and every TWA would
+      dotted directory, the file would deploy to nothing and every TWA would
       fall back to a Chrome address bar with no error anywhere. --check asserts
       the hosting config actually serves it.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -66,7 +66,7 @@ const iconsOnly = flags.has('--icons');
 const slugs = Object.keys(SKINS).filter((s) => !only.length || only.includes(s));
 
 /* The origin every app is served from, and the Android package prefix. Both
-   are single points of truth — changing the domain must not mean editing 23
+   are single points of truth, changing the domain must not mean editing 23
    files. */
 export const ORIGIN = 'https://skywolfstudio.com';
 export const PKG_PREFIX = 'com.skywolfstudio';
@@ -101,7 +101,7 @@ const CATEGORY = {
 };
 
 /* The web manifest "categories" member is a different vocabulary from the Play
-   Console one above — lowercase, from the W3C registry. */
+   Console one above, lowercase, from the W3C registry. */
 const WEB_CATEGORIES = {
   'baby-log': ['lifestyle', 'health'],
   'bill-splitter': ['finance', 'utilities'],
@@ -136,7 +136,7 @@ const fail = (slug, msg) => problems.push(`${String(slug).padEnd(18)} ${msg}`);
 /* Every icon.svg is a 64-unit square: a full-bleed rounded rect in
    --accent-deep, then the glyph. For the maskable variant we want the same
    drawing, smaller, on a square of the identical colour. Scaling the whole
-   SVG (tile included) is what makes that trivial — the tile's rounded corners
+   SVG (tile included) is what makes that trivial, the tile's rounded corners
    disappear into a background that is already its own colour. */
 const MASKABLE_SCALE = 0.72;
 
@@ -153,7 +153,7 @@ function maskableSvg(slug, svg) {
 }
 
 /* Play's listing icon spec is 512x512 32-bit PNG *with* alpha, so transparency
-   is allowed here — but Play paints its own rounding and shadow underneath, and
+   is allowed here, but Play paints its own rounding and shadow underneath, and
    a transparent corner over that reads as a chipped tile. Same drawing, opaque.
    (The feature graphic and screenshots are the ones where alpha is forbidden.) */
 function opaqueSvg(slug, svg) {
@@ -191,14 +191,14 @@ async function renderIcons() {
 
     mkdirSync(join(OUT, slug), { recursive: true });
 
-    /* purpose "any" — the drawing as designed, rounded corners intact */
+    /* purpose "any", the drawing as designed, rounded corners intact */
     await shoot(svg, 192, join(APPS, slug, 'icon-192.png'), false);
     await shoot(svg, 512, join(APPS, slug, 'icon-512.png'), false);
 
-    /* purpose "maskable" — full bleed, glyph inside the safe circle */
+    /* purpose "maskable", full bleed, glyph inside the safe circle */
     await shoot(maskableSvg(slug, svg), 512, join(APPS, slug, 'icon-maskable-512.png'), true);
 
-    /* Play Console listing icon — 512x512, opaque */
+    /* Play Console listing icon, 512x512, opaque */
     await shoot(opaqueSvg(slug, svg), 512, join(OUT, slug, 'play-icon-512.png'), true);
 
     /* iOS home screen, unchanged in size but regenerated so it never drifts */
@@ -216,8 +216,8 @@ async function renderIcons() {
    answers: 23 of these sat next to each other must read as one studio, and each
    one alone must read as its own product.
 
-   So the LAYOUT is invariant — identical grid, identical icon size and
-   position, identical type hierarchy, identical studio line — and everything
+   So the LAYOUT is invariant, identical grid, identical icon size and
+   position, identical type hierarchy, identical studio line, and everything
    the skin already varies is allowed to vary here too: hue, chroma, paper
    warmth, the display face, and the background texture. It is the same trade
    the apps make, applied to a marketing asset, which is why they end up
@@ -227,7 +227,7 @@ async function renderIcons() {
    nothing that has to survive lives in the outer 6%. */
 
 const PROMISE = {
-  'baby-log': 'Feeds, naps and diapers — one thumb, in the dark',
+  'baby-log': 'Feeds, naps and diapers, one thumb, in the dark',
   'bill-splitter': 'Split a bill fairly, down to the last cent',
   'bracket-maker': 'A tournament bracket that prints properly',
   'caregiver-log': 'One shared log every caregiver can read',
@@ -236,7 +236,7 @@ const PROMISE = {
   'image-compressor': 'Smaller images, without uploading them',
   'moving-boxes': 'Number the box, find it again in the new house',
   'packing-list': 'Pack once, forget nothing',
-  'pdf-tools': 'Merge, split and rotate — nothing uploaded',
+  'pdf-tools': 'Merge, split and rotate, nothing uploaded',
   'pill-schedule': 'A large-print medication card for the fridge',
   'qr-maker': 'QR codes that never expire',
   'scan-to-pdf': 'Phone photos into a straight, sharp PDF',
@@ -287,12 +287,12 @@ function featureGraphicHtml(slug) {
     .replace('background-size:100% 4px', 'background-size:100% 8px')
     .replace('background-size:100% 2px', 'background-size:100% 6px');
 
-  const name = mf.short_name && mf.name.length > 22 ? mf.name.split(/[—-]/)[0].trim() : mf.name;
+  const name = mf.short_name && mf.name.length > 22 ? mf.name.split(/[, -]/)[0].trim() : mf.name;
   const promise = PROMISE[slug] ?? mf.description ?? '';
 
   /* The promise line is the only body text on the asset, so it gets solved
      against the canvas the same way --ink-2 is in the apps rather than picked.
-     Walk it darker until it clears 4.6:1 — a feature graphic that looks fine on
+     Walk it darker until it clears 4.6:1, a feature graphic that looks fine on
      a monitor and turns to mush on a phone in daylight is the usual failure. */
   let ink2 = oklch(0.42, skin.chroma * 0.6, skin.hue);
   for (let L = 0.42; L > 0.16 && contrast(ink2, pal.canvas) < 4.6; L -= 0.02) {
@@ -350,7 +350,7 @@ p{
 
 /* Bubblewrap reads the live manifest and refuses to build without a 512x512
    icon; Play's own PWA quality bar wants a maskable one as well. Everything
-   added here is additive — an existing hand-written description or name is
+   added here is additive, an existing hand-written description or name is
    never overwritten. */
 function upgradeManifest(slug) {
   const p = join(APPS, slug, 'manifest.webmanifest');
@@ -400,12 +400,12 @@ function upgradeManifest(slug) {
    even the same field.
 
    So: an explicit title, declared here. Only apps whose manifest name exceeds
-   30 characters need an entry — everything else uses its name unchanged, and
+   30 characters need an entry, everything else uses its name unchanged, and
    the check below still fails loudly for any new app that grows past the cap
    without someone deciding what to do about it. */
 const PLAY_TITLES = {
   'specials-planner': 'Specials Planner',
-  'sub-plans': 'Sub Plans — Teacher Binder',
+  'sub-plans': 'Sub Plans, Teacher Binder',
 };
 
 export const playTitle = (slug, mf) => PLAY_TITLES[slug] ?? mf.name;
@@ -451,7 +451,7 @@ function twaManifest(slug) {
 
 /* One origin, 23 apps, one file. Each statement needs the release signing
    fingerprint from Play App Signing, which does not exist until the first
-   upload — so the file is generated with a placeholder and --check refuses to
+   upload, so the file is generated with a placeholder and --check refuses to
    call the portfolio ready while any placeholder survives. */
 const FINGERPRINT_FILE = join(HERE, 'play-fingerprints.json');
 
@@ -522,15 +522,15 @@ if (check) {
     if (existsSync(p)) {
       const mf = JSON.parse(readFileSync(p, 'utf8'));
       if (!(mf.icons ?? []).some((i) => i.sizes === '512x512' && i.purpose === 'maskable')) {
-        fail(slug, 'manifest declares no maskable 512x512 icon — Bubblewrap will warn, launcher will crop');
+        fail(slug, 'manifest declares no maskable 512x512 icon, Bubblewrap will warn, launcher will crop');
       }
       if (!(mf.icons ?? []).some((i) => i.sizes === '512x512' && (i.purpose ?? 'any').includes('any'))) {
-        fail(slug, 'manifest declares no 512x512 "any" icon — Bubblewrap refuses to build');
+        fail(slug, 'manifest declares no 512x512 "any" icon, Bubblewrap refuses to build');
       }
       if (!mf.id) fail(slug, 'manifest has no id');
       /* Play caps the store title at 30 characters, and Bubblewrap seeds the
          Android app label from manifest `name`. Two apps carry a deliberately
-         longer, search-friendly name — that is fine on the web and fine as a
+         longer, search-friendly name, that is fine on the web and fine as a
          listing subtitle, but it cannot be the title, so it has to be a
          conscious choice rather than something discovered in Play Console. */
       const title = playTitle(slug, mf);
@@ -541,12 +541,12 @@ if (check) {
       }
     }
     if (!existsSync(join(APPS, slug, 'privacy.html'))) {
-      fail(slug, 'no privacy.html — Play requires a reachable privacy policy URL');
+      fail(slug, 'no privacy.html, Play requires a reachable privacy policy URL');
     } else if (!/href="\.?\/?privacy\.html"/.test(readFileSync(join(APPS, slug, 'index.html'), 'utf8'))) {
       /* The Console listing field is only half of it: Play requires the policy
          to be reachable from inside the app too, and in a TWA the app IS this
          page. Easy to satisfy and easy to forget. */
-      fail(slug, 'privacy.html exists but index.html never links to it — Play requires an in-app link');
+      fail(slug, 'privacy.html exists but index.html never links to it, Play requires an in-app link');
     }
   }
 
@@ -561,16 +561,16 @@ if (check) {
   }
 
   const h = hostingServesAssetlinks();
-  if (h.swallowed) fail('origin', 'firebase.json ignores "**/.*" — .well-known/assetlinks.json will NOT deploy');
+  if (h.swallowed) fail('origin', 'firebase.json ignores "**/.*", .well-known/assetlinks.json will NOT deploy');
   if (!h.typed) fail('origin', 'no application/json Content-Type header for assetlinks.json');
 
   if (problems.length) {
-    console.log(`\nPlay readiness — ${problems.length} gap(s)\n`);
+    console.log(`\nPlay readiness, ${problems.length} gap(s)\n`);
     for (const p of problems) console.log('  ' + p);
     console.log('');
     process.exit(1);
   }
-  console.log(`\nPlay readiness — ${slugs.length} app(s) ready\n`);
+  console.log(`\nPlay readiness, ${slugs.length} app(s) ready\n`);
   process.exit(0);
 }
 
@@ -600,11 +600,11 @@ if (!iconsOnly) {
   console.log(`  ${slugs.length} twa-manifest.json written to design/out/play/`);
 
   const al = assetlinks();
-  console.log(`  .well-known/assetlinks.json — ${al.count} statements, ${al.missing.length} awaiting a real fingerprint`);
+  console.log(`  .well-known/assetlinks.json, ${al.count} statements, ${al.missing.length} awaiting a real fingerprint`);
 
   const h = hostingServesAssetlinks();
   if (h.swallowed) {
-    console.log('\n  !! firebase.json ignores "**/.*" — assetlinks.json will not deploy.');
+    console.log('\n  !! firebase.json ignores "**/.*", assetlinks.json will not deploy.');
     console.log('     Every TWA would fall back to a browser address bar, with no error to find.');
   }
 }

@@ -2,7 +2,7 @@
 
 Resize and re-encode images entirely in the browser. The "free online resizer"
 industry quietly keeps a copy of every photo passed through it; here nothing is
-ever uploaded, and the claim is testable — turn off the network and the whole
+ever uploaded, and the claim is testable, turn off the network and the whole
 app still loads and still compresses.
 
 **Two ways to ask for a size.** *Fit under a size* is the primary control: pick
@@ -18,13 +18,13 @@ which centre-crops so a passport form asking for 600×600 gets 600×600.
 **The hard promise: it never hands back a bigger file.** Canvas PNG is
 unquantised lossless RGBA and routinely inflates a photo several times over. If
 a re-encode comes out larger, the original bytes are returned untouched, the row
-says so with the measured multiple, and — where it is true — it names the format
+says so with the measured multiple, and, where it is true, it names the format
 that would have worked ("WebP would be 69% smaller than the original here").
 
 **Metadata is a choice with the consequence written out.** The default drops
 everything, including GPS. *Keep the date taken* re-injects a minimal EXIF APP1
-carrying only DateTimeOriginal / DateTimeDigitized / DateTime — no Orientation
-(the pixels are already upright), no Make, no Model, no GPS — so a photo library
+carrying only DateTimeOriginal / DateTimeDigitized / DateTime, no Orientation
+(the pixels are already upright), no Make, no Model, no GPS, so a photo library
 still sorts the copies correctly. JPEG output only.
 
 Other behaviour worth knowing: JPEG composites onto white and says so when the

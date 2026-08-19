@@ -1,4 +1,4 @@
-// Home inventory — pure model logic. No DOM, no storage, no pdf-lib.
+// Home inventory, pure model logic. No DOM, no storage, no pdf-lib.
 // "I wish I'd photographed everything before the fire." That's the product.
 
 export function newId() {
@@ -29,7 +29,7 @@ export function newInventory(name) {
     name: name || 'Home inventory',
     rooms: [],   // {id, name}
     items: [],   // see newItem()
-    draft: null, // a photo taken but not yet named — must survive an interruption
+    draft: null, // a photo taken but not yet named, must survive an interruption
     lastExportAt: 0,
     updatedAt: 0,
   };
@@ -60,7 +60,7 @@ export function parseValue(s) {
 
 /* Money out. Cents are shown whenever there are any: rounding to whole dollars
    is how the adjuster PDF ended up with 312 rows of $20 under a total of
-   $6,237 — a document whose own column does not sum to its own total. */
+   $6,237, a document whose own column does not sum to its own total. */
 export function fmtCents(cents, opts) {
   const n = (Number.isFinite(Number(cents)) ? Number(cents) : 0) / 100;
   const min = (opts && opts.pad) ? 2 : 0;
@@ -82,7 +82,7 @@ export function roomItems(inv, roomId) {
    The app tells people the backup is plain JSON they can read and edit, so a
    hand-edited file is an EXPECTED input, not an exotic one. One bare `null`
    left in the items array used to throw inside totals() on every home render
-   and take the whole home screen — including the Restore button — down with
+   and take the whole home screen, including the Restore button, down with
    it. Everything that comes off disk or out of a file goes through here. */
 
 const cleanStr = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '');
@@ -126,7 +126,7 @@ export function sanitizeInventory(raw) {
     rooms.push({ id, name: cleanStr(r.name, LIMITS.room) || 'Room' });
   }
   // A bare `null` left behind by a sloppy text-editor delete is dropped, not
-  // resurrected as a ghost row — and the caller counts and reports how many.
+  // resurrected as a ghost row, and the caller counts and reports how many.
   const items = (Array.isArray(o.items) ? o.items : []).filter(i => i && typeof i === 'object').map(sanitizeItem);
   const draftPhoto = cleanImg(o.draft && o.draft.photo);
   return {
@@ -141,7 +141,7 @@ export function sanitizeInventory(raw) {
   };
 }
 
-/* Tolerant of partial objects (hand-edited or old backups) — the home screen
+/* Tolerant of partial objects (hand-edited or old backups), the home screen
    iterates every stored inventory and must never die on one bad row. */
 export function totals(inv) {
   inv = { rooms: [], items: [], ...(inv && typeof inv === 'object' ? inv : {}) };

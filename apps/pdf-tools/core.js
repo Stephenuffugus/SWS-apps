@@ -1,9 +1,8 @@
-// PDF Tools core — merge/reorder/rotate/delete/split, PDFLib injected.
+// PDF Tools core, merge/reorder/rotate/delete/split, PDFLib injected.
 // Documents never leave the device; this module never touches the network.
 
 /* Errors the user is meant to read are tagged. Anything untagged is a bug in
-   our code or a browser limit, and app.js shows its own sentence for those —
-   a raw exception string ("Cannot read properties of undefined (reading
+   our code or a browser limit, and app.js shows its own sentence for those, a raw exception string ("Cannot read properties of undefined (reading
    'Pages')") is not an error message, it is an apology in the wrong language. */
 export function humanError(msg) {
   const e = new Error(msg);
@@ -31,7 +30,7 @@ export function formatBytes(n) {
 
 /* order: [{ doc: index into loadedDocs, page: 0-based page index, rotate: extra degrees 0/90/180/270 }]
    loadedDocs: array of PDFDocument. Returns merged bytes.
-   Pages are copied in ONE copyPages call per source document — per-page calls
+   Pages are copied in ONE copyPages call per source document, per-page calls
    each create a fresh copier and re-embed shared fonts/images, bloating a
    100-page letterhead PDF by ~100×. */
 export async function buildOutput(PDFLib, loadedDocs, order) {
@@ -76,13 +75,13 @@ export function planOutput(loadedDocs, order) {
 
 /* The angle a page will actually come out at: whatever the source PDF already
    carried, plus whatever the user added. Showing only the user's delta lies on
-   exactly the files people bring here — a scan already at /Rotate 90. */
+   exactly the files people bring here, a scan already at /Rotate 90. */
 export function finalAngle(sourceAngle, added) {
   return ((((sourceAngle || 0) + (added || 0)) % 360) + 360) % 360;
 }
 
 /* ── Splitting, over the ASSEMBLED ORDER ───────────────────────────────── */
-/* Everything below works on `order` — the rows visible on screen — never on
+/* Everything below works on `order`, the rows visible on screen, never on
    the source document. A page the user deleted is gone; a rotation the user
    applied is carried, because the same buildOutput path writes every file. */
 
@@ -95,7 +94,7 @@ export const SPLIT_MODES = [
 ];
 
 /* "1-3, 5, 8-10" → [[0,2],[4,4],[7,9]] (0-based, inclusive). Throws a human
-   error naming the real limits — a range past the end must say how far the
+   error naming the real limits, a range past the end must say how far the
    document actually goes, not just refuse. */
 export function parseRanges(text, total) {
   const src = String(text == null ? '' : text).trim();
@@ -104,12 +103,12 @@ export function parseRanges(text, total) {
   for (const rawPart of src.split(/[,;]+/)) {
     const part = rawPart.trim();
     if (!part) continue;
-    const m = /^(\d+)(?:\s*(?:-|–|—|–|to)\s*(\d+))?$/i.exec(part);
+    const m = /^(\d+)(?:\s*(?:-|-|, |-|to)\s*(\d+))?$/i.exec(part);
     if (!m) throw humanError('“' + part + '” is not a page or a range. Use numbers like 1-3, 5, 8-10.');
     const a = Number(m[1]);
     const b = m[2] === undefined ? a : Number(m[2]);
     if (a < 1 || b < 1) {
-      throw humanError('There is no page 0 — pages here are numbered 1 to ' + total + '.');
+      throw humanError('There is no page 0, pages here are numbered 1 to ' + total + '.');
     }
     if (a > total || b > total) {
       throw humanError('Page ' + Math.max(a, b) + ' does not exist. This list is ' + total +
@@ -141,7 +140,7 @@ export function splitGroups(orderLength, mode, spec) {
   if (mode === 'every') {
     const n = Number(String(spec == null ? '' : spec).trim());
     if (!Number.isInteger(n) || n < 1) {
-      throw humanError('Type how many pages go in each file — a whole number, 1 or more.');
+      throw humanError('Type how many pages go in each file, a whole number, 1 or more.');
     }
     if (n >= total) {
       throw humanError('Every ' + n + ' pages would be one file, because the list is only ' +
@@ -180,7 +179,7 @@ export function splitGroups(orderLength, mode, spec) {
   throw humanError('Unknown split mode.');
 }
 
-/* Human, stable, unique filenames — and the same function the UI previews
+/* Human, stable, unique filenames, and the same function the UI previews
    with, so what it shows is what lands in Downloads. */
 export function splitNames(base, groups) {
   const clean = String(base || 'pages').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'pages';
@@ -203,7 +202,7 @@ export function splitNames(base, groups) {
 
 /* Build one PDF per group, through buildOutput, so deletions and rotations
    are carried exactly as the merge path carries them.
-   onProgress(done, total) may await — that is how the UI gets a paint and how
+   onProgress(done, total) may await, that is how the UI gets a paint and how
    Cancel gets a chance to be clicked. */
 export async function buildSplit(PDFLib, loadedDocs, order, groups, onProgress, isCancelled) {
   const outs = [];
@@ -342,7 +341,7 @@ export async function loadPdf(PDFLib, bytes) {
   try {
     count = doc.getPageCount();
   } catch {
-    throw humanError('That PDF is damaged — its page list could not be read. Try re-downloading or re-exporting it.');
+    throw humanError('That PDF is damaged, its page list could not be read. Try re-downloading or re-exporting it.');
   }
   if (!count) throw humanError('That PDF has no pages in it.');
   return doc;

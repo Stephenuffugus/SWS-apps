@@ -4,33 +4,33 @@
     "personas": [
       {
         "name": "Priya Raghunathan",
-        "who": "38, moving a three-bed terrace in eleven days, second move in four years. Bounced off Sortly after reading the review the research quotes — 'Great until you hit 100 items then have to pay $300 … crazy price for a household app.' Competent with software, has no patience for one. Not an access-needs persona.",
-        "context": "Kitchen floor, 21:40, own phone at 414 CSS px, one hand — the other is holding a tape gun. Overhead light. Real time pressure: she has told herself she is doing the kitchen tonight.",
+        "who": "38, moving a three-bed terrace in eleven days, second move in four years. Bounced off Sortly after reading the review the research quotes, 'Great until you hit 100 items then have to pay $300 … crazy price for a household app.' Competent with software, has no patience for one. Not an access-needs persona.",
+        "context": "Kitchen floor, 21:40, own phone at 414 CSS px, one hand, the other is holding a tape gun. Overhead light. Real time pressure: she has told herself she is doing the kitchen tonight.",
         "task": "Pack and label twelve kitchen boxes in one sitting, then print the labels on the laptop before bed.",
         "verdict": "The packing half is the best thing in the app and she finished twelve boxes fast. The printing half burned nineteen sheets of paper she did not ask for, and she never noticed that the QR on her fullest boxes is probably unscannable.",
         "delights": [
-          "The seal loop is genuinely quick. Measured end to end — fill the textarea, click 'Seal the box 📦', field cleared, focus back in #boxItems — 167ms, and the room field is deliberately NOT cleared (app.js:191 clears only boxNum and boxItems), so 'Kitchen' stays put for box after box. That is exactly the fix the research asked for against 'So slow. Unless I missed something you need to manually type the name of everything'.",
-          "The running count in the h2 — '30 boxes · 240 things' — reads as progress rather than data entry. Verified live at every size I tried.",
+          "The seal loop is genuinely quick. Measured end to end, fill the textarea, click 'Seal the box 📦', field cleared, focus back in #boxItems, 167ms, and the room field is deliberately NOT cleared (app.js:191 clears only boxNum and boxItems), so 'Kitchen' stays put for box after box. That is exactly the fix the research asked for against 'So slow. Unless I missed something you need to manually type the name of everything'.",
+          "The running count in the h2, '30 boxes · 240 things', reads as progress rather than data entry. Verified live at every size I tried.",
           "Comma or newline both work with no mode switch (parseItems, helpers.js:12-16), so she could paste and she could type, and never had to think about which."
         ],
         "frictions": [
           {
-            "what": "'Print QR labels' prints the whole box list first. With 200 boxes the PDF is 39 Letter pages: pages 1–19 are the inventory list, pages 20–39 are the labels. Measured with pdfinfo on a real print of the app at 1280px. With her twelve boxes it was still one full page of list before any label. The Boxes card at index.html:1327 is the only card without .screenonly, so it prints, and there is no way to get labels without it or the list without labels.",
+            "what": "'Print QR labels' prints the whole box list first. With 200 boxes the PDF is 39 Letter pages: pages 1 to 19 are the inventory list, pages 20 to 39 are the labels. Measured with pdfinfo on a real print of the app at 1280px. With her twelve boxes it was still one full page of list before any label. The Boxes card at index.html:1327 is the only card without .screenonly, so it prints, and there is no way to get labels without it or the list without labels.",
             "severity": "major",
-            "whyItMatters": "She pressed a button called 'Print QR labels' and the printer produced pages with no QR codes on them. On the 200-box run that is nineteen sheets. The research names printing as 'the category's worst surface' and this is the cheapest possible way to be part of that — and worse, the manifest is accidental rather than designed, so it is untitled, has no room totals, and its heading is '200 BOXES · 400 THINGS'."
+            "whyItMatters": "She pressed a button called 'Print QR labels' and the printer produced pages with no QR codes on them. On the 200-box run that is nineteen sheets. The research names printing as 'the category's worst surface' and this is the cheapest possible way to be part of that, and worse, the manifest is accidental rather than designed, so it is untitled, has no room totals, and its heading is '200 BOXES · 400 THINGS'."
           },
           {
-            "what": "The QR on a full box is very probably too dense to scan at the size it prints. Measured, not estimated: I printed to Letter at 300dpi and measured the dark QR extents in the raster — 25.4mm, 26.4mm and 28.1mm for payloads of 41, 57 and 101 modules. That is 0.62mm/module for a 3-item box, 0.46mm for a 10-item box, and 0.278mm/module for a box that hits the 900-character cap in encodeBoxForLabel (helpers.js:56). The code comment at app.js:119 asserts 'L keeps big labels scannable at 30mm'; the cap is on characters, not on modules, so it does not hold.",
+            "what": "The QR on a full box is very probably too dense to scan at the size it prints. Measured, not estimated: I printed to Letter at 300dpi and measured the dark QR extents in the raster, 25.4mm, 26.4mm and 28.1mm for payloads of 41, 57 and 101 modules. That is 0.62mm/module for a 3-item box, 0.46mm for a 10-item box, and 0.278mm/module for a box that hits the 900-character cap in encodeBoxForLabel (helpers.js:56). The code comment at app.js:119 asserts 'L keeps big labels scannable at 30mm'; the cap is on characters, not on modules, so it does not hold.",
             "severity": "major",
-            "whyItMatters": "Her kitchen boxes are the full ones. 0.278mm/module at error-correction L, on an inkjet with dot gain, printed on paper taped to corrugated cardboard, read by a phone in a garage — that is the failure mode she will discover at the new house, one box at a time, with no way to tell a good label from a bad one before she prints. The one thing that must never silently degrade is the thing that silently degrades with how much she packed."
+            "whyItMatters": "Her kitchen boxes are the full ones. 0.278mm/module at error-correction L, on an inkjet with dot gain, printed on paper taped to corrugated cardboard, read by a phone in a garage, that is the failure mode she will discover at the new house, one box at a time, with no way to tell a good label from a bad one before she prints. The one thing that must never silently degrade is the thing that silently degrades with how much she packed."
           },
           {
-            "what": "Typing more than 100 items, or an item longer than 60 characters, is silently truncated. Verified: 150 lines in → 100 stored; a 200-character item → stored at 60 characters. The toast said 'Sealed 📦 — next box' both times.",
+            "what": "Typing more than 100 items, or an item longer than 60 characters, is silently truncated. Verified: 150 lines in → 100 stored; a 200-character item → stored at 60 characters. The toast said 'Sealed 📦, next box' both times.",
             "severity": "minor",
             "whyItMatters": "The research is explicit that the whole pitch is 'no 10-box limit, no 100-item limit' and that the honest thing is to name our one real ceiling up front. Silently eating 50 items while saying 'Sealed' is the Boxy complaint ('at least say that up front') committed by us."
           },
           {
-            "what": "Box numbers accept anything and fail silently in both directions. Typed into #boxNum and read back out of localStorage: '0' → box 1, '-5' → box 2, '3.7' → box 3, '1e3' → box 1, '007' → box 7, '99999999999999999999' → 100000000000000000000. Worse, once that last one is stored, nextBoxNumber (helpers.js:8-10) computes 1e20 + 1, which in float is still 1e20 — so every subsequent box gets number 1e20 forever. Verified: the next box typed as 'abc' also came out 100000000000000000000.",
+            "what": "Box numbers accept anything and fail silently in both directions. Typed into #boxNum and read back out of localStorage: '0' → box 1, '-5' → box 2, '3.7' → box 3, '1e3' → box 1, '007' → box 7, '99999999999999999999' → 100000000000000000000. Worse, once that last one is stored, nextBoxNumber (helpers.js:8-10) computes 1e20 + 1, which in float is still 1e20, so every subsequent box gets number 1e20 forever. Verified: the next box typed as 'abc' also came out 100000000000000000000.",
             "severity": "major",
             "whyItMatters": "One fat-fingered number permanently kills automatic numbering for the rest of the move, and the app never says a word. '1e3' quietly becoming box 1 is the same class of bug with a duplicate as its payload."
           }
@@ -38,30 +38,30 @@
       },
       {
         "name": "Dale Okonkwo",
-        "who": "61, Priya's father-in-law, the man stationed at the new house on moving day. Uses a phone confidently for photos and WhatsApp and nothing else. Has never opened this app and never will — he is a scanner, not a packer. This is the persona the entire product architecture exists for.",
+        "who": "61, Priya's father-in-law, the man stationed at the new house on moving day. Uses a phone confidently for photos and WhatsApp and nothing else. Has never opened this app and never will, he is a scanner, not a packer. This is the persona the entire product architecture exists for.",
         "context": "Empty hallway of the new house, 11:20, bright daylight through an open front door, phone in one hand and a box corner in the other. No wifi at the property yet, 4G is patchy. Movers are walking past him and he has about three seconds per box.",
         "task": "Point the camera at the label on box #1 so he knows whether it goes upstairs or in the kitchen.",
         "verdict": "Total failure. He got a blank page and put the box down in the hall.",
         "frictions": [
           {
-            "what": "Scanning a label renders a page with a header, a footer and nothing else. Verified on a real fresh document load (not a fragment nav): after loading the app at #b.<payload>, #reveal has its .hidden class correctly removed, #revNum reads 'Box #1' and #revItems holds all 12 <li> — and none of it is on screen, because getComputedStyle on its parent returns display:none and the whole document body is 224.75px tall. index.html:1294 declares <main id=\"main\"> and index.html:1305 declares <div id=\"main\"> inside it; app.js:155 calls $('main').classList.add('hidden'), and getElementById returns the first match in tree order — the outer <main>, which is #reveal's own ancestor. Screenshot: design/out/drive-moving-boxes-scan-fresh.png.",
+            "what": "Scanning a label renders a page with a header, a footer and nothing else. Verified on a real fresh document load (not a fragment nav): after loading the app at #b.<payload>, #reveal has its .hidden class correctly removed, #revNum reads 'Box #1' and #revItems holds all 12 <li>, and none of it is on screen, because getComputedStyle on its parent returns display:none and the whole document body is 224.75px tall. index.html:1294 declares <main id=\"main\"> and index.html:1305 declares <div id=\"main\"> inside it; app.js:155 calls $('main').classList.add('hidden'), and getElementById returns the first match in tree order, the outer <main>, which is #reveal's own ancestor. Screenshot: design/out/drive-moving-boxes-scan-fresh.png.",
             "severity": "blocker",
-            "whyItMatters": "This is not a feature that is weak, it is the feature. The whole strategic position in the research — 'the contents are inside the QR, not looked up from it', 'anyone who can point a camera at the box can read it' — is delivered by exactly this code path, and the code path renders nothing. Every label Priya prints tonight is a label that produces a blank page. Ten seconds of hand-verification at any point since the duplicate id was introduced would have caught it; helpers.test.mjs only covers the pure functions, so nothing did."
+            "whyItMatters": "This is not a feature that is weak, it is the feature. The whole strategic position in the research, 'the contents are inside the QR, not looked up from it', 'anyone who can point a camera at the box can read it', is delivered by exactly this code path, and the code path renders nothing. Every label Priya prints tonight is a label that produces a blank page. Ten seconds of hand-verification at any point since the duplicate id was introduced would have caught it; helpers.test.mjs only covers the pure functions, so nothing did."
           },
           {
-            "what": "Even with the hiding bug repaired at the outer element, the fix is not one line. I un-hid main#main in the live page and the reveal card appeared — followed immediately by the packer's entire private inventory, a live 'Pack a box' editor and Export/Import buttons, because showScanned never hides the inner div#main. Verified: innerMainAlsoVisible = true. Screenshot: design/out/drive-moving-boxes-reveal-if-fixed.png.",
+            "what": "Even with the hiding bug repaired at the outer element, the fix is not one line. I un-hid main#main in the live page and the reveal card appeared, followed immediately by the packer's entire private inventory, a live 'Pack a box' editor and Export/Import buttons, because showScanned never hides the inner div#main. Verified: innerMainAlsoVisible = true. Screenshot: design/out/drive-moving-boxes-reveal-if-fixed.png.",
             "severity": "blocker",
-            "whyItMatters": "The scan view is a read-only surface shown on other people's phones — the mover's, the neighbour's, the teenager's. Whoever fixes this must hide the inner container, not the outer one, or the repair ships a different defect: a stranger scanning one box sees the full household inventory and can edit it."
+            "whyItMatters": "The scan view is a read-only surface shown on other people's phones, the mover's, the neighbour's, the teenager's. Whoever fixes this must hide the inner container, not the outer one, or the repair ships a different defect: a stranger scanning one box sees the full household inventory and can edit it."
           },
           {
             "what": "There is nothing on the reveal card telling him what he is looking at or what to do next. No 'this is box 1 of 47', no room colour, no way back, no 'Save this to my own list'. Verified: zero <a> and zero <button> inside #reveal.",
             "severity": "major",
-            "whyItMatters": "He needs one word — 'Upstairs' — at arm's length in daylight, and ideally the reassurance that his phone did not just install anything. He also cannot use the scan to rebuild an inventory if the packer's phone dies, which the research names as the last-resort backup the printed labels are supposed to be."
+            "whyItMatters": "He needs one word, 'Upstairs', at arm's length in daylight, and ideally the reassurance that his phone did not just install anything. He also cannot use the scan to rebuild an inventory if the packer's phone dies, which the research names as the last-resort backup the printed labels are supposed to be."
           },
           {
             "what": "Every printed label lists the first four items in plain text under the number. Verified on a real print: '#4 · Office · MacBook Pro 16\" · PlayStation 5 · passport & birth certificates · jewelry box …'.",
             "severity": "major",
-            "whyItMatters": "Dale is standing in an open doorway on a public street with that box in his hands. The research is unanimous and sourced — 'Openly marking boxes with words like JEWELRY, VALUABLES, or CASH is an invitation to trouble.' The QR already carries the contents privately; printing them in the clear beside it gives away the security advantage for free."
+            "whyItMatters": "Dale is standing in an open doorway on a public street with that box in his hands. The research is unanimous and sourced, 'Openly marking boxes with words like JEWELRY, VALUABLES, or CASH is an invitation to trouble.' The QR already carries the contents privately; printing them in the clear beside it gives away the security advantage for free."
           }
         ]
       },
@@ -69,70 +69,70 @@
         "name": "Marguerite “Margo” Ellery",
         "who": "74, downsizing from the family house into a two-room assisted-living flat. Macular degeneration in one eye and an essential tremor in her right hand that got worse this year. Reads on an iPad at the largest system setting. This is the comfort-panel persona.",
         "context": "Her sitting room, 10:30, iPad in portrait at 414 CSS px flat on the arm of a chair, one finger, bright window behind her. Her son set the app up and left. No time pressure and very little tolerance for being made to feel stupid.",
-        "task": "Correct box #58 — she listed the wrong photo albums — and delete box #3, which she has decided to give away instead.",
+        "task": "Correct box #58, she listed the wrong photo albums, and delete box #3, which she has decided to give away instead.",
         "verdict": "The comfort panel did its job properly and she was visibly pleased by it. Then the two buttons she actually needed refused to grow with everything else, and she deleted the wrong box.",
         "delights": [
-          "She found the sliders icon in the header on her own — button#swsPrefsBtn, aria-label 'Display and comfort settings' — opened it, and set Text size to Largest. It worked cleanly: root font 16px → 24px, the whole layout scaled with it, horizontal overflow stayed at exactly 0px at 414px, and axe with the dialog open returned zero violations. Escape closed it and returned focus to the button.",
-          "Tapping ✎ on box #58 from the very bottom of a 60-box list did the right thing in the end: after the render settled the page was back at scrollY 0 with the textarea at 341px from the top, in view, focused, and pre-filled with the box's items. I measured a mid-flight state 1478px off-screen and then re-measured after it settled — no defect, the app recovers.",
-          "Everything else the panel touches survives the change of size. At Largest, the seal button, the fields, the search box, the print row — all still full width, all still tappable, no text clipped, nothing left behind at 13px."
+          "She found the sliders icon in the header on her own, button#swsPrefsBtn, aria-label 'Display and comfort settings', opened it, and set Text size to Largest. It worked cleanly: root font 16px → 24px, the whole layout scaled with it, horizontal overflow stayed at exactly 0px at 414px, and axe with the dialog open returned zero violations. Escape closed it and returned focus to the button.",
+          "Tapping ✎ on box #58 from the very bottom of a 60-box list did the right thing in the end: after the render settled the page was back at scrollY 0 with the textarea at 341px from the top, in view, focused, and pre-filled with the box's items. I measured a mid-flight state 1478px off-screen and then re-measured after it settled, no defect, the app recovers.",
+          "Everything else the panel touches survives the change of size. At Largest, the seal button, the fields, the search box, the print row, all still full width, all still tappable, no text clipped, nothing left behind at 13px."
         ],
         "frictions": [
           {
-            "what": "The ✎ and ✕ buttons on every box row stay 43×36px at Largest text while the rest of the page grows to 1.5×. Measured at 414px with prefs text=xxl: 24 targets reported under the floor, every one of them an 'Edit box' or 'Delete box' button at w:43 h:36. Cause is index.html:589 — `.btn.small{min-height:36px}` hard-codes a pixel value and so overrides --tap, which index.html:265 defines as max(44px, 44px × var(--ui-scale)) and which reaches 66px at this setting.",
+            "what": "The ✎ and ✕ buttons on every box row stay 43×36px at Largest text while the rest of the page grows to 1.5×. Measured at 414px with prefs text=xxl: 24 targets reported under the floor, every one of them an 'Edit box' or 'Delete box' button at w:43 h:36. Cause is index.html:589, `.btn.small{min-height:36px}` hard-codes a pixel value and so overrides --tap, which index.html:265 defines as max(44px, 44px × var(--ui-scale)) and which reaches 66px at this setting.",
             "severity": "blocker",
             "whyItMatters": "DESIGN-SYSTEM.md:284 makes 44px a hard invariant and DESIGN-SYSTEM.md:388-390 says in as many words that density must never shrink targets because the people who scaled up did it for eyesight or tremor. This app breaks that rule on precisely the two controls where a mis-tap is destructive, sitting 6px apart, in a list where every row looks identical. With her tremor she hit ✕ on the row above the one she wanted."
           },
           {
-            "what": "Deleting is a native confirm('Delete box #3?') at app.js:93, and once accepted the box is gone with no undo, no toast and no trace. Verified: after accepting, the array went 5 → 4, the word 'undo' appears nowhere in the document, and the toast still showed the stale 'Sealed 📦 — next box' from earlier. SWS.undo exists in sws-ui.js:130 and index.html:1283 loads it; app.js never calls it once.",
+            "what": "Deleting is a native confirm('Delete box #3?') at app.js:93, and once accepted the box is gone with no undo, no toast and no trace. Verified: after accepting, the array went 5 → 4, the word 'undo' appears nowhere in the document, and the toast still showed the stale 'Sealed 📦, next box' from earlier. SWS.undo exists in sws-ui.js:130 and index.html:1283 loads it; app.js never calls it once.",
             "severity": "blocker",
-            "whyItMatters": "She deleted the wrong box and had no way back. The confirm dialog is worse than useless here — it appeared under her thumb, said '#3' in the system font at the system size (the one text on screen her comfort setting could not enlarge), and she dismissed it the way one dismisses any pop-up. The undo helper is already in the page. Not calling it is a choice."
+            "whyItMatters": "She deleted the wrong box and had no way back. The confirm dialog is worse than useless here, it appeared under her thumb, said '#3' in the system font at the system size (the one text on screen her comfort setting could not enlarge), and she dismissed it the way one dismisses any pop-up. The undo helper is already in the page. Not calling it is a choice."
           },
           {
-            "what": "Once she taps ✎ there is no way out of edit mode. The primary button relabels to 'Update box #58 📦' and stays that way; verified there is no Cancel control anywhere in the document. And the trap has teeth: still in edit mode, I typed what a user would think is a new box and pressed the button — box #2's contents were replaced by the new text and no new box was created.",
+            "what": "Once she taps ✎ there is no way out of edit mode. The primary button relabels to 'Update box #58 📦' and stays that way; verified there is no Cancel control anywhere in the document. And the trap has teeth: still in edit mode, I typed what a user would think is a new box and pressed the button, box #2's contents were replaced by the new text and no new box was created.",
             "severity": "major",
-            "whyItMatters": "The one recovery instinct — 'I'll just start typing something else' — silently destroys the box she was editing. For her that is a second unrecoverable loss on the same screen, and 'moving-app ate my data' is the single most-repeated 1★ in the sourced complaints."
+            "whyItMatters": "The one recovery instinct, 'I'll just start typing something else', silently destroys the box she was editing. For her that is a second unrecoverable loss on the same screen, and 'moving-app ate my data' is the single most-repeated 1★ in the sourced complaints."
           }
         ]
       },
       {
         "name": "Erin Vance",
-        "who": "29, moving in with her partner, and the one in the couple who does spreadsheets. Refugee from a Sortly renewal — the research's '300% in 30 days' revolt — so she is specifically here because it is free and local, and specifically anxious about losing data because that is what the reviews she read were all about.",
+        "who": "29, moving in with her partner, and the one in the couple who does spreadsheets. Refugee from a Sortly renewal, the research's '300% in 30 days' revolt, so she is specifically here because it is free and local, and specifically anxious about losing data because that is what the reviews she read were all about.",
         "context": "Laptop at 1280px at the dining table on a Sunday afternoon, two hands, coffee. Her partner has AirDropped her the JSON export from his own phone. Low time pressure, high care.",
         "task": "Merge her partner's 30 boxes into her 40 so there is one master inventory, then export a backup she can email to herself.",
         "verdict": "Lost forty boxes of her own work in one click, silently, with a green-sounding confirmation message. She would not use this app again.",
         "delights": [
-          "Export produced a real file with no account and no upload, and the toast — 'Backup exported — email it to yourself' — told her what to do with it, which is more than most of the field does.",
+          "Export produced a real file with no account and no upload, and the toast, 'Backup exported, email it to yourself', told her what to do with it, which is more than most of the field does.",
           "Everything genuinely works offline. I registered the service worker, went offline, and reloaded: cache 'boxes-v14' held all eleven assets and the app came back with all 200 boxes rendered. The privacy promise in the footer is true."
         ],
         "frictions": [
           {
-            "what": "Import replaces, it does not merge, and it does not ask. Verified: 40 boxes in localStorage, imported a 30-box file, result '30 boxes · 30 things' with only the partner's records surviving. No confirm dialog fired. The toast read 'Backup restored — 30 boxes'. app.js:218-225 assigns `boxes = arr…` outright.",
+            "what": "Import replaces, it does not merge, and it does not ask. Verified: 40 boxes in localStorage, imported a 30-box file, result '30 boxes · 30 things' with only the partner's records surviving. No confirm dialog fired. The toast read 'Backup restored, 30 boxes'. app.js:218-225 assigns `boxes = arr…` outright.",
             "severity": "blocker",
-            "whyItMatters": "This is the sourced complaint reproduced by our own code — 'My entire move disappeared all my photos my boxes and labels.' The button says 'Import', which to a normal person means 'bring these in', and the success message counts only the new boxes so the loss is invisible until she scrolls. There is no undo and localStorage has already been overwritten, so the previous state is unrecoverable even in principle."
+            "whyItMatters": "This is the sourced complaint reproduced by our own code, 'My entire move disappeared all my photos my boxes and labels.' The button says 'Import', which to a normal person means 'bring these in', and the success message counts only the new boxes so the loss is invisible until she scrolls. There is no undo and localStorage has already been overwritten, so the previous state is unrecoverable even in principle."
           },
           {
-            "what": "Import silently discards anything past 500 boxes or 100 items per box. Verified: a 700-box file with 140 items each imported as '500 boxes · 50000 things' and the toast said 'Backup restored — 500 boxes' — phrased as success. app.js:223-224.",
+            "what": "Import silently discards anything past 500 boxes or 100 items per box. Verified: a 700-box file with 140 items each imported as '500 boxes · 50000 things' and the toast said 'Backup restored, 500 boxes', phrased as success. app.js:223-224.",
             "severity": "major",
             "whyItMatters": "A restore that quietly drops 200 boxes is a worse failure than one that refuses, because she will believe she is restored. The research asked us to state this ceiling out loud as the one real limit we have; instead it is enforced in silence at exactly the moment a frightened user is trying to recover."
           },
           {
             "what": "A single malformed record in localStorage takes the whole list off screen. load() at app.js:39-44 only checks Array.isArray and then trusts every field, while the import path validates properly. Six shapes tested, three fatal: `[{\"n\":1}]` (no items) → 'Cannot read properties of undefined (reading length)', 0 rows rendered, heading falls back to 'Boxes'; `[{\"n\":1,\"room\":123,\"items\":\"…\"}]` → 'b.items.join is not a function', heading claims '1 boxes · 16 things' while the list is empty; `[null,1,\"x\",{good box}]` → 'Cannot read properties of null', and the one valid box vanishes with the rest.",
             "severity": "major",
-            "whyItMatters": "renderBoxes throws partway through, so good records die with the bad one. Any half-written value — a quota kill mid-write, a second tab, a sync tool, a browser crash — presents to the user as 'the app lost my entire move', which is the exact 1★ the whole product is positioned against. The data is still sitting in localStorage; the app just refuses to draw it, and says nothing."
+            "whyItMatters": "renderBoxes throws partway through, so good records die with the bad one. Any half-written value, a quota kill mid-write, a second tab, a sync tool, a browser crash, presents to the user as 'the app lost my entire move', which is the exact 1★ the whole product is positioned against. The data is still sitting in localStorage; the app just refuses to draw it, and says nothing."
           },
           {
             "what": "Export is always named moving-boxes.json with no date and no box count.",
             "severity": "minor",
-            "whyItMatters": "She now has moving-boxes.json, moving-boxes (1).json and moving-boxes (2).json in Downloads and no way to tell which is the 40-box one. For a person whose reason for being here is fear of data loss, an undatable backup is a weak backup — and there is no CSV, so nothing she can open and read to check."
+            "whyItMatters": "She now has moving-boxes.json, moving-boxes (1).json and moving-boxes (2).json in Downloads and no way to tell which is the 40-box one. For a person whose reason for being here is fear of data loss, an undatable backup is a weak backup, and there is no CSV, so nothing she can open and read to check."
           }
         ]
       },
       {
         "name": "Tomás Bergeron",
-        "who": "44, hired mover, third job of the day. Android phone, cracked screen protector, works gloves he half-removes to use it. Has no interest in software; will scan a code if it takes less than one attempt. Stands in for the research's 'my husband cannot use his own phone to scan what I've packed' — the second person who is meant to be able to read the labels without an install, an account or an invitation.",
-        "context": "Back of the truck, 14:50, direct afternoon sun on a glossy printed label, standing, both hands otherwise on a box. Very high time pressure — he is paid by the job.",
+        "who": "44, hired mover, third job of the day. Android phone, cracked screen protector, works gloves he half-removes to use it. Has no interest in software; will scan a code if it takes less than one attempt. Stands in for the research's 'my husband cannot use his own phone to scan what I've packed', the second person who is meant to be able to read the labels without an install, an account or an invitation.",
+        "context": "Back of the truck, 14:50, direct afternoon sun on a glossy printed label, standing, both hands otherwise on a box. Very high time pressure, he is paid by the job.",
         "task": "Scan three labels in a row to sort a pallet into rooms.",
-        "verdict": "Scanned one, got a blank white page, stopped scanning and went back to reading the printed text — which is the only reason the boxes got to the right rooms at all.",
+        "verdict": "Scanned one, got a blank white page, stopped scanning and went back to reading the printed text, which is the only reason the boxes got to the right rooms at all.",
         "frictions": [
           {
             "what": "Same blank-page blocker as Dale, from the other side of the promise: the app that is supposed to need no install renders nothing on the phone of the person who has not installed it.",
@@ -140,14 +140,14 @@
             "whyItMatters": "The differentiator the research calls 'the single most valuable sentence this app can print' is not just unstated, it is untrue in the shipped build. Every second person the labels are aimed at gets a white page with a tip-jar button on it."
           },
           {
-            "what": "Nothing on the printed label says which side is up, whether it is fragile, or which room it belongs to in a form he can act on at three paces. Verified on a real print: the label carries #number, the free-text room in 11pt, and up to four items in 8pt grey (#666) — measured at 8pt, that item line is unreadable at arm's length in sun, and there are no handling flags in the model at all.",
+            "what": "Nothing on the printed label says which side is up, whether it is fragile, or which room it belongs to in a form he can act on at three paces. Verified on a real print: the label carries #number, the free-text room in 11pt, and up to four items in 8pt grey (#666), measured at 8pt, that item line is unreadable at arm's length in sun, and there are no handling flags in the model at all.",
             "severity": "major",
             "whyItMatters": "The room is the only field he needs and it is set in 11pt beside a 26pt box number he does not care about. Every commercial moving-label kit sells colour-per-room for this reason; ours prints monochrome text and puts the emphasis on the wrong field."
           },
           {
             "what": "Duplicate box numbers are accepted with no warning. Verified: sealing three boxes with #5 typed each time produced rows '#5', '#5', '#5', a heading of '3 boxes · 3 things', and the next-number placeholder then read '6'.",
             "severity": "minor",
-            "whyItMatters": "The number is the only identifier he and the household share. Three boxes called #5 makes the whole numbering scheme — and the 'did all 47 arrive?' reconciliation the research says the app should answer — meaningless, and the app watched it happen."
+            "whyItMatters": "The number is the only identifier he and the household share. Three boxes called #5 makes the whole numbering scheme, and the 'did all 47 arrive?' reconciliation the research says the app should answer, meaningless, and the app watched it happen."
           }
         ]
       }
@@ -158,21 +158,21 @@
         "The comfort panel works and is worth having. Opened from the header, axe-clean with the dialog open, 16px → 24px root font at Largest, and zero horizontal overflow at 414px and at 320px even with 200 boxes loaded and search open.",
         "Layout is genuinely robust. Zero px of horizontal overflow at 320, 414 and 1280, at largest text and at roomy spacing, with 200 boxes and 1600 items in the list.",
         "Offline and privacy are real, not marketing: service worker cache 'boxes-v14' precaches all eleven assets and a full offline reload rendered all 200 boxes.",
-        "No injection surface found. Hostile room names and item text (<img onerror>, <script>, javascript: URLs) round-trip through the QR payload, the hash and the reveal view as literal text — every render path uses textContent. Malformed hashes fail closed.",
-        "Unicode survives the round trip. Cyrillic, Greek and emoji encoded into the QR payload and decoded back byte-identical, and rendered correctly on both the label and the reveal card — no repeat of the seating-chart '??' defect."
+        "No injection surface found. Hostile room names and item text (<img onerror>, <script>, javascript: URLs) round-trip through the QR payload, the hash and the reveal view as literal text, every render path uses textContent. Malformed hashes fail closed.",
+        "Unicode survives the round trip. Cyrillic, Greek and emoji encoded into the QR payload and decoded back byte-identical, and rendered correctly on both the label and the reveal card, no repeat of the seating-chart '??' defect."
       ],
       "hurts": [
-        "Scanning a label — the headline feature and the entire strategic position — renders a blank page. Two elements share id=\"main\" (index.html:1294 and 1305), so app.js:155 hides the reveal view's own ancestor.",
+        "Scanning a label, the headline feature and the entire strategic position, renders a blank page. Two elements share id=\"main\" (index.html:1294 and 1305), so app.js:155 hides the reveal view's own ancestor.",
         "Destructive actions are unguarded and unrecoverable in three separate places: Import silently replaces the whole inventory, Delete is a native confirm with no undo, and edit mode has no cancel so a mis-tap plus normal typing overwrites the box being edited. SWS.undo is loaded on the page and never called.",
-        "One bad record in localStorage empties the entire list on screen, with a console error and no message to the user — the app's own version of the 1★ complaint it is positioned against.",
+        "One bad record in localStorage empties the entire list on screen, with a console error and no message to the user, the app's own version of the 1★ complaint it is positioned against.",
         "Printing is two products fighting: 'Print QR labels' emits 19 pages of inventory before 20 pages of labels at 200 boxes, and the labels themselves both leak valuables in plain text and carry QR codes measured at 0.278mm/module on a full box.",
         "The ✎/✕ pair stays 36px tall at every comfort setting because .btn.small hard-codes it (index.html:589), breaking the portfolio's one hard target-size invariant on its two most dangerous controls.",
-        "Search — the reason the app exists on moving day — dead-ends. 200 matching boxes render as 10 non-interactive <li> with no count, no 'showing 10 of 200', no way to open a result, and a zero-match query produces complete silence.",
-        "The search field, the app's headline control, has no accessible name at all — placeholder only, no aria-label, no wrapping label — and #searchResults has no aria-live, so a screen-reader user gets no confirmation that anything was found."
+        "Search, the reason the app exists on moving day, dead-ends. 200 matching boxes render as 10 non-interactive <li> with no count, no 'showing 10 of 200', no way to open a result, and a zero-match query produces complete silence.",
+        "The search field, the app's headline control, has no accessible name at all, placeholder only, no aria-label, no wrapping label, and #searchResults has no aria-live, so a screen-reader user gets no confirmation that anything was found."
       ],
       "mostWantedNext": [
         "Make the scan work, then keep it working: rename the inner container, hide that one, and add a browser regression test that loads a real label URL and asserts the reveal card is on screen.",
-        "Undo everywhere destructive — Import, Delete, and an explicit Cancel out of edit mode — using the SWS.undo helper the page already loads.",
+        "Undo everywhere destructive, Import, Delete, and an explicit Cancel out of edit mode, using the SWS.undo helper the page already loads.",
         "Split printing into 'Labels only' and 'Packing manifest', with a label-size choice and a copies-per-box control, and cap the QR by module count rather than character count so a full box's code stays above ~0.5mm/module.",
         "Make the printed label safe and useful at three paces: room in the largest type, an optional colour band per room, handling flags (FRAGILE / THIS WAY UP / OPEN FIRST), and contents in the QR only by default.",
         "Make search finish the job: real hit count, every result a button that scrolls to and highlights its box, an explicit empty state, and an accessible name on the field."
@@ -186,14 +186,14 @@
       {
         "name": "Scan a printed label on a phone that has never opened the app",
         "method": "Sealed a 12-item Kitchen box through the real UI, recomputed the exact QR payload with the app's own encodeBoxForLabel, then navigated to about:blank and loaded the app fresh at that #b.<payload> URL so init() genuinely re-ran (a fragment-only goto does not reload and hides this bug).",
-        "result": "Blank page. document.body is 224.75px tall and its only text is 'Moving Boxes / ♥ Tip jar / Your household inventory stays in your household…'. #reveal correctly has .hidden removed, #revNum is 'Box #1' and #revItems holds 12 <li> — but getComputedStyle(#reveal.parentElement).display is 'none'. document.querySelectorAll('#main').length is 2: <main id=\"main\"> at index.html:1294 and <div id=\"main\"> at index.html:1305. getElementById('main') returns the MAIN, so app.js:155 hides the reveal's own ancestor. Zero console errors — it fails completely silently. Screenshot design/out/drive-moving-boxes-scan-fresh.png.",
+        "result": "Blank page. document.body is 224.75px tall and its only text is 'Moving Boxes / ♥ Tip jar / Your household inventory stays in your household…'. #reveal correctly has .hidden removed, #revNum is 'Box #1' and #revItems holds 12 <li>, but getComputedStyle(#reveal.parentElement).display is 'none'. document.querySelectorAll('#main').length is 2: <main id=\"main\"> at index.html:1294 and <div id=\"main\"> at index.html:1305. getElementById('main') returns the MAIN, so app.js:155 hides the reveal's own ancestor. Zero console errors, it fails completely silently. Screenshot design/out/drive-moving-boxes-scan-fresh.png.",
         "severity": "blocker",
         "defect": "Duplicate id=\"main\" makes the headline feature render nothing. app.js:155 + index.html:1294,1305."
       },
       {
         "name": "The scan view with the hiding bug patched at the wrong element",
         "method": "Loaded a label URL fresh, then removed .hidden from main#main in the live page to see what the intended screen actually looks like, and measured whether the app half was also hidden.",
-        "result": "The reveal card renders well — 'Box #1' at display size, room beneath, six items — and immediately below it the full private inventory, the live 'Pack a box' editor and the Export/Import row are all visible (innerMainVisible = true), because showScanned never touches div#main. axe clean, overflow 0. Screenshot design/out/drive-moving-boxes-reveal-if-fixed.png.",
+        "result": "The reveal card renders well, 'Box #1' at display size, room beneath, six items, and immediately below it the full private inventory, the live 'Pack a box' editor and the Export/Import row are all visible (innerMainVisible = true), because showScanned never touches div#main. axe clean, overflow 0. Screenshot design/out/drive-moving-boxes-reveal-if-fixed.png.",
         "severity": "blocker",
         "defect": "The obvious one-line repair ships a privacy defect: a stranger scanning one box would see and be able to edit the whole household inventory. The inner container must be the one that hides."
       },
@@ -202,32 +202,32 @@
         "method": "Sealed three boxes spanning the payload range (3, 10 and 60 items), printed to Letter via page.pdf, rasterised at 300dpi with pdftoppm, and flood-filled the raster to find the square dark blobs and measure their true printed width in mm. Cross-checked module counts from each canvas naturalWidth (cell 4px, quiet zone 4 modules each side).",
         "result": "41 modules, 57 modules and 101 modules printed at 25.4mm, 26.4mm and 28.1mm respectively → 0.62, 0.46 and 0.278 mm per module. The 101-module code is the one produced by any box that reaches the 900-character cap in encodeBoxForLabel (helpers.js:56), at error-correction level L (app.js:119).",
         "severity": "major",
-        "defect": "The cap is on base64 characters, not on QR version, so density degrades with how full the box is. 0.278mm/module on an inkjet, on cardboard, in a garage is below any practical smartphone floor — and the app gives no warning that a given label is at risk."
+        "defect": "The cap is on base64 characters, not on QR version, so density degrades with how full the box is. 0.278mm/module on an inkjet, on cardboard, in a garage is below any practical smartphone floor, and the app gives no warning that a given label is at risk."
       },
       {
         "name": "Print 200 boxes and count what actually comes out",
         "method": "Seeded 200 boxes × 2 items, stubbed window.print, clicked #printBtn, produced a real Letter PDF, then used pdfinfo and page-by-page pdftotext to identify each page's content.",
-        "result": "39 pages. Pages 1–19 are the inventory list (page 1 begins '200 BOXES · 400 THINGS', page 8 shows rows #78/#79). Pages 20–39 are the labels, 10 per page in the 2-up grid, ending at #199/#200. Print took 2824ms to render 200 QR canvases; all 200 rendered, zero fell back to the '(QR too large)' placeholder.",
+        "result": "39 pages. Pages 1 to 19 are the inventory list (page 1 begins '200 BOXES · 400 THINGS', page 8 shows rows #78/#79). Pages 20 to 39 are the labels, 10 per page in the 2-up grid, ending at #199/#200. Print took 2824ms to render 200 QR canvases; all 200 rendered, zero fell back to the '(QR too large)' placeholder.",
         "severity": "major",
         "defect": "A button labelled 'Print QR labels' emits 19 pages with no QR code on them, and there is no way to print either half alone. The Boxes card at index.html:1327 is the only card lacking .screenonly."
       },
       {
         "name": "What the printed label says out loud",
         "method": "Printed a deliberately sensitive box ('Office': MacBook Pro 16\", PlayStation 5, passport & birth certificates, jewelry box, $400 cash) and read the rendered label face out of the DOM and out of the rasterised PDF.",
-        "result": "The label prints '#4 / Office / MacBook Pro 16\" · PlayStation 5 · passport & birth certificates · jewelry box …' — renderLabels at app.js:149 emits items.slice(0,4) in 8pt #666 under the number. Room is 11pt; box number is 26pt.",
+        "result": "The label prints '#4 / Office / MacBook Pro 16\" · PlayStation 5 · passport & birth certificates · jewelry box …', renderLabels at app.js:149 emits items.slice(0,4) in 8pt #666 under the number. Room is 11pt; box number is 26pt.",
         "severity": "major",
-        "defect": "Directly contradicts the sourced movers' guidance in the research ('Openly marking boxes with words like JEWELRY, VALUABLES, or CASH is an invitation to trouble'), and gives away the app's own advantage — the contents are already carried privately inside the QR."
+        "defect": "Directly contradicts the sourced movers' guidance in the research ('Openly marking boxes with words like JEWELRY, VALUABLES, or CASH is an invitation to trouble'), and gives away the app's own advantage, the contents are already carried privately inside the QR."
       },
       {
         "name": "Unicode through the QR payload, the label and the reveal card",
         "method": "Sealed boxes with Cyrillic ('Мастерская', 'Молоток'), Greek ('ελληνικά βιβλία'), Japanese ('日本の茶碗') and emoji ('🧸 teddy'), then round-tripped each through encodeBoxForLabel → decodeBox and inspected both the printed label and the reveal DOM.",
-        "result": "Byte-identical round trip in every case: roomRoundTrip true, last decoded item '🧸 teddy' intact. Cyrillic, Greek and emoji render correctly on screen and in the print PDF. Japanese rendered as tofu boxes in the PDF, but the container has 280 fonts and zero CJK-capable ones (fc-list | grep -ci cjk = 0), so that is this machine, not the app — the bundled webfont is space-grotesk-latin.woff2 and fallback demonstrably works for the scripts the OS can draw.",
+        "result": "Byte-identical round trip in every case: roomRoundTrip true, last decoded item '🧸 teddy' intact. Cyrillic, Greek and emoji render correctly on screen and in the print PDF. Japanese rendered as tofu boxes in the PDF, but the container has 280 fonts and zero CJK-capable ones (fc-list | grep -ci cjk = 0), so that is this machine, not the app, the bundled webfont is space-grotesk-latin.woff2 and fallback demonstrably works for the scripts the OS can draw.",
         "severity": "none",
         "defect": null
       },
       {
         "name": "Injection through every text path, including the URL hash",
-        "method": "Encoded a hostile box directly into a label hash — room '<img src=x onerror=\"document.title=...\">', items including '<script>window.__x=1</script>', '\"><b>bold?</b>' and 'javascript:alert(1)' — loaded it fresh, and also typed hostile strings into the room and items fields.",
+        "method": "Encoded a hostile box directly into a label hash, room '<img src=x onerror=\"document.title=...\">', items including '<script>window.__x=1</script>', '\"><b>bold?</b>' and 'javascript:alert(1)', loaded it fresh, and also typed hostile strings into the room and items fields.",
         "result": "No execution. document.title unchanged, window.__x undefined, zero <img> and zero <script> inside #reveal, and revRoom.textContent starts with the literal '<img'. Every render path builds nodes with textContent (app.js:10-24).",
         "severity": "none",
         "defect": null
@@ -235,7 +235,7 @@
       {
         "name": "Malformed and hostile label hashes",
         "method": "Loaded five bad hashes fresh: '#b.', '#b.!!!!', '#b.' + 50,000 'A's, a valid base64 of {\"n\":1,\"i\":[1,2,3]} (numbers where strings belong), and base64 of '[]'.",
-        "result": "Four of five fail closed — reveal stays hidden, the normal app renders, no console errors. The fifth (numeric items) decodes as a legitimate box, so it takes the blank-page path from scenario 1. decodeBox (helpers.js:39-51) filters non-strings correctly.",
+        "result": "Four of five fail closed, reveal stays hidden, the normal app renders, no console errors. The fifth (numeric items) decodes as a legitimate box, so it takes the blank-page path from scenario 1. decodeBox (helpers.js:39-51) filters non-strings correctly.",
         "severity": "none",
         "defect": null
       },
@@ -244,33 +244,33 @@
         "method": "Wrote six malformed shapes into the 'moving-boxes' key and reloaded after each, recording the heading, the row count and any page error.",
         "result": "Three of six are fatal. '[{\"n\":1}]' → TypeError 'Cannot read properties of undefined (reading length)', 0 rows, heading falls back to 'Boxes'. '[{\"n\":1,\"room\":123,\"items\":\"string not array\"}]' → 'b.items.join is not a function', heading claims '1 boxes · 16 things' while the list renders empty. '[null,1,\"x\",{valid box}]' → 'Cannot read properties of null', and the one valid box is lost with the rest. The other three degrade quietly to an empty list. load() at app.js:39-44 checks only Array.isArray, while the import path at app.js:218-224 validates every field.",
         "severity": "major",
-        "defect": "renderBoxes throws partway through, so a single bad record hides every good one. To the user this is indistinguishable from 'the app lost my entire move' — the top sourced complaint in the category — and no message is shown."
+        "defect": "renderBoxes throws partway through, so a single bad record hides every good one. To the user this is indistinguishable from 'the app lost my entire move', the top sourced complaint in the category, and no message is shown."
       },
       {
         "name": "Import over an existing inventory",
         "method": "Seeded 40 boxes, then imported a 30-box JSON file through the real file input with a dialog listener armed to catch any confirmation.",
-        "result": "'40 boxes · 40 things' → '30 boxes · 30 things'. No dialog fired. Toast: 'Backup restored — 30 boxes'. The surviving records are all from the imported file. Then imported a 700-box × 140-item file: result '500 boxes · 50000 things', toast 'Backup restored — 500 boxes' — 200 boxes and 40 items per box discarded in silence (caps at app.js:223-224).",
+        "result": "'40 boxes · 40 things' → '30 boxes · 30 things'. No dialog fired. Toast: 'Backup restored, 30 boxes'. The surviving records are all from the imported file. Then imported a 700-box × 140-item file: result '500 boxes · 50000 things', toast 'Backup restored, 500 boxes', 200 boxes and 40 items per box discarded in silence (caps at app.js:223-224).",
         "severity": "blocker",
         "defect": "Import is an unconfirmed, unrecoverable overwrite of everything, announced with a success message that counts only what arrived."
       },
       {
         "name": "Edit mode: entry, escape, and the mis-tap that overwrites",
-        "method": "Clicked ✎ on box 2 of 3, inspected the resulting state, then did what a user does when they think they are done — typed fresh contents and pressed the primary button.",
-        "result": "Button relabels to 'Update box #2 📦', textarea pre-fills with box 2's items, and no Cancel control exists anywhere in the document. Typing 'BRAND NEW BOX CONTENTS' and pressing the button produced ['1: E item 0', '2: BRAND NEW BOX CONTENTS', '3: E item 2'] — box 2 overwritten, no new box created, no warning. Also verified the recovery case: editing box 58 from the bottom of a 60-box list settles at scrollY 0 with the textarea in view and focused — that part is fine.",
+        "method": "Clicked ✎ on box 2 of 3, inspected the resulting state, then did what a user does when they think they are done, typed fresh contents and pressed the primary button.",
+        "result": "Button relabels to 'Update box #2 📦', textarea pre-fills with box 2's items, and no Cancel control exists anywhere in the document. Typing 'BRAND NEW BOX CONTENTS' and pressing the button produced ['1: E item 0', '2: BRAND NEW BOX CONTENTS', '3: E item 2'], box 2 overwritten, no new box created, no warning. Also verified the recovery case: editing box 58 from the bottom of a 60-box list settles at scrollY 0 with the textarea in view and focused, that part is fine.",
         "severity": "major",
         "defect": "editingBoxId (app.js:36) is sticky with no exit, so the natural next action silently destroys the box you accidentally opened."
       },
       {
         "name": "Search at 200 boxes",
         "method": "Loaded 200 boxes × 8 items, typed a term matching every box, and compared the app's own searchBoxes result against what was rendered; then searched a term matching nothing.",
-        "result": "200 true hits, 10 rendered (hard .slice(0,10) at app.js:105), no count anywhere, and zero <a>/<button>/[tabindex] inside #searchResults — every result is an inert <li>. A zero-match query renders nothing at all: #searchResults.textContent is the empty string, with no 'nothing found' message.",
+        "result": "200 true hits, 10 rendered (hard .slice(0,10) at app.js:105), no count anywhere, and zero <a>/<button>/[tabindex] inside #searchResults, every result is an inert <li>. A zero-match query renders nothing at all: #searchResults.textContent is the empty string, with no 'nothing found' message.",
         "severity": "major",
         "defect": "The control the whole moving-day use case runs on truncates without saying so and cannot be acted on."
       },
       {
         "name": "Comfort panel, keyboard reach and target sizes at Largest text",
         "method": "Loaded 12 boxes, opened the panel from the header button, ran axe with the dialog open, clicked the Largest radio, closed with Escape, then measured overflow, target sizes and tab order at 414px.",
-        "result": "Panel opens as a real <dialog open>, axe returns []. Root font 16px → 24px. Overflow 0px, zero offending elements. 24 targets under the floor, all of them ✎/✕ at 43×36 — .btn.small hard-codes min-height:36px at index.html:589, defeating --tap (index.html:265, 66px at this scale). Tab order is header → search → boxNum → boxRoom → boxItems → Seal, then ✎/✕ for every single box before reaching Print/Export/Import — at 200 boxes that is 400 Tab presses to reach the print button, and there is no skip link.",
+        "result": "Panel opens as a real <dialog open>, axe returns []. Root font 16px → 24px. Overflow 0px, zero offending elements. 24 targets under the floor, all of them ✎/✕ at 43×36, .btn.small hard-codes min-height:36px at index.html:589, defeating --tap (index.html:265, 66px at this scale). Tab order is header → search → boxNum → boxRoom → boxItems → Seal, then ✎/✕ for every single box before reaching Print/Export/Import, at 200 boxes that is 400 Tab presses to reach the print button, and there is no skip link.",
         "severity": "blocker",
         "defect": "Target-size invariant (DESIGN-SYSTEM.md:284, 388-390) broken on the two destructive controls; no keyboard shortcut past a long list."
       },
@@ -284,7 +284,7 @@
       {
         "name": "Box-number edges and the auto-numbering poison",
         "method": "Typed eight values into #boxNum and read back what was stored: '0', '-5', '99999999999999999999', '3.7', '1e3', 'abc', '  7  ', '007'. Then sealed three boxes all numbered 5.",
-        "result": "0 → 1, -5 → 2, 3.7 → 3, 1e3 → 1, 007 → 7, '  7  ' → 7, and 99999999999999999999 → 100000000000000000000. After that, 'abc' also produced 100000000000000000000, because nextBoxNumber (helpers.js:8-10) computes 1e20 + 1 which floats back to 1e20 — auto-numbering is permanently stuck. Three boxes typed as #5 all stored as 5, rendered as '#5','#5','#5', heading '3 boxes · 3 things', next placeholder '6'. All silent.",
+        "result": "0 → 1, -5 → 2, 3.7 → 3, 1e3 → 1, 007 → 7, '  7  ' → 7, and 99999999999999999999 → 100000000000000000000. After that, 'abc' also produced 100000000000000000000, because nextBoxNumber (helpers.js:8-10) computes 1e20 + 1 which floats back to 1e20, auto-numbering is permanently stuck. Three boxes typed as #5 all stored as 5, rendered as '#5','#5','#5', heading '3 boxes · 3 things', next placeholder '6'. All silent.",
         "severity": "major",
         "defect": "One absurd entry permanently breaks automatic numbering; invalid and duplicate numbers are accepted with no feedback."
       },
@@ -298,37 +298,37 @@
       {
         "name": "Rapid clicking, whitespace, and the input caps",
         "method": "Fired three synchronous clicks at #addBox with content typed, then submitted whitespace-only content, 150 items, and a 200-character item.",
-        "result": "Triple-click created exactly one box — the first click clears the textarea, so clicks two and three hit the empty-input guard (app.js:170) and toast 'List what's inside first'. Whitespace-only correctly rejected. 150 items silently stored as 100; a 200-character item silently stored at 60 characters; both toasted 'Sealed 📦 — next box'. A 40-character cap on room is enforced.",
+        "result": "Triple-click created exactly one box, the first click clears the textarea, so clicks two and three hit the empty-input guard (app.js:170) and toast 'List what's inside first'. Whitespace-only correctly rejected. 150 items silently stored as 100; a 200-character item silently stored at 60 characters; both toasted 'Sealed 📦, next box'. A 40-character cap on room is enforced.",
         "severity": "minor",
         "defect": "No duplicate-creation bug, but every cap is enforced in silence while the toast reports plain success."
       },
       {
         "name": "localStorage quota exhaustion",
         "method": "Filled the origin with 200KB filler values until setItem threw (26 keys, ~5.2MB), then sealed a box and reloaded twice.",
-        "result": "Could not reach the failure path: the small boxes array still fit in the remaining headroom, both seals persisted, and after reload the app showed 2 boxes. The '⚠ Couldn't save — storage may be full' warning at app.js:50 was never triggered.",
+        "result": "Could not reach the failure path: the small boxes array still fit in the remaining headroom, both seals persisted, and after reload the app showed 2 boxes. The '⚠ Couldn't save, storage may be full' warning at app.js:50 was never triggered.",
         "severity": "none",
-        "defect": "Not a finding either way — the warning path exists and is correctly rate-limited in source, but I was unable to provoke it in a real browser and am not reporting it as verified."
+        "defect": "Not a finding either way, the warning path exists and is correctly rate-limited in source, but I was unable to provoke it in a real browser and am not reporting it as verified."
       }
     ]
   },
   "fixes": [
     {
       "title": "Rename the inner container and hide that one, so scanning a label actually shows the box",
-      "rationale": "Dale and Tomás both got a blank page from the app's only reason to exist. Two elements share id=\"main\", so app.js:155 hides #reveal's own ancestor: verified body height 224.75px, #revNum populated but display:none, zero console errors. Repairing it at the outer element is not enough — scenario 2 showed that un-hiding <main> exposes the packer's whole private inventory and a live editor to whoever scanned the box. Rename div#main to #app, have showScanned hide #app, and add a browser regression test that loads a real label URL and asserts the reveal card has a non-zero bounding box; helpers.test.mjs only covers pure functions and would never have caught this.",
+      "rationale": "Dale and Tomás both got a blank page from the app's only reason to exist. Two elements share id=\"main\", so app.js:155 hides #reveal's own ancestor: verified body height 224.75px, #revNum populated but display:none, zero console errors. Repairing it at the outer element is not enough, scenario 2 showed that un-hiding <main> exposes the packer's whole private inventory and a live editor to whoever scanned the box. Rename div#main to #app, have showScanned hide #app, and add a browser regression test that loads a real label URL and asserts the reveal card has a non-zero bounding box; helpers.test.mjs only covers pure functions and would never have caught this.",
       "where": "apps/moving-boxes/index.html:1294 and :1305; apps/moving-boxes/app.js:154-156, :233-243",
       "severity": "blocker",
       "effort": "S"
     },
     {
       "title": "Make Import merge by default, and never overwrite without an undo",
-      "rationale": "Erin lost 40 boxes in one click: verified 40 → 30 with no confirmation and a toast reading 'Backup restored — 30 boxes'. This reproduces the most-cited 1★ in the research ('My entire move disappeared all my photos my boxes and labels'). Offer merge-by-box-number as the default with replace as an explicit second choice, snapshot the previous array first, and route the result through SWS.undo (sws-ui.js:130) which index.html:1283 already loads. Also report the truth when caps bite — a 700-box file currently imports as 500 and says 'restored'.",
+      "rationale": "Erin lost 40 boxes in one click: verified 40 → 30 with no confirmation and a toast reading 'Backup restored, 30 boxes'. This reproduces the most-cited 1★ in the research ('My entire move disappeared all my photos my boxes and labels'). Offer merge-by-box-number as the default with replace as an explicit second choice, snapshot the previous array first, and route the result through SWS.undo (sws-ui.js:130) which index.html:1283 already loads. Also report the truth when caps bite, a 700-box file currently imports as 500 and says 'restored'.",
       "where": "apps/moving-boxes/app.js:209-230 (the reader.onload assignment at :218-225)",
       "severity": "blocker",
       "effort": "M"
     },
     {
       "title": "Undo instead of confirm() for delete, and a real Cancel out of edit mode",
-      "rationale": "Margo deleted the wrong box behind a native confirm she could not enlarge, and then found the only escape from edit mode destroys the box she was editing — verified: typing new contents while editing replaced box #2 rather than creating a box. Replace confirm('Delete box #N?') at app.js:93 with an immediate delete plus SWS.undo, add a visible Cancel beside the primary button whenever editingBoxId is set, and clear editingBoxId if the user starts what looks like a new box.",
+      "rationale": "Margo deleted the wrong box behind a native confirm she could not enlarge, and then found the only escape from edit mode destroys the box she was editing, verified: typing new contents while editing replaced box #2 rather than creating a box. Replace confirm('Delete box #N?') at app.js:93 with an immediate delete plus SWS.undo, add a visible Cancel beside the primary button whenever editingBoxId is set, and clear editingBoxId if the user starts what looks like a new box.",
       "where": "apps/moving-boxes/app.js:91-96 (delete), :36 and :171-181 (editingBoxId), sws-ui.js:130",
       "severity": "blocker",
       "effort": "M"
@@ -342,21 +342,21 @@
     },
     {
       "title": "Validate every record on load, and never let one bad row blank the list",
-      "rationale": "Three of six corrupt-storage shapes threw and rendered zero rows while the data was still present — including a case where the heading said '1 boxes · 16 things' over an empty list, and one where a perfectly good box was lost because a null sibling threw first. load() at app.js:39-44 trusts everything; the import path at app.js:218-224 already has the sanitiser it needs. Reuse it, skip the unusable rows, and say how many were skipped rather than showing an empty app to someone who is already afraid of losing their move.",
+      "rationale": "Three of six corrupt-storage shapes threw and rendered zero rows while the data was still present, including a case where the heading said '1 boxes · 16 things' over an empty list, and one where a perfectly good box was lost because a null sibling threw first. load() at app.js:39-44 trusts everything; the import path at app.js:218-224 already has the sanitiser it needs. Reuse it, skip the unusable rows, and say how many were skipped rather than showing an empty app to someone who is already afraid of losing their move.",
       "where": "apps/moving-boxes/app.js:39-44 (load), :68-99 (renderBoxes)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Split printing into 'Labels only' and 'Packing manifest'",
-      "rationale": "Priya pressed 'Print QR labels' and got 19 pages of inventory before 20 pages of labels (measured: 39-page PDF at 200 boxes, list on pages 1–19, labels on 20–39). The Boxes card at index.html:1327 is the only card without .screenonly, so the manifest is an accident rather than a product. Two buttons, two print classes; then make the manifest deliberate — a title, room totals, and a date — because the research names a printed manifest as table stakes and the industry guidance calls it the digital manifest.",
+      "rationale": "Priya pressed 'Print QR labels' and got 19 pages of inventory before 20 pages of labels (measured: 39-page PDF at 200 boxes, list on pages 1 to 19, labels on 20 to 39). The Boxes card at index.html:1327 is the only card without .screenonly, so the manifest is an accident rather than a product. Two buttons, two print classes; then make the manifest deliberate, a title, room totals, and a date, because the research names a printed manifest as table stakes and the industry guidance calls it the digital manifest.",
       "where": "apps/moving-boxes/index.html:1327 (missing .screenonly) and :1267-1280 (label print block); apps/moving-boxes/app.js:196-200",
       "severity": "major",
       "effort": "M"
     },
     {
       "title": "Cap the QR by module count, not by character count, and warn when a label is dense",
-      "rationale": "Measured at 300dpi: 41/57/101-module codes print at 25.4/26.4/28.1mm, i.e. 0.62 / 0.46 / 0.278 mm per module. The 900-character cap in helpers.js:56 lets a full box reach version 21 at error-correction L, and app.js:119's comment claiming scannability at 30mm does not survive the arithmetic. Cap the payload so no label exceeds ~57 modules at the printed size, or grow the printed square for dense codes, and show the user which boxes had contents dropped from their QR — right now the '…plus 19 more (see packing list)' marker points at a packing list that only exists on the phone that may be lost.",
+      "rationale": "Measured at 300dpi: 41/57/101-module codes print at 25.4/26.4/28.1mm, i.e. 0.62 / 0.46 / 0.278 mm per module. The 900-character cap in helpers.js:56 lets a full box reach version 21 at error-correction L, and app.js:119's comment claiming scannability at 30mm does not survive the arithmetic. Cap the payload so no label exceeds ~57 modules at the printed size, or grow the printed square for dense codes, and show the user which boxes had contents dropped from their QR, right now the '…plus 19 more (see packing list)' marker points at a packing list that only exists on the phone that may be lost.",
       "where": "apps/moving-boxes/helpers.js:56-66 (encodeBoxForLabel maxChars), apps/moving-boxes/app.js:117-134 (qrDataUrl), apps/moving-boxes/index.html:1278 (`.label img{width:30mm}`)",
       "severity": "major",
       "effort": "M"
@@ -369,15 +369,15 @@
       "effort": "S"
     },
     {
-      "title": "Make search results finish the job — count, click, and an empty state",
-      "rationale": "Tomás and Priya both need the moving-day question answered, and at 200 matching boxes the app renders 10 inert <li> with no indication that 190 were hidden, and renders literally nothing for a query that matches nothing. Show the real hit count, make each result a button that scrolls to and highlights its box row, and write an explicit 'No box has \"x\" — check the spelling, or it may not be packed yet.'",
+      "title": "Make search results finish the job, count, click, and an empty state",
+      "rationale": "Tomás and Priya both need the moving-day question answered, and at 200 matching boxes the app renders 10 inert <li> with no indication that 190 were hidden, and renders literally nothing for a query that matches nothing. Show the real hit count, make each result a button that scrolls to and highlights its box row, and write an explicit 'No box has \"x\", check the spelling, or it may not be packed yet.'",
       "where": "apps/moving-boxes/app.js:101-115 (renderSearch, the .slice(0,10) at :105)",
       "severity": "major",
       "effort": "S"
     },
     {
       "title": "Give the search field a name and its results a live region",
-      "rationale": "The standard battery's only hard failure and my own inspection agree: #searchInput has no aria-label, no aria-labelledby and no wrapping label — placeholder only — and #searchResults has no aria-live. This is the single control the app is built around, and a screen-reader user reaches an anonymous edit box that reports nothing when it finds something.",
+      "rationale": "The standard battery's only hard failure and my own inspection agree: #searchInput has no aria-label, no aria-labelledby and no wrapping label, placeholder only, and #searchResults has no aria-live. This is the single control the app is built around, and a screen-reader user reaches an anonymous edit box that reports nothing when it finds something.",
       "where": "apps/moving-boxes/index.html:1307 (#searchInput) and :1308 (#searchResults)",
       "severity": "major",
       "effort": "S"
@@ -391,14 +391,14 @@
     },
     {
       "title": "Be honest about every cap, in the toast and on the page",
-      "rationale": "150 items silently became 100, a 200-character item silently became 60, and a 700-box import silently became 500 — each announced as plain success. The research's fourth complaint is entirely about hidden limits ('at least say that up front', 'Please respect our time'), and it is the one place where behaving like the competition costs us nothing to fix. Say '100 items kept, 50 dropped' in the toast, and state the 500-box / 100-item ceiling in the page copy where competitors put their pricing table.",
+      "rationale": "150 items silently became 100, a 200-character item silently became 60, and a 700-box import silently became 500, each announced as plain success. The research's fourth complaint is entirely about hidden limits ('at least say that up front', 'Please respect our time'), and it is the one place where behaving like the competition costs us nothing to fix. Say '100 items kept, 50 dropped' in the toast, and state the 500-box / 100-item ceiling in the page copy where competitors put their pricing table.",
       "where": "apps/moving-boxes/helpers.js:14 (parseItems slice), apps/moving-boxes/app.js:223-224 (import caps), :226 (restore toast), index.html:1337 (hint copy)",
       "severity": "minor",
       "effort": "S"
     },
     {
       "title": "Give the scan view an identity and a way onward",
-      "rationale": "Dale had no idea what he was looking at and no next step: #reveal contains zero links and zero buttons. Add 'box 12 of 47', the one-line promise the research calls the most valuable sentence the app can print ('the contents are inside this code — no app, no account, no signal'), and a 'Save this box to my own list' action so a printed sheet of labels really is the last-resort restore the strategy claims it is.",
+      "rationale": "Dale had no idea what he was looking at and no next step: #reveal contains zero links and zero buttons. Add 'box 12 of 47', the one-line promise the research calls the most valuable sentence the app can print ('the contents are inside this code, no app, no account, no signal'), and a 'Save this box to my own list' action so a printed sheet of labels really is the last-resort restore the strategy claims it is.",
       "where": "apps/moving-boxes/index.html:1297-1303 (#reveal markup); apps/moving-boxes/app.js:154-163 (showScanned)",
       "severity": "minor",
       "effort": "M"

@@ -207,7 +207,7 @@ await T('undoing a slot delete brings the signups back with it', async () => {
   await D.deleteSlot(boardId, slotId);
 });
 
-await T('owner rotates the share code — old link dies instantly', async () => {
+await T('owner rotates the share code, old link dies instantly', async () => {
   const newCode = await D.rotateCode(boardId, code);
   assert.notEqual(newCode, code);
   assert.equal(await D.resolveCode(code), null);

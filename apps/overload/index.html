@@ -340,14 +340,14 @@ svg.spark{width:100%;height:74px;margin-top:10px}
 <script>
 'use strict';
 /* ================================================================
-   OVERLOAD — Sky Wolf Studio · SWS Strategic Media LLC
+   OVERLOAD, Sky Wolf Studio · SWS Strategic Media LLC
    Prescription-first training: the engine writes the workout, so
    logging is one tap per set.
    localStorage "overload.v2"
    program = {id, mg, ex, w, sets, repMin, repMax, rest, due,
               outcomes[], stall, history:[{date,w,reps[],verdict}]}
 
-   UX INVARIANT — do not break: after initial lift creation, the
+   UX INVARIANT, do not break: after initial lift creation, the
    user never types anything, anywhere, in the core loop.
    Verdict vocabulary is fixed: ADD WEIGHT / ADD REPS / CONSOLIDATE /
    DELOAD −10%. Do not invent new verdict names.
@@ -499,7 +499,7 @@ function warmupRamp(p,w){
     if(out.length&&t<=out[out.length-1].w)continue;
     out.push({w:t,reps});
   }
-  /* one lonely line is not a ramp — tiny weights warm up by lifting */
+  /* one lonely line is not a ramp, tiny weights warm up by lifting */
   return out.length>=2?out:[];
 }
 
@@ -718,7 +718,7 @@ function logSet(reps){
   restStart();
 }
 
-/* rest timer — per-lift duration, beep and buzz at the end.
+/* rest timer, per-lift duration, beep and buzz at the end.
    Wall-clock, not tick-counted: a locked phone throttles intervals, and a
    rest that silently stretches from 2:00 to 3:40 is a defect in a gym. */
 let restIv=null;

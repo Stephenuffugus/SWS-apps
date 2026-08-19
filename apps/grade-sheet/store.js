@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   GRADE SHEET — where it lives
+   GRADE SHEET, where it lives
 
-   IndexedDB, one record per class. The obvious alternative — one record per
-   score — is wrong at this app's real size: 25 classes × 24 children × 40
+   IndexedDB, one record per class. The obvious alternative, one record per
+   score, is wrong at this app's real size: 25 classes × 24 children × 40
    assignments is 24,000 cells, and per-cell records mean the Today screen
    reads the whole book to draw itself. One record per class lets Today render
    from `meta` alone and open exactly one class, which is also the privacy
@@ -18,8 +18,8 @@
 
    The first is load-bearing. Browser storage on a managed school Chromebook
    can be cleared by policy or on sign-out, and a teacher losing a term of
-   marks is a career-affecting event. Two independent markers — this key and
-   the IndexedDB record — let the app notice that one survived and the other
+   marks is a career-affecting event. Two independent markers, this key and
+   the IndexedDB record, let the app notice that one survived and the other
    did not, which is the only warning we can give her.
 
    NOTHING DERIVED IS EVER STORED. No percentage, no letter, no subtotal, no
@@ -58,7 +58,7 @@ const tx = async (store, mode, fn) => {
     try { out = fn(s); } catch (e) { reject(e); return; }
     /* Unwrap by TYPE, not by truthiness. A `get` that finds nothing has
        `result === undefined`, and testing for that returned the IDBRequest
-       itself — so a first run got an object instead of "no book yet" and every
+       itself, so a first run got an object instead of "no book yet" and every
        read off it was undefined. */
     t.oncomplete = () => resolve(out instanceof IDBRequest ? out.result : out);
     t.onerror = () => reject(t.error);
@@ -93,7 +93,7 @@ export const newBook = (now) => ({
   nameDisplay: 'firstLast1',      // the projectable form is the DEFAULT
   privacyScreen: false, startHidden: false,
   dayLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-  classIndex: [],                 // {id,name,period,days} — enough to draw Today
+  classIndex: [],                 // {id,name,period,days}, enough to draw Today
   lastBackupAt: null,
   ids: { cls: 0, stu: 0, asg: 0, cat: 0 },
 });
@@ -108,7 +108,7 @@ export const newClass = (id, name) => ({
 
 /* ── has this browser thrown the book away? ─────────────────────────────────
    Two markers, checked against each other. If the localStorage date survives
-   but the database is empty, the browser cleared site data — which on a
+   but the database is empty, the browser cleared site data, which on a
    managed machine is a policy, not an accident, and she needs to be told in
    those words rather than shown a cheerful empty state. */
 export async function checkForWipe() {
@@ -125,8 +125,7 @@ export function markSeen(now) {
 
 /* ── persistent storage ─────────────────────────────────────────────────────
    Asking is free and sometimes granted. The answer decides which of the two
-   header sentences she gets, and neither of them says "your data is safe" —
-   on a school machine that is the one sentence guaranteed to be untrue. */
+   header sentences she gets, and neither of them says "your data is safe", on a school machine that is the one sentence guaranteed to be untrue. */
 export async function askPersist() {
   if (!navigator.storage || !navigator.storage.persist) return null;
   try {
@@ -141,8 +140,7 @@ export async function askPersist() {
    worth far more: a human can follow it in Notepad, and a partially corrupted
    file is still partly salvageable by eye.
 
-   The readme is aimed at a version of this teacher who no longer has the app —
-   because the whole promise of a local file is that it outlives us. */
+   The readme is aimed at a version of this teacher who no longer has the app, because the whole promise of a local file is that it outlives us. */
 export function serialize(book, classes, now) {
   return {
     sws: 1,
@@ -151,11 +149,11 @@ export function serialize(book, classes, now) {
     version: 1,
     exportedAt: now,
     readme: [
-      'This is your gradebook. It is a plain text file — you can open it in Notepad.',
+      'This is your gradebook. It is a plain text file, you can open it in Notepad.',
       'To put it back: open Grade Sheet, choose Restore from a file, and pick this file.',
       'If Grade Sheet no longer exists, everything you need is still readable below,',
       'and the CSV file saved alongside this one opens in Excel or Google Sheets.',
-      'Grades are not stored in this file. Only the marks you typed are — every',
+      'Grades are not stored in this file. Only the marks you typed are, every',
       'percentage is worked out fresh from them, so nothing here can go stale.',
     ],
     book: (({ classIndex, ...rest }) => rest)(book),
@@ -185,10 +183,10 @@ export function deserialize(data) {
   }
   /* Right shape, wrong contents. A truncated or hand-edited file can carry the
      app name and nothing else, and restoring it would replace a working book
-     with a broken one — the single most expensive failure this app has. Refuse
+     with a broken one, the single most expensive failure this app has. Refuse
      it while she still has her data. */
   if (!data.book || typeof data.book !== 'object' || !Array.isArray(data.classes)) {
-    throw new Error('That file says it is a Grade Sheet backup, but it is missing its contents — it may have been cut short while saving. Nothing has been changed.');
+    throw new Error('That file says it is a Grade Sheet backup, but it is missing its contents, it may have been cut short while saving. Nothing has been changed.');
   }
   const classes = (data.classes || []).map((c) => {
     const scores = {};

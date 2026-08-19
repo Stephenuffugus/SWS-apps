@@ -1,4 +1,4 @@
-// Packing list — pure logic. Tested in test/helpers.test.mjs.
+// Packing list, pure logic. Tested in test/helpers.test.mjs.
 
 /* Every limit in this app is named here and reported to the user at the moment
    it bites. A cap you only discover afterwards is the exact betrayal the
@@ -93,7 +93,7 @@ export const PRESET_LABELS = {
 };
 
 /* A shared link carries only labels, to keep the QR payload as small as it can
-   be. The recipient's categories are recovered from this table instead — free
+   be. The recipient's categories are recovered from this table instead, free
    grouping for zero extra characters in the URL. */
 const CAT_BY_LABEL = new Map();
 for (const key of Object.keys(PRESETS)) {
@@ -147,7 +147,7 @@ export function addCustom(items, raw) {
   };
 }
 
-/** Fold one list into another — what a couple sharing a trip actually wants. */
+/** Fold one list into another, what a couple sharing a trip actually wants. */
 export function mergeItems(items, incoming) {
   const have = new Set(items.map((i) => norm(i && i.label)));
   const added = [];
@@ -210,8 +210,8 @@ export function encodeList(name, items) {
 
 /**
  * Returns one of:
- *   null                                  — no share link in this hash at all
- *   { error: 'unreadable' }               — there WAS one and it is broken/clipped
+ *   null, no share link in this hash at all
+ *   { error: 'unreadable' }, there WAS one and it is broken/clipped
  *   { name, items, droppedItems, longLabels, nameTruncated }
  *
  * The old version returned null for every one of those, so a link clipped by an

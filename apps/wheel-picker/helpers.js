@@ -1,7 +1,7 @@
-// Wheel picker — pure logic. Tested in test/helpers.test.mjs.
+// Wheel picker, pure logic. Tested in test/helpers.test.mjs.
 
 /* The two caps, named rather than buried in a .slice(). The UI has to be able
-   to say what they are — a wheel that silently drops 400 of the 500 names you
+   to say what they are, a wheel that silently drops 400 of the 500 names you
    pasted is not a limit, it is a lie. */
 export const MAX_NAMES = 100;
 export const MAX_NAME_LEN = 40;
@@ -15,7 +15,7 @@ export function parseNames(text) {
  *
  * Pasting a 500-name roster used to produce exactly 100 names and no comment,
  * and a 43-character name was stored truncated while the textarea still showed
- * it in full — so the wheel and the box disagreed and only one of them was
+ * it in full, so the wheel and the box disagreed and only one of them was
  * honest. Callers use `dropped` and `truncated` to say so out loud.
  */
 export function parseNamesDetailed(text) {
@@ -69,23 +69,22 @@ export function decodeState(hash) {
 /* Wedge colours, arranged in three LIGHTNESS tiers rather than six hues.
  *
  * The old palette was six colours of near-identical lightness: measured
- * adjacent-pair contrast ran 1.04–1.47:1, so on a projector, in greyscale, or
+ * adjacent-pair contrast ran 1.04 to 1.47:1, so on a projector, in greyscale, or
  * to a colour-blind viewer the wheel was one flat disc with faint seams. Hue
  * alone does not separate two shapes that touch.
  *
  * Three tiers and not two because the wedges form a CYCLE, and an odd cycle
- * cannot be two-coloured — with six alternating colours every odd name count
+ * cannot be two-coloured, with six alternating colours every odd name count
  * put two same-lightness wedges side by side at the wrap. Three tiers can
  * always be arranged so no two neighbours match.
  */
 /* Chosen by measured relative luminance, not by eye. The bands are roughly
-   0.05 / 0.72 / 0.25, which puts every adjacent pair at 2.5:1 or better —
-   deep↔pale 7.3, pale↔mid 2.6, mid↔deep 2.9. Picking "a dark violet and a
+   0.05 / 0.72 / 0.25, which puts every adjacent pair at 2.5:1 or better, deep↔pale 7.3, pale↔mid 2.6, mid↔deep 2.9. Picking "a dark violet and a
    dark blue" by name is exactly how the previous palette ended up at 1.04. */
 const TIERS = [
-  ['#1e3a8a', '#134e4a', '#4c1d95', '#881337'],  // 0 — deep, L 0.046–0.061
-  ['#a7f3d0', '#fbcfe8', '#fde68a', '#bbf7d0'],  // 1 — pale, L 0.710–0.816
-  ['#0891b2', '#ea580c', '#0d9488'],             // 2 — mid,  L 0.230–0.245
+  ['#1e3a8a', '#134e4a', '#4c1d95', '#881337'],  // 0, deep, L 0.046 to 0.061
+  ['#a7f3d0', '#fbcfe8', '#fde68a', '#bbf7d0'],  // 1, pale, L 0.710 to 0.816
+  ['#0891b2', '#ea580c', '#0d9488'],             // 2, mid,  L 0.230 to 0.245
 ];
 
 /* Kept as a flat list because the test suite and any other caller still expect
@@ -96,7 +95,7 @@ export const WHEEL_COLORS = [TIERS[0][0], TIERS[1][0], TIERS[2][0], TIERS[0][1],
  * Which lightness tier slice `i` sits in, for a wheel of `count` slices.
  *
  * i % 3 walks the tiers, which properly colours the cycle except when
- * count % 3 === 1 — there the last slice lands on tier 0 beside slice 0, also
+ * count % 3 === 1, there the last slice lands on tier 0 beside slice 0, also
  * tier 0. Its neighbours are then tiers 2 and 0, so tier 1 is the one free
  * choice, and it is always available.
  */
@@ -129,7 +128,7 @@ const LABEL_DARK = '#1f2937';
 const LABEL_LIGHT = '#ffffff';
 
 /**
- * The label colour for slice `i` — whichever of near-white and near-black
+ * The label colour for slice `i`, whichever of near-white and near-black
  * actually reads better on that wedge.
  *
  * Same approach the design system's build uses for --accent-ink. Deriving it

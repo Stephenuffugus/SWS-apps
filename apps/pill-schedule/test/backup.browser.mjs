@@ -2,8 +2,8 @@
  *
  * Local-only storage means a cleared browser takes the data with it, so the
  * backup file is the only safety net any of these apps has. It is tested here
- * on Pill Schedule because that is the highest-stakes payload in the set — a
- * medication list — but the runtime under test is design/backup.js, shared by
+ * on Pill Schedule because that is the highest-stakes payload in the set, a
+ * medication list, but the runtime under test is design/backup.js, shared by
  * every app that uses it.
  *
  * Asserts the three things that would make it worthless:
@@ -37,7 +37,7 @@ await withApp('pill-schedule', async ({ page, errors }) => {
         { name: 'Lisinopril', dose: '10 mg, 1 tablet', when: ['morning'] },
         { name: 'Metformin', dose: '500 mg', when: ['morning', 'evening'] },
       ],
-      allergies: 'penicillin — rash',
+      allergies: 'penicillin, rash',
     });
     localStorage.setItem('pill-schedule', payload);
     return payload.length;

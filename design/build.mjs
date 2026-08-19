@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — build
+   SWS STUDIO, build
 
    Turns each row of skins.mjs into a complete, contrast-checked token block,
    concatenates it with studio.css, and writes design/out/<app>.css.
@@ -25,13 +25,13 @@ const OUT = join(HERE, 'out');
 /* Contrast targets. Body text aims past the 4.5 minimum because these apps
    get read on phones in bad light by people who are busy. */
 const T = {
-  ink: 11,          // primary text — comfortably AAA
-  ink2: 4.6,        // secondary text — AA with headroom for rounding
-  ink3: 3.1,        // placeholders and disabled hints — decorative only
+  ink: 11,          // primary text, comfortably AAA
+  ink2: 4.6,        // secondary text, AA with headroom for rounding
+  ink3: 3.1,        // placeholders and disabled hints, decorative only
   accentText: 4.6,  // links, and the accent used as text
   accentInk: 4.6,   // label on a filled accent button
   focus: 3.1,       // WCAG 2.2 non-text contrast
-  control: 3.05,    // input / button boundary — WCAG 1.4.11
+  control: 3.05,    // input / button boundary, WCAG 1.4.11
   semantic: 4.6,
 };
 
@@ -54,8 +54,7 @@ function derive(slug, skin, mode){
 
   /* -- paper ------------------------------------------------------------- */
   // 'warm' apps get a cream page whatever their accent hue is; 'cool' apps
-  // get a page tinted with their own hue. Only meaningful in light mode —
-  // in the dark every app tints with its own hue.
+  // get a page tinted with their own hue. Only meaningful in light mode, // in the dark every app tints with its own hue.
   const warm = skin.paper === 'warm' && !dark;
   const pH = warm ? PAPER_HUE : hue;
   const pC = warm ? 0.018 : 0.013;
@@ -79,8 +78,8 @@ function derive(slug, skin, mode){
     t.line      = oklch(cL + 0.13, pC * 1.8, pH);
   }
 
-  /* Anything that must stay legible appears on three backgrounds — the page,
-     a card, and an inset well — and they are not equally forgiving. Solve
+  /* Anything that must stay legible appears on three backgrounds, the page,
+     a card, and an inset well, and they are not equally forgiving. Solve
      against whichever of the three is hardest for a colour of this weight,
      and the other two come free. */
   const backdrops = [t.canvas, t.surface, t['surface-2']];
@@ -89,7 +88,7 @@ function derive(slug, skin, mode){
 
   // --line is decorative (card edges, row rules) and may stay faint.
   // --line-2 is the visible boundary of an input or a button, which WCAG
-  // 1.4.11 puts at 3:1 — so it gets solved, not guessed. The washed-out
+  // 1.4.11 puts at 3:1, so it gets solved, not guessed. The washed-out
   // #e3e8ee these apps shipped with is the single biggest reason the forms
   // read as unfinished.
   const lineProbe = oklch(dark ? 0.45 : 0.72, pC * 2.1, pH);
@@ -106,7 +105,7 @@ function derive(slug, skin, mode){
 
   // Secondary and tertiary ink are solved against SURFACE, which is the
   // lighter (light mode) / darker (dark mode) of the two backgrounds they
-  // appear on — clear there means clear everywhere.
+  // appear on, clear there means clear everywhere.
   t['ink-2'] = solveForContrast({
     startL: dark ? 0.74 : 0.50, C: inkC, H: hue,
     against: hardestFor(oklch(dark ? 0.74 : 0.50, inkC, hue)), target: T.ink2,
@@ -134,7 +133,7 @@ function derive(slug, skin, mode){
      is what keeps the yellow-ish apps from going olive.
 
      --accent-deep has to be dark enough to read as text on a white card, and
-     for a hue near yellow there is almost no chroma available down there — so
+     for a hue near yellow there is almost no chroma available down there, so
      forcing the button to use it turns marigold into mud. But a button does
      not need dark-on-light: it can be a bright fill with a dark label.
 
@@ -147,7 +146,7 @@ function derive(slug, skin, mode){
   const cAtDeep = Math.min(aC, maxChromaAt(deep.L, hue));
   const cAtBright = Math.min(aC, maxChromaAt(brightL, hue));
   // 1.10 is where the two strategies actually diverge in practice: golds and
-  // cyans land at 1.13–1.36, blues and violets at 0.84–1.07. A skin can force
+  // cyans land at 1.13 to 1.36, blues and violets at 0.84 to 1.07. A skin can force
   // either with `fill: 'bright' | 'deep'` when the heuristic reads it wrong.
   const preferBright = skin.fill
     ? skin.fill === 'bright' && !dark
@@ -204,10 +203,10 @@ function derive(slug, skin, mode){
   /* -- app-specific semantics ------------------------------------------- */
   /* An app's own colours get the same treatment as the system's. `role` says
      how each is used, so the build can check the right thing:
-       fill — a button/badge background; also emits a solved --<name>-ink
-       tint — a soft highlight background that --ink must stay readable on
-       line — a border, held to the 3:1 control boundary
-       text — a colour used as text, held to 4.6:1 */
+       fill, a button/badge background; also emits a solved --<name>-ink
+       tint, a soft highlight background that --ink must stay readable on
+       line, a border, held to the 3:1 control boundary
+       text, a colour used as text, held to 4.6:1 */
   for (const [name, spec] of Object.entries(skin.extra ?? {})){
     const h = spec.h ?? hue;
     const c = spec.c ?? chroma * 0.4;
@@ -317,9 +316,9 @@ function buildApp(slug, skin){
    * a `scale` silently got 1rem anyway: Grocery List asked for 1.060 and
    * Pill Schedule for 1.140, and both shipped at 1. Two review agents found it
    * independently and neither could fix it from an app layer, which is exactly
-   * right — it is a build-order bug, not an app bug. */
+   * right, it is a build-order bug, not an app bug. */
   const scale = skin.scale ? `
-/* ── ${slug} type scale — after the base so the skin actually wins ─────── */
+/* ── ${slug} type scale, after the base so the skin actually wins ─────── */
 :root{
   --t-base:${(1 * skin.scale).toFixed(3)}rem;
   --t-lg:${(1.0625 * skin.scale).toFixed(3)}rem;
@@ -330,7 +329,7 @@ function buildApp(slug, skin){
   const fontKey = voice.font;
   const face = fontKey ? FONT_FILES[fontKey] : null;
   // Headings only, latin only, served from this app's own directory so the
-  // service worker can cache it. Never a CDN — that would break offline and
+  // service worker can cache it. Never a CDN, that would break offline and
   // leak a request, and "nothing leaves your device" has to be literal.
   const fontFace = face ? `@font-face{
   font-family:'${face.family}';
@@ -343,7 +342,7 @@ function buildApp(slug, skin){
 ` : '';
 
   return `/* ═══════════════════════════════════════════════════════════════════════
-   ${slug} — ${skin.note}
+   ${slug}, ${skin.note}
    GENERATED by design/build.mjs from design/skins.mjs + design/studio.css.
    Do not edit here; edit the source and rebuild.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -378,7 +377,7 @@ ${tokenBlock(light)}
 
    The media query is the default: follow the operating system. The
    [data-theme] selector is the manual override the comfort panel writes, and
-   it has to be able to win in BOTH directions — a user who picks Light on a
+   it has to be able to win in BOTH directions, a user who picks Light on a
    phone that is in dark mode is asking for light, and gets it because the
    media query excludes [data-theme="light"].
 
@@ -392,8 +391,8 @@ ${tokenBlock(dark)}
 ${tokenBlock(dark)}
 }
 
-/* Native widgets — scrollbars, date pickers, the spin buttons on a number
-   field — take their look from color-scheme, not from our tokens. Without
+/* Native widgets, scrollbars, date pickers, the spin buttons on a number
+   field, take their look from color-scheme, not from our tokens. Without
    these two lines a manually-darkened app still renders a white date picker. */
 :root[data-theme="light"]{color-scheme:light}
 :root[data-theme="dark"]{color-scheme:dark}
@@ -401,7 +400,7 @@ ${tokenBlock(dark)}
 
 ${readFileSync(join(HERE, 'studio.css'), 'utf8')}
 ${scale}
-/* ── ${slug} texture — must follow the base layer to win the cascade ───── */
+/* ── ${slug} texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:${texL.image};
   background-attachment:${attach};
@@ -459,7 +458,7 @@ if (failures.length){
   console.log('');
 }
 
-// Worst pair per app — a quick way to see which palettes have no headroom.
+// Worst pair per app, a quick way to see which palettes have no headroom.
 console.log('Tightest check per app');
 for (const [app, list] of byApp){
   const worst = list.reduce((a, b) => (b.ratio / b.target < a.ratio / a.target ? b : a));

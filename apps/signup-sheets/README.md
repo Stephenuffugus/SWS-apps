@@ -11,7 +11,7 @@ A free tool by SWS Strategic Media LLC.
   only backend, loaded as ESM from gstatic via an import map (node tests resolve
   the same imports to the npm package).
 - **Owners** sign in with Google or an email link. **Participants** are Firebase
-  anonymous-auth users — their anon uid is what lets them edit/release their own
+  anonymous-auth users, their anon uid is what lets them edit/release their own
   claim later (the product doc's "claimToken", enforced by rules instead of
   localStorage).
 - Share codes (6 chars, no 0/O/1/I/l lookalikes) live in a `codes` collection
@@ -30,7 +30,7 @@ A free tool by SWS Strategic Media LLC.
 
 | File | Role |
 |---|---|
-| `firestore.rules` | the security model — change with extreme care, run `npm run test:rules` |
+| `firestore.rules` | the security model, change with extreme care, run `npm run test:rules` |
 | `data.js` | every Firestore/Auth call; writes mirror the rules exactly |
 | `helpers.js` | pure logic (code gen, bulk paste, date-range slots, nudge) |
 | `app.js` | UI: routing, rendering, owner console |
@@ -65,6 +65,6 @@ emulators automatically.
 
 ## Deliberately not built
 
-Comments, likes, profiles, notifications, feeds — per the product doc, the
+Comments, likes, profiles, notifications, feeds, per the product doc, the
 engine stays social-free. Skins B (team parent) and C (caregiver log) reuse
 this exact engine and rules with different rendering.

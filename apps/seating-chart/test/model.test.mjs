@@ -1,4 +1,4 @@
-// Unit tests for the seating model — run: node test/model.test.mjs
+// Unit tests for the seating model, run: node test/model.test.mjs
 import assert from 'node:assert/strict';
 import {
   newProject, parseGuestPaste, splitCsvLine, lastNameOf,
@@ -20,8 +20,8 @@ function sampleProject() {
   p.guests = parseGuestPaste([
     'Ann Alvarez, Alvarez family, Beef',
     'Ben Alvarez, Alvarez family, Fish',
-    'Cara Chen, , Veg, nut allergy',
-    'Dev Chen, , Beef',
+    'Cara Chen, Veg, nut allergy',
+    'Dev Chen, Beef',
     'Elle Novak, Novak party, Veg',
     'Finn Novak, Novak party, Beef',
     'Gus Ortiz',

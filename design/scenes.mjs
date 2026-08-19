@@ -1,20 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — screenshot scenes
+   SWS STUDIO, screenshot scenes
 
    One entry per app, consumed by shots.mjs. A scene answers a single question:
    what does this app look like when somebody has actually been using it?
 
    Two ways to get there, and the choice matters:
 
-     act    — drive the real UI: fill the field, click the button. Slower, but
+     act, drive the real UI: fill the field, click the button. Slower, but
               the state is real by construction and cannot drift from the app.
               Prefer this.
-     store  — seed localStorage before boot. Necessary when the state would
+     store, seed localStorage before boot. Necessary when the state would
               take twenty interactions to build, but it hard-codes that app's
               storage shape here, so it breaks silently if the shape changes.
 
    Each panel becomes one 1080x1920 Play screenshot. Order is the swipe order,
-   and the first one carries the install decision — it should show the app
+   and the first one carries the install decision, it should show the app
    doing its job, not a welcome screen.
 
    Captions are short because Play renders them small. The sub-line is the
@@ -41,31 +41,31 @@ const toTop = async (p, sel, pad = 12) => {
    teacher would see, including the live page count on the Print button. */
 const SUB_PLANS_BINDER = {
   teacher: 'Ms. Rivera',
-  class: '3rd grade — 24 kids',
+  class: '3rd grade, 24 kids',
   room: '12',
   school: 'Maple Elementary',
-  plan: '8:00  Morning work — packet on my desk, they know the drill\n'
+  plan: '8:00  Morning work, packet on my desk, they know the drill\n'
     + '8:40  Read-aloud, ch. 7 of Because of Winn-Dixie (bookmark is in it)\n'
-    + '9:15  Math — pages 44-45, work in table groups\n'
+    + '9:15  Math, pages 44-45, work in table groups\n'
     + '10:30 Recess. Take the orange whistle by the door.\n'
-    + '11:00 Writing — finish the small-moment drafts\n'
+    + '11:00 Writing, finish the small-moment drafts\n'
     + '12:00 Lunch (they line up by the sink)\n'
     + '1:00  Science video + the worksheet in the blue tray\n'
     + '2:15  Clean-up, read silently, stack chairs at 2:50',
   bathroom: 'One at a time, with the pass hanging by the door. If two ask at once they can wait.',
   wifi: 'WiFi: MapleGuest / maple2024!\nLaptop cart code: 4417',
   office: 'Ext. 100',
-  neighbor: 'Mrs. Alvarez, Rm 14 — she knows my routines and will not mind being asked.',
+  neighbor: 'Mrs. Alvarez, Rm 14, she knows my routines and will not mind being asked.',
   helpers: 'Ava and Marcus know every routine and will tell you the truth about what comes next.',
   needs: 'Jordan sits up front (glasses). Sam leaves at 1:30 for speech and comes back at 2.',
-  behavior: 'Marble jar on my desk — add for good group work. No need to take any out.',
+  behavior: 'Marble jar on my desk, add for good group work. No need to take any out.',
   nurse: 'Ext. 108',
-  admin: 'Mr. Okafor — ext. 103',
+  admin: 'Mr. Okafor, ext. 103',
   drills: 'Fire: out our door, turn left, flag by the fence at the far end of the lot.\n'
     + 'Lockdown: lights off, kids behind the bookshelf, door is already locked.',
-  health: 'Maya R: peanut allergy — EpiPen is in the red pouch on my desk, office has a second.\n'
+  health: 'Maya R: peanut allergy, EpiPen is in the red pouch on my desk, office has a second.\n'
     + 'Eli T: asthma inhaler in his backpack, he knows when he needs it.',
-  dismissal: 'Bus riders leave at 3:05 — the list is taped inside the closet door. Walkers at 3:10.',
+  dismissal: 'Bus riders leave at 3:05, the list is taped inside the closet door. Walkers at 3:10.',
   note: 'Leave the room roughly standing and I will be delighted. Thank you for taking my class.',
 };
 
@@ -81,18 +81,18 @@ const fillBinder = async (p, keys) => {
 /* Home Inventory opens on a list of inventories, so every panel has to create
    one first: "Start an inventory" → name it → the fast-capture screen. Photos
    need a real camera, which headless Chromium does not have, so the items are
-   captured without one — the panels that matter are the list, the room
+   captured without one, the panels that matter are the list, the room
    breakdown and the export, none of which depend on the image. */
 /* Grouped by room on purpose: the "room by room" panel is a lie if every item
    lands in Living room and the other rooms read "0 items". */
 const HI_BY_ROOM = [
-  ['Living room', [['65-inch TV', '1', '900'], ['Sofa — three seat', '1', '1400'], ['Rug — wool 8x10', '1', '620']]],
+  ['Living room', [['65-inch TV', '1', '900'], ['Sofa, three seat', '1', '1400'], ['Rug, wool 8x10', '1', '620']]],
   ['Kitchen', [['Espresso machine', '1', '480'], ['Stand mixer', '1', '390'], ['Dining table + 6 chairs', '1', '860']]],
-  ['Bedroom', [['MacBook Pro 14"', '1', '1999'], ['Jewellery — inherited', '1', '2200']]],
+  ['Bedroom', [['MacBook Pro 14"', '1', '1999'], ['Jewellery, inherited', '1', '2200']]],
   ['Garage', [['Road bike', '1', '1250'], ['Washer / dryer', '1', '1100'], ['Mitre saw', '1', '340']]],
 ];
 
-const hiStart = async (p, name = 'Our house — 2026') => {
+const hiStart = async (p, name = 'Our house, 2026') => {
   await p.getByRole('button', { name: /start an inventory/i }).click();
   await p.waitForTimeout(400);
   await p.fill('#askField', name);
@@ -154,7 +154,7 @@ const SC_GUESTS = [
 const scStart = async (p) => {
   await p.getByRole('button', { name: /new event/i }).click();
   await p.waitForTimeout(400);
-  await p.fill('#nameField', 'Jessie & Sam — 14 June');
+  await p.fill('#nameField', 'Jessie & Sam, 14 June');
   await p.getByRole('button', { name: /^create$/i }).click();
   await p.waitForTimeout(600);
 };
@@ -191,7 +191,7 @@ const scAddTables = async (p) => {
 };
 
 /* Seating is tap-a-party then tap-a-table. Seat most of the room but leave a
-   couple of parties out — a finished chart with nothing left to do hides the
+   couple of parties out, a finished chart with nothing left to do hides the
    thing the app is actually for. */
 const scSeatSome = async (p) => {
   await scTab(p, 'Seat people');
@@ -207,7 +207,7 @@ const scSeatSome = async (p) => {
   }
 };
 
-/* PDF Tools has no state to seed — its whole job is the files you hand it — so
+/* PDF Tools has no state to seed, its whole job is the files you hand it, so
    the scene feeds real PDFs through the app's own <input type=file>. The
    fixtures are generated by design/fixtures/make.mjs so every render gets the
    same pages; a merger photographed empty is a picture of a button. */
@@ -450,7 +450,7 @@ export const SCENES = {
       {
         slug: 'whopays',
         caption: 'Who owes whom, settled',
-        sub: 'Say who paid and it works out the transfers — no app to install, no account to join.',
+        sub: 'Say who paid and it works out the transfers, no app to install, no account to join.',
         act: async (p) => {
           for (const name of ['Alex', 'Bea', 'Chris', 'Dana']) {
             await p.fill('#personInput', name).catch(() => {});
@@ -519,7 +519,7 @@ export const SCENES = {
       {
         slug: 'split',
         caption: 'Split out just the pages you need',
-        sub: 'One file per page, a range, or every N pages — as separate PDFs or a zip.',
+        sub: 'One file per page, a range, or every N pages, as separate PDFs or a zip.',
         act: async (p) => {
           await pdfLoad(p, ['lease-agreement.pdf']);
           await toTop(p, '#outCard', 60);
@@ -545,7 +545,7 @@ export const SCENES = {
       {
         slug: 'paste',
         caption: 'Nobody retypes 140 names',
-        sub: 'Paste the list straight out of your spreadsheet — parties, meals and allergies with it.',
+        sub: 'Paste the list straight out of your spreadsheet, parties, meals and allergies with it.',
         act: async (p) => {
           await scStart(p);
           await scAddGuests(p);
@@ -711,7 +711,7 @@ export const SCENES = {
       {
         slug: 'preview',
         caption: 'Read it as your sub would',
-        sub: 'Black and white, exactly as it lands on the desk — before you print a page.',
+        sub: 'Black and white, exactly as it lands on the desk, before you print a page.',
         act: async (p) => {
           await fillBinder(p, Object.keys(SUB_PLANS_BINDER));
           await p.click('#previewBtn').catch(() => {});
@@ -770,7 +770,7 @@ export const SCENES = {
       {
         slug: 'custom',
         caption: 'Add the things only you take',
-        sub: 'Retainer, dog food, the good charger — they stay for next time.',
+        sub: 'Retainer, dog food, the good charger, they stay for next time.',
         act: async (p) => {
           await p.fill('#tripName', 'Tahoe long weekend');
           await p.getByRole('button', { name: /essentials/i }).click();
@@ -781,7 +781,7 @@ export const SCENES = {
             await p.waitForTimeout(220);
           }
           /* The point of this panel is the custom items, and they land at the
-             bottom of the list — framing the top of the card would show only
+             bottom of the list, framing the top of the card would show only
              the preset rows the previous panel already showed. */
           await p.evaluate(() => {
             const hit = [...document.querySelectorAll('#list li')]

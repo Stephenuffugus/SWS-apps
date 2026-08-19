@@ -1,5 +1,5 @@
 // jsdom smoke test: drive the seating-chart UI end to end (no IndexedDB in
-// jsdom — the app must degrade gracefully; PDFLib is stubbed).
+// jsdom, the app must degrade gracefully; PDFLib is stubbed).
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
@@ -44,7 +44,7 @@ const clickText = (root, tag, text) => {
 
 check('home renders hero', $('view').textContent.includes('Seating charts without the 2am panic'));
 
-// Naming an event goes through #nameDlg, not a native prompt() — a system
+// Naming an event goes through #nameDlg, not a native prompt(), a system
 // prompt is the one surface the comfort panel cannot reach.
 clickText($('view'), 'button', 'New event');
 await sleep(50);
@@ -58,7 +58,7 @@ check('editor opens with project name', [...$('view').querySelectorAll('input')]
 
 // guests: bulk paste
 const ta = $('view').querySelector('textarea');
-type(ta, 'Ann Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish\nCara Chen, , Veg, nut allergy\nDev Chen');
+type(ta, 'Ann Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish\nCara Chen, Veg, nut allergy\nDev Chen');
 clickText($('view'), 'button', 'Add them all');
 await sleep(20);
 check('guests added', $('view').textContent.includes('4 guests'), $('view').textContent.slice(0, 120));
@@ -91,7 +91,7 @@ check('everyone seated after suggestion', $('view').textContent.includes('Everyo
 check('no violations', $('view').textContent.includes('No broken rules'));
 
 // overload a table to trigger a violation: move everyone to table 1 (3 seats)
-const proj = null; // internal state not exposed; drive via UI — unseat + place all at T1
+const proj = null; // internal state not exposed; drive via UI, unseat + place all at T1
 clickText($('view'), 'button', 'Clear all seats');
 await sleep(20);
 // select all four individually

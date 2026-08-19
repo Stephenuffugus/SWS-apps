@@ -36,7 +36,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
    is the contract that matters anyway: what does the teacher see on that day. */
 const boxAt = (w, iso, p) => w.document.querySelector(`.box[data-iso="${iso}"][data-p="${p}"]`);
 /* Read a box the way the app reads it. Each line is its own element now, so
-   it can carry its own colour — and textContent joins those with nothing
+   it can carry its own colour, and textContent joins those with nothing
    between them, which silently turns three lines into one word. The storage
    assertion below is the real contract and was never affected; this helper
    was reaching past it into the DOM shape. */
@@ -63,7 +63,7 @@ const stored = w => JSON.parse(w.localStorage.getItem('palette2'));
 
 async function main() {
 
-console.log('\n— fresh boot —');
+console.log('\n,  fresh boot , ');
 {
   const w = boot();
   ok(!!w.document.getElementById('w-fresh'), 'welcome screen shows Start fresh');
@@ -73,16 +73,16 @@ console.log('\n— fresh boot —');
   ok(!!w.localStorage.getItem('palette2'), 'state persisted on start');
 }
 
-console.log('\n— year build & rotation —');
+console.log('\n,  year build & rotation , ');
 {
   const w = boot(baseState);
   const boxes = w.document.querySelectorAll('.box[data-p="1"]');
   ok(boxes.length === 5, 'first week renders 5 school days');
   const letters = [...boxes].map(b => b.dataset.letter).join('');
-  ok(letters === 'ABCAB', 'rotation cycles A,B,C,A,B across Mon–Fri');
-  ok(w.document.getElementById('wk-jump').options.length === 5, 'Aug 24 – Sep 25 generates 5 weeks');
+  ok(letters === 'ABCAB', 'rotation cycles A,B,C,A,B across Mon-Fri');
+  ok(w.document.getElementById('wk-jump').options.length === 5, 'Aug 24, Sep 25 generates 5 weeks');
   /* Header cells now carry a paint control, so read the heading's own text
-     rather than the cell's — textContent would include the button glyph. */
+     rather than the cell's, textContent would include the button glyph. */
   const headText = (t) => {
     const c = t.cloneNode(true);
     c.querySelectorAll('button').forEach(b => b.remove());
@@ -93,7 +93,7 @@ console.log('\n— year build & rotation —');
   ok(ths.length === 9, 'header = Day + 6 periods + lunch + Notes');
 }
 
-console.log('\n— special day skips the letter —');
+console.log('\n,  special day skips the letter , ');
 {
   const st = clone(baseState);
   st.special['2026-08-24'] = 'Teacher work day';
@@ -105,13 +105,13 @@ console.log('\n— special day skips the letter —');
   ok(w.document.querySelector('.sp-banner').textContent === 'Teacher work day', 'banner renders');
 }
 
-console.log('\n— typing persists —');
+console.log('\n,  typing persists , ');
 {
   const w = boot(baseState);
   const saved = () => JSON.parse(w.localStorage.getItem('palette2'));
-  const box = type(w, '2026-08-25', 2, 'Dot Day — read The Dot');
+  const box = type(w, '2026-08-25', 2, 'Dot Day, read The Dot');
   await sleep(500);
-  ok(Object.values(saved().cells).includes('Dot Day — read The Dot'), 'cell text saved to storage');
+  ok(Object.values(saved().cells).includes('Dot Day, read The Dot'), 'cell text saved to storage');
   ok(Object.keys(saved().cells).every(k => !/^\d{4}-/.test(k)), 'lessons are keyed to cycle position, not to a date');
   const nb = w.document.querySelector('.box[data-p="notes"][data-iso="2026-08-25"]');
   nb.textContent = 'Collect forms';
@@ -121,10 +121,10 @@ console.log('\n— typing persists —');
   box.textContent = '';
   box.dispatchEvent(new w.Event('input', { bubbles: true }));
   await sleep(500);
-  ok(!Object.values(saved().cells).includes('Dot Day — read The Dot'), 'clearing a box removes the key');
+  ok(!Object.values(saved().cells).includes('Dot Day, read The Dot'), 'clearing a box removes the key');
 }
 
-console.log('\n— copy bar —');
+console.log('\n,  copy bar , ');
 {
   const w = boot(baseState);
   const box = type(w, '2026-08-25', 1, 'Clay pinch pots');
@@ -151,7 +151,7 @@ console.log('\n— copy bar —');
   ok(!w.document.getElementById('bar').classList.contains('show'), 'bar hides for notes boxes');
 }
 
-console.log('\n— destructive copy is refused, and every copy is undoable —');
+console.log('\n,  destructive copy is refused, and every copy is undoable , ');
 {
   const w = boot(baseState);
   for (let p = 1; p <= 6; p++) type(w, '2026-08-25', p, `period ${p} plan`);
@@ -172,7 +172,7 @@ console.log('\n— destructive copy is refused, and every copy is undoable —')
   ok(textAt(w, '2026-08-25', 3) === 'djembes', 'undo leaves the source alone');
 }
 
-console.log('\n— a cancelled day carries the plans forward with the cycle —');
+console.log('\n,  a cancelled day carries the plans forward with the cycle , ');
 {
   const st = clone(baseState);
   const w = boot(st);
@@ -192,7 +192,7 @@ console.log('\n— a cancelled day carries the plans forward with the cycle —'
   ok(textAt(w, '2026-08-27', 1) === 'LESSON FOR LETTER A', 'and the lessons slide back with it');
 }
 
-console.log('\n— multi-line lessons survive a reload —');
+console.log('\n,  multi-line lessons survive a reload , ');
 {
   const w = boot(clone(baseState));
   type(w, '2026-08-24', 1, 'Warm-up: djembes\nCall and response\nCool down');
@@ -203,7 +203,7 @@ console.log('\n— multi-line lessons survive a reload —');
   ok(textAt(w2, '2026-08-24', 1).split('\n').length === 3, 'three lines come back after a reload');
 }
 
-console.log('\n— a write that fails is never reported as a save —');
+console.log('\n,  a write that fails is never reported as a save , ');
 {
   const w = boot(clone(baseState));
   w.eval(`Storage.prototype.setItem=function(){ throw new DOMException('quota','QuotaExceededError') }`);
@@ -214,7 +214,7 @@ console.log('\n— a write that fails is never reported as a save —');
   ok(/could not save|refused to save/i.test(w.document.getElementById('save-alert-text').textContent), 'the warning says what happened');
 }
 
-console.log('\n— the last edit is flushed on the way out —');
+console.log('\n,  the last edit is flushed on the way out , ');
 {
   const w = boot(clone(baseState));
   type(w, '2026-08-24', 4, 'typed and walked away');
@@ -222,7 +222,7 @@ console.log('\n— the last edit is flushed on the way out —');
   ok(Object.values(stored(w).cells).includes('typed and walked away'), 'pagehide writes the pending edit (no 400ms grace needed)');
 }
 
-console.log('\n— backup round trip & migrate tolerance —');
+console.log('\n,  backup round trip & migrate tolerance , ');
 {
   const w = boot(clone(baseState));
   const oldBackup = { app:'palette', version:2, state:{ config:{ yearStart:'2026-08-24', yearEnd:'2026-09-04', periods:4, lunchAfter:9 }, cells:{ '2026-08-25|1':'restored' } } };
@@ -237,7 +237,7 @@ console.log('\n— backup round trip & migrate tolerance —');
   ok(w.eval(`applyImportedText('{"nope":1}')`) === false, 'garbage file rejected politely');
 }
 
-console.log('\n— CSV export shape —');
+console.log('\n,  CSV export shape , ');
 {
   const st = clone(baseState);
   st.cells['2026-08-24|1'] = 'has, comma and "quotes"';
@@ -250,7 +250,7 @@ console.log('\n— CSV export shape —');
   ok(w.eval(`csvField('- warm up')`) === "'- warm up", 'so is a leading minus');
 }
 
-console.log('\n— XSS safety —');
+console.log('\n,  XSS safety , ');
 {
   const st = clone(baseState);
   st.cells['2026-08-24|1'] = '<img src=x onerror="window.__pwned=1">';
@@ -264,7 +264,7 @@ console.log('\n— XSS safety —');
   ok(banner && !banner.querySelector('b'), 'banner label escaped');
 }
 
-console.log('\n— setup apply reflows the grid —');
+console.log('\n,  setup apply reflows the grid , ');
 {
   const w = boot(clone(baseState));
   w.document.querySelector('.tab[data-view="setup"]').click();
@@ -274,7 +274,7 @@ console.log('\n— setup apply reflows the grid —');
   w.document.getElementById('f-letters').value = 'A, B';
   w.document.getElementById('f-apply').click();
   /* Header cells now carry a paint control, so read the heading's own text
-     rather than the cell's — textContent would include the button glyph. */
+     rather than the cell's, textContent would include the button glyph. */
   const headText = (t) => {
     const c = t.cloneNode(true);
     c.querySelectorAll('button').forEach(b => b.remove());
@@ -289,7 +289,7 @@ console.log('\n— setup apply reflows the grid —');
   ok(s.config.periods === 7 && s.config.lunchAfter === 3, 'config saved');
 }
 
-console.log('\n— accessibility contract —');
+console.log('\n,  accessibility contract , ');
 {
   const w = boot(clone(baseState));
   ok(w.document.querySelector('.tab[data-view="week"]').getAttribute('aria-current') === 'page', 'active view button exposes aria-current');
@@ -322,8 +322,7 @@ console.log('\n— accessibility contract —');
   box2.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }));
   ok(w.document.activeElement === w.document.getElementById('bar-day'), 'Ctrl+Enter jumps focus to the copy buttons');
 
-  // — the colour editor (Stephen 2026-08-17: custom colours, add, delete) —
-  // "Edit colours" used to jump to Setup, where no editor existed. Guard the
+  //, the colour editor (Stephen 2026-08-17: custom colours, add, delete), // "Edit colours" used to jump to Setup, where no editor existed. Guard the
   // real one: it opens as a modal, adds a colour, and deletes one cleanly.
   w.document.getElementById('p-edit').click();
   ok(w.document.getElementById('modal').classList.contains('show'), 'Edit colours opens the editor modal');
@@ -352,7 +351,7 @@ console.log('\n— accessibility contract —');
   ok(dp.getAttribute('aria-pressed') !== before, 'day-picker toggle exposes pressed state');
 }
 
-console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, dated rules —');
+console.log('\n,  Jessie notes 2026-08-18: period names, whole-day colour, dated rules , ');
 {
   /* Custom column names: config carries them, everything spoken or printed
      reads them, and an unnamed column keeps its default. */
@@ -377,7 +376,7 @@ console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, date
   pn.dispatchEvent(new w.Event('blur'));
   ok((stored(w).config.periodNames[1] || '') === '' && headTexts()[2] === 'Period 2', 'clearing the heading restores the default');
 
-  // "Apply it to: every period this day" — one apply, six boxes
+  // "Apply it to: every period this day", one apply, six boxes
   w.document.querySelector('[data-paint="cell:2026-08-25:1"]').click();
   const pick = w.document.querySelector('.cpick');
   ok(!!pick && [...pick.querySelectorAll('input[name="cp-scope"]')].some(r => r.value === 'day'), 'the picker offers every period this day');
@@ -397,7 +396,7 @@ console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, date
     'a column heading offers the calendar boxes straight away');
   w.eval('closePicker()');
 
-  // "every Tuesday until Sep 4" — an edited date makes a dated rule
+  // "every Tuesday until Sep 4", an edited date makes a dated rule
   w.document.querySelector('[data-paint="cell:2026-08-25:3"]').click();
   const pick2 = w.document.querySelector('.cpick');
   pick2.querySelector('.cs[data-id="k1"]').click();
@@ -448,7 +447,7 @@ console.log('\n— Jessie notes 2026-08-18: period names, whole-day colour, date
   ok(!w2.__pwn && !w2.document.querySelector('table.week img'), 'a hostile column name cannot inject markup');
 }
 
-console.log('\n— Jessie notes 2026-08-18 round 2: fit mode has a way out —');
+console.log('\n,  Jessie notes 2026-08-18 round 2: fit mode has a way out , ');
 {
   const w = boot(clone(baseState));
   ok(!!w.document.getElementById('fitbar'), 'the fitbar exists in the DOM (its CSS shipped a round early, the bar did not)');
@@ -480,7 +479,7 @@ console.log('\n— Jessie notes 2026-08-18 round 2: fit mode has a way out —')
   ok(w.eval('curWeek') === 1, 'the fitbar arrow reaches the next week');
 }
 
-console.log('\n— Jessie notes 2026-08-18 round 2: select many, restyle once —');
+console.log('\n,  Jessie notes 2026-08-18 round 2: select many, restyle once , ');
 {
   const w = boot(clone(baseState));
   const doc = w.document;
@@ -527,7 +526,7 @@ console.log('\n— Jessie notes 2026-08-18 round 2: select many, restyle once �
   ok(stored(w).boxStyle['c0|1'].f === 'hand', 'the font stores alongside the size');
   ok(boxAt(w, '2026-08-24', 1).classList.contains('f-hand'), 'and renders');
 
-  // it all comes back after a reload — and an old backup without these
+  // it all comes back after a reload, and an old backup without these
   // stores boots fine (every other block in this suite already proves that)
   const w2 = boot(stored(w));
   ok(boxAt(w2, '2026-08-24', 1).classList.contains('sz-l') && boxAt(w2, '2026-08-24', 1).classList.contains('f-hand'),
@@ -567,7 +566,7 @@ console.log('\n— Jessie notes 2026-08-18 round 2: select many, restyle once �
   ok(w3.document.querySelectorAll('table.week td.sel').length === 2, 'Space picks up the focused box');
 }
 
-console.log('\n— reset —');
+console.log('\n,  reset , ');
 {
   const w = boot(clone(baseState));
   w.eval('resetAll()');

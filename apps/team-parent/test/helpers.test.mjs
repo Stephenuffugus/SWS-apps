@@ -142,9 +142,9 @@ t('THE REGRESSION: no silent truncation mid-word at 20 characters', () => {
 });
 
 t('a label the user typed by hand still parses as just a name', () => {
-  assert.deepEqual(parseLabel('Snack duty — Sat game'), { name: 'Snack duty — Sat game', where: '', wear: '' });
+  assert.deepEqual(parseLabel('Snack duty, Sat game'), { name: 'Snack duty, Sat game', where: '', wear: '' });
   // legacy labels carried the date inside them; they must survive untouched
-  assert.equal(parseLabel('Practice — Tue, Sep 1 · 5pm').name, 'Practice — Tue, Sep 1 · 5pm');
+  assert.equal(parseLabel('Practice, Tue, Sep 1 · 5pm').name, 'Practice, Tue, Sep 1 · 5pm');
 });
 
 t('composeLabel strips the separator so the encoding cannot be spoofed', () => {
@@ -164,7 +164,7 @@ const REF = new Date(2026, 7, 15); // mid-August: a fall season is being set up
 t('sniffDateTime pulls the date and time out of a pasted league line', () => {
   assert.deepEqual(sniffDateTime('Sat 9/12 9:00am Game vs Hawks', REF),
     { date: '2026-09-12', time: '09:00', rest: 'Sat Game vs Hawks' });
-  assert.deepEqual(sniffDateTime('Sep 19 — Scorekeeper', REF),
+  assert.deepEqual(sniffDateTime('Sep 19, Scorekeeper', REF),
     { date: '2026-09-19', time: '', rest: 'Scorekeeper' });
   assert.deepEqual(sniffDateTime('2026-10-03 14:30 Away at Falcons', REF),
     { date: '2026-10-03', time: '14:30', rest: 'Away at Falcons' });

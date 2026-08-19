@@ -1,4 +1,4 @@
-// Wheel Picker — fair spins on-device, wheel state in the URL.
+// Wheel Picker, fair spins on-device, wheel state in the URL.
 import {
   parseNamesDetailed, sliceAtPointer, easeOut, encodeState, decodeState,
   sliceColor, sliceInk, MAX_NAMES, MAX_NAME_LEN,
@@ -22,7 +22,7 @@ async function copyText(text, okMsg) {
 
 let names = [];
 let removed = [];       // winners taken off in remove mode (restorable)
-let history = [];       // every winner this session — the fairness receipt
+let history = [];       // every winner this session, the fairness receipt
 let rotation = 0;       // current wheel rotation in radians
 let spinning = false;
 
@@ -33,8 +33,8 @@ const CX = canvas.width / 2, CY = canvas.height / 2, R = canvas.width / 2 - 8;
 /* ── Spin length ──────────────────────────────────────────────────────────
    Four seconds of continuous rotation is a vestibular-migraine trigger, and
    the app used to ignore both the OS setting and its own comfort panel. It now
-   honours them with the same precedence the panel uses — an explicit choice
-   beats the OS, in both directions — and offers its own length control on top,
+   honours them with the same precedence the panel uses, an explicit choice
+   beats the OS, in both directions, and offers its own length control on top,
    because a teacher running thirty draws in a lesson wants a short one for
    reasons that have nothing to do with access needs. */
 const SPIN_KEY = 'wheel.spin';
@@ -140,7 +140,7 @@ function setBusy(on) {
   const b = $('spinBtn');
   /* aria-disabled, not disabled. Disabling the button that currently holds
      focus makes the browser drop focus to <body>, and it stayed there after
-     the spin — so a keyboard or switch user pressed Space once and lost their
+     the spin, so a keyboard or switch user pressed Space once and lost their
      place in the page for the rest of the session. */
   b.setAttribute('aria-disabled', on ? 'true' : 'false');
   b.classList.toggle('is-busy', on);
@@ -148,7 +148,7 @@ function setBusy(on) {
 }
 
 function announceWinner(name, note) {
-  $('winner').textContent = '🎉 ' + name + (note ? ' — ' + note : '');
+  $('winner').textContent = '🎉 ' + name + (note ? ', ' + note : '');
   history.unshift(name);
   history = history.slice(0, 50);
   renderHistory();
@@ -166,7 +166,7 @@ function finishSpin() {
      in front of a class. */
   if (idx < 0 || typeof winner !== 'string') {
     $('winner').textContent = '';
-    toast('The wheel changed while it was spinning — spin again');
+    toast('The wheel changed while it was spinning, spin again');
     draw();
     return;
   }
@@ -183,8 +183,7 @@ function finishSpin() {
   updateCount();
 
   // Naming the endgame. The old build removed the second-to-last name and then
-  // refused to spin, so the last person was never drawn and never announced —
-  // the one moment the whole room is waiting for.
+  // refused to spin, so the last person was never drawn and never announced, // the one moment the whole room is waiting for.
   if (names.length === 1) {
     announceWinner(winner, 'last one left: ' + names[0]);
   } else if (names.length === 0) {
@@ -210,7 +209,7 @@ function finishSpin() {
 function spin() {
   if (spinning) return;
 
-  // One name is a valid wheel — it is exactly the state elimination mode ends
+  // One name is a valid wheel, it is exactly the state elimination mode ends
   // in, and refusing there is what stranded the last person.
   if (names.length < 1) { toast('Add some names first'); return; }
 
@@ -244,7 +243,7 @@ function spin() {
   requestAnimationFrame(step);
 }
 
-/* ── History — the fairness receipt ───────────────────────────────────── */
+/* ── History, the fairness receipt ───────────────────────────────────── */
 
 function renderHistory() {
   const box = $('historyBox');
@@ -274,7 +273,7 @@ function updateCount() {
   if (!el) return;
   const n = names.length;
   el.textContent = n === 0
-    ? `No names yet — up to ${MAX_NAMES}`
+    ? `No names yet, up to ${MAX_NAMES}`
     : `${n} ${n === 1 ? 'name' : 'names'} on the wheel · up to ${MAX_NAMES}`;
 }
 
@@ -287,7 +286,7 @@ function readNames(announce) {
      the app said "1000 guests added"-style nothing; a 43-character name was
      stored clipped while the textarea still showed it whole. */
   if (announce && dropped > 0) {
-    toast(`Only the first ${MAX_NAMES} names fit — ${dropped} left off`, 5000);
+    toast(`Only the first ${MAX_NAMES} names fit, ${dropped} left off`, 5000);
   } else if (announce && truncated > 0) {
     toast(`${truncated} ${truncated === 1 ? 'name was' : 'names were'} shortened to ${MAX_NAME_LEN} characters`, 4500);
   }
@@ -331,7 +330,7 @@ function showQr(url) {
   } catch (e) {
     /* A QR code tops out around 2,900 characters, and 100 long names encode to
        well past that. The old build toasted "Could not draw the QR" over a
-       blank canvas and left the user with nothing — at the exact moment they
+       blank canvas and left the user with nothing, at the exact moment they
        were trying to hand the wheel to a room. */
     cv.classList.add('hidden');
     note.textContent =
@@ -361,7 +360,7 @@ function wire() {
 
   $('shareBtn').addEventListener('click', () => {
     syncHash();
-    copyText(location.href, 'Link copied — the wheel is saved inside it');
+    copyText(location.href, 'Link copied, the wheel is saved inside it');
   });
 
   $('resetBtn').addEventListener('click', () => {
@@ -395,7 +394,7 @@ function wire() {
 
   /* The hash IS the document. Following a link, pressing Back, or opening a
      second wheel in the same tab all change it, and the app used to read it
-     once at startup and never again — so Back left the URL and the wheel
+     once at startup and never again, so Back left the URL and the wheel
      describing different things. */
   window.addEventListener('hashchange', () => {
     const s = decodeState(location.hash);

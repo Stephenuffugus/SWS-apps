@@ -15,7 +15,7 @@ const seed = (page, n) => page.evaluate((n) => {
   for (let i = 0; i < n; i++) {
     const at = new Date(Date.now() - (n - i) * day / 3);
     S.entries.push({ id: 'e' + i, authorName: i % 2 ? 'Dana' : 'Rosalie',
-      body: i % 7 === 0 ? 'Gave Donepezil — 5mg' : 'Quiet afternoon, entry number ' + i + '.',
+      body: i % 7 === 0 ? 'Gave Donepezil, 5mg' : 'Quiet afternoon, entry number ' + i + '.',
       type: i % 7 === 0 ? 'medication' : 'note', status: 'ok', creatorUid: 'owner', createdAt: ts(at) });
   }
   S.entries.push({ id: 'q1', authorName: 'Dana', body: 'Ask about the swelling in her ankles.',
@@ -61,7 +61,7 @@ await board(async ({ page, errors }) => {
     /MEDICATION GIVEN/.test(U) && /Donepezil/.test(txt) && /doses logged/.test(txt),
     (txt.match(/Donepezil[^\n]*/) || [''])[0]);
   ok('the patient identity is not printed twice',
-    (txt.match(/Care log — Mom/g) || []).length === 1 && !/Caring for Mom/.test(txt));
+    (txt.match(/Care log, Mom/g) || []).length === 1 && !/Caring for Mom/.test(txt));
   ok('the range is stated on the page', /Covering .* to today/.test(txt));
   ok('the rota, the invite code and the tip jar stay off the page',
     !/Who’s there/.test(txt) && !/Invite code/.test(txt) && !/Tip jar/.test(txt));
@@ -76,7 +76,7 @@ await board(async ({ page, errors }) => {
   }
   ok('every page says whose log it is', allPagesNamed, pages + ' pages checked');
   // Deferred once on the belief that Chromium renders no @page margin boxes.
-  // It does, and it resolves both counters — measured here, page by page.
+  // It does, and it resolves both counters, measured here, page by page.
   ok('every page is numbered, and knows how many there are',
     numbered.length === pages, numbered.length + ' of ' + pages + ' pages carry "Page n of ' + pages + '"');
   ok('no console errors in the print path', errors.length === 0, errors.join('|'));

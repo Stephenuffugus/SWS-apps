@@ -1,12 +1,12 @@
-/* Grade Sheet — offline first.
+/* Grade Sheet, offline first.
    The whole app is cached so it runs with the network off, which is both the
    feature (a school basement, a locked-down machine) and the proof: an app
    that works with Wi-Fi off is an app that cannot be sending grades anywhere. */
 /* One constant, not two. design/bump-sw.mjs rewrites the first `VERSION` or
    `CACHE` it finds, so a worker that declares both ends up with a bumped name
-   nothing reads and a cache name that never moves — the exact silent-stale
+   nothing reads and a cache name that never moves, the exact silent-stale
    failure the bump script exists to prevent. */
-const CACHE = 'gradesheet-v6';
+const CACHE = 'gradesheet-v7';
 const ASSETS = [
   './', './index.html', './app.js', './grade.js', './roster.js', './store.js',
   './manifest.webmanifest', './icon.svg', './privacy.html',
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so the fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets below stay cache-first; only the document leads with the network,

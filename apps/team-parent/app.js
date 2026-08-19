@@ -1,7 +1,7 @@
-// Team Parent — Engine 1, skin B. One coach signs in; every family taps a link.
+// Team Parent, Engine 1, skin B. One coach signs in; every family taps a link.
 // Same engine as signup-sheets: slots are events/duties, claims are RSVPs,
 // entries are announcements (owner) and notes (anyone).
-// All user data reaches the DOM via textContent (the el() helper) — never innerHTML.
+// All user data reaches the DOM via textContent (the el() helper), never innerHTML.
 import {
   normalizeCode, parseBulkSlots, dateRangeSlots, fillStats, shareUrl,
   dateKey, isDated, keyParts, keyToInputs, formatKey, formatTime,
@@ -14,7 +14,7 @@ import { firebaseConfig } from './firebase-config.js';
 D.initFirebase(firebaseConfig);
 
 const CONFIG = {
-  // Stripe payment link for the tip jar — button stays hidden while empty.
+  // Stripe payment link for the tip jar, button stays hidden while empty.
   tipUrl: 'https://buy.stripe.com/dRm3cw7THb9taHPbyh7EQ02',
 };
 
@@ -75,8 +75,8 @@ async function copyText(text, okMsg) {
 }
 function friendly(e) {
   const code = (e && (e.code || e.message)) || '';
-  if (String(code).includes('permission-denied')) return 'That didn’t go through — the spot may have just filled, or the page is locked.';
-  if (String(code).includes('unavailable')) return 'You look offline — the change is queued and will sync when you reconnect.';
+  if (String(code).includes('permission-denied')) return 'That didn’t go through, the spot may have just filled, or the page is locked.';
+  if (String(code).includes('unavailable')) return 'You look offline, the change is queued and will sync when you reconnect.';
   return 'Something went wrong. Try again?';
 }
 
@@ -110,14 +110,14 @@ window.addEventListener('hashchange', render);
 const isOwner = () => !!(user && live.board && live.board.ownerUid === user.uid);
 
 /* ---------- home ---------- */
-// Participants see an invitation instead of the standard colophon — every
+// Participants see an invitation instead of the standard colophon, every
 // shared board doubles as the product's own ad. Owners and home keep the default.
 function setGrowthFooter(participant) {
   const o = document.getElementById('orgLine');
   if (!o) return;
   if (!o.dataset.home) o.dataset.home = o.innerHTML;
   o.innerHTML = participant
-    ? 'Made with <a href="./" style="color:inherit">Team Parent</a> — free, no ads. <a href="./" style="color:inherit">Start yours</a>'
+    ? 'Made with <a href="./" style="color:inherit">Team Parent</a>, free, no ads. <a href="./" style="color:inherit">Start yours</a>'
     : o.dataset.home;
 }
 
@@ -132,7 +132,7 @@ async function renderHome() {
 
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'The whole season, one link'),
-    el('p', {}, 'Practices, games, snack duty, carpools. Families RSVP and claim duties in seconds — ',
+    el('p', {}, 'Practices, games, snack duty, carpools. Families RSVP and claim duties in seconds, ',
       el('strong', {}, 'no accounts, no group-text chaos, no ads.')),
     el('button', { class: 'btn primary', type: 'button', onclick: startCreate }, 'Create a team page'),
   ));
@@ -147,14 +147,14 @@ async function renderHome() {
     class: 'btn', type: 'button', style: 'flex:0 0 auto',
     onclick: () => {
       const c = normalizeCode(codeInput.value);
-      if (!c) { toast('Codes are 6 letters/numbers — check with your organizer'); return; }
+      if (!c) { toast('Codes are 6 letters/numbers, check with your organizer'); return; }
       location.hash = '#/b/' + c;
     },
   }, 'Open');
   v.append(el('section', { class: 'card' },
     el('h2', {}, 'Got a team code?'),
     el('div', { class: 'row' }, codeInput, openBtn),
-    el('p', { class: 'hint', text: 'If your coach shared a link, just tap it — this box is for codes read out loud.' })));
+    el('p', { class: 'hint', text: 'If your coach shared a link, just tap it, this box is for codes read out loud.' })));
 
   if (user && !D.isAnon(user)) {
     const sec = el('section', { class: 'card' }, el('h2', {}, 'Your teams'));
@@ -164,7 +164,7 @@ async function renderHome() {
     try {
       const boards = (await D.myBoards(user.uid)).filter(b => b.skin === 'team');
       sec.lastChild.remove();
-      if (boards.length === 0) sec.append(el('p', { class: 'hint', text: 'No teams yet — create your first one above.' }));
+      if (boards.length === 0) sec.append(el('p', { class: 'hint', text: 'No teams yet, create your first one above.' }));
       for (const b of boards) {
         list.append(el('li', {},
           el('div', { class: 'grow' },
@@ -201,7 +201,7 @@ async function renderBoard(code) {
     const boardId = await D.resolveCode(code).catch(() => null);
     if (!boardId) {
       v.replaceChildren(el('section', { class: 'card' },
-        el('p', { class: 'warn', text: 'That team page doesn’t exist — the organizer may have rotated the link.' }),
+        el('p', { class: 'warn', text: 'That team page doesn’t exist, the organizer may have rotated the link.' }),
         el('p', {}, el('a', { href: '#/' }, 'Go home'))));
       return;
     }
@@ -244,13 +244,12 @@ function syncClaimWatchers() {
    The old version wrote only `--accent` onto documentElement.style while every
    visible surface paints from `--accent-fill`, so all five themes rendered the
    identical blue button. It now emits the whole ramp, in OKLCH so the five
-   read as equally weighted, into a stylesheet rather than an inline style —
-   an inline style on <html> outranks the comfort panel's high-contrast block,
+   read as equally weighted, into a stylesheet rather than an inline style, an inline style on <html> outranks the comfort panel's high-contrast block,
    a stylesheet does not, and a stylesheet can carry a dark-mode variant.
    Fills sit at L .42 so ink-on-fill clears the 7:1 this app is read at (sun on
    a phone in a parked car), not the 4.5:1 floor. */
 // The five KEYS are fixed by firestore.rules (`s.theme in ['blue','green',
-// 'plum','slate','amber']`), which is shared with signup-sheets — so the keys
+// 'plum','slate','amber']`), which is shared with signup-sheets, so the keys
 // stay and only what they paint changes.
 const THEMES = {
   blue:  { name: 'Blue',  h: 250, C: 0.115 },
@@ -299,7 +298,7 @@ function baseUrl() {
    Four Firestore listeners, plus one per slot, plus the segmented control all
    called drawBoard() directly: measured 108 full teardowns of #view in 3.14s
    on a 100-event board. Coalesce them into one paint per animation frame, and
-   carry across the things a rebuild would otherwise throw away — the Manage
+   carry across the things a rebuild would otherwise throw away, the Manage
    accordion's open state, the scroll position, the focused field, its caret,
    and every half-typed value in the panel. */
 let paintTimer = null;
@@ -313,7 +312,7 @@ function drawBoard() {
   if (!pendingSince) pendingSince = now;
   clearTimeout(paintTimer);
   // Coalesce a burst of snapshots, but never sit on a change for longer than
-  // a quarter of a second — a slot filling up has to show up promptly.
+  // a quarter of a second, a slot filling up has to show up promptly.
   const delay = (now - pendingSince >= 250) ? 0 : 70;
   paintTimer = setTimeout(() => { paintTimer = null; pendingSince = 0; paintBoard(); }, delay);
 }
@@ -387,13 +386,13 @@ function trustBadge() {
   }
   return el('p', { class: 'trust noprint' }, svg,
     el('span', {}, el('b', {}, 'No ads. No account. Nothing tracked.'),
-      ' Families never sign up or install anything — tapping the link is the whole thing. ' +
+      ' Families never sign up or install anything, tapping the link is the whole thing. ' +
       'The only information this page holds is what the organizer typed (the schedule, the team details) ' +
       'and the name and note a family adds when they claim a spot; that is stored so everyone sees the ' +
       'same page, and it is never sold, never advertised against, and there is no tracking and no email list.'));
 }
 
-/* The printed sheet has to lead back to the live page — that is the whole
+/* The printed sheet has to lead back to the live page, that is the whole
    point of putting it on the fridge. */
 let printQrCanvas = null, printQrFor = '';
 function printQr(url) {
@@ -426,7 +425,7 @@ function paintBoard() {
   const own = isOwner();
   setGrowthFooter(!own);
   // The recipient's four seconds must not open on an account prompt and a
-  // money link — the documented "I thought it was spam" reflex.
+  // money link, the documented "I thought it was spam" reflex.
   $('authBtn').classList.toggle('hidden', !own);
   const tip = $('tipLink');
   if (tip) tip.classList.toggle('hidden', !own || !CONFIG.tipUrl);
@@ -450,7 +449,7 @@ function paintBoard() {
   v.append(el('div', { class: 'printonly printhead' },
     el('div', { class: 'ph-text' },
       el('div', { class: 'ph-title', text: b.title }),
-      el('div', { class: 'ph-sub', text: 'Always-current schedule — no app, no account:' }),
+      el('div', { class: 'ph-sub', text: 'Always-current schedule, no app, no account:' }),
       el('div', { class: 'ph-url', text: url }),
       el('div', { class: 'ph-code' }, 'Team code: ', el('b', { text: live.code }))),
     qrc ? el('div', { class: 'ph-qr' }, qrc) : null));
@@ -469,15 +468,15 @@ function paintBoard() {
       el('h2', {}, 'Share with the families'),
       el('div', { class: 'sharecode', text: live.code }),
       el('div', { class: 'row' },
-        el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied — drop it in the group chat once, done') }, 'Copy link'),
+        el('button', { class: 'btn primary', type: 'button', onclick: () => copyText(url, 'Link copied, drop it in the group chat once, done') }, 'Copy link'),
         el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code')),
       el('p', { class: 'hint', text: 'One share reaches everyone. Families never need accounts.' })));
   }
 
   if (locked) v.append(el('div', { class: 'banner', text: own
-    ? 'This page is locked — families can look but not RSVP. Unlock it in Manage.'
-    : 'This page is locked by the organizer — read-only for now.' }));
-  if (!navigator.onLine) v.append(el('div', { class: 'banner', text: 'You’re offline — you can read the page; RSVPs will sync when you’re back.' }));
+    ? 'This page is locked, families can look but not RSVP. Unlock it in Manage.'
+    : 'This page is locked by the organizer, read-only for now.' }));
+  if (!navigator.onLine) v.append(el('div', { class: 'banner', text: 'You’re offline, you can read the page; RSVPs will sync when you’re back.' }));
 
   // --- announcements (pinned) ---
   const announcements = live.entries.filter(e => e.type === 'announcement' && e.status === 'ok');
@@ -502,8 +501,8 @@ function paintBoard() {
     ));
   }
   if (own) {
-    // live snapshots redraw this whole view — the draft and the caret survive it
-    const input = tracked('announce', { type: 'text', maxlength: '2000', placeholder: 'Practice cancelled — field is flooded…',
+    // live snapshots redraw this whole view, the draft and the caret survive it
+    const input = tracked('announce', { type: 'text', maxlength: '2000', placeholder: 'Practice cancelled, field is flooded…',
       'aria-label': 'New announcement',
       onkeydown: (ev) => { if (ev.key === 'Enter') postBtn.click(); } });
     const postBtn = el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
@@ -514,7 +513,7 @@ function paintBoard() {
           await D.addEntry(live.boardId, b, { authorName: b.title + ' organizer', body, type: 'announcement' });
           manageDraft.announce = '';
           input.value = '';
-          toast('Posted — it is pinned to the top for every family, with the time on it');
+          toast('Posted, it is pinned to the top for every family, with the time on it');
         } catch (e) { toast(friendly(e), 4500); }
       } }, 'Post');
     v.append(el('section', { class: 'card noprint' },
@@ -534,7 +533,7 @@ function paintBoard() {
 
   // --- schedule, in date order ---
   const schedCard = el('section', { class: 'card' }, el('h2', {}, 'Schedule & duties'));
-  // "Duties filled: 1 of 12" is an organizer metric — it is not one of the
+  // "Duties filled: 1 of 12" is an organizer metric, it is not one of the
   // three questions a family opens this page with.
   if (own) {
     const stats = fillStats(live.slots.filter(s => s.capacity < RSVP_CAP));
@@ -542,7 +541,7 @@ function paintBoard() {
   }
   if (live.slots.length === 0) {
     schedCard.append(el('p', { class: 'hint', text: own
-      ? 'No events yet — open Manage below to add practices, games, and duty slots.'
+      ? 'No events yet, open Manage below to add practices, games, and duty slots.'
       : 'The organizer hasn’t added the schedule yet.' }));
   }
   let lastDay = '';
@@ -578,7 +577,7 @@ function paintBoard() {
         el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
         el('button', { class: 'btn', type: 'button', onclick: () => downloadIcs(b) }, 'Add season to calendar'),
         el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print')),
-      el('p', { class: 'hint', text: 'The calendar file downloads straight to this device — no calendar permission, no sign-in. The printed sheet carries the QR back to this page.' })));
+      el('p', { class: 'hint', text: 'The calendar file downloads straight to this device, no calendar permission, no sign-in. The printed sheet carries the QR back to this page.' })));
   }
 
   focusRestore(keepFocus);
@@ -589,7 +588,7 @@ function paintBoard() {
   const stats = fillStats(live.slots.filter(s => s.capacity < RSVP_CAP));
   const summary = live.slots.length + '|' + stats.taken + '|' + stats.total + '|' + locked;
   if (lastSummary && summary !== lastSummary) {
-    announce('Team page updated — ' + live.slots.length + ' events, ' + stats.taken + ' of ' + stats.total + ' duty spots filled.');
+    announce('Team page updated, ' + live.slots.length + ' events, ' + stats.taken + ' of ' + stats.total + ' duty spots filled.');
   }
   lastSummary = summary;
 }
@@ -622,7 +621,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
   if (upcoming.length === 0) {
     card.append(el('h2', {}, 'Next up'),
       el('p', { class: 'nu-none', text: undatedSlots.length
-        ? 'Nothing dated yet — the duties below still need names against them.'
+        ? 'Nothing dated yet, the duties below still need names against them.'
         : 'Nothing on the calendar yet.' }));
     return card;
   }
@@ -635,7 +634,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
   const sameDay = upcoming.filter(s => dayOf(s) === firstDay);
 
   card.append(el('h2', {}, 'Next up'));
-  card.append(el('p', { class: 'nu-when', text: (isToday ? 'Today — ' : '') + formatKey(upcoming[0].order).split(' · ')[0] }));
+  card.append(el('p', { class: 'nu-when', text: (isToday ? 'Today, ' : '') + formatKey(upcoming[0].order).split(' · ')[0] }));
 
   for (const s of sameDay) {
     const p = keyParts(s.order);
@@ -655,7 +654,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
     if (!isRSVP) {
       const who = claims.map(c => c.name).join(', ');
       row.append(el('p', { class: 'nu-line ' + (left === 0 ? 'nu-ok' : 'nu-need'),
-        text: left === 0 ? 'Covered by ' + who : (who ? who + ' — ' + left + ' more needed' : left + ' still needed') }));
+        text: left === 0 ? 'Covered by ' + who : (who ? who + ', ' + left + ' more needed' : left + ' still needed') }));
       if (!mine && left > 0 && !locked) row.append(el('div', { class: 'noprint' },
         el('button', { class: 'btn primary', type: 'button', onclick: () => openClaim(s, false) }, 'I’ll cover this')));
     } else if (claims.length) {
@@ -665,7 +664,7 @@ function renderNextUp(upcoming, undatedSlots, own, locked) {
   }
 
   // If this family's own turn is not on that day, say when it is and take
-  // them to it — measured 2.61 viewports down before this existed.
+  // them to it, measured 2.61 viewports down before this existed.
   const nextMine = [...upcoming, ...undatedSlots].find(s => mineOf(s) && dayOf(s) !== firstDay);
   if (nextMine) {
     const { name } = parseLabel(nextMine.label);
@@ -724,7 +723,7 @@ function renderEvent(s, own, locked, past) {
       class: 'noprint chipx',
       onclick: async () => {
         // The most destructive tap a parent can make. Snapshot first, then
-        // offer the way back — a confirm here would tax every deliberate tap
+        // offer the way back, a confirm here would tax every deliberate tap
         // and still not catch the accidental one.
         const snap = { name: c.name, note: c.note || '' };
         try {
@@ -732,8 +731,8 @@ function renderEvent(s, own, locked, past) {
           else await D.ownerRemoveClaim(live.boardId, s.id, c.uid);
         } catch (e) { toast(friendly(e), 4500); return; }
         if (isMine) {
-          undoToast(isRSVP ? 'RSVP withdrawn' : 'Spot given up — ' + (name || s.label), async () => {
-            try { await D.claimSlot(live.boardId, s.id, snap.name, snap.note); toast('Back in — ' + (name || s.label)); }
+          undoToast(isRSVP ? 'RSVP withdrawn' : 'Spot given up, ' + (name || s.label), async () => {
+            try { await D.claimSlot(live.boardId, s.id, snap.name, snap.note); toast('Back in, ' + (name || s.label)); }
             catch (e2) { toast(friendly(e2), 5000); }
           });
         } else {
@@ -788,7 +787,7 @@ function renderNotes(b, own, locked) {
     }, '✕'));
     list.append(li);
   }
-  if (notes.length === 0) card.append(el('p', { class: 'hint', text: '“Which field is Saturday’s game at?” — questions for the organizer go here.' }));
+  if (notes.length === 0) card.append(el('p', { class: 'hint', text: '“Which field is Saturday’s game at?”, questions for the organizer go here.' }));
   card.append(list);
   if (!locked) {
     const nameIn = el('input', { type: 'text', placeholder: 'Your name', maxlength: '60', value: myName(), 'aria-label': 'Your name' });
@@ -802,7 +801,7 @@ function renderNotes(b, own, locked) {
         try {
           const status = await D.addEntry(live.boardId, b, { authorName: name, body, type: 'note' });
           bodyIn.value = '';
-          toast(status === 'pending' ? 'Added — the organizer will approve it shortly' : 'Added');
+          toast(status === 'pending' ? 'Added, the organizer will approve it shortly' : 'Added');
         } catch (e) { toast(friendly(e), 4500); }
       } }, 'Add');
     card.append(el('div', { class: 'row noprint', style: 'margin-top:10px' }, nameIn, bodyIn, addBtn));
@@ -879,7 +878,7 @@ function renderManage(b) {
     const where = tracked('r-where', { type: 'text', placeholder: 'Kestrel Park', maxlength: '44' });
     const need = tracked('r-need', { type: 'number', placeholder: 'blank = RSVP', min: '1', max: '998' });
     /* The seven weekday checkboxes used to be display:none, which takes them
-       out of the tab order AND the accessibility tree — the app's biggest
+       out of the tab order AND the accessibility tree, the app's biggest
        time-saver was pointer-only, and axe cannot see the defect. They are now
        clipped, not hidden, so they stay focusable and announce their state. */
     const days = el('div', { class: 'wkdays', role: 'group', 'aria-labelledby': 'wkdaysLabel' },
@@ -950,8 +949,8 @@ function renderManage(b) {
   inner.append(el('h2', { style: 'margin-top:16px' }, 'Share, text and print'));
   inner.append(el('div', { class: 'row', style: 'flex-wrap:wrap' },
     el('button', { class: 'btn', type: 'button', onclick: () => copyText(url, 'Link copied') }, 'Copy link'),
-    el('button', { class: 'btn', type: 'button', onclick: () => copyText(weekText(b), 'This week copied — paste it into the group chat') }, 'Copy this week'),
-    el('button', { class: 'btn', type: 'button', onclick: () => copyText(nudgeMessage(b.title, live.slots.filter(s => s.capacity < RSVP_CAP), url), 'Open spots copied — paste it into the group chat') }, 'Copy open spots'),
+    el('button', { class: 'btn', type: 'button', onclick: () => copyText(weekText(b), 'This week copied, paste it into the group chat') }, 'Copy this week'),
+    el('button', { class: 'btn', type: 'button', onclick: () => copyText(nudgeMessage(b.title, live.slots.filter(s => s.capacity < RSVP_CAP), url), 'Open spots copied, paste it into the group chat') }, 'Copy open spots'),
     el('button', { class: 'btn', type: 'button', onclick: () => downloadIcs(b) }, 'Season .ics'),
     el('button', { class: 'btn', type: 'button', onclick: showQR }, 'QR code'),
     el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print schedule')));
@@ -969,7 +968,7 @@ function renderManage(b) {
           class: 'themedot' + (on ? ' sel' : ''),
           style: '--dot:oklch(' + t.L + ' ' + t.C + ' ' + t.h + ')',
           onclick: () => D.setTheme(live.boardId, s, key)
-            .then(() => toast(t.name + ' — the buttons and highlights follow it'))
+            .then(() => toast(t.name + ', the buttons and highlights follow it'))
             .catch(e => toast(friendly(e), 5000)),
         }, el('span', { class: 'tick', 'aria-hidden': 'true', text: on ? '✓' : '' }));
       })),
@@ -982,14 +981,14 @@ function renderManage(b) {
     el('label', { class: 'f', style: 'display:flex;align-items:center;gap:8px' },
       el('input', { type: 'checkbox', style: 'width:auto', ...(s.locked ? { checked: '' } : {}),
         onchange: (ev) => D.setLocked(live.boardId, s, ev.target.checked)
-          .then(() => toast(ev.target.checked ? 'Locked — the page is read-only' : 'Unlocked'))
+          .then(() => toast(ev.target.checked ? 'Locked, the page is read-only' : 'Unlocked'))
           .catch(e => toast(friendly(e))) }),
       el('span', { style: 'margin:0' }, 'Lock the page (read-only)')),
     el('div', { class: 'row', style: 'margin-top:8px' },
       el('button', { class: 'btn', type: 'button', onclick: async () => {
         if (!confirm('Rotate the link? The old one stops working instantly.')) return;
         try { const code = await D.rotateCode(live.boardId, live.code);
-          live.code = code; location.hash = '#/b/' + code; toast('New link ready — old one is dead'); }
+          live.code = code; location.hash = '#/b/' + code; toast('New link ready, old one is dead'); }
         catch (e) { toast(friendly(e), 4500); }
       } }, 'Rotate link'),
       el('button', { class: 'btn danger', type: 'button', onclick: async () => {
@@ -1015,7 +1014,7 @@ function renderManage(b) {
 
 async function addSlotsChecked(rows) {
   if (live.slots.length + rows.length > 100) {
-    toast('Pages max out at 100 events — archive last season or split by month.', 5000);
+    toast('Pages max out at 100 events, archive last season or split by month.', 5000);
     return;
   }
   // Dated rows carry their date as the order key; undated ones queue after
@@ -1046,14 +1045,14 @@ function weekText(b) {
 
 function downloadIcs(b) {
   const dated = live.slots.filter(s => isDated(s.order));
-  if (dated.length === 0) { toast('Nothing dated yet — add a date to an event and it lands in the calendar file'); return; }
+  if (dated.length === 0) { toast('Nothing dated yet, add a date to an event and it lands in the calendar file'); return; }
   const text = seasonIcs({ title: b.title, slots: live.slots, url: shareUrl(live.code, baseUrl()) });
   const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
   const href = URL.createObjectURL(blob);
   const a = el('a', { href, download: (b.title || 'season').replace(/[^\w -]+/g, '').trim().slice(0, 40) + '.ics' });
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(href), 4000);
-  toast(dated.length + ' events downloaded — open the file to add them to any calendar');
+  toast(dated.length + ' events downloaded, open the file to add them to any calendar');
 }
 
 let slotEditing = null;
@@ -1113,8 +1112,8 @@ function wire() {
     } catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized-domain')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Google sign-in didn’t complete (' + (code || 'unknown') + ') — try again or use the email link.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Google sign-in didn’t complete (' + (code || 'unknown') + '), try again or use the email link.', 7000);
     }
   });
   $('emailBtn').addEventListener('click', async () => {
@@ -1124,8 +1123,8 @@ function wire() {
     catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Couldn’t send the link (' + (code || 'unknown') + ') — check the address and try again.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Couldn’t send the link (' + (code || 'unknown') + '), check the address and try again.', 7000);
     }
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
@@ -1136,21 +1135,21 @@ function wire() {
     saveName(name);
     closeDlg($('nameDlg'));
     const what = parseLabel(claimTarget.label).name || claimTarget.label;
-    /* Offline, batch.commit() never settles — Firestore writes to its local
+    /* Offline, batch.commit() never settles, Firestore writes to its local
        cache and waits for a connection. The claim IS safe, so say so instead
        of saying nothing: this user's whole reason for checking is an app that
        once lost his RSVP. */
     let settled = false;
     const queuedNotice = setTimeout(() => {
       if (settled) return;
-      toast('Saved on this phone — “' + what + '” will sync the moment you have signal.', 6000);
+      toast('Saved on this phone, “' + what + '” will sync the moment you have signal.', 6000);
     }, navigator.onLine ? 4000 : 700);
     try {
       const r = await D.claimSlot(live.boardId, claimTarget.id, name, $('noteInput').value);
       settled = true; clearTimeout(queuedNotice);
       toast(r === 'note-dropped'
-        ? 'You’re in! (Your note couldn’t be attached — the organizer’s setup needs a refresh.)'
-        : 'You’re in — ' + what, r === 'note-dropped' ? 6000 : 3000);
+        ? 'You’re in! (Your note couldn’t be attached, the organizer’s setup needs a refresh.)'
+        : 'You’re in, ' + what, r === 'note-dropped' ? 6000 : 3000);
     } catch (e) { settled = true; clearTimeout(queuedNotice); toast(friendly(e), 4500); }
   });
   $('nameCancel').addEventListener('click', () => closeDlg($('nameDlg')));
@@ -1170,14 +1169,14 @@ function wire() {
     // belongs instead of sitting at the bottom of the season forever.
     if (order) fields.order = order;
     else if (isDated(slotEditing.order)) fields.order = UNDATED_BASE + (Number(String(slotEditing.id).replace(/\D/g, '').slice(0, 6)) || 1);
-    try { await D.updateSlot(live.boardId, slotEditing.id, fields); closeDlg($('slotDlg')); toast('Saved' + (order ? ' — moved into date order' : '')); }
+    try { await D.updateSlot(live.boardId, slotEditing.id, fields); closeDlg($('slotDlg')); toast('Saved' + (order ? ', moved into date order' : '')); }
     catch (e) { toast(friendly(e), 4500); }
   });
   $('slotDelete').addEventListener('click', async () => {
     const s = slotEditing;
     const n = s.claimedCount || 0;
     // With people already in it, deleting throws away their claims and no undo
-    // of ours can put someone else's claim back — so that one still asks.
+    // of ours can put someone else's claim back, so that one still asks.
     if (n && !confirm('Delete this event and its ' + n + ' RSVP(s)? Their names cannot be restored.')) return;
     const snap = { label: s.label, capacity: s.capacity, order: s.order };
     try { await D.deleteSlot(live.boardId, s.id); closeDlg($('slotDlg')); }
@@ -1198,7 +1197,7 @@ function wire() {
     try {
       const { code } = await D.createBoard({ title, description: $('createDesc').value.trim() });
       location.hash = '#/b/' + code;
-      toast('Team page created — build the schedule, then share the link');
+      toast('Team page created, build the schedule, then share the link');
     } catch (e) { toast(friendly(e), 5000); }
   });
   $('createCancel').addEventListener('click', () => closeDlg($('createDlg')));
@@ -1241,7 +1240,7 @@ async function init() {
   }
   try {
     await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:'));
-  } catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
+  } catch (e) { toast('That sign-in link didn’t work, request a fresh one.', 6000); }
   try { await D.completeRedirect(); }
   catch (e) { toast('Google sign-in didn’t complete (' + ((e && e.code) || '?') + ')', 6000); }
   D.onAuth((u) => { user = u; refreshAuthBtn(); render(); });

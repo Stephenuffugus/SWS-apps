@@ -4,7 +4,7 @@ These belong in `github.com/Stephenuffugus/trackfit`. They are parked in this
 repo because this codespace's token is scoped to SWS-apps and got a 403 pushing
 to trackfit, and the work would otherwise die when the codespace closes.
 
-Nothing here is deployed — Firebase serves `public: "apps"`, and this is under
+Nothing here is deployed, Firebase serves `public: "apps"`, and this is under
 `design/`.
 
 ## Applying them
@@ -19,10 +19,10 @@ pnpm install && pnpm verify
 **Verified**: applied cleanly to a fresh clone from GitHub at `550476c`, which
 is what these were authored against.
 
-Pushing the branch deploys nothing — `.github/workflows/deploy.yml` fires on
+Pushing the branch deploys nothing, `.github/workflows/deploy.yml` fires on
 `push: branches: [main]` only.
 
-## 0001 — self-host the fonts
+## 0001, self-host the fonts
 
 Every cold load sent the user's IP to `fonts.gstatic.com` before anything
 rendered, and the app broke in a basement with no signal, which is exactly
@@ -30,7 +30,7 @@ where it is meant to be used. Latin subsets, 152 kB for four faces. Also drops
 the Workbox `runtimeCaching` rules for the Google hosts, which would have
 re-enabled the request the moment a stylesheet referenced them again.
 
-## 0002 — make it free
+## 0002, make it free
 
 Removes the paid tier (premium.ts, PremiumGate, PremiumModal,
 LicenseActivation, PremiumPricingTest, pricing-feedback, the Payhip links,
@@ -59,7 +59,7 @@ this app rather than nearly true.
   everything free, which is fine, but they may be owed a note. Owner's call.
 - **A Cloudflare Worker named `trackfit-vision` holding an `ANTHROPIC_API_KEY`**
   is described in `docs/SETUP-PHOTO-ID.md`. If it was ever deployed it is still
-  live and still billable. Not reachable from this machine — **inferred from
+  live and still billable. Not reachable from this machine, **inferred from
   the docs, not verified.** Check `dash.cloudflare.com`.
 - The dead `VITE_PREMIUM_*` / `VITE_*_PHOTO_ID` GitHub Actions secrets.
 - `MONETIZE_HANDOFF.md` still asserts the app has a freemium gate, and is

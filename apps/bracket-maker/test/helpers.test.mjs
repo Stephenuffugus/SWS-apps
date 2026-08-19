@@ -61,7 +61,7 @@ ok('cannot pick a non-contender or resolve a bye by hand', () => {
   const before = JSON.stringify(s.picks);
   s = setPick(s, 0, 0, 1);      // B is not in match 0
   assert.equal(JSON.stringify(s.picks), before);
-  s = setPick(s, 0, 0, 0);      // match 0 is a bye — no pick recorded
+  s = setPick(s, 0, 0, 0);      // match 0 is a bye, no pick recorded
   assert.equal(JSON.stringify(s.picks), before);
 });
 ok('full random play-through always crowns exactly one champion (fuzz)', () => {

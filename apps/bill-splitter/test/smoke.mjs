@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-// Drop the external vendor script tag — QR isn't exercised here and jsdom
+// Drop the external vendor script tag, QR isn't exercised here and jsdom
 // file-loading is flaky; everything else runs as-is.
 const patched = html
   .replace('<script src="vendor-qrcode.js"></script>', '')
   // jsdom does not fetch external scripts, and the undo runtime is the thing
-  // half these assertions are about — inline it so the page under test is real.
+  // half these assertions are about, inline it so the page under test is real.
   .replace('<script src="sws-ui.js"></script>',
     '<script>' + readFileSync(new URL('../sws-ui.js', import.meta.url), 'utf8') + '</script>');
 

@@ -1,8 +1,8 @@
-// Caregiver Log — Engine 1, skin C. A calm shared family notebook.
+// Caregiver Log, Engine 1, skin C. A calm shared family notebook.
 // Same engine: slots are coverage days, claims are "I'll be there",
 // entries are the timeline (note / appointment / medication / question).
 // Tone matters here: plain language, no confetti, nothing loud.
-// All user data reaches the DOM via textContent — never innerHTML.
+// All user data reaches the DOM via textContent, never innerHTML.
 import { normalizeCode, shareUrl } from './helpers.js';
 import * as D from './data.js';
 import { firebaseConfig } from './firebase-config.js';
@@ -10,7 +10,7 @@ import { firebaseConfig } from './firebase-config.js';
 D.initFirebase(firebaseConfig);
 
 const CONFIG = {
-  // Stripe payment link for the tip jar — button stays hidden while empty, and
+  // Stripe payment link for the tip jar, button stays hidden while empty, and
   // never shows at all on a board the viewer does not own (see setChrome).
   tipUrl: 'https://buy.stripe.com/eVq7sM0rf1yTcPX1XH7EQ03',
 };
@@ -51,7 +51,7 @@ let pendingUndoAction = null;
 /* `action` turns the toast into the app's undo affordance: {label, onAction}.
    Destructive things in a caregiver log are never worth a one-tap regret.
    The toast also TAKES focus when the control that triggered it has just been
-   removed from the document — without that, the only undo in the app sits at
+   removed from the document, without that, the only undo in the app sits at
    the very end of the body, fifty tab stops away, behind a ten-second timer. */
 function toast(msg, ms, action) {
   const t = $('toast');
@@ -79,7 +79,7 @@ function hideToast() { $('toast').classList.remove('show'); pendingUndoAction = 
 
 /* The offer expires with the toast, so a Ctrl+Z ten minutes later can never
    resurrect something the family has forgotten about. Inside a field the key
-   still means "undo my last keystroke" — the browser does that better than we
+   still means "undo my last keystroke", the browser does that better than we
    can, and taking it from someone mid-sentence would be its own bug. */
 document.addEventListener('keydown', (ev) => {
   if (!pendingUndoAction) return;
@@ -143,7 +143,7 @@ function lockIcon() {
   svg.append(rect, path);
   return svg;
 }
-/* The promise as an object, not as grey copy at the bottom of the page — and
+/* The promise as an object, not as grey copy at the bottom of the page, and
    the promise has to be the true one. This app is not on-device-only: the log
    syncs so the sibling two states away sees it. So the badge says exactly what
    travels, where it lands, and who can read it. Never soften this into
@@ -153,7 +153,7 @@ function trustStamp(extraClass) {
     el('div', { class: 'trust' }, lockIcon(),
       el('span', {}, el('b', {}, 'Kept between the family.'),
         ' Notes, names and coverage days sync through this app’s own database so'
-        + ' every phone with the invite link stays current — never sold, never'
+        + ' every phone with the invite link stays current, never sold, never'
         + ' advertised against, and no account for the family. Anyone holding the'
         + ' link can read the log, so send it one person at a time.')));
 }
@@ -169,8 +169,8 @@ async function copyText(text, okMsg) {
 }
 function friendly(e) {
   const code = (e && (e.code || e.message)) || '';
-  if (String(code).includes('permission-denied')) return 'That didn’t save — the log may be locked, or that day is covered.';
-  if (String(code).includes('unavailable')) return 'You look offline — it will sync when you’re back.';
+  if (String(code).includes('permission-denied')) return 'That didn’t save, the log may be locked, or that day is covered.';
+  if (String(code).includes('unavailable')) return 'You look offline, it will sync when you’re back.';
   return 'Something went wrong. Try again?';
 }
 
@@ -188,7 +188,7 @@ const saveDraft = (v) => {
   catch (e) {}
 };
 
-/* "New since you last looked" is computed here, not pushed — we cannot send a
+/* "New since you last looked" is computed here, not pushed, we cannot send a
    notification and will not pretend to. */
 const seenKey = () => 'cl-seen-' + (live.boardId || '');
 let seenAt = 0;              // the stamp this visit is measured against
@@ -229,7 +229,7 @@ function softDeleteEntry(e) {
       drawBoard();
       // Put the keyboard back where the delete happened, not at the top.
       restoreFocus($('view'), 'delete-' + firstId);
-      toast(n === 1 ? 'Kept — nothing was deleted' : 'Kept — nothing was deleted', 4000);
+      toast(n === 1 ? 'Kept, nothing was deleted' : 'Kept, nothing was deleted', 4000);
     },
   });
 }
@@ -287,7 +287,7 @@ async function renderHome() {
 
   v.append(el('div', { class: 'hero' },
     el('h2', {}, 'One calm place for the whole family'),
-    el('p', {}, 'Appointments, medication changes, questions for the doctor, who’s covering which day — written down once, where every sibling can see it. It opens in any browser, on whatever phone your brother has.'),
+    el('p', {}, 'Appointments, medication changes, questions for the doctor, who’s covering which day, written down once, where every sibling can see it. It opens in any browser, on whatever phone your brother has.'),
     el('button', { class: 'btn primary big', type: 'button', onclick: startCreate }, 'Start a care log'),
     trustStamp(),
   ));
@@ -301,7 +301,7 @@ async function renderHome() {
     class: 'btn fit', type: 'button',
     onclick: () => {
       const c = normalizeCode(codeInput.value);
-      if (!c) { toast('Codes are 6 letters and numbers — ask whoever invited you'); return; }
+      if (!c) { toast('Codes are 6 letters and numbers, ask whoever invited you'); return; }
       location.hash = '#/b/' + c;
     },
   }, 'Open');
@@ -313,7 +313,7 @@ async function renderHome() {
   if (user && !D.isAnon(user)) {
     const sec = el('section', { class: 'card' }, el('h2', {}, 'Your logs'));
     const list = el('ul', { class: 'plain' });
-    // A held reference, not `sec.lastChild` — positional DOM surgery removed
+    // A held reference, not `sec.lastChild`, positional DOM surgery removed
     // the wrong node the moment anything else was appended to this card.
     const status = el('p', { class: 'sub', role: 'status', text: 'Loading…' });
     sec.append(list, status);
@@ -325,7 +325,7 @@ async function renderHome() {
         sec.append(el('div', { class: 'empty' },
           el('div', { class: 'glyph', 'aria-hidden': 'true' }, '📓'),
           el('h3', {}, 'No logs yet'),
-          el('p', {}, 'Start one for the person you’re caring for — you can invite the rest of the family in a minute.'),
+          el('p', {}, 'Start one for the person you’re caring for, you can invite the rest of the family in a minute.'),
           el('button', { class: 'btn primary', type: 'button', onclick: startCreate }, 'Start a care log')));
       }
       for (const b of boards) {
@@ -370,7 +370,7 @@ async function renderBoard(code) {
     if (!boardId) {
       announce('That log does not exist');
       v.replaceChildren(el('section', { class: 'card' },
-        el('p', { class: 'warn', text: 'That log doesn’t exist — the invite may have been rotated.' }),
+        el('p', { class: 'warn', text: 'That log doesn’t exist, the invite may have been rotated.' }),
         el('p', {}, el('a', { href: '#/' }, 'Go home'))));
       return;
     }
@@ -437,7 +437,7 @@ function localStamp(d) {
 }
 /* Anyone can type square brackets. A token whose numbers are not a real date
    is left alone as ordinary text rather than rolled over into a nonsense
-   timestamp — a wrong time on a medication is the thing this exists to stop. */
+   timestamp, a wrong time on a medication is the thing this exists to stop. */
 function parseStamp(m) {
   const [, y, mo, d, h, mi] = m.map(Number);
   if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
@@ -483,7 +483,7 @@ const effMs = (e) => effDate(e).getTime();
 
 function dayKey(d) {
   if (!d) return 'Just now';
-  // logs span years — a doctor reading the printout needs the year once it differs
+  // logs span years, a doctor reading the printout needs the year once it differs
   const opts = { weekday: 'long', month: 'long', day: 'numeric' };
   if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
   return d.toLocaleDateString(undefined, opts);
@@ -522,11 +522,11 @@ function visibleEntries() {
 /* ---------- medication ----------
    "Medication" used to be a badge class on a free-text note. A dose has a drug,
    a time and a person, and the one question anybody actually asks it is "has
-   this already been given?" — so that answer is computed from the log itself,
+   this already been given?", so that answer is computed from the log itself,
    shown before the save, and stands in the way inside the interval.
    Older free-text medication notes are matched too, by name, so the guard works
    on a log that has been running since before this existed. */
-const GAVE_RE = /^Gave\s+(.+?)(?:\s+—\s+(.+?))?\s*$/;
+const GAVE_RE = /^Gave\s+(.+?)(?:\s+, \s+(.+?))?\s*$/;
 function medName(e) {
   if (e.type !== 'medication') return '';
   const first = parseBody(e).text.split('\n')[0];
@@ -562,7 +562,7 @@ function lastGivenFor(drug) {
 
 /* ---------- the board shell ----------
    drawBoard used to wipe #view on every snapshot, which blurred the textarea
-   and dropped the caret — a sibling's write threw the slowest typist in the
+   and dropped the caret, a sibling's write threw the slowest typist in the
    family out of the box mid-sentence. The sections below are created once per
    board and refilled in place, and the composer is never detached at all. */
 let shell = null;
@@ -576,7 +576,7 @@ function ensureShell(v) {
   const cov = el('section', { class: 'card noprint' });
   const entriesBox = el('div', { class: 'screenonly' });
   // h2 first, then the composer (inserted before entriesBox when it exists),
-  // then the list — so the order never depends on the order things were built.
+  // then the list, so the order never depends on the order things were built.
   const timeline = el('section', { class: 'card screenonly' }, el('h2', {}, 'The log'), entriesBox);
   const manageBox = el('div', {});
   const printBox = el('div', {});
@@ -607,7 +607,7 @@ function drawBoard() {
   fillTimeline(u, b, own, locked);
   fillManage(u, b, own);
   // The doctor's page is built when it is asked for, not held permanently in
-  // the DOM — at 500 entries the hidden copy doubled the node count.
+  // the DOM, at 500 entries the hidden copy doubled the node count.
   u.printBox.replaceChildren();
 
   restoreFocus(v, keepFocus);
@@ -645,13 +645,13 @@ function fillHead(u, b, own) {
       }, 'Review the first one')));
   }
 
-  // Print has one home for both roles now — it used to hide inside the owner's
+  // Print has one home for both roles now, it used to hide inside the owner's
   // collapsed disclosure and sit in a trailing card for everyone else.
   const headActions = el('div', { class: 'row noprint actions' });
   if (own) {
     headActions.append(el('button', {
       class: 'btn primary', type: 'button', 'data-fk': 'copylink',
-      onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Invite link copied — send it to one person at a time'),
+      onclick: () => copyText(shareUrl(live.code, baseUrl()), 'Invite link copied, send it to one person at a time'),
     }, 'Copy invite link'));
   }
   headActions.append(el('button', {
@@ -660,9 +660,9 @@ function fillHead(u, b, own) {
   }, 'Print for a doctor visit'));
   head.append(headActions);
   // noprint: the invite code must never ride along on a page handed to a clinic.
-  if (own) head.append(el('p', { class: 'sub rowhint noprint', text: 'Invite code ' + live.code + ' — the QR code, settings and the rest are in “Invite family & settings” below.' }));
+  if (own) head.append(el('p', { class: 'sub rowhint noprint', text: 'Invite code ' + live.code + ', the QR code, settings and the rest are in “Invite family & settings” below.' }));
 
-  head.append(el('p', { class: 'disclaimer', text: 'This is a shared family notebook — not a medical record, and not medical advice. It isn’t covered by HIPAA.' }));
+  head.append(el('p', { class: 'disclaimer', text: 'This is a shared family notebook, not a medical record, and not medical advice. It isn’t covered by HIPAA.' }));
   head.append(trustStamp('noprint'));
 }
 
@@ -684,16 +684,16 @@ function fillBanners(u, own, locked) {
   // told them the opposite. The rules always let the owner write; the UI now
   // agrees with them.
   if (locked) box.append(el('div', { class: 'banner', text: own
-    ? 'The log is locked — family can read but not write. You can still write. Unlock it in Settings.'
-    : 'The log is locked for now — you can read everything.' }));
-  if (!navigator.onLine) box.append(el('div', { class: 'banner', text: 'You’re offline — you can read the log; new notes will sync when you’re back.' }));
+    ? 'The log is locked, family can read but not write. You can still write. Unlock it in Settings.'
+    : 'The log is locked for now, you can read everything.' }));
+  if (!navigator.onLine) box.append(el('div', { class: 'banner', text: 'You’re offline, you can read the log; new notes will sync when you’re back.' }));
 }
 
 /* --- coverage --- */
 /* Days that have gone by fold themselves away instead of being deleted. A log
    that runs for a year puts eleven months of rota above today, and the answer
    to that is NOT an "archive" button that guesses which rows are finished and
-   throws away a day somebody had claimed — coverage labels are free text, and
+   throws away a day somebody had claimed, coverage labels are free text, and
    "Thursday night" or "school run" cannot be dated at all. Only the exact shape
    "Add the next 7 days" writes is recognised; anything typed by a human is
    never hidden, and nothing is ever removed. */
@@ -740,7 +740,7 @@ function fillCoverage(u, own, locked) {
       : el('div', { class: 'empty' },
         el('div', { class: 'glyph', 'aria-hidden': 'true' }, '🗓️'),
         el('h3', {}, 'No coverage days yet'),
-        el('p', {}, 'Ask whoever started this log to add the week — the days will show up here as soon as they do.')));
+        el('p', {}, 'Ask whoever started this log to add the week, the days will show up here as soon as they do.')));
   }
   const past = [], ahead = [];
   for (const s of live.slots) (isPastSlot(s) ? past : ahead).push(s);
@@ -750,8 +750,8 @@ function fillCoverage(u, own, locked) {
       ...(pastOpen ? { open: '' } : {}),
       ontoggle: (ev) => { pastOpen = ev.target.open; },
     }, el('summary', { 'data-fk': 'pastdays' },
-      past.length === 1 ? '1 earlier day — still here, just folded away'
-        : past.length + ' earlier days — still here, just folded away'));
+      past.length === 1 ? '1 earlier day, still here, just folded away'
+        : past.length + ' earlier days, still here, just folded away'));
     for (const s of past) box.append(renderCoverageDay(s, own, locked));
     covCard.append(box);
   }
@@ -760,7 +760,7 @@ function fillCoverage(u, own, locked) {
     covCard.append(el('div', { class: 'empty' },
       el('h3', {}, 'Nothing on the list from today onwards'),
       own ? el('p', {}, 'Every day on the list has gone by. Add the coming week so nobody has to ask again.')
-        : el('p', {}, 'Every day on the list has gone by — whoever started this log can add the coming week.')));
+        : el('p', {}, 'Every day on the list has gone by, whoever started this log can add the coming week.')));
   }
   if (own && live.slots.length) {
     covCard.append(el('div', { class: 'row noprint actions' },
@@ -775,7 +775,7 @@ function renderCoverageDay(s, own, locked) {
   const left = Math.max(0, (s.capacity || 1) - (s.claimedCount || 0));
   const box = el('div', { class: 'slot' });
   // The label and the status wrap together inside their own box, so the edit
-  // pencil keeps one address — the end of the first line — instead of dropping
+  // pencil keeps one address, the end of the first line, instead of dropping
   // onto its own row directly above "I can be there" whenever the status badge
   // is the wider one. A 78-year-old aiming for the volunteer button should
   // never find a destructive owner tool under her thumb.
@@ -783,7 +783,7 @@ function renderCoverageDay(s, own, locked) {
     el('span', { class: 'label', text: s.label }),
     el('span', { class: 'count ' + (left === 0 ? 'covered' : 'needed'), text: left === 0 ? 'Covered' : 'Needs someone' }));
   const top = el('div', { class: 'top' }, meta);
-  // Repeated controls name their own row — a screen reader listing buttons used
+  // Repeated controls name their own row, a screen reader listing buttons used
   // to get N identical "Edit day"s.
   if (own) top.append(el('button', {
     class: 'btn icon noprint slotedit', type: 'button',
@@ -814,7 +814,7 @@ function renderCoverageDay(s, own, locked) {
     box.append(el('div', { class: 'noprint claimrow' },
       el('button', {
         class: 'btn', type: 'button',
-        'aria-label': 'I can be there — ' + s.label, 'data-fk': 'claim-' + s.id,
+        'aria-label': 'I can be there, ' + s.label, 'data-fk': 'claim-' + s.id,
         onclick: () => openClaim(s),
       }, 'I can be there')));
   }
@@ -822,7 +822,7 @@ function renderCoverageDay(s, own, locked) {
 }
 
 const slotLabelFmt = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-/* Pressing this twice is the default mistake — it is the empty state's own call
+/* Pressing this twice is the default mistake, it is the empty state's own call
    to action. It now skips the days already on the list and says what it did,
    instead of quietly producing fourteen rows for seven days. */
 async function addWeek() {
@@ -836,13 +836,13 @@ async function addWeek() {
     else rows.push({ label, capacity: 1 });
     d.setDate(d.getDate() + 1);
   }
-  if (!rows.length) { toast('Those 7 days are already on the list — nothing added.', 4500); return; }
+  if (!rows.length) { toast('Those 7 days are already on the list, nothing added.', 4500); return; }
   try {
     await addSlotsChecked(rows, already);
   } catch (e) { toast(friendly(e), 4500); }
 }
 
-/* Reuses #slotDlg in "add" mode rather than a native prompt() — unlabelled,
+/* Reuses #slotDlg in "add" mode rather than a native prompt(), unlabelled,
    unstyled, and suppressible by the browser. */
 function addCustomDay() { openSlotDlg(null); }
 
@@ -877,8 +877,8 @@ let whenOpen = false;
 
 const PLACEHOLDER = {
   note: 'She was in good spirits today. Ate a full lunch.',
-  appointment: 'Dr. Reyes, cardiology — Tuesday 10am. Needs the med list.',
-  medication: 'Anything worth knowing about this dose — refused it, took it late, seemed drowsy after.',
+  appointment: 'Dr. Reyes, cardiology, Tuesday 10am. Needs the med list.',
+  medication: 'Anything worth knowing about this dose, refused it, took it late, seemed drowsy after.',
   question: 'Ask about the swelling in her ankles at the next visit?',
 };
 const BODY_LABEL = {
@@ -887,7 +887,7 @@ const BODY_LABEL = {
 };
 
 function saveLineText() {
-  if (composeDraft) return 'Draft kept on this device — closing the page won’t lose it.';
+  if (composeDraft) return 'Draft kept on this device, closing the page won’t lose it.';
   if (lastSavedAt) return 'Saved to the log at ' + timeOf(lastSavedAt);
   return '';
 }
@@ -990,7 +990,7 @@ function patchLastGiven() {
   if (!last) { comp.lastGiven.classList.add('hidden'); comp.lastGiven.textContent = ''; return; }
   const inWindow = Date.now() - last.when.getTime() < DOSE_WINDOW_MS;
   comp.lastGiven.textContent = 'Last given ' + timeOf(last.when) + ' ' + dayKey(last.when)
-    + ' by ' + last.who + ' — ' + agoText(last.when) + '.';
+    + ' by ' + last.who + ', ' + agoText(last.when) + '.';
   comp.lastGiven.classList.toggle('soon', inWindow);
   comp.lastGiven.classList.remove('hidden');
 }
@@ -1034,7 +1034,7 @@ function submitEntry() {
   }
 
   let text = extra;
-  if (drug) text = ('Gave ' + drug + (dose ? ' — ' + dose : '')) + (extra ? '\n' + extra : '');
+  if (drug) text = ('Gave ' + drug + (dose ? ', ' + dose : '')) + (extra ? '\n' + extra : '');
   text = text.slice(0, 1900);   // leaves room for the when/edited tokens under the 2000 cap
   const when = whenOpen && comp.whenInput.value ? new Date(comp.whenInput.value) : null;
   const useWhen = when && !isNaN(when) && Math.abs(when.getTime() - Date.now()) > 120000 ? when : null;
@@ -1056,13 +1056,13 @@ async function saveEntry(name, body, type) {
     lastSavedAt = new Date();
     patchComposer();
     toast(status === 'pending'
-      ? 'Saved — it will appear for the family once the log’s owner approves it'
+      ? 'Saved, it will appear for the family once the log’s owner approves it'
       : 'Saved to the log', 4000);
   } catch (e) { toast(capMessage(e) || friendly(e), 6000); }
 }
 
 /* The shared database rules cap a board at 500 entries ever created, and a
-   refusal arrives as a bare permission-denied — which friendly() reads as "the
+   refusal arrives as a bare permission-denied, which friendly() reads as "the
    log may be locked". Telling someone their note did not save for a reason
    that is not the reason is worse than saying nothing. No counter appears
    anywhere until the write actually fails: this app's users are fleeing
@@ -1072,7 +1072,7 @@ const capReached = () => Number((live.board && live.board.entryCount) || 0) >= E
 function capMessage(e) {
   const code = String((e && (e.code || e.message)) || '');
   if (!code.includes('permission-denied') || !capReached()) return null;
-  return 'This log is full — it has held ' + ENTRY_CAP + ' entries, including any that were'
+  return 'This log is full, it has held ' + ENTRY_CAP + ' entries, including any that were'
     + ' removed. Download a copy in “Invite family & settings”, then start a fresh log.';
 }
 
@@ -1081,7 +1081,7 @@ function openDoseDlg(drug, last) {
   doseCtx = { drug };
   $('doseDrug').textContent = drug;
   $('doseWhen').textContent = last.who + ' logged it at ' + timeOf(last.when) + ', ' + dayKey(last.when)
-    + ' — ' + agoText(last.when) + '.';
+    + ', ' + agoText(last.when) + '.';
   showDlg($('doseDlg'));
   $('doseCancel').focus();
 }
@@ -1091,7 +1091,7 @@ function fillTimeline(u, b, own, locked) {
   const card = u.timeline;
   // The whole card is screen-only: its contents are the composer, the type
   // picker and the newest-first list, none of which belong on the printed page.
-  // Owners may write while the log is locked — that is what the rules say and
+  // Owners may write while the log is locked, that is what the rules say and
   // what the banner claims.
   const canWrite = !locked || own;
   if (canWrite) {
@@ -1105,7 +1105,7 @@ function fillTimeline(u, b, own, locked) {
   }
 
   // A year of logging is 500 entries and 55,000 pixels. Once the log is long
-  // enough to be worth searching, it becomes searchable — nothing appears
+  // enough to be worth searching, it becomes searchable, nothing appears
   // before then, because a filter box over nine notes is furniture.
   const all = visibleEntries();
   if (!u.filterRow) u.filterRow = buildFilter();
@@ -1137,7 +1137,7 @@ function fillTimeline(u, b, own, locked) {
     u.entriesBox.append(el('div', { class: 'empty' },
       el('div', { class: 'glyph', 'aria-hidden': 'true' }, '📝'),
       el('h3', {}, 'Nothing written down yet'),
-      el('p', {}, 'Everything the family writes lands here, newest first — so the sibling who lives far away is as caught up as the one in the next room.'),
+      el('p', {}, 'Everything the family writes lands here, newest first, so the sibling who lives far away is as caught up as the one in the next room.'),
       !canWrite ? null : el('button', {
         class: 'btn primary', type: 'button',
         onclick: () => { comp.body.focus(); comp.body.scrollIntoView({ block: 'center' }); },
@@ -1175,7 +1175,7 @@ function buildFilter() {
     el('label', { class: 'f' }, el('span', {}, 'Find in the log'), input), count);
 }
 
-let editing = null;   // { id, text, when } — survives the redraw a snapshot forces
+let editing = null;   // { id, text, when }, survives the redraw a snapshot forces
 function renderEntry(e, own, locked) {
   const mineE = user && e.creatorUid === user.uid;
   const p = parseBody(e);
@@ -1200,7 +1200,7 @@ function renderEntry(e, own, locked) {
   const who = e.authorName + (d ? ' at ' + timeOf(d) : '');
   const actions = el('span', { class: 'entry-actions noprint' });
   // A running "ask at the next appointment" list only works if a question can
-  // be crossed off. Any link-holder may — whoever is in the room.
+  // be crossed off. Any link-holder may, whoever is in the room.
   if (e.type === 'question' && !locked) actions.append(el('button', {
     class: 'btn icon', type: 'button',
     'aria-label': (e.done ? 'Put the question back on the list: ' : 'Mark as asked: ') + who,
@@ -1213,11 +1213,11 @@ function renderEntry(e, own, locked) {
     class: 'btn icon', type: 'button',
     'aria-label': 'Approve the entry by ' + who, 'data-fk': 'approve-' + e.id,
     onclick: () => D.updateEntry(live.boardId, e.id, { status: 'ok' })
-      .then(() => toast('Approved — the family can see it now', 4000))
+      .then(() => toast('Approved, the family can see it now', 4000))
       .catch(err => toast(friendly(err), 4500)),
   }, '✓'));
   // Fixing a typo at 2am must not mean deleting the note and retyping it. The
-  // rules let the person who wrote an entry edit its text, and only them — so
+  // rules let the person who wrote an entry edit its text, and only them, so
   // that is exactly who gets the button.
   if (mineE && !locked) actions.append(el('button', {
     class: 'btn icon', type: 'button',
@@ -1279,7 +1279,7 @@ function renderEntryEditor(e, p) {
 }
 
 /* ---------- the doctor-visit page ----------
-   One button used to print the entire log — 56 Letter pages at 500 entries,
+   One button used to print the entire log, 56 Letter pages at 500 entries,
    with no medication list and the questions scattered through it. The page a
    clinician gets is now a defined artifact: standing details, the open
    questions, the medications given in the range, then the timeline. */
@@ -1310,17 +1310,17 @@ function buildPrintPage() {
   const asc = shown.slice().reverse();
 
   // A <thead> is the one thing browsers genuinely repeat on every printed page
-  // — a position:fixed header renders on every page too, but on top of the
+  //, a position:fixed header renders on every page too, but on top of the
   // body text. Fifty-six loose Letter pages go onto a clipboard with three
   // other patients' paperwork; page 34 has to say whose mother it is.
   const sheet = el('table', { class: 'printsheet' },
     el('thead', {}, el('tr', {}, el('th', { class: 'runhead', scope: 'col',
-      text: b.title + ' — family-kept care log · not a medical record' }))));
+      text: b.title + ', family-kept care log · not a medical record' }))));
   const cell = el('td', {});
   sheet.append(el('tbody', {}, el('tr', {}, cell)));
   box.append(sheet);
   const page = { append: (...n) => cell.append(...n) };
-  page.append(el('h2', {}, 'Care log — ' + b.title));
+  page.append(el('h2', {}, 'Care log, ' + b.title));
   page.append(el('p', { class: 'printmeta', text:
     (from ? 'Covering ' + from.toLocaleDateString(undefined, { dateStyle: 'long' }) + ' to today'
       : 'Covering the whole log')
@@ -1329,18 +1329,18 @@ function buildPrintPage() {
 
   // 1. The standing reference block every paper caregiver binder has. It is
   //    the first thing the medical assistant reaches for, so when it is empty
-  //    the page says so rather than quietly leaving the section out — a
+  //    the page says so rather than quietly leaving the section out, a
   //    missing heading reads as "this page has no medication list", which is
   //    a different and worse claim than "nobody has filled it in yet".
   page.append(el('h3', { class: 'printsec' }, 'Standing details'));
   page.append(b.description
     ? el('p', { class: 'refblock', text: b.description })
     : el('p', { class: 'refblock', text: 'Not filled in. Current medicines and doses, allergies, '
-      + 'doctors and phone numbers go here — the family can add them in the app under '
+      + 'doctors and phone numbers go here, the family can add them in the app under '
       + '“Invite family & settings”.' }));
 
   // 2. The running "ask at the next appointment" list, at the top where the
-  //    guides tell families to put it — open questions from the whole log, not
+  //    guides tell families to put it, open questions from the whole log, not
   //    just the printed range.
   const questions = all.filter(e => e.type === 'question' && e.status === 'ok' && !e.done);
   if (questions.length) {
@@ -1349,12 +1349,12 @@ function buildPrintPage() {
     for (const q of questions.slice().reverse()) {
       const d = effDate(q);
       ul.append(el('li', {}, el('span', { text: parseBody(q).text }),
-        el('span', { class: 'qsrc', text: ' — ' + q.authorName + ', ' + dayKey(d) })));
+        el('span', { class: 'qsrc', text: ', ' + q.authorName + ', ' + dayKey(d) })));
     }
     page.append(ul);
   }
 
-  // 3. Medications given in the range, grouped by drug — the thing the medical
+  // 3. Medications given in the range, grouped by drug, the thing the medical
   //    assistant has ninety seconds to copy onto the encounter note.
   const meds = shown.filter(e => e.type === 'medication');
   if (meds.length) {
@@ -1380,13 +1380,13 @@ function buildPrintPage() {
         return mm && mm[2] ? mm[2].trim() : '';
       }).filter(Boolean))];
       ul.append(el('li', {},
-        el('b', { text: g.name + (doses.length ? ' — ' + doses.join(' / ') : '') }),
+        el('b', { text: g.name + (doses.length ? ', ' + doses.join(' / ') : '') }),
         el('div', { class: 'qsrc', text: g.rows.length + (g.rows.length === 1 ? ' dose logged: ' : ' doses logged: ') + times.join('; ') })));
     }
     for (const m of loose) {
       const d = effDate(m);
       ul.append(el('li', {}, el('span', { text: parseBody(m).text }),
-        el('span', { class: 'qsrc', text: ' — ' + m.authorName + ', ' + dayKey(d) + ' ' + timeOf(d) })));
+        el('span', { class: 'qsrc', text: ', ' + m.authorName + ', ' + dayKey(d) + ' ' + timeOf(d) })));
     }
     page.append(ul);
   }
@@ -1413,7 +1413,7 @@ function buildPrintPage() {
 let manageSig = null;
 function fillManage(u, b, own) {
   if (!own) { u.manageBox.replaceChildren(); manageSig = null; return; }
-  // Rebuilt only when something in it actually changed — otherwise a sibling's
+  // Rebuilt only when something in it actually changed, otherwise a sibling's
   // note wiped whatever the owner was halfway through typing in here.
   const sig = JSON.stringify([b.title, b.description || '', b.settings || {}, live.code]);
   if (sig === manageSig && u.manageBox.firstChild) return;
@@ -1436,9 +1436,9 @@ function renderManage(b) {
   inner.append(el('h3', {}, 'Invite family'),
     el('div', { class: 'sharecode', text: live.code }),
     el('div', { class: 'row' },
-      el('button', { class: 'btn primary', type: 'button', 'data-fk': 'copylink2', onclick: () => copyText(url, 'Invite link copied — send it to one person at a time') }, 'Copy invite link'),
+      el('button', { class: 'btn primary', type: 'button', 'data-fk': 'copylink2', onclick: () => copyText(url, 'Invite link copied, send it to one person at a time') }, 'Copy invite link'),
       el('button', { class: 'btn', type: 'button', 'data-fk': 'qr', onclick: showQR }, 'QR code')),
-    el('p', { class: 'sub rowhint', text: 'Share deliberately — everyone with the link can read and write. If a link gets loose, rotate it below and the old one dies instantly.' }));
+    el('p', { class: 'sub rowhint', text: 'Share deliberately, everyone with the link can read and write. If a link gets loose, rotate it below and the old one dies instantly.' }));
 
   inner.append(el('h3', {}, 'Settings'));
   const s = b.settings || {};
@@ -1453,14 +1453,14 @@ function renderManage(b) {
       el('label', {},
         el('input', { type: 'checkbox', 'data-fk': 'locked', ...(s.locked ? { checked: '' } : {}),
           onchange: (ev) => D.setLocked(live.boardId, s, ev.target.checked)
-            .then(() => toast(ev.target.checked ? 'Locked — the family can read but not write' : 'Unlocked', 4000))
+            .then(() => toast(ev.target.checked ? 'Locked, the family can read but not write' : 'Unlocked', 4000))
             .catch(e => toast(friendly(e), 4500)) }),
         el('span', {}, 'Lock the log for the family (you can still write)'))),
     el('div', { class: 'row' },
       el('button', { class: 'btn', type: 'button', 'data-fk': 'rotate', onclick: async () => {
         if (!confirm('Rotate the invite link? Anyone using the old one loses access instantly.')) return;
         try { const code = await D.rotateCode(live.boardId, live.code);
-          live.code = code; location.hash = '#/b/' + code; toast('New invite link ready — the old one no longer works', 5000); }
+          live.code = code; location.hash = '#/b/' + code; toast('New invite link ready, the old one no longer works', 5000); }
         catch (e) { toast(friendly(e), 4500); }
       } }, 'Rotate invite')));
 
@@ -1473,7 +1473,7 @@ function renderManage(b) {
   de.value = b.description || '';
   inner.append(
     el('label', { class: 'f' }, el('span', {}, 'Who the log is for'), ti),
-    el('label', { class: 'f' }, el('span', {}, 'Standing details — these print at the top of the doctor’s page'), de),
+    el('label', { class: 'f' }, el('span', {}, 'Standing details, these print at the top of the doctor’s page'), de),
     el('button', { class: 'btn', type: 'button', 'data-fk': 'savedetails', onclick: () => {
       const title = ti.value.trim();
       if (!title) { toast('A first name is plenty'); return; }
@@ -1483,17 +1483,17 @@ function renderManage(b) {
 
   inner.append(el('h3', {}, 'Keep your own copy'));
   inner.append(
-    el('p', { class: 'sub', text: 'A year of a family’s log should never be one tap away from gone. This downloads everything written here as a file on your device — and puts it back if you ever need it.' }),
+    el('p', { class: 'sub', text: 'A year of a family’s log should never be one tap away from gone. This downloads everything written here as a file on your device, and puts it back if you ever need it.' }),
     el('div', { class: 'row' },
       el('button', { class: 'btn', type: 'button', 'data-fk': 'export', onclick: exportLog }, 'Download a copy'),
       el('button', { class: 'btn', type: 'button', 'data-fk': 'import', onclick: openImport }, 'Put a copy back')));
 
-  // The ask lives here — on the owner's own device, in a panel only they can
-  // open — and never on the page a grieving family opened from a text message.
+  // The ask lives here, on the owner's own device, in a panel only they can
+  // open, and never on the page a grieving family opened from a text message.
   if (CONFIG.tipUrl) {
     inner.append(el('h3', {}, 'Support the app'));
     inner.append(
-      el('p', { class: 'sub', text: 'Caregiver Log is free, ad-free and has no subscription. A tip goes to the developer who builds it — never to a family, and never asked for on a log you shared.' }),
+      el('p', { class: 'sub', text: 'Caregiver Log is free, ad-free and has no subscription. A tip goes to the developer who builds it, never to a family, and never asked for on a log you shared.' }),
       el('a', { class: 'btn', href: CONFIG.tipUrl, target: '_blank', rel: 'noopener', 'data-fk': 'tipmanage' }, '♥ Tip jar'));
   }
 
@@ -1541,7 +1541,7 @@ function exportLog() {
     document.body.append(a);
     a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    toast('Downloaded — keep it somewhere you will find it', 4500);
+    toast('Downloaded, keep it somewhere you will find it', 4500);
   } catch (e) { toast('Could not build the file on this device', 4500); }
 }
 
@@ -1549,7 +1549,7 @@ function exportLog() {
    "Download a copy" on its own is half a backup: a file you cannot put back is
    a souvenir. This was held over once because the database rules stamp every
    entry with the server's own clock, so a restore could not keep the original
-   times — and a year of log silently re-dated to the moment of restore is
+   times, and a year of log silently re-dated to the moment of restore is
    precisely the harm this app exists to prevent.
 
    The [when] token removes that objection. The time a thing HAPPENED already
@@ -1558,7 +1558,7 @@ function exportLog() {
    server's clock. So a restored log reads at its real times, and the one thing
    the page says about today is the truth: it was put back today.
 
-   What cannot come back is who had claimed which coverage day — a claim
+   What cannot come back is who had claimed which coverage day, a claim
    document is keyed to the claimer's own account and only they can write it.
    The dialog says so rather than dropping it quietly. */
 const NORM = (s) => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -1573,7 +1573,7 @@ function parseISO(v) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-/* Everything here mirrors a rule the database will apply anyway — length caps,
+/* Everything here mirrors a rule the database will apply anyway, length caps,
    the type list, the capacity range. Better to drop one malformed row on this
    side than to have the whole restore stop halfway with a permission error. */
 function planImport(data) {
@@ -1595,7 +1595,7 @@ function planImport(data) {
   }
 
   /* Two keys, because a row may arrive without a usable time. A dated row has
-     to match the same note at the same minute — two doses of the same drug on
+     to match the same note at the same minute, two doses of the same drug on
      different evenings are two doses. A row with no time at all can only be
      matched on its words, and must be, or every restore would add another copy
      of it. Both directions matter: putting the same file back twice must not
@@ -1668,7 +1668,7 @@ async function readImportFile(file) {
   if (plan.dropped) tail.push(plan.dropped + ' unreadable and skipped');
 
   if (!bits.length) {
-    toast(tail.length ? 'Nothing new in that copy — it is all already in the log.' : 'That copy has nothing in it.', 5000);
+    toast(tail.length ? 'Nothing new in that copy, it is all already in the log.' : 'That copy has nothing in it.', 5000);
     return;
   }
   importPlan = plan;
@@ -1679,7 +1679,7 @@ async function readImportFile(file) {
   const warn = $('importWarn');
   const notes = [];
   if (plan.people) {
-    notes.push('Who had claimed which day cannot come back — each person puts their own'
+    notes.push('Who had claimed which day cannot come back, each person puts their own'
       + ' name down, so the days arrive empty for the family to claim again.');
   }
   const overBy = plan.entries.length - plan.room;
@@ -1688,7 +1688,7 @@ async function readImportFile(file) {
     notes.length = 0;
     notes.push('This log has room for ' + plan.room + ' more '
       + (plan.room === 1 ? 'entry' : 'entries') + ' and the copy holds ' + plan.entries.length
-      + '. Start a fresh log and put the copy into that one instead — half a log is worse than none.');
+      + '. Start a fresh log and put the copy into that one instead, half a log is worse than none.');
   }
   warn.textContent = notes.join(' ');
   warn.classList.toggle('hidden', !notes.length);
@@ -1720,7 +1720,7 @@ async function runImport() {
       if (done === 1 || done % 10 === 0) say('Put back ' + done + ' of ' + total + ' notes…');
     }
     closeDlg($('importDlg'));
-    toast('Back in the log — ' + done + (done === 1 ? ' note' : ' notes')
+    toast('Back in the log, ' + done + (done === 1 ? ' note' : ' notes')
       + (plan.slots.length ? ' and ' + plan.slots.length + ' coverage '
         + (plan.slots.length === 1 ? 'day' : 'days') : '')
       + ', at the times they happened.', 6000);
@@ -1771,7 +1771,7 @@ function showQR() {
     for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)
       if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
     ok = true;
-  } catch (e) { /* canvas or the encoder is unavailable — say so */ }
+  } catch (e) { /* canvas or the encoder is unavailable, say so */ }
   $('qrError').classList.toggle('hidden', ok);
   $('qrBox').classList.toggle('hidden', !ok);
   showDlg($('qrDlg'));
@@ -1792,8 +1792,8 @@ function wire() {
     } catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized-domain')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Google sign-in didn’t complete (' + (code || 'unknown') + ') — try again or use the email link.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Google sign-in didn’t complete (' + (code || 'unknown') + '), try again or use the email link.', 7000);
     }
   });
   $('emailBtn').addEventListener('click', async () => {
@@ -1808,8 +1808,8 @@ function wire() {
     catch (e) {
       const code = (e && e.code) || '';
       toast(code.includes('unauthorized')
-        ? 'This site’s domain isn’t authorized in Firebase yet — add it under Authentication → Settings → Authorized domains.'
-        : 'Couldn’t send the link (' + (code || 'unknown') + ') — check the address and try again.', 7000);
+        ? 'This site’s domain isn’t authorized in Firebase yet, add it under Authentication → Settings → Authorized domains.'
+        : 'Couldn’t send the link (' + (code || 'unknown') + '), check the address and try again.', 7000);
     }
   });
   $('authCancel').addEventListener('click', () => closeDlg($('authDlg')));
@@ -1822,7 +1822,7 @@ function wire() {
     try {
       const r = await D.claimSlot(live.boardId, claimTarget.id, name, $('noteInput').value);
       toast(r === 'note-dropped'
-        ? 'You’re on for ' + claimTarget.label + '. (Your note couldn’t attach — setup needs a refresh.)'
+        ? 'You’re on for ' + claimTarget.label + '. (Your note couldn’t attach, setup needs a refresh.)'
         : 'You’re on for ' + claimTarget.label, r === 'note-dropped' ? 6000 : 2400);
     } catch (e) { toast(friendly(e), 4500); }
   });
@@ -1833,7 +1833,7 @@ function wire() {
     const label = $('slotLabel').value.trim();
     const cap = Math.min(Math.max(parseInt($('slotCap').value, 10) || 1, 1), 999);
     if (!label) { toast('The day needs a label'); return; }
-    if (!slotEditing) {   // add mode — same dialog, no native prompt()
+    if (!slotEditing) {   // add mode, same dialog, no native prompt()
       closeDlg($('slotDlg'));
       try { await addSlotsChecked([{ label: label.slice(0, 120), capacity: cap }], 0); }
       catch (e) { toast(friendly(e), 4500); }
@@ -1855,7 +1855,7 @@ function wire() {
   $('slotCancel').addEventListener('click', () => closeDlg($('slotDlg')));
   $('slotLabel').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('slotSave').click(); });
   $('qrClose').addEventListener('click', () => closeDlg($('qrDlg')));
-  $('qrCopy').addEventListener('click', () => copyText($('qrUrl').value, 'Invite link copied — send it to one person at a time'));
+  $('qrCopy').addEventListener('click', () => copyText($('qrUrl').value, 'Invite link copied, send it to one person at a time'));
 
   $('doseCancel').addEventListener('click', () => { closeDlg($('doseDlg')); if (comp) comp.drug.focus(); });
   $('doseGo').addEventListener('click', () => {
@@ -1897,7 +1897,7 @@ function wire() {
     try {
       const { code } = await D.createBoard({ title, description: $('createDesc').value.trim() });
       location.hash = '#/b/' + code;
-      toast('The log is ready — invite family when you are');
+      toast('The log is ready, invite family when you are');
     } catch (e) { toast(friendly(e), 5000); }
   });
   $('createCancel').addEventListener('click', () => closeDlg($('createDlg')));
@@ -1923,7 +1923,7 @@ async function init() {
   wire();
   try {
     await D.completeEmailLink(async () => prompt('Confirm your email to finish signing in:'));
-  } catch (e) { toast('That sign-in link didn’t work — request a fresh one.', 6000); }
+  } catch (e) { toast('That sign-in link didn’t work, request a fresh one.', 6000); }
   try { await D.completeRedirect(); }
   catch (e) { toast('Google sign-in didn’t complete (' + ((e && e.code) || '?') + ')', 6000); }
   if (CONFIG.tipUrl) $('tipLink').href = CONFIG.tipUrl;

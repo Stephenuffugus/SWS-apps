@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — shared UI runtime
+   SWS STUDIO, shared UI runtime
    Sky Wolf Studio · SWS Strategic Media LLC
 
    Copied to apps/<slug>/sws-ui.js by design/apply.mjs. Do not edit the copies;
@@ -7,9 +7,9 @@
 
    Two things, both answers to findings that repeated across every audit:
 
-     SWS.toast(msg, opts)   — status messages, optionally carrying an Undo
-     SWS.undo(msg, fn)      — the shorthand, because undo is the common case
-     SWS.saved(opts)        — "your work is safe", said out loud for once
+     SWS.toast(msg, opts), status messages, optionally carrying an Undo
+     SWS.undo(msg, fn), the shorthand, because undo is the common case
+     SWS.saved(opts), "your work is safe", said out loud for once
 
    WHY UNDO AND NOT A CONFIRM DIALOG
    The audits found one-tap delete with no way back in app after app. The
@@ -20,7 +20,7 @@
 
    WHY A SHARED FILE
    22 of the 23 apps already declare their own local `toast(msg, ms)`. Those
-   are module-scoped and keep working untouched — this adds a global namespace
+   are module-scoped and keep working untouched, this adds a global namespace
    beside them rather than replacing anything. Apps migrate at their own pace.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -31,7 +31,7 @@
 
   var node = null;
   var timer = null;
-  var held = false;      // pointer or focus is inside — do not auto-dismiss
+  var held = false;      // pointer or focus is inside, do not auto-dismiss
   var pending = null;    // the timeout we deferred while held
 
   /* Every app ships <div id="toast" role="status" aria-live="polite">, but not
@@ -50,7 +50,7 @@
     if (!node.getAttribute('aria-live')) node.setAttribute('aria-live', 'polite');
 
     /* A toast that vanishes on a timer is close to unusable for anyone reading
-       slowly, using a screen reader, or driving the page from a keyboard — and
+       slowly, using a screen reader, or driving the page from a keyboard, and
        an Undo button that vanishes is worse than none, because it promises a
        way back and then takes it away. So the clock stops whenever the pointer
        or the focus is inside, and restarts when it leaves. */
@@ -90,7 +90,7 @@
    * SWS.toast('Item deleted', { action: { label: 'Undo', onAction: restore } })
    *
    * opts.ms       how long to stay. Defaults to 4s, or 7s when there is an
-   *               action — you have to notice it, read it, and reach it.
+   *               action, you have to notice it, read it, and reach it.
    * opts.assertive  for genuine errors only; interrupts a screen reader.
    */
   SWS.toast = function (msg, opts) {
@@ -129,7 +129,7 @@
   /* The pending undo, so a keyboard can reach it without tabbing to the toast.
    *
    * #toast is the last element in <body>, which measured 18 focus stops away
-   * on Packing List — by the time you tab there the toast has long gone. Undo
+   * on Packing List, by the time you tab there the toast has long gone. Undo
    * is the one action people already have a key for, so it gets that key. */
   var pendingUndo = null;
 
@@ -138,7 +138,7 @@
     if (e.key !== 'z' && e.key !== 'Z') return;
     if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
 
-    // Never steal Ctrl+Z from someone typing — inside a field it means
+    // Never steal Ctrl+Z from someone typing, inside a field it means
     // "undo my last keystroke", which the browser handles better than we can.
     var el = document.activeElement;
     if (el && (el.isContentEditable ||
@@ -173,8 +173,7 @@
 
   /* ── Reading the comfort panel from JavaScript ──────────────────────────
    *
-   * CSS gets the comfort settings through the cascade. A <canvas> does not —
-   * it is a bitmap, and it hears nothing about a root font-size change or a
+   * CSS gets the comfort settings through the cascade. A <canvas> does not, * it is a bitmap, and it hears nothing about a root font-size change or a
    * theme switch. Neither does a requestAnimationFrame loop.
    *
    * The portfolio review found this in 12 of 14 apps: text set to Largest
@@ -203,8 +202,7 @@
   };
 
   /**
-   * Call `fn` whenever anything the user can change about the display changes —
-   * a panel setting, or the OS flipping to dark while the app is open.
+   * Call `fn` whenever anything the user can change about the display changes, * a panel setting, or the OS flipping to dark while the app is open.
    *
    * Pass your repaint function. Returns an unsubscribe.
    */
@@ -247,7 +245,7 @@
    *
    * Prefers a quiet in-place flag (an element with [data-saved-flag], or the
    * conventional #saved) over a toast, because a save confirmation should be
-   * ambient — one that interrupts on every keystroke is its own problem.
+   * ambient, one that interrupts on every keystroke is its own problem.
    */
   SWS.saved = function (opts) {
     opts = opts || {};
@@ -262,7 +260,7 @@
 
       /* The flag is decoration for a sighted user who is watching the spot it
          appears in. A screen-reader user is not, so the same fact goes to the
-         live region — but politely, and only when asked, so that a save on
+         live region, but politely, and only when asked, so that a save on
          every keystroke does not become a stream of chatter. */
       if (opts.announce) SWS.toast(text, { ms: 1200 });
       return flag;

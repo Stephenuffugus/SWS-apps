@@ -1,4 +1,4 @@
-// jsdom smoke — fields persist, sheet renders only filled blocks.
+// jsdom smoke, fields persist, sheet renders only filled blocks.
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 
@@ -33,7 +33,7 @@ ta.value = 'Maya (6)';
 ta.dispatchEvent(new window.Event('input', { bubbles: true }));
 check('value persisted to localStorage', (window.localStorage.getItem('sitter-baby') || '').includes('Maya (6)'));
 
-// switch to pet mode and back — data survives
+// switch to pet mode and back, data survives
 $('modePet').click();
 check('pet form renders', $('form').textContent.includes('Walks & litter'));
 $('modeBaby').click();

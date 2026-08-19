@@ -1,7 +1,7 @@
 # Caregiver Log
 
 Engine 1 (shared-link coordination), skin C. A calm, private, shared family
-notebook for caring for someone — the timeline every sibling can see, the
+notebook for caring for someone, the timeline every sibling can see, the
 coverage schedule nobody has to renegotiate in a group text. A free tool by
 Sky Wolf Studio.
 
@@ -9,7 +9,7 @@ Sky Wolf Studio.
 party. Design rules from the product doc, enforced here:
 
 - No PII beyond a first name the family chooses.
-- Invite-deliberately sharing — the UI frames the link as an invitation given
+- Invite-deliberately sharing, the UI frames the link as an invitation given
   one person at a time, with one-tap rotation if a link gets loose.
 - A plain-language disclaimer on every log and every printout: this is a
   shared family notebook, not a medical record, not HIPAA-covered.
@@ -33,5 +33,5 @@ drives this app's data layer against the emulator.
 
 ## Config
 
-- `firebase-config.js` — same project as the other Engine 1 apps.
-- `CONFIG.tipUrl` in `app.js` — Stripe tip link (hidden until set).
+- `firebase-config.js`, same project as the other Engine 1 apps.
+- `CONFIG.tipUrl` in `app.js`, Stripe tip link (hidden until set).

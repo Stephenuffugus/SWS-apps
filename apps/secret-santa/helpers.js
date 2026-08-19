@@ -1,4 +1,4 @@
-// Secret Santa — pure draw logic. Tested in test/helpers.test.mjs.
+// Secret Santa, pure draw logic. Tested in test/helpers.test.mjs.
 
 export const NAME_MAX = 40;   // one line of a roster
 export const ROSTER_MAX = 200; // 60 used to be the cap; 200 draws in a few ms
@@ -36,7 +36,7 @@ export function parseNames(text) {
 }
 
 /* exclusions: array of [i, j] index pairs that may not draw each other
-   (either direction — typically couples). Returns assignment array where
+   (either direction, typically couples). Returns assignment array where
    result[i] = index that person i gives to, or null if impossible. */
 export function drawNames(names, exclusions, rng) {
   const n = names.length;
@@ -74,7 +74,7 @@ export function redrawKeeping(n, exclusions, keep, rng) {
   return matchAssignment(n, allowed(n, exclusions), rng || Math.random, keep);
 }
 
-/** true when a valid draw exists at all — exact, not a guess. */
+/** true when a valid draw exists at all, exact, not a guess. */
 export function drawPossible(n, exclusions) {
   if (n < 2) return false;
   return matchAssignment(n, allowed(n, exclusions), null) !== null;
@@ -172,7 +172,7 @@ export function decodeReveal(hash) {
     const obj = JSON.parse(decodeURIComponent(escape(atob(s))));
     if (!obj || typeof obj.s !== 'string' || typeof obj.g !== 'string') return null;
     /* A payload that decodes to two empty strings is a truncated link, not a
-       reveal — without this it produces a ceremony with nobody in it. */
+       reveal, without this it produces a ceremony with nobody in it. */
     const santa = obj.s.trim().slice(0, NAME_MAX);
     const gets = obj.g.trim().slice(0, NAME_MAX);
     if (!santa || !gets) return null;

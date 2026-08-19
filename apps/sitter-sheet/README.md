@@ -2,12 +2,12 @@
 
 One printable page with everything the babysitter or pet sitter needs:
 contacts, routines, meals, meds, allergies, house quirks. Data lives in
-localStorage on your device only — family details are nobody's business. A free
+localStorage on your device only, family details are nobody's business. A free
 tool by Sky Wolf Studio.
 
 **Two documents, one form.** The parent gets an edit form with a live print
-preview that is literally the printed page. The sitter — anyone opening the
-shared link or scanning the QR — gets a separate read-only page led by a
+preview that is literally the printed page. The sitter, anyone opening the
+shared link or scanning the QR, gets a separate read-only page led by a
 3-second panel: street address and cross street, allergies and medications,
 and 911 / Poison Control as tap-to-call targets. Every phone number in the
 sitter's view is a `tel:` link.
@@ -25,5 +25,5 @@ Two modes (babysitter / pet sitter) with separate saved sheets. `CONFIG.tipUrl`
 in `app.js` for the tip jar.
 
 Tests: `node test/smoke.test.mjs` and `node test/sitter-view.test.mjs` (jsdom).
-The print layer is only verifiable by generating a real PDF — see
+The print layer is only verifiable by generating a real PDF, see
 `design/stress.mjs` and drive `page.pdf()` through `design/harness.mjs`.

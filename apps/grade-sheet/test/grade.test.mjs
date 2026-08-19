@@ -2,7 +2,7 @@
 //
 // The 79 assertions from the spec, in spec order. Several of them are written
 // as "assert the engine does NOT return X", where X is the answer a naive
-// implementation gives — those are the ones actually protecting real children's
+// implementation gives, those are the ones actually protecting real children's
 // grades, so they are stated explicitly rather than implied by the positive case.
 import assert from 'node:assert/strict';
 import {
@@ -19,7 +19,7 @@ function ok(name, fn) {
 const near = (a, b, eps = 1e-6, m = '') =>
   assert.ok(Math.abs(a - b) < eps, `${m} expected ~${b}, got ${a}`);
 
-/* Builders — keep the cases readable so a wrong expectation is visible. */
+/* Builders, keep the cases readable so a wrong expectation is visible. */
 let seq = 0;
 const A = (pp, o = {}) => ({ id: 'a' + (++seq), name: o.name || 'a' + seq, pointsPossible: pp, ...o });
 const g = (pp, pts, o = {}) => A(pp, { state: 'graded', points: pts, ...o });
@@ -29,7 +29,7 @@ const un = (pp, o = {}) => A(pp, { state: 'ungraded', ...o });
 const TP = (o = {}) => ({ model: 'total-points', dp: 1, scale: SCALES.tenPoint, ...o });
 const WT = (cats, o = {}) => ({ model: 'weighted-categories', dp: 1, scale: SCALES.tenPoint, categories: cats, ...o });
 
-/* ── rounding and letters (1–10) ─────────────────────────────────────────── */
+/* ── rounding and letters (1 to 10) ─────────────────────────────────────────── */
 ok('1-2  half-up survives the unrepresentable midpoints', () => {
   assert.equal(roundHalfUp(1.005, 2), 1.01, 'Math.round(1.005*100)/100 gives 1');
   assert.equal(roundHalfUp(8.575, 2), 8.58, 'Math.round(8.575*100)/100 gives 8.57');
@@ -70,7 +70,7 @@ ok('10  the letter is a pure function of the DISPLAYED value at dp 0,1,2', () =>
   assert.equal(contradictions, 0, `${contradictions} of ${checked} contradicted`);
 });
 
-/* ── scale validation (11–16) ────────────────────────────────────────────── */
+/* ── scale validation (11 to 16) ────────────────────────────────────────────── */
 ok('11-12  a cutoff may not be finer than the class shows', () => {
   assert.ok(validateScale([{ label: 'A', min: 89.5 }, { label: 'F', min: 0 }], 0).length > 0);
   assert.equal(validateScale([{ label: 'A', min: 89.5 }, { label: 'F', min: 0 }], 1).length, 0);
@@ -87,7 +87,7 @@ ok('16  every built-in scale validates at dp 1', () => {
   }
 });
 
-/* ── states (17–29) ──────────────────────────────────────────────────────── */
+/* ── states (17 to 29) ──────────────────────────────────────────────────────── */
 ok('17-18  the four states together, and the same roster projected', () => {
   const rows = [g(20, 18), miss(10), exc(25), un(15), g(5, 5)];
   const c = TP();
@@ -111,7 +111,7 @@ ok('22-23  a graded 0 and a missing are the same number, different facts', () =>
   assert.equal(z.earned, m.earned);
   assert.equal(z.possible, m.possible);
   assert.equal(z.pct, m.pct);
-  // distinguishable at the record level — the cell renderer keys off `state`
+  // distinguishable at the record level, the cell renderer keys off `state`
   assert.notEqual(g(10, 0).state, miss(10).state);
 });
 ok('24-25  absent behaves as ungraded; absent and late change no number', () => {
@@ -122,7 +122,7 @@ ok('24-25  absent behaves as ungraded; absent and late change no number', () => 
   const d = categoryAggregate([g(10, 8), g(10, 6)]);
   assert.equal(c.pct, d.pct);
 });
-ok('26-27  nothing graded, and everything excused, are null — never 0', () => {
+ok('26-27  nothing graded, and everything excused, are null, never 0', () => {
   assert.equal(finish(TP(), classGrade(TP(), [un(10), un(20)]).raw).display, null);
   const all = classGrade(TP(), [exc(10), exc(20)]);
   assert.equal(all.raw, null, 'all-excused must not read as 0%');
@@ -132,13 +132,13 @@ ok('28-29  over 100 on one item is fine; negative is rejected', () => {
   assert.ok(toCp(-1) < 0, 'engine sees the sign; the entry layer blocks it');
 });
 
-/* ── weighted (30–45) ────────────────────────────────────────────────────── */
+/* ── weighted (30 to 45) ────────────────────────────────────────────────────── */
 const W3 = () => WT([
   { id: 'c1', name: 'Tests', weight: 40 },
   { id: 'c2', name: 'Classwork', weight: 40 },
   { id: 'c3', name: 'Participation', weight: 20 },
 ]);
-ok('30-34  an empty category is not a zero — the week-two bug', () => {
+ok('30-34  an empty category is not a zero, the week-two bug', () => {
   const rows = [g(20, 16, { categoryId: 'c2' }), g(5, 5, { categoryId: 'c3' })];
   const r = classGrade(W3(), rows);
   assert.equal(r.W, 60);
@@ -210,7 +210,7 @@ ok('44-45  the forecast activates ungraded work but not empty categories', () =>
   assert.deepEqual(empty.projected.inactive, ['Tests'], 'no assignments at all stays inactive');
 });
 
-/* ── drop-lowest (46–62) ─────────────────────────────────────────────────── */
+/* ── drop-lowest (46 to 62) ─────────────────────────────────────────────────── */
 ok('46-48  Beth: drop the one that helps her, not the smallest', () => {
   const beth = [g(100, 80, { name: 'q1' }), g(100, 20, { name: 'q2' }), g(20, 1, { name: 'q3' })];
   const d = categoryAggregate(beth, { dropLowest: 1 });
@@ -320,7 +320,7 @@ ok('62  extra credit is never dropped', () => {
   near(r.pct, 120);
 });
 
-/* ── extra credit (63–69) ────────────────────────────────────────────────── */
+/* ── extra credit (63 to 69) ────────────────────────────────────────────────── */
 ok('63-64  extra credit can exceed 100, and the cap is a display choice', () => {
   const rows = [g(50, 50), g(50, 48), g(0, 5, { extraCredit: true })];
   const cls = TP();
@@ -350,7 +350,7 @@ ok('67-69  zero-possible is implicit credit; credit alone is not a grade', () =>
   assert.deepEqual(r.inactive, ['EC']);
 });
 
-/* ── precision (70–73) ───────────────────────────────────────────────────── */
+/* ── precision (70 to 73) ───────────────────────────────────────────────────── */
 ok('70-71  centipoints add exactly where floats do not', () => {
   near(categoryAggregate([g(2.5, 2.25), g(2.5, 1.75), g(5, 4.5)]).pct, 85, 1e-9);
   const thirty = Array.from({ length: 30 }, () => g(3, 1));
@@ -368,14 +368,13 @@ ok('73  round once, at the end', () => {
   assert.notEqual(roundHalfUp(89.4449, 1), doubled);
 });
 
-/* ── app layer (74–79) ───────────────────────────────────────────────────── */
-ok('74  the engine is pure — it cannot persist a derived value', () => {
+/* ── app layer (74 to 79) ───────────────────────────────────────────────────── */
+ok('74  the engine is pure, it cannot persist a derived value', () => {
   /* The spec's rule is that no computed percentage, letter, subtotal or drop
      decision is ever stored, because a stored number goes stale the moment a
      teacher edits a cutoff. The export side of that is asserted in
      store.test.mjs; what is provable HERE is the stronger structural fact:
-     this file has no way to write anything. No storage, no DOM, no clock —
-     so a derived value physically cannot leak out of it. */
+     this file has no way to write anything. No storage, no DOM, no clock, so a derived value physically cannot leak out of it. */
   const src = readSrc();
   for (const api of ['localStorage', 'sessionStorage', 'indexedDB', 'document', 'window', 'fetch(']) {
     assert.ok(!src.includes(api), `grade.js must not reference ${api}`);

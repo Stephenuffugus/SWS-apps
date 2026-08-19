@@ -1,4 +1,4 @@
-// Packing List — many trips, presets + custom items, localStorage, shareable URL.
+// Packing List, many trips, presets + custom items, localStorage, shareable URL.
 import {
   PRESETS, PRESET_LABELS, MAX_LABEL, MAX_NAME, MAX_SHARED,
   mergePreset, addCustom, mergeItems, sanitizeItems, stats, groupItems,
@@ -41,11 +41,11 @@ function sayOnce(key, msg, opts) {
 
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg || 'Copied'); }
-  catch (e) { toast('Could not copy — your browser blocked the clipboard. Use Show QR instead.', { assertive: true }); }
+  catch (e) { toast('Could not copy, your browser blocked the clipboard. Use Show QR instead.', { assertive: true }); }
 }
 
 /* ══ State ═══════════════════════════════════════════════════════════════ */
-/* v1 kept one {name, items} under 'packing-list' — a second trip in the same
+/* v1 kept one {name, items} under 'packing-list', a second trip in the same
    month overwrote the first as the user typed the new name. Trips are now a
    list. The old key is still written as a mirror of the active trip, so a
    browser still serving the previous app.js out of its service-worker cache
@@ -123,12 +123,12 @@ function save() {
     if (!saveBroken) {
       saveBroken = true;
       toast('This browser refused to save (out of room, or private browsing). '
-        + 'What is on screen is safe until you close the tab — use Copy link to keep it.',
+        + 'What is on screen is safe until you close the tab, use Copy link to keep it.',
       { ms: 12000, assertive: true });
     }
     return;
   }
-  if (saveBroken) { saveBroken = false; toast('Saving works again — the list is stored on this device.'); }
+  if (saveBroken) { saveBroken = false; toast('Saving works again, the list is stored on this device.'); }
   try {
     const c = cur();
     localStorage.setItem(KEY_V1, JSON.stringify({ name: c.name, items: c.items.map((i) => ({ label: i.label, done: i.done })) }));
@@ -172,8 +172,8 @@ function renderPresets() {
       type: 'button',
       'data-fk': 'preset:' + key,
       'aria-label': PRESET_LABELS[key] + (on
-        ? ' — all ' + st.size + ' already on your list'
-        : ' — add ' + st.missing + ' of ' + st.size + ' items'),
+        ? ', all ' + st.size + ' already on your list'
+        : ', add ' + st.missing + ' of ' + st.size + ' items'),
       onclick: () => addPreset(key),
     }, PRESET_LABELS[key], on ? el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓') : null));
   }
@@ -237,7 +237,7 @@ function updateProgress() {
 /* Ticking a row deliberately does NOT call renderList(): rebuilding the list on
    every tap would throw away focus and scroll position, which is exactly what
    toggling in place exists to avoid. But the group heading carries its own
-   count, and skipping the redraw left it behind — a section read
+   count, and skipping the redraw left it behind, a section read
    "Toiletries & health · 0 of 5 packed" above five ticked boxes until something
    else forced a redraw, so the only correct number on screen was the one at the
    top. Recount just the group that changed, from the DOM that is already there. */
@@ -380,7 +380,7 @@ function startEdit(li, item) {
     save();
     renderList();
     if (cleaned.truncated) {
-      toast('Item names stop at ' + MAX_LABEL + ' characters — saved as “' + cleaned.label + '”.', { ms: 7000 });
+      toast('Item names stop at ' + MAX_LABEL + ' characters, saved as “' + cleaned.label + '”.', { ms: 7000 });
     } else if (before !== cleaned.label) {
       toast('Renamed to “' + cleaned.label + '”');
     }
@@ -409,12 +409,12 @@ function addItem() {
     renderList();
     if (r.truncated) {
       toast('Item names stop at ' + MAX_LABEL + ' characters, so ' + r.dropped
-        + ' were dropped — saved as “' + r.label + '”.', { ms: 8000 });
+        + ' were dropped, saved as “' + r.label + '”.', { ms: 8000 });
     }
   } else if (r.reason === 'duplicate') {
     toast('“' + r.label + '” is already on the list.');
   } else if (raw.trim()) {
-    toast('That is only spaces — give the item a name.');
+    toast('That is only spaces, give the item a name.');
   }
   field.focus();
 }
@@ -426,7 +426,7 @@ function syncTripSelect() {
   for (const t of db.trips) {
     const s = stats(t.items);
     sel.append(el('option', { value: t.id },
-      (t.name.trim() || 'Untitled trip') + ' — ' + s.done + '/' + s.total + ' packed'));
+      (t.name.trim() || 'Untitled trip') + ', ' + s.done + '/' + s.total + ' packed'));
   }
   sel.value = db.activeId;
   $('delTripBtn').disabled = false;
@@ -440,7 +440,7 @@ function switchTrip(id) {
   $('tripName').value = cur().name;
   renderList();
   const s = stats(cur().items);
-  toast('Opened “' + (cur().name.trim() || 'Untitled trip') + '” — ' + s.total + ' items, ' + s.done + ' packed.');
+  toast('Opened “' + (cur().name.trim() || 'Untitled trip') + '”, ' + s.total + ' items, ' + s.done + ' packed.');
 }
 
 function snapshotDb() {
@@ -495,7 +495,7 @@ function wire() {
     $('tripName').value = '';
     renderList();
     $('tripName').focus();
-    undoToast('New trip started — your other ' + (db.trips.length - 1) + ' trip'
+    undoToast('New trip started, your other ' + (db.trips.length - 1) + ' trip'
       + (db.trips.length === 2 ? ' is' : 's are') + ' still under Saved trips.',
     () => restoreDb(snap));
   });
@@ -552,23 +552,23 @@ function wire() {
 
   $('shareBtn').addEventListener('click', () => {
     const c = cur();
-    if (!c.items.length) { toast('Add some items first — there is nothing to share yet.'); return; }
+    if (!c.items.length) { toast('Add some items first, there is nothing to share yet.'); return; }
     const url = shareUrl();
     if (c.items.length > MAX_SHARED) {
       toast('A link carries the first ' + MAX_SHARED + ' items; this trip has ' + c.items.length
         + ', so ' + (c.items.length - MAX_SHARED) + ' will not arrive.', { ms: 9000, assertive: true });
     }
-    copyText(url, 'Link copied (' + url.length + ' characters) — their checkboxes start fresh.');
+    copyText(url, 'Link copied (' + url.length + ' characters), their checkboxes start fresh.');
   });
 
   $('printBtn').addEventListener('click', () => {
     const c = cur();
-    if (!c.items.length) { toast('Add some items first — there is nothing to print yet.'); return; }
+    if (!c.items.length) { toast('Add some items first, there is nothing to print yet.'); return; }
     window.print();
   });
 
   $('qrBtn').addEventListener('click', showQr);
-  $('qrCopy').addEventListener('click', () => copyText(shareUrl(), 'Link copied — paste it into any message.'));
+  $('qrCopy').addEventListener('click', () => copyText(shareUrl(), 'Link copied, paste it into any message.'));
   $('qrClose').addEventListener('click', closeQr);
 
   /* Ctrl-P bypasses the button entirely, so the printed sheet has to be right
@@ -581,7 +581,7 @@ function stampPrintMeta() {
   const s = stats(c.items);
   const when = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
   $('printMeta').textContent = s.total === 0
-    ? 'This list is empty — printed ' + when + '.'
+    ? 'This list is empty, printed ' + when + '.'
     : s.done + ' of ' + s.total + ' packed · printed ' + when + ' · Packing List by Sky Wolf Studio's;
 }
 
@@ -612,17 +612,17 @@ function adoptShared(shared, mode) {
     const t = newTrip(shared.name, shared.items);
     db.trips.push(t);
     db.activeId = t.id;
-    msg = 'Opened “' + shared.name + '” as a new trip — ' + shared.items.length
+    msg = 'Opened “' + shared.name + '” as a new trip, ' + shared.items.length
       + ' items. Your own trip is still under Saved trips.';
   } else if (mode === 'merge') {
     const r = mergeItems(c.items, shared.items);
     c.items = r.items;
     msg = 'Merged in ' + r.added + ' item' + (r.added === 1 ? '' : 's')
-      + (r.skipped ? ' — ' + r.skipped + ' were already on your list.' : '.');
+      + (r.skipped ? ', ' + r.skipped + ' were already on your list.' : '.');
   } else {
     c.name = shared.name;
     c.items = shared.items;
-    msg = 'Replaced this trip with “' + shared.name + '” — ' + shared.items.length + ' items.';
+    msg = 'Replaced this trip with “' + shared.name + '”, ' + shared.items.length + ' items.';
   }
   hidePacked = false;
   save();
@@ -641,7 +641,7 @@ function showImportChoice(shared) {
   const bar = $('importBar');
   const notes = sharedNotes(shared);
   const panel = el('div', { class: 'warn' },
-    el('p', {}, el('b', {}, 'Someone shared a packing list with you.'), ' “' + shared.name + '” — '
+    el('p', {}, el('b', {}, 'Someone shared a packing list with you.'), ' “' + shared.name + '”, '
       + shared.items.length + ' item' + (shared.items.length === 1 ? '' : 's')
       + '. Your open trip “' + (c.name.trim() || 'Untitled trip') + '” has ' + c.items.length + '.'),
     notes.length ? el('p', {}, notes.join(' ')) : null,
@@ -663,7 +663,7 @@ function showImportChoice(shared) {
   bar.replaceChildren(panel);
   bar.classList.remove('hidden');
   bar.focus();
-  toast('A shared list is waiting at the top of the page — choose what to do with it.',
+  toast('A shared list is waiting at the top of the page, choose what to do with it.',
     { ms: 8000, assertive: true });
 }
 
@@ -676,7 +676,7 @@ function handleShared() {
     const bar = $('importBar');
     bar.replaceChildren(el('div', { class: 'warn' },
       el('p', {}, el('b', {}, 'That shared link did not arrive in one piece.'),
-        ' Packing-list links are long — a 26-item list is about 700 characters — and some'
+        ' Packing-list links are long, a 26-item list is about 700 characters, and some'
         + ' messaging apps and link previewers cut them short. Ask whoever sent it to paste'
         + ' the whole link again, or to show you the QR instead.'),
       el('div', { class: 'cluster' },
@@ -684,13 +684,13 @@ function handleShared() {
           onclick: () => { bar.classList.add('hidden'); bar.replaceChildren(); } }, 'Dismiss'))));
     bar.classList.remove('hidden');
     bar.focus();
-    toast('That shared link looks cut off — nothing was changed.', { ms: 8000, assertive: true });
+    toast('That shared link looks cut off, nothing was changed.', { ms: 8000, assertive: true });
     return;
   }
 
   if (!shared.items.length) {
     clearHash();
-    toast('That shared link has no items in it — nothing was changed.', { ms: 6000 });
+    toast('That shared link has no items in it, nothing was changed.', { ms: 6000 });
     return;
   }
 
@@ -727,7 +727,7 @@ init();
 
 /* ══ QR share (scan instead of typing a link) ════════════════════════════ */
 /* Error correction 'M' was hardcoded and the payload simply overflowed past
-   ~99 preset-length items — 26 if the labels are descriptive — surfacing as
+   ~99 preset-length items, 26 if the labels are descriptive, surfacing as
    "Could not draw the QR" with no route out. 'L' buys roughly 25% more data,
    and when even that will not fit the dialog opens and says so. */
 function buildQr(url) {
@@ -754,7 +754,7 @@ function closeQr() {
 
 function showQr() {
   const c = cur();
-  if (!c.items.length) { toast('Add some items first — there is nothing to put in a QR yet.'); return; }
+  if (!c.items.length) { toast('Add some items first, there is nothing to put in a QR yet.'); return; }
 
   const url = shareUrl();
   const canvas = $('qrCanvas');
@@ -764,7 +764,7 @@ function showQr() {
   if (!built) {
     canvas.classList.add('hidden');
     note.className = 'warn';
-    note.textContent = 'Too long for a QR — use Copy link. This trip is ' + c.items.length
+    note.textContent = 'Too long for a QR, use Copy link. This trip is ' + c.items.length
       + ' items and ' + url.length + ' characters; a QR code tops out near 2,300, and it is the'
       + ' length of the names that decides, not the count. A link has no such limit.';
     openQr();
@@ -777,7 +777,7 @@ function showQr() {
   const total = count + quiet * 2;
 
   /* The canvas was hardcoded at 300px and squeezed to 246 CSS px on a 320px
-     phone — 1.49px per module. Size it from the viewport instead, fill the
+     phone, 1.49px per module. Size it from the viewport instead, fill the
      whole box the dialog can give it, and render into a backing store at the
      device's real pixel density. Module edges are snapped with Math.round so
      the squares tile exactly however the scale falls: a rounded-up cell would
@@ -792,7 +792,7 @@ function showQr() {
   canvas.classList.remove('hidden');
   canvas.width = px;
   canvas.height = px;
-  /* Width only — the stylesheet keeps height:auto and max-width:100%, so a
+  /* Width only, the stylesheet keeps height:auto and max-width:100%, so a
      viewport too small for the computed size shrinks it without distorting. */
   canvas.style.width = (px / dpr) + 'px';
 

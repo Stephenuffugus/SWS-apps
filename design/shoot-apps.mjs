@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — screenshot the real apps
+   SWS STUDIO, screenshot the real apps
 
    The skin preview shows what the design system looks like in the abstract.
    This shows what the actual shipped apps look like, which is the only thing
@@ -74,8 +74,7 @@ for (const mode of ['light', 'dark']){
     if (!existsSync(join(ROOT, slug, 'index.html'))) continue;
     const page = await ctx.newPage();
 
-    // A console error in one of these apps is a real defect, not noise —
-    // collect them so a restyle that breaks the JS cannot pass silently.
+    // A console error in one of these apps is a real defect, not noise, // collect them so a restyle that breaks the JS cannot pass silently.
     const errors = [];
     page.on('pageerror', (e) => errors.push(String(e).split('\n')[0]));
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text().slice(0, 200)); });

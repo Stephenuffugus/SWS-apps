@@ -1,12 +1,11 @@
-// QR Maker — permanent static codes, generated on-device.
+// QR Maker, permanent static codes, generated on-device.
 import {
   buildPayloadInfo, qrToSvg, drawQrToCanvas, installUtf8, byteLen,
   CAPACITY, EC_LABEL, SIZES, sizeById, sizePlan, slugFor,
 } from './helpers.js';
 
 /* Before anything encodes anything. vendor-qrcode.js defaults to
-   `charCodeAt(i) & 0xff`, which silently replaces every non-ASCII character —
-   a café's own name, an Arabic sign, a Cyrillic SSID — with junk, inside a
+   `charCodeAt(i) & 0xff`, which silently replaces every non-ASCII character, a café's own name, an Arabic sign, a Cyrillic SSID, with junk, inside a
    code that scans perfectly. One line, and test/helpers.test.mjs now decodes
    the modules back out to prove it. */
 installUtf8(qrcode);
@@ -72,7 +71,7 @@ const batchText = () => { const n = document.getElementById('batchIn'); return n
 /* ── Storage ────────────────────────────────────────────────────────────
    localStorage held 0 bytes: a reload wiped the SSID, the password, the
    toughness, the size and the type with no warning before and no restore
-   after. It persists now — and because a Wi-Fi password is part of what gets
+   after. It persists now, and because a Wi-Fi password is part of what gets
    kept, the trust stamp says so in as many words. */
 function readStore() {
   let raw = null;
@@ -133,7 +132,7 @@ function writeStore() {
   } catch (e) {
     if (storageWarned) return;
     storageWarned = true;
-    toast('This browser refused to store anything — a private window usually does. Everything still works, but nothing here will survive a reload. Export your kept codes to a file instead.',
+    toast('This browser refused to store anything, a private window usually does. Everything still works, but nothing here will survive a reload. Export your kept codes to a file instead.',
       { ms: 9000, assertive: true });
   }
 }
@@ -142,8 +141,8 @@ function writeStore() {
    Built once and never replaced. It used to be rebuilt with
    replaceChildren() on every click, which dropped focus to <body> the moment
    you pressed Enter on a tab. role="tab" was declared with no aria-selected,
-   no tabindex, no aria-controls and no arrow keys — a lie a screen reader
-   believes — so these are plain aria-pressed toggles in a labelled group,
+   no tabindex, no aria-controls and no arrow keys, a lie a screen reader
+   believes, so these are plain aria-pressed toggles in a labelled group,
    which is the thing they actually are. */
 const segBtns = new Map();
 function buildTypeSeg() {
@@ -201,7 +200,7 @@ function renderFields() {
       input('url', { type: 'url', placeholder: 'skywolf.example or https://…', autocomplete: 'off' })));
 
   } else if (type === 'text') {
-    const ta = el('textarea', { placeholder: 'Any text — a message, an address, a serial number…' });
+    const ta = el('textarea', { placeholder: 'Any text, a message, an address, a serial number…' });
     ta.value = fields['text.text'] || '';
     ta.addEventListener('input', (ev) => { fields['text.text'] = ev.target.value; update(); persist(); });
     box.append(el('label', { class: 'f' }, el('span', {}, 'Text'), ta));
@@ -231,8 +230,8 @@ function renderFields() {
         input('ssid', { type: 'text', autocomplete: 'off' })),
       el('label', { class: 'f' }, el('span', {}, 'Security'), authSel),
       passRow,
-      el('label', {}, hid, el('span', {}, 'This network is hidden — the router does not broadcast its name')),
-      el('p', { class: 'hint', text: 'Guests point their camera at the code and join — no typing, no asking twice. Print it for the fridge or the guest room.' }),
+      el('label', {}, hid, el('span', {}, 'This network is hidden, the router does not broadcast its name')),
+      el('p', { class: 'hint', text: 'Guests point their camera at the code and join, no typing, no asking twice. Print it for the fridge or the guest room.' }),
       el('p', { class: 'hint', text: 'There is no WPA3 setting because the Wi-Fi card format has none: it knows WPA/WPA2, WEP and open. Most WPA3 routers accept a WPA card; a few iPhones refuse a WPA3-only network from a scan and have to be joined by hand once, after which they remember it.' }));
     syncPassRow();
 
@@ -500,7 +499,7 @@ function saveCurrent() {
   if (!currentQr) return;
   if (saved.length >= MAX_SAVED) {
     toast('This device already holds ' + MAX_SAVED + ' kept codes, which is the limit here. Delete one, or export all ' +
-      MAX_SAVED + ' to a file first — nothing is thrown away silently.', { ms: 9000, assertive: true });
+      MAX_SAVED + ' to a file first, nothing is thrown away silently.', { ms: 9000, assertive: true });
     return;
   }
   const item = {
@@ -548,7 +547,7 @@ function loadSaved(it) {
       // instead of pretending the fields were recovered.
       type = 'text';
       fields['text.text'] = it.payload;
-      note = ' This one arrived without its Wi-Fi fields, so it opened as plain text — the code it makes is identical.';
+      note = ' This one arrived without its Wi-Fi fields, so it opened as plain text, the code it makes is identical.';
     } else fields['text.text'] = it.payload;
   }
 
@@ -558,7 +557,7 @@ function loadSaved(it) {
   syncBatchType();
   runUpdate();
   persist();
-  toast('Opened “' + it.label + '” — same text, same toughness, so an export now is byte-for-byte the one you kept on ' +
+  toast('Opened “' + it.label + '”, same text, same toughness, so an export now is byte-for-byte the one you kept on ' +
     it.date + '.' + note, { ms: 6000 });
 }
 
@@ -583,7 +582,7 @@ function exportSaved(it, kind) {
     drawQrToCanvas(q, off, sizePlan(size, q.getModuleCount()).px, false);
     download(off.toDataURL('image/png'), filenameFor('png', it.label));
   }
-  toast('Saved ' + filenameFor(kind, it.label) + ' — identical to the one kept on ' + it.date + '.', { ms: 5000 });
+  toast('Saved ' + filenameFor(kind, it.label) + ', identical to the one kept on ' + it.date + '.', { ms: 5000 });
 }
 
 function deleteSaved(id) {
@@ -620,7 +619,7 @@ function renderSaved() {
     const meta = el('span', {
       class: 'sv-meta',
       title: it.payload,
-      text: it.payload + ' — ' + EC_LABEL[it.ec] + ' · ' + it.modules + ' × ' + it.modules +
+      text: it.payload + ', ' + EC_LABEL[it.ec] + ' · ' + it.modules + ' × ' + it.modules +
         ' modules · ' + fmt(it.bytes) + ' bytes · kept ' + it.date,
     });
     ul.append(el('li', {},
@@ -633,7 +632,7 @@ function renderSaved() {
   }
   show('savedEmpty', saved.length === 0);
   $('savedCount').textContent = saved.length
-    ? saved.length + ' of ' + MAX_SAVED + ' kept here. They live in this browser on this device only — clearing site data removes them, and no copy exists anywhere else.'
+    ? saved.length + ' of ' + MAX_SAVED + ' kept here. They live in this browser on this device only, clearing site data removes them, and no copy exists anywhere else.'
     : '';
   $('clearSaved').disabled = saved.length === 0;
   $('exportJson').disabled = saved.length === 0;
@@ -643,7 +642,7 @@ function exportJson() {
   const doc = { app: 'qr-maker', v: 1, exported: new Date().toISOString(), codes: saved };
   downloadBlob(new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' }),
     'qr-maker-codes-' + today() + '.json');
-  toast('Exported ' + saved.length + ' code' + (saved.length === 1 ? '' : 's') + ' — file it with the artwork.', { ms: 5000 });
+  toast('Exported ' + saved.length + ' code' + (saved.length === 1 ? '' : 's') + ', file it with the artwork.', { ms: 5000 });
 }
 
 function importJson(file) {
@@ -652,7 +651,7 @@ function importJson(file) {
   r.onload = () => {
     let d = null;
     try { d = JSON.parse(String(r.result)); } catch (e) {
-      toast('That is not a QR Maker export — the file is not readable JSON.', { assertive: true });
+      toast('That is not a QR Maker export, the file is not readable JSON.', { assertive: true });
       return;
     }
     const incoming = Array.isArray(d) ? d : (d && Array.isArray(d.codes) ? d.codes : null);
@@ -684,7 +683,7 @@ function syncBatchType() {
   $('batchIn').disabled = !usable;
   if (!usable) {
     $('batchIn').setAttribute('placeholder', '');
-    $('batchStatus').textContent = 'Batch works for links, text, phone numbers and email addresses. A stack of Wi-Fi cards would all carry the same password, so there is nothing to batch — switch to one of the other four types.';
+    $('batchStatus').textContent = 'Batch works for links, text, phone numbers and email addresses. A stack of Wi-Fi cards would all carry the same password, so there is nothing to batch, switch to one of the other four types.';
     $('batchProblems').classList.add('hidden');
     batchPlan = { lines: 0, used: 0, ready: [], problems: [] };
     $('batchPrint').disabled = true;
@@ -710,11 +709,11 @@ function analyzeBatch() {
     const f = {};
     f[BATCH_KEY[type]] = line;
     const info = buildPayloadInfo(type, f);
-    if (info.problem) { problems.push('Line ' + (i + 1) + ' — ' + info.problem); return; }
-    if (!info.payload) { problems.push('Line ' + (i + 1) + ' — nothing to encode.'); return; }
+    if (info.problem) { problems.push('Line ' + (i + 1) + ', ' + info.problem); return; }
+    if (!info.payload) { problems.push('Line ' + (i + 1) + ', nothing to encode.'); return; }
     const b = byteLen(info.payload);
     if (b > CAPACITY[ec]) {
-      problems.push('Line ' + (i + 1) + ' — ' + fmt(b) + ' bytes, over the ' + fmt(CAPACITY[ec]) +
+      problems.push('Line ' + (i + 1) + ', ' + fmt(b) + ' bytes, over the ' + fmt(CAPACITY[ec]) +
         '-byte limit at ' + EC_LABEL[ec] + ' toughness. Skipped.');
       return;
     }
@@ -728,7 +727,7 @@ function analyzeBatch() {
   } else {
     bits.push(fmt(all.length) + ' line' + (all.length === 1 ? '' : 's') + ' · ' + fmt(ready.length) + ' code' + (ready.length === 1 ? '' : 's') + ' ready');
     if (all.length > MAX_BATCH) {
-      bits.push('this sheet holds ' + fmt(MAX_BATCH) + ', so the last ' + fmt(all.length - MAX_BATCH) + ' lines were not used — nothing was dropped quietly');
+      bits.push('this sheet holds ' + fmt(MAX_BATCH) + ', so the last ' + fmt(all.length - MAX_BATCH) + ' lines were not used, nothing was dropped quietly');
     }
     if (problems.length) bits.push(fmt(problems.length) + ' line' + (problems.length === 1 ? '' : 's') + ' could not be used, listed below');
   }
@@ -758,7 +757,7 @@ function encodeBatch() {
    rather than freezing under the finger with no explanation. */
 function withBusy(count, verb, fn) {
   if (count > 25) {
-    toast(verb + ' ' + fmt(count) + ' codes on this device — a few seconds, and nothing is uploaded.', { ms: 4000 });
+    toast(verb + ' ' + fmt(count) + ' codes on this device, a few seconds, and nothing is uploaded.', { ms: 4000 });
     setTimeout(fn, 80);
   } else fn();
 }
@@ -861,14 +860,14 @@ function zipBatch() {
     return { name: base + '.svg', data: enc.encode(qrToSvg(it.qr, { mm: size.mm })) };
   });
   downloadBlob(zipStore(files), 'qr-codes-' + today() + '.zip');
-  toast(files.length + ' SVG files, each named after its line, at ' + size.mm + ' mm. Built here — the zip never left the device.', { ms: 6000 });
+  toast(files.length + ' SVG files, each named after its line, at ' + size.mm + ' mm. Built here, the zip never left the device.', { ms: 6000 });
 }
 
 /* ── Wiring ─────────────────────────────────────────────────────────────── */
 function copyPayload() {
   const text = currentPayload;
   if (!text) return;
-  const done = () => toast('Copied. This is the whole string a scanner reads — paste it anywhere to check it.', { ms: 4000 });
+  const done = () => toast('Copied. This is the whole string a scanner reads, paste it anywhere to check it.', { ms: 4000 });
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done, fallback);
   } else fallback();
@@ -884,7 +883,7 @@ function copyPayload() {
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     ta.remove();
     if (ok) done();
-    else toast('This browser blocked the copy. The text is on screen above — select it and copy by hand.', { ms: 6000, assertive: true });
+    else toast('This browser blocked the copy. The text is on screen above, select it and copy by hand.', { ms: 6000, assertive: true });
   }
 }
 
@@ -912,7 +911,7 @@ function wire() {
     if (!currentQr) return;
     const size = sizeById(sizeId);
     downloadBlob(new Blob([qrToSvg(currentQr, { mm: size.mm })], { type: 'image/svg+xml' }), filenameFor('svg'));
-    toast('Saved ' + filenameFor('svg') + ' — a vector at ' + size.mm + ' mm, scales to a billboard, yours forever.', { ms: 5000 });
+    toast('Saved ' + filenameFor('svg') + ', a vector at ' + size.mm + ' mm, scales to a billboard, yours forever.', { ms: 5000 });
   });
 
   $('dlPng').addEventListener('click', () => {
@@ -922,7 +921,7 @@ function wire() {
     const off = document.createElement('canvas');
     drawQrToCanvas(currentQr, off, plan.px, false);
     download(off.toDataURL('image/png'), filenameFor('png'));
-    toast('Saved ' + filenameFor('png') + ' — ' + fmt(plan.px) + ' × ' + fmt(plan.px) + ' px, ' + fmt(plan.dpi) +
+    toast('Saved ' + filenameFor('png') + ', ' + fmt(plan.px) + ' × ' + fmt(plan.px) + ' px, ' + fmt(plan.dpi) +
       ' DPI at ' + size.mm + ' mm.', { ms: 5000 });
   });
 
@@ -960,7 +959,7 @@ function setTrust() {
   $('trustText').textContent =
     'Every code here is built by this page, on this device. Nothing you type is ever sent anywhere: no ' +
     'server sees your link, your network name or your password, and the whole app works with the Wi-Fi ' +
-    'off. Codes you keep — a Wi-Fi password among them — are stored in this browser on this device only, ' +
+    'off. Codes you keep, a Wi-Fi password among them, are stored in this browser on this device only, ' +
     'and “Clear all” removes them.';
 }
 

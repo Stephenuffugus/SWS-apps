@@ -228,8 +228,7 @@ await t('zipStore produces an archive the system unzip agrees with', async () =>
   }
 });
 /* Info-ZIP's `unzip` ignores the UTF-8 flag and writes the name as cp437, so
-   the non-ASCII case is checked with Python's zipfile, which honours bit 11 —
-   a genuinely independent reader, not our own decoder. */
+   the non-ASCII case is checked with Python's zipfile, which honours bit 11, a genuinely independent reader, not our own decoder. */
 await t('zipStore flags UTF-8 names so a compliant reader gets them back', () => {
   const bytes = new TextEncoder().encode('%PDF-1.4 not really');
   const zip = zipStore([{ name: '確定申告書-p1.pdf', bytes }]);

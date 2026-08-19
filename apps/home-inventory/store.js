@@ -1,4 +1,4 @@
-// IndexedDB persistence — photos live inside the inventory objects, so this
+// IndexedDB persistence, photos live inside the inventory objects, so this
 // is where the gigabytes would go without capture-time compression.
 const DBNAME = 'sws-inventory';
 

@@ -1,7 +1,7 @@
-/* Signup Sheets service worker — offline-first shell so sheets stay readable
+/* Signup Sheets service worker, offline-first shell so sheets stay readable
    with no signal (Firestore's local cache supplies the data). Bump VERSION
    on each deploy. */
-const VERSION = 'signup-v25';
+const VERSION = 'signup-v26';
 const ASSETS = [
   './',
   './index.html',
@@ -34,11 +34,11 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   const cacheable = url.origin === location.origin || url.hostname === 'www.gstatic.com';
-  // Never intercept Firestore/Auth traffic — the SDK manages its own offline story.
+  // Never intercept Firestore/Auth traffic, the SDK manages its own offline story.
   if (e.request.method !== 'GET' || !cacheable) return;
 
   /* The PAGE is fetched network-first. Cache-first served the previous
-     index.html on the FIRST load after every deploy — the browser only
+     index.html on the FIRST load after every deploy, the browser only
      discovers a new sw.js during that same navigation, so a fix always
      appeared one visit late and looked exactly like "nothing changed".
      Assets stay cache-first; only the document leads with the network, and it

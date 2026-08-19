@@ -1,4 +1,4 @@
-// Moving boxes — pure logic. Tested in test/helpers.test.mjs.
+// Moving boxes, pure logic. Tested in test/helpers.test.mjs.
 
 /* Every ceiling in the app, in one place, so the UI can quote the real number
    instead of enforcing it in silence. A cap the user discovers later is the
@@ -23,7 +23,7 @@ export function parseBoxNumber(value) {
   const s = String(value === null || value === undefined ? '' : value).trim();
   if (!s) return { n: null, error: null };
   if (!/^[0-9]+$/.test(s)) {
-    return { n: null, error: 'Box numbers are whole numbers — “' + s + '” isn’t one.' };
+    return { n: null, error: 'Box numbers are whole numbers, “' + s + '” isn’t one.' };
   }
   const n = parseInt(s, 10);
   if (n < 1) return { n: null, error: 'Box numbers start at 1.' };
@@ -60,8 +60,7 @@ export function parseItems(text) {
   return parseItemsDetailed(text).items;
 }
 
-/* One record, made safe. Returns null only when there is nothing recoverable —
-   a box with no usable number. Everything else is repaired, never discarded:
+/* One record, made safe. Returns null only when there is nothing recoverable, a box with no usable number. Everything else is repaired, never discarded:
    a box whose `items` came back as a string still has a number and a room, and
    losing the whole move because of it is the top complaint in the category. */
 function sanitizeBox(raw, tally) {
@@ -97,7 +96,7 @@ function sanitizeBox(raw, tally) {
   return { id: id || newId(), n, room, items };
 }
 
-/* Used by BOTH load() and import — the reason the two paths used to disagree
+/* Used by BOTH load() and import, the reason the two paths used to disagree
    is that only one of them validated. */
 export function sanitizeBoxes(arr) {
   const tally = { boxes: [], skipped: 0, overflow: 0, itemsDropped: 0, shortened: 0, repaired: 0 };
@@ -136,7 +135,7 @@ export function mergeBoxes(current, incoming) {
   return { boxes: out, added, updated, unchanged, overflow };
 }
 
-/* "which box has the can opener" — search items, rooms, and numbers. */
+/* "which box has the can opener", search items, rooms, and numbers. */
 export function searchBoxes(boxes, query) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return [];
@@ -167,7 +166,7 @@ export function boxesToCsv(boxes) {
 }
 
 /* Label QR payload: the box travels inside the link, so scanning a label on
-   moving day shows the contents on any phone — no account, no lookup server. */
+   moving day shows the contents on any phone, no account, no lookup server. */
 export function encodeBox(box) {
   const o = { n: box.n, r: box.room, i: box.items };
   if (Number.isInteger(box.total) && box.total > 0) o.t = box.total;
@@ -197,7 +196,7 @@ export const isBoxHash = (hash) => /^#b\./.test(String(hash || ''));
 /* Fit a box into one label QR.
  *
  * `fit` is either a character budget or, better, a predicate the caller builds
- * from the REAL constraint — how many modules the finished code has, and
+ * from the REAL constraint, how many modules the finished code has, and
  * therefore how wide each module prints. A character cap cannot see that: the
  * old 900-char ceiling produced 101-module codes that printed at 0.278mm per
  * module, which no phone camera reads off cardboard in a garage.
@@ -212,7 +211,7 @@ export function encodeBoxForLabel(box, fit = 900) {
   const build = (k) => {
     const kept = items.slice(0, k);
     const dropped = total - k;
-    if (dropped) kept.push('…plus ' + dropped + ' more — on the packing list');
+    if (dropped) kept.push('…plus ' + dropped + ' more, on the packing list');
     return { payload: encodeBox({ ...box, items: kept }), kept: k, dropped };
   };
 
@@ -220,7 +219,7 @@ export function encodeBoxForLabel(box, fit = 900) {
   if (test(whole.payload)) return whole;
 
   // Payload length grows with the item count, so the largest k that fits is a
-  // binary search — 7 encodes for a 100-item box instead of 100.
+  // binary search, 7 encodes for a 100-item box instead of 100.
   let lo = 0, hi = total - 1, best = build(0);
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;

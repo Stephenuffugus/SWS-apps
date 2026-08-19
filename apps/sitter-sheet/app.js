@@ -1,10 +1,10 @@
-// Sitter Sheet — babysitter/pet-sitter one-pager.
+// Sitter Sheet, babysitter/pet-sitter one-pager.
 //
 // Two readers, two documents. The PARENT gets an edit form; the SITTER gets a
 // read-only page led by the three things that matter in the worst three
 // seconds this sheet will ever have: where you are, what they are allergic to,
 // and a phone number their thumb can hit. Everything is localStorage and print
-// CSS — no account, no upload, no network call after load.
+// CSS, no account, no upload, no network call after load.
 //
 // All user data reaches the DOM via textContent.
 
@@ -14,7 +14,7 @@ const CONFIG = { tipUrl: 'https://buy.stripe.com/bJe28s1vj5P98zH7i17EQ0a' };
    a long medication schedule looked complete, saved short, and only revealed
    the loss after a reload. The control now carries maxlength, so nothing can
    be typed and silently lost, and the ceiling is high enough that a chatty
-   bedtime routine never reaches it. Both halves of the app must agree — the
+   bedtime routine never reaches it. Both halves of the app must agree, the
    share decoder slices to the same number. */
 const MAXLEN = 4000;
 const COUNT_FROM = 200;   // show the countdown only in the last 200 chars
@@ -99,7 +99,7 @@ async function copyText(text, okMsg) {
    Each field: [key, label, multiline, hint, opts].
 
    That fourth column used to be a `placeholder` holding a fully-written fake
-   answer — "Maya: peanuts (EpiPen on the counter!)", "Dr. Chen — 555-0177".
+   answer, "Maya: peanuts (EpiPen on the counter!)", "Dr. Chen, 555-0177".
    Inside the box, in the same typeface as real content, those read as the
    family's own words on a stranger's phone; and at High contrast the base
    layer maps --ink-3 onto --ink, so grey stopped distinguishing them at all.
@@ -115,7 +115,7 @@ export const SCHEMAS = {
     sections: [
       ['The kids', [
         ['kids', 'Names & ages', true, 'e.g. each child’s name, age and what to know about them'],
-        ['bedtime', 'Bedtime & routine', true, 'e.g. bath, stories, lights out — and the comfort item'],
+        ['bedtime', 'Bedtime & routine', true, 'e.g. bath, stories, lights out, and the comfort item'],
         ['meals', 'Meals & snacks', true, 'e.g. what to serve, when, and what is off limits'],
       ]],
       ['Health & safety', [
@@ -162,7 +162,7 @@ export const SCHEMAS = {
         ['walks', 'Walks & litter', true, 'e.g. walk times, where the harness is, litter routine'],
       ]],
       ['Health', [
-        ['meds', 'Medications & allergies', true, 'e.g. what to give, how much, when — and anything to avoid'],
+        ['meds', 'Medications & allergies', true, 'e.g. what to give, how much, when, and anything to avoid'],
         ['vet', 'Vet & emergency vet', true, 'e.g. practice names and numbers, day and out-of-hours'],
       ]],
       ['Contacts', [
@@ -195,15 +195,15 @@ export const SCHEMAS = {
 
 const EMERGENCY_NOTE = {
   baby: 'Call 911 first, then us. Poison Control: 1-800-222-1222.',
-  pet: 'If anything feels wrong, call us first — then the emergency vet. Better a silly call than a sorry one.',
+  pet: 'If anything feels wrong, call us first, then the emergency vet. Better a silly call than a sorry one.',
 };
 
 let mode = 'baby';
 const KEY = (m) => 'sitter-' + m;
 let data = {};
 
-/* view: 'edit' — the parent's form.
-   'sitter' — the read-only page, either because a link carried a sheet
+/* view: 'edit', the parent's form.
+   'sitter', the read-only page, either because a link carried a sheet
    ('link') or because the parent asked to see it ('preview'). */
 let view = 'edit';
 let sitterFrom = 'link';
@@ -235,7 +235,7 @@ function prettyDate(iso) {
    even long-pressable. In the sitter view each run of digits becomes a tel:
    anchor sized as a real target. The character class deliberately excludes
    ":" and newline so "7:30 bath, 8:00 books" is not a phone number, and a
-   run has to hold 7–15 digits to qualify.                                   */
+   run has to hold 7 to 15 digits to qualify.                                   */
 const PHONE = /\+?\d[\d\-().  \t]{5,}\d/g;
 
 function linkifyPhones(text) {
@@ -344,7 +344,7 @@ function filledSections(skip) {
 
 function top3El() {
   const t = SCHEMAS[mode].top3;
-  const none = '— not filled in —';
+  const none = ',  not filled in , ';
   const where = el('div', { class: 't3 where' },
     el('div', { class: 't3l', text: 'Where you are' }),
     el('div', { class: 't3v', text: val('address') || none }));
@@ -450,7 +450,7 @@ function renderSitter() {
   const box = $('sitterView');
   const schema = SCHEMAS[mode];
   const t = schema.top3;
-  const none = '— not filled in —';
+  const none = ',  not filled in , ';
   box.replaceChildren();
 
   const head = el('section', { class: 'card' },
@@ -458,8 +458,7 @@ function renderSitter() {
   if (data._u) head.append(el('p', { class: 'sub', text: 'Updated ' + prettyDate(data._u) }));
   box.append(head);
 
-  /* The 3-second panel. Address, allergies, and a number a thumb can hit —
-     pinned above everything else whether or not the parent filled them in. */
+  /* The 3-second panel. Address, allergies, and a number a thumb can hit, pinned above everything else whether or not the parent filled them in. */
   const panel = el('section', { class: 'card s3' });
   panel.append(el('h2', { class: 'sr-only' }, 'The three things you may need in a hurry'));
 
@@ -504,7 +503,7 @@ function renderSitter() {
       shieldIcon(),
       saved
         ? el('span', {}, el('b', {}, 'Saved to this device.'),
-          ' It lives in this browser only — nothing was uploaded. Clear it any time from the edit screen.')
+          ' It lives in this browser only, nothing was uploaded. Clear it any time from the edit screen.')
         : el('span', {}, el('b', {}, 'Nothing has been saved to this phone.'),
           ' This sheet is being read straight out of the link. Keep the link and it works offline; ' +
           'save it only if you want it to survive losing the message.')));
@@ -571,7 +570,7 @@ function saveShared() {
   stripHash();
   sitterFrom = 'saved';
   renderSitter();
-  /* Undo restores the STORE and leaves the sheet on screen — the link is still
+  /* Undo restores the STORE and leaves the sheet on screen, the link is still
      readable, it just is not on this phone any more. */
   undoable('Saved to this device.', () => {
     restoreKey(m, before);
@@ -590,7 +589,7 @@ function editShared() {
     restoreKey(m, before);
     load();
     setView('edit');
-    toast('Put back — your own sheet is as it was.');
+    toast('Put back, your own sheet is as it was.');
   });
 }
 function printNow() {
@@ -606,7 +605,7 @@ function switchMode(next) {
   setView('edit');
   const other = next === 'baby' ? 'pet sitter' : 'babysitter';
   toast('Showing your ' + (next === 'baby' ? 'babysitter' : 'pet sitter') +
-    ' sheet — your ' + other + ' sheet is still saved.');
+    ' sheet, your ' + other + ' sheet is still saved.');
 }
 
 function wire() {
@@ -626,7 +625,7 @@ function wire() {
   });
   $('textBtn').addEventListener('click', async () => {
     if (!hasContent()) { toast('Fill in at least one field first'); return; }
-    const ok = await copyText(sheetText(), 'Copied as plain text — paste it into a message');
+    const ok = await copyText(sheetText(), 'Copied as plain text, paste it into a message');
     if (!ok) showFallback(sheetText(), 'Your browser blocked the copy. Select the text below and copy it by hand.');
   });
   $('dlBtn').addEventListener('click', downloadSheet);
@@ -654,7 +653,7 @@ function sheetText() {
   lines.push('IN AN EMERGENCY: ' + t.calls.map(([l, n]) => l + ' ' + n).join(' · '));
   const skip = new Set(['address', 'cross', t.alert].filter(Boolean));
   for (const [name, fields] of filledSections(skip)) {
-    lines.push('', '— ' + name + ' —');
+    lines.push('', ',  ' + name + ' , ');
     for (const [key, label] of fields) lines.push(label + ': ' + val(key));
   }
   return lines.join('\n');
@@ -673,7 +672,7 @@ function downloadSheet() {
     document.body.append(a);
     a.click();
     a.remove();
-    toast('Downloaded. It is a plain JSON file — yours to keep.');
+    toast('Downloaded. It is a plain JSON file, yours to keep.');
   } catch (e) {
     toast('Could not build the file');
   }
@@ -733,7 +732,7 @@ function clearSheet() {
   });
 }
 
-/* ── Share: the whole sheet travels inside the URL — nothing uploaded ────── */
+/* ── Share: the whole sheet travels inside the URL, nothing uploaded ────── */
 function encodeSheet() {
   const filled = {};
   for (const [k, v] of Object.entries(data)) if (isField(k) && (v || '').trim()) filled[k] = v;
@@ -760,8 +759,8 @@ function decodeSheet(hash) {
 const sheetShareUrl = () => (location.origin === 'null' || location.protocol === 'file:'
   ? location.href.split('#')[0] : location.origin + location.pathname) + '#' + encodeSheet();
 
-/* When the clipboard is refused — routine in iOS in-app browsers and over
-   plain http on a LAN — the text has to appear somewhere selectable, or the
+/* When the clipboard is refused, routine in iOS in-app browsers and over
+   plain http on a LAN, the text has to appear somewhere selectable, or the
    output simply has no path at all. */
 function showFallback(text, msg) {
   const box = $('fallback');
@@ -787,7 +786,7 @@ function init() {
     /* The recipient's phone does NOT get a silent copy of a stranger's
        address, wifi password and children's medications. The sheet is held in
        memory, shown read-only, and only written if they ask. The hash stays in
-       the URL so a reload — offline, in someone else's basement — still works. */
+       the URL so a reload, offline, in someone else's basement, still works. */
     mode = shared.mode;
     data = shared.data;
     showSitter('link');
@@ -804,7 +803,7 @@ init();
 /* ── QR share ───────────────────────────────────────────────────────────────
    The old path cornered itself twice: the bundled encoder's ceiling is 2,331
    characters and a realistic sheet makes a longer URL, and well below that
-   ceiling it drew 1–2px modules into a fixed 300px bitmap — a code that opens
+   ceiling it drew 1 to 2px modules into a fixed 300px bitmap, a code that opens
    confidently and cannot be scanned. Now: try a lower error-correction level
    before giving up, size the bitmap from the module count and the device pixel
    ratio, and when the sheet genuinely will not fit, say so and hand over a
@@ -817,19 +816,19 @@ function qrEncode(url) {
       q.addData(url);
       q.make();
       return q;
-    } catch (e) { /* over capacity at this level — try the next */ }
+    } catch (e) { /* over capacity at this level, try the next */ }
   }
   return null;
 }
 
 function qrTooBig() {
-  toast('This sheet is too long for a QR code. The link carries all of it — send that instead.', {
+  toast('This sheet is too long for a QR code. The link carries all of it, send that instead.', {
     ms: 9000,
     action: {
       label: 'Copy link',
       onAction: async () => {
         const url = sheetShareUrl();
-        if (!await copyText(url, 'Link copied — the whole sheet is inside it')) {
+        if (!await copyText(url, 'Link copied, the whole sheet is inside it')) {
           showFallback(url, 'Your browser blocked the copy. Select the link below and copy it by hand.');
         }
       },
@@ -873,7 +872,7 @@ $('qrClose').addEventListener('click', () => {
 $('shareBtn').addEventListener('click', async () => {
   if (!hasContent()) { toast('Fill in at least one field first'); return; }
   const url = sheetShareUrl();
-  if (!await copyText(url, 'Link copied — the whole sheet is inside it')) {
+  if (!await copyText(url, 'Link copied, the whole sheet is inside it')) {
     showFallback(url, 'Your browser blocked the copy. Select the link below and copy it by hand.');
   }
 });

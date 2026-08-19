@@ -1,4 +1,4 @@
-// A minimal, store-only ZIP writer — no dependency, no compression.
+// A minimal, store-only ZIP writer, no dependency, no compression.
 //
 // The CSV names a photo file for every row; without a matching bundle of
 // photos that column is a promise the app does not keep. JPEGs are already

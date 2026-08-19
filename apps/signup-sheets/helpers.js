@@ -1,4 +1,4 @@
-// Pure helpers — no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
+// Pure helpers, no imports, no DOM, no Firebase. Unit-tested in test/helpers.test.mjs.
 
 // Share-code alphabet from the product doc: no 0/O/1/I/l lookalikes.
 export const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -20,11 +20,11 @@ export const MAX_SLOTS = 100;
 
 /* Bulk slot paste, with an honest account of what happened to every line.
    Returns { rows, skipped, remainder, dropped }:
-     rows      — the parsed slots, at most `limit` of them
-     skipped   — raw lines that carried no label ("x5", stray punctuation)
-     remainder — the lines the limit refused, verbatim, ready to be handed back
+     rows, the parsed slots, at most `limit` of them
+     skipped, raw lines that carried no label ("x5", stray punctuation)
+     remainder, the lines the limit refused, verbatim, ready to be handed back
                  to the textarea so nothing the user typed is ever deleted
-     dropped   — how many non-blank lines are in `remainder`
+     dropped, how many non-blank lines are in `remainder`
    A 150-line paste used to produce 100 slots and the toast "100 spots added".
    That is the exact betrayal this app exists to be the opposite of. */
 export function parseBulkSlotsReport(text, limit) {
@@ -63,8 +63,8 @@ export function parseBulkSlots(text) {
   return parseBulkSlotsReport(text).rows;
 }
 
-/* Date-range slots: "every Tue 3–5pm, Sept–Nov" style generation.
-   weekdays: Set/array of 0–6 (Sun=0). Dates are LOCAL. */
+/* Date-range slots: "every Tue 3 to 5pm, Sept-Nov" style generation.
+   weekdays: Set/array of 0 to 6 (Sun=0). Dates are LOCAL. */
 export function dateRangeSlotsReport(opts) {
   const { start, end, weekdays, timeText, prefix, capacity } = opts || {};
   const out = [];
@@ -81,7 +81,7 @@ export function dateRangeSlotsReport(opts) {
     if (out.length >= MAX_SLOTS) { dropped++; continue; }
     let label = fmt.format(d);
     if (timeText) label += ' · ' + String(timeText).trim().slice(0, 40);
-    if (prefix) label = String(prefix).trim().slice(0, 60) + ' — ' + label;
+    if (prefix) label = String(prefix).trim().slice(0, 60) + ', ' + label;
     out.push({ label: label.slice(0, 120), capacity: cap });
   }
   return { rows: out, dropped };

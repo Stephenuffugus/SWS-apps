@@ -1,4 +1,4 @@
-// Scan-to-PDF — images in, one clean PDF out. PDFLib injected for testability.
+// Scan-to-PDF, images in, one clean PDF out. PDFLib injected for testability.
 import { dataUrlToBytes, normRot } from './helpers.js';
 
 export const PAGE = {
@@ -12,7 +12,7 @@ export const PAGE = {
 const FIT_LONG = 792;
 
 /**
- * pages: [{ bytes | dataUrl, rot }] — rot is clockwise degrees held as
+ * pages: [{ bytes | dataUrl, rot }], rot is clockwise degrees held as
  * metadata, so a rotation costs nothing and never re-encodes the photo.
  *
  * Returns { bytes, skipped, made }. When `made` is 0 there is NO document:

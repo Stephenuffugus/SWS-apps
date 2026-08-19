@@ -1,4 +1,4 @@
-# HANDOFF — OVERLOAD
+# HANDOFF, OVERLOAD
 **Sky Wolf Studio · SWS Strategic Media LLC**
 Prescription-first strength tracker. Single-file vanilla PWA.
 `node test/overload.test.mjs` = 68 assertions, green.
@@ -10,7 +10,7 @@ A progressive-overload app built around one inversion of the category:
 OVERLOAD prescribes the exact next session (weight × rep range × sets, due on a
 3-day clock for 2×/week per muscle group); in the gym the user only confirms.
 
-**UX invariant — do not break:** after initial lift creation, the user never
+**UX invariant, do not break:** after initial lift creation, the user never
 types anything, anywhere, in the core loop. Any new feature must respect this.
 **Verdict vocabulary is fixed:** ADD WEIGHT / ADD REPS / CONSOLIDATE /
 DELOAD −10%. Don't invent new verdict names.
@@ -26,11 +26,11 @@ server, single file.
 Everything from the previous roadmap §6 is done:
 
 1. **PWA shell:** `manifest.webmanifest`, `sw.js` (network-first document,
-   cache-first assets — bump `CACHE` per deploy), icon set from Stephen's
+   cache-first assets, bump `CACHE` per deploy), icon set from Stephen's
    art, fonts self-hosted in `fonts/` (Big Shoulders 600/800, Plex Mono
    400/600).
-2. **Per-lift settings:** `rest` (seconds, 15s steps, 30–600, default 120),
-   sets, rep range, delete-with-undo — all via the ⚙ on each due card,
+2. **Per-lift settings:** `rest` (seconds, 15s steps, 30 to 600, default 120),
+   sets, rep range, delete-with-undo, all via the ⚙ on each due card,
    steppers only, zero typing. Rep clamps keep `repMin ≤ repMax`.
 3. **Export / import:** Download backup (`{app:'overload',version:2,data}`)
    and Restore (file picker, shape-validated, confirm, Undo) in Trend.
@@ -49,12 +49,12 @@ Also fixed from v2:
   Order is now render-then-show. Keep it that way.
 - **Session weight is a copy:** `W.w` (not `p.w`) takes the ± adjustments;
   the prescription is written once, at finish. Closing mid-session discards
-  everything, by design — no partial sessions.
+  everything, by design, no partial sessions.
 - Inline `onclick` handlers replaced with listeners; due cards are keyboard
   buttons; `#live` announcements; branding corrected to Sky Wolf Studio;
   `privacy.html` + footer; copy brought into Stephen's voice.
 
-## 3. Engine (pinned by tests — change only deliberately)
+## 3. Engine (pinned by tests, change only deliberately)
 
 `judge(p, reps)` on session finish:
 1. All sets ≥ repMax → **ADD WEIGHT** (+inc: per-exercise or group default
@@ -78,12 +78,12 @@ Stall ≥ 3 → swap offer from the same group at 85% rounded (resets stall).
   sound: true }
 ```
 
-## 5. Design system — keep cohesive
+## 5. Design system, keep cohesive
 
 IPF plate colors as the whole semantic palette: red fail/deload, yellow
 partial/hold, green hit/progress, blue primary. Big Shoulders Display for
 display, Plex Mono for every number. The **set map** (green/yellow/red dots)
-is the product's visual identity — reuse it anywhere outcomes appear (home
+is the product's visual identity, reuse it anywhere outcomes appear (home
 cards, live workout, results, history, and now the volume strip).
 
 ## 6. Later / optional

@@ -1,4 +1,4 @@
-// Secret Santa — draw with exclusions, per-person private reveal links.
+// Secret Santa, draw with exclusions, per-person private reveal links.
 import {
   parseRoster, drawNames, redrawKeeping, blamePair, validAssignment,
   encodeReveal, decodeReveal, isRevealHash, ROSTER_MAX,
@@ -31,11 +31,11 @@ const sayUndo = (msg, fn, opts) => (window.SWS && window.SWS.undo
 
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); say(okMsg || 'Copied'); }
-  catch (e) { say('Could not copy — long-press the link row to select it instead.'); }
+  catch (e) { say('Could not copy, long-press the link row to select it instead.'); }
 }
 
 let names = [];
-let exclusions = [];    // pairs of NAMES — editing the list must never remap couples
+let exclusions = [];    // pairs of NAMES, editing the list must never remap couples
 let pendingPick = null; // a name, while picking the second half of a pair
 let lastPicked = null;  // the chip focus goes back to after the picker rebuilds
 let drawn = null;       // the draw itself: { names, assignment, pairNames, event, budget, sent, changed, isRedraw }
@@ -45,7 +45,7 @@ let drawn = null;       // the draw itself: { names, assignment, pairNames, even
    closed tab and tomorrow morning. Nothing leaves this browser. */
 let saveTimer = null;
 function save(quiet) {
-  /* A participant's reveal page must leave nothing behind — the trust badge on
+  /* A participant's reveal page must leave nothing behind, the trust badge on
      that screen says so, so nothing may write storage while it is showing. */
   if ($('organizer').classList.contains('hidden')) return;
   try {
@@ -57,7 +57,7 @@ function save(quiet) {
       exclusions,
       drawn,
     }));
-  } catch (e) { /* private mode or a full quota — the app still works */ }
+  } catch (e) { /* private mode or a full quota, the app still works */ }
   if (!quiet && window.SWS && window.SWS.saved) window.SWS.saved();
 }
 function saveSoon() {
@@ -115,12 +115,12 @@ function readRoster() {
   names = report.names;
   const notes = [];
   if (report.skipped) {
-    notes.push('Only the first ' + ROSTER_MAX + ' names were added — ' +
+    notes.push('Only the first ' + ROSTER_MAX + ' names were added, ' +
       report.skipped + ' more ' + (report.skipped === 1 ? 'line was' : 'lines were') + ' left out.');
   }
   if (report.merged.length) {
     notes.push('Two lines said “' + report.merged.slice(0, 3).join('”, “') +
-      '” — only one of each was added. Add a surname to tell them apart.');
+      '”, only one of each was added. Add a surname to tell them apart.');
   }
   if (report.shortened.length) {
     notes.push('Shortened to 40 characters: “' + report.shortened.slice(0, 2).join('”, “') + '”.');
@@ -140,7 +140,7 @@ function pickName(name) {
   if (pendingPick === null) {
     pendingPick = name;
     renderExclusions();
-    say(name + ' selected — now tap who ' + name + ' must not draw.');
+    say(name + ' selected, now tap who ' + name + ' must not draw.');
     return;
   }
   if (pendingPick === name) {
@@ -245,7 +245,7 @@ function runDraw() {
   }
   /* Adding a latecomer must not blow up the exchange. When the roster has
      changed under an existing draw, keep every match the rules still allow and
-     re-route only what has to move — usually one or two links, not all nine. */
+     re-route only what has to move, usually one or two links, not all nine. */
   const patching = !!drawn && rosterChangedSinceDraw();
   let assignment = null;
   if (patching) {
@@ -261,7 +261,7 @@ function runDraw() {
   if (!assignment) {
     const blame = blamePair(names.length, pairs);
     warn(blame
-      ? names[blame[0]] + ' and ' + names[blame[1]] + ' can’t both be excluded here — with ' +
+      ? names[blame[0]] + ' and ' + names[blame[1]] + ' can’t both be excluded here, with ' +
         names.length + ' people there is no valid draw. Remove that pair and draw again.'
       : 'These ' + pairs.length + ' no-match rules cannot all be satisfied with ' + names.length +
         ' people. Remove one pair and try again.');
@@ -299,8 +299,8 @@ function runDraw() {
   if (previous) {
     sayUndo(changed.length + ' of ' + names.length + ' links changed' +
       (patching && changed.length < names.length
-        ? ' — everyone else keeps the link you already sent.'
-        : ' — those people all need a new one.'),
+        ? ', everyone else keeps the link you already sent.'
+        : ', those people all need a new one.'),
       () => { drawn = previous; renderResults(); save(true); },
       { label: 'Undo re-draw' });
   } else {
@@ -342,12 +342,12 @@ function renderResults() {
       const isNew = d.changed.includes(santa);
       label.append(el('span', {
         class: 'tag' + (isNew ? ' tag-new' : ''),
-        text: isNew ? 'new link — re-send' : 'unchanged',
+        text: isNew ? 'new link, re-send' : 'unchanged',
       }));
     }
     row.append(label);
 
-    /* Painted in place, never by rebuilding the list — a re-render here would
+    /* Painted in place, never by rebuilding the list, a re-render here would
        throw focus off the button that was just pressed. */
     const sentBtn = el('button', { class: 'btn small sentbtn', type: 'button' });
     const paintSent = () => {
@@ -373,7 +373,7 @@ function renderResults() {
       class: 'btn small', type: 'button',
       'aria-label': 'Copy the message for ' + santa,
       onclick: () => {
-        copyText(msg, 'Message for ' + santa + ' copied — paste it into their text thread');
+        copyText(msg, 'Message for ' + santa + ' copied, paste it into their text thread');
         markSent(true);
       },
     }, 'Copy message'));
@@ -394,7 +394,7 @@ function renderResults() {
           class: 'slipEvent',
           text: [d.event, d.budget && ('Budget: ' + d.budget)].filter(Boolean).join(' · '),
         })),
-      el('div', { class: 'slipFold', 'aria-hidden': 'true', text: '— — — fold — — —' }),
+      el('div', { class: 'slipFold', 'aria-hidden': 'true', text: ', ,  fold,  , ' }),
       el('div', { class: 'slipBottom' },
         el('span', { text: 'You are the Secret Santa for' }),
         el('strong', { text: gets }))));
@@ -409,7 +409,7 @@ function renderResults() {
     ? d.names.length + ' people · everyone gives once · everyone receives once · ' +
       'nobody drew themselves · ' + idx.length +
       (idx.length === 1 ? ' no-match rule respected' : ' no-match rules respected')
-    : 'This draw did not pass its own check — draw again before sending anything.';
+    : 'This draw did not pass its own check, draw again before sending anything.';
   $('proof').classList.toggle('warn', !sound);
 
   const stale = rosterChangedSinceDraw();
@@ -563,7 +563,7 @@ function showQr(url, who) {
     const canvas = $('qrCanvas');
     const count = qr.getModuleCount();
     /* Size the canvas to whole modules that fit the viewport, rather than
-       letting CSS resample a fixed 300px square — a resampled QR stops
+       letting CSS resample a fixed 300px square, a resampled QR stops
        scanning, and a 300px square overflows a 320px phone. */
     const room = Math.max(180, Math.min(300, (window.innerWidth || 320) - 96));
     const cell = Math.max(2, Math.floor(room / (count + 8)));
@@ -577,7 +577,7 @@ function showQr(url, who) {
       if (qr.isDark(r, c)) ctx.fillRect(off + c * cell, off + r * cell, cell, cell);
     canvas.setAttribute('aria-label', 'QR code that opens the private reveal link for ' + who);
   } catch (e) { say('Could not draw the QR'); return; }
-  $('qrTitle').textContent = who + ' — scan for your private reveal';
+  $('qrTitle').textContent = who + ', scan for your private reveal';
   const d = $('qrDlg');
   try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
 }

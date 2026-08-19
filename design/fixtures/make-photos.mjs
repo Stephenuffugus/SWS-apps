@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — document-photo fixtures for Scan to PDF
+   SWS STUDIO, document-photo fixtures for Scan to PDF
 
    Scan to PDF turns phone photos of paper into a straight, sharp PDF, and a
    headless browser has no camera. These are photographs-of-paper as a rendered
    scene: a sheet on a desk surface, rotated a few degrees, with a soft shadow
-   and a slight warm cast — the conditions the app exists to correct for. Shot
+   and a slight warm cast, the conditions the app exists to correct for. Shot
    as JPEG because that is what a camera roll actually hands over.
 
      node design/fixtures/make-photos.mjs
@@ -47,7 +47,7 @@ const html = (s) => `<!doctype html><meta charset=utf-8><style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:900px;height:1200px;overflow:hidden}
 body{
-  /* a desk, not a scanner bed — uneven light is the whole point */
+  /* a desk, not a scanner bed, uneven light is the whole point */
   background:
     radial-gradient(120% 90% at 22% 8%, #efe7db 0%, #d9cdbb 46%, #bdae99 100%);
   display:flex; align-items:center; justify-content:center;
@@ -77,7 +77,7 @@ h1{font-size:21px;letter-spacing:.06em;text-align:center;font-weight:700}
   <div class="tot"><span>${s.total[0]}</span><span>${s.total[1]}</span></div>
   <div class="tot"><span>${s.total[2]}</span><span>${s.total[3]}</span></div>
   <div class="tot grand"><span>${s.total[4]}</span><span>${s.total[5]}</span></div>
-  <div class="foot">THANK YOU — KEEP THIS RECEIPT</div>
+  <div class="foot">THANK YOU, KEEP THIS RECEIPT</div>
 </div>`;
 
 const { chromium } = await import('playwright-core');

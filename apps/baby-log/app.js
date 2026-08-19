@@ -1,4 +1,4 @@
-// Baby Log — giant-button logging, IndexedDB-only storage.
+// Baby Log, giant-button logging, IndexedDB-only storage.
 import {
   newId, sortedEvents, lastOfKind, activeSleep, daySummary,
   agoText, durText, summaryText,
@@ -28,14 +28,13 @@ function el(tag, attrs, ...kids) {
   }
   return n;
 }
-/* Emoji are decoration. Screen readers should hear "Fed — left", not
+/* Emoji are decoration. Screen readers should hear "Fed, left", not
    "woman feeding baby Fed dash left", so every glyph goes in its own
    aria-hidden span. */
 function glyph(ch) { return el('span', { 'aria-hidden': 'true' }, ch + ' '); }
 
 /* ---------- toast, and the undo that now outlives it ----------
-   The old toast owned one node and rewrote it wholesale, so the next tap —
-   and at 3am there is always a next tap — erased the Undo button 350ms into
+   The old toast owned one node and rewrote it wholesale, so the next tap, and at 3am there is always a next tap, erased the Undo button 350ms into
    its promised 8 seconds. Message and undo are now two long-lived children
    with two independent clocks: a later message can never take the way back
    away, and the Undo button is never removed from the DOM while it is live,
@@ -45,14 +44,14 @@ let undoUntil = 0;
 let toastTimer = null;
 let curMsg = '';
 let pendingUndo = null;   // { msg, fn }
-let toastHeld = false;    // pointer or focus inside — the clock stops
+let toastHeld = false;    // pointer or focus inside, the clock stops
 
 function paintToast() {
   const t = $('toast');
   $('toastMsg').textContent = curMsg;
   const btn = $('undoBtn');
   btn.hidden = !pendingUndo;
-  if (pendingUndo) btn.setAttribute('aria-label', 'Undo — ' + pendingUndo.msg);
+  if (pendingUndo) btn.setAttribute('aria-label', 'Undo, ' + pendingUndo.msg);
   t.classList.toggle('act', !!pendingUndo);
   t.classList.toggle('show', !!(curMsg || pendingUndo));
 }
@@ -98,7 +97,7 @@ function hideToast(keepFocus) {
   paintToast();
 }
 /* Destructive actions never ask first; they offer a way back. `fn` restores
-   only the slice that changed — a whole-state snapshot would also revert the
+   only the slice that changed, a whole-state snapshot would also revert the
    baby's name if the parent happened to be typing it. */
 function offerUndo(msg, fn, ms) {
   pendingUndo = { msg, fn };
@@ -109,7 +108,7 @@ function offerUndo(msg, fn, ms) {
   armToast();
 }
 /* #toast transitions visibility, so a synchronous focus() on a toast that was
-   hidden a moment ago is silently rejected — which is every returning user's
+   hidden a moment ago is silently rejected, which is every returning user's
    first delete. The app layer takes visibility out of the transition; the
    frame retry is the belt to that braces. */
 function focusUndo() {
@@ -157,8 +156,8 @@ async function copyText(text, okMsg) {
 
 /* ---------- storage ----------
    Every event is its own record. The old store wrote the entire log to a
-   single 'main' key on every tap, so two tabs on one phone — which is exactly
-   what installing the PWA leaves behind — silently ate each other's entries:
+   single 'main' key on every tap, so two tabs on one phone, which is exactly
+   what installing the PWA leaves behind, silently ate each other's entries:
    last writer won the whole document and the loser was told it saved. Writing
    one key per event means two tabs can only ever touch different keys, and a
    BroadcastChannel tells the other tab to re-read rather than guess. */
@@ -247,7 +246,7 @@ function setSaved(ok, when) {
   line.classList.toggle('bad', !ok);
   $('saveStateText').textContent = ok
     ? (when ? 'Saved on this device · ' + timeOf(when) : 'Saved on this device')
-    : 'Not saved — storage may be full or blocked. Export a backup.';
+    : 'Not saved, storage may be full or blocked. Export a backup.';
 }
 function persist(fn) {
   return dbWrite(fn).then(() => {
@@ -259,7 +258,7 @@ function persist(fn) {
       saveWarned = Date.now();
       /* Short on purpose: the persistent line under the timeline carries the
          full explanation and does not time out. */
-      toast('⚠ Couldn’t save — export a backup', 6000);
+      toast('⚠ Couldn’t save, export a backup', 6000);
     }
   });
 }
@@ -371,14 +370,14 @@ function daySpanWords(start) {
    name and on the printed page. */
 const KIND_TEXT = {
   feed: {
-    left: { glyph: '🤱', text: 'Fed — left' },
-    right: { glyph: '🤱', text: 'Fed — right' },
+    left: { glyph: '🤱', text: 'Fed, left' },
+    right: { glyph: '🤱', text: 'Fed, right' },
     bottle: { glyph: '🍼', text: 'Bottle' },
   },
   diaper: {
-    wet: { glyph: '💧', text: 'Diaper — wet' },
-    dirty: { glyph: '💩', text: 'Diaper — dirty' },
-    both: { glyph: '🌊', text: 'Diaper — both' },
+    wet: { glyph: '💧', text: 'Diaper, wet' },
+    dirty: { glyph: '💩', text: 'Diaper, dirty' },
+    both: { glyph: '🌊', text: 'Diaper, both' },
   },
   sleep_start: { '': { glyph: '😴', text: 'Fell asleep' } },
   sleep_end: { '': { glyph: '🌅', text: 'Woke up' } },
@@ -386,7 +385,7 @@ const KIND_TEXT = {
 function describe(e) {
   return (KIND_TEXT[e.kind] || {})[e.detail || ''] || { glyph: '', text: e.kind };
 }
-/* Pair each wake with the sleep it ended, so paper reads "Woke up — slept
+/* Pair each wake with the sleep it ended, so paper reads "Woke up, slept
    1h 30m" instead of making a pediatrician do subtraction on two rows. */
 function napLengths(events) {
   const out = new Map();
@@ -411,7 +410,7 @@ function renderStatus() {
   if (sleeping) {
     const mins = Math.floor((now - sleeping.ts) / 60000);
     const stale = mins >= STALE_SLEEP_MIN;
-    const line = 'Asleep — ' + durText(Math.max(0, mins)) + ' so far';
+    const line = 'Asleep, ' + durText(Math.max(0, mins)) + ' so far';
     box.append(el('div', { class: 'sleeping' }, glyph('😴'), line));
     said.push(line);
     if (stale) {
@@ -437,12 +436,12 @@ function renderStatus() {
   let nextSide = '';
   let feedLine;
   if (!lastFeed) {
-    feedLine = 'No feeds logged yet — the buttons below are built for one thumb in the dark.';
+    feedLine = 'No feeds logged yet, the buttons below are built for one thumb in the dark.';
   } else if (lastFeed.detail === 'bottle') {
     feedLine = 'Last feed: ' + agoText(now - lastFeed.ts) + ' (bottle)';
   } else {
     nextSide = lastFeed.detail === 'left' ? 'right' : 'left';
-    feedLine = 'Last feed: ' + agoText(now - lastFeed.ts) + ' — ' + lastFeed.detail +
+    feedLine = 'Last feed: ' + agoText(now - lastFeed.ts) + ', ' + lastFeed.detail +
       ' side → start ' + nextSide + ' next';
   }
   box.append(el('div', {}, feedLine));
@@ -462,7 +461,7 @@ function renderStatus() {
   sleepBtn.classList.toggle('active', !!sleeping);
   sleepBtn.setAttribute('aria-pressed', sleeping ? 'true' : 'false');
 
-  /* Mark the side that comes next — ringed and worded, never colour alone. */
+  /* Mark the side that comes next, ringed and worded, never colour alone. */
   for (const b of document.querySelectorAll('.bigbtns button[data-kind="feed"]')) {
     const mark = b.querySelector('.nextmark');
     const isNext = !!nextSide && b.dataset.detail === nextSide;
@@ -487,7 +486,7 @@ function summaryWindow() {
     const start = dayStart(now);
     return {
       start, end: dayEnd(now), now,
-      label: dayLabel(now) + ' — ' + daySpanWords(start),
+      label: dayLabel(now) + ', ' + daySpanWords(start),
       note: 'The log day turns over at ' + ROLL_LABEL + ' (' + daySpanWords(start) +
         '), so a night counts with the day it started.',
     };
@@ -526,8 +525,8 @@ function renderSummary() {
   if (s.sleepOpenMin > 0) {
     kids.splice(2, 0, el('div', { class: 'sub' },
       s.sleepOpenMin >= STALE_SLEEP_MIN
-        ? 'A sleep timer has been running ' + durText(s.sleepOpenMin) + ' — end it above and it will count.'
-        : 'Asleep now — ' + durText(s.sleepOpenMin) + ' more so far, counted once they wake.'));
+        ? 'A sleep timer has been running ' + durText(s.sleepOpenMin) + ', end it above and it will count.'
+        : 'Asleep now, ' + durText(s.sleepOpenMin) + ' more so far, counted once they wake.'));
   }
   box.replaceChildren(...kids);
 }
@@ -554,7 +553,7 @@ function removeEntry(entry, fromKeyboard) {
     if (back) back.focus();
   }, 8000);
   /* Keyboard activation reports detail 0. Only then do we chase focus into the
-     toast — a thumb tap should never have the page move under it. */
+     toast, a thumb tap should never have the page move under it. */
   if (fromKeyboard) focusUndo();
 }
 
@@ -573,7 +572,7 @@ function setEntryTime(entry, ts) {
 }
 
 /* One inline editor, shared by "fix this row's time" and "set when they woke".
-   A sheet, never a modal — nothing may open over the log surface. */
+   A sheet, never a modal, nothing may open over the log surface. */
 function timeEditor(opts) {
   const id = 'te-' + Math.random().toString(36).slice(2, 8);
   const base = opts.baseTs;
@@ -596,7 +595,7 @@ function timeEditor(opts) {
   out.append(
     el('label', { class: 'f', for: id }, el('span', {}, opts.label || 'Time'), input),
     resolved,
-    el('p', { class: 'hint', text: 'A time later than now means yesterday — the line above shows the day it will be saved on.' }),
+    el('p', { class: 'hint', text: 'A time later than now means yesterday, the line above shows the day it will be saved on.' }),
     el('div', { class: 'row' },
       el('button', {
         class: 'btn primary', type: 'button',
@@ -676,12 +675,12 @@ function renderTimeline() {
   more.classList.toggle('hidden', rest === 0);
   if (rest) {
     more.textContent = rest > PAGE_STEP
-      ? 'Show ' + PAGE_STEP + ' more — ' + rest + ' older entries not shown'
+      ? 'Show ' + PAGE_STEP + ' more, ' + rest + ' older entries not shown'
       : 'Show ' + rest + ' earlier ' + (rest === 1 ? 'entry' : 'entries');
   }
   $('hiddenNote').textContent = rest
     ? rest + ' older ' + (rest === 1 ? 'entry is' : 'entries are') +
-      ' not shown yet. Nothing is capped and nothing is deleted — every entry is here, printed and exported.'
+      ' not shown yet. Nothing is capped and nothing is deleted, every entry is here, printed and exported.'
     : '';
   $('hiddenNote').classList.toggle('hidden', !rest);
 
@@ -700,7 +699,7 @@ function renderTimeline() {
     }
     const d = describe(e);
     const nap = naps.get(e.id);
-    const text = nap ? d.text + ' — slept ' + durText(nap) : d.text;
+    const text = nap ? d.text + ', slept ' + durText(nap) : d.text;
     const row = el('li', {},
       /* The timestamp is the edit affordance. A feed logged 97 minutes late
          used to be uncorrectable; now the time itself is the button. */
@@ -738,7 +737,7 @@ function renderTimeline() {
    pediatrician count 151 rows by hand. */
 function renderPrintHead() {
   const now = new Date();
-  $('printName').textContent = (data.name || 'Baby') + ' — feeding, sleep & diaper log';
+  $('printName').textContent = (data.name || 'Baby') + ', feeding, sleep & diaper log';
   $('printDate').textContent = 'Printed ' +
     now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
     ' · kept on one phone, never uploaded';
@@ -775,7 +774,7 @@ function renderPrintTotals() {
       el('td', { text: durText(s.sleepClosedMin) }));
   });
   box.append(
-    el('h3', { text: 'Daily totals — ' + days.length + ' ' + (days.length === 1 ? 'day' : 'days') }),
+    el('h3', { text: 'Daily totals, ' + days.length + ' ' + (days.length === 1 ? 'day' : 'days') }),
     el('table', { class: 'totals' }, el('thead', {}, head), el('tbody', {}, rows)),
     el('p', { class: 'sub', text: 'A day runs 5am to 5am, so a night is counted with the day it started. A “both” diaper counts once as wet and once as dirty.' }));
 }
@@ -795,7 +794,7 @@ function logEvent(kind, detail) {
   /* No trim. The old cap silently dropped the oldest 1,000 entries at 5,000
      under a "Logged ✓", and a later export could not get them back. */
   if (data.events.length === 10000) {
-    toast('Your log has 10,000 entries. Everything is kept — export a backup now and then.', 6000);
+    toast('Your log has 10,000 entries. Everything is kept, export a backup now and then.', 6000);
   }
   return renderAll();
 }
@@ -858,8 +857,8 @@ function wire() {
     const w = summaryWindow();
     const s = daySummary(data.events, w.start, w.end, w.now);
     const notes = s.sleepOpenMin >= STALE_SLEEP_MIN
-      ? ['(a sleep timer is still running — end it for an accurate total)'] : [];
-    copyText(summaryText(data.name, s, w.label, notes), 'Summary copied — hand off the shift');
+      ? ['(a sleep timer is still running, end it for an accurate total)'] : [];
+    copyText(summaryText(data.name, s, w.label, notes), 'Summary copied, hand off the shift');
   });
   $('printBtn').addEventListener('click', () => window.print());
   /* Ctrl+P has to produce the same paper as the button, so the expansion hangs
@@ -915,7 +914,7 @@ function wire() {
         next = { name: typeof obj.name === 'string' ? obj.name.slice(0, 40) : '', events: clean };
       } catch (e) { toast('That file doesn’t look like a Baby Log backup.'); return; }
       /* Restore replaces weeks of nights. This one destructive action still
-         says what it is about to do before it does it — everything else in
+         says what it is about to do before it does it, everything else in
          the app is undo-only. */
       const have = data.events.length;
       if (have && !confirm(
@@ -933,7 +932,7 @@ function wire() {
       editingId = null;
       replaceAll({ name: data.name, events: data.events.concat(quarantined) });
       renderAll();
-      offerUndo('Backup restored — ' + data.events.length +
+      offerUndo('Backup restored, ' + data.events.length +
         (data.events.length === 1 ? ' entry.' : ' entries.') +
         (skipped ? ' ' + skipped + ' skipped: impossible dates.' : ''), () => {
         data.name = snapshot.name;
@@ -977,7 +976,7 @@ async function init() {
   if (restored) setSaved(true, null);
   if (bad) {
     toast(bad + ' ' + (bad === 1 ? 'entry has' : 'entries have') +
-      ' an impossible date and are hidden — they are still in your backup.', 8000);
+      ' an impossible date and are hidden, they are still in your backup.', 8000);
   }
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

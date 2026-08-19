@@ -1,4 +1,4 @@
-/* Scan to PDF — the session store.
+/* Scan to PDF, the session store.
 
    The audit's fatal case: eight pages of a signed lease captured at a leasing
    office counter, an incoming call, the tab evicted, and nothing to come back
@@ -11,7 +11,7 @@
    Order and rotation live in one small localStorage record instead of inside
    the page rows, so reordering 40 pages rewrites 2 KB rather than 40 MB.
 
-   Nothing in this file — or anywhere in this app — opens a network connection. */
+   Nothing in this file, or anywhere in this app, opens a network connection. */
 
 const DB_NAME = 'sws-scan-to-pdf';
 const STORE = 'pages';

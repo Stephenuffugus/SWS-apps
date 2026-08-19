@@ -1,4 +1,4 @@
-// Sub Plans — substitute folder builder. localStorage, print-CSS output,
+// Sub Plans, substitute folder builder. localStorage, print-CSS output,
 // whole-folder-in-a-link share. All user data rendered via textContent.
 //
 // Nothing here talks to a network. The only way a word of this leaves the
@@ -51,30 +51,30 @@ export const SCHEMA = {
   sections: [
     ['The basics', [
       ['teacher', 'Your name', false, 'Ms. Rivera'],
-      ['class', 'Class & grade', false, '3rd grade — 24 kids'],
+      ['class', 'Class & grade', false, '3rd grade, 24 kids'],
       ['room', 'Room', false, '12'],
       ['school', 'School', false, 'Maple Elementary'],
     ]],
     ['Today', [
       ['date', 'Date (leave blank for the binder copy)', false, 'Tuesday, Sep 8'],
-      ['plan', 'The plan, hour by hour', true, '8:00 Morning work — packet on my desk\n9:15 Math — video queued on the laptop, then worksheet p. 34\n11:30 Lunch — they walk themselves down at 11:28\n12:15 Read-aloud — the bookmark is in the book\n2:45 Pack up, stack chairs'],
+      ['plan', 'The plan, hour by hour', true, '8:00 Morning work, packet on my desk\n9:15 Math, video queued on the laptop, then worksheet p. 34\n11:30 Lunch, they walk themselves down at 11:28\n12:15 Read-aloud, the bookmark is in the book\n2:45 Pack up, stack chairs'],
       ['backup', 'If you run out of material', true, 'Extra worksheets in the blue tray. Silent reading always works. They will tell you Fun Friday is a thing. It is not.'],
     ]],
     ['First ten minutes', [
       ['bathroom', 'Bathroom & hallway', true, 'One at a time, with the pass hanging by the door.'],
       ['wifi', 'WiFi & computer passwords', true, 'WiFi: MapleGuest / maple2024!\nLaptop: rivera12'],
       ['office', 'Office / front desk', false, 'Ext. 100'],
-      ['neighbor', 'Teacher next door', false, 'Mrs. Alvarez, Rm 14 — she knows my routines'],
+      ['neighbor', 'Teacher next door', false, 'Mrs. Alvarez, Rm 14, she knows my routines'],
     ]],
     ['The class', [
-      ['helpers', 'Helpers you can trust', true, 'Ava and Marcus know every routine — ask them anything.'],
-      ['needs', 'Kids who need something', true, 'Jordan sits up front (glasses). Sam leaves at 1:40 for speech — he knows the way.'],
-      ['behavior', 'Behavior system', true, 'Marble jar on my desk — add for good choices, never take away. If someone is really struggling, Mrs. Alvarez next door will take them for a reset.'],
+      ['helpers', 'Helpers you can trust', true, 'Ava and Marcus know every routine, ask them anything.'],
+      ['needs', 'Kids who need something', true, 'Jordan sits up front (glasses). Sam leaves at 1:40 for speech, he knows the way.'],
+      ['behavior', 'Behavior system', true, 'Marble jar on my desk, add for good choices, never take away. If someone is really struggling, Mrs. Alvarez next door will take them for a reset.'],
     ]],
     ['Routines', [
-      ['schedule', 'Bell schedule', true, '8:00 First bell — pick them up at door 4\n10:30 Recess\n11:30 Lunch\n1:00 Specials (Mon art · Tue music · Wed PE)\n3:05 Dismissal'],
-      ['attendance', 'Attendance', true, 'Clipboard by the door — take it by 8:15, a helper runs the slip to the office.'],
-      ['dismissal', 'Dismissal', true, 'Bus riders leave at 3:05 — the list is taped by the door. Pickup kids wait on the rug until called.'],
+      ['schedule', 'Bell schedule', true, '8:00 First bell, pick them up at door 4\n10:30 Recess\n11:30 Lunch\n1:00 Specials (Mon art · Tue music · Wed PE)\n3:05 Dismissal'],
+      ['attendance', 'Attendance', true, 'Clipboard by the door, take it by 8:15, a helper runs the slip to the office.'],
+      ['dismissal', 'Dismissal', true, 'Bus riders leave at 3:05, the list is taped by the door. Pickup kids wait on the rug until called.'],
     ]],
     ['Where things are', [
       ['where', 'Where things are', true, 'Seating chart taped to my desk. Today’s materials in the tray marked TODAY. Extra pencils in the red bin.'],
@@ -82,34 +82,34 @@ export const SCHEMA = {
     ]],
     ['People to lean on', [
       ['nurse', 'Nurse', false, 'Ext. 108'],
-      ['admin', 'Admin on duty', false, 'Mr. Okafor — ext. 103'],
+      ['admin', 'Admin on duty', false, 'Mr. Okafor, ext. 103'],
     ]],
     ['Emergencies', [
       ['drills', 'Fire · lockdown · drills', true, 'Fire: out our door, turn left, flagpole. Grab the class list hanging by the door.\nLockdown: lights off, door locked, everyone in the corner by the cubbies.'],
-      ['health', 'Health alerts', true, 'Maya R: peanut allergy — EpiPen is in the nurse’s office, plan in the red folder on my desk.'],
+      ['health', 'Health alerts', true, 'Maya R: peanut allergy, EpiPen is in the nurse’s office, plan in the red folder on my desk.'],
     ]],
     ['End of the day', [
-      ['note', 'Anything else + a thank-you', true, 'Leave the room roughly standing and a note about how it went — that’s all I ask. Thank you SO much for being here.'],
+      ['note', 'Anything else + a thank-you', true, 'Leave the room roughly standing and a note about how it went, that’s all I ask. Thank you SO much for being here.'],
     ]],
   ],
 };
 
 /* Secondary school is half the audience and the examples above are all
-   elementary. Same fields, different worked examples — a teacher who reads
+   elementary. Same fields, different worked examples, a teacher who reads
    "marble jar on my desk" concludes the tool was built for somebody else. */
 const SECONDARY = {
-  class: ['Classes & grade', '8th grade science — 6 periods, 3 preps'],
-  plan: ['The plan, period by period', 'P1 8:05 Bio — video queued, worksheet in the P1 tray\nP2 9:00 Bio — same\nP3 9:55 Phys Sci — reading p. 112 + questions 1-8\nP4 10:50 PREP — no class\nP5 11:45 Lunch duty, cafeteria east door\nP6 12:40 Phys Sci — same as P3\nP7 1:35 Bio — same as P1'],
+  class: ['Classes & grade', '8th grade science, 6 periods, 3 preps'],
+  plan: ['The plan, period by period', 'P1 8:05 Bio, video queued, worksheet in the P1 tray\nP2 9:00 Bio, same\nP3 9:55 Phys Sci, reading p. 112 + questions 1-8\nP4 10:50 PREP, no class\nP5 11:45 Lunch duty, cafeteria east door\nP6 12:40 Phys Sci, same as P3\nP7 1:35 Bio, same as P1'],
   backup: ['If you run out of material', 'Article + five questions in the folder marked SUB on the desk. Silent reading is fine. Do not start the lab.'],
-  helpers: ['Students you can trust', 'P1 ask Dev or Amara. P3 ask Kayla — she runs the attendance slip.'],
-  needs: ['Students who need something', 'P2 Jordan sits front (glasses). P6 Sam leaves at 1:40 — signed out, he knows.'],
+  helpers: ['Students you can trust', 'P1 ask Dev or Amara. P3 ask Kayla, she runs the attendance slip.'],
+  needs: ['Students who need something', 'P2 Jordan sits front (glasses). P6 Sam leaves at 1:40, signed out, he knows.'],
   behavior: ['Behavior & phones', 'Phones in the wall caddy at the bell. Warning, then move the seat, then write it up. Referral forms are in the top drawer.'],
   schedule: ['Period times', 'P1 8:05 · P2 9:00 · P3 9:55 · P4 10:50 · P5 11:45 · P6 12:40 · P7 1:35\nBells are two minutes early on Wednesdays (advisory).'],
-  attendance: ['Attendance', 'Take it in the first five minutes of every period — the tablet is on the podium, it logs you out between bells.'],
+  attendance: ['Attendance', 'Take it in the first five minutes of every period, the tablet is on the podium, it logs you out between bells.'],
   dismissal: ['End of each period', 'Nobody leaves before the bell. Stack stools, close the gas taps at the back bench.'],
   where: ['Where things are', 'Seating charts for all six periods in the black binder on the desk, one per tab. Handouts in the trays by period.'],
   tech: ['Tech', 'Projector remote lives in the mug. If the board freezes, unplug the black cable and count to ten.'],
-  note: ['Anything else + a thank-you', 'Leave me the period-by-period rundown if you can — thank you for taking six groups of teenagers on short notice.'],
+  note: ['Anything else + a thank-you', 'Leave me the period-by-period rundown if you can, thank you for taking six groups of teenagers on short notice.'],
 };
 
 const HEADER_KEYS = ['teacher', 'class', 'room', 'school', 'date'];
@@ -170,7 +170,7 @@ function save() {
   } catch (e) {
     if (!storageBroken) {
       storageBroken = true;
-      toast('This browser will not let the folder save — copy the link and keep it somewhere safe before you close the tab.', 9000, { assertive: true });
+      toast('This browser will not let the folder save, copy the link and keep it somewhere safe before you close the tab.', 9000, { assertive: true });
     }
     return false;
   }
@@ -203,7 +203,7 @@ function updateCount(counter, value) {
   const n = value.length;
   if (n < CAP_WARN_AT) { counter.textContent = ''; counter.classList.remove('near'); return; }
   counter.textContent = n >= FIELD_CAP
-    ? 'Full — ' + FIELD_CAP.toLocaleString() + ' characters is the limit for this box'
+    ? 'Full, ' + FIELD_CAP.toLocaleString() + ' characters is the limit for this box'
     : (FIELD_CAP - n).toLocaleString() + ' characters left';
   counter.classList.toggle('near', n >= FIELD_CAP);
 }
@@ -239,7 +239,7 @@ function renderForm() {
             try { ev.target.setSelectionRange(at, at); } catch (e2) {}
             if (!capWarned) {
               capWarned = true;
-              toast('That box is full at ' + FIELD_CAP.toLocaleString() + ' characters — the rest was not kept. Split it across another field.', 8000, { assertive: true });
+              toast('That box is full at ' + FIELD_CAP.toLocaleString() + ' characters, the rest was not kept. Split it across another field.', 8000, { assertive: true });
             }
           }
           data[key] = ev.target.value;
@@ -366,7 +366,7 @@ function renderSheet(target, pages) {
 
   if (!hasContent()) {
     sheet.append(el('div', { class: 'emptynote' },
-      'Sub Plans — this folder is empty. Fill in at least one field, then print.'));
+      'Sub Plans, this folder is empty. Fill in at least one field, then print.'));
     return;
   }
 
@@ -387,9 +387,9 @@ function renderSheet(target, pages) {
   const qrb = printQrBlock();
   body.append(el('div', { class: 'shead' },
     el('div', { class: 'headtext' },
-      el('h1', {}, 'Sub Plans' + (filled('teacher') ? ' — ' + data.teacher.trim() : '')),
+      el('h1', {}, 'Sub Plans' + (filled('teacher') ? ', ' + data.teacher.trim() : '')),
       subBits.length ? el('div', { class: 'sub', text: subBits.join(' · ') }) : null,
-      el('div', { class: 'warm', text: 'Thank you for being here today — this folder has everything you need.' })),
+      el('div', { class: 'warm', text: 'Thank you for being here today, this folder has everything you need.' })),
     qrb));
 
   // emergency box first: the page a sub needs before anything goes wrong
@@ -452,8 +452,7 @@ function alertIcon() {
   return svg;
 }
 
-/* An empty rectangle gets "they were great, thanks!". Checkboxes get answers —
-   the research says this page is in every credible template. */
+/* An empty rectangle gets "they were great, thanks!". Checkboxes get answers, the research says this page is in every credible template. */
 const FEEDBACK_TICKS = [
   'We got through the plan', 'We did not finish it', 'I used the backup activity',
   'Someone was a real help', 'Someone struggled', 'I left work to grade',
@@ -461,7 +460,7 @@ const FEEDBACK_TICKS = [
 ];
 function feedbackBox() {
   const box = el('div', { class: 'noteback' },
-    el('h3', {}, 'How did it go? Leave me a note —'));
+    el('h3', {}, 'How did it go? Leave me a note , '));
   const ticks = el('ul', { class: 'ticks' });
   for (const t of FEEDBACK_TICKS) ticks.append(el('li', {}, el('span', { class: 'box' }), t));
   box.append(ticks);
@@ -495,8 +494,8 @@ function computePages() {
     last = Math.max(last, top + h);
     flat = Math.max(flat, raw + h);
   }
-  // whatever sits below the final atom — box padding, borders, the sheet's own
-  // trailing space — still occupies paper
+  // whatever sits below the final atom, box padding, borders, the sheet's own
+  // trailing space, still occupies paper
   last += Math.max(0, box.height * 0.75 - flat);
   return Math.max(1, Math.ceil(last / PAGE_PT));
 }
@@ -607,14 +606,14 @@ function refreshShareNote() {
     : inside[0];
   out.textContent = inside.length
     ? 'This link will carry ' + list + ' inside the web address itself. Send it only to someone you would hand the paper folder to.'
-    : 'The whole folder travels inside the web address itself. Nothing is uploaded, but a web address is easy to forward on — send it only to someone you would hand the paper folder to.';
+    : 'The whole folder travels inside the web address itself. Nothing is uploaded, but a web address is easy to forward on, send it only to someone you would hand the paper folder to.';
 }
 
 /* ---------- wiring ---------- */
 function wire() {
   // Ctrl/Cmd+P must print the CURRENT folder, not a blank or stale one
   window.addEventListener('beforeprint', () => {
-    if (!hasContent()) toast('Nothing is filled in yet — that print will be one near-blank sheet.', 5000);
+    if (!hasContent()) toast('Nothing is filled in yet, that print will be one near-blank sheet.', 5000);
     renderSheet($('sheet'), pageCount);
   });
   $('printBtn').addEventListener('click', async () => {
@@ -635,7 +634,7 @@ function wire() {
     try { localStorage.setItem(QRP_KEY, qrOnPaper ? '1' : '0'); } catch (e) {}
     if (qrDirty) await refreshQr();
     if (qrOnPaper && !qrUrl && hasContent()) {
-      toast('This folder is too long for a QR anyone could scan, so nothing will be printed — use Copy link instead.', 7000);
+      toast('This folder is too long for a QR anyone could scan, so nothing will be printed, use Copy link instead.', 7000);
     }
     updatePageCount();
     if ($('sheet').classList.contains('preview')) renderSheet($('sheet'), pageCount);
@@ -669,16 +668,16 @@ function wire() {
     if (!hasContent()) { toast('Fill in at least one field first'); return; }
     const url = await shareUrl();
     const long = url.length > 2000
-      ? ' It is ' + url.length.toLocaleString() + ' characters long, so some apps will cut it in half — printing is safer for a folder this size.'
+      ? ' It is ' + url.length.toLocaleString() + ' characters long, so some apps will cut it in half, printing is safer for a folder this size.'
       : '';
-    copyText(url, 'Link copied — the whole folder is inside it.' + long);
+    copyText(url, 'Link copied, the whole folder is inside it.' + long);
   });
   $('qrBtn').addEventListener('click', async () => {
     if (!hasContent()) { toast('Fill in at least one field first'); return; }
     const url = await shareUrl();
     if (url.length > MAX_QR_URL) {
       toast('This folder is about ' + Math.round((url.length - MAX_QR_URL) / 10) * 10
-        + ' characters too long for a QR anyone could scan — use Copy link instead, or shorten the longest boxes.', 7000);
+        + ' characters too long for a QR anyone could scan, use Copy link instead, or shorten the longest boxes.', 7000);
       return;
     }
     showQr(url);
@@ -695,7 +694,7 @@ function openShared(hash) {
   const apply = (shared) => {
     if (!shared) {
       history.replaceState(null, '', location.pathname + location.search);
-      toast('That link does not carry a readable folder — it may have been cut short in the message.', 6000);
+      toast('That link does not carry a readable folder, it may have been cut short in the message.', 6000);
       return;
     }
     if (hasContent() && !confirm('Open the shared folder? Your saved one will be replaced.')) {
@@ -708,7 +707,7 @@ function openShared(hash) {
     renderForm(); applyView(); markDirty();
     history.replaceState(null, '', location.pathname + location.search);
     if (window.SWS && window.SWS.undo) {
-      window.SWS.undo('Folder loaded from the link — your own folder was replaced.', () => {
+      window.SWS.undo('Folder loaded from the link, your own folder was replaced.', () => {
         data = before;
         save();
         renderForm(); applyView(); markDirty();
@@ -751,7 +750,7 @@ init();
 /* ---------- QR on screen ---------- */
 function showQr(url) {
   const built = buildQr(url);
-  if (!built) { toast('Could not draw the QR — use Copy link instead.'); return; }
+  if (!built) { toast('Could not draw the QR, use Copy link instead.'); return; }
   const { qr, count } = built;
   const canvas = $('qrCanvas');
   /* Module size follows the module count, and the bitmap stays an exact
@@ -768,7 +767,7 @@ function showQr(url) {
   const cell = cssCell * scale;
   const off = 4 * cell;
   const ctx = canvas.getContext('2d');
-  if (!ctx) { toast('Could not draw the QR — use Copy link instead.'); return; }
+  if (!ctx) { toast('Could not draw the QR, use Copy link instead.'); return; }
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#000';
   for (let r = 0; r < count; r++) for (let c = 0; c < count; c++)

@@ -1,4 +1,4 @@
-// jsdom smoke — add meds, persistence, printed grid rows.
+// jsdom smoke, add meds, persistence, printed grid rows.
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 

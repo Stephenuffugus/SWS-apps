@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — Play Store screenshots
+   SWS STUDIO, Play Store screenshots
 
    Screenshots are the listing. Almost nobody reads the description; they swipe
-   the images and decide. So these are not raw captures — each one is a
+   the images and decide. So these are not raw captures, each one is a
    composed panel: a caption in the app's own display face, over the app's own
    paper, above a real screenshot of the real app with real content in it.
 
@@ -14,8 +14,8 @@
    ── The aspect-ratio trap ────────────────────────────────────────────────
 
    Google Play rejects phone screenshots whose aspect ratio is taller than
-   9:16. A modern phone viewport is about 412x915, which is 1:2.22 — well past
-   the limit — so the obvious thing (screenshot a phone-sized page and upload
+   9:16. A modern phone viewport is about 412x915, which is 1:2.22, well past
+   the limit, so the obvious thing (screenshot a phone-sized page and upload
    it) fails validation. Every panel here is composed at exactly 1080x1920,
    which is 9:16 on the nose, and the app capture is placed inside it.
 
@@ -90,7 +90,7 @@ function fontFace(voice) {
   return `@font-face{font-family:"${FONT_FILES[key].family}";src:url(data:font/woff2;base64,${b64}) format("woff2");font-weight:${FONT_FILES[key].weights};font-display:block}`;
 }
 
-/* Same solver the rest of the studio uses — the caption has to clear 4.6:1 on
+/* Same solver the rest of the studio uses, the caption has to clear 4.6:1 on
    the app's own paper, whatever hue that paper happens to be. */
 function ink(slug, target, dark = false) {
   const skin = SKINS[slug];
@@ -144,7 +144,7 @@ p{margin-top:20px;font-size:34px;line-height:1.3;font-weight:450;color:${ink(slu
 /* ── run ─────────────────────────────────────────────────────────────────── */
 
 if (!slugs.length) {
-  console.log('nothing to do — no scene defined for the requested app(s). Try --list');
+  console.log('nothing to do, no scene defined for the requested app(s). Try --list');
   process.exit(0);
 }
 
@@ -160,11 +160,10 @@ for (const slug of slugs) {
 
   /* Panels are named <index>-<slug>.png, so renaming or removing a panel would
      leave the old file sitting in the directory looking exactly as current as
-     the new one — and for a directory whose whole purpose is "upload these to
+     the new one, and for a directory whose whole purpose is "upload these to
      Play", a stale panel is worse than a missing one.
 
-     But do NOT clear the directory up front. A run killed part-way through —
-     a timeout, a Ctrl-C — would then leave the app with fewer screenshots than
+     But do NOT clear the directory up front. A run killed part-way through, a timeout, a Ctrl-C, would then leave the app with fewer screenshots than
      it started with, which is how qr-maker lost three good panels. Render
      first, remember what was written, and sweep the leftovers only once the
      app has completed. An interrupted run now costs nothing. */
@@ -175,7 +174,7 @@ for (const slug of slugs) {
        three lines pushes the sub-line into the phone frame and gets clipped.
        Cheaper to say so here than to notice it in a contact sheet later. */
     if (panel.caption.length > 34) {
-      console.log(`  !  ${slug}/${panel.slug}: caption is ${panel.caption.length} chars — may wrap into the frame`);
+      console.log(`  !  ${slug}/${panel.slug}: caption is ${panel.caption.length} chars, may wrap into the frame`);
     }
 
     const page = await browser.newPage({
@@ -199,8 +198,7 @@ for (const slug of slugs) {
 
     /* Seeding a scene usually trips an undo toast, and a half-faded toast
        across the bottom of a store screenshot reads as a notification the app
-       is nagging with. Let it retire on its own rather than deleting it —
-       waiting proves the toast really does go away, which deleting would hide.
+       is nagging with. Let it retire on its own rather than deleting it, waiting proves the toast really does go away, which deleting would hide.
 
        The toast holds its dismiss clock while the pointer is inside it, which
        is deliberate and correct: an undo that vanishes under your finger is
@@ -210,7 +208,7 @@ for (const slug of slugs) {
     await page.mouse.move(4, 4);
     await page.waitForFunction(() => {
       const t = document.getElementById('toast');
-      /* Test the painted state, not offsetParent — the toast is position:fixed
+      /* Test the painted state, not offsetParent, the toast is position:fixed
          and offsetParent is null for fixed elements whether it is on screen or
          not, so that check reads "gone" the entire time it is visible. */
       return !t || getComputedStyle(t).opacity === '0' || !t.classList.contains('show');

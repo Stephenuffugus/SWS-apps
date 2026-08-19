@@ -245,7 +245,7 @@
     padding-left:64px;padding-right:12px;
   }
   /* "hand me one": a doodle in the margin for the moment the list is a wall.
-     One tap picks a task and starts the clock — zero decisions. */
+     One tap picks a task and starts the clock, zero decisions. */
   #handBtn{
     position:absolute;left:6px;top:50%;transform:translateY(-50%);
     width:40px;height:40px;border-radius:50%;
@@ -624,7 +624,7 @@
 <script src="sws-ui.js"></script>
 <script>
 /* =========================================================
-   CROSS OFF — Sky Wolf Studio · SWS Strategic Media LLC
+   CROSS OFF, Sky Wolf Studio · SWS Strategic Media LLC
    A paper to-do list you cross off with real highlighters.
    Priorities (NOW/TODAY/SOON) · beat-the-clock countdowns ·
    personal records · focus mode · multi-page notebook ·
@@ -898,7 +898,7 @@ function render(){
   }
   /* open work on top, crossed-off work settles to the bottom of the page.
      What is left to do is the first thing she sees, not what is already
-     behind her — the wins wait at the bottom, ink and all */
+     behind her, the wins wait at the bottom, ink and all */
   const open=p.tasks.filter(t=>!t.done);
   const done=p.tasks.filter(t=>t.done);
   for(const pri of [1,2,3]){
@@ -1050,7 +1050,7 @@ function openEditSheet(task){
   noteEl.value=task.note||'';
 
   /* the little checklist within the checklist: dishwasher becomes load it,
-     run it, empty it — and when the last one lands, the big line lights up */
+     run it, empty it, and when the last one lands, the big line lights up */
   task.steps=task.steps||[];
   const renderSteps=()=>{
     const box=document.getElementById('shSteps');
@@ -1403,7 +1403,7 @@ function finishCountdown(task){
 }
 
 /* ---------- steps: the checklist within the checklist ----------
-   The last step landing is a real win, so it celebrates — and then leaves
+   The last step landing is a real win, so it celebrates, and then leaves
    the big line glowing on the page for HER to cross off. The app never
    steals the stroke. */
 function toggleStep(task,i,rerender){
@@ -1421,7 +1421,7 @@ function stepCelebration(task){
   announce('All the steps are done. '+task.text+' is ready to cross off.');
   if(window.SWS&&SWS.toast)SWS.toast('Every step of "'+task.text.slice(0,32)+'" is done. Go cross it off.');
   /* clear the sheet away so the glowing line and the highlighters are right
-     there — the crossing off is hers */
+     there, the crossing off is hers */
   if(sheet.classList.contains('show'))setTimeout(closeSheet,650);
 }
 function renderFocusSteps(task){

@@ -4,7 +4,7 @@
 
    axe flagged 14 apps for having no main landmark, and 148 nodes of content
    sitting outside any landmark at all. It is also what the base's skip link
-   points at — the link exists and styles correctly but, without a target, does
+   points at, the link exists and styles correctly but, without a target, does
    nothing for the keyboard user it was added for.
 
    Everything between the app header and the close of .wrap becomes <main>.
@@ -49,7 +49,7 @@ for (const slug of Object.keys(SKINS)){
   const wrapOpen = html.search(/<div class="wrap"/i);
   const headerClose = html.search(/<\/header>/i);
   if (wrapOpen === -1 || headerClose === -1 || headerClose < wrapOpen){
-    console.log(`  !! ${slug}: no .wrap / </header> pair — needs a hand`);
+    console.log(`  !! ${slug}: no .wrap / </header> pair, needs a hand`);
     continue;
   }
 

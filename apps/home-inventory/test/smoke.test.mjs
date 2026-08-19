@@ -1,4 +1,4 @@
-// jsdom smoke test — drives the home-inventory UI (no IndexedDB, no canvas;
+// jsdom smoke test, drives the home-inventory UI (no IndexedDB, no canvas;
 // the app must degrade; photo capture is exercised via a stubbed pick).
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
@@ -53,7 +53,7 @@ clickText($('askBtns'), 'Create');
 await sleep(60);
 check('editor opens with default rooms', $('view').textContent.includes('Living room'));
 
-// capture an item (no photo — jsdom has no canvas; name-only path)
+// capture an item (no photo, jsdom has no canvas; name-only path)
 const nameIn = $('capName');
 type(nameIn, '65-inch TV');
 const valIn = $('capValue');

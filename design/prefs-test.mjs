@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — comfort panel, driven in a real browser
+   SWS STUDIO, comfort panel, driven in a real browser
 
      node design/prefs-test.mjs            all 23 apps
      node design/prefs-test.mjs qr-maker   one app
 
    This does not check that the CSS "looks right". It drives the panel the way
-   a person would — open it, press an option, reload, open a different app —
-   and asserts the thing the user actually wanted happened: the text really got
+   a person would, open it, press an option, reload, open a different app, and asserts the thing the user actually wanted happened: the text really got
    bigger, the page really went dark, the choice really survived a reload, and
    it really carried across to the next app.
 
@@ -88,7 +87,7 @@ const measure = (page) => page.evaluate(() => {
   const body = getComputedStyle(document.body);
   const h = document.querySelector('h1, .hero h2');
 
-  /* A custom property's computed value is its TOKEN TEXT — getPropertyValue
+  /* A custom property's computed value is its TOKEN TEXT, getPropertyValue
      hands back "calc(16px * 0.8)" and "max(44px, ...)", never a length. Read
      them off a throwaway element that actually has to lay out, so the numbers
      below are the ones the browser really used. */
@@ -142,7 +141,7 @@ for (const slug of slugs) {
     }
 
     /* It has to sit on the title's line. Landing anywhere inside the header is
-       not good enough — appended to the wrong container it ends up stranded on
+       not good enough, appended to the wrong container it ends up stranded on
        its own row under the app name, which looks like a mistake because it is
        one. Vertical overlap with the <h1> is the check. */
     const inRow = await page.evaluate(() => {
@@ -165,13 +164,13 @@ for (const slug of slugs) {
     });
     if (!open.exists) fail(slug, 'panel never got built');
     if (!open.open) fail(slug, 'panel did not open');
-    if (!open.modal) fail(slug, 'panel opened non-modally — Esc and focus trapping are lost');
+    if (!open.modal) fail(slug, 'panel opened non-modally, Esc and focus trapping are lost');
     if (!open.focusInside) fail(slug, 'focus stayed outside the open dialog');
 
     /* The footer must be inside the dialog and inside the viewport. The first
        build guessed the scroller's height with a fixed calc(), and as soon as
        the note wrapped to three lines Done and Reset were pushed out of the
-       box — the panel opened fine and could not be dismissed by button. */
+       box, the panel opened fine and could not be dismissed by button. */
     const foot = await page.evaluate(() => {
       const d = document.getElementById('swsPrefs').getBoundingClientRect();
       const b = document.querySelector('#swsPrefs .sws-foot .btn.primary')?.getBoundingClientRect();
@@ -203,7 +202,7 @@ for (const slug of slugs) {
       const w = (el) => parseFloat(getComputedStyle(el, '::before').width);
       return Math.abs(w(on) - w(off));
     });
-    if (jitter > 0.5) fail(slug, `selected chip reserves ${jitter}px more than an unselected one — the row will shift on tap`);
+    if (jitter > 0.5) fail(slug, `selected chip reserves ${jitter}px more than an unselected one, the row will shift on tap`);
 
     /* Esc must close it. Native <dialog> gives this away for free, so a
        failure here means something swallowed the key. */
@@ -217,13 +216,13 @@ for (const slug of slugs) {
     await choose(page, 'Text size', 'Largest');
     const big = await measure(page);
     if (!(big.rootPx > base.rootPx * 1.35)) {
-      fail(slug, `Largest text moved root from ${base.rootPx} to ${big.rootPx}px — expected ~1.5x`);
+      fail(slug, `Largest text moved root from ${base.rootPx} to ${big.rootPx}px, expected ~1.5x`);
     }
     if (big.overflow > 2) fail(slug, `page scrolls sideways by ${big.overflow}px at Largest text`);
     if (big.tapPx < 44) fail(slug, `--tap fell to ${big.tapPx}px at Largest text`);
     if (!(big.tapPx > base.tapPx)) fail(slug, `--tap did not grow with the text (${base.tapPx}px to ${big.tapPx}px)`);
 
-    /* 4. It survives a reload — this is the whole point of persisting it. */
+    /* 4. It survives a reload, this is the whole point of persisting it. */
     await page.reload({ waitUntil: 'load' });
     const afterReload = await measure(page);
     if (Math.abs(afterReload.rootPx - big.rootPx) > 0.6) {
@@ -276,7 +275,7 @@ for (const slug of slugs) {
     if (easy.overflow > 2) fail(slug, `page scrolls sideways by ${easy.overflow}px with Easier reading on`);
     await choose(page, 'Reading', 'Default');
 
-    /* 8. Warm tint paints, and is an overlay rather than a filter — a filter
+    /* 8. Warm tint paints, and is an overlay rather than a filter, a filter
           would reparent the fixed toast and strand it mid-page. */
     await choose(page, 'Warm tint', 'High');
     const warm = await page.evaluate(() => {
@@ -289,9 +288,9 @@ for (const slug of slugs) {
     });
     if (warm.display === 'none') fail(slug, 'Warm tint High painted nothing');
     if (warm.blend !== 'multiply') fail(slug, `warm overlay blend is ${warm.blend}, expected multiply`);
-    if (warm.pointer !== 'none') fail(slug, 'warm overlay is not click-through — it will eat every tap');
+    if (warm.pointer !== 'none') fail(slug, 'warm overlay is not click-through, it will eat every tap');
     if (warm.bodyFilter !== 'none' || warm.wrapFilter !== 'none') {
-      fail(slug, 'a filter is in play — fixed-position toast/action bar will be reparented');
+      fail(slug, 'a filter is in play, fixed-position toast/action bar will be reparented');
     }
     await choose(page, 'Warm tint', 'Off');
 
@@ -385,7 +384,7 @@ if (slugs.length > 2) {
   await page.reload({ waitUntil: 'load' });
   await page.waitForTimeout(200);
   if (early[0] !== 'dark') {
-    fail(slugs[0], `theme was "${early[0]}" when the document became interactive — expected "dark" (flash of light)`);
+    fail(slugs[0], `theme was "${early[0]}" when the document became interactive, expected "dark" (flash of light)`);
   } else {
     notes.push('anti-flash: theme applied before the document became interactive');
   }

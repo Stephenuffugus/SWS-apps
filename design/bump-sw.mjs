@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO — bump the service-worker cache version
+   SWS STUDIO, bump the service-worker cache version
 
    Every app is offline-first: its service worker caches index.html under a
    named version and serves that copy until the name changes. So editing an
-   app's HTML and deploying is not enough — a returning visitor keeps the old
+   app's HTML and deploying is not enough, a returning visitor keeps the old
    page forever, and the change reaches only people who have never opened the
    app before.
 
@@ -29,7 +29,7 @@ const argv = process.argv.slice(2);
 const dry = argv.includes('--dry');
 const only = argv.filter((a) => !a.startsWith('--'));
 /* Discovered from the filesystem, not from skins.mjs. Keying this off the
-   design system meant an app outside it — Float — was silently skipped, which
+   design system meant an app outside it, Float, was silently skipped, which
    is the one failure this script exists to prevent: an un-bumped worker keeps
    serving the old page to everyone who has already opened it. Any directory
    under apps/ with a service worker counts. */
@@ -51,8 +51,8 @@ for (const slug of slugs) {
      activate handler deletes caches starting with it, so renaming the prefix
      would orphan the old cache instead of clearing it. Only the number moves.
 
-     Two constant names are in use — most apps call it VERSION, specials-planner
-     calls it CACHE — so match either rather than skipping the odd one out. An
+     Two constant names are in use, most apps call it VERSION, specials-planner
+     calls it CACHE, so match either rather than skipping the odd one out. An
      app quietly left un-bumped is exactly the failure this script exists to
      prevent, so a miss is reported loudly instead. */
   const m = src.match(/(const\s+(?:VERSION|CACHE)\s*=\s*['"])([a-z0-9-]*?-v)(\d+)(['"])/i);

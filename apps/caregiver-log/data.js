@@ -1,5 +1,4 @@
-// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly —
-// the counter-coupled batches are not optional; the rules reject anything else.
+// Firestore/Auth data layer. Every write here mirrors firestore.rules exactly, // the counter-coupled batches are not optional; the rules reject anything else.
 // Imported via an import map: the browser resolves 'firebase/*' to gstatic ESM
 // builds; node tests resolve it to the npm package against the emulator.
 import { initializeApp } from 'firebase/app';
@@ -54,7 +53,7 @@ export async function signInGoogle() {
   } catch (e) {
     const code = (e && e.code) || '';
     // Popup blocked or closed (embedded browsers, strict blockers):
-    // fall back to a full-page redirect — the page comes back signed in.
+    // fall back to a full-page redirect, the page comes back signed in.
     if (code.includes('popup') || code.includes('cancelled')) {
       await signInWithRedirect(auth, new GoogleAuthProvider());
       return null; // navigating away

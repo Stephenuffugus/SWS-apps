@@ -1,4 +1,4 @@
-// PDF smoke tests — node test/pdf.test.mjs (pdf-lib via node_modules)
+// PDF smoke tests, node test/pdf.test.mjs (pdf-lib via node_modules)
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { newInventory } from '../model.js';
