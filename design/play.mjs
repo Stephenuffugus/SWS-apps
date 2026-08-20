@@ -287,7 +287,7 @@ function featureGraphicHtml(slug) {
     .replace('background-size:100% 4px', 'background-size:100% 8px')
     .replace('background-size:100% 2px', 'background-size:100% 6px');
 
-  const name = mf.short_name && mf.name.length > 22 ? mf.name.split(/[, -]/)[0].trim() : mf.name;
+  const name = mf.short_name && mf.name.length > 22 ? mf.name.split(/[—-]/)[0].trim() : mf.name;
   const promise = PROMISE[slug] ?? mf.description ?? '';
 
   /* The promise line is the only body text on the asset, so it gets solved

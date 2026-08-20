@@ -1,6 +1,6 @@
 /* Bill Splitter service worker, cache-first so the app works fully offline.
    Bump VERSION on any deploy to invalidate old caches. */
-const VERSION = 'billsplit-v23';
+const VERSION = 'billsplit-v24';
 const ASSETS = [
   './',
   './index.html',

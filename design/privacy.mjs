@@ -77,7 +77,7 @@ function page(slug) {
   const pal = palette[slug];
   const voice = VOICES[skin.voice];
   const mf = JSON.parse(readFileSync(join(APPS, slug, 'manifest.webmanifest'), 'utf8'));
-  const name = mf.name.split(/[, -]/)[0].trim();
+  const name = mf.name.split(/[—-]/)[0].trim();
 
   const ink = solveInk(slug, 11);
   const muted = solveInk(slug, 4.6);

@@ -219,7 +219,7 @@ export function sniffDateTime(line, now) {
     if (m) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = m[3] ? +m[3] : 0; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); }
   }
   if (!mo) {
-    m = /(?:^|[\s(·, --])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=$|[\s)·, -,-])/.exec(s);
+    m = /(?:^|[\s(·—–-])(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=$|[\s)·—–,-])/.exec(s);
     if (m) {
       mo = +m[1]; d = +m[2];
       y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : 0;
@@ -249,7 +249,7 @@ export function sniffDateTime(line, now) {
     }
     date = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
-  const rest = s.replace(/\s*[·, --]\s*[·, --]\s*/g, ', ').replace(/^[\s·, -,-]+|[\s·, -,-]+$/g, '').replace(/\s{2,}/g, ' ').trim();
+  const rest = s.replace(/\s*[·—–-]\s*[·—–-]\s*/g, ', ').replace(/^[\s·—–,-]+|[\s·—–,-]+$/g, '').replace(/\s{2,}/g, ' ').trim();
   return { date, time, rest };
 }
 

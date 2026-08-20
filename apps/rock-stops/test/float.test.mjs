@@ -67,7 +67,7 @@ check('version exposed', typeof w.FLOAT_VERSION === 'string' && /^\d+\./.test(w.
   check('black is L*≈0', near(bL, 0, 0.5), bL);
   const [, ra] = w.rgbToLab(255, 0, 0);
   check('red has +a*', ra > 50, ra);
-  const [, bb] = w.rgbToLab(0, 0, 255);
+  const [, , bb] = w.rgbToLab(0, 0, 255);
   check('blue has -b*', bb < -50, bb);
 }
 

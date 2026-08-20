@@ -1446,6 +1446,10 @@ const trips = {
     host.innerHTML = '';
     host.appendChild(el('h2', { class: 'display' }, site ? 'Edit site' : 'New site'));
     const name = el('input', { class: 'text-input', value: s.name === 'Unnamed site' ? '' : s.name, placeholder: 'Site name' });
+    /* Sites saved before 2026-08-19 hold the old dash spellings ('public — check
+       rules'); without this rewrite the select would fall back to the first
+       option and a plain save would flip the stored land type. */
+    if (s.landType && !LAND_TYPES.includes(s.landType)) s.landType = s.landType.replace(/\s+[—–]\s+/g, ', ');
     const land = el('select', { class: 'select' }, ...LAND_TYPES.map(l => el('option', { value: l, selected: s.landType === l ? '' : null }, l)));
     const stat = el('select', { class: 'select' }, ...COLLECT_STATUS.map(c => el('option', { value: c, selected: s.collectStatus === c ? '' : null }, c)));
     const notes = el('textarea', { class: 'text-input', rows: 2, placeholder: 'Access notes, parking, who to ask…' }, s.notes || '');

@@ -76,7 +76,7 @@ const DELIMS = [
 const stripOrnament = (line) =>
   line
     .replace(/^\s*\d+\s*[.)\]-]\s+/, '')
-    .replace(/^\s*[•·*-, -]\s+/, '')
+    .replace(/^\s*[•·*–—-]\s+/, '')
     .trim();
 
 export function detectDelimiter(lines) {

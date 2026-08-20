@@ -58,7 +58,7 @@ check('editor opens with project name', [...$('view').querySelectorAll('input')]
 
 // guests: bulk paste
 const ta = $('view').querySelector('textarea');
-type(ta, 'Ann Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish\nCara Chen, Veg, nut allergy\nDev Chen');
+type(ta, 'Ann Alvarez, Alvarez family, Beef\nBen Alvarez, Alvarez family, Fish\nCara Chen, , Veg, nut allergy\nDev Chen');
 clickText($('view'), 'button', 'Add them all');
 await sleep(20);
 check('guests added', $('view').textContent.includes('4 guests'), $('view').textContent.slice(0, 120));
