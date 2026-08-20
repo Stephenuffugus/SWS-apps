@@ -354,3 +354,12 @@ needs design decisions, not a patch; program fades on the audio clock
 storage-degraded surfacing (HUSH-020), calibration bus (HUSH-021), and
 everything in their listening list (R-01..R-10) waits for ears and hardware.
 Suites after the round: 120 + 155 ok, all 23 mutations caught. Shell v10.
+
+## Round 2b, same night: the stores grow armor (their HUSH-010/011)
+
+`sanitiseTrial()` / `sanitiseNight()` / `sanitiseNights()` now gate every path
+into TRIAL and NIGHTS: boot load, the morning log, tracker imports, and the
+archive concat. Bad dates drop, impossible metrics become null, unknown
+sounds void a trial, and (caught while writing it) a null metric stays null
+instead of becoming a phantom zero via Number(null). Manual inputs gained
+browser min/max. 131 + 155 ok, 25 mutations caught, shell v11.

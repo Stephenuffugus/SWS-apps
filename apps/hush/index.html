@@ -560,12 +560,12 @@ body.simple .actions{margin-bottom:14px}
       <div class="row"><div class="lab"><span>How did it go</span><span id="v-feel">—</span></div>
         <input type="range" id="feel" min="0" max="10" value="5" aria-label="How did it go"></div>
       <div class="grid" style="grid-template-columns:repeat(2,1fr)">
-        <label class="opt" style="text-align:left;padding:9px 11px">Time asleep<input type="number" id="mTotal" placeholder="min" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
-        <label class="opt" style="text-align:left;padding:9px 11px">Deep sleep<input type="number" id="mDeep" placeholder="min" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
-        <label class="opt" style="text-align:left;padding:9px 11px">REM<input type="number" id="mRem" placeholder="min" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
-        <label class="opt" style="text-align:left;padding:9px 11px">Minutes to fall asleep<input type="number" id="mLat" placeholder="min" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
-        <label class="opt" style="text-align:left;padding:9px 11px">Times woken<input type="number" id="mWake" placeholder="count" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
-        <label class="opt" style="text-align:left;padding:9px 11px">Sleep score<input type="number" id="mScore" placeholder="0 to 100" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">Time asleep<input type="number" id="mTotal" placeholder="min" min="0" max="1440" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">Deep sleep<input type="number" id="mDeep" placeholder="min" min="0" max="1440" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">REM<input type="number" id="mRem" placeholder="min" min="0" max="1440" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">Minutes to fall asleep<input type="number" id="mLat" placeholder="min" min="0" max="720" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">Times woken<input type="number" id="mWake" placeholder="count" min="0" max="1440" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
+        <label class="opt" style="text-align:left;padding:9px 11px">Sleep score<input type="number" id="mScore" placeholder="0 to 100" min="0" max="100" style="width:100%;background:none;border:0;font-family:var(--mono);font-size:16px;color:var(--glow);padding:4px 0 0"></label>
       </div>
       <p class="hint">Fill in whatever your tracker gives you. Anything you leave blank is simply ignored. If you only ever fill in the first slider, that still works.</p>
       <button class="bigbtn" id="saveLog" style="border-color:var(--glow);color:var(--glow)">Save this night</button>
@@ -2311,7 +2311,7 @@ window.addEventListener("keydown", e => {
      so a bare registration would never see an update. Bump in lockstep with
      SHELL_VERSION in sw.js. */
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=10").catch(()=>{}));
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=11").catch(()=>{}));
   }
 })();
 
@@ -2775,8 +2775,52 @@ const METRICS = [
 ];
 
 /* ---- trial state ---- */
-let TRIAL = Store.get("trial") || null;
-let NIGHTS = Store.get("nights") || [];
+/* The main state gets sanitiseSaved() on every boot; the trial and the night
+   history, the most personal records in the app, used to be trusted raw off
+   the disk. Same defensive standard now: junk degrades to safe defaults
+   instead of crashing boot, and every record that survives is one the code
+   can safely index, chart and analyse. */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function finiteIn(v, lo, hi) {
+  // null/empty means "not logged" and must STAY null: Number(null) is 0, and a
+  // phantom zero entering the statistics is worse than a missing value
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
+}
+function sanitiseNight(r) {
+  if (!r || typeof r !== "object" || typeof r.date !== "string" || !DATE_RE.test(r.date)) return null;
+  return { date: r.date,
+    feel: finiteIn(r.feel, 0, 10),
+    total: finiteIn(r.total, 0, 1440), deep: finiteIn(r.deep, 0, 1440),
+    rem: finiteIn(r.rem, 0, 1440), lat: finiteIn(r.lat, 0, 720),
+    wake: finiteIn(r.wake, 0, 1440), score: finiteIn(r.score, 0, 100),
+    hrdrop: finiteIn(r.hrdrop, -100, 100) };
+}
+function sanitiseNights(v) {
+  if (!Array.isArray(v)) return [];
+  const seen = Object.create(null), out = [];
+  for (const r of v) { const n = sanitiseNight(r); if (n && !seen[n.date]) { seen[n.date] = 1; out.push(n); } }
+  return out.sort((a, b) => a.date < b.date ? -1 : 1);
+}
+function sanitiseTrial(t) {
+  if (!t || typeof t !== "object") return null;
+  if (!Array.isArray(t.arms) || t.arms.length !== 2 || !t.arms.every(a => PRESETS.some(p => p.id === a))) return null;
+  const nPer = finiteIn(t.nPer, 1, 60);
+  const order = Array.isArray(t.order) ? t.order.filter(x => x === 0 || x === 1) : [];
+  if (nPer === null || !order.length) return null;
+  const assigned = Array.isArray(t.assigned)
+    ? t.assigned.filter(a => a && typeof a === "object" && typeof a.date === "string" && DATE_RE.test(a.date) && (a.arm === 0 || a.arm === 1))
+    : [];
+  const out = { started: typeof t.started === "string" && DATE_RE.test(t.started) ? t.started : (assigned[0] ? assigned[0].date : null),
+    arms: [t.arms[0], t.arms[1]],
+    metric: METRICS.some(m => m.id === t.metric) ? t.metric : "feel",
+    blinded: t.blinded !== false, nPer, order, assigned };
+  if (typeof t.ended === "string" && DATE_RE.test(t.ended)) out.ended = t.ended;
+  return out;
+}
+let TRIAL = sanitiseTrial(Store.get("trial"));
+let NIGHTS = sanitiseNights(Store.get("nights"));
 const saveTrial = () => Store.set("trial", TRIAL);
 const saveNights = () => Store.set("nights", NIGHTS);
 const today = d => { const x = d || new Date(); return x.getFullYear()+"-"+pad2(x.getMonth()+1)+"-"+pad2(x.getDate()); };
@@ -2834,7 +2878,8 @@ function startTrialNow() {
 function endTrialNow() {
   if (!confirm("End this trial? The nights you logged are kept, but the assignments stop.")) return;
   TRIAL.ended = today(); TRIAL.blinded = false;
-  Store.set("trialArchive", (Store.get("trialArchive")||[]).concat([TRIAL]));
+  const arch = Store.get("trialArchive");
+  Store.set("trialArchive", (Array.isArray(arch) ? arch : []).concat([TRIAL]));
   TRIAL = null; saveTrial(); renderTrial(); syncLabels();
 }
 
@@ -2991,7 +3036,9 @@ function saveNight() {
     lat: numOrNull("mLat"), wake: numOrNull("mWake"), score: numOrNull("mScore"),
     hrdrop: pendingHrDrop
   };
-  NIGHTS = NIGHTS.filter(n => n.date !== date).concat([rec]).sort((a,b)=>a.date<b.date?-1:1);
+  const cleanRec = sanitiseNight(rec);
+  if (!cleanRec) return;
+  NIGHTS = NIGHTS.filter(n => n.date !== date).concat([cleanRec]).sort((a,b)=>a.date<b.date?-1:1);
   saveNights(); pendingHrDrop = null;
   renderTrial(); renderHistory(); syncLabels();
   $("s-log").textContent = "saved";
@@ -3179,6 +3226,7 @@ async function handleFile(file) {
     status("Could not read that file. " + (e.message || ""));
     return;
   }
+  nights = sanitiseNights(nights);
   if (!nights.length) { status("No sleep data found in that file. If it's a CSV, it needs a date column and at least one sleep column."); return; }
   // merge: imported values fill gaps, a hand-entered 'feel' rating is never overwritten
   let added = 0, updated = 0;

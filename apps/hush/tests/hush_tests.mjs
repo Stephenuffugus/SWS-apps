@@ -144,6 +144,9 @@ function makeBox(src, extra) {
     grabConst(src, "SHORTLIST"), grabConst(src, "TIERS"), grabConst(src, "INFO"),
     grabConst(src, "fadeSeconds"), grabConst(src, "fmtLeft"),
     grabFn(src, "sanitiseSaved"), grabFn(src, "sanitiseEnums"),
+    grabConst(src, "METRICS"), grabConst(src, "DATE_RE"),
+    grabFn(src, "finiteIn"), grabFn(src, "sanitiseNight"),
+    grabFn(src, "sanitiseNights"), grabFn(src, "sanitiseTrial"),
     grabFn(src, "clampToControl"), grabFn(src, "applyShared"),
     grabFn(src, "b64urlEnc"), grabFn(src, "b64urlDec"), grabFn(src, "shareEncode"),
     grabFn(src, "readSharedLink"), grabFn(src, "targetGain"), grabFn(src, "nameOfSound"),
@@ -292,6 +295,34 @@ function run(src, workerSrc) {
   ok(gainAt(50, true) < gainAt(100, true), "the ring is monotonic");
   // the corrupt-save hazard, at the point where it would have done the damage
   ok(gainAt(999, true) === 0.34, "an out of range volume still clamps at the capped ceiling (last line of defence)");
+
+  /* ---------------- [nightstore] trial + night history stores ---------------- */
+  group("nightstore");
+  const ns = makeBox(src);
+  const sN = (x) => vm.runInContext("sanitiseNights(" + JSON.stringify(x) + ")", ns);
+  ok(Array.isArray(sN(null)) && sN(null).length === 0, "junk nights store degrades to an empty history");
+  ok(sN("nope").length === 0 && sN(42).length === 0 && sN({ a: 1 }).length === 0, "non-array nights stores are rejected");
+  const goodN = sN([{ date: "2026-08-19", feel: 7, total: 420, score: 88 },
+                    { date: "NaN-NaN-NaN", feel: 7 },
+                    { date: "2026-08-19", feel: 3 },
+                    { date: "2026-08-20", feel: 99, total: -5, score: "250", lat: "soon" }]);
+  ok(goodN.length === 2, "bad dates drop, duplicate dates keep the first record", JSON.stringify(goodN));
+  ok(goodN[1].feel === null && goodN[1].total === null && goodN[1].score === null && goodN[1].lat === null,
+    "impossible metric values become null rather than entering the statistics");
+  ok(goodN[0].total === 420 && goodN[0].score === 88, "legitimate values round trip");
+  ok(vm.runInContext('sanitiseNight({ date: "2026-08-20", feel: 6, deep: null })', ns).deep === null,
+    "an unlogged metric stays null instead of becoming a phantom zero");
+  const sT = (x) => vm.runInContext("sanitiseTrial(" + JSON.stringify(x) + ")", ns);
+  ok(sT(null) === null && sT("x") === null && sT([]) === null, "junk trial stores degrade to no trial");
+  ok(sT({ arms: ["madeUpSound", "alsoFake"], nPer: 5, order: [0, 1] }) === null, "a trial over unknown sounds is void");
+  const t0 = { started: "2026-08-01", arms: ["newborn", "rain"], metric: "feel", blinded: true, nPer: 2,
+    order: [0, 1, 1, 0], assigned: [{ date: "2026-08-01", arm: 0 }, { date: "bad", arm: 1 }, { date: "2026-08-02", arm: 9 }] };
+  const tOut = sT(t0);
+  ok(tOut && tOut.assigned.length === 1 && tOut.assigned[0].arm === 0,
+    "malformed assignments drop, sound ones stay", JSON.stringify(tOut && tOut.assigned));
+  ok(sT({ arms: ["newborn", "rain"], nPer: "lots", order: [0, 1] }) === null, "a trial without a sane sample size is void");
+  ok(tOut.metric === "feel" && sT(Object.assign({}, t0, { metric: "vibes" })).metric === "feel",
+    "unknown metrics fall back to feel");
 
   /* ---------------- [save] round trip and corrupt recovery ---------------- */
   group("save");
@@ -587,6 +618,10 @@ const MUTATIONS = [
     s => s.replace("S.cap ? 0.34 : 1.0", "S.cap ? 0.90 : 1.0")],
   ["adaptive lift climbs past the cap again",
     s => s.replace("return clamp(Math.min(requested, capMax), 0, capMax);", "return clamp(requested, 0, 1);")],
+  ["night history stops validating dates",
+    s => s.replace('typeof r.date !== "string" || !DATE_RE.test(r.date)) return null;', 'false) return null;')],
+  ["trial store accepts unknown sounds again",
+    s => s.replace("!t.arms.every(a => PRESETS.some(p => p.id === a))) return null;", "false) return null;")],
   ["save sanitiser stops clamping numbers",
     s => s.replace("out[k] = r ? Math.min(r[1], Math.max(r[0], n)) : n;", "out[k] = n;")],
   ["save sanitiser accepts any type",
