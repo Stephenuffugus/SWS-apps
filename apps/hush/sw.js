@@ -17,7 +17,7 @@
    Bump SHELL_VERSION on every deploy, AND the ?v= on the registration in
    index.html in lockstep — this host edge-pins bare sw.js URLs for 7 days. */
 
-const SHELL_VERSION = "hush-shell-v9";
+const SHELL_VERSION = "hush-shell-v10";
 const NAV_TIMEOUT_MS = 8000;
 
 const SHELL_ASSETS = [
@@ -36,8 +36,17 @@ self.addEventListener("install", event => {
       .then(cache => Promise.all(
         SHELL_ASSETS.map(url =>
           fetch(url, { cache: "no-cache", credentials: "same-origin" })
-            .then(res => (res && res.ok) ? cache.put(url, res) : null)
-            .catch(() => null)
+            .then(res => {
+              if (res && res.ok) return cache.put(url, res);
+              // icons may miss without dooming the install; the shell may not,
+              // or this version would activate unable to serve offline at all
+              if (url === "./" || url === "./index.html") throw new Error("essential shell asset failed: " + url);
+              return null;
+            })
+            .catch(err => {
+              if (url === "./" || url === "./index.html") throw err;
+              return null;
+            })
         )
       ))
       .then(() => self.skipWaiting())

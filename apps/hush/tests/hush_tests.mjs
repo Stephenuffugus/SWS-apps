@@ -280,11 +280,18 @@ function run(src, workerSrc) {
   ok(Math.abs(gainAt(100, false) - 1.0) < 1e-9, "uncapped, full ring, output is 1.0");
   ok(gainAt(0, true) === 0, "a zero ring is silent");
   ok(gainAt(100, true, 1, 1, false) === 0, "not playing is silent whatever the ring says");
-  ok(gainAt(100, true, 1, 3.5) <= 1.0 && gainAt(100, true, 1, 3.5) > 0,
-    "adaptive lift can never push the output past 1.0");
+  ok(gainAt(100, true, 1, 3.5) <= 0.34 + 1e-9 && gainAt(100, true, 1, 3.5) > 0,
+    "the cap is a final ceiling: full adaptive lift stays at or under 0.34");
+  {
+    let worst = 0;
+    for (let vol = 0; vol <= 100; vol += 10)
+      for (const adapt of [1, 1.8, 2.6, 3.5])
+        for (const prog of [0.2, 1]) worst = Math.max(worst, gainAt(vol, true, prog, adapt));
+    ok(worst <= 0.34 + 1e-9, "sweep: no ring/program/adaptive combination beats the nursery cap", String(worst));
+  }
   ok(gainAt(50, true) < gainAt(100, true), "the ring is monotonic");
   // the corrupt-save hazard, at the point where it would have done the damage
-  ok(gainAt(999, true) === 1.0, "an out of range volume still clamps at the gain node (last line of defence)");
+  ok(gainAt(999, true) === 0.34, "an out of range volume still clamps at the capped ceiling (last line of defence)");
 
   /* ---------------- [save] round trip and corrupt recovery ---------------- */
   group("save");
@@ -578,6 +585,8 @@ const MUTATIONS = [
     s => s.replace("sharedPick = {\n    shared: true,", "sharedPick = null && {\n    shared: true,")],
   ["nursery cap raised",
     s => s.replace("S.cap ? 0.34 : 1.0", "S.cap ? 0.90 : 1.0")],
+  ["adaptive lift climbs past the cap again",
+    s => s.replace("return clamp(Math.min(requested, capMax), 0, capMax);", "return clamp(requested, 0, 1);")],
   ["save sanitiser stops clamping numbers",
     s => s.replace("out[k] = r ? Math.min(r[1], Math.max(r[0], n)) : n;", "out[k] = n;")],
   ["save sanitiser accepts any type",

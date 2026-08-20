@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="canonical" href="https://skywolfstudio.com/hush/">
 <meta name="theme-color" content="#0E1220">
 <meta name="description" content="Pick your sound. Go to sleep. A free noise machine, honest about the science: no ads, no account, no subscription, nothing recorded.">
@@ -17,7 +17,7 @@
 :root{
   --ink:#0E1220; --ink2:#151B2E; --ink3:#1D2540; --haze:#2B3555;
   --line:rgba(237,228,212,.10); --line2:rgba(237,228,212,.18);
-  --cream:#EDE4D4; --dim:rgba(237,228,212,.58); --faint:rgba(237,228,212,.34);
+  --cream:#EDE4D4; --dim:rgba(237,228,212,.58); --faint:rgba(237,228,212,.52);
   --glow:#F2B872; --deep:#C87F3C; --sage:#8FB6A3; --rose:#D98A8A; --violet:#9C8FC4;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -297,7 +297,7 @@ body.simple .actions{margin-bottom:14px}
       <p class="hint">These are generated live, note by note. There are no audio files in this app. That is why it is one page, works offline, and never repeats itself.</p>
       <div class="note study">
         <b>The tempo range is not arbitrary.</b> Trials of music for insomnia keep landing on the same recipe: slow tempo between sixty and eighty beats a minute, one instrument, soft and smooth, simple structure, thirty to forty-five minutes before bed. The tempo slider only moves inside that window on purpose.
-        <cite>Jespersen et al., Cochrane 2015 (10 trials, 557 people): music improved sleep quality by about one standard deviation, moderate-quality evidence. Later reviews converge on the 60 to 80 bpm figure.</cite>
+        <cite>Jespersen et al., Cochrane review, 2022 update (13 studies, 1007 people): listening to music improved self-rated sleep quality by about 2.8 points on the 21 point PSQI scale (10 studies, 708 people), moderate certainty evidence. Later reviews converge on the 60 to 80 bpm figure.</cite>
       </div>
     </div>
   </section>
@@ -424,7 +424,7 @@ body.simple .actions{margin-bottom:14px}
         <div class="mrow"><div><span class="mnum" id="mNum">—</span> <span class="munit">dB, estimated</span></div>
           <div class="munit" id="mPeak">peak</div></div>
         <div class="mtrack"><div class="mfill" id="mFill"></div><div class="mtick" id="mTick" style="left:50%"></div></div>
-        <div class="mlegend"><span>30</span><span>50 · nursery limit</span><span>85</span></div>
+        <div class="mlegend"><span>30</span><span>50 · nursery reference</span><span>85</span></div>
         <div class="mverdict" id="mVerdict">Turn the microphone on, put the phone where the baby's head is, and read the number.</div>
       </div>
 
@@ -646,8 +646,8 @@ body.simple .actions{margin-bottom:14px}
       </div>
       <div class="note">
         <b>Hearing, separately.</b>
-        All fourteen infant sound machines measured in a 2014 study exceeded the 50 dBA nursery limit at 30 cm on maximum volume, and three went past 85 dBA, an occupational limit for adults over eight hours. Distance and volume are the whole fix. That is what the room meter is for.
-        <cite>Hugh et al., Pediatrics 2014;133(4):677 to 681. AAP guidance: roughly 2 m / 7 ft from the head.</cite>
+        All fourteen infant sound machines measured in a 2014 study exceeded 50 dBA at 30 cm on maximum volume, the hospital nursery reference level, and three went past 85 dBA, an occupational limit for adults over eight hours. Distance and volume are the whole fix. That is what the room meter is for.
+        <cite>Hugh et al., Pediatrics 2014;133(4):677 to 681. AAP 2023 guidance: as far from the child as possible, as quiet as still works, and not left running longer than it needs to be.</cite>
       </div>
       <div class="note study">
         <b>Where it does look promising.</b>
@@ -1178,7 +1178,7 @@ function thump(t, amp) {
   const s = ctx.createBufferSource(); s.buffer = thumpBufs[(Math.random()*3)|0];
   const g = ctx.createGain(); g.gain.value = heartAmt * amp;
   s.connect(g); g.connect(nodes.heartLp); s.start(t);
-  flashQueue.push({ t, amp });
+  if (!document.hidden && flashQueue.length < 256) flashQueue.push({ t, amp });
 }
 
 /* ---------------- character layers ----------------
@@ -1368,7 +1368,7 @@ function swTick() {
       const s = ctx.createBufferSource();
       s.buffer = burstBufs[(Math.random()*4)|0];
       s.connect(nodes.swGain); s.start(swNext);
-      burstQueue.push(swNext);
+      if (!document.hidden && burstQueue.length < 256) burstQueue.push(swNext);
     }
     swNext += period;
     if (swNext >= swPhaseEnd) { swPhaseOn = !swPhaseOn; swPhaseEnd = swNext + block; }
@@ -1474,7 +1474,7 @@ function makeCtx() {
 }
 async function start() {
   if (!ctx) makeCtx();
-  if (ctx.state === "suspended") await ctx.resume();
+  if (ctx.state !== "running") { try { await ctx.resume(); } catch {} }
   playing = true;
   nextBeat = ctx.currentTime + 0.15;
   swNext = 0;
@@ -1498,14 +1498,29 @@ function stop() {
   progGain = 1; adaptGain = 1;
   if (voiceBus) { try { voiceBus.gain.setTargetAtTime(0, ctx.currentTime, .1); } catch {} }
   vNext = {}; nightState = null;
+  /* A manual stop retires the timer for real. Leaving S.timer set painted
+     "20 min" chips over a deadline that no longer existed, and a restart ran
+     forever while claiming it would stop. */
+  S.timer = 0; save();
   setVolume(); clearTimer(); releaseWake();
+  document.querySelectorAll("#simpleTimer .opt, #timerGrid .opt").forEach(b =>
+    b.setAttribute("aria-pressed", String(Number(b.dataset.m) === 0)));
   if (typeof bankHrDrop === "function") bankHrDrop();
   if (heartTimer) { clearInterval(heartTimer); heartTimer = null; }
   if (prog) { S.swOn = false; syncSwitches(); }
   prog = null; S.program = null; $("phaseTxt").textContent = ""; paintChips();
   setTimeout(() => { if (!playing && raf) { cancelAnimationFrame(raf); raf = null; g2.clearRect(0,0,cv.width,cv.height); } }, 400);
 }
-$("core").addEventListener("click", () => playing ? stop() : start());
+/* Simple mode promises one recommendation and one button, but the big ring,
+   the timer chips and Full screen all called start(), which plays whatever is
+   sitting in S. Before the person has ever chosen a sound, that was the
+   engine's silent default, not the card's promise. One authority now. */
+function primaryStart() {
+  const everChose = (S.lastUsed && S.lastUsed.id) || sharedPick || S.preset;
+  if (!everChose && tonightPick && tonightPick.id && !tonightPick.shared) playAnything(tonightPick.id);
+  else start();
+}
+$("core").addEventListener("click", () => playing ? stop() : primaryStart());
 
 /* ---------------- sleep timer ----------------
    The fade out used to be computed on a 250 ms setInterval. A hidden tab is
@@ -1523,7 +1538,13 @@ $("core").addEventListener("click", () => playing ? stop() : start());
 let timerEnd = 0, timerRAF = null, fadeFrom = 0, fadeTo = 0;
 function targetGain() {
   const capMax = S.cap ? 0.34 : 1.0;
-  return clamp(playing ? Math.pow(S.vol/100, 2) * capMax * progGain * adaptGain : 0, 0, 1);
+  if (!playing) return 0;
+  /* The cap is a CEILING, not an ingredient. Multiplying it into the mix let
+     adaptive lift (up to 3.5x) climb right past it: capped, ring at 100, full
+     lift clamped at 1.0, full output, with the cap switch still drawn ON.
+     Nothing, adaptive or program, may exceed the capped ceiling. */
+  const requested = Math.pow(S.vol/100, 2) * capMax * progGain * adaptGain;
+  return clamp(Math.min(requested, capMax), 0, capMax);
 }
 function armFade() {
   if (!ctx || !nodes || !playing || !timerEnd) return;
@@ -1546,7 +1567,7 @@ function startTimer(min) {
   if (!min) { paintTimer(); return; }
   if (prog) stopProgram();
   timerEnd = Date.now() + min*60000;
-  if (!playing) start(); else armFade();
+  if (!playing) primaryStart(); else armFade();
   timerRAF = setInterval(() => {
     const left = timerEnd - Date.now();
     if (left <= 0) { S.timer = 0; endTimerNow(); return; }
@@ -1657,8 +1678,8 @@ function paintMeter(spl) {
   const f = $("mFill");
   f.style.background = spl <= 50 ? "var(--sage)" : spl <= 65 ? "var(--glow)" : "var(--rose)";
   $("mVerdict").textContent =
-    spl <= 50 ? "At or under the nursery limit. This is where you want it."
-    : spl <= 65 ? "Louder than the hospital-nursery guideline. Fine for a short settle, worth turning down or moving further away for sleep."
+    spl <= 50 ? "At or under 50 dB, the hospital nursery reference level. Quieter, and further from the crib, is always better."
+    : spl <= 65 ? "Louder than the hospital nursery reference. Turn it down or move it further away for sleep."
     : "Too loud for a child at this distance. Turn it down, or move the phone further from the crib.";
 }
 function adaptTick() {
@@ -1916,7 +1937,14 @@ if (IS_IOS) {
 sw("swOn","swOn", () => { swNext = 0; if (S.swOn && !playing) start(); });
 sw("okWake","okWake"); sw("sunrise","sunrise");
 sw("micOn","micOn", () => { S.micOn ? enableMic(false) : disableMic(); });
-sw("adapt","adapt", () => { if (S.adapt && !micInit) enableMic(false); if (!S.adapt) { adaptGain = 1; setVolume(); } });
+sw("adapt","adapt", () => {
+  /* Adaptive is only real if the microphone actually opened. On refusal the
+     switch used to stay painted ON with no analyser behind it. */
+  if (S.adapt && !micInit) enableMic(false).then(ok => {
+    if (!ok) { S.adapt = false; adaptGain = 1; setVolume(); syncSwitches(); save(); }
+  });
+  if (!S.adapt) { adaptGain = 1; setVolume(); }
+});
 const syncSwitches = () => switches.forEach(f => f());
 
 $("wakeTime").addEventListener("change", e => { S.wakeTime = e.target.value; save(); });
@@ -1931,7 +1959,12 @@ $("meterBtn").addEventListener("click", () => {
   p.scrollIntoView({behavior:"smooth", block:"start"});
   if (!micInit) enableMic(false);
 });
-$("resetBtn").addEventListener("click", () => { Store.del("state"); location.reload(); });
+$("resetBtn").addEventListener("click", () => {
+  /* "Everything" has to mean everything: the trial, the night history and the
+     archive are the most personal records in the app, and they used to survive. */
+  ["state","trial","nights","trialArchive"].forEach(k => Store.del(k));
+  location.reload();
+});
 
 function syncLabels() {
   $("s-noise").textContent = (NOISES.find(n=>n.id===S.noise)||{}).n || "";
@@ -2070,7 +2103,7 @@ function openViz() {
   vizOn = true; $("viz").classList.add("on");
   sizeCanvas(vcv);
   seedViz();
-  if (!playing) start();
+  if (!playing) primaryStart();
   requestWake();
   uiHideAt = Date.now() + 5000;
   $("vizui").classList.remove("hide");
@@ -2278,7 +2311,7 @@ window.addEventListener("keydown", e => {
      so a bare registration would never see an update. Bump in lockstep with
      SHELL_VERSION in sw.js. */
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=9").catch(()=>{}));
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=10").catch(()=>{}));
   }
 })();
 
@@ -2765,7 +2798,10 @@ function tonightArm() {
   const n = today();
   const existing = TRIAL.assigned.find(a => a.date === n);
   if (existing) return existing.arm;
-  const arm = TRIAL.order[TRIAL.assigned.length % TRIAL.order.length];
+  /* The planned nights ARE the experiment. Wrapping with % kept assigning
+     new nights forever past the declared sample size. */
+  if (TRIAL.assigned.length >= TRIAL.order.length) return null;
+  const arm = TRIAL.order[TRIAL.assigned.length];
   TRIAL.assigned.push({ date:n, arm });
   saveTrial();
   return arm;
@@ -2780,6 +2816,10 @@ function armData(armIdx) {
 
 function startTrialNow() {
   const nPer = Number($("nights").value);
+  if (trialArmSel[0] === trialArmSel[1]) {
+    alert("Pick two different sounds for A and B. A trial of a sound against itself cannot tell you anything.");
+    return;
+  }
   TRIAL = {
     started: today(),
     arms: [trialArmSel[0], trialArmSel[1]],

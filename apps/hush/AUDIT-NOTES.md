@@ -307,3 +307,50 @@ to `main`.
    crash mid write, still lose the loser's changes. The sanitiser now means the
    result is never dangerous, only stale. A read modify write would fix it
    properly.
+
+---
+
+## Round 2, 2026-08-20: the ChatGPT code-level audit, Phase 0
+
+An external code-level audit (ChatGPT, working from the packaged source) found
+32 issues; each was verified against this source before anything moved. Shipped
+this round, worst first:
+
+- **The nursery cap is now a final ceiling** (their HUSH-001, CRITICAL,
+  confirmed real). Adaptive lift reaches 3.5x and targetGain() clamped at 1.0,
+  so cap ON + ring 100 + full lift = full output with the cap switch still
+  drawn ON. The old test blessed the wrong invariant ("adaptive stays under
+  1.0"); it now asserts a 0.34 ceiling plus a vol/prog/adapt sweep, and a new
+  selftest mutation breaks the ceiling on purpose.
+- **One start authority in simple mode** (HUSH-002). The big ring, the timer
+  chips and Full screen called start(), which plays whatever sits in S; before
+  any real choice that was the engine default, not the card's promise.
+  primaryStart() routes first-ever starts through the recommendation.
+- **Manual Stop retires the timer** (HUSH-003). S.timer stayed painted on the
+  chips with timerEnd=0, so a restart ran forever while claiming 20 min.
+- **Adaptive rolls back when the mic is refused** (HUSH-013).
+- **Trials: A must differ from B** (HUSH-007) **and assignment freezes at the
+  planned sample size** (HUSH-008; the % wrap assigned nights forever).
+- **Reset everything now erases everything**: state, trial, nights, archive
+  (HUSH-012).
+- **Visual queues are bounded** (HUSH-016): producers skip while hidden and cap
+  at 256; they used to grow ~140k entries over a hidden night.
+- **start() resumes any non-running context** including WebKit "interrupted"
+  (HUSH-018), **the SW install fails rather than activate without its shell**
+  (HUSH-022), **pinch zoom is re-enabled** (HUSH-024), **--faint text moves to
+  ~4.7:1 contrast** (HUSH-025).
+- **Science copy corrected against primary sources re-fetched today**
+  (HUSH-030/031): the music citation misattributed Wang 2014's numbers to
+  Cochrane 2015; it now cites the 2022 update (13 studies/1007; PSQI −2.79,
+  10 studies/708, moderate certainty). The 50 dBA meter copy now calls itself a
+  hospital nursery reference, not a safety verdict, and the AAP line matches
+  the 2023 policy (far as possible, quiet as possible, limited duration).
+
+Deliberately NOT done this round: the trial-science overhaul (their
+HUSH-004/005/006/009/010/011: canonical sleepDate, deviation tracking, blind
+UI, block-aware analysis, auxiliary-store sanitisers) is real and accepted but
+needs design decisions, not a patch; program fades on the audio clock
+(HUSH-014), scheduling generations (HUSH-015), wake-lock manager (HUSH-019),
+storage-degraded surfacing (HUSH-020), calibration bus (HUSH-021), and
+everything in their listening list (R-01..R-10) waits for ears and hardware.
+Suites after the round: 120 + 155 ok, all 23 mutations caught. Shell v10.
