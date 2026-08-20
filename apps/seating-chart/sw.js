@@ -1,6 +1,6 @@
 /* Seating Chart service worker, the app is local-first; cache everything,
    including the vendored pdf-lib, so exports work fully offline. */
-const VERSION = 'seating-v24';
+const VERSION = 'seating-v25';
 const ASSETS = [
   './',
   './index.html',

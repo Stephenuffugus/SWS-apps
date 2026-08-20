@@ -440,6 +440,22 @@ footer.colophon{
 footer.colophon a{color:var(--ink)}
 footer.colophon a:hover{color:var(--accent-deep)}
 
+/* Static product copy below the app. Same measure and muted ink as the
+   colophon; headings step up to full ink so the section scans. */
+.about{
+  color:var(--ink-2);
+  max-width:var(--measure);
+  margin-inline:auto;
+  padding:var(--s8) var(--s4) 0;
+  line-height:var(--lh-snug);
+}
+.about h2{color:var(--ink);font-size:1.25rem;margin:0 0 .4em}
+.about h3{color:var(--ink);font-size:1.05rem;margin:1.5em 0 .35em}
+.about p{margin:.4em 0}
+.about li{margin:.3em 0}
+.about ol{padding-left:1.3em;margin:.4em 0}
+.about b{color:var(--ink)}
+
 /* The promise, rendered as an actual object rather than a sentence in grey.
    Research finding: users do not believe "private" as body copy, it has to
    look like a stamp on the thing. */
@@ -1372,6 +1388,19 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
 </style>
 <script src="sws-prefs.js"></script>
 <script src="sws-ui.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Seating Chart",
+  "url": "https://skywolfstudio.com/seating-chart/",
+  "description": "Free seating chart maker for weddings, events, and classrooms. Rules catch seating mistakes, print-ready PDFs, no account, no watermark, everything stays on your device.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "publisher": { "@type": "Organization", "name": "Sky Wolf Studio" }
+}
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -1382,6 +1411,41 @@ dialog h3{margin:0 0 12px; font-size:1.05rem}
     <a id="tipLink" class="tipbtn hidden" target="_blank" rel="noopener">♥ Tip jar</a>
   </header>
   <main id="view"></main>
+
+  <!-- Static, crawlable product copy. The app above is a blank <main> to a
+       search engine, so this section is the page's actual text: what the tool
+       is, how it works, and the honest answers. Hidden from print. -->
+  <section class="about noprint" aria-label="About Seating Chart">
+    <h2>A free seating chart maker with nothing to sign up for</h2>
+    <p>Seating Chart is a free tool for planning who sits where at a wedding, a reception, a banquet, or in a classroom. There is no account, no watermark on anything you print, and no ads. Everything you type stays on your own device.</p>
+
+    <h3>How it works</h3>
+    <ol>
+      <li>Paste your guest list. One name per line works, and so does a spreadsheet paste with party, meal, and dietary columns.</li>
+      <li>Add your tables. Round, rectangle, or a head table, each with its own seat count.</li>
+      <li>Seat people yourself, or let auto-arrange make a first pass and fix what it got wrong.</li>
+      <li>Print. An entrance display for the door, escort cards, and a caterer sheet with meal counts by table.</li>
+    </ol>
+
+    <h3>The rules catch your mistakes</h3>
+    <p>Real seating falls apart in the details: the two relatives who cannot share a table, the college friends who must. Tell this chart those rules once (keep together, keep apart, must sit at this table) and it warns you the moment an arrangement breaks one. It also flags overfull tables, seated guests who declined, and guests left stranded when a table is deleted. Nothing gets silently rearranged. It tells you what broke, and you decide.</p>
+
+    <h3>What it tracks</h3>
+    <p>Parties and groups, meals, dietary flags, RSVPs, and notes for every guest. The caterer sheet counts every attending guest including the ones not seated yet, so the kitchen never undercounts a meal.</p>
+
+    <h3>Where your data lives</h3>
+    <p>On this device, and nowhere else. There is no server and no account, which also means you own the backup: every event can be exported as a single file from the Print tab and imported on another device. If you clear your browser data without exporting first, the event is gone, so export a backup when it matters.</p>
+
+    <h3>Who it is for</h3>
+    <p>Weddings and receptions. Teachers building classroom seating charts. Banquets, galas, reunions, corporate dinners, and any dinner where somebody has opinions about the seating.</p>
+
+    <h3>Common questions</h3>
+    <p><b>Is it really free?</b> Yes. Free tools with a tip jar are how Sky Wolf Studio works. No locked features, no watermark, no trial.</p>
+    <p><b>How many guests can it handle?</b> Paste up to 1,000 at a time, and if a paste gets cut off it says so instead of pretending.</p>
+    <p><b>Does it work on a phone?</b> Yes. It installs like an app and keeps working offline once it has loaded.</p>
+    <p><b>Can two people edit the same chart?</b> Not yet. Sharing today means exporting the event file and sending it over.</p>
+  </section>
+
   <footer class="colophon">
     Nothing leaves your device. No account, no watermark, no ads, free, even the exports.<br>
     <span id="orgLine">A free tool by <a href="../" style="color:inherit">Sky Wolf Studio</a> &middot; <a href="privacy.html" style="color:inherit">Privacy</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Seating%20Chart" style="color:inherit">Feedback</a></span>
