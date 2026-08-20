@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="canonical" href="https://skywolfstudio.com/bill-splitter/">
 <title>Free Bill Splitter: Itemized, Tip &amp; Tax, Nothing Uploaded</title>
 <meta name="description" content="Split a dinner bill or trip expenses in seconds. No account, no ads, no server, everything stays on your device.">
 <meta property="og:title" content="Free Bill Splitter: Itemized, Tip &amp; Tax, Nothing Uploaded">
@@ -2683,7 +2684,7 @@ function renderDinner(){
     $('tipAmt').value = d.tipValue ? (d.tipMode === 'pct' ? String(d.tipValue) : (d.tipValue / 100).toFixed(2)) : '';
 
   const sel = $('paidBy');
-  sel.replaceChildren(el('option', { value: '', text: ',  nobody yet , ' }));
+  sel.replaceChildren(el('option', { value: '', text: '— nobody yet —' }));
   for (const p of state.people)
     sel.append(el('option', { value: p.id, text: p.name }));
   sel.value = d.paidBy || '';
