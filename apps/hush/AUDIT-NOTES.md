@@ -363,3 +363,14 @@ archive concat. Bad dates drop, impossible metrics become null, unknown
 sounds void a trial, and (caught while writing it) a null metric stays null
 instead of becoming a phantom zero via Number(null). Manual inputs gained
 browser min/max. 131 + 155 ok, 25 mutations caught, shell v11.
+
+## Rulings from Stephen, 2026-08-20 night
+
+- **Trial nights do NOT lock the sound controls.** The deviation approach is
+  the approved path when the trial rework lands: change what you like, the
+  night gets flagged deviated and excluded from the primary analysis, with an
+  explanation. No gates.
+- **Reset everything keeps its total erase but asks first.** Shipped.
+- A visible **build tag** now sits in the footer, lockstep-tested against the
+  registration version, because "am I looking at the old version?" burned a
+  real testing session tonight. 132 + 155 ok. Shell v12.

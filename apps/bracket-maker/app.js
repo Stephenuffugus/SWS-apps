@@ -286,8 +286,8 @@ function renderTitle() {
   $('printTitle').textContent = t || 'Tournament bracket';
   const when = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   $('printMeta').textContent = state.names.length
-    ? state.names.length + ' entrants · printed ' + when + ' · Bracket Maker by Sky Wolf Studio's
-    : 'Printed ' + when + ' · Bracket Maker by Sky Wolf Studio's;
+    ? state.names.length + ' entrants · printed ' + when + ' · Bracket Maker by Sky Wolf Studio'
+    : 'Printed ' + when + ' · Bracket Maker by Sky Wolf Studio';
 }
 
 function renderCounts(info) {

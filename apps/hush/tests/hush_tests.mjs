@@ -583,6 +583,9 @@ function run(src, workerSrc) {
       // registration and shell version move in lockstep
       const reg = /serviceWorker\.register\("sw\.js\?v=(\d+)"\)/.exec(html);
       ok(!!reg, "the registration URL is versioned, because this host edge pins a bare sw.js");
+      const bt = /build v(\d+)/.exec(html);
+      ok(!!bt && !!reg && bt[1] === reg[1],
+        "the footer build tag matches the registration version, so a stale copy names itself");
       const shell = /SHELL_VERSION\s*=\s*"hush-shell-v(\d+)"/.exec(w);
       ok(!!shell, "the shell version is a number we can compare");
       ok(reg && shell && reg[1] === shell[1],
