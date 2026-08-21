@@ -414,11 +414,26 @@ function load(){
   try{
     const d=JSON.parse(localStorage.getItem(KEY))||{};
     const num=(v,lo,hi,dflt)=>{const n=+v;return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):dflt;};
+    /* The promise above was only two thirds kept, and the third that leaked was
+       the dangerous one. Several of these values are printed straight into
+       innerHTML, so a lift id, an outcome, a rep count or a body-fat reading
+       carrying a tag became live markup the moment History drew: an imported
+       file could run script as this origin, and this origin is the whole studio,
+       so it could read or wipe every sibling app's data. Nothing escapes the
+       boundary now. An id keeps only characters an id may contain, an outcome
+       must be one of the three the engine writes, every history field is rebuilt
+       rather than merely counted, and a body fat number must be a number. */
+    const OUT=['hit','part','fail'], VERD=['progress','rep','hold','deload'];
+    const cleanId=v=>String(v==null?'':v).replace(/[^A-Za-z0-9_-]/g,'').slice(0,32)||Date.now().toString(36);
     return {
-      programs:(Array.isArray(d.programs)?d.programs:[]).filter(p=>p&&LIB[p.mg]).map(p=>{
+      /* hasOwnProperty, not a bare lookup: LIB['constructor'] is truthy and
+         inherited, so a muscle group of "constructor" used to pass this filter
+         and then throw on the next line, losing every lift in the file. */
+      programs:(Array.isArray(d.programs)?d.programs:[]).filter(p=>p&&Object.prototype.hasOwnProperty.call(LIB,p.mg)).map(p=>{
         const repMin=num(p.repMin,1,30,8);
+        const outcomes=Array.isArray(p.outcomes)?p.outcomes.filter(o=>OUT.includes(o)):null;
         return {
-          id:String(p.id||Date.now().toString(36)),
+          id:cleanId(p.id),
           mg:p.mg,
           ex:LIB[p.mg].ex.some(e=>e.n===p.ex)?p.ex:LIB[p.mg].ex[0].n,
           w:num(p.w,1,2000,45),
@@ -426,12 +441,22 @@ function load(){
           repMin, repMax:Math.max(repMin,num(p.repMax,1,30,12)),
           rest:num(p.rest,15,600,DEFAULT_REST),
           due:typeof p.due==='string'?p.due:new Date().toISOString(),
-          outcomes:Array.isArray(p.outcomes)?p.outcomes:null,
+          outcomes:(outcomes&&outcomes.length)?outcomes:null,
           stall:num(p.stall,0,999,0),
-          history:Array.isArray(p.history)?p.history.filter(h=>h&&Array.isArray(h.reps)):[]
+          history:(Array.isArray(p.history)?p.history:[]).filter(h=>h&&Array.isArray(h.reps)).map(h=>({
+            date:typeof h.date==='string'?h.date:'',
+            /* renderHist calls .toUpperCase() on this without checking, so a
+               missing verdict threw at boot and took the service worker
+               registration and every later verdict card down with it. */
+            verdict:VERD.includes(h.verdict)?h.verdict:'hold',
+            w:num(h.w,0,2000,0),
+            reps:h.reps.map(r=>num(r,0,999,0)),
+            ex:typeof h.ex==='string'?h.ex.slice(0,60):''
+          }))
         };
       }),
-      weighins:(Array.isArray(d.weighins)?d.weighins:[]).filter(x=>x&&Number.isFinite(+x.bw)),
+      weighins:(Array.isArray(d.weighins)?d.weighins:[]).filter(x=>x&&Number.isFinite(+x.bw))
+        .map(x=>({date:typeof x.date==='string'?x.date:'',bw:+x.bw,bf:Number.isFinite(+x.bf)?+x.bf:null})),
       sound:d.sound!==false
     };
   }catch(e){return{programs:[],weighins:[],sound:true}}
@@ -506,8 +531,15 @@ function warmupRamp(p,w){
 
 /* Epley estimated 1RM per session, from the best set. Derived, never typed. */
 function e1rmSeries(p){
+  /* Only sessions done on the lift's CURRENT exercise. A cable fly and a bench
+     press are not points on one strength curve, and after a swap the old rows
+     were being plotted as though they were, turning a change of exercise into
+     an imaginary collapse or jump in strength. Rows from before sessions
+     carried a name are trusted to belong to this lift, which is the best that
+     can be said about them. */
   return p.history
     .filter(h=>Array.isArray(h.reps)&&h.reps.length&&h.reps.some(r=>r>0))
+    .filter(h=>!h.ex||h.ex===p.ex)
     .map(h=>({date:h.date,e:Math.round(h.w*(1+Math.max(...h.reps)/30)*10)/10}));
 }
 
@@ -741,7 +773,10 @@ function finishWorkout(){
   const p=W.p;
   p.w=W.w;                      // the weight actually lifted is what gets judged
   const r=judge(p,W.reps);
-  p.history.push({date:new Date().toISOString(), w:p.w, reps:[...W.reps], verdict:r.v});
+  /* The lift's name is stamped on the session that earned it. Without this the
+     row only ever knew the CURRENT exercise, so one swap silently relabelled
+     every past session and the strength line drew two different lifts as one. */
+  p.history.push({date:new Date().toISOString(), w:p.w, reps:[...W.reps], verdict:r.v, ex:p.ex});
   p.stall = r.v==='progress' ? 0 : p.stall+1;
   p.outcomes=r.out;
   p.w=r.nw;
@@ -829,7 +864,9 @@ function renderTrend(){
 }
 function renderHist(){
   const items=[];
-  S.programs.forEach(p=>p.history.forEach(h=>items.push({...h,ex:p.ex,min:p.repMin,max:p.repMax})));
+  /* h.ex first: a session keeps the name of the lift it was actually done on.
+     Falling back to p.ex covers rows written before sessions carried a name. */
+  S.programs.forEach(p=>p.history.forEach(h=>items.push({...h,ex:h.ex||p.ex,min:p.repMin,max:p.repMax})));
   items.sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById('histList').innerHTML=items.length?items.slice(0,25).map(h=>`
     <div class="hist">

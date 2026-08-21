@@ -253,6 +253,64 @@ console.log('\n,  weigh-in and trend , ');
   ok(w.document.getElementById('bwErr').textContent.length > 0, 'and told inline, not with an alert');
 }
 
+/* A backup file is the one thing here that arrives from somewhere else, and the
+   app tells people to use it to move to a new phone. Several stored fields are
+   printed into innerHTML, so until 2026-08-21 a crafted file could put live
+   markup on the page and run script as this origin, which is the whole studio:
+   it could read or wipe grocery-list, cross-off, hush and every sibling. Each
+   case below was watched executing before the boundary was closed. */
+console.log('\n,  a hostile backup file cannot become markup , ');
+{
+  const payloads = {
+    'lift id': prog({ id: '"><img src=x onerror="globalThis.__pwned=1">' }),
+    'outcome': prog({ outcomes: ['hit', '"><img src=x onerror="globalThis.__pwned=1">'] }),
+    'history weight': prog({ history: [{ date: new Date().toISOString(), w: '<img src=z onerror="globalThis.__pwned=1">', reps: [8], verdict: 'progress' }] }),
+    'history reps': prog({ history: [{ date: new Date().toISOString(), w: 135, reps: ['<img src=z onerror="globalThis.__pwned=1">'], verdict: 'progress' }] }),
+    'missing verdict': prog({ history: [{ date: new Date().toISOString(), w: 135, reps: [8] }] }),
+  };
+  for (const [what, p] of Object.entries(payloads)) {
+    const w = boot({ programs: [p], weighins: [], sound: true });
+    // Anything the coercion let through would be a real element by now.
+    const injected = w.document.querySelectorAll('img[onerror], img[src="x"], img[src="z"]').length;
+    ok(injected === 0, `a hostile ${what} cannot create an element`);
+    ok(!w.__pwned, `a hostile ${what} cannot run script`);
+  }
+  // body fat is printed straight into the trend card
+  const wf = boot({ programs: [], weighins: [{ date: new Date().toISOString(), bw: 180, bf: '<img src=z onerror="globalThis.__pwned=1">' }], sound: true });
+  ok(wf.document.querySelectorAll('img[onerror]').length === 0 && !wf.__pwned, 'a hostile body-fat value cannot create an element');
+  // and the app must still be alive: a bad record must not take the boot down
+  /* Assert the row actually DREW. The list element is static markup, so its
+     mere presence proves nothing: before the fix renderHist threw on the
+     missing verdict, the boot died there, and the list stayed empty forever. */
+  const wv = boot({ programs: [prog({ history: [{ date: new Date().toISOString(), w: 135, reps: [8] }] })], weighins: [], sound: true });
+  ok(wv.document.getElementById('histList').textContent.trim().length > 0,
+    'a history row with no verdict still draws instead of killing the boot');
+  // a muscle group naming an inherited property used to wipe the whole file
+  const wc = boot({ programs: [prog(), { ...prog({ id: 'p2' }), mg: 'constructor' }], weighins: [], sound: true });
+  ok(stored(wc) === null || JSON.parse(wc.localStorage.getItem('overload.v2')).programs.length >= 0, 'a poisoned muscle group does not crash the load');
+  const kept = wc.document.querySelectorAll('[data-lift]').length;
+  ok(kept >= 1, 'and the good lift in the same file survives it');
+}
+
+console.log('\n,  a session remembers the lift it was done on , ');
+{
+  const iso = (d) => new Date(Date.now() - d * 864e5).toISOString();
+  const w = boot({ programs: [prog({
+    ex: 'Dumbbell Bench Press',
+    history: [
+      { date: iso(9), w: 135, reps: [10], verdict: 'progress', ex: 'Barbell Bench Press' },
+      { date: iso(3), w: 60, reps: [10], verdict: 'progress', ex: 'Dumbbell Bench Press' },
+    ],
+  })], weighins: [], sound: true });
+  const hist = w.document.getElementById('histList').textContent;
+  ok(/Barbell Bench Press/.test(hist), 'an old session keeps the name of the lift it was actually done on');
+  ok(/Dumbbell Bench Press/.test(hist), 'and the new one keeps its own');
+  // the strength line must not join two different lifts into one curve
+  w.document.querySelector('[data-gear]').click();
+  const spark = w.document.querySelector('#sheet .e1-spark');
+  ok(!spark, 'one session on the current lift is a dot, not a strength line drawn across a swap');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 }
