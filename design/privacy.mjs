@@ -79,6 +79,17 @@ function page(slug) {
   const mf = JSON.parse(readFileSync(join(APPS, slug, 'manifest.webmanifest'), 'utf8'));
   const name = mf.name.split(/[—-]/)[0].trim();
 
+  /* Several apps state which localStorage key is "the only" one they write,
+     and every one of them that carries the comfort panel was wrong: that panel
+     writes sws.prefs on the shared origin so the same text size and contrast
+     follow you between apps. Read the app rather than trusting the fact sheet,
+     because this is exactly the kind of sentence a Play reviewer checks. */
+  const appHtml = readFileSync(join(APPS, slug, 'index.html'), 'utf8');
+  const hasPrefs = appHtml.includes('sws-prefs.js');
+  const prefsNote = hasPrefs
+    ? ` This app also writes one shared key, <code>sws.prefs</code>, which holds your display settings (text size, contrast, theme) so they follow you across Sky Wolf Studio apps. It holds nothing personal and never leaves the device.`
+    : '';
+
   const ink = solveInk(slug, 11);
   const muted = solveInk(slug, 4.6);
   const inkD = solveInkDark(slug, 11);
@@ -91,11 +102,11 @@ function page(slug) {
   /* ── the one section that must never be wrong ─────────────────────────── */
   const whereItGoes = leaves
     ? `<h2>Where your data goes</h2>
-  <p>${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.</p>
+  <p>${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.${prefsNote}</p>
   <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> ${esc(f.leavesDevice)}</p>
   <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds, no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>`
     : `<h2>Where your data goes</h2>
-  <p>Nowhere. ${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.</p>
+  <p>Nowhere. ${esc(f.storesWhat)} is kept ${esc(f.storageMechanism)}.${prefsNote}</p>
   <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>`;
 
   /* Most verifyTips already send the reader to DevTools. Appending the generic
@@ -160,7 +171,9 @@ function page(slug) {
 
   <h2>What we do not do</h2>
   <ul>
-    <li>No account, no sign-in, no email address collected.</li>
+    ${leaves
+      ? `<li>No ads and no profile. No account for the people you share a link with: they open it and start using it. Only the person who starts a list signs in, with Google or an email link, so the list has an owner.</li>`
+      : `<li>No account, no sign-in, no email address collected.</li>`}
     <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
     <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
     <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
@@ -177,7 +190,9 @@ function page(slug) {
   <p>The app's files are served by Google's Firebase Hosting, which, like any web host, keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. ${leaves ? 'It is separate from the shared data described above.' : 'It cannot record anything you type, because what you type is never sent to the host.'}</p>
 
   <h2>Children</h2>
-  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
+  <p>This app is made for adults. It is not directed at children.${leaves
+    ? ` The one piece of personal information involved is the email address or Google account the person who starts a list signs in with, which is described in "Where your data goes" above. Nothing is used to build a profile.`
+    : ` It collects no personal information from anyone, of any age.`}</p>
 
   <h2>Accessibility</h2>
   <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>

@@ -33,16 +33,16 @@
   <p class="lede">Caregiver Log is a shared log where a family keeps appointments, medications and notes about someone they are caring for. It is free, carries no ads, and is made by Sky Wolf Studio.</p>
 
   <h2>Where your data goes</h2>
-  <p>The log's title and description, every note, appointment, medication and question anyone posts, the display name each person types, and any task slots and who claimed them is kept in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the log still opens without signal. This browser separately holds your display name under `cl-myname`, an unsent draft note under `cl-draft-&lt;logId&gt;`, a last-viewed timestamp under `cl-seen-&lt;logId&gt;`, and, only if you sign in by email link, your email address under `cl-signin-email`.</p>
+  <p>The log's title and description, every note, appointment, medication and question anyone posts, the display name each person types, and any task slots and who claimed them is kept in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the log still opens without signal. This browser separately holds your display name under `cl-myname`, an unsent draft note under `cl-draft-&lt;logId&gt;`, a last-viewed timestamp under `cl-seen-&lt;logId&gt;`, and, only if you sign in by email link, your email address under `cl-signin-email`. This app also writes one shared key, <code>sws.prefs</code>, which holds your display settings (text size, contrast, theme) so they follow you across Sky Wolf Studio apps. It holds nothing personal and never leaves the device.</p>
   <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> Everything posted to a log is stored on Google's Firestore servers, because that is the only way everyone holding the link can see it. This app therefore does not carry, and must never carry, the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the log title and description, every entry's author name and body, and every slot label and claim are written to Firestore and readable by anyone with the 6-character share link. The organiser is signed in, anonymously by default, or with Google or an email link if they choose, and Firebase Authentication issues a user id that is stored alongside each entry. Health-related details typed here live on Google's servers; treat the share link like the log itself.</p>
   <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds, no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>
 
   <h2>How to check that for yourself</h2>
-  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open or create a log and you will see requests to firestore.googleapis.com, that is your shared log, and it is the only thing sent. There is no analytics call, and you can confirm why: apps/caregiver-log/firebase-config.js contains no measurementId, so Google Analytics is never initialised.</p>
+  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open or create a log and you will see requests to firestore.googleapis.com, that is your shared log, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call, and you can confirm why: apps/caregiver-log/firebase-config.js contains no measurementId, so Google Analytics is never initialised.</p>
 
   <h2>What we do not do</h2>
   <ul>
-    <li>No account, no sign-in, no email address collected.</li>
+    <li>No ads and no profile. No account for the people you share a link with: they open it and start using it. Only the person who starts a list signs in, with Google or an email link, so the list has an owner.</li>
     <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
     <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
     <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
@@ -61,7 +61,7 @@
   <p>The app's files are served by Google's Firebase Hosting, which, like any web host, keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It is separate from the shared data described above.</p>
 
   <h2>Children</h2>
-  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
+  <p>This app is made for adults. It is not directed at children. The one piece of personal information involved is the email address or Google account the person who starts a list signs in with, which is described in "Where your data goes" above. Nothing is used to build a profile.</p>
 
   <h2>Accessibility</h2>
   <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>
@@ -73,7 +73,7 @@
   <hr>
   <footer>
     <p>Sky Wolf Studio · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
-    <p>Last updated 2026-08-16.</p>
+    <p>Last updated 2026-08-21.</p>
   </footer>
 </main>
 </body>

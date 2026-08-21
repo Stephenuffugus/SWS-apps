@@ -65,8 +65,12 @@ function boardTrust() {
     el('div', { class: 'trust' },
       el('span', { class: 'tick', 'aria-hidden': 'true' }, '✓'),
       el('span', {},
-        el('b', {}, 'What leaves this phone: the item names, so the rest of the household sees them.'),
-        ' Nothing else, no contacts, no location, no account for the people you share with. ' +
+        /* This used to say the item names and "nothing else", which was not
+           true: the list's name, the ticked state and a random id telling one
+           household member from another all travel with them. The promise is
+           still a strong one, so it costs nothing to say it accurately. */
+        el('b', {}, 'What leaves this phone: what is on the list, the list’s name, whether something is ticked off, and a random id that tells one of you from another.'),
+        ' No contacts, no location, no account for the people you share with. ' +
         'Your copy is kept on this phone too, so the list still opens in aisle 12 with no signal, ' +
         'and no brand can pay to put anything on it.')));
 }

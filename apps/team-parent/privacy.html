@@ -33,16 +33,16 @@
   <p class="lede">Team Parent is a season of practices, games, snack duty and carpools in one link every family can open. It is free, carries no ads, and is made by Sky Wolf Studio.</p>
 
   <h2>Where your data goes</h2>
-  <p>The team page's title and description, every practice, game and duty slot with its label and capacity, the name each family types when they RSVP or claim a duty, and any announcements or notes posted is kept in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the schedule still opens at a field with no signal. This browser separately holds the display name you last used under `tp-myname`, and, only if the organiser signs in by email link, that email address under `tp-signin-email`.</p>
+  <p>The team page's title and description, every practice, game and duty slot with its label and capacity, the name each family types when they RSVP or claim a duty, and any announcements or notes posted is kept in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the schedule still opens at a field with no signal. This browser separately holds the display name you last used under `tp-myname`, and, only if the organiser signs in by email link, that email address under `tp-signin-email`. This app also writes one shared key, <code>sws.prefs</code>, which holds your display settings (text size, contrast, theme) so they follow you across Sky Wolf Studio apps. It holds nothing personal and never leaves the device.</p>
   <p><strong>Some of it does leave this device, and we would rather say so plainly than bury it.</strong> Everything on a team page is stored on Google's Firestore servers, because that is the only way every family sees the same schedule update live. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the page title and description, every slot label, every claimant name (capped at 60 characters) and every announcement body (capped at 2000) are written to Firestore and readable by anyone holding the 6-character share link. Only the organiser signs in, anonymously by default, or with Google or an email link if they choose; families need no account and are signed in anonymously behind the scenes so the app can tell one RSVP from another. Separately, an address you type into a location field is turned into an ordinary Google Maps link: nothing is fetched, and you only go there if you tap it.</p>
   <p>That is the trade this app makes: sharing with other people needs a copy somewhere both of you can reach. Everything else about the promise still holds, no advertising, no analytics, no profile built about you, and nothing sold to anyone.</p>
 
   <h2>How to check that for yourself</h2>
-  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a team page and you will see requests to firestore.googleapis.com, that is the shared schedule, and it is the only thing sent. There is no analytics call: apps/team-parent/firebase-config.js contains no measurementId, so Google Analytics is never initialised.</p>
+  <p>Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a team page and you will see requests to firestore.googleapis.com, that is the shared schedule, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call: apps/team-parent/firebase-config.js contains no measurementId, so Google Analytics is never initialised.</p>
 
   <h2>What we do not do</h2>
   <ul>
-    <li>No account, no sign-in, no email address collected.</li>
+    <li>No ads and no profile. No account for the people you share a link with: they open it and start using it. Only the person who starts a list signs in, with Google or an email link, so the list has an owner.</li>
     <li>No ads, no analytics, no advertising trackers, no cookies, no fingerprinting.</li>
     <li>No selling, sharing or brokering of anything you type here. There is no data to sell.</li>
     <li>No paywall, no trial, no subscription, no watermark, no export limit.</li>
@@ -61,7 +61,7 @@
   <p>The app's files are served by Google's Firebase Hosting, which, like any web host, keeps standard, short-lived server logs such as IP addresses, for security and operations. That log records that a browser fetched a page. It is separate from the shared data described above.</p>
 
   <h2>Children</h2>
-  <p>This app is made for adults. It is not directed at children, and it collects no personal information from anyone, of any age.</p>
+  <p>This app is made for adults. It is not directed at children. The one piece of personal information involved is the email address or Google account the person who starts a list signs in with, which is described in "Where your data goes" above. Nothing is used to build a profile.</p>
 
   <h2>Accessibility</h2>
   <p>We aim for <strong>WCAG 2.1 AA</strong>: labelled fields, keyboard-operable controls that keep their focus when the page redraws, visible focus rings, 44px touch targets that grow with the text-size setting, screen-reader announcements for changes, and colour contrast checked by build-time solver in both light and dark mode. The display panel in the header sets text size, spacing, contrast, reading style and motion, and those settings follow you across all of our apps.</p>
@@ -73,7 +73,7 @@
   <hr>
   <footer>
     <p>Sky Wolf Studio · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
-    <p>Last updated 2026-08-16.</p>
+    <p>Last updated 2026-08-21.</p>
   </footer>
 </main>
 </body>

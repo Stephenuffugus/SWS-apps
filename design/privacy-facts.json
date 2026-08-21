@@ -64,13 +64,13 @@
     "permissions": [
       "write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard"
     ],
-    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open or create a log and you will see requests to firestore.googleapis.com, that is your shared log, and it is the only thing sent. There is no analytics call, and you can confirm why: apps/caregiver-log/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open or create a log and you will see requests to firestore.googleapis.com, that is your shared log, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call, and you can confirm why: apps/caregiver-log/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
   },
   "grocery-list": {
     "slug": "grocery-list",
     "oneLine": "a shared household grocery list that updates live for everyone holding the link.",
-    "storesWhat": "The list's title and description, every item anyone adds, the author name typed with it, whether it has been ticked into the cart, and any slots and claims",
-    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the list still opens in a supermarket dead zone. The only localStorage key this app writes is `gl-signin-email`, and only if you sign in by email link",
+    "storesWhat": "The list's title, every item anyone adds, and whether it has been ticked into the cart",
+    "storageMechanism": "in Google Firestore, under the Firebase project `sws-apps-9646d`, and mirrored into this browser's IndexedDB offline cache so the list still opens in a supermarket dead zone. Firebase also keeps your signed-in session in this browser, and writes `gl-signin-email` if you sign in by email link",
     "leavesDevice": "Everything on a list is stored on Google's Firestore servers, because that is the only way the whole household sees the same list. This app therefore does not carry the 'nothing leaves your device' promise the rest of the portfolio makes. Concretely: the list title and description, every item body (capped at 2000 characters) and the author name (capped at 60) are written to Firestore and readable and editable by anyone holding the 6-character share link. The list owner is signed in, anonymously by default, or with Google or an email link if they choose, and Firebase Authentication issues a user id stored alongside each item.",
     "thirdParties": [
       "Google Firebase Firestore (firestore.googleapis.com), stores every list and every item.",
@@ -83,7 +83,7 @@
     "permissions": [
       "write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard"
     ],
-    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a list and you will see requests to firestore.googleapis.com, that is the shared list itself, and it is the only thing sent. There is no analytics call: apps/grocery-list/firebase-config.js has no measurementId, so Google Analytics is never initialised."
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a list and you will see requests to firestore.googleapis.com, that is the shared list itself, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call: apps/grocery-list/firebase-config.js has no measurementId, so Google Analytics is never initialised."
   },
   "home-inventory": {
     "slug": "home-inventory",
@@ -269,7 +269,7 @@
     "permissions": [
       "write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard"
     ],
-    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a sheet and you will see requests to firestore.googleapis.com, that is the sheet itself, and it is the only thing sent. There is no analytics call: apps/signup-sheets/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a sheet and you will see requests to firestore.googleapis.com, that is the sheet itself, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call: apps/signup-sheets/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
   },
   "sitter-sheet": {
     "slug": "sitter-sheet",
@@ -334,7 +334,7 @@
     "permissions": [
       "write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard"
     ],
-    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a team page and you will see requests to firestore.googleapis.com, that is the shared schedule, and it is the only thing sent. There is no analytics call: apps/team-parent/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
+    "verifyTip": "Open DevTools → Network and load the page: you will see the Firebase SDK fetched from gstatic.com and nothing else. Open a team page and you will see requests to firestore.googleapis.com, that is the shared schedule, and plus one call to identitytoolkit.googleapis.com, which is the sign-in that lets the list tell one of you from another. Those two are the only things sent. There is no analytics call: apps/team-parent/firebase-config.js contains no measurementId, so Google Analytics is never initialised."
   },
   "wedding-timeline": {
     "slug": "wedding-timeline",
