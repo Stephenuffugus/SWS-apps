@@ -280,6 +280,16 @@ function wrongSkinCard(v, skin) {
       el('a', { class: 'btn', href: '#/' }, 'Go home'))));
 }
 
+/* The owner deleted this list while somebody else had it open. Say so, rather
+   than leaving a list on screen that no longer exists anywhere. */
+function deletedCard(v) {
+  setGrowthFooter(false);
+  v.replaceChildren(el('section', { class: 'card' },
+    el('h2', { class: 'lead' }, 'This list was deleted'),
+    el('p', { class: 'warn' }, 'Whoever started it has removed it, so there is nothing here to show any more. Anything you had added went with it.'),
+    el('p', { class: 'listfoot' }, el('a', { class: 'btn', href: '#/' }, 'Go home'))));
+}
+
 function renderBadCode() {
   live.stop();
   notFoundCard($('view'));
@@ -579,7 +589,16 @@ function listAsText(b, items) {
 }
 
 function drawBoard() {
-  if (route().view !== 'board' || !live.board) return;
+  if (route().view !== 'board') return;
+  /* A board snapshot of null means the list was deleted, by the owner on
+     another phone. This used to return here and do nothing at all: the list
+     stayed on screen exactly as it was, the entries watcher went on listening,
+     and the next tap failed with a permission error nobody could explain. It
+     is a real state and it gets a real screen. */
+  if (!live.board) {
+    if (live.boardId) { live.stop(); deletedCard($('view')); }
+    return;
+  }
   // Before anything is drawn or any watcher is started.
   if (live.board.skin && live.board.skin !== D.SKIN) {
     wrongSkinCard($('view'), live.board.skin);
