@@ -101,7 +101,9 @@ items above come first):
 3. **Hush Phase 2, overnight reliability** (section 5). Mechanical, well
    specified, no design decisions needed, extends an already-strong suite.
 4. **Fleet UI smoothing pass** (section 6). Two confirmed defects found by
-   grep today plus a short checklist. Cheap, do it in the cracks.
+   grep today plus a short checklist. Cheap, do it in the cracks. Pair it
+   with Stephen's design directive (section 10): the smoothing pass and the
+   styling pass touch the same files, do them together per app.
 5. **Hush trial rework** (section 5, phase 1). Real work under Stephen's
    recorded rulings. Its own session; do not start it as a side quest.
 6. **Sub Plans audit report** when Stephen brings it back. Verify against
@@ -328,3 +330,38 @@ and is recorded as the reason round 2 went well.
   node_modules into an older session scratchpad
   (apps/seating-chart/node_modules is a symlink). If tests ever fail with
   MODULE_NOT_FOUND, that link rotted; `npm i` locally to rebuild it.
+
+## 10. Design directive from Stephen, ruled 2026-08-21, standing
+
+His words, close to verbatim: he wants "a little more style to everything,
+nice aesthetic borders. simple, elegant, maybe a little floral, waves,
+eclectic borders", it "would greatly elevate the experience of every app",
+"white and gold for the wedding", and "really tailor and customize them so
+they dont all feel so dull and the same".
+
+Translated into direction:
+
+- Every app gets its own tailored visual identity. The current sameness is
+  the defect being cured. Simple and elegant first; decoration serves
+  clarity and never fights it.
+- The instrument is a refined decorative border and ornament language:
+  thin elegant frames, corner ornaments, section dividers. Vary the motif
+  per app so each feels like itself: floral for some, waves for others,
+  eclectic geometry elsewhere, always chosen from the app's own subject.
+- The wedding pieces wear white and gold: wedding-timeline fully, and
+  seating-chart's wedding face.
+- Constraints that survive the styling, all pre-existing house law: inline
+  SVG and CSS only, zero new dependencies, no external asset hosts; the
+  contrast lessons hold (no normal text under 4.5:1, the Hush faint-text
+  scar); dark shells stay dark and readable; print and PDF outputs stay
+  legible and ink-cheap unless a styled print is a deliberate product
+  choice, which for the wedding pieces it may well be; Stephen's art is
+  sacred, ornament complements it and never replaces it; every touched app
+  gets its cache bumped and tests run before deploy; no em or en dashes.
+- Rollout: weave the aesthetic pass into each app as audit fixes land
+  (same files, one deploy), and run it as its own track when the bug queue
+  is calm. The wedding pair is the clearest brief, start the dedicated
+  track there.
+
+The kickoff prompt Stephen used to brief the Opus session carries the same
+directive: docs/OPUS-KICKOFF-PROMPT-2026-08-21.md.
