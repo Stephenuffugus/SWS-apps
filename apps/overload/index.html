@@ -208,6 +208,12 @@ svg.spark{width:100%;height:74px;margin-top:10px}
 .footnote a{color:var(--dim)}
 
 /* -------- toast (SWS.toast / SWS.undo) -------- */
+#saveWarn{
+  margin:0 0 14px;padding:12px 14px;border-radius:10px;
+  border:1px solid #7A5C22;background:#2A2416;color:#F0DFB8;
+  font-size:13px;line-height:1.55;
+}
+#saveWarn[hidden]{display:none}
 #toast{
   position:fixed;left:50%;transform:translate(-50%,16px);
   bottom:calc(86px + env(safe-area-inset-bottom));z-index:70;
@@ -237,6 +243,13 @@ svg.spark{width:100%;height:74px;margin-top:10px}
 </header>
 
 <main>
+
+<!-- Stays up until a save works again. A gym app that quietly stops recording
+     is worse than one that refuses to open. -->
+<div id="saveWarn" role="status" hidden>
+  This device is out of storage, so new sets are not being saved.
+  Save a backup file from the Trend tab, then clear some space.
+</div>
 
 <!-- ===== TODAY ===== -->
 <section class="view on" id="v-today">
@@ -461,7 +474,25 @@ function load(){
     };
   }catch(e){return{programs:[],weighins:[],sound:true}}
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* A session logged against a full phone used to vanish without a word: the app
+   drew the verdict card, the next prescription and the whole result, and none
+   of it had been written. It says so now, and keeps saying it until a save
+   works, because the one thing worse than losing a session is not knowing. */
+let saveBroken=false;
+function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(S));
+    if(saveBroken){saveBroken=false;const b=document.getElementById('saveWarn');if(b)b.hidden=true;}
+    return true;
+  }catch(e){
+    if(!saveBroken){
+      saveBroken=true;
+      const b=document.getElementById('saveWarn');if(b)b.hidden=false;
+      if(window.SWS&&SWS.toast)SWS.toast('This device is out of storage, so this session was not saved. Save a backup file and clear some space.');
+    }
+    return false;
+  }
+}
 const fmtD = iso=>new Date(iso).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
 const fmtT = s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 const meta = p => LIB[p.mg].ex.find(e=>e.n===p.ex)||{};
@@ -746,6 +777,11 @@ document.getElementById('wkClose').addEventListener('click',()=>{
 
 function logSet(reps){
   if(!W)return;
+  /* Rest is a state, not a decoration. The overlay covers the set buttons but
+     the buttons underneath kept their focus, so a second Enter on the key that
+     just logged a set logged another one and started a second rest on top of
+     the first. Between sets, the only ways forward are Skip and the clock. */
+  if(restIv)return;
   W.reps.push(reps); paintSet();
   if(W.reps.length>=W.p.sets){ finishWorkout(); return; }
   restStart();
@@ -755,7 +791,14 @@ function logSet(reps){
    Wall-clock, not tick-counted: a locked phone throttles intervals, and a
    rest that silently stretches from 2:00 to 3:40 is a defect in a gym. */
 let restIv=null;
+let restReturn=null;   // where focus goes back to when rest ends
 function restStart(){
+  /* Never leave an old interval running. restIv only ever held the newest id,
+     so a second start orphaned the first: nothing could reach it to stop it and
+     it went on beeping and buzzing past its own deadline, for the rest of the
+     session. */
+  if(restIv){clearInterval(restIv);restIv=null;}
+  restReturn=document.activeElement;
   const deadline=Date.now()+(W.p.rest||DEFAULT_REST)*1000;
   const el=document.getElementById('restT');
   document.getElementById('restNext').textContent=`Next: set ${W.reps.length+1} of ${W.p.sets} at ${W.w} lbs`;
@@ -763,8 +806,18 @@ function restStart(){
   paint();
   document.getElementById('rest').classList.add('on');
   restIv=setInterval(()=>{ if(paint()<=0){beep();vib(150);restEnd();} },250);
+  /* Focus follows the eye. It used to stay on the set button behind the
+     overlay, which is both the keyboard trap above and a screen reader landing
+     on a control it cannot see. */
+  const skip=document.getElementById('restSkip');
+  if(skip)skip.focus();
 }
-function restEnd(){clearInterval(restIv);restIv=null;document.getElementById('rest').classList.remove('on');}
+function restEnd(){
+  clearInterval(restIv);restIv=null;
+  document.getElementById('rest').classList.remove('on');
+  if(restReturn&&document.contains(restReturn)){try{restReturn.focus();}catch(e){}}
+  restReturn=null;
+}
 document.getElementById('restSkip').addEventListener('click',restEnd);
 
 /* finish → judge → schedule */
@@ -901,7 +954,15 @@ function applyImportedText(text){
   const mine=S.programs.length;
   if(mine&&!confirm(`This backup holds ${d.programs.length} lift${d.programs.length===1?'':'s'}. It replaces the ${mine} on this device. Continue?`))return false;
   const before=JSON.stringify(S);
-  try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}
+  /* This used to swallow the failure and then say "Backup restored." anyway.
+     Someone restoring onto a full phone was told their training history was
+     back while nothing had been written, and they would find out at the next
+     launch. If the write did not happen, say that instead. */
+  try{localStorage.setItem(KEY,JSON.stringify(d));}
+  catch(e){
+    if(window.SWS&&SWS.toast)SWS.toast('Could not restore: this device is out of storage. Clear some space and try again.');
+    return false;
+  }
   S=load();
   renderDue();renderTrend();renderHist();syncSound();
   if(window.SWS&&SWS.toast)SWS.toast('Backup restored.',{

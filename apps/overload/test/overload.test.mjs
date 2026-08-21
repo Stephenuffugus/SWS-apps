@@ -311,6 +311,47 @@ console.log('\n,  a session remembers the lift it was done on , ');
   ok(!spark, 'one session on the current lift is a dot, not a strength line drawn across a swap');
 }
 
+console.log('\n,  rest is one state, not several , ');
+{
+  const w = boot({ programs: [prog({ sets: 4 })], weighins: [], sound: false });
+  w.document.querySelector('[data-lift]').click();
+  const chip = w.document.querySelector('#setRow button, .reps button, [data-reps]');
+  ok(!!chip, 'the set chips are there to press');
+  chip.click();
+  ok(w.eval('restIv !== null'), 'logging a set starts the rest clock');
+  const firstIv = w.eval('restIv');
+  // the exact double-press that used to orphan a timer and log a phantom set
+  chip.click();
+  chip.click();
+  ok(w.eval('restIv') === firstIv, 'pressing again during rest does not start a second clock');
+  ok(w.eval('W.reps.length') === 1, 'and does not log a set the lifter did not do');
+  ok(w.document.activeElement === w.document.getElementById('restSkip'),
+    'focus moves to the rest control instead of staying on a button behind the overlay');
+  w.document.getElementById('restSkip').click();
+  ok(w.eval('restIv === null'), 'skipping ends the rest');
+  chip.click();
+  ok(w.eval('W.reps.length') === 2, 'and the next set logs normally afterwards');
+}
+
+console.log('\n,  a device that stops saving says so , ');
+{
+  const w = boot({ programs: [prog()], weighins: [], sound: false });
+  const bar = w.document.getElementById('saveWarn');
+  ok(!!bar && bar.hidden, 'the notice exists and stays out of the way while saving works');
+  w.eval("w_orig=Storage.prototype.setItem;Storage.prototype.setItem=function(){var e=new Error('quota');e.name='QuotaExceededError';throw e}");
+  ok(w.eval('save()') === false, 'save reports the failure instead of swallowing it');
+  ok(!w.document.getElementById('saveWarn').hidden, 'and the page says sets are not being kept');
+  // restore must not claim success when the write never happened
+  ok(w.eval("applyImportedText(JSON.stringify({app:'overload',version:2,data:{programs:[],weighins:[],sound:true}}))") === false,
+    'a restore onto a full device reports failure rather than saying it worked');
+  const said = (w.__toasts || []).map(t => t.m).join(' ');
+  ok(/could not restore/i.test(said), 'and says so in words');
+  ok(!/backup restored/i.test(said), 'and never claims the backup was restored');
+  w.eval("Storage.prototype.setItem=w_orig");
+  ok(w.eval('save()') === true, 'saving works again once there is room');
+  ok(w.document.getElementById('saveWarn').hidden, 'and the notice takes itself down');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 }
