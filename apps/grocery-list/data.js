@@ -299,11 +299,24 @@ export const toggleDone = (boardId, entryId, done) =>
    live count so a long-lived list never hits the 500-ever cap. */
 export async function clearChecked(boardId, entries) {
   const keep = entries.filter(e => !e.done);
-  const batch = writeBatch(db);
-  for (const e of entries) if (e.done) batch.delete(doc(db, 'boards', boardId, 'entries', e.id));
-  batch.update(doc(db, 'boards', boardId), { entryCount: keep.length });
-  await batch.commit();
-  return entries.length - keep.length;
+  const gone = entries.filter(e => e.done);
+  /* A Firestore batch holds 500 writes and the list holds 500 items, so a
+     household that ticked off everything produced 501 writes and the whole
+     clear failed: the one feature that rescues a long-lived list broke exactly
+     when the list was longest. Deletes go in chunks, and the counter is only
+     corrected once they have all landed, so a failure part way through leaves
+     a count that is too high rather than one that is too low, and too high can
+     be cleared again while too low quietly raises the ceiling. */
+  const CHUNK = 400;
+  for (let i = 0; i < gone.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    for (const e of gone.slice(i, i + CHUNK)) {
+      batch.delete(doc(db, 'boards', boardId, 'entries', e.id));
+    }
+    await batch.commit();
+  }
+  await updateDoc(doc(db, 'boards', boardId), { entryCount: keep.length });
+  return gone.length;
 }
 
 /* The 500-entry cap counts entries EVER CREATED, and a bare deleteDoc never

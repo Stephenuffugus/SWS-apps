@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import * as G from '../../grocery-list/data.js';
 
-const { auth } = G.initFirebase({
+const { auth, db } = G.initFirebase({
   apiKey: 'demo', authDomain: 'demo.firebaseapp.com', projectId: 'demo-signup',
 });
 
@@ -75,6 +75,57 @@ await t('owner clears checked items and the counter resets to live count', async
   assert.ok(!after.some(e => e.body === 'Milk'));
   board = await once((cb, err) => G.watchBoard(boardId, cb, err));
   assert.equal(board.entryCount, 2, 'counter reset so the list never hits the 500-ever cap');
+});
+
+/* The clear used to be one batch: one delete per ticked item plus the counter
+   correction. A Firestore batch holds 500 writes and the product holds 500
+   items, so a household that ticked off a full list produced 501 and the whole
+   thing failed. The feature that rescues a long-lived list broke exactly when
+   the list was longest, which is the only time anyone needs it. */
+await t('a completely full list can still be cleared', async () => {
+  const { collection, getDocs } = await import('firebase/firestore');
+  const big = await G.createBoard({ title: 'A very long week' });
+  let bigBoard = await once((cb, err) => G.watchBoard(big.boardId, cb, err));
+  /* Seeded through the real addEntry, because the rules quite rightly refuse a
+     client that tries to write entries any other way. 500 is not an arbitrary
+     number: it is the product cap, and the cap is exactly where the old single
+     batch tipped over its own 500-write ceiling.
+
+     HONEST LIMIT OF THIS TEST: the Firestore emulator does not enforce the
+     500-write batch ceiling, so this test passes against the old single-batch
+     code too. It was run both ways to check. What it does prove is that the
+     chunked path clears a full list completely and leaves the counter right.
+     The ceiling itself is guaranteed by construction and asserted below, and
+     only a real project can prove the rest. */
+  const made = [];
+  for (let i = 0; i < 500; i++) {
+    const id = await G.addEntry(big.boardId, bigBoard, { authorName: 'someone', body: 'item ' + i, type: 'note', done: true });
+    made.push(id);
+  }
+  const listed = await getDocs(collection(db, 'boards', big.boardId, 'entries'));
+  assert.equal(listed.size, 500, 'the list really is full');
+  const all = listed.docs.map(d => ({ id: d.id, done: true }));
+  const cleared = await G.clearChecked(big.boardId, all);
+  assert.equal(cleared, 500, 'every ticked item went, not just the first 499');
+  const left = await getDocs(collection(db, 'boards', big.boardId, 'entries'));
+  assert.equal(left.size, 0, 'nothing was stranded behind the batch limit');
+  const after = await once((cb, err) => G.watchBoard(big.boardId, cb, err));
+  assert.equal(after.entryCount, 0, 'and the counter came back to the live count');
+});
+
+await t('no delete batch can reach the Firestore write ceiling', async () => {
+  // The emulator will not catch this for us, so read the guarantee off the
+  // source: the chunk has to be strictly under 500, and the counter correction
+  // must be its own write rather than a 501st passenger.
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../../grocery-list/data.js', import.meta.url), 'utf8');
+  const m = /const CHUNK = (\d+);/.exec(src);
+  assert.ok(m, 'clearChecked still deletes in chunks');
+  assert.ok(Number(m[1]) < 500, 'and the chunk is under the 500-write batch ceiling');
+  const body = src.slice(src.indexOf('export async function clearChecked'));
+  const upto = body.slice(0, body.indexOf('return gone.length'));
+  assert.ok(!/batch\.update\(/.test(upto),
+    'the counter correction is its own write, not a passenger that makes a full batch 501');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

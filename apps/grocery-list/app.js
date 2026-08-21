@@ -261,6 +261,25 @@ function notFoundCard(v) {
     el('p', { class: 'listfoot' }, el('a', { class: 'btn', href: '#/' }, 'Go home'))));
 }
 
+/* Four apps share one engine and one pool of share codes, so a code from a
+   signup sheet or a caregiver log resolves perfectly well here. Nothing used to
+   check, and this app would render that family's board as a grocery list and
+   let people write into it. A code belongs to the tool that made it. */
+function wrongSkinCard(v, skin) {
+  const names = { signup: 'Signup Sheets', team: 'Team Parent', care: 'Caregiver Log' };
+  const where = names[skin];
+  setGrowthFooter(false);
+  live.stop();
+  v.replaceChildren(el('section', { class: 'card' },
+    el('h2', { class: 'lead' }, 'That code belongs to a different tool'),
+    el('p', { class: 'warn' }, where
+      ? `This link was made in ${where}, so it needs to be opened there. Nothing has been changed.`
+      : 'This link was made in another Sky Wolf Studio tool, so it needs to be opened there. Nothing has been changed.'),
+    el('p', { class: 'listfoot' },
+      where ? el('a', { class: 'btn primary', href: `../${skin === 'signup' ? 'signup-sheets' : skin === 'team' ? 'team-parent' : 'caregiver-log'}/#/b/${live.code}` }, `Open in ${where}`) : '',
+      el('a', { class: 'btn', href: '#/' }, 'Go home'))));
+}
+
 function renderBadCode() {
   live.stop();
   notFoundCard($('view'));
@@ -561,6 +580,11 @@ function listAsText(b, items) {
 
 function drawBoard() {
   if (route().view !== 'board' || !live.board) return;
+  // Before anything is drawn or any watcher is started.
+  if (live.board.skin && live.board.skin !== D.SKIN) {
+    wrongSkinCard($('view'), live.board.skin);
+    return;
+  }
   syncEntriesWatcher();
   const b = live.board;
   const own = isOwner();
