@@ -16,6 +16,7 @@
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import vm from 'node:vm';
 import { withApp } from './harness.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -203,6 +204,84 @@ async function guardLive(slug) {
   } finally { await b.close(); }
 }
 
+/* ── 5. a worker may only ever delete its OWN caches ────────────────────────
+   caches.keys() is ORIGIN-wide. This origin hosts every app in the studio, so
+   an activate handler that deletes "every key that is not mine" wipes the
+   offline shell of all thirty siblings the first time anyone opens that one
+   app. It is not theoretical: it shipped on lucidwinds.com and black screened
+   the fleet, Hush carries the scar in its own worker comments, and on
+   2026-08-21 an audit found three apps here doing it again (cross-off,
+   overload, specials-planner) while every other app used a prefix filter.
+
+   Greps are not enough. A worker can spell the filter a dozen ways, so this
+   RUNS the real worker in a sandbox against a fake fleet of sibling caches and
+   asserts it only ever deletes its own. A guard that tests behaviour survives
+   a rewrite of the code it guards. */
+async function guardWorkerCacheScope(slug) {
+  const swPath = join(APPS, slug, 'sw.js');
+  if (!existsSync(swPath)) return;
+  const src = readFileSync(swPath, 'utf8');
+
+  /* A fleet's worth of neighbours, plus one stale cache belonging to this app
+     so we can prove the worker still does its real job. */
+  const own = [...src.matchAll(/["'`]([a-z0-9][\w-]*?-v?\d+)["'`]/gi)].map((m) => m[1]);
+  const mine = own[0] || `${slug}-v0`;
+  const myPrefix = mine.replace(/v?\d+$/, '');
+  const stale = `${myPrefix}0-stale`;
+  /* Neighbours must be names this app could never legitimately own, or the
+     guard reports its own fixture. Anything sharing this app's prefix is its
+     property to delete, so it is filtered out before the run. */
+  const neighbours = ['hush-shell-v12', 'grocery-v7', 'seating-v3', 'sws-portal-v4',
+    'workbox-precache', 'zz-foreign-sentinel-v1']
+    .filter((k) => !k.startsWith(myPrefix));
+  const fleet = [...neighbours, stale, mine];
+
+  const deleted = [];
+  const listeners = {};
+  const box = {
+    console: { log() {}, warn() {}, error() {} },
+    caches: {
+      keys: () => Promise.resolve(fleet.slice()),
+      delete: (k) => { deleted.push(k); return Promise.resolve(true); },
+      open: () => Promise.resolve({ put: () => Promise.resolve(), addAll: () => Promise.resolve(), add: () => Promise.resolve(), match: () => Promise.resolve(undefined) }),
+      match: () => Promise.resolve(undefined),
+    },
+    fetch: () => Promise.resolve({ ok: true, status: 200, clone: () => ({}) }),
+    Response: class { constructor(b, i) { this.body = b; Object.assign(this, i); } },
+    URL, setTimeout, clearTimeout, Promise,
+  };
+  box.self = {
+    addEventListener: (ev, fn) => { listeners[ev] = fn; },
+    skipWaiting: () => Promise.resolve(),
+    clients: { claim: () => Promise.resolve() },
+    location: { origin: ORIGIN },
+    registration: { scope: `${ORIGIN}/${slug}/` },
+  };
+  box.addEventListener = box.self.addEventListener;
+  box.location = box.self.location;
+  box.skipWaiting = box.self.skipWaiting;
+
+  try {
+    vm.createContext(box);
+    vm.runInContext(src, box);
+  } catch (e) {
+    fail(slug, 'worker-parse', `sw.js did not run in a sandbox: ${String(e.message).slice(0, 90)}`);
+    return;
+  }
+  if (typeof listeners.activate !== 'function') { checked++; return; }
+
+  let waited = null;
+  try { listeners.activate({ waitUntil: (p) => { waited = p; } }); } catch { /* handled below */ }
+  try { await Promise.resolve(waited); } catch { /* a rejected activate is its own problem */ }
+
+  const strangers = deleted.filter((k) => neighbours.includes(k));
+  if (strangers.length) {
+    fail(slug, 'worker-cache-scope',
+      `activate deletes ${strangers.length} sibling cache(s) on the shared origin: ${strangers.join(', ')}. Filter on this app's own prefix.`);
+  }
+  checked++;
+}
+
 /* ── run ────────────────────────────────────────────────────────────────── */
 console.log(`\nguards, ${slugs.length} apps${LIVE ? ' + live' : ''}\n`);
 guardCssPlacement();
@@ -210,6 +289,7 @@ for (const slug of slugs) {
   try {
     await guardControls(slug);
     await guardHandlers(slug);
+    await guardWorkerCacheScope(slug);
     if (LIVE) await guardLive(slug);
   } catch (e) {
     fail(slug, 'guard-crashed', String(e).split('\n')[0].slice(0, 120));

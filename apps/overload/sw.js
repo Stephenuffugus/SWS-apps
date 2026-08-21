@@ -1,6 +1,6 @@
 /* OVERLOAD service worker, cache-first shell for offline basement gyms.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'overload-v9';
+const CACHE = 'overload-v10';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg',
   'icon-192.png', 'icon-512.png', 'sws-ui.js',
@@ -11,7 +11,11 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    /* caches.keys() is ORIGIN-wide. This origin hosts thirty sibling apps, so
+       deleting every key that is not ours wipes their offline shells the first
+       time anyone opens Overload. Only ever delete our own namespace. */
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k.startsWith('overload-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

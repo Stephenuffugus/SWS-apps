@@ -1,6 +1,6 @@
 /* Specials Planner service worker, cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'specials-planner-v32';
+const CACHE = 'specials-planner-v33';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'fonts/fraunces-latin.woff2', 'fonts/spline-sans-latin.woff2', "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
@@ -9,7 +9,11 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    /* caches.keys() is ORIGIN-wide. This origin hosts thirty sibling apps, so
+       deleting every key that is not ours wipes their offline shells the first
+       time anyone opens the planner. Only ever delete our own namespace. */
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k.startsWith('specials-planner-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
