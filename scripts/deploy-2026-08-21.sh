@@ -3,6 +3,11 @@
 #
 # RUN THIS WITH:  ! bash scripts/deploy-2026-08-21.sh
 #
+# It prints a clear PASS or FAIL at the end and checks the live site itself, so
+# a deploy that did not happen cannot look like one that did. An earlier run of
+# this script left no trace on the live site and no output here, which is why
+# it now reports every step.
+#
 # WHY HOSTING AND RULES GO TOGETHER, IN THAT ORDER
 # ------------------------------------------------
 # Adding an item to a shared list now writes the row and the counter together,
@@ -26,30 +31,57 @@
 #   * Cross Off: the midnight page-flip, a visible storage failure, and backup
 #   * privacy pages across the fleet stop claiming things that are not true
 #   * every app gets its own ornament, and the wedding turns white and gold
-#
-# AFTER IT FINISHES
-# -----------------
-#   1. Open the grocery list on your phone and your partner's, close it fully
-#      and reopen (not just background it), then add one item on each. If the
-#      item appears on the other phone, the migration landed. If an add fails,
-#      that phone is still on the old cached copy: force it closed and reopen.
-#   2. Open any app, tap the display settings icon, and step the text size all
-#      the way up. The title and the X must stay put the whole time. That is
-#      the bug you reported, and this is the twenty second check for it.
 
-set -euo pipefail
-cd "$(dirname "$0")/.."
+set -uo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+echo "repo: $ROOT"
+echo "signed in as: $(npx firebase login:list 2>/dev/null | tail -1)"
+echo
+
+fail() { echo; echo "FAILED at: $1"; echo "Nothing further was attempted. Paste this output back to Claude."; exit 1; }
 
 echo "==> 1/2  hosting (all apps)"
-npx firebase deploy --only hosting --project sws-apps-9646d
+npx firebase deploy --only hosting --project sws-apps-9646d || fail "hosting deploy"
 
 echo
 echo "==> 2/2  firestore rules"
-# Run from apps/signup-sheets: that is where the firebase config that knows
-# about firestore lives. The repo root config only declares hosting.
-cd apps/signup-sheets
-npx firebase deploy --only firestore:rules --project sws-apps-9646d
-cd ../..
+# The repo root config declares hosting only; the firestore config lives here.
+cd "$ROOT/apps/signup-sheets" || fail "cd to apps/signup-sheets"
+npx firebase deploy --only firestore:rules --project sws-apps-9646d || fail "rules deploy"
+cd "$ROOT"
 
 echo
-echo "Done. Now do the two checks above."
+echo "==> checking the live site actually changed"
+ok=0; bad=0
+check() { # name, url, pattern
+  if curl -s --max-time 30 "$2" | grep -q -- "$3"; then
+    echo "  PASS  $1"; ok=$((ok+1))
+  else
+    echo "  FAIL  $1  (still serving the old copy)"; bad=$((bad+1))
+  fi
+}
+check "grocery client writes the coupled counter" \
+  "https://skywolfstudio.com/grocery-list/data.js" "lastEntryId"
+check "comfort panel fix is live" \
+  "https://skywolfstudio.com/grocery-list/" "Load-bearing, and it looks like nothing"
+check "cross off stops deleting sibling caches" \
+  "https://skywolfstudio.com/cross-off/sw.js" "startsWith('cross-off-')"
+check "overload coerces a hostile backup" \
+  "https://skywolfstudio.com/overload/" "cleanId"
+check "privacy page tells the truth about sign-in" \
+  "https://skywolfstudio.com/grocery-list/privacy.html" "Only the person who starts a list signs in"
+
+echo
+if [ "$bad" -gt 0 ]; then
+  echo "$ok live, $bad NOT live. The deploy did not fully land; paste this back to Claude."
+  exit 1
+fi
+echo "All $ok checks live."
+echo
+echo "NOW DO THESE TWO THINGS ON YOUR PHONE:"
+echo "  1. Fully close and reopen the grocery list on both phones (do not just"
+echo "     background it), then add one item on each. If it shows up on the"
+echo "     other phone, the migration landed."
+echo "  2. Open any app, tap the display settings icon, and step the text size"
+echo "     all the way up. The title and the X must stay put the whole time."
