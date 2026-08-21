@@ -1980,6 +1980,12 @@ render();
 function checkNewDay(){
   const t=todayStr();
   if(t===dayNow)return;
+  /* Only ever forwards. Any different date used to count as a new day, so a
+     clock corrected backwards, or a flight west across a date line, filed
+     today's page as though the morning had come and reset the count. Dates in
+     this format sort as strings, so this is the whole test. Going back simply
+     waits for the calendar to catch up again. */
+  if(t<dayNow){dayNow=t;return;}
   const was=dayNow;dayNow=t;
   state.doneToday=0;
   if(!morningFlip(was)){render();save();}

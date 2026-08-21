@@ -373,6 +373,27 @@ console.log('\n== the work date only moves when a page turns ==');
 /* The markup always opened with TODAY lit, whatever had been saved, so someone
    who chose NOW yesterday came back to a page showing TODAY and typed a task
    that silently became NOW. The button and the behaviour must agree. */
+/* Any different date used to mean "new day", so a clock corrected backwards or
+   a flight west across a date line filed the page and reset the count as though
+   morning had come. The page may only ever turn forwards. */
+console.log('\n== the page never turns backwards ==');
+{
+  const w = boot();
+  w.eval(`(()=>{const p=page();p.tasks[0].done=true;state.doneToday=1;save();render();})()`);
+  const piled = w.eval('page().past.length');
+  // the clock goes back a day, the way a correction or a westward flight does
+  w.eval(`dayNow='2999-01-01'`);
+  w.eval('checkNewDay()');
+  ok(w.eval('page().past.length') === piled, 'a backward date does not file the page');
+  ok(w.eval('state.doneToday') === 1, 'and does not wipe what was crossed off today');
+  ok(w.eval('dayNow') === w.eval('todayStr()'), 'but the app does take the real date on board');
+
+  // and forwards still works, which is the point of the whole mechanism
+  w.eval(`dayNow='2000-01-01'`);
+  w.eval('checkNewDay()');
+  ok(w.eval('page().past.length') === piled + 1, 'a forward date still turns the page');
+}
+
 console.log('\n== the highlighted priority is the one that will be used ==');
 {
   const w0 = boot();
