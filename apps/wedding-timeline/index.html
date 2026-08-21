@@ -1294,6 +1294,41 @@ body::after{
 }
 
 
+
+/* ── wedding-timeline ornament: the app's own mark, in the motif of what it is for ──
+   The Director's ruling of 2026-08-21: the fleet felt dull and the same, so
+   each app signs its own header. Motif comes from what the app is FOR, drawn
+   as a mask so the accent paints it and one drawing serves both themes.
+
+   It rides on header.app::after rather than on markup, which means no app had
+   to be edited to receive it and none can lose it in a hand edit. The header
+   is a wrapping flex row, so flex-basis:100% puts the mark on its own line
+   underneath the title, and order:99 keeps it last however the row wraps.
+   Empty content, so it is decorative to assistive technology by construction,
+   and it never carries meaning the text does not already carry. */
+:root{ --orn:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='74' height='16' viewBox='0 0 74 16' fill='none' stroke='%23000' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'><path d='M0 8 Q 15 8 22 8 M 26 8 q 4-6 9 0 q-5 6-9 0 M 39 8 q 4-6 9 0 q-5 6-9 0 M52 8 Q 60 8 74 8'/></svg>"); }
+header.app::after{
+  content:''; flex-basis:100%; order:99;
+  height:14px; margin:-2px 0 2px;
+  color:var(--accent);
+  background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+/* Same mark, placed by hand where a page wants a divider rather than a
+   signature. Nothing uses it yet; it exists so the next app does not
+   reinvent one. */
+.sws-orn{
+  display:block; height:14px; margin:2px 0 14px;
+  color:var(--accent); background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+.sws-orn.center{-webkit-mask-position:center;mask-position:center}
+/* Ink is cheaper than a screen and a hairline survives a fax. */
+@media print{ header.app::after,.sws-orn{opacity:1; height:10px} }
 /* ── wedding-timeline texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:radial-gradient(70rem 40rem at 8% -10%, rgba(154,124,42,0.07), transparent 60%),radial-gradient(60rem 36rem at 96% 2%, rgba(160,109,147,0.06), transparent 55%);

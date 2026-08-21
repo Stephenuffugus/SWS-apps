@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { oklch, oklchA, contrast, solveForContrast, caret, maxChromaAt } from './color.mjs';
-import { SKINS, VOICES, TEXTURES, TEXTURE_SUPPORT, PAPER_HUE, SYSTEM_STACK, FONT_FILES, LATIN_RANGE } from './skins.mjs';
+import { SKINS, VOICES, TEXTURES, TEXTURE_SUPPORT, ORNAMENTS, PAPER_HUE, SYSTEM_STACK, FONT_FILES, LATIN_RANGE } from './skins.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, 'out');
@@ -317,6 +317,53 @@ function buildApp(slug, skin){
    * Pill Schedule for 1.140, and both shipped at 1. Two review agents found it
    * independently and neither could fix it from an app layer, which is exactly
    * right, it is a build-order bug, not an app bug. */
+  const ornamentCss = (sk) => {
+    const path = ORNAMENTS[sk.ornament ?? 'none'];
+    if (!path) return '';
+    const w = sk.ornamentStroke ?? 1.25;
+    /* currentColor, so one drawing serves both themes and no second palette is
+       needed. The mask carries the shape and the accent paints it, which also
+       means the mark cannot fight the text: it is never darker than the ink
+       around it. */
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='74' height='16' viewBox='0 0 74 16' fill='none' stroke='%23000' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round'><path d='${path}'/></svg>`;
+    const uri = `url("data:image/svg+xml,${svg.replace(/#/g, '%23').replace(/"/g, "'")}")`;
+    return `
+/* ── ${slug} ornament: the app's own mark, in the motif of what it is for ──
+   The Director's ruling of 2026-08-21: the fleet felt dull and the same, so
+   each app signs its own header. Motif comes from what the app is FOR, drawn
+   as a mask so the accent paints it and one drawing serves both themes.
+
+   It rides on header.app::after rather than on markup, which means no app had
+   to be edited to receive it and none can lose it in a hand edit. The header
+   is a wrapping flex row, so flex-basis:100% puts the mark on its own line
+   underneath the title, and order:99 keeps it last however the row wraps.
+   Empty content, so it is decorative to assistive technology by construction,
+   and it never carries meaning the text does not already carry. */
+:root{ --orn:${uri}; }
+header.app::after{
+  content:''; flex-basis:100%; order:99;
+  height:14px; margin:-2px 0 2px;
+  color:var(--accent);
+  background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+/* Same mark, placed by hand where a page wants a divider rather than a
+   signature. Nothing uses it yet; it exists so the next app does not
+   reinvent one. */
+.sws-orn{
+  display:block; height:14px; margin:2px 0 14px;
+  color:var(--accent); background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+.sws-orn.center{-webkit-mask-position:center;mask-position:center}
+/* Ink is cheaper than a screen and a hairline survives a fax. */
+@media print{ header.app::after,.sws-orn{opacity:1; height:10px} }`;
+  };
+
   const scale = skin.scale ? `
 /* ── ${slug} type scale, after the base so the skin actually wins ─────── */
 :root{
@@ -400,6 +447,7 @@ ${tokenBlock(dark)}
 
 ${readFileSync(join(HERE, 'studio.css'), 'utf8')}
 ${scale}
+${ornamentCss(skin)}
 /* ── ${slug} texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:${texL.image};

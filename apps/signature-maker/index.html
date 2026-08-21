@@ -1294,6 +1294,41 @@ body::after{
 }
 
 
+
+/* ── signature-maker ornament: the app's own mark, in the motif of what it is for ──
+   The Director's ruling of 2026-08-21: the fleet felt dull and the same, so
+   each app signs its own header. Motif comes from what the app is FOR, drawn
+   as a mask so the accent paints it and one drawing serves both themes.
+
+   It rides on header.app::after rather than on markup, which means no app had
+   to be edited to receive it and none can lose it in a hand edit. The header
+   is a wrapping flex row, so flex-basis:100% puts the mark on its own line
+   underneath the title, and order:99 keeps it last however the row wraps.
+   Empty content, so it is decorative to assistive technology by construction,
+   and it never carries meaning the text does not already carry. */
+:root{ --orn:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='74' height='16' viewBox='0 0 74 16' fill='none' stroke='%23000' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'><path d='M0 8 h 30 M 37 3 l 5 5 l-5 5 l-5-5 z M 49 8 h 25'/></svg>"); }
+header.app::after{
+  content:''; flex-basis:100%; order:99;
+  height:14px; margin:-2px 0 2px;
+  color:var(--accent);
+  background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+/* Same mark, placed by hand where a page wants a divider rather than a
+   signature. Nothing uses it yet; it exists so the next app does not
+   reinvent one. */
+.sws-orn{
+  display:block; height:14px; margin:2px 0 14px;
+  color:var(--accent); background:currentColor;
+  -webkit-mask:var(--orn) left center/74px 14px no-repeat;
+  mask:var(--orn) left center/74px 14px no-repeat;
+  opacity:.7;
+}
+.sws-orn.center{-webkit-mask-position:center;mask-position:center}
+/* Ink is cheaper than a screen and a hairline survives a fax. */
+@media print{ header.app::after,.sws-orn{opacity:1; height:10px} }
 /* ── signature-maker texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22140%22%20height%3D%22140%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%223%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22saturate%22%20values%3D%220%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22140%22%20height%3D%22140%22%20filter%3D%22url(%23n)%22%20opacity%3D%220.035%22%2F%3E%3C%2Fsvg%3E");

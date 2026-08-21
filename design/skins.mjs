@@ -30,6 +30,7 @@ export const SKINS = {
   /* ── School ───────────────────────────────────────────────────────────── */
 
   'specials-planner': {
+    ornament: 'key',
     hue: 38, chroma: 0.13, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 14, wrap: '66rem', support: 190,
     // Terracotta on cream. This app already had a real identity and teachers
@@ -38,6 +39,7 @@ export const SKINS = {
   },
 
   'sub-plans': {
+    ornament: 'diamond',
     hue: 174, chroma: 0.095, paper: 'warm', voice: 'editorial', texture: 'rule',
     r: 12, wrap: '48rem', support: 38,
     extra: { 'line-strong': { role: 'line', l: 0.62, c: 0.02, dl: 0.52 } },
@@ -45,6 +47,7 @@ export const SKINS = {
   },
 
   'grade-sheet': {
+    ornament: 'diamond',
     hue: 226, chroma: 0.08, paper: 'warm', voice: 'editorial', texture: 'grid',
     r: 10, wrap: '72rem', support: 86,
     // Blue-black ink on cream ledger paper, which is literally the artifact.
@@ -61,12 +64,14 @@ export const SKINS = {
   /* ── Family & Home ────────────────────────────────────────────────────── */
 
   'sitter-sheet': {
+    ornament: 'wave',
     hue: 86, chroma: 0.12, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 16, wrap: '44rem',  support: 12,
     note: 'honey on cream, you are handing a stranger your house and your kids; warmth is the job',
   },
 
   'baby-log': {
+    ornament: 'wave',
     hue: 294, chroma: 0.10, paper: 'cool', voice: 'plain', texture: 'none',
     r: 20, wrap: '34rem',
     // 3am, one hand, dark room. Soft rounded geometry, oversized targets, and
@@ -86,6 +91,7 @@ export const SKINS = {
   },
 
   'pill-schedule': {
+    ornament: 'wave',
     hue: 234, chroma: 0.115, paper: 'cool', voice: 'plain', texture: 'none',
     r: 10, wrap: '52rem',
     // Research is blunt about this category: an older-adult test panel rejected
@@ -98,6 +104,7 @@ export const SKINS = {
   },
 
   'caregiver-log': {
+    ornament: 'wave',
     hue: 250, chroma: 0.035, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 12, wrap: '46rem',
     // Deliberately the least colourful app in the portfolio. Families use this
@@ -107,6 +114,7 @@ export const SKINS = {
   },
 
   'grocery-list': {
+    ornament: 'stitch',
     hue: 158, chroma: 0.14, paper: 'cool', voice: 'plain', texture: 'none',
     r: 16, wrap: '38rem',
     // Used standing in an aisle holding something in the other hand.
@@ -117,6 +125,7 @@ export const SKINS = {
   /* ── Events & Groups ──────────────────────────────────────────────────── */
 
   'signup-sheets': {
+    ornament: 'key',
     hue: 58, chroma: 0.155, paper: 'warm', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 200,
     extra: { mine: { role: 'tint', l: 0.93, c: 0.045, dl: 0.32 } },
@@ -124,6 +133,7 @@ export const SKINS = {
   },
 
   'team-parent': {
+    ornament: 'key',
     hue: 258, chroma: 0.15, paper: 'cool', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 58,
     extra: { mine: { role: 'tint', l: 0.93, c: 0.045, dl: 0.32 } },
@@ -131,6 +141,7 @@ export const SKINS = {
   },
 
   'secret-santa': {
+    ornament: 'vine',
     hue: 8, chroma: 0.145, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 14, wrap: '42rem', support: 152,
     extra: { pine: { role: 'fill', l: 0.44, c: 0.10, h: 152, dl: 0.72 } },
@@ -138,6 +149,7 @@ export const SKINS = {
   },
 
   'wedding-timeline': {
+    ornament: 'vine',
     // White and gold, by the Director's ruling of 2026-08-21. Gold is the one
     // hue that punishes the usual heuristic: to carry white text it has to be
     // darkened until it stops being gold and turns olive, which is the trap
@@ -153,6 +165,7 @@ export const SKINS = {
   },
 
   'seating-chart': {
+    ornament: 'vine',
     hue: 310, chroma: 0.115, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 14, wrap: '64rem', support: 174,
     extra: { sel: { role: 'tint', l: 0.93, c: 0.05, dl: 0.32 } },
@@ -160,6 +173,7 @@ export const SKINS = {
   },
 
   'bracket-maker': {
+    ornament: 'key',
     // Was hue 104, which is where yellow has already turned toward green, it
     // read olive rather than trophy, and had done since the palette landed.
     // 86 is the yellow-gold band, and `fill: bright` keeps the button a
@@ -173,6 +187,7 @@ export const SKINS = {
   },
 
   'wheel-picker': {
+    ornament: 'key',
     hue: 350, chroma: 0.175, paper: 'cool', voice: 'technical', texture: 'wash',
     r: 22, wrap: '38rem', support: 58,
     note: 'hot magenta, very round, the one app in the portfolio allowed to be loud',
@@ -181,18 +196,21 @@ export const SKINS = {
   /* ── Paper & Files ────────────────────────────────────────────────────── */
 
   'scan-to-pdf': {
+    ornament: 'diamond',
     hue: 202, chroma: 0.12, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 10, wrap: '44rem',
     note: 'scanner cyan on a faint grid, looks like a device, which is the promise',
   },
 
   'pdf-tools': {
+    ornament: 'diamond',
     hue: 276, chroma: 0.135, paper: 'cool', voice: 'technical', texture: 'none',
     r: 10, wrap: '48rem',
     note: 'indigo, crisp, a workbench, no decoration',
   },
 
   'image-compressor': {
+    ornament: 'diamond',
     /* Was magenta at chroma 0.145 behind a `wash` texture. The research called
        it and the review agent agreed: this is the one app whose entire job is
        judging whether a photograph still looks right, and a saturated coloured
@@ -209,6 +227,7 @@ export const SKINS = {
   },
 
   'signature-maker': {
+    ornament: 'diamond',
     hue: 264, chroma: 0.022, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 12, wrap: '40rem',
     // Almost achromatic on purpose. The app is ink on paper; anything else
@@ -217,6 +236,7 @@ export const SKINS = {
   },
 
   'qr-maker': {
+    ornament: 'diamond',
     hue: 142, chroma: 0.13, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 8, wrap: '40rem',
     note: 'signal green on a module grid, the page echoes the thing it makes',
@@ -225,18 +245,21 @@ export const SKINS = {
   /* ── Moving & Travel ──────────────────────────────────────────────────── */
 
   'moving-boxes': {
+    ornament: 'stitch',
     hue: 72, chroma: 0.105, paper: 'warm', voice: 'technical', texture: 'grid',
     r: 10, wrap: '44rem', support: 258,
     note: 'kraft cardboard and packing-tape geometry',
   },
 
   'packing-list': {
+    ornament: 'stitch',
     hue: 188, chroma: 0.12, paper: 'cool', voice: 'plain', texture: 'none',
     r: 16, wrap: '38rem',
     note: 'travel teal, checked off at 6am in an airport with one hand',
   },
 
   'home-inventory': {
+    ornament: 'stitch',
     hue: 124, chroma: 0.085, paper: 'warm', voice: 'technical', texture: 'grid',
     r: 10, wrap: '52rem', support: 38,
     // Opened either in dull anticipation of a disaster or in the middle of one.
@@ -246,6 +269,7 @@ export const SKINS = {
   /* ── Money ────────────────────────────────────────────────────────────── */
 
   'bill-splitter': {
+    ornament: 'diamond',
     hue: 218, chroma: 0.10, paper: 'cool', voice: 'technical', texture: 'none',
     r: 12, wrap: '44rem', support: 152,
     note: 'steady slate-blue, money apps earn trust by being boring',
@@ -336,6 +360,45 @@ export const TEXTURES = {
 };
 
 /** Extra background-* declarations a texture needs beyond the image itself. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ORNAMENTS, the Director's ruling of 2026-08-21
+
+   "a little more style to everything, nice aesthetic borders. simple, elegant,
+   maybe a little floral, waves, eclectic borders... really tailor and customize
+   them so they dont all feel so dull and the same."
+
+   Each app gets one decorative rule drawn in its own accent, in a motif taken
+   from what the app is actually FOR: vines for the wedding, a swell for the
+   rock pools, a running stitch for the packing list. It sits under the page
+   heading, where it reads as a signature rather than a decoration.
+
+   Rules this obeys, all of them pre-existing house law:
+     * inline SVG in a data URI, no external asset, no dependency
+     * decorative only, never carries meaning, never the sole indicator
+     * drawn in currentColor so it inherits the app's ink and needs no second
+       palette in dark mode
+     * pure line work, so it costs nothing to paint and prints as a hairline
+
+   `stroke` is the only variable a motif gets: the same drawing at a different
+   weight reads as a different hand. Keep them under ~120 characters of path
+   data, because this string is inlined into every app.
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const ORNAMENTS = {
+  /* A vine: two leaves either side of a slow curve. The wedding, the timeline,
+     anything that wants to look engraved rather than printed. */
+  vine: 'M0 8 Q 15 8 22 8 M 26 8 q 4-6 9 0 q-5 6-9 0 M 39 8 q 4-6 9 0 q-5 6-9 0 M52 8 Q 60 8 74 8',
+  /* A swell. Water, tides, sound, sleep, anything with a rhythm to it. */
+  wave: 'M0 8 q 9-6 18 0 t 18 0 t 18 0 t 18 0',
+  /* A running stitch, for the things people pack, sort and count. */
+  stitch: 'M0 8 h 8 M14 8 h 8 M28 8 h 8 M42 8 h 8 M56 8 h 8 M70 8 h 4',
+  /* A woven key, the eclectic one: angular, formal, a little architectural. */
+  key: 'M0 8 h 10 v-5 h 10 v 10 h 10 v-10 h 10 v 10 h 10 v-5 h 14',
+  /* A plain hairline with a diamond at the centre, for tools that should stay
+     quiet and businesslike but still want a mark of their own. */
+  diamond: 'M0 8 h 30 M 37 3 l 5 5 l-5 5 l-5-5 z M 49 8 h 25',
+  none: '',
+};
+
 export const TEXTURE_SUPPORT = {
   none: '',
   wash: '',
