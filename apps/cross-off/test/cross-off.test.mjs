@@ -302,6 +302,45 @@ console.log('\n== persistence roundtrip and daily reset ==');
    notebook it had already flipped; close it before the watcher noticed and the
    next morning opened on yesterday's crossed-out page. That is precisely the
    graveyard this app was built to abolish. */
+/* The morning toast stands for nine seconds and the first task of the day
+   often lands inside them. Undo restored a whole snapshot of the task array,
+   so it took that new task with it: the safety mechanism became the data loss,
+   in the app whose entire promise is that nothing you write goes missing. */
+console.log('\n== the flip undo cannot eat work written after the flip ==');
+{
+  const w = boot();
+  w.eval(`(()=>{const p=page();p.tasks.forEach(t=>{t.done=true});save();render();})()`);
+  w.eval('freshPage(page())');
+  const undo = (w.__toasts || []).find(t => /flip-back/.test(t.m));
+  ok(!!undo && undo.o && undo.o.action, 'the flip offers an undo');
+
+  // she writes the first thing of the day while the toast is still up
+  const inp = w.document.getElementById('addInput');
+  inp.value = 'ring the dentist';
+  inp.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  ok(w.eval(`page().tasks.some(t=>t.text==='ring the dentist')`), 'the new task is on the page');
+
+  undo.o.action.onAction();
+  ok(w.eval(`page().tasks.some(t=>t.text==='ring the dentist')`),
+    'and undo does not take it back off again');
+  ok(w.eval('page().past.length') === 1,
+    'the old page stays in the flip-back pile, where it can still be read');
+  ok((w.__toasts || []).some(t => /Kept what you have written/.test(t.m)),
+    'and she is told plainly why nothing was undone');
+}
+
+console.log('\n== an undo tapped immediately still works ==');
+{
+  const w = boot();
+  w.eval(`(()=>{const p=page();p.tasks.forEach(t=>{t.done=true});save();render();})()`);
+  const before = w.eval('page().tasks.length');
+  w.eval('freshPage(page())');
+  const undo = (w.__toasts || []).find(t => /flip-back/.test(t.m));
+  undo.o.action.onAction();
+  ok(w.eval('page().tasks.length') === before && w.eval('page().past.length') === 0,
+    'nothing happened in between, so the page comes back exactly');
+}
+
 console.log('\n== the work date only moves when a page turns ==');
 {
   const w = boot();
@@ -320,6 +359,58 @@ console.log('\n== the work date only moves when a page turns ==');
   // and the watcher must run whether or not the app is in front
   ok(/setInterval\(checkNewDay,\s*60000\)/.test(html),
     'the day watcher ticks even while the app is in the foreground');
+}
+
+/* Every tab held the whole notebook and every save wrote the whole thing back,
+   so two tabs were last-write-wins and a task added in one vanished when the
+   other saved. */
+console.log('\n== two tabs converge instead of overwriting each other ==');
+{
+  const w = boot();
+  const otherTab = (mutate) => {
+    const st = JSON.parse(w.localStorage.getItem('crossoff.v1'));
+    mutate(st);
+    const raw = JSON.stringify(st);
+    w.localStorage.setItem('crossoff.v1', raw);
+    // what the browser fires in THIS tab when another one writes
+    const ev = new w.StorageEvent('storage', { key: 'crossoff.v1', newValue: raw });
+    w.dispatchEvent(ev);
+    return st;
+  };
+
+  otherTab(st => st.pages[0].tasks.push({ id: 7001, text: 'pick up the prescription',
+    note: '', done: false, pri: 2, chore: false, strokes: [], timer: null, result: null }));
+  ok(w.eval(`page().tasks.some(t=>t.text==='pick up the prescription')`),
+    'a task added in the other tab appears here');
+  ok((w.__toasts || []).some(t => /other tab/.test(t.m)), 'and says where it came from');
+
+  // but not while hands are busy: the page must not move mid-edit
+  w.document.body.classList.add('sheet-open');
+  otherTab(st => st.pages[0].tasks.push({ id: 7002, text: 'book the car in',
+    note: '', done: false, pri: 2, chore: false, strokes: [], timer: null, result: null }));
+  ok(!w.eval(`page().tasks.some(t=>t.text==='book the car in')`),
+    'an update waits while a sheet is open rather than pulling the page away');
+  w.eval('closeSheet()');
+  ok(w.eval(`page().tasks.some(t=>t.text==='book the car in')`),
+    'and lands as soon as the sheet closes');
+}
+
+console.log('\n== only one tab may flip the page each morning ==');
+{
+  const w = boot();
+  w.eval(`(()=>{const p=page();p.tasks.forEach(t=>{t.done=true});save();render();})()`);
+  ok(w.eval(`morningFlip('2000-01-01')`) !== false, 'the first flip of the day happens');
+  const piled = w.eval('page().past.length');
+  /* The second tab still believes yesterday's work is on the page, because its
+     copy is stale. Without the guard it flips that stale page too, filing the
+     same day twice. Re-marking the tasks done is exactly that stale state, and
+     without it this test would pass for the wrong reason: a freshly flipped
+     page has nothing done on it, so morningFlip would decline anyway. */
+  w.eval(`(()=>{const p=page();p.tasks.forEach(t=>{t.done=true});})()`);
+  ok(w.eval(`morningFlip('2000-01-01')`) === false,
+    'a second tab arriving at the same morning does not flip again');
+  ok(w.eval('page().past.length') === piled,
+    'so the same page is not filed into the pile twice');
 }
 
 console.log('\n== a device that stops saving says so ==');

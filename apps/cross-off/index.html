@@ -737,7 +737,12 @@ const packPage=p=>({id:p.id,name:p.name,color:p.color,
     strokes:t.strokes,result:t.result||null,
     /* a running countdown survives a reload: the deadline is wall-clock */
     timer:t.timer?{duration:t.timer.duration,deadline:t.timer.deadline,buzzed:t.timer.buzzed}:null}))});
+/* Counts writes, so an Undo offered nine seconds ago can tell whether anything
+   has happened since it was offered. A whole-array snapshot restored over newer
+   work destroys that work, and the safety mechanism becomes the data loss. */
+let rev=0;
 function save(){
+  rev++;
   try{
     const data={
       uid,activePage:state.activePage,
@@ -947,9 +952,13 @@ function freshPage(p){
   const snapshot=flipPage(p,todayStr());
   state.lastFlip=todayStr();
   render();save();
+  const at=rev;                       // nothing has happened since the flip yet
   announce('Fresh page');
-  if(window.SWS&&SWS.toast)SWS.toast('Fresh page. Yesterday is in the flip-back pile, ink and all.',{
+  if(window.SWS&&SWS.toast)SWS.toast('Fresh page. The previous page is in the flip-back pile, ink and all.',{
     ms:7000,action:{label:'Undo',onAction:()=>{
+      /* Restoring the snapshot would throw away anything written since. The
+         newer work wins; it is the only thing here that cannot be got back. */
+      if(rev!==at){if(window.SWS&&SWS.toast)SWS.toast('Kept what you have written since. The old page is still in the flip-back pile.');return;}
       p.past.pop();
       p.tasks=snapshot;
       render();save();
@@ -962,6 +971,11 @@ function freshPage(p){
    went and Undo brings it back. workDate stamps the pile with the day the
    work actually happened, not the morning it got filed. */
 function morningFlip(workDate){
+  /* One flip per day, whoever gets there first. Two tabs open across midnight
+     both noticed the new day and both flipped, filing the same page into the
+     pile twice and rewriting the chores twice. The other tab's write lands
+     here through the storage listener, so this check sees its stamp. */
+  if(state.lastFlip===todayStr())return false;
   const flipped=[];
   for(const p of state.pages){
     if(!p.tasks.some(t=>t.done))continue;
@@ -970,9 +984,14 @@ function morningFlip(workDate){
   if(!flipped.length)return false;
   state.lastFlip=todayStr();
   render();save();
+  const at=rev;                       // nothing has happened since the flip yet
   announce('New day, fresh page. Yesterday is in the flip-back pile.');
   if(window.SWS&&SWS.toast)SWS.toast('New day, fresh page. Yesterday is in the flip-back pile, ink and all.',{
     ms:9000,action:{label:'Undo',onAction:()=>{
+      /* The toast lasts nine seconds and a first task often lands inside them.
+         Restoring the snapshot would take that task with it, so the newer work
+         wins: yesterday is still in the pile and can be read there. */
+      if(rev!==at){if(window.SWS&&SWS.toast)SWS.toast('Kept what you have written since. Yesterday is still in the flip-back pile.');return;}
       for(const f of flipped){f.p.past.pop();f.p.tasks=f.snapshot;}
       render();save();
     }}});
@@ -1103,6 +1122,7 @@ function closeSheet(){
   document.body.classList.remove('sheet-open');
   if(sheetReturn&&sheetReturn.isConnected&&sheetReturn.focus)sheetReturn.focus();
   sheetReturn=null;
+  if(pendingOtherTab)adoptOtherTab();   // a waiting update lands once hands are free
 }
 backdrop.addEventListener('click',()=>{
   if(Date.now()-sheetOpenedAt<350)return; // ignore the ghost click from the opening tap
@@ -1880,6 +1900,36 @@ addEventListener('pageshow',checkNewDay);
    hidden, so someone still writing at midnight kept yesterday's page under
    their pen until they looked away. */
 setInterval(checkNewDay,60000);
+
+/* ---------- the other tab ----------
+   Every tab held its own copy of the whole notebook and every save wrote the
+   whole thing back, so two tabs were last-write-wins: a task added in one
+   quietly disappeared when the other saved. Nothing here refuses a write,
+   because refusing to save what someone just wrote is the worse failure. The
+   tabs converge instead: when another tab writes, this one takes the newer
+   notebook. If hands are busy (a sheet open, a task being edited, the focus
+   screen up) it waits until they are free rather than pulling the page out
+   from under them. */
+let pendingOtherTab=false;
+function busyEditing(){
+  if(document.body.classList.contains('sheet-open'))return true;
+  const f=document.activeElement;
+  if(f&&(f.tagName==='INPUT'||f.tagName==='TEXTAREA')&&f.value)return true;
+  const focusEl=document.getElementById('focus');
+  if(focusEl&&focusEl.classList.contains('show'))return true;
+  return false;
+}
+function adoptOtherTab(){
+  pendingOtherTab=false;
+  if(!load())return;              // unreadable or absent: keep what we have
+  render();
+  if(window.SWS&&SWS.toast)SWS.toast('Updated from your other tab.');
+}
+addEventListener('storage',(e)=>{
+  if(e.key!==STORE_KEY||!e.newValue)return;
+  if(busyEditing()){pendingOtherTab=true;return;}
+  adoptOtherTab();
+});
 
 /* a timer that was running when the app closed picks itself back up */
 for(const p of state.pages)for(const t of p.tasks){
