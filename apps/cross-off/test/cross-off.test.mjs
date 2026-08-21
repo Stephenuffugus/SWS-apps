@@ -370,6 +370,27 @@ console.log('\n== the work date only moves when a page turns ==');
 /* Deleting one task stopped its clock. Taking a whole page away did not, so a
    countdown on a shelved or deleted page kept running against something nobody
    could see any more, and buzzed from it when it hit zero. */
+/* The markup always opened with TODAY lit, whatever had been saved, so someone
+   who chose NOW yesterday came back to a page showing TODAY and typed a task
+   that silently became NOW. The button and the behaviour must agree. */
+console.log('\n== the highlighted priority is the one that will be used ==');
+{
+  const w0 = boot();
+  w0.document.querySelector('#addPri .pri[data-p="1"]').click();
+  ok(w0.eval('state.addPri') === 1, 'choosing NOW takes effect');
+  ok(stored(w0).addPri === 1, 'and is kept without needing another action to save it');
+
+  const w = boot(stored(w0));
+  const lit = w.document.querySelector('#addPri .pri.sel');
+  ok(!!lit && lit.dataset.p === '1', 'the page reopens with NOW lit, not TODAY');
+  ok(lit.getAttribute('aria-pressed') === 'true', 'and says so to a screen reader');
+  const inp = w.document.getElementById('addInput');
+  inp.value = 'ring the vet back';
+  inp.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  ok(w.eval(`page().tasks.some(t=>t.text==='ring the vet back'&&t.pri===1)`),
+    'and a task typed straight away gets the priority the page is showing');
+}
+
 console.log('\n== a page that leaves takes its clocks with it ==');
 {
   for (const [button, what] of [['shArchive', 'archived'], ['shPageDel', 'deleted']]) {

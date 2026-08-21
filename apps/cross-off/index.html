@@ -1866,11 +1866,22 @@ function addTask(text,pri){
   const p=page()||addPage();
   p.tasks.push({id:++uid,text,note:'',done:false,strokes:[],pri,chore:false,steps:[],timer:null,result:null});
 }
+/* The saved choice and the highlighted button have to agree. The markup always
+   opened with TODAY lit, but the loaded state could say NOW, so a task typed
+   straight after opening quietly took a priority the page was not showing. */
+function syncAddPri(){
+  document.querySelectorAll('#addPri .pri').forEach(x=>{
+    const on=+x.dataset.p===state.addPri;
+    x.classList.toggle('sel',on);
+    x.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
 document.getElementById('addPri').addEventListener('click',e=>{
   const b=e.target.closest('.pri');
   if(!b)return;
   state.addPri=+b.dataset.p;
-  document.querySelectorAll('#addPri .pri').forEach(x=>x.classList.toggle('sel',x===b));
+  syncAddPri();
+  save();                 // a choice made is a choice kept
 });
 addInput.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&addInput.value.trim()){
@@ -1948,6 +1959,7 @@ if(!loaded&&loadState==='corrupt'){
   // the book opened, but some pages inside it did not
   if(damagedPages)showUnreadableNotice(damagedPages);
 }
+syncAddPri();   // after the boot, so it shows what was loaded and not the default
 document.getElementById('soundBtn').textContent=state.sound?'🔊':'🔇';
 document.getElementById('soundBtn').setAttribute('aria-pressed',state.sound);
 document.querySelectorAll('.marker').forEach(m=>{
