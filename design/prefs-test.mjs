@@ -204,6 +204,37 @@ for (const slug of slugs) {
     });
     if (jitter > 0.5) fail(slug, `selected chip reserves ${jitter}px more than an unselected one, the row will shift on tap`);
 
+    /* The panel must not be able to scroll ITSELF. Every option's radio is
+       hidden with position:absolute, so if its chip is not a positioned
+       ancestor the radio is laid out against the dialog instead, twenty one of
+       them stack up as invisible overflow, and focusing one on tap makes the
+       browser scroll the dialog: title, options and footer slide out of the
+       box, the blank remainder is bare dialog surface, and the next tap closes
+       the panel. That was the 2026-08-21 report, "changing a setting glitches
+       it out and I have to reopen it", in all twenty four apps at once, and it
+       hit hardest the people who opened the panel to make the text bigger.
+       Measured, not inspected: with the fix the dialog has zero overflow, and
+       without it between 699 and 1609 pixels of it. */
+    const strand = await page.evaluate(() => {
+      const d = document.getElementById('swsPrefs');
+      const input = d.querySelector('.opt input');
+      if (!input) return null;
+      let n = input.parentElement, host = 'none';
+      while (n) {
+        if (getComputedStyle(n).position !== 'static') { host = n.tagName; break; }
+        n = n.parentElement;
+      }
+      return { overflow: d.scrollHeight - d.clientHeight, host };
+    });
+    if (strand) {
+      if (strand.host === 'DIALOG') {
+        fail(slug, 'the hidden option radios are positioned against the dialog, not their own chip, so tapping a setting scrolls the panel out of its own box');
+      }
+      if (strand.overflow > 1) {
+        fail(slug, `the panel has ${strand.overflow}px of invisible overflow, it can scroll its own header out of view`);
+      }
+    }
+
     /* Esc must close it. Native <dialog> gives this away for free, so a
        failure here means something swallowed the key. */
     await page.keyboard.press('Escape');

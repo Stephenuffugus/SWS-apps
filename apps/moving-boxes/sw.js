@@ -1,6 +1,6 @@
 /* Moving Boxes service worker, fully offline (the new house has no wifi yet). */
-const VERSION = 'boxes-v24';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js", "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js", "./sws-ui.js"];
+const VERSION = 'boxes-v25';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./icon.svg","./index.html","./manifest.webmanifest","./vendor-qrcode.js", "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

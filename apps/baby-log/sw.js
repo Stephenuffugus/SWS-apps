@@ -1,6 +1,6 @@
 /* Baby Log service worker, fully offline (3am has no patience for spinners). */
-const VERSION = 'baby-v25';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./model.js", "./sws-prefs.js", "./sws-ui.js"];
+const VERSION = 'baby-v26';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./model.js", "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

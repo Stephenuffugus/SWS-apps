@@ -182,12 +182,13 @@
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO, base layer
+   SWS STUDIO — base layer
    Sky Wolf Studio · SWS Strategic Media LLC
 
    This file is the shared skeleton behind all 23 apps. It contains ZERO
    colour literals: every colour arrives from the per-app skin block that
-   `design/build.mjs` generates ahead of it. That split is the whole trick, identical bones, different skin.
+   `design/build.mjs` generates ahead of it. That split is the whole trick —
+   identical bones, different skin.
 
    Structural tokens (space, type, radius, timing) live HERE because they are
    invariant across the portfolio. Hue, chroma, texture, font pairing and
@@ -206,7 +207,7 @@
   --ui-scale:1;
   --density:1;
 
-  /* Spacing, a 4px base. Use these, never magic numbers.
+  /* Spacing — a 4px base. Use these, never magic numbers.
      Multiplied by --density so one control retunes the whole rhythm; the
      ratios between steps never change, which is what keeps a compact layout
      looking deliberate instead of merely squashed. */
@@ -236,7 +237,7 @@
   --lh-snug:1.35;
   --lh-body:1.55;
 
-  /* Measure, prose is capped so lines stay in the comfortable 45 to 75ch band. */
+  /* Measure — prose is capped so lines stay in the comfortable 45–75ch band. */
   --measure:64ch;
 
   /* Radius. Skins set --r (the card radius); everything else derives, so an
@@ -280,7 +281,7 @@
    multiplies on top of it.
 
    rem inside a media query always means the initial font size, never this one,
-   so the responsive breakpoints below stay put while the text grows, which is
+   so the responsive breakpoints below stay put while the text grows — which is
    what you want: bumping the text should not flip the layout to desktop. */
 html{
   -webkit-text-size-adjust:100%;
@@ -342,14 +343,14 @@ hr{border:0; border-top:1px solid var(--line); margin:var(--s5) 0}
 /* Horizontal group that wraps instead of overflowing. */
 .cluster{display:flex; flex-wrap:wrap; gap:var(--s2); align-items:center}
 
-/* The legacy equal-columns row, kept because every app uses it, but it now
+/* The legacy equal-columns row, kept because every app uses it — but it now
    collapses to a stack on narrow screens instead of crushing its children. */
 .row{display:flex; gap:var(--s2); flex-wrap:wrap}
 .row > *{flex:1 1 12rem; min-width:0}
 .row.tight{gap:var(--s1)}
 .row.nowrap{flex-wrap:nowrap}
 
-/* ── 4. Studio chrome, identical in all 23 apps ────────────────────────── */
+/* ── 4. Studio chrome — identical in all 23 apps ────────────────────────── */
 /* This block is the strongest "same studio" signal in the system. Palette and
    font change per app; the geometry, order and behaviour never do. */
 
@@ -359,7 +360,7 @@ header.app{
   gap:var(--s3);
   /* Wraps rather than overflows. At the largest text setting the title, the
      settings button and the tip pill cannot share a 414px line, and without
-     this the row silently pushes the whole page sideways, the one layout
+     this the row silently pushes the whole page sideways — the one layout
      failure the comfort settings could introduce on their own. */
   flex-wrap:wrap;
   padding:var(--s4) 0 var(--s3);
@@ -389,7 +390,8 @@ header.app .tagline{
 }
 header.app .spacer{flex:1}
 
-/* Tip jar. Present in every app, always the same shape, never shouty, it is an offer, not a nag. */
+/* Tip jar. Present in every app, always the same shape, never shouty —
+   it is an offer, not a nag. */
 a.tipbtn{
   display:inline-flex; align-items:center; gap:var(--s1);
   /* --tap like everything else. It was 36px on the reasoning that chrome is
@@ -406,7 +408,7 @@ a.tipbtn{
   text-decoration:none;
   white-space:nowrap;
   /* nowrap plus the header's min-width:0 means this can be squeezed narrower
-     than its own text and spill. It is a fixed-size pill, let it wrap to the
+     than its own text and spill. It is a fixed-size pill — let it wrap to the
      next line instead of being crushed. */
   flex:none;
   transition:color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
@@ -419,7 +421,7 @@ a.tipbtn:hover{color:var(--accent-deep); border-color:var(--accent); background:
 .hero p:last-child{margin-bottom:0}
 
 /* --ink-2, not --ink-3. The colophon carries the privacy promise and the
-   feedback link, which are sentences a user is meant to read, and this file's
+   feedback link, which are sentences a user is meant to read — and this file's
    own rule is that --ink-3 is for placeholders and disabled text only. axe
    caught it failing 4.5:1 on six apps. */
 footer.colophon{
@@ -435,7 +437,7 @@ footer.colophon a{color:var(--ink)}
 footer.colophon a:hover{color:var(--accent-deep)}
 
 /* The promise, rendered as an actual object rather than a sentence in grey.
-   Research finding: users do not believe "private" as body copy, it has to
+   Research finding: users do not believe "private" as body copy — it has to
    look like a stamp on the thing. */
 .trust{
   display:inline-flex; align-items:center; gap:var(--s2);
@@ -462,7 +464,7 @@ section.card,.card{
 @media (min-width:30rem){ section.card,.card{ padding:var(--s6) } }
 
 /* The uppercase micro-label that heads each card. Every app already uses
-   `card h2` this way, so the selector stays, only the values improve. */
+   `card h2` this way, so the selector stays — only the values improve. */
 section.card > h2,.card > h2{
   font-family:var(--font-text);
   font-size:var(--t-micro);
@@ -487,7 +489,7 @@ section.card > h2 + .sub,.card > h2 + .sub{margin-top:calc(var(--s4) * -1 + var(
 /* ── 6. Controls ────────────────────────────────────────────────────────── */
 button,input,select,textarea{font-family:inherit; font-size:inherit; color:inherit}
 
-/* 16px minimum on inputs is not a style choice, anything smaller makes iOS
+/* 16px minimum on inputs is not a style choice — anything smaller makes iOS
    Safari zoom the page on focus, which feels broken. */
 input[type=text],input[type=url],input[type=tel],input[type=email],
 input[type=number],input[type=search],input[type=date],input[type=time],
@@ -631,8 +633,8 @@ label:has(> input[type=checkbox]),label:has(> input[type=radio]){
 
 /* ── 8. Small type & status ─────────────────────────────────────────────── */
 /* --t-sm (15px), not --t-xs (13px). Hints are where these apps put their
-   actual instructions, "tap a name to edit it", "the schedule travels inside
-   the link", and the audits flagged 12.8px hint text as a defect on app after
+   actual instructions — "tap a name to edit it", "the schedule travels inside
+   the link" — and the audits flagged 12.8px hint text as a defect on app after
    app. If it teaches the user something, it does not get to be the smallest
    thing on the page. --t-xs is for chrome: chips, tab labels, the tip pill. */
 .hint,.footnote,.small{
@@ -658,7 +660,7 @@ label:has(> input[type=checkbox]),label:has(> input[type=radio]){
 .chips{display:flex; flex-wrap:wrap; gap:var(--s2)}
 
 /* "Saved" said out loud, quietly. The audits found that saving is
-   fire-and-forget across the portfolio, the app only speaks when it FAILS, so
+   fire-and-forget across the portfolio — the app only speaks when it FAILS, so
    the user's only evidence that their list survived is that nothing happened.
    SWS.saved() drives this. */
 [data-saved-flag]{
@@ -780,7 +782,7 @@ tr:last-child td{border-bottom:0}
  *
  * This is the portfolio's answer to the single most repeated finding in the
  * audits: destructive actions with no way back. A confirm dialog on every tap
- * is the wrong fix, it taxes the 99 correct taps to catch the one mistake,
+ * is the wrong fix — it taxes the 99 correct taps to catch the one mistake,
  * and at 3am it is just another thing to dismiss. Undo taxes nothing.
  *
  * Promoted here from Pill Schedule and Caregiver Log, which had it first. */
@@ -839,7 +841,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   white-space:nowrap; border:0;
 }
 
-/* Skip link, keyboard users should not tab through the header on every app. */
+/* Skip link — keyboard users should not tab through the header on every app. */
 .skip{
   position:absolute; left:var(--s4); top:var(--s4); z-index:100;
   padding:var(--s3) var(--s4);
@@ -856,11 +858,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .nowrap{white-space:nowrap}
 .tnum{font-variant-numeric:tabular-nums}
 
-/* ── 15. Comfort, user preferences ─────────────────────────────────────── */
+/* ── 15. Comfort — user preferences ─────────────────────────────────────── */
 /*
  * The operating system's preference is always the default. An attribute on
  * <html> is the user overriding it *for our apps*, and it must be able to win
- * in both directions, someone whose phone is in dark mode and who asks us for
+ * in both directions — someone whose phone is in dark mode and who asks us for
  * light is not confused, they have a reason, and a switch that only works one
  * way is not a switch.
  *
@@ -916,12 +918,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 /* --ink-3 is resolved on :root and --ink-2 is overridden on BODY, and the
    split is the whole point.
  *
- * Written as one block, body{--ink-2:var(--ink); --ink-3:var(--ink-2)}, the
+ * Written as one block — body{--ink-2:var(--ink); --ink-3:var(--ink-2)} — the
  * second declaration reads the value the first one just set, so all three inks
  * collapsed to the same colour. Measured on Sitter Sheet: --ink, --ink-2 and
  * --ink-3 all #262013, a 1.00:1 ratio between a placeholder and real typed
  * text. High contrast made it IMPOSSIBLE to tell an empty field from a filled
- * one, worse, for the people who turn it on, than leaving it off.
+ * one — worse, for the people who turn it on, than leaving it off.
  *
  * Resolving --ink-3 one element up means it picks up the ORIGINAL --ink-2, so
  * placeholders darken to full secondary strength and still read as secondary. */
@@ -974,7 +976,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 :root[data-reading="easy"] table{letter-spacing:normal; word-spacing:normal}
 
 /* -- Warm tint -------------------------------------------------------------
-   Half of these apps get opened in a dark room at 3am, a feed at two, a dose
+   Half of these apps get opened in a dark room at 3am — a feed at two, a dose
    at four. This is the f.lux move: a warm wash that pulls the blue down.
 
    It is an overlay rather than a filter on purpose. `filter` on a container
@@ -1003,7 +1005,7 @@ body::after{
  * a photo being judged for compression artefacts, a signature pad previewing
  * the ink that will be exported. Signature Maker hit this and had to lift its
  * pad above z-index 9999 by hand, then lift the action bar, toast and skip
- * link over that in turn, a fragile local ladder that every app with a canvas
+ * link over that in turn — a fragile local ladder that every app with a canvas
  * would have had to rebuild.
  *
  * One class instead. Put .notint on the element whose colour must be true. */
@@ -1026,22 +1028,22 @@ body::after{
 /*
  * Everything here is scoped to #swsPrefs / #swsPrefsBtn. Seven of the apps
  * already style a bare `dialog`, and their rules sit after this file in the
- * cascade, an ID keeps the panel looking the same in all 23 regardless.
+ * cascade — an ID keeps the panel looking the same in all 23 regardless.
  *
  * The options are real radio groups in a real <fieldset>. That is not
  * ceremony: it buys arrow-key navigation, "Text size, 3 of 5" from a screen
- * reader, and correct behaviour with no JavaScript running yet, none of which
+ * reader, and correct behaviour with no JavaScript running yet — none of which
  * a div-with-role reimplementation gets right for free.
  */
 
 /* The trigger, sitting next to the tip jar. Icon-only, so the accessible name
-   has to come from the markup, apply.mjs writes the aria-label. */
+   has to come from the markup — apply.mjs writes the aria-label. */
 /* Full --tap, not the 36px pill it started as.
    Two review agents flagged this independently and both correctly refused to
    patch it locally, because it is emitted from here into all 23 apps. They
    were right: this is the one control in the portfolio specifically for people
    with access needs, and shipping it below the floor we set for everything
-   else, to the user with a tremor who needs it most, could not be defended. */
+   else — to the user with a tremor who needs it most — could not be defended. */
 #swsPrefsBtn{
   display:inline-flex; align-items:center; justify-content:center;
   width:var(--tap); height:var(--tap); flex:none;
@@ -1069,7 +1071,7 @@ body::after{
   overflow:hidden;
 }
 /* A dialog is display:none until it opens, so the column layout has to be
-   attached to [open], setting it on the base rule would make the panel
+   attached to [open] — setting it on the base rule would make the panel
    permanently visible. Laying it out as a flex column is what keeps Done and
    Reset on screen: the earlier fixed max-height on the scroller guessed at the
    footer's height, and the moment the note wrapped to three lines the buttons
@@ -1123,7 +1125,7 @@ body::after{
 }
 /* The explanation lives inside the <legend> rather than beside it, so a screen
    reader reads "Warm tint, takes the blue down for night use" as the group's
-   name, and so there is no second element to space against the first. */
+   name — and so there is no second element to space against the first. */
 #swsPrefs legend .lite{
   display:block;
   margin-top:2px;
@@ -1135,6 +1137,22 @@ body::after{
 /* Beats the base's `label:has(> input[type=radio])` flex row, which is built
    for a settings list and would put each option on its own full-width line. */
 #swsPrefs .opt label{
+  /* Load-bearing, and it looks like nothing. The radio inside each chip is
+     hidden the visually-hidden way, position:absolute, and an absolutely
+     positioned box is placed against its nearest POSITIONED ancestor. Without
+     this line that ancestor was the dialog itself, so all twenty-one radios
+     piled up against the panel instead of sitting in their chips, giving the
+     dialog seven hundred pixels of invisible overflow. Tapping a chip focuses
+     its radio, the browser scrolls that radio into view, and the only thing
+     that could scroll was the panel: the title, the close X and the options
+     slid up out of the box and left a blank slab, which is bare dialog
+     surface, and the next tap landed on it and closed the whole thing. That is
+     the "changing a setting glitches it out and I have to reopen it" bug, in
+     all twenty four apps, hurting hardest the people who came here to make the
+     text bigger. position:relative makes each chip hold its own radio. It
+     moves nothing: a relatively positioned box with no offsets sits exactly
+     where the static one did. */
+  position:relative;
   display:inline-flex; align-items:center; justify-content:center;
   min-height:var(--tap);
   /* Tighter than a .btn on purpose: the permanent tick slot below costs every
@@ -1154,7 +1172,7 @@ body::after{
 }
 #swsPrefs .opt label:hover{color:var(--ink); border-color:var(--ink-3)}
 
-/* The radio stays in the accessibility tree and stays focusable, it is only
+/* The radio stays in the accessibility tree and stays focusable — it is only
    painted out. display:none or visibility:hidden would make the group
    unreachable by keyboard, which is the exact defect the Pill Schedule audit
    found in the shipped app. */
@@ -1178,7 +1196,7 @@ body::after{
   box-shadow:0 0 0 4px var(--focus-halo);
 }
 
-/* Selection must not rest on colour alone, that is WCAG 1.4.1, and it is also
+/* Selection must not rest on colour alone — that is WCAG 1.4.1, and it is also
    just the difference between "which one is on?" and knowing.
 
    The slot is always present and only its contents are hidden. Adding the tick
@@ -1202,7 +1220,7 @@ body::after{
 }
 
 /* Live sample. Changing text size or spacing with the panel covering the page
-   is otherwise guesswork, this gives the setting something to visibly act on
+   is otherwise guesswork — this gives the setting something to visibly act on
    without closing the dialog. */
 #swsPrefs .sws-sample{
   padding:var(--s4);
@@ -1254,7 +1272,7 @@ body::after{
 
   /* Most browsers print with "background graphics" OFF by default, which drops
      every fill but keeps the text colour. Anything that relied on a coloured
-     background for contrast, a primary button, a selected chip, would come
+     background for contrast — a primary button, a selected chip — would come
      out as near-white text on white paper. Restate them as ink-on-white with a
      border so they survive either setting. */
   .btn,.btn.primary,.chip,.chip.on,.seg button,.seg button.active{

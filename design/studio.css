@@ -954,6 +954,22 @@ body::after{
 /* Beats the base's `label:has(> input[type=radio])` flex row, which is built
    for a settings list and would put each option on its own full-width line. */
 #swsPrefs .opt label{
+  /* Load-bearing, and it looks like nothing. The radio inside each chip is
+     hidden the visually-hidden way, position:absolute, and an absolutely
+     positioned box is placed against its nearest POSITIONED ancestor. Without
+     this line that ancestor was the dialog itself, so all twenty-one radios
+     piled up against the panel instead of sitting in their chips, giving the
+     dialog seven hundred pixels of invisible overflow. Tapping a chip focuses
+     its radio, the browser scrolls that radio into view, and the only thing
+     that could scroll was the panel: the title, the close X and the options
+     slid up out of the box and left a blank slab, which is bare dialog
+     surface, and the next tap landed on it and closed the whole thing. That is
+     the "changing a setting glitches it out and I have to reopen it" bug, in
+     all twenty four apps, hurting hardest the people who came here to make the
+     text bigger. position:relative makes each chip hold its own radio. It
+     moves nothing: a relatively positioned box with no offsets sits exactly
+     where the static one did. */
+  position:relative;
   display:inline-flex; align-items:center; justify-content:center;
   min-height:var(--tap);
   /* Tighter than a .btn on purpose: the permanent tick slot below costs every

@@ -1,11 +1,11 @@
 /* Grocery List service worker, offline-first shell. Bump VERSION on deploy. */
-const VERSION = 'grocery-v24';
+const VERSION = 'grocery-v25';
 const ASSETS = ['./', './index.html', './app.js', './data.js', './helpers.js',
   './firebase-config.js', './vendor-qrcode.js', './manifest.webmanifest',
   './icon.svg', './apple-touch-icon.png',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js', "./sws-prefs.js", "./sws-ui.js"];
+  'https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js', "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
