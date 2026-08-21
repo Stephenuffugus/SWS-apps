@@ -364,6 +364,56 @@ console.log('\n== the work date only moves when a page turns ==');
 /* Every tab held the whole notebook and every save wrote the whole thing back,
    so two tabs were last-write-wins and a task added in one vanished when the
    other saved. */
+/* The worst shape this app could take: the recovery path destroying the thing
+   it was recovering. A notebook that would not parse looked exactly like a
+   first run, so the boot seeded Home and Errands over it and saved. */
+console.log('\n== a notebook that will not read is never written over ==');
+{
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+    beforeParse(win) {
+      win.alert = () => {}; win.confirm = () => true;
+      win.SWS = { toast: (m, o) => { (win.__toasts = win.__toasts || []).push({ m, o }); } };
+      win.localStorage.setItem('crossoff.v1', '{"pages":[{"name":"Sept", oops');
+    }
+  });
+  const w = dom.window;
+  /* The app has to keep working, so it will write a fresh notebook to the
+     live key. What must never happen is the original being gone: it is copied
+     aside BEFORE anything is written, which is the whole recovery. */
+  ok(w.localStorage.getItem('crossoff.v1.unreadable') === '{"pages":[{"name":"Sept", oops',
+    'the unreadable original is kept aside, byte for byte, before anything is written');
+  ok(w.eval("loadState") === 'corrupt', 'the app knows this was damage, not a first run');
+  ok(!w.eval(`state.pages[0].tasks.some(t=>/pharmacy/.test(t.text))`),
+    'and does not seed the sample tasks as though nobody had ever used it');
+  const bar = w.document.getElementById('storageWarn');
+  ok(bar && !bar.hidden, 'the page says what happened');
+  ok(/could not be read/.test(bar.textContent), 'in words, not a code');
+  ok(!!bar.querySelector('button'), 'and offers the backup file');
+}
+
+console.log('\n== one bad page does not cost the whole notebook ==');
+{
+  const good = {
+    uid: 50, activePage: 1,
+    pages: [
+      { id: 1, name: 'Home', color: '#F9E547', past: [], tasks: [
+        { id: 11, text: 'ring the school', note: '', done: false, pri: 2, chore: false, strokes: [], timer: null, result: null }] },
+      null,
+      { id: 3, name: 'Errands', color: '#FA86C4', past: [], tasks: [] },
+    ],
+    archived: [], records: {}, doneToday: 0, doneDate: '2000-01-01',
+  };
+  const w = boot(good);
+  ok(w.eval('state.pages.length') === 2, 'the readable pages open');
+  ok(w.eval(`state.pages.some(p=>p.name==='Home')&&state.pages.some(p=>p.name==='Errands')`),
+    'both of them, by name');
+  ok(w.eval(`page().tasks.some(t=>t.text==='ring the school')`), 'with their tasks intact');
+  const bar = w.document.getElementById('storageWarn');
+  ok(bar && !bar.hidden && /could not be read/.test(bar.textContent),
+    'and the page admits one page is missing rather than hiding it');
+}
+
 console.log('\n== two tabs converge instead of overwriting each other ==');
 {
   const w = boot();

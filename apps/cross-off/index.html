@@ -788,10 +788,17 @@ function storageMended(){
   const bar=document.getElementById('storageWarn');
   if(bar)bar.hidden=true;
 }
+/* Three different things used to look identical to the boot: no notebook yet,
+   a notebook that will not parse, and a notebook that parsed to nothing. All
+   three returned false, and the boot took false to mean "first run", seeded
+   Home and Errands over the top and saved. So the recovery path was what
+   destroyed a damaged notebook. These are now told apart. */
+let loadState='fresh';        // 'fresh' | 'ok' | 'corrupt'
+let damagedPages=0;
 function load(){
   try{
     const raw=localStorage.getItem(STORE_KEY);
-    if(!raw)return false;
+    if(!raw){loadState='fresh';return false;}
     const d=JSON.parse(raw);
     uid=d.uid||0;
     const unpackPage=p=>({id:p.id,name:p.name,color:p.color,
@@ -804,8 +811,16 @@ function load(){
           /* a deadline that passed while the app was closed does not get to
              scream on open; it arrives already calm */
           buzzed:t.timer.buzzed||t.timer.deadline<=Date.now()}:null}))});
-    state.pages=(Array.isArray(d.pages)?d.pages:[]).map(unpackPage);
-    state.archived=(Array.isArray(d.archived)?d.archived:[]).map(unpackPage);
+    /* One unreadable page must not cost the whole notebook. Anything that
+       throws is dropped and counted; the rest of the book still opens. */
+    let lost=0;
+    const safeUnpack=(list)=>(Array.isArray(list)?list:[]).map(p=>{
+      try{ return p&&typeof p==='object' ? unpackPage(p) : null; }
+      catch(e){ return null; }
+    }).filter(p=>{ if(!p){lost++;return false;} return true; });
+    state.pages=safeUnpack(d.pages);
+    state.archived=safeUnpack(d.archived);
+    if(lost)damagedPages=lost;
     state.activePage=d.activePage;
     state.records=d.records||{};
     state.doneToday=(d.doneDate===todayStr())?(d.doneToday||0):0;   // count resets daily
@@ -816,8 +831,49 @@ function load(){
     state.hintShown=d.hintShown!==false;
     state.lastFlip=d.lastFlip||null;
     state.lastSaveDay=d.doneDate||null;   // the day the notebook was last touched
-    return state.pages.length>0;
-  }catch(e){return false;}
+    if(state.pages.length>0){loadState='ok';return true;}
+    loadState='corrupt';                  // something was stored, and it is not a notebook
+    return false;
+  }catch(e){loadState='corrupt';return false;}
+}
+
+/* Keep the original bytes before anything is written over them. Only ever
+   written once, so a second bad boot cannot overwrite the first rescue. */
+/* Says what happened, keeps the offer of a backup, and never blames anyone.
+   `lost` is a count of pages that would not read; absent means the whole
+   notebook would not read. */
+function showUnreadableNotice(lost){
+  const put=()=>{
+    const bar=document.getElementById('storageWarn');
+    if(!bar)return;
+    const text=lost
+      ? `${lost} ${lost===1?'page':'pages'} in this notebook could not be read and ${lost===1?'is':'are'} not showing. Everything else opened normally, and nothing has been written over. Save a backup file before making changes.`
+      : 'What was saved here could not be read, so this is starting as an empty page. The original has been kept exactly as it was and nothing has been written over it.';
+    bar.replaceChildren(document.createTextNode(text+' '));
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.textContent='Save a backup file';
+    btn.onclick=()=>{
+      const real=document.querySelector('#backupControls button');
+      if(real){real.scrollIntoView({block:'center'});real.click();}
+    };
+    bar.appendChild(btn);
+    bar.hidden=false;
+  };
+  /* This script runs at the end of the body, so the banner is already in the
+     document. Waiting for DOMContentLoaded would only delay the one message
+     the person needs before they start writing. Defer only if it is genuinely
+     not there yet. */
+  if(document.getElementById('storageWarn'))put();
+  else addEventListener('DOMContentLoaded',put);
+}
+
+const BROKEN_KEY='crossoff.v1.unreadable';
+function preserveUnreadable(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(raw&&!localStorage.getItem(BROKEN_KEY))localStorage.setItem(BROKEN_KEY,raw);
+  }catch(e){/* out of room: the original is still sitting in STORE_KEY untouched */}
 }
 
 const tabsEl=document.getElementById('tabs');
@@ -1854,7 +1910,18 @@ addEventListener('resize',()=>{
 });
 
 /* ---------- boot: load saved notebook, seed only on first run ---------- */
-if(!load()){
+const loaded=load();
+if(!loaded&&loadState==='corrupt'){
+  /* Something is stored here and it will not read as a notebook. The old code
+     took that for a first run, seeded samples straight over it and saved, so
+     the recovery path was the thing that destroyed the notebook. Keep the
+     original bytes, say so plainly, and open an empty book rather than
+     pretending this is somebody's first day. */
+  preserveUnreadable();
+  const home=addPage('Home');
+  state.activePage=home.id;
+  showUnreadableNotice();
+}else if(!loaded){
   const home=addPage('Home');
   home.tasks.push(
     {id:++uid,text:'call the pharmacy before it closes',note:'',done:false,strokes:[],pri:1,chore:false,steps:[],timer:null,result:null},
@@ -1869,6 +1936,8 @@ if(!load()){
   save();
 }else{
   if(!state.pages.find(p=>p.id===state.activePage))state.activePage=state.pages[0].id;
+  // the book opened, but some pages inside it did not
+  if(damagedPages)showUnreadableNotice(damagedPages);
 }
 document.getElementById('soundBtn').textContent=state.sound?'🔊':'🔇';
 document.getElementById('soundBtn').setAttribute('aria-pressed',state.sound);
