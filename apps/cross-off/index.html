@@ -282,6 +282,38 @@
   }
   .footnote a{color:var(--ink-soft)}
 
+  /* ---------- backup, and the warning that sends you to it ---------- */
+  .backupbox{padding:18px 20px 4px 64px;max-width:52ch}
+  .backupbox p{margin:0 0 10px;font-size:12.5px;color:var(--ink-soft);line-height:1.65}
+  /* The shared runtime ships .btn markup, and this app is not on the studio
+     stylesheet, so the buttons arrived raw. Dressed to match the paper rather
+     than restyled in the shared file, which four other apps depend on. */
+  .backupbox .backup-row{display:flex;flex-wrap:wrap;gap:10px}
+  .backupbox .btn{
+    padding:9px 15px;min-height:42px;border:1px solid var(--rule-strong,#C9CBD3);
+    border-radius:9px;background:#fff;color:var(--ink,#2A2F3A);
+    font:inherit;font-size:13px;cursor:pointer;
+  }
+  .backupbox .btn:hover{border-color:var(--ink-soft,#7A8794)}
+  .backupbox .btn:focus-visible{outline:2px solid var(--urgent);outline-offset:1px}
+  /* Not red and not an alarm. It is a fact the page has to say out loud, in
+     the same voice as everything else here. */
+  #storageWarn{
+    margin:0 20px 12px 64px;padding:12px 14px;border-radius:10px;
+    border:1px solid #E4C98A;background:#FCF4E2;color:#5C4A22;
+    font-size:13px;line-height:1.6;
+  }
+  #storageWarn[hidden]{display:none}
+  #storageWarn button{
+    display:inline-block;margin-top:8px;padding:8px 14px;min-height:40px;
+    border:1px solid #C8A860;border-radius:8px;background:#fff;color:#5C4A22;
+    font:inherit;font-size:13px;cursor:pointer;
+  }
+  @media (max-width:640px){
+    .backupbox{padding-left:20px}
+    #storageWarn{margin-left:20px}
+  }
+
   /* ---------- highlighter tray ---------- */
   #tray{
     position:fixed;left:0;right:0;bottom:0;z-index:10;
@@ -557,6 +589,14 @@
   </div>
 </header>
 
+<!-- Stays put until a save works again. No guilt, no blame, one thing to do
+     about it, in keeping with the rest of the app's voice. -->
+<div id="storageWarn" role="status" hidden>
+  This device stopped saving, so new writing here will not survive a reload.
+  Usually it means storage is full. Save a backup file, then clear some space.
+  <button type="button" id="storageWarnBackup">Save a backup file</button>
+</div>
+
 <div id="tabs" role="tablist" aria-label="Pages"></div>
 
 <div id="page">
@@ -570,6 +610,18 @@
       <button class="pri sel" data-p="2">TODAY</button>
       <button class="pri" data-p="3">SOON</button>
     </div>
+  </div>
+  <!-- The whole notebook, months of pages and their ink, lived in one browser
+       value with no way to get a copy out. A cleared browser or a lost phone
+       took all of it. Same control the rest of the studio uses, wired by the
+       shared runtime from these attributes so there is no inline script. -->
+  <div class="backupbox">
+    <p>Everything here is saved on this device only. That is the promise, and the
+    price of it is that a cleared browser or a lost phone takes the notebook with
+    it. A backup file lands in your downloads and puts every page back exactly as
+    it was, ink and all.</p>
+    <div id="backupControls" data-sws-backup data-app="cross-off" data-name="Cross Off"
+         data-keys="crossoff.v1"></div>
   </div>
   <div class="footnote">Cross Off is free. No ads, no account, and your list never leaves this device.<br>
     A free tool by <a href="../">Sky Wolf Studio</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Cross%20Off">Feedback</a> · <a href="https://buy.stripe.com/28EbJ2a1P1yT6rz7i17EQ0p" target="_blank" rel="noopener">&hearts; Tip jar</a></div>
@@ -623,6 +675,7 @@
 <div id="live" class="sr-only" aria-live="polite"></div>
 
 <script src="sws-ui.js"></script>
+<script src="sws-backup.js"></script>
 <script>
 /* =========================================================
    CROSS OFF, Sky Wolf Studio · SWS Strategic Media LLC
@@ -667,6 +720,16 @@ let uid=0;
 /* ---------- persistence (guarded: falls back to in-memory) ---------- */
 const STORE_KEY='crossoff.v1';
 const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+
+/* The day the NOTEBOOK is on, which is not always the day the clock is on.
+   It moves only when a page actually flips. save() used to stamp the wall
+   clock instead, so crossing something off at ten past midnight in a session
+   that was still open quietly told the notebook it had already turned the
+   page. Close the app before the watcher noticed and the next morning opened
+   on yesterday's crossed-out page: the graveyard the whole design exists to
+   prevent. Declared up here because save() reads it and `let` has no hoisting
+   to lend. */
+let dayNow=todayStr();
 const packPage=p=>({id:p.id,name:p.name,color:p.color,
   past:p.past||[],
   tasks:p.tasks.map(t=>({id:t.id,text:t.text,note:t.note||'',done:t.done,pri:t.pri||2,
@@ -680,13 +743,45 @@ function save(){
       uid,activePage:state.activePage,
       pages:state.pages.map(packPage),
       archived:(state.archived||[]).map(packPage),
-      records:state.records,doneToday:state.doneToday,doneDate:todayStr(),
+      records:state.records,doneToday:state.doneToday,doneDate:dayNow,
       color:state.color,addPri:state.addPri,sound:state.sound,
       lastCustom:state.lastCustom||null,hintShown:state.hintShown,
       lastFlip:state.lastFlip
     };
     localStorage.setItem(STORE_KEY,JSON.stringify(data));
-  }catch(e){/* no storage available: session runs in-memory */}
+    if(storageBroken)storageMended();
+    return true;
+  }catch(e){
+    /* This used to swallow the error and say nothing, which is the worst thing
+       a notebook can do: the page kept accepting writing, the ink kept
+       appearing, and every word of it was gone at the next reload. Quota,
+       private mode and evicted storage all land here. Say so, once, and keep
+       saying it until a save works again. */
+    storageFailed();
+    return false;
+  }
+}
+let storageBroken=false;
+function storageFailed(){
+  if(storageBroken)return;
+  storageBroken=true;
+  const bar=document.getElementById('storageWarn');
+  if(bar)bar.hidden=false;
+  /* Send the button at the real backup control rather than building a second
+     one, so there is only ever one implementation of saving a file. */
+  const go=document.getElementById('storageWarnBackup');
+  if(go&&!go.dataset.wired){
+    go.dataset.wired='1';
+    go.onclick=()=>{
+      const real=document.querySelector('#backupControls button');
+      if(real){real.scrollIntoView({block:'center'});real.click();}
+    };
+  }
+}
+function storageMended(){
+  storageBroken=false;
+  const bar=document.getElementById('storageWarn');
+  if(bar)bar.hidden=true;
 }
 function load(){
   try{
@@ -1772,7 +1867,6 @@ render();
    "rebooted" and the load() path never runs. Watch for the date changing
    out from under a living session: coming back to the foreground, or a
    quiet minute tick while backgrounded. */
-let dayNow=todayStr();
 function checkNewDay(){
   const t=todayStr();
   if(t===dayNow)return;
@@ -1782,7 +1876,10 @@ function checkNewDay(){
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkNewDay();});
 addEventListener('pageshow',checkNewDay);
-setInterval(()=>{if(document.hidden)checkNewDay();},60000);
+/* Ticks whether or not the app is in front. It used to check only while
+   hidden, so someone still writing at midnight kept yesterday's page under
+   their pen until they looked away. */
+setInterval(checkNewDay,60000);
 
 /* a timer that was running when the app closed picks itself back up */
 for(const p of state.pages)for(const t of p.tasks){

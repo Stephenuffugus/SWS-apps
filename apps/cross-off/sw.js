@@ -1,9 +1,9 @@
 /* Cross Off service worker, cache-first shell for offline use.
    Bump CACHE on every deploy so users pick up new versions. */
-const CACHE = 'cross-off-v11';
+const CACHE = 'cross-off-v12';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest', 'icon.svg',
-  'icon-192.png', 'icon-512.png', 'sws-ui.js',
+  'icon-192.png', 'icon-512.png', 'sws-ui.js', 'sws-backup.js',
   'fonts/caveat-700-latin.woff2', 'fonts/patrick-hand-latin.woff2'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

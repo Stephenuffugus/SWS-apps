@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(HERE, '..', 'index.html'), 'utf8');
+const sw = readFileSync(join(HERE, '..', 'sw.js'), 'utf8');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let pass = 0, fail = 0;
@@ -293,6 +294,66 @@ console.log('\n== persistence roundtrip and daily reset ==');
   st.doneDate = '2000-01-01';
   const w2 = boot(st);
   ok(w2.eval('state.doneToday') === 0, 'the count resets on a new day');
+}
+
+/* The notebook's day is not the clock's day. It may only move when a page
+   actually turns. save() used to stamp the wall clock into doneDate, so
+   crossing anything off after midnight in a session that never closed told the
+   notebook it had already flipped; close it before the watcher noticed and the
+   next morning opened on yesterday's crossed-out page. That is precisely the
+   graveyard this app was built to abolish. */
+console.log('\n== the work date only moves when a page turns ==');
+{
+  const w = boot();
+  const realToday = w.eval('todayStr()');
+  ok(w.eval('typeof dayNow') === 'string', 'the notebook keeps its own day');
+  ok(w.eval('dayNow') === realToday, 'which starts as today');
+
+  // midnight passes while the app is open and in use, then a task is crossed off
+  w.eval("dayNow='2000-01-01'");
+  w.eval('save()');
+  ok(stored(w).doneDate === '2000-01-01',
+    'a save after midnight writes the day the notebook is on, not the clock');
+  ok(stored(w).doneDate !== realToday,
+    'so it cannot quietly mark the page as already turned');
+
+  // and the watcher must run whether or not the app is in front
+  ok(/setInterval\(checkNewDay,\s*60000\)/.test(html),
+    'the day watcher ticks even while the app is in the foreground');
+}
+
+console.log('\n== a device that stops saving says so ==');
+{
+  const w = boot();
+  const bar = w.document.getElementById('storageWarn');
+  ok(!!bar, 'there is somewhere to say it');
+  ok(bar.hidden, 'and it stays out of the way while saving works');
+  // storage goes away mid-session, the way a full phone does
+  /* jsdom ignores assignment to localStorage.setItem on the instance, so the
+     break has to go on the prototype the way a real quota error would. */
+  w.eval("w_orig_setItem=Storage.prototype.setItem;Storage.prototype.setItem=function(){var e=new Error('quota');e.name='QuotaExceededError';throw e}");
+  const okFlag = w.eval('save()');
+  ok(okFlag === false, 'save reports the failure instead of swallowing it');
+  ok(!w.document.getElementById('storageWarn').hidden,
+    'and the page says the writing is not being kept');
+  ok(/backup/i.test(w.document.getElementById('storageWarn').textContent),
+    'and offers the one thing that helps');
+  // storage comes back (space cleared) and the notice retires itself
+  w.eval("Storage.prototype.setItem=w_orig_setItem");
+  ok(w.eval('save()') === true, 'saving works again once there is room');
+  ok(w.document.getElementById('storageWarn').hidden,
+    'and the notice takes itself down rather than nagging forever');
+}
+
+console.log('\n== the notebook can be got out of the browser ==');
+{
+  const w = boot();
+  const host = w.document.getElementById('backupControls');
+  ok(!!host, 'there is a backup control');
+  ok(host.getAttribute('data-keys') === 'crossoff.v1',
+    'pointed at this app\'s own key and nothing else on the origin');
+  ok(/sws-backup\.js/.test(html) && /'sws-backup\.js'/.test(sw),
+    'the shared runtime is loaded and precached so it works offline too');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
