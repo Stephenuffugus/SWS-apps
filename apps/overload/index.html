@@ -534,12 +534,26 @@ function judge(p, reps){
     why=`Failure only on the final set. Fatigue, not a ceiling. Consolidate: close that last set and the weight moves.`;}
   else if(fails===1){v='hold';nw=p.w;
     why=`One mid-session failure (set ${first+1}), ${rate}%. Hold the weight, take a full 2 to 3 minutes before that set.`;}
-  else{v='deload';nw=Math.max(incOf(p),Math.round(p.w*0.9/2.5)*2.5);
+  /* Rounded to THIS lift's increment, not to a flat 2.5. A bench moves in 5s
+     because the smallest plate is 2.5 and it goes on twice, so rounding a
+     deload to 2.5 produced weights no bar can hold: 135 came back as 122.5,
+     which needs 38.75 a side, and the plate list could only make 37.5. The app
+     then printed those plates as though they were the prescription and the
+     lifter loaded 120 believing it was 122.5. */
+  else{v='deload';nw=Math.max(incOf(p),Math.round(p.w*0.9/incOf(p))*incOf(p));
     why=`Failure hit early, set ${first+1} on, ${rate}%. Grinding builds fatigue, not muscle. Drop to ${nw}, own it, climb back.`;}
   return {v,nw,why,rate,out};
 }
+/* Never print a loading that does not add up to the prescription. The greedy
+   pass used to drop whatever it could not represent and say nothing, so a
+   weight the plates could not make was quietly rendered as a lighter one and
+   the lifter had no way to know. If a remainder survives, the honest thing is
+   to name the weight these plates actually make. */
 function plateMath(t){let s=(t-45)/2;if(s<=0)return"empty bar";
-  const d=[45,35,25,10,5,2.5],o=[];for(const p of d){while(s>=p){o.push(p);s-=p}}return o.join(" + ")+" / side";}
+  const d=[45,35,25,10,5,2.5],o=[];for(const p of d){while(s>=p-1e-9){o.push(p);s-=p}}
+  const list=o.length?o.join(" + ")+" / side":"empty bar";
+  if(s>1e-9){const real=45+2*(o.reduce((a,b)=>a+b,0));return `${list} (${real} lbs, the closest these plates make)`;}
+  return list;}
 
 /* The warm-up ramp, written by the same engine that writes the workout:
    barbell lifts open with the empty bar, then 60% and 80% of the working

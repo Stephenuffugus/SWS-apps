@@ -47,7 +47,12 @@ console.log('\n,  engine: the verdict table , ');
   r = j([12, 6, 10]);
   ok(r.v === 'hold', 'one mid-session failure: CONSOLIDATE');
   r = j([6, 5, 10]);
-  ok(r.v === 'deload' && r.nw === Math.round(135 * 0.9 / 2.5) * 2.5, 'early failures: DELOAD to 90% rounded to 2.5');
+  /* Rounded to the LIFT'S increment. A flat 2.5 produced 122.5 for a bench,
+     and no bar can hold 122.5: it needs 38.75 a side and the plates stop at
+     37.5, so the app printed a loading 2.5 lbs lighter than the prescription
+     and said nothing. */
+  ok(r.v === 'deload' && r.nw === Math.round(135 * 0.9 / 5) * 5, 'early failures: DELOAD to 90% rounded to the lift increment');
+  ok(r.nw === 120, 'and 135 comes back as a weight a bar can actually hold');
   r = j([2, 2, 2], { w: 5 });
   ok(r.nw >= 5, 'deload never drops below the increment');
   r = j([12, 12, 12], { mg: 'Quads', ex: 'Back Squat', w: 225 });
@@ -63,6 +68,39 @@ console.log('\n,  plate math , ');
   ok(w.eval(`plateMath(135)`) === '45 / side', '135 = one plate per side');
   ok(w.eval(`plateMath(225)`) === '45 + 45 / side', '225 = two plates per side');
   ok(w.eval(`plateMath(190)`) === '45 + 25 + 2.5 / side', 'mixed plates resolve greedily');
+
+  /* The app's whole promise is that the prescription is the instruction, so a
+     printed loading that does not add up to the prescribed weight is the app
+     lying about the one number it exists to give. Sweep every weight the
+     engine can reach on a barbell lift and demand the plates sum exactly. */
+  const bad = w.eval(`(() => {
+    const out = [];
+    for (let t = 45; t <= 500; t += 5) {
+      const s = plateMath(t);
+      if (s === 'empty bar') continue;
+      const per = s.split(' / side')[0].split(' + ').reduce((a, b) => a + parseFloat(b), 0);
+      if (Math.abs(45 + 2 * per - t) > 1e-9) out.push(t);
+    }
+    return out;
+  })()`);
+  ok(bad.length === 0, 'every 5 lb barbell weight loads to exactly its prescription');
+
+  // and when a weight genuinely cannot be made, it must say so rather than
+  // print a lighter loading as though it were the prescription
+  const odd = w.eval(`plateMath(122.5)`);
+  ok(/closest these plates make/.test(odd), 'an unloadable weight admits what the plates really make');
+  ok(/120 lbs/.test(odd), 'and names the weight that will actually be on the bar');
+
+  // the engine should not be handing it unloadable weights in the first place
+  const deloads = w.eval(`(() => {
+    const out = [];
+    for (let start = 50; start <= 400; start += 5) {
+      const r = judge({ ...${JSON.stringify(prog())}, w: start }, [3, 3, 10]);
+      if (r.v === 'deload' && (r.nw - 45) % 5 !== 0 && r.nw > 45) out.push([start, r.nw]);
+    }
+    return out;
+  })()`);
+  ok(deloads.length === 0, 'no deload of a barbell lift lands on a weight a bar cannot hold');
 }
 
 console.log('\n,  create a lift, run a session, schedule +3 days , ');
