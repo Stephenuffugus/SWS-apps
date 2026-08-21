@@ -367,6 +367,22 @@ console.log('\n== the work date only moves when a page turns ==');
 /* The worst shape this app could take: the recovery path destroying the thing
    it was recovering. A notebook that would not parse looked exactly like a
    first run, so the boot seeded Home and Errands over it and saved. */
+/* Deleting one task stopped its clock. Taking a whole page away did not, so a
+   countdown on a shelved or deleted page kept running against something nobody
+   could see any more, and buzzed from it when it hit zero. */
+console.log('\n== a page that leaves takes its clocks with it ==');
+{
+  for (const [button, what] of [['shArchive', 'archived'], ['shPageDel', 'deleted']]) {
+    const w = boot();
+    w.eval(`startCountdown(page().tasks[0], 300000)`);
+    const id = w.eval('page().tasks[0].id');
+    ok(w.eval(`!!ticks[${id}]`), `a countdown is running before the page is ${what}`);
+    w.eval(`openPageSheet(page())`);
+    w.document.getElementById(button).click();
+    ok(!w.eval(`!!ticks[${id}]`), `and is stopped when the page is ${what}`);
+  }
+}
+
 console.log('\n== a notebook that will not read is never written over ==');
 {
   const dom = new JSDOM(html, {

@@ -349,6 +349,25 @@ console.log('\n,  a session remembers the lift it was done on , ');
   ok(!spark, 'one session on the current lift is a dot, not a strength line drawn across a swap');
 }
 
+/* The house rule is Undo, not confirm. Deleting one lift already followed it;
+   wiping everything, the more frightening of the two, was still guarding itself
+   with a dialog that also claimed the loss was permanent. */
+console.log('\n,  wiping everything is undoable , ');
+{
+  const w = boot({ programs: [prog(), prog({ id: 'p2', ex: 'Incline DB Press' })], weighins: [{ date: new Date().toISOString(), bw: 180 }], sound: true });
+  ok(w.eval('S.programs.length') === 2, 'two lifts to lose');
+  w.document.getElementById('wipeBtn').click();
+  ok(w.eval('S.programs.length') === 0, 'the wipe happens without asking first');
+  const t = (w.__toasts || []).find(x => /Wiped/.test(x.m));
+  ok(!!t && t.o && t.o.action, 'and offers an undo instead of a confirmation');
+  ok(/2 lifts/.test(t.m), 'saying how much went, so the offer means something');
+  t.o.action.onAction();
+  ok(w.eval('S.programs.length') === 2, 'undo brings every lift back');
+  ok(w.eval('S.weighins.length') === 1, 'and the weigh-ins with them');
+  ok(w.eval(`S.programs.some(p=>p.ex==='Incline DB Press')`), 'exactly as they were');
+  ok(!/cannot be undone/.test(html), 'and nothing in the app still claims this cannot be undone');
+}
+
 console.log('\n,  rest is one state, not several , ');
 {
   const w = boot({ programs: [prog({ sets: 4 })], weighins: [], sound: false });

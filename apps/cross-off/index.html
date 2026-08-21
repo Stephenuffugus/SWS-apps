@@ -1356,6 +1356,7 @@ function openPageSheet(p){
     const snap=state.pages.indexOf(p);
     state.archived=state.archived||[];
     state.archived.push(p);
+    stopPageTicks(p);              // a shelved page does not go on counting
     state.pages=state.pages.filter(x=>x.id!==p.id);
     state.activePage=state.pages[Math.max(0,Math.min(snap,state.pages.length-1))].id;
     closeSheet();render();save();
@@ -1371,6 +1372,7 @@ function openPageSheet(p){
   document.getElementById('shPageDel').addEventListener('click',()=>{
     if(state.pages.length<=1){closeSheet();return;}
     const snap=state.pages.indexOf(p);
+    stopPageTicks(p);              // and neither does a deleted one
     state.pages=state.pages.filter(x=>x.id!==p.id);
     state.activePage=state.pages[0].id;
     closeSheet();render();save();
@@ -1551,6 +1553,13 @@ function startTick(task,chip){
 }
 function stopTick(task){
   if(ticks[task.id]){clearInterval(ticks[task.id]);delete ticks[task.id];}
+}
+/* Deleting a task stopped its clock, but taking a whole page away did not, so
+   a countdown on a shelved or deleted page kept ticking against an object
+   nothing could see any more, and buzzed from it when it reached zero. */
+function stopPageTicks(p){
+  if(!p||!Array.isArray(p.tasks))return;
+  for(const t of p.tasks)stopTick(t);
 }
 function cancelCountdown(task){
   stopTick(task);task.timer=null;

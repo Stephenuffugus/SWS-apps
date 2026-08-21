@@ -1006,12 +1006,28 @@ document.querySelectorAll('nav button').forEach(b=>{
     document.getElementById('v-'+b.dataset.v).classList.add('on');
   };
 });
+/* The house pattern is Undo, not confirm: a confirm asks before you can see
+   what you are losing, and this one also promised the loss was permanent,
+   which was both unfriendly and untrue. Deleting a single lift already worked
+   this way; wiping everything, the more frightening action of the two, was the
+   one still guarding itself with a dialog. */
 document.getElementById('wipeBtn').onclick=()=>{
-  if(confirm('Wipe all lifts, history, and weigh-ins on this device? This cannot be undone.')){
-    try{localStorage.removeItem(KEY);}catch(e){}
-    S=load();
-    renderDue(); renderTrend(); renderHist(); syncSound();
-  }
+  const before=localStorage.getItem(KEY);
+  const had=S.programs.length;
+  try{localStorage.removeItem(KEY);}catch(e){}
+  S=load();
+  renderDue(); renderTrend(); renderHist(); syncSound();
+  const what=had===1?'1 lift':had+' lifts';
+  if(window.SWS&&SWS.toast)SWS.toast(`Wiped ${what} and everything logged against them.`,{
+    ms:9000,action:{label:'Undo',onAction:()=>{
+      if(before===null)return;
+      try{localStorage.setItem(KEY,before);}catch(e){
+        if(window.SWS&&SWS.toast)SWS.toast('Could not put it back: this device is out of storage.');
+        return;
+      }
+      S=load();
+      renderDue(); renderTrend(); renderHist(); syncSound();
+    }}});
 };
 document.getElementById('hdrDate').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
 syncSound();
