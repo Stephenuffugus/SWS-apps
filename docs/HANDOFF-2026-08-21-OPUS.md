@@ -24,7 +24,15 @@ today, 2026-08-21. Nothing below is taken on ChatGPT's word alone.
   skywolfstudio.com/hush (correct, it moved home), `user-scalable=no` already
   removed, faint-text contrast already raised.
 - Auth authorized-domains outage is fixed and verified. Play org is VERIFIED,
-  packaging is unblocked.
+  packaging is unblocked, and as of 2026-08-21 Stephen has PAID for and set
+  up the Google Play store account. His words: he wants to upload an app,
+  "but i want to make sure its good first". So the first-upload gate is:
+  the chosen app's audit report worked through, the two triage bugs in
+  section 2 fixed (the install-identity one directly affects TWA
+  packaging), then the packaging toolchain. He is having ChatGPT audit the
+  three apps the household actually uses (see section 7); the first listing
+  will likely come from those three, but that choice is his to make, do not
+  assume it.
 - Both ChatGPT audits now exist as greppable markdown in docs/audits/
   (converted today from the docx, which also remain):
   - docs/audits/seating-chart-audit-2026-08-20.md
@@ -247,27 +255,29 @@ repeating and what the house already believes:
   sitter-sheet, team-parent).
 - Touch targets 44px for primary controls.
 
-## 7. Audit strategy: the answer to "more audits, work from these, or combo"
+## 7. Audit strategy: decided and in motion
 
-Recommendation: **combo, tilted heavily toward working from what we have.**
-The two audits in hand plus Sub Plans (pending) are more than enough verified
-work to fill the week around packaging. More audits now would pile findings
-on apps nobody is using yet.
+Stephen ruled on 2026-08-21: ChatGPT audits the three apps the household
+actually uses, **Overload, Cross Off, and Grocery List**. This session built
+all three code-level packages the same day and handed him the zips. Each
+zip carries a READ_ME_FIRST_FOR_CHATGPT.md orientation; the exact text
+ChatGPT was given is preserved in the repo at
+docs/audits/package-readme-{overload,cross-off,grocery-list}-2026-08-21.md.
+Read those before verifying any returned finding, so you know what context
+the auditor had. Baselines at packaging time, all run and green: overload
+68 assertions, cross-off 83, grocery integration suite 5 against the
+emulators (`npx firebase emulators:exec --only firestore,auth --project
+demo-signup "node test/grocery.test.mjs"` from apps/signup-sheets/).
+The grocery package includes the real firestore.rules and rules.test.mjs;
+its readme aims the auditor at the rules first, and discloses the two known
+fleet bugs (section 2) so report space goes to diagnosis, not rediscovery.
 
-Worth requesting from ChatGPT, at most two, when Stephen has the time:
+So the pending-report shelf is now four: Sub Plans, Overload, Cross Off,
+Grocery List. When each lands: verify every finding against source before
+implementing, same discipline that caught Hush's wrong-invariant test.
 
-1. **Grocery List.** The only app with known live daily users (Stephen and
-   his partner), shared-link infrastructure, Firebase auth just un-broken,
-   and the most to lose from a silent data bug. A code-level audit (send
-   source, like Hush v2, not the public page) would be aimed at real users.
-2. **Cross Off.** Real user test in flight (the mom), ADHD audience where a
-   single trust break ends usage, and the rollover watcher is exactly the
-   kind of time-boundary logic audits catch (see Hush's sleepDate bug).
-
-Do not bother auditing: the small utilities (qr-maker, wheel-picker,
-signature-maker, image-compressor) until one is chosen for a Play listing,
-and anything ChatGPT already covered pre-source (its own v2 said the
-speculative audit was largely wrong once it saw code).
+Do not commission more audits beyond these until one of the small utilities
+is chosen for a Play listing.
 
 Lesson to keep applying: **the code-level audit format (send the source
 package) is dramatically better than the public-page format.** The seating
@@ -284,14 +294,12 @@ and is recorded as the reason round 2 went well.
 1. **Verdicts already queued in the plan:** ears on Hush v12 (footer must say
    build v12; heartbeat volume placement question), Jessie on Sub Plans and
    listing order, the mom's Cross Off morning test result.
-2. **Sub Plans ChatGPT report** when it comes back.
-3. **Decision on the two proposed audits** (Grocery List and Cross Off,
-   code-level packages). This session can build the packages; Stephen runs
-   the ChatGPT side.
-4. **During packaging:** Play Console clicks, and any stored-credential
+2. **The four ChatGPT reports** as they come back: Sub Plans, Overload,
+   Cross Off, Grocery List (packages delivered to Stephen 2026-08-21).
+3. **During packaging:** Play Console clicks, and any stored-credential
    writes go through the established path: we hand him a ready script, he
    runs it with `! node <path>`, we verify via public read.
-5. **A push of the lucid-winds repo** from a session with a token that can
+4. **A push of the lucid-winds repo** from a session with a token that can
    (plan item 5, d13da3fd Hush countdown repair plus pointing
    lucidwinds.com/hush at the new home).
 
