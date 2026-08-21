@@ -267,8 +267,14 @@ export async function addEntry(boardId, board, { authorName, body, type, done })
   const uid = (await ensureSignedIn()).uid;
   const owner = board.ownerUid === uid;
   const status = owner ? 'ok' : (board.settings.approvalRequired ? 'pending' : 'ok');
+  /* The row and the counter have to move as one. The rules make each half name
+     the other: the board update points at this entry id and the entry create
+     checks the board pointed back. Without that a link-holder could raise the
+     counter forever without adding anything, and past 500 nobody could add at
+     all. So the id is minted here rather than left to the batch. */
+  const ref = doc(collection(db, 'boards', boardId, 'entries'));
   const batch = writeBatch(db);
-  batch.set(doc(collection(db, 'boards', boardId, 'entries')), {
+  batch.set(ref, {
     authorName: authorName.slice(0, 60),
     body: body.slice(0, 2000),
     type: CARE_TYPES.includes(type) ? type : 'note',
@@ -277,7 +283,7 @@ export async function addEntry(boardId, board, { authorName, body, type, done })
     createdAt: serverTimestamp(),
     done: !!done,
   });
-  batch.update(doc(db, 'boards', boardId), { entryCount: increment(1) });
+  batch.update(doc(db, 'boards', boardId), { entryCount: increment(1), lastEntryId: ref.id });
   await batch.commit();
   return status;
 }

@@ -52,6 +52,23 @@ service cloud.firestore {
       return board(boardId).settings.locked == false;
     }
 
+    // Firestore deletes are not recursive, so a deleted list leaves its entries,
+    // slots and claims behind. Nested reads used to ask only "are you signed
+    // in?", which left a household's list readable by anyone still holding the
+    // board id long after the owner deleted it. Every nested read now proves
+    // the parent is still there.
+    function boardLives(boardId) {
+      return exists(boardPath(boardId));
+    }
+
+    // An entry id arrives from the client and is interpolated into a document
+    // path below, so it is shape-checked first: Firestore auto-ids are short and
+    // alphanumeric, and a value carrying a slash must never be able to steer the
+    // path somewhere else.
+    function safeDocId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[A-Za-z0-9_-]+$');
+    }
+
     function validSettings(s) {
       return s.keys().hasOnly(['approvalRequired', 'locked', 'theme'])
           && s.approvalRequired is bool
@@ -117,7 +134,7 @@ service cloud.firestore {
       allow update: if (
                       isOwner(boardId)
                       && request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['title', 'description', 'settings', 'shareCode', 'entryCount'])
+                           .hasOnly(['title', 'description', 'settings', 'shareCode', 'entryCount', 'lastEntryId'])
                       && request.resource.data.title is string
                       && request.resource.data.title.size() >= 1
                       && request.resource.data.title.size() <= 100
@@ -128,14 +145,29 @@ service cloud.firestore {
                       && request.resource.data.entryCount is int
                       && request.resource.data.entryCount >= 0
                     ) || (
-                      // Participants: increment only. Allowing decrements would let a
-                      // hostile client drain the counter and bypass the 500-entry cap.
-                      // The count is "entries ever created"; the owner can reset it.
+                      // Participants: increment only, and only alongside a real new
+                      // entry. Allowing decrements would let a hostile client drain
+                      // the counter and bypass the 500-entry cap. The count is
+                      // "entries ever created"; the owner can reset it.
+                      //
+                      // The +1 used to be the WHOLE test, which meant the counter
+                      // could be pumped by anyone holding the link without a single
+                      // item ever appearing: past 500 every honest add started
+                      // failing and the list was bricked by a stranger. The claims
+                      // counter next door already knew the answer, so the entry
+                      // counter now borrows it. The update must name the entry, and
+                      // that entry must genuinely APPEAR in this same commit:
+                      // absent before, present after. The entry rule below requires
+                      // the board to name it back, so neither half stands alone.
                       authed()
                       && boardUnlocked(boardId)
                       && request.resource.data.diff(resource.data).affectedKeys()
-                           .hasOnly(['entryCount'])
+                           .hasOnly(['entryCount', 'lastEntryId'])
                       && request.resource.data.entryCount == resource.data.entryCount + 1
+                      && request.resource.data.entryCount <= 500
+                      && safeDocId(request.resource.data.lastEntryId)
+                      && !exists(/databases/$(database)/documents/boards/$(boardId)/entries/$(request.resource.data.lastEntryId))
+                      && existsAfter(/databases/$(database)/documents/boards/$(boardId)/entries/$(request.resource.data.lastEntryId))
                     );
 
       allow delete: if isOwner(boardId);
@@ -143,7 +175,7 @@ service cloud.firestore {
       // ---------- slots (owner-defined; participants only ever touch claims) ----------
 
       match /slots/{slotId} {
-        allow get, list: if authed();
+        allow get, list: if authed() && boardLives(boardId);
 
         allow create: if isOwner(boardId)
                       && request.resource.data.keys().hasOnly(['label', 'capacity', 'order', 'claimedCount'])
@@ -199,7 +231,7 @@ service cloud.firestore {
 
         // One claim per person per slot: the doc id IS the claimant's uid.
         match /claims/{claimUid} {
-          allow get, list: if authed();
+          allow get, list: if authed() && boardLives(boardId);
 
           allow create: if authed()
                         && claimUid == request.auth.uid
@@ -224,10 +256,13 @@ service cloud.firestore {
                         && request.resource.data.name.size() <= 60
                         && validClaimNote(request.resource.data);
 
-          // Release your own claim (batch-coupled to counter), or owner removes anyone.
+          // Release your own claim (batch-coupled to counter), or owner removes
+          // anyone. Releasing is a participant write, so a locked board freezes
+          // it too; the owner can always still clean up.
           allow delete: if (
                           authed()
                           && claimUid == request.auth.uid
+                          && boardUnlocked(boardId)
                           && getAfter(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount
                              == get(/databases/$(database)/documents/boards/$(boardId)/slots/$(slotId)).data.claimedCount - 1
                         ) || (
@@ -242,6 +277,7 @@ service cloud.firestore {
         // Approved entries are public to link-holders; pending ones only to
         // their author and the owner. (List queries must filter accordingly.)
         allow get, list: if authed()
+                         && boardLives(boardId)
                          && (
                            resource == null
                            || resource.data.status == 'ok'
@@ -252,7 +288,11 @@ service cloud.firestore {
         allow create: if authed()
                       && request.resource.data.keys().hasOnly(
                            ['authorName', 'body', 'type', 'status', 'creatorUid', 'createdAt', 'done'])
-                      && (!('done' in request.resource.data) || request.resource.data.done is bool)
+                      // `done` is the grocery shared checkbox and exists nowhere else;
+                      // a signup sheet or a caregiver log has no such affordance, so
+                      // the field may not be smuggled onto their entries
+                      && (!('done' in request.resource.data)
+                          || (request.resource.data.done is bool && board(boardId).skin == 'grocery'))
                       && request.resource.data.creatorUid == request.auth.uid
                       && request.resource.data.authorName is string
                       && request.resource.data.authorName.size() >= 1
@@ -272,9 +312,12 @@ service cloud.firestore {
                           && request.resource.data.status ==
                              (board(boardId).settings.approvalRequired ? 'pending' : 'ok'))
                       )
-                      // hard cap: must be batch-coupled to the board counter, max 500
+                      // hard cap: must be batch-coupled to the board counter, max 500,
+                      // and the board must name THIS entry as the one it counted, so
+                      // the counter and the item can only ever move together
                       && boardAfter(boardId).entryCount == board(boardId).entryCount + 1
-                      && boardAfter(boardId).entryCount <= 500;
+                      && boardAfter(boardId).entryCount <= 500
+                      && boardAfter(boardId).lastEntryId == entryId;
 
         // Author may edit their own text (not status, not identity); owner moderates
         // status; ANY link-holder may flip the shared done-checkbox (grocery lists:
@@ -297,7 +340,13 @@ service cloud.firestore {
                              .hasOnly(['status'])
                         && request.resource.data.status in ['ok', 'pending']
                       ) || (
+                        // The shared checkbox is a GROCERY affordance: whoever is at
+                        // the store ticks things off, whoever added them. It was
+                        // never meant to reach the other three skins, and without a
+                        // skin check anyone holding a board id could flip done on a
+                        // signup sheet or a caregiver log.
                         authed()
+                        && board(boardId).skin == 'grocery'
                         && boardUnlocked(boardId)
                         && request.resource.data.diff(resource.data).affectedKeys()
                              .hasOnly(['done'])
@@ -307,9 +356,13 @@ service cloud.firestore {
         // Author deletes their own; owner deletes anything. Deletes do NOT free
         // entryCount quota (the cap is entries-ever-created; participant-driven
         // decrements would let the cap be bypassed). The owner can reset the counter.
+        // A locked board freezes participant writes, and delete is a write. This
+        // branch used to skip the check, so the header's promise that locking
+        // freezes everything was not true of the one action that destroys data.
         allow delete: if (
                         authed()
                         && resource.data.creatorUid == request.auth.uid
+                        && boardUnlocked(boardId)
                       ) || (
                         isOwner(boardId)
                       );

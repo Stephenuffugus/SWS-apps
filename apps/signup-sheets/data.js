@@ -324,8 +324,12 @@ export async function addEntry(boardId, board, { authorName, body }) {
   const uid = (await ensureSignedIn()).uid;
   const owner = board.ownerUid === uid;
   const status = owner ? 'ok' : (board.settings.approvalRequired ? 'pending' : 'ok');
+  /* The row and the counter move as one: the rules make each half name the
+     other, so the id is minted here rather than left to the batch. See
+     firestore.rules, the participant board-update branch. */
+  const ref = doc(collection(db, 'boards', boardId, 'entries'));
   const batch = writeBatch(db);
-  batch.set(doc(collection(db, 'boards', boardId, 'entries')), {
+  batch.set(ref, {
     authorName: authorName.slice(0, 60),
     body: body.slice(0, 2000),
     type: ENTRY_TYPE,
@@ -333,7 +337,7 @@ export async function addEntry(boardId, board, { authorName, body }) {
     creatorUid: uid,
     createdAt: serverTimestamp(),
   });
-  batch.update(doc(db, 'boards', boardId), { entryCount: increment(1) });
+  batch.update(doc(db, 'boards', boardId), { entryCount: increment(1), lastEntryId: ref.id });
   await batch.commit();
   return status;
 }

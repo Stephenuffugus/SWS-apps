@@ -61,6 +61,23 @@ await env.withSecurityRulesDisabled(async (ctx) => {
     authorName: 'Pat', body: 'pending body', type: 'note', status: 'pending',
     creatorUid: 'anonA', createdAt: new Date(),
   });
+  // anonA owns an entry and a claim on the LOCKED board B3, so the lock tests
+  // exercise the delete/release paths rather than failing for lack of a target.
+  await db.doc('boards/B3/entries/locked1').set({
+    authorName: 'Pat', body: 'written before the lock', type: 'note', status: 'ok',
+    creatorUid: 'anonA', createdAt: new Date(),
+  });
+  await db.doc('boards/B3/slots/S1/claims/anonA').set({ name: 'Pat', createdAt: new Date() });
+  await db.doc('boards/B3/slots/S1').set(
+    { label: 'Locked slot', capacity: 5, order: 1, claimedCount: 1 });
+  // What a deleted list leaves behind: children with no parent. GONE never had
+  // a board document, which is exactly the state the owner's delete leaves.
+  await db.doc('boards/GONE/entries/ghost1').set({
+    authorName: 'Pat', body: 'milk', type: 'note', status: 'ok',
+    creatorUid: 'anonA', createdAt: new Date(),
+  });
+  await db.doc('boards/GONE/slots/S1').set(
+    { label: 'orphan', capacity: 2, order: 1, claimedCount: 0 });
 });
 
 /* ---------- reads ---------- */
@@ -166,10 +183,13 @@ await T('owner removes any claim directly', assertSucceeds(owner.doc('boards/B1/
 await T('locked board: claims rejected', assertFails(claim(anonA, 'anonA', 'boards/B3/slots/S1', 1)));
 
 /* ---------- entries ---------- */
+/* The board update has to name the entry it counted; see the counter-pump
+   tests further down for why neither half is trusted alone. */
 const entry = (db, uid, board = 'B1', count = 1, over = {}, id) => {
+  const eid = id || uid + '-e' + count;
   const b = db.batch();
-  b.set(db.doc(`boards/${board}/entries/` + (id || uid + '-e' + count)), entryDoc(uid, over));
-  b.update(db.doc('boards/' + board), { entryCount: count });
+  b.set(db.doc(`boards/${board}/entries/` + eid), entryDoc(uid, over));
+  b.update(db.doc('boards/' + board), { entryCount: count, lastEntryId: eid });
   return b.commit();
 };
 await T('participant posts an entry (batched with counter)', assertSucceeds(entry(anonA, 'anonA', 'B1', 1, {}, 'e1')));
@@ -184,7 +204,7 @@ await T('locked board: entries rejected', assertFails(entry(anonA, 'anonA', 'B3'
 await T('owner posts pre-approved even on approval board', assertSucceeds((() => {
   const b = owner.batch();
   b.set(owner.doc('boards/B4/entries/own1'), entryDoc('owner1', { status: 'ok' }));
-  b.update(owner.doc('boards/B4'), { entryCount: 2 });
+  b.update(owner.doc('boards/B4'), { entryCount: 2, lastEntryId: 'own1' });
   return b.commit();
 })()));
 await T('author edits own entry body', assertSucceeds(anonA.doc('boards/B1/entries/e1').update({ body: 'Rolls AND butter' })));
@@ -205,7 +225,7 @@ await T('grocery board creates', assertSucceeds((() => {
 await T('item created with done:false', assertSucceeds((() => {
   const b = anonA.batch();
   b.set(anonA.doc('boards/G1/entries/milk'), entryDoc('anonA', { body: 'Milk', done: false }));
-  b.update(anonA.doc('boards/G1'), { entryCount: 1 });
+  b.update(anonA.doc('boards/G1'), { entryCount: 1, lastEntryId: 'milk' });
   return b.commit();
 })()));
 await T('ANYONE with the link can check off an item they did not add',
@@ -216,6 +236,80 @@ await T('done must be a boolean', assertFails(
   anonB.doc('boards/G1/entries/milk').update({ done: 'yes' })));
 await T('unknown skin still rejected', assertFails(
   owner.doc('boards/G2').set(boardDoc({ skin: 'todo', shareCode: 'TDLIST' }))));
+
+/* ---------- the counter pump (external audit, 2026-08-21, GL-SEC-01) ----------
+   The claims counter proved its claim doc genuinely appears in the same batch;
+   the entry counter only checked that the number went up by one. So a hostile
+   link-holder could raise entryCount forever without ever adding an item, and
+   once it passed 500 every honest add failed: the list bricked by a stranger
+   with the link. These assert the coupling from both ends. */
+await T('bare counter pump with no entry is refused',
+  assertFails(anonB.doc('boards/G1').update({ entryCount: 2 })));
+await T('counter pump naming an entry that is not created is refused',
+  assertFails(anonB.doc('boards/G1').update({ entryCount: 2, lastEntryId: 'ghost' })));
+await T('counter pump naming an entry that already exists is refused',
+  assertFails(anonB.doc('boards/G1').update({ entryCount: 2, lastEntryId: 'milk' })));
+await T('an honest add still works, entry and counter together', assertSucceeds((() => {
+  const b = anonB.batch();
+  b.set(anonB.doc('boards/G1/entries/bread'), entryDoc('anonB', { body: 'Bread', done: false }));
+  b.update(anonB.doc('boards/G1'), { entryCount: 2, lastEntryId: 'bread' });
+  return b.commit();
+})()));
+await T('an entry whose board update names a different entry is refused', assertFails((() => {
+  const b = anonB.batch();
+  b.set(anonB.doc('boards/G1/entries/eggs'), entryDoc('anonB', { body: 'Eggs' }));
+  b.update(anonB.doc('boards/G1'), { entryCount: 3, lastEntryId: 'bread' });
+  return b.commit();
+})()));
+await T('the 500 cap holds on the board update too', assertFails((() => {
+  const b = anonA.batch();
+  b.set(anonA.doc('boards/B5/entries/over'), entryDoc('anonA'));
+  b.update(anonA.doc('boards/B5'), { entryCount: 501, lastEntryId: 'over' });
+  return b.commit();
+})()));
+
+/* ---------- the done toggle is a GROCERY affordance (GL-SEC-04) ----------
+   The rule was written for "whoever is at the store ticks things off" but it
+   never checked the skin, so a stranger holding any board id could flip done
+   on a signup sheet or a caregiver log, where no such shared checkbox exists. */
+await T('stranger cannot flip done on a non-grocery board',
+  assertFails(anonB.doc('boards/B4/entries/pending1').update({ done: true })));
+/* Written as the full, otherwise-legal batch on purpose. A bare .set() would be
+   refused for want of counter coupling and the assertion would pass without ever
+   testing the skin, which is a test passing for the wrong reason. */
+await T('done cannot be smuggled onto a non-grocery entry at create time', assertFails((() => {
+  const b = anonC.batch();
+  b.set(anonC.doc('boards/B1/entries/sneaky'), entryDoc('anonC', { done: true }));
+  b.update(anonC.doc('boards/B1'), { entryCount: 2, lastEntryId: 'sneaky' });
+  return b.commit();
+})()));
+await T('the same entry without done is accepted on a non-grocery board', assertSucceeds((() => {
+  const b = anonC.batch();
+  b.set(anonC.doc('boards/B1/entries/honest'), entryDoc('anonC'));
+  b.update(anonC.doc('boards/B1'), { entryCount: 2, lastEntryId: 'honest' });
+  return b.commit();
+})()));
+
+/* ---------- locking really does freeze participants (GL-RULE-01) ----------
+   The file header promises locking freezes ALL participant writes. Delete and
+   release were the two paths that never checked. */
+await T('participant cannot delete their own entry on a locked board',
+  assertFails(anonA.doc('boards/B3/entries/locked1').delete()));
+await T('participant cannot release their claim on a locked board', assertFails((() => {
+  const b = anonA.batch();
+  b.delete(anonA.doc('boards/B3/slots/S1/claims/anonA'));
+  b.update(anonA.doc('boards/B3/slots/S1'), { claimedCount: 0 });
+  return b.commit();
+})()));
+
+/* ---------- deleting a list really removes it (GL-SEC-03) ----------
+   Firestore delete is not recursive, so entries outlived their board. The read
+   rules never checked the parent existed, which left a household's list
+   readable by anyone still holding the board id after the owner deleted it. */
+await T('an orphaned entry is unreadable once its board is gone',
+  assertFails(anonA.doc('boards/GONE/entries/ghost1').get()));
+await T('an orphaned slot is unreadable once its board is gone',
+  assertFails(anonA.doc('boards/GONE/slots/S1').get()));
 
 /* ---------- pending-entry visibility ---------- */
 await T('stranger cannot read someone\'s pending entry', assertFails(anonB.doc('boards/B4/entries/pending1').get()));
