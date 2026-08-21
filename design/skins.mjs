@@ -138,9 +138,18 @@ export const SKINS = {
   },
 
   'wedding-timeline': {
-    hue: 336, chroma: 0.085, paper: 'warm', voice: 'editorial', texture: 'wash',
-    r: 18, wrap: '46rem', support: 86,
-    note: 'dusty rose on cream, the invitation-suite register, not the bridal-app register',
+    // White and gold, by the Director's ruling of 2026-08-21. Gold is the one
+    // hue that punishes the usual heuristic: to carry white text it has to be
+    // darkened until it stops being gold and turns olive, which is the trap
+    // bracket-maker already fell into. `fill: bright` keeps the leaf bright and
+    // sets dark ink on it instead. Paper goes 'cool' so the page takes the
+    // faintest tint of the same hue, which is ivory rather than cream, and the
+    // old dusty rose stays on as the support hue so the wash keeps a blush
+    // underneath the gold instead of going flat and monochrome.
+    hue: 88, chroma: 0.105, paper: 'cool', voice: 'editorial', texture: 'wash',
+    fill: 'bright',
+    r: 18, wrap: '46rem', support: 336,
+    note: 'gold leaf on ivory with a rose whisper in the wash, the invitation suite in foil',
   },
 
   'seating-chart': {
