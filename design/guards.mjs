@@ -61,11 +61,26 @@ function guardCssPlacement() {
 /* Classes the generated base legitimately defines. Derived from the base of an
    app that has never been hand-edited, so this cannot drift as tokens are added. */
 const BASE_CLASSES = (() => {
-  const ref = slugs.find((s) => existsSync(join(APPS, s, 'index.html')));
-  const html = readFileSync(join(APPS, ref, 'index.html'), 'utf8');
-  const end = html.indexOf('/* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */');
-  const base = end === -1 ? '' : html.slice(0, end);
-  return new Set([...base.matchAll(/^\.([a-z][\w-]*)\s*\{/gm)].map((m) => m[1]));
+  const END = '/* ▲▲▲ END SWS STUDIO BASE ▲▲▲ */';
+  /* The reference has to be an app that actually CARRIES the generated base.
+     This used to take the first app with an index.html, which is astravault,
+     and astravault is build output from another repo with no base block at all.
+     So the reference set came back empty and every one of the twenty four apps
+     was reported as having twenty eight stray rules. Twenty four false alarms
+     is how a guard gets ignored, and then deleted, and then the real one slips
+     through. Take the biggest base block found instead, which is the fullest
+     one and cannot be an app that never had it applied. */
+  let best = '';
+  for (const s of slugs) {
+    const p = join(APPS, s, 'index.html');
+    if (!existsSync(p)) continue;
+    const html = readFileSync(p, 'utf8');
+    const end = html.indexOf(END);
+    if (end === -1) continue;
+    const base = html.slice(0, end);
+    if (base.length > best.length) best = base;
+  }
+  return new Set([...best.matchAll(/^\.([a-z][\w-]*)\s*\{/gm)].map((m) => m[1]));
 })();
 
 /* ── 2. no interactive control may be invisible or stacked ──────────────────
