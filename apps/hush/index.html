@@ -38,7 +38,13 @@ button{background:none;border:0;cursor:pointer}
 .wrap{max-width:560px;margin:0 auto;padding:0 var(--pad) 130px}
 
 header{display:flex;align-items:baseline;justify-content:space-between;padding:18px 0 4px}
-.mark{font-family:var(--serif);font-size:26px;letter-spacing:.24em;text-transform:uppercase}
+.mark{font-family:var(--serif);font-size:26px;letter-spacing:.24em;text-transform:uppercase;
+  margin:0;font-weight:normal}
+/* The wordmark is the page's real heading, so it is an h1. The rest of the
+   name rides along for search and screen readers without showing: "Hush" alone
+   is a crowded word in the sleep category. */
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .mark span{color:var(--glow)}
 .tag{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
 
@@ -224,7 +230,7 @@ body.simple .actions{margin-bottom:14px}
 <div class="wrap">
 
   <header>
-    <div class="mark">Hu<span>s</span>h</div>
+    <h1 class="mark">Hu<span>s</span>h<span class="vh"> by Sky Wolf Studio, a free sound machine and sleep sound player</span></h1>
     <button class="modeBtn" id="modeBtn">Everything</button>
   </header>
 
@@ -691,7 +697,7 @@ body.simple .actions{margin-bottom:14px}
     <a href="https://buy.stripe.com/bJecN6gqd0uP7vDcCl7EQ0t" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;min-height:48px;line-height:48px;
        padding:0 16px;border:1px solid currentColor;border-radius:12px;text-decoration:none;
        color:inherit;opacity:.7">&hearts; Tip jar</a>
-    <div style="opacity:.5;font-size:11px;margin-top:10px">build v12</div>
+    <div style="opacity:.5;font-size:11px;margin-top:10px">build v13</div>
   </footer>
 </div>
 
@@ -2314,7 +2320,7 @@ window.addEventListener("keydown", e => {
      so a bare registration would never see an update. Bump in lockstep with
      SHELL_VERSION in sw.js. */
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=12").catch(()=>{}));
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js?v=13").catch(()=>{}));
   }
 })();
 
