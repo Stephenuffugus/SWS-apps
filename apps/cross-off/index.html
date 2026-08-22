@@ -801,9 +801,18 @@ function load(){
     if(!raw){loadState='fresh';return false;}
     const d=JSON.parse(raw);
     uid=d.uid||0;
-    const unpackPage=p=>({id:p.id,name:p.name,color:p.color,
+    /* Ids and colours are COERCED, not copied. A backup file arrives from
+       somewhere else, and a page id is written into an HTML attribute by the
+       archived-pages sheet: a hostile id from a file could close that attribute
+       and add its own, including an event handler, which runs as this origin
+       and this origin is the whole studio. Ids here are numbers, so making them
+       numbers again closes it at the door. Colour reaches an inline style, so
+       it is held to a plain hex. */
+    const numId=v=>{const n=Number(v);return Number.isFinite(n)&&n>0?Math.floor(n):++uid;};
+    const safeColor=v=>/^#[0-9a-fA-F]{3,8}$/.test(String(v))?String(v):'#F9E547';
+    const unpackPage=p=>({id:numId(p.id),name:String(p.name==null?'':p.name).slice(0,60),color:safeColor(p.color),
       past:Array.isArray(p.past)?p.past:[],
-      tasks:(Array.isArray(p.tasks)?p.tasks:[]).map(t=>({id:t.id,text:String(t.text||''),note:String(t.note||''),
+      tasks:(Array.isArray(p.tasks)?p.tasks:[]).map(t=>({id:numId(t.id),text:String(t.text||''),note:String(t.note||''),
         done:!!t.done,pri:t.pri||2,chore:!!t.chore,
         steps:(Array.isArray(t.steps)?t.steps:[]).filter(s=>s&&s.text).map(s=>({text:String(s.text).slice(0,120),done:!!s.done})),
         strokes:Array.isArray(t.strokes)?t.strokes:[],result:t.result||null,

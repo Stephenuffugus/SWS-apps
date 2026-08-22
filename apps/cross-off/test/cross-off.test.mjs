@@ -425,6 +425,38 @@ console.log('\n== a page that leaves takes its clocks with it ==');
   }
 }
 
+/* A backup file arrives from somewhere else, and the app tells people to use
+   one to move to a new phone. A page id is written into an HTML attribute by
+   the archived-pages sheet, so a hostile id from a file could close that
+   attribute and add its own, event handlers included, running as this origin.
+   This origin is the whole studio and localStorage is shared across it. */
+console.log('\n== a hostile backup file cannot become markup ==');
+{
+  const hostile = {
+    uid: 9, activePage: 1,
+    pages: [{ id: 1, name: 'Home', color: '#F9E547', past: [], tasks: [] }],
+    archived: [{
+      id: '1" onfocus="globalThis.__pwned=1" autofocus x="',
+      name: '<img src=x onerror="globalThis.__pwned=1">',
+      color: 'red;background:url(javascript:0)', past: [], tasks: [],
+    }],
+    records: {}, doneToday: 0, doneDate: '2000-01-01',
+  };
+  const w = boot(hostile);
+  w.eval('openArchived()');
+  const btn = w.document.querySelector('[data-restore]');
+  ok(!!btn, 'the archived row still renders');
+  ok(!btn.hasAttribute('onfocus') && !btn.hasAttribute('autofocus'),
+    'a hostile page id cannot break out of its attribute and add handlers');
+  ok([...btn.attributes].every(a => ['class', 'data-restore'].includes(a.name)),
+    'and cannot add any attribute at all');
+  ok(w.document.querySelectorAll('img[onerror]').length === 0,
+    'a hostile page name cannot create an element');
+  ok(!w.__pwned, 'and nothing from the file runs');
+  ok(/^#[0-9a-fA-F]{3,8}$/.test(w.eval('state.archived[0].color')),
+    'a hostile colour cannot reach an inline style');
+}
+
 console.log('\n== a notebook that will not read is never written over ==');
 {
   const dom = new JSDOM(html, {
