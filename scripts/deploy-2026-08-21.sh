@@ -71,6 +71,10 @@ check "overload coerces a hostile backup" \
   "https://skywolfstudio.com/overload/" "cleanId"
 check "privacy page tells the truth about sign-in" \
   "https://skywolfstudio.com/grocery-list/privacy.html" "Only the person who starts a list signs in"
+check "specials planner refuses a hostile colour from a backup" \
+  "https://skywolfstudio.com/specials-planner/" "A colour has to look like a colour"
+check "cross off refuses a hostile id from a backup" \
+  "https://skywolfstudio.com/cross-off/" "Ids and colours are COERCED"
 
 echo
 if [ "$bad" -gt 0 ]; then
