@@ -30,6 +30,7 @@ export const SKINS = {
   /* ── School ───────────────────────────────────────────────────────────── */
 
   'specials-planner': {
+    frame: 'ornate',
     // 0.55 not 1: at full tint this and secret-santa both hit the 35 degree cap
     // and landed on the same cream, which is the collision this field exists to
     // remove. 0.55 puts terracotta paper at hue 56 and leaves 43 to the cranberry.
@@ -47,6 +48,7 @@ export const SKINS = {
   },
 
   'sub-plans': {
+    frame: 'ornate',
     ornament: 'tab',
     hue: 174, chroma: 0.095, paper: 'warm', voice: 'editorial', texture: 'rule',
     r: 12, wrap: '48rem', support: 38,
@@ -55,6 +57,7 @@ export const SKINS = {
   },
 
   'grade-sheet': {
+    frame: 'ornate',
     ornament: 'diamond',
     hue: 226, chroma: 0.08, paper: 'warm', voice: 'editorial', texture: 'grid',
     r: 10, wrap: '72rem', support: 86,
@@ -72,6 +75,7 @@ export const SKINS = {
   /* ── Family & Home ────────────────────────────────────────────────────── */
 
   'sitter-sheet': {
+    frame: 'ornate',
     paperTint: 1.0,
     ornament: 'wave',
     hue: 86, chroma: 0.12, paper: 'warm', voice: 'editorial', texture: 'wash',
@@ -134,6 +138,7 @@ export const SKINS = {
   /* ── Events & Groups ──────────────────────────────────────────────────── */
 
   'signup-sheets': {
+    frame: 'plain',
     // Marigold is close to cream already, so full tint is only 20 degrees.
     paperTint: 1.0,
     ornament: 'key',
@@ -144,6 +149,7 @@ export const SKINS = {
   },
 
   'team-parent': {
+    frame: 'plain',
     ornament: 'key',
     hue: 258, chroma: 0.15, paper: 'cool', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 58,
@@ -152,6 +158,7 @@ export const SKINS = {
   },
 
   'secret-santa': {
+    frame: 'ornate',
     // Capped at 35 degrees from cream, which is as far toward cranberry as
     // paper can go and still be paper.
     paperTint: 0.5,
@@ -163,7 +170,7 @@ export const SKINS = {
   },
 
   'wedding-timeline': {
-    ornament: 'vine',
+    ornament: 'vine', frame: 'ornate',
     // White and gold, by the Director's ruling of 2026-08-21. Gold is the one
     // hue that punishes the usual heuristic: to carry white text it has to be
     // darkened until it stops being gold and turns olive, which is the trap
@@ -179,6 +186,7 @@ export const SKINS = {
   },
 
   'seating-chart': {
+    frame: 'ornate',
     /* Was the vine, byte-identical to wedding-timeline's, and the two sit next
        to each other in the hub: the one thing meant to tell them apart was the
        best evidence they were the same product. The vine is the wedding's now. */
@@ -190,6 +198,7 @@ export const SKINS = {
   },
 
   'bracket-maker': {
+    frame: 'plain',
     paperTint: 1.0,
     ornament: 'key',
     // Was hue 104, which is where yellow has already turned toward green, it
@@ -205,6 +214,7 @@ export const SKINS = {
   },
 
   'wheel-picker': {
+    frame: 'plain',
     ornament: 'key',
     hue: 350, chroma: 0.175, paper: 'cool', voice: 'technical', texture: 'wash',
     r: 22, wrap: '38rem', support: 58,
@@ -214,6 +224,7 @@ export const SKINS = {
   /* ── Paper & Files ────────────────────────────────────────────────────── */
 
   'scan-to-pdf': {
+    frame: 'plain',
     ornament: 'diamond',
     hue: 202, chroma: 0.12, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 10, wrap: '44rem',
@@ -221,6 +232,7 @@ export const SKINS = {
   },
 
   'pdf-tools': {
+    frame: 'plain',
     ornament: 'diamond',
     hue: 276, chroma: 0.135, paper: 'cool', voice: 'technical', texture: 'none',
     r: 10, wrap: '48rem',
@@ -228,6 +240,7 @@ export const SKINS = {
   },
 
   'image-compressor': {
+    frame: 'plain',
     ornament: 'diamond',
     /* Was magenta at chroma 0.145 behind a `wash` texture. The research called
        it and the review agent agreed: this is the one app whose entire job is
@@ -245,6 +258,7 @@ export const SKINS = {
   },
 
   'signature-maker': {
+    frame: 'ornate',
     ornament: 'diamond',
     hue: 264, chroma: 0.022, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 12, wrap: '40rem',
@@ -254,6 +268,7 @@ export const SKINS = {
   },
 
   'qr-maker': {
+    frame: 'plain',
     ornament: 'diamond',
     hue: 142, chroma: 0.13, paper: 'cool', voice: 'technical', texture: 'grid',
     r: 8, wrap: '40rem',
@@ -263,6 +278,7 @@ export const SKINS = {
   /* ── Moving & Travel ──────────────────────────────────────────────────── */
 
   'moving-boxes': {
+    frame: 'plain',
     paperTint: 1.0,
     ornament: 'stitch',
     hue: 72, chroma: 0.105, paper: 'warm', voice: 'technical', texture: 'grid',
@@ -271,6 +287,7 @@ export const SKINS = {
   },
 
   'packing-list': {
+    frame: 'plain',
     ornament: 'stitch',
     hue: 188, chroma: 0.12, paper: 'cool', voice: 'plain', texture: 'none',
     r: 16, wrap: '38rem',
@@ -278,6 +295,7 @@ export const SKINS = {
   },
 
   'home-inventory': {
+    frame: 'plain',
     paperTint: 0.75,
     ornament: 'stitch',
     hue: 124, chroma: 0.085, paper: 'warm', voice: 'technical', texture: 'grid',
@@ -289,6 +307,7 @@ export const SKINS = {
   /* ── Money ────────────────────────────────────────────────────────────── */
 
   'bill-splitter': {
+    frame: 'plain',
     ornament: 'diamond',
     hue: 218, chroma: 0.10, paper: 'cool', voice: 'technical', texture: 'none',
     r: 12, wrap: '44rem', support: 152,

@@ -1340,6 +1340,20 @@ header.app::after{
    written up as printMark in the plan rather than faked with a dead selector.
    .sws-orn is placed by hand, so it prints wherever it was put. */
 @media print{ .sws-orn{opacity:1; height:10px} }
+
+/* ── home-inventory card frame ─────────────────────────────────────────────────── */
+section.card,.card{ position:relative; }
+section.card::before,.card::before{
+  content:''; position:absolute; inset:6px; pointer-events:none;
+  border:1px solid color-mix(in oklab, var(--accent) 34%, transparent);
+  border-radius:calc(var(--r-card) - 4px);
+}
+
+/* Paper is not a screen: the frame prints as a hairline or not at all. */
+@media print{
+  section.card::before,.card::before{ border-color:#bbb }
+  section.card::after,.card::after{ display:none }
+}
 /* ── home-inventory texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:linear-gradient(rgba(72,81,55,0.055) 1px, transparent 1px),linear-gradient(90deg, rgba(72,81,55,0.055) 1px, transparent 1px);

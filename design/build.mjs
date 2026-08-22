@@ -398,6 +398,68 @@ ${sk.ornamentHost ?? 'header.app'}::after{
 @media print{ .sws-orn{opacity:1; height:10px} }`;
   };
 
+  /* ── the frame ──────────────────────────────────────────────────────────
+     A card was a 1px rectangle with a soft shadow, in every app, and that is
+     most of what "they all feel dull and the same" actually meant. This draws
+     a second hairline just INSIDE the edge, the way an invitation or a
+     certificate is framed, and sets the app's own motif into the corners. The
+     eye is pulled to the middle of the box instead of sliding off the edge.
+
+     Built from a ::before, so no layout moves and nothing shifts by a pixel.
+     pointer-events:none so it can never eat a tap. Drawn in the accent at low
+     opacity, so it can never compete with the ink or change a contrast pair.
+     `frame` picks how loud it is; `none` keeps the plain card. */
+  const frameCss = (sk) => {
+    const kind = sk.frame ?? 'none';
+    if (kind === 'none') return '';
+    const path = ORNAMENTS[sk.ornament ?? 'none'];
+    const inset = kind === 'wide' ? 'var(--s3)' : '6px';
+
+    /* One corner flourish, drawn from the app's own motif so the frame and the
+       header mark are visibly the same hand. Mirrored into the other three
+       corners with transform, which costs nothing and needs no second asset. */
+    /* One drawing, emitted four times, each turned to face its own corner. All
+       four used to share a single orientation, which read as a mistake rather
+       than a frame: three of the flourishes curled the wrong way. */
+    const cornerAt = (deg) =>
+      `url("data:image/svg+xml,${(`<svg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'><g transform='rotate(${deg} 13 13)'><path d='M1 11 Q 1 1 11 1'/><circle cx='6' cy='6' r='1.7'/></g></svg>`).replace(/"/g, "'")}")`;
+
+    const corners = kind === 'plain' ? '' : `
+/* The four corner flourishes, drawn from the same hand as the header mark.
+   Masks, so they take the accent and one drawing serves both themes. */
+section.card::after,.card::after{
+  content:''; position:absolute; inset:${inset}; pointer-events:none;
+  color:var(--accent); opacity:.6;
+  background:currentColor;
+  -webkit-mask:
+    ${cornerAt(0)} left top/26px 26px no-repeat,
+    ${cornerAt(90)} right top/26px 26px no-repeat,
+    ${cornerAt(270)} left bottom/26px 26px no-repeat,
+    ${cornerAt(180)} right bottom/26px 26px no-repeat;
+  mask:
+    ${cornerAt(0)} left top/26px 26px no-repeat,
+    ${cornerAt(90)} right top/26px 26px no-repeat,
+    ${cornerAt(270)} left bottom/26px 26px no-repeat,
+    ${cornerAt(180)} right bottom/26px 26px no-repeat;
+  -webkit-mask-composite:source-over; mask-composite:add;
+}`;
+
+    return `
+/* ── ${slug} card frame ─────────────────────────────────────────────────── */
+section.card,.card{ position:relative; }
+section.card::before,.card::before{
+  content:''; position:absolute; inset:${inset}; pointer-events:none;
+  border:1px solid color-mix(in oklab, var(--accent) 34%, transparent);
+  border-radius:calc(var(--r-card) - 4px);
+}
+${corners}
+/* Paper is not a screen: the frame prints as a hairline or not at all. */
+@media print{
+  section.card::before,.card::before{ border-color:#bbb }
+  section.card::after,.card::after{ display:none }
+}`;
+  };
+
   const scale = skin.scale ? `
 /* ── ${slug} type scale, after the base so the skin actually wins ─────── */
 :root{
@@ -482,6 +544,7 @@ ${tokenBlock(dark)}
 ${readFileSync(join(HERE, 'studio.css'), 'utf8')}
 ${scale}
 ${ornamentCss(skin)}
+${frameCss(skin)}
 /* ── ${slug} texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:${texL.image};
