@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { newProject, parseGuestPaste, autoArrange } from '../model.js';
-import { makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf } from '../pdf.js';
+import { makeEntrancePdf, makeEscortCardsPdf, makeCatererPdf, entranceColumns } from '../pdf.js';
 
 const require = createRequire(import.meta.url);
 const PDFLib = require('pdf-lib');
@@ -63,6 +63,31 @@ await t('unicode guest names are sanitized, not fatal', async () => {
     const bytes = await fn(PDFLib, u, 'letter');
     assert.ok(bytes.length > 800);
   }
+});
+
+/* The entrance display is the sheet that gets stood on an easel at the door,
+   and its grid was two columns unconditionally: a wedding with four or five
+   tables never reached column two, so the names sat against the left margin
+   with the whole right half of the paper blank under a centred title. */
+await t('a short guest list fills the page instead of hugging the left margin', async () => {
+  const small = newProject('Jessie and Sam');
+  small.guests = parseGuestPaste(
+    ['Ada Lovelace','Alan Turing','Grace Hopper','Edsger Dijkstra',
+     'Barbara Liskov','Ken Thompson','Donald Knuth','Fran Allen'].join('\n'), ids);
+  small.tables = [
+    { id: 'T1', label: 'Table One', shape: 'round', seats: 4, x: 0, y: 0 },
+    { id: 'T2', label: 'Table Two', shape: 'round', seats: 4, x: 0, y: 0 },
+  ];
+  small.guests.forEach((g, i) => { small.assignments[g.id] = i % 2 ? 'T2' : 'T1'; });
+
+  assert.equal(entranceColumns(small), 1,
+    'two tables of names is one centred column, not two with half the sheet blank');
+  const bytes = await makeEntrancePdf(PDFLib, small, 'letter');
+  const doc = await PDFLib.PDFDocument.load(bytes);
+  assert.equal(doc.getPageCount(), 1, 'a small wedding is one page');
+
+  // and a real crowd still gets the two column grid it needs
+  assert.equal(entranceColumns(p), 2, 'a full reception of 43 guests still runs two columns');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

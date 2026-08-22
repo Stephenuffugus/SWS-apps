@@ -86,6 +86,27 @@ function attending(project) {
 
 /* ---------- 1. entrance display, big, pretty, by table ---------- */
 
+/* How many columns the entrance display should use. Exported so the decision
+   can be tested without decompressing a PDF content stream: a short list must
+   be one centred column, not two with the right half of the paper blank. */
+export function entranceColumns(project, size = 'letter') {
+  const occ = occupancy(project);
+  let need = 0;
+  for (const t of project.tables) {
+    const n = (occ[t.id] || []).filter((g) => g.rsvp !== 'no').length;
+    if (!n) continue;
+    need += 22 + n * 15 + 14;          // table label, one line each, gap after
+  }
+  if (!need) return 1;
+  /* The question is not how many tables there are, it is whether the whole
+     list fits down one column of one page. Six tables of eight people does not;
+     two tables of four does, and forcing that into a two column grid is what
+     left half the sheet blank. */
+  const { h } = PAGE[size] || PAGE.letter;
+  const usable = h - 54 * 2 - 76;      // margins, then the title block
+  return need <= usable ? 1 : 2;
+}
+
 export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const { w, h } = PAGE[size] || PAGE.letter;
@@ -97,9 +118,23 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
   const soft = rgb(0.45, 0.48, 0.52);
 
   const margin = 54, colGap = 30;
-  const colW = (w - margin * 2 - colGap) / 2;
   const occ = occupancy(project);
   const tables = [...project.tables];
+
+  /* This is the sheet that gets stood on an easel at the door, so an empty half
+     of it is not a style question. The grid was two columns unconditionally, and
+     a wedding with four or five tables never reached the second one: the names
+     sat jammed against the left margin with the entire right half of the paper
+     blank, under a centred title. A short list now runs as one centred column,
+     which is what a hand-lettered board would do. */
+  const cols = entranceColumns(project);
+  const colW = cols === 1
+    ? Math.min(340, w - margin * 2)
+    : (w - margin * 2 - colGap) / 2;
+  // one column is centred on the page; two keep the old left margin
+  const colX = (c) => cols === 1
+    ? (w - colW) / 2
+    : margin + c * (colW + colGap);
 
   // shrink-to-fit: long titles/names must never clip the page or bleed columns
   const fitSize = (font, text, startSize, maxW, minSize = 7) => {
@@ -130,7 +165,7 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
 
   const ensure = (need) => {
     if (y - need < margin) {
-      if (col === 0) { col = 1; y = colTop; }
+      if (cols === 2 && col === 0) { col = 1; y = colTop; }
       else { colTop = newPage(); }
     }
   };
@@ -141,13 +176,13 @@ export async function makeEntrancePdf(PDFLib, project, size = 'letter') {
     if (guests.length === 0) continue;
     const blockH = 20 + guests.length * 15 + 14;
     ensure(Math.min(blockH, 200));
-    const x = margin + col * (colW + colGap);
+    const x = colX(col);
     const tl = safe(t.label);
     page.drawText(tl, { x, y: y - 14, size: fitSize(serifBold, tl, 14, colW), font: serifBold, color: ink });
     y -= 22;
     for (const g of guests) {
       ensure(15);
-      const gx = margin + col * (colW + colGap);
+      const gx = colX(col);
       const gn = safe(g.name);
       page.drawText(gn, { x: gx + 6, y: y - 11, size: fitSize(serif, gn, 11.5, colW - 8), font: serif, color: ink });
       y -= 15;
