@@ -87,6 +87,10 @@ check "specials planner refuses a hostile colour from a backup" \
   "https://skywolfstudio.com/specials-planner/" "A colour has to look like a colour"
 check "cross off refuses a hostile id from a backup" \
   "https://skywolfstudio.com/cross-off/" "Ids and colours are COERCED"
+check "grocery stops calling a loading list a deleted one" \
+  "https://skywolfstudio.com/grocery-list/app.js" "live.boardId && live.seen"
+check "grocery lists can be deleted from the home screen" \
+  "https://skywolfstudio.com/grocery-list/app.js" "Delete ' + b.title"
 
 echo
 if [ "$bad" -gt 0 ]; then
