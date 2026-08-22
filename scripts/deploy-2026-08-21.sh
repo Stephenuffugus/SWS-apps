@@ -54,12 +54,24 @@ cd "$ROOT"
 echo
 echo "==> checking the live site actually changed"
 ok=0; bad=0
+# The body is fetched into a variable and searched afterwards, NOT piped into
+# grep. `grep -q` exits the instant it matches, curl then dies of SIGPIPE, and
+# `set -o pipefail` turns that into a failed pipeline: the check reported the
+# fix as missing precisely BECAUSE it was there. It only bit on the large
+# index.html files, where grep finishes long before curl does, which is why the
+# first run of this script announced three false failures and sent Stephen a
+# scare. A deploy verifier that cries wolf is worse than none, because the next
+# real failure gets waved through as "probably that bug again".
 check() { # name, url, pattern
-  if curl -s --max-time 30 "$2" | grep -q -- "$3"; then
-    echo "  PASS  $1"; ok=$((ok+1))
-  else
-    echo "  FAIL  $1  (still serving the old copy)"; bad=$((bad+1))
-  fi
+  local body try
+  for try in 1 2 3; do
+    body="$(curl -s --max-time 30 "$2" || true)"
+    case "$body" in
+      *"$3"*) echo "  PASS  $1"; ok=$((ok+1)); return ;;
+    esac
+    sleep 5
+  done
+  echo "  FAIL  $1  (not in the live copy after 3 tries)"; bad=$((bad+1))
 }
 check "grocery client writes the coupled counter" \
   "https://skywolfstudio.com/grocery-list/data.js" "lastEntryId"
