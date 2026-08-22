@@ -170,5 +170,26 @@ await t('one tap cannot make two lists, and a spare can be removed', async () =>
     'a list can be deleted from the home screen without opening it first');
 });
 
+/* "I deployed a fix" and "this phone has the fix" are different sentences, and
+   telling them apart by behaviour has cost two testing sessions now: a phone
+   keeps the old copy until its service worker swaps over, so a typed code can
+   fail on the stale app while a freshly opened link works on the new one, and
+   that reads as "the code is broken". The footer says which build is running.
+   The tag is worthless if it can drift from the worker, so it cannot. */
+await t('the app tells you which build the phone is running', async () => {
+  const { readFileSync } = await import('node:fs');
+  const app = readFileSync(new URL('../../grocery-list/app.js', import.meta.url), 'utf8');
+  const sw = readFileSync(new URL('../../grocery-list/sw.js', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../grocery-list/index.html', import.meta.url), 'utf8');
+  const build = /export const BUILD = '([^']+)'/.exec(app);
+  const version = /const VERSION = '([^']+)'/.exec(sw);
+  assert.ok(build, 'app.js declares the build it is');
+  assert.ok(version, 'sw.js declares the cache version');
+  assert.equal(build[1], version[1],
+    'the printed build and the worker version move together, or the tag lies');
+  assert.ok(/id="buildTag"/.test(html), 'and there is somewhere on the page to show it');
+  assert.ok(/tag.textContent = 'build ' \+ BUILD/.test(app), 'and it is actually printed');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -6,6 +6,10 @@ import { firebaseConfig } from './firebase-config.js';
 
 D.initFirebase(firebaseConfig);
 
+/* Kept in lockstep with sw.js VERSION by a test. It is printed in the footer so
+   a phone can be asked which copy it is running instead of being guessed at. */
+export const BUILD = 'grocery-v30';
+
 const CONFIG = { tipUrl: 'https://buy.stripe.com/28EeVec9X3H1cPXaud7EQ04' };
 
 const $ = (id) => document.getElementById(id);
@@ -901,6 +905,8 @@ function refreshAuthBtn() {
 
 async function init() {
   wire();
+  const tag = $('buildTag');
+  if (tag) tag.textContent = 'build ' + BUILD;
   if (CONFIG.tipUrl) {
     const t = $('tipLink');
     t.href = CONFIG.tipUrl;
