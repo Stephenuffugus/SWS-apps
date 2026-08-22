@@ -56,7 +56,30 @@ function derive(slug, skin, mode){
   // 'warm' apps get a cream page whatever their accent hue is; 'cool' apps
   // get a page tinted with their own hue. Only meaningful in light mode, // in the dark every app tints with its own hue.
   const warm = skin.paper === 'warm' && !dark;
-  const pH = warm ? PAPER_HUE : hue;
+  /* `warm` pinned the page to one hue for every app that asked for stationery,
+     and twelve of the twenty four do, so half the fleet resolved to byte
+     identical canvas, card and line colours. All the per-app hue work in
+     skins.mjs was being thrown away for those twelve, which is the mechanical
+     root of "they all feel dull and the same": before a single card renders,
+     the page is the same page.
+
+     paperTint (0 to 1, default 0, opt in per row) rotates the paper a fraction
+     of the way toward the app's own hue. Two rules keep it stationery rather
+     than coloured card:
+       * hard cap at 35 degrees, because past that cream stops reading as paper
+       * only along an arc within 90 degrees. An app whose hue is far away (a
+         slate at 250, a plum at 310) cannot be rotated toward without dragging
+         the page through green and out of warm entirely, so those rows simply
+         do not move however high they set the number. They need a different
+         lever, not a louder version of this one. */
+  const tintable = (() => {
+    if (!warm || !skin.paperTint) return 0;
+    let d = ((hue - PAPER_HUE + 540) % 360) - 180;     // signed shortest arc
+    if (Math.abs(d) > 90) return 0;                     // too far to stay warm
+    const want = d * Math.min(1, Math.max(0, skin.paperTint));
+    return Math.max(-35, Math.min(35, want));
+  })();
+  const pH = warm ? (PAPER_HUE + tintable + 360) % 360 : hue;
   const pC = warm ? 0.018 : 0.013;
 
   const t = {};

@@ -30,6 +30,10 @@ export const SKINS = {
   /* ── School ───────────────────────────────────────────────────────────── */
 
   'specials-planner': {
+    // 0.55 not 1: at full tint this and secret-santa both hit the 35 degree cap
+    // and landed on the same cream, which is the collision this field exists to
+    // remove. 0.55 puts terracotta paper at hue 56 and leaves 43 to the cranberry.
+    paperTint: 0.7,
     /* Its header is a bare <header>, so the default host selector never matched
        and the app the whole design language came from was the one app that
        received no mark at all. Named explicitly rather than left to fail
@@ -68,6 +72,7 @@ export const SKINS = {
   /* ── Family & Home ────────────────────────────────────────────────────── */
 
   'sitter-sheet': {
+    paperTint: 1.0,
     ornament: 'wave',
     hue: 86, chroma: 0.12, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 16, wrap: '44rem',  support: 12,
@@ -129,6 +134,8 @@ export const SKINS = {
   /* ── Events & Groups ──────────────────────────────────────────────────── */
 
   'signup-sheets': {
+    // Marigold is close to cream already, so full tint is only 20 degrees.
+    paperTint: 1.0,
     ornament: 'key',
     hue: 58, chroma: 0.155, paper: 'warm', voice: 'technical', texture: 'band',
     r: 12, wrap: '46rem', support: 200,
@@ -145,6 +152,9 @@ export const SKINS = {
   },
 
   'secret-santa': {
+    // Capped at 35 degrees from cream, which is as far toward cranberry as
+    // paper can go and still be paper.
+    paperTint: 0.5,
     ornament: 'vine',
     hue: 8, chroma: 0.145, paper: 'warm', voice: 'editorial', texture: 'grain',
     r: 14, wrap: '42rem', support: 152,
@@ -180,6 +190,7 @@ export const SKINS = {
   },
 
   'bracket-maker': {
+    paperTint: 1.0,
     ornament: 'key',
     // Was hue 104, which is where yellow has already turned toward green, it
     // read olive rather than trophy, and had done since the palette landed.
@@ -252,6 +263,7 @@ export const SKINS = {
   /* ── Moving & Travel ──────────────────────────────────────────────────── */
 
   'moving-boxes': {
+    paperTint: 1.0,
     ornament: 'stitch',
     hue: 72, chroma: 0.105, paper: 'warm', voice: 'technical', texture: 'grid',
     r: 10, wrap: '44rem', support: 258,
@@ -266,6 +278,7 @@ export const SKINS = {
   },
 
   'home-inventory': {
+    paperTint: 0.75,
     ornament: 'stitch',
     hue: 124, chroma: 0.085, paper: 'warm', voice: 'technical', texture: 'grid',
     r: 10, wrap: '52rem', support: 38,
