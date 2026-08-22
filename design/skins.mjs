@@ -30,7 +30,11 @@ export const SKINS = {
   /* ── School ───────────────────────────────────────────────────────────── */
 
   'specials-planner': {
-    ornament: 'key',
+    /* Its header is a bare <header>, so the default host selector never matched
+       and the app the whole design language came from was the one app that
+       received no mark at all. Named explicitly rather than left to fail
+       silently again. */
+    ornament: 'rotation', ornamentHost: 'header',
     hue: 38, chroma: 0.13, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 14, wrap: '66rem', support: 190,
     // Terracotta on cream. This app already had a real identity and teachers
@@ -39,7 +43,7 @@ export const SKINS = {
   },
 
   'sub-plans': {
-    ornament: 'diamond',
+    ornament: 'tab',
     hue: 174, chroma: 0.095, paper: 'warm', voice: 'editorial', texture: 'rule',
     r: 12, wrap: '48rem', support: 38,
     extra: { 'line-strong': { role: 'line', l: 0.62, c: 0.02, dl: 0.52 } },
@@ -165,7 +169,10 @@ export const SKINS = {
   },
 
   'seating-chart': {
-    ornament: 'vine',
+    /* Was the vine, byte-identical to wedding-timeline's, and the two sit next
+       to each other in the hub: the one thing meant to tell them apart was the
+       best evidence they were the same product. The vine is the wedding's now. */
+    ornament: 'seats',
     hue: 310, chroma: 0.115, paper: 'warm', voice: 'editorial', texture: 'wash',
     r: 14, wrap: '64rem', support: 174,
     extra: { sel: { role: 'tint', l: 0.93, c: 0.05, dl: 0.32 } },
@@ -396,6 +403,19 @@ export const ORNAMENTS = {
   /* A plain hairline with a diamond at the centre, for tools that should stay
      quiet and businesslike but still want a mark of their own. */
   diamond: 'M0 8 h 30 M 37 3 l 5 5 l-5 5 l-5-5 z M 49 8 h 25',
+  /* Four chairs pulled up to a table edge: the rail runs THROUGH the lower
+     third of each circle, which is what makes it read as seating rather than
+     as beads on a string. Reads right for a wedding round, a classroom row and
+     a banquet table at once, which is this app's three-audience problem solved
+     in one drawing. It also frees the vine to be the wedding's alone. */
+  seats: 'M4 8 h66 M15 4 a3 3 0 1 0 .1 0 M30 4 a3 3 0 1 0 .1 0 M45 4 a3 3 0 1 0 .1 0 M60 4 a3 3 0 1 0 .1 0',
+  /* The cycle that repeats: the same open circles the planner already draws for
+     its A/B/C rotation letters, on screen and in print. The app's own strongest
+     device, in miniature. */
+  rotation: 'M0 8 h 12 M22 8 a4 4 0 1 0 8 0 a4 4 0 1 0-8 0 M34 8 h 4 M46 8 a4 4 0 1 0 8 0 a4 4 0 1 0-8 0 M58 8 h 16',
+  /* A file-folder tab, because that is literally the object: a binder left on a
+     desk for a stranger to pick up on the worst morning of the week. */
+  tab: 'M0 8 h 18 l 5-5 h 12 l 5 5 h 34',
   none: '',
 };
 

@@ -1,5 +1,5 @@
 /* Image Compressor service worker, fully offline. Bump VERSION on deploy. */
-const VERSION = 'imgc-v27';
+const VERSION = 'imgc-v29';
 const ASSETS = ["./","./app.js","./apple-touch-icon.png","./helpers.js","./zip.js","./icon.svg","./index.html","./manifest.webmanifest", "./fonts/space-grotesk-latin.woff2", "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

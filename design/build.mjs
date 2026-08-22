@@ -340,8 +340,13 @@ function buildApp(slug, skin){
    Empty content, so it is decorative to assistive technology by construction,
    and it never carries meaning the text does not already carry. */
 :root{ --orn:${uri}; }
-header.app::after{
-  content:''; flex-basis:100%; order:99;
+${sk.ornamentHost ?? 'header.app'}::after{
+  /* display:block matters in both directions. Inside the wrapping flex header
+     it still becomes a flex item, so flex-basis keeps putting the mark on its
+     own line. On a plain block header (specials-planner) the default inline
+     box has auto width and no height to paint a mask into, which is exactly
+     why that app appeared to receive an ornament and showed nothing. */
+  content:''; display:block; flex-basis:100%; order:99;
   height:14px; margin:-2px 0 2px;
   color:var(--accent);
   background:currentColor;
@@ -360,8 +365,14 @@ header.app::after{
   opacity:.7;
 }
 .sws-orn.center{-webkit-mask-position:center;mask-position:center}
-/* Ink is cheaper than a screen and a hairline survives a fax. */
-@media print{ header.app::after,.sws-orn{opacity:1; height:10px} }`;
+/* No print rule here on purpose. The header is display:none in print, so a
+   rule for its ::after was dead in every app in the fleet: the ornament
+   reaches paper nowhere today. Putting it on the printed page is real work
+   (it belongs under the document title, drawn in the print ink rather than the
+   accent so a mono copier renders a hairline and not a grey smudge) and it is
+   written up as printMark in the plan rather than faked with a dead selector.
+   .sws-orn is placed by hand, so it prints wherever it was put. */
+@media print{ .sws-orn{opacity:1; height:10px} }`;
   };
 
   const scale = skin.scale ? `

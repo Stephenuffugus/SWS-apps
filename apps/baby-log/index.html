@@ -1328,7 +1328,12 @@ body::after{
    and it never carries meaning the text does not already carry. */
 :root{ --orn:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='74' height='16' viewBox='0 0 74 16' fill='none' stroke='%23000' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'><path d='M0 8 q 9-6 18 0 t 18 0 t 18 0 t 18 0'/></svg>"); }
 header.app::after{
-  content:''; flex-basis:100%; order:99;
+  /* display:block matters in both directions. Inside the wrapping flex header
+     it still becomes a flex item, so flex-basis keeps putting the mark on its
+     own line. On a plain block header (specials-planner) the default inline
+     box has auto width and no height to paint a mask into, which is exactly
+     why that app appeared to receive an ornament and showed nothing. */
+  content:''; display:block; flex-basis:100%; order:99;
   height:14px; margin:-2px 0 2px;
   color:var(--accent);
   background:currentColor;
@@ -1347,8 +1352,14 @@ header.app::after{
   opacity:.7;
 }
 .sws-orn.center{-webkit-mask-position:center;mask-position:center}
-/* Ink is cheaper than a screen and a hairline survives a fax. */
-@media print{ header.app::after,.sws-orn{opacity:1; height:10px} }
+/* No print rule here on purpose. The header is display:none in print, so a
+   rule for its ::after was dead in every app in the fleet: the ornament
+   reaches paper nowhere today. Putting it on the printed page is real work
+   (it belongs under the document title, drawn in the print ink rather than the
+   accent so a mono copier renders a hairline and not a grey smudge) and it is
+   written up as printMark in the plan rather than faked with a dead selector.
+   .sws-orn is placed by hand, so it prints wherever it was put. */
+@media print{ .sws-orn{opacity:1; height:10px} }
 /* ── baby-log texture, must follow the base layer to win the cascade ───── */
 body{
   background-image:none;
