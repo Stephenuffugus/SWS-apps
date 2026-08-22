@@ -128,5 +128,47 @@ await t('no delete batch can reach the Firestore write ceiling', async () => {
     'the counter correction is its own write, not a passenger that makes a full batch 501');
 });
 
+/* 2026-08-22, found by Stephen on his own phone within an hour of the deploy.
+   The screen that says "this list was deleted" was added the same night for a
+   real case (the owner deletes on another phone), but it fired on a board that
+   was merely still LOADING: renderBoard attaches the watcher and then calls
+   drawBoard synchronously, so board is null on every single open. It then
+   stopped the listener that would have proved otherwise, so nothing recovered.
+   Every household was told their list had been removed the moment they opened
+   it, and because delete only existed INSIDE a list, they could not remove the
+   spares either. Null means "not here yet" until a real snapshot has arrived. */
+await t('opening a list is never mistaken for a deleted one', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../../grocery-list/app.js', import.meta.url), 'utf8');
+  const guard = src.slice(src.indexOf('function drawBoard'));
+  assert.ok(/if \(live\.boardId && live\.seen\)/.test(guard.slice(0, 900)),
+    'the deleted screen requires a board that was actually seen');
+  assert.ok(/seen: false/.test(src) && /if \(b\) live\.seen = true/.test(src) && /this\.seen = false/.test(src),
+    'the flag starts false, is set by a real snapshot, and resets on stop');
+
+  // the exact ordering that broke it
+  const live = { boardId: null, board: null, seen: false, stopped: false,
+    stop() { this.stopped = true; this.boardId = null; this.board = null; this.seen = false; } };
+  let deleted = false;
+  const draw = () => { if (!live.board) { if (live.boardId && live.seen) { live.stop(); deleted = true; } } };
+  live.boardId = 'B1'; draw();
+  assert.equal(deleted, false, 'a list that is still loading is not called deleted');
+  assert.equal(live.stopped, false, 'and its listener is left alone so it can finish loading');
+  live.board = { title: 'Groceries' }; live.seen = true; draw();
+  assert.equal(deleted, false, 'nor once it has loaded');
+  live.board = null; draw();
+  assert.ok(deleted && live.stopped, 'but a list that WAS here and then vanished is reported');
+});
+
+await t('one tap cannot make two lists, and a spare can be removed', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../../grocery-list/app.js', import.meta.url), 'utf8');
+  assert.ok(/let creating = false/.test(src) && /if \(creating\) return/.test(src),
+    'list creation refuses to run twice at once');
+  assert.ok(/Making your list/.test(src), 'and says it is working so nobody taps again');
+  assert.ok(/aria-label': 'Delete ' \+ b\.title/.test(src),
+    'a list can be deleted from the home screen without opening it first');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -126,11 +126,17 @@ let renaming = false;   // the owner is editing the list's name
 let renameDraft = '';   // …and what they have typed so far, kept across redraws
 const live = {
   boardId: null, code: null, board: null, entries: [],
+  /* True once a real board snapshot has actually arrived. Without it there is
+     no way to tell "the list has not loaded yet" from "the list was deleted",
+     and they look identical: board is null in both. Getting that wrong told
+     every household their list had been removed the moment they opened it. */
+  seen: false,
   unsubs: [],
   stop() {
     this.unsubs.forEach(u => u && u());
     this.unsubs = [];
     this.boardId = null; this.code = null; this.board = null; this.entries = [];
+    this.seen = false;
     shareOpen = false; addError = ''; flashId = null;
     renaming = false; renameDraft = '';
     clearTimeout(flashTimer);
@@ -218,25 +224,52 @@ async function renderHome() {
       sec.lastChild.remove();
       if (boards.length === 0) sec.append(el('p', { class: 'sub', text: 'No lists yet, most households only ever need one.' }));
       for (const b of boards) {
+        /* Delete lives here as well as inside the list. It used to be reachable
+           only by opening a list first, so a household that ended up with a
+           spare copy had to walk into it to get rid of it, and if a list would
+           not open there was no way to remove it at all. */
         ul.append(el('li', {},
           el('span', { class: 'grow' }, b.title),
           el('button', { class: 'btn', type: 'button', style: 'flex:0 0 auto',
-            'aria-label': 'Open ' + b.title, onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open')));
+            'aria-label': 'Open ' + b.title, onclick: () => { location.hash = '#/b/' + b.shareCode; } }, 'Open'),
+          el('button', { class: 'btn danger', type: 'button', style: 'flex:0 0 auto',
+            'aria-label': 'Delete ' + b.title,
+            onclick: async (ev) => {
+              if (!confirm('Delete "' + b.title + '" for everyone? This cannot be undone.')) return;
+              const btn = ev.currentTarget;
+              btn.disabled = true; btn.textContent = 'Deleting…';
+              try { await D.deleteBoard(b.id, b.shareCode); toast('List deleted'); render(); }
+              catch (e) { btn.disabled = false; btn.textContent = 'Delete'; toast(friendly(e), 5000); }
+            } }, 'Delete')));
       }
     } catch (e) { const p = sec.lastChild; p.className = 'warn'; p.textContent = friendly(e); }
   }
 }
 
-function startCreate() {
+function startCreate(ev) {
   if (!user || D.isAnon(user)) { showDlg($('authDlg')); return; }
-  createList();
+  createList(ev && ev.currentTarget);
 }
-async function createList() {
+/* One at a time. Creating a list is a round trip, and on a phone a button that
+   looks like it did nothing gets tapped again: that is how a household ends up
+   with three lists all called the same thing from what felt like one press.
+   The guard is the fix; the busy label is what stops the second press being
+   tempted in the first place. */
+let creating = false;
+async function createList(btn) {
+  if (creating) return;
+  creating = true;
+  const label = btn && btn.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = 'Making your list…'; }
   try {
     const { code } = await D.createBoard({ title: 'Groceries', description: '' });
     location.hash = '#/b/' + code;
     toast('List ready, share the link with the household');
   } catch (e) { toast(friendly(e), 5000); }
+  finally {
+    creating = false;
+    if (btn) { btn.disabled = false; if (label) btn.textContent = label; }
+  }
 }
 
 /* ---------- board ---------- */
@@ -312,7 +345,7 @@ async function renderBoard(code) {
     if (!boardId) { notFoundCard(v); return; }
 
     live.boardId = boardId; live.code = code;
-    live.unsubs.push(D.watchBoard(boardId, (b) => { live.board = b; drawBoard(); },
+    live.unsubs.push(D.watchBoard(boardId, (b) => { live.board = b; if (b) live.seen = true; drawBoard(); },
       (e) => toast(friendly(e), 5000)));
   }
   drawBoard();
@@ -596,7 +629,12 @@ function drawBoard() {
      and the next tap failed with a permission error nobody could explain. It
      is a real state and it gets a real screen. */
   if (!live.board) {
-    if (live.boardId) { live.stop(); deletedCard($('view')); }
+    /* Only a board that WAS here and is now gone has been deleted. Before the
+       first snapshot lands, board is null too, and drawBoard is called once
+       synchronously the moment the watcher is attached, so without live.seen
+       this told everyone their list had been removed and then stopped the
+       listener that would have proved otherwise. */
+    if (live.boardId && live.seen) { live.stop(); deletedCard($('view')); }
     return;
   }
   // Before anything is drawn or any watcher is started.
