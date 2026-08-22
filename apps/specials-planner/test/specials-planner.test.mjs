@@ -574,6 +574,44 @@ console.log('\n,  reset , ');
   ok(!!w.document.getElementById('w-fresh'), 'back to welcome screen');
 }
 
+/* A backup file arrives from another person: this app tells teachers a backup
+   "restores on any phone or computer" and offers Restore as one of three front
+   doors, so passing them around is the intended workflow. Every legend colour
+   is written into a style attribute in the week grid, and a hex carrying a
+   quote closes that attribute and adds markup of its own, which runs as this
+   origin. This origin is every app in the studio sharing one localStorage.
+   Reproduced end to end through the real UI in headless Chromium before it was
+   closed: the payload renamed the page and read the sibling apps' data.
+
+   Both layers are asserted, because either one alone would close it and a
+   later edit could remove the other without anyone noticing. */
+console.log('\n== a hostile colour in a restored backup cannot become markup ==');
+{
+  // built on the real base state, or the app never finishes booting and the
+  // week grid, which is the sink, is never drawn at all
+  const hostile = clone(baseState);
+  hostile.legend = [{ id: 'k1', name: 'Art', hex: '#ffffff;"><img src=x onerror="globalThis.__pwned=1">' }];
+  hostile.fillCol = { '1': 'k1' };
+  hostile.fillDay = { '1': 'k1' };
+  const w = boot(hostile);
+  await sleep(300);
+  /* Read what the app is actually USING, not what is on disk: the stored file
+     keeps whatever bytes it arrived with, which is harmless once the value is
+     coerced on the way in and escaped on the way out. */
+  const painted = w.document.querySelector('[style*="--cell-fill"]');
+  const hex = painted ? painted.getAttribute('style') : '';
+  ok(!/[<>]/.test(hex),
+    `no markup survives into a style attribute (got ${JSON.stringify(hex).slice(0, 90)})`);
+  ok(w.document.querySelectorAll('img[onerror], img[src="x"]').length === 0,
+    'and nothing from the file becomes an element');
+  ok(!w.__pwned, 'and nothing from the file runs');
+
+  // second layer: the week grid must escape, the way every other hex sink here does
+  const src = html;
+  ok(!/--cell-fill:\$\{(?!esc\()/.test(src),
+    'every colour written into a style attribute goes through esc()');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 }

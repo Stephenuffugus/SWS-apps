@@ -2383,6 +2383,21 @@ function renderBoxLines(b, text) {
 
 function ensureColourState() {
   if (!Array.isArray(S.legend) || !S.legend.length) S.legend = SEED_LEGEND.map(x => ({ ...x }));
+  /* A legend arrives from a backup file, and a backup file arrives from another
+     person: this app tells teachers a backup "restores on any phone or
+     computer" and offers Restore as one of three front doors, so passing these
+     around is the intended workflow. Every colour goes into a style attribute
+     in the week grid, and a hex carrying a quote closes that attribute and adds
+     markup of its own, which runs as this origin. That is every app in the
+     studio, sharing one localStorage. It was reproduced end to end before this
+     line existed: a restored file could rename the page and read the sibling
+     apps' data. A colour has to look like a colour. */
+  S.legend = S.legend.filter(c => c && typeof c === 'object').map(c => ({
+    ...c,
+    id: String(c.id ?? '').slice(0, 48),
+    name: String(c.name ?? '').slice(0, 60),
+    hex: /^#[0-9a-fA-F]{3,8}$/.test(String(c.hex ?? '')) ? String(c.hex) : '#77C043',
+  }));
   S.fill = S.fill || {};        // cellKey -> colour id            (one box)
   S.fillDow = S.fillDow || {};  // "dow|period" -> colour id       (every week)
   S.fillCol = S.fillCol || {};  // "period" -> colour id           (column heading)
@@ -3486,7 +3501,7 @@ function renderWeek(){
 
   ensureColourState();
   const hStyle=(id)=>{ const col=colourById(id); return col
-      ? ` class="filled" style="--cell-fill:${col.hex};--cell-ink:${inkOn(col.hex)}"` : ''; };
+      ? ` class="filled" style="--cell-fill:${esc(col.hex)};--cell-ink:${esc(inkOn(col.hex))}"` : ''; };
   /* Labels can carry a custom column name now, which is user text, esc here
      covers every call site at once. */
   const paintBtn=(what,label)=>`<button type="button" class="paint no-print" data-paint="${what}" aria-label="Colour ${esc(label)}">◧</button>`;
@@ -3533,7 +3548,7 @@ function renderWeek(){
     const dayName=`${DAYNAMES[d.dow]} ${niceDate(d.iso)}`;
     const rot=d.letter?`, rotation day ${esc(d.letter)}`:(d.special?`, ${esc(d.special)}`:'');
     rows+=`<tr class="${d.special?'sp-row':''} ${d.iso===todayISO?'today-row':''}">
-      <td${(()=>{const df=colourById(S.fillDay[d.dow]);return df?` class="day-td filled" style="--cell-fill:${df.hex};--cell-ink:${inkOn(df.hex)}"`:' class="day-td"';})()}>${paintBtn('day:'+d.dow,DAYNAMES[d.dow]+' label')}<div class="day-cell">
+      <td${(()=>{const df=colourById(S.fillDay[d.dow]);return df?` class="day-td filled" style="--cell-fill:${esc(df.hex)};--cell-ink:${esc(inkOn(df.hex))}"`:' class="day-td"';})()}>${paintBtn('day:'+d.dow,DAYNAMES[d.dow]+' label')}<div class="day-cell">
         <div>
           <div class="day-name">${DAYNAMES[d.dow]}</div>
           <div class="day-date">${niceDate(d.iso)}${d.iso===todayISO?'<span class="sr-only">, today</span>':''}</div>
@@ -3546,7 +3561,7 @@ function renderWeek(){
       if(coveredBy(d,p)) continue;                 // swallowed by a merge to its left
       const f=fillFor(d,p), span=spanFor(d,p), k=cellKey(d,p);
       const tdCls=[f?'filled':'',span>1?'merged':'',S.dim[k]?'dimmed':'',selBoxes.has(k)?'sel':''].filter(Boolean).join(' ');
-      const fs=(tdCls?` class="${tdCls}"`:'')+(f?` style="--cell-fill:${f.hex};--cell-ink:${inkOn(f.hex)}"`:'');
+      const fs=(tdCls?` class="${tdCls}"`:'')+(f?` style="--cell-fill:${esc(f.hex)};--cell-ink:${esc(inkOn(f.hex))}"`:'');
       const sp=span>1?` colspan="${span}"`:'';
       const spanNote=span>1?`, spanning ${span} periods`:'';
       const pn=esc(periodName(p,true));
@@ -3556,7 +3571,7 @@ function renderWeek(){
     const nk='n'+d.iso;
     const nf=colourById(S.fill[nk]!==undefined?S.fill[nk]:S.fillDow['n'+d.dow]);
     const nCls=[nf?'filled':'',S.dim[nk]?'dimmed':'',selBoxes.has(nk)?'sel':''].filter(Boolean).join(' ');
-    const nfs=(nCls?` class="${nCls}"`:'')+(nf?` style="--cell-fill:${nf.hex};--cell-ink:${inkOn(nf.hex)}"`:'');
+    const nfs=(nCls?` class="${nCls}"`:'')+(nf?` style="--cell-fill:${esc(nf.hex)};--cell-ink:${esc(inkOn(nf.hex))}"`:'');
     rows+=`<td data-label="Notes"${nfs}><div class="${boxCls(nk)}" contenteditable="${boxCE}"${boxTab} role="textbox" aria-multiline="true" aria-label="Notes for ${dayName}" data-iso="${d.iso}" data-p="notes"></div>${paintBtn('note:'+d.iso,'notes for '+dayName)}</td></tr>`;
   }
 

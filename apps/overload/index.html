@@ -417,6 +417,12 @@ const LIB = {
     {n:"Weighted Plank",a:"Plate on back. Add time or load."},
     {n:"Pallof Press",inc:2.5,a:"Anti-rotation. The job nothing else trains."}]}
 };
+/* Every exercise name the library has ever offered. A history row may legally
+   name a lift the program has since swapped away from, so it cannot be checked
+   against the CURRENT exercise, but it must still be a name this app issued
+   rather than whatever a backup file happens to contain. */
+const KNOWN_EX = new Set(Object.values(LIB).flatMap(g => g.ex.map(e => e.n)));
+
 
 const KEY="overload.v2";
 const DEFAULT_REST=120;
@@ -464,7 +470,14 @@ function load(){
             verdict:VERD.includes(h.verdict)?h.verdict:'hold',
             w:num(h.w,0,2000,0),
             reps:h.reps.map(r=>num(r,0,999,0)),
-            ex:typeof h.ex==='string'?h.ex.slice(0,60):''
+            /* Held to a real exercise name, not merely cut to length. This
+               field was added today so a session could keep the name of the
+               lift it was actually done on, and it went in with a 60 character
+               cap, which is not a sanitiser: an img tag with an onerror is
+               twenty eight. It goes to innerHTML in renderHist. Any name a
+               swap ever produced came out of the library, so requiring it to
+               be in the library loses nothing real. */
+            ex:KNOWN_EX.has(h.ex)?h.ex:''
           }))
         };
       }),

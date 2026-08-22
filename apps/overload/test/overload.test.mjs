@@ -304,6 +304,10 @@ console.log('\n,  a hostile backup file cannot become markup , ');
     'outcome': prog({ outcomes: ['hit', '"><img src=x onerror="globalThis.__pwned=1">'] }),
     'history weight': prog({ history: [{ date: new Date().toISOString(), w: '<img src=z onerror="globalThis.__pwned=1">', reps: [8], verdict: 'progress' }] }),
     'history reps': prog({ history: [{ date: new Date().toISOString(), w: 135, reps: ['<img src=z onerror="globalThis.__pwned=1">'], verdict: 'progress' }] }),
+    /* Added the same day the injection was closed, and closed with a length cap
+       rather than a sanitiser, which is not the same thing: an img tag with an
+       onerror is twenty eight characters. */
+    'history exercise name': prog({ history: [{ date: new Date().toISOString(), w: 135, reps: [8], verdict: 'progress', ex: '<img src=x onerror="globalThis.__pwned=1">' }] }),
     'missing verdict': prog({ history: [{ date: new Date().toISOString(), w: 135, reps: [8] }] }),
   };
   for (const [what, p] of Object.entries(payloads)) {
@@ -334,15 +338,15 @@ console.log('\n,  a session remembers the lift it was done on , ');
 {
   const iso = (d) => new Date(Date.now() - d * 864e5).toISOString();
   const w = boot({ programs: [prog({
-    ex: 'Dumbbell Bench Press',
+    ex: 'Weighted Dips',
     history: [
       { date: iso(9), w: 135, reps: [10], verdict: 'progress', ex: 'Barbell Bench Press' },
-      { date: iso(3), w: 60, reps: [10], verdict: 'progress', ex: 'Dumbbell Bench Press' },
+      { date: iso(3), w: 60, reps: [10], verdict: 'progress', ex: 'Weighted Dips' },
     ],
   })], weighins: [], sound: true });
   const hist = w.document.getElementById('histList').textContent;
   ok(/Barbell Bench Press/.test(hist), 'an old session keeps the name of the lift it was actually done on');
-  ok(/Dumbbell Bench Press/.test(hist), 'and the new one keeps its own');
+  ok(/Weighted Dips/.test(hist), 'and the new one keeps its own');
   // the strength line must not join two different lifts into one curve
   w.document.querySelector('[data-gear]').click();
   const spark = w.document.querySelector('#sheet .e1-spark');
