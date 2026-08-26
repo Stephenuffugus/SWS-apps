@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coverage</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --line:#262b36; --ink:#e9edf4; --muted:#9aa3b2;
+    --field:#0b0d11; --pass:#2fbf71; --fail:#ff5a5f; --accent:#4c8dff; --accent-ink:#fff;
+    --shadow:0 8px 30px rgba(0,0,0,.35); --r:14px;
+  }
+  @media (prefers-color-scheme:light){
+    :root{ --bg:#eef1f6; --card:#ffffff; --line:#e4e8f0; --ink:#141822; --muted:#5a6474;
+           --field:#f6f8fc; --pass:#1a9e5f; --fail:#e0464b; --shadow:0 8px 30px rgba(20,30,60,.10); }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+    padding:max(12px,env(safe-area-inset-top)) 12px calc(96px + env(safe-area-inset-bottom));
+    max-width:520px; margin:0 auto;
+  }
+  .num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+  h1{font-size:15px; letter-spacing:.02em; text-transform:uppercase; color:var(--muted); margin:2px 2px 12px; font-weight:600}
+  .brand{color:var(--ink)}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:16px; margin-bottom:12px}
+
+  .verdict{display:flex; flex-direction:column; gap:2px; text-align:center; padding:18px 16px 6px}
+  .verdict .state{font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+  .verdict .dscr{font-size:58px; font-weight:800; line-height:1; margin-top:2px}
+  .verdict .sub{font-size:13px; color:var(--muted)}
+  .verdict.pass .state{color:var(--pass)} .verdict.fail .state{color:var(--fail)}
+
+  .bar{position:relative; height:12px; border-radius:8px; background:var(--field); border:1px solid var(--line); margin:14px 2px 6px; overflow:hidden}
+  .bar .fill{position:absolute; left:0; top:0; bottom:0; border-radius:8px 0 0 8px; transition:width .12s linear}
+  .bar.pass .fill{background:var(--pass)} .bar.fail .fill{background:var(--fail)}
+  .bar .tick{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--ink); opacity:.55}
+  .barlabels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin:0 2px 4px}
+
+  .pay{display:flex; justify-content:space-between; align-items:baseline; padding:10px 16px; border-top:1px solid var(--line)}
+  .pay .k{font-size:13px; color:var(--muted)} .pay .v{font-size:19px; font-weight:700}
+  .pay .v small{font-size:12px; color:var(--muted); font-weight:500}
+  .pay .v.neg{color:var(--fail)}
+
+  .solve{padding:12px 16px; border-top:1px solid var(--line)}
+  .solve .lead{font-size:15px; font-weight:600}
+  .solve .lead b{font-weight:800}
+  .solve .why{font-size:12px; color:var(--muted); margin-top:3px}
+
+  fieldset{border:none; margin:0; padding:0}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px}
+  .in{position:relative}
+  .in .pre{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px}
+  .in .suf{position:absolute; right:11px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px}
+  input[type=text],input[type=number]{
+    width:100%; background:var(--field); border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; padding:12px 12px 12px 22px; font-size:16px; font-variant-numeric:tabular-nums; -moz-appearance:textfield;
+  }
+  input.plain{padding-left:12px}
+  input:focus{outline:none; border-color:var(--accent)}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+  .full{grid-column:1 / -1}
+  details{border-top:1px solid var(--line); margin-top:6px; padding-top:10px}
+  summary{font-size:13px; color:var(--muted); cursor:pointer; list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"\2699  ";}
+  .disc{font-size:11px; color:var(--muted); line-height:1.45; padding:0 2px; margin-top:2px}
+  .disc b{color:var(--ink)}
+  .buildtag{opacity:.5; font-size:11px; letter-spacing:.04em; text-align:center; margin-top:8px}
+  .fin{font-size:12px; text-align:center; color:var(--muted); padding:6px 2px 0}
+
+  /* buttons */
+  .btn{appearance:none; border:1px solid var(--line); background:var(--field); color:var(--ink);
+       border-radius:11px; padding:12px 14px; font-size:15px; font-weight:600; cursor:pointer; display:inline-flex;
+       align-items:center; justify-content:center; gap:7px; transition:transform .05s ease, opacity .15s}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
+  .btn.ghost{background:transparent}
+  .btn[disabled]{opacity:.5; cursor:not-allowed}
+  .btn .cnt{font-size:12px; background:rgba(128,128,128,.25); border-radius:20px; padding:1px 7px; min-width:20px}
+
+  /* bottom action bar */
+  .bar-actions{position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; gap:8px; justify-content:center;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--bg) 72%, transparent);
+  }
+  .bar-actions > *{flex:1; max-width:170px}
+
+  /* overlays */
+  .sheet{position:fixed; inset:0; z-index:40; background:rgba(6,8,12,.55); backdrop-filter:blur(2px);
+    display:none; align-items:flex-end; justify-content:center}
+  .sheet.open{display:flex}
+  .sheet-inner{background:var(--bg); width:100%; max-width:520px; max-height:92vh; overflow:auto;
+    border-radius:18px 18px 0 0; border:1px solid var(--line); border-bottom:none;
+    padding:14px 12px calc(20px + env(safe-area-inset-bottom))}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; margin:2px 4px 12px; position:sticky; top:0}
+  .sheet-head h2{font-size:16px; margin:0}
+  .sheet-head .x{font-size:22px; line-height:1; color:var(--muted); background:none; border:none; cursor:pointer; padding:4px 8px}
+
+  .deal{display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:10px 12px; margin-bottom:8px}
+  .deal.sel{border-color:var(--accent)}
+  .deal .pick{width:22px; height:22px; border-radius:6px; border:2px solid var(--line); flex:none; display:grid; place-items:center; color:transparent; font-size:13px}
+  .deal.sel .pick{background:var(--accent); border-color:var(--accent); color:#fff}
+  .deal .body{flex:1; min-width:0}
+  .deal .title{font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .deal .meta{font-size:12px; color:var(--muted); margin-top:1px}
+  .deal .chip{font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; flex:none}
+  .deal .chip.pass{color:#fff; background:var(--pass)} .deal .chip.fail{color:#fff; background:var(--fail)}
+  .deal .del{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:2px 6px; flex:none}
+  .empty{text-align:center; color:var(--muted); font-size:14px; padding:26px 10px}
+
+  .cmp{overflow-x:auto}
+  table.cmp-t{border-collapse:collapse; width:100%; font-size:13px}
+  table.cmp-t th,table.cmp-t td{text-align:right; padding:9px 10px; border-bottom:1px solid var(--line); white-space:nowrap}
+  table.cmp-t th:first-child,table.cmp-t td:first-child{text-align:left; color:var(--muted); position:sticky; left:0; background:var(--bg)}
+  table.cmp-t thead th{font-size:13px; font-weight:700}
+  table.cmp-t td.v-pass{color:var(--pass); font-weight:700} table.cmp-t td.v-fail{color:var(--fail); font-weight:700}
+
+  .share-prev{text-align:center}
+  .share-prev img{max-width:100%; border-radius:12px; border:1px solid var(--line); box-shadow:var(--shadow)}
+  .share-actions{display:flex; gap:8px; margin-top:12px}
+  .share-actions .btn{flex:1}
+  .gate{background:var(--card); border:1px dashed var(--line); border-radius:12px; padding:16px; text-align:center; font-size:14px; color:var(--muted)}
+  .gate b{color:var(--ink)}
+
+  .toast{position:fixed; left:50%; bottom:104px; transform:translateX(-50%) translateY(8px); z-index:60;
+    background:var(--ink); color:var(--bg); font-size:13px; font-weight:600; padding:9px 16px; border-radius:20px;
+    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<h1><span class="brand" id="brandName">Coverage</span> · deal screener</h1>
+
+<!-- ============ VERDICT ============ -->
+<div class="card">
+  <div class="verdict" id="verdict">
+    <div class="state" id="vState">—</div>
+    <div class="dscr num" id="vDscr">—</div>
+    <div class="sub" id="vSub">qualifying DSCR vs threshold</div>
+  </div>
+  <div class="barlabels"><span>0</span><span id="barTargetLbl">target</span><span></span></div>
+  <div class="bar" id="bar"><div class="fill" id="barFill"></div><div class="tick" id="barTick"></div></div>
+
+  <div class="pay"><span class="k">Payment (PI)</span><span class="v num" id="oPI">—</span></div>
+  <div class="pay"><span class="k">PITIA (PI+tax+ins+HOA)</span><span class="v num" id="oPitia">—</span></div>
+  <div class="pay"><span class="k">Cash flow /mo <small>(after debt)</small></span><span class="v num" id="oCF">—</span></div>
+  <div class="pay"><span class="k">Cap rate</span><span class="v num" id="oCap">—</span></div>
+  <div class="pay"><span class="k">True DSCR <small>(NOI ÷ debt service)</small></span><span class="v num" id="oTrue">—</span></div>
+
+  <div class="solve" id="solve">
+    <div class="lead" id="solveLead">—</div>
+    <div class="why" id="solveWhy"></div>
+  </div>
+</div>
+
+<!-- ============ INPUTS ============ -->
+<div class="card">
+  <fieldset>
+    <div class="grid">
+      <div class="full">
+        <label for="iNbhd">Neighborhood / label <span style="opacity:.7">(no full address)</span></label>
+        <input class="plain" type="text" id="iNbhd" placeholder="e.g. Burbank duplex" autocomplete="off">
+      </div>
+      <div><label for="iPrice">Purchase price</label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iPrice" inputmode="numeric" value="600000"></div></div>
+      <div><label for="iDown">Down payment</label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iDown" inputmode="numeric" value="180000"><span class="suf" id="downPct">30%</span></div></div>
+      <div><label for="iRent">Gross monthly rent</label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iRent" inputmode="numeric" value="4200"></div></div>
+      <div><label for="iRate">Rate</label>
+        <div class="in"><input class="plain" type="number" id="iRate" inputmode="decimal" step="0.01" value="7.5"><span class="suf">% / yr</span></div></div>
+      <div><label for="iTerm">Term</label>
+        <div class="in"><input class="plain" type="number" id="iTerm" inputmode="numeric" value="30"><span class="suf">yrs</span></div></div>
+      <div><label for="iIns">Insurance / mo</label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iIns" inputmode="numeric" value="180"></div></div>
+      <div><label for="iHoa">HOA / mo</label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iHoa" inputmode="numeric" value="0"></div></div>
+      <div><label for="iTax">Taxes / mo <span id="taxAuto">(auto)</span></label>
+        <div class="in"><span class="pre">$</span><input type="number" id="iTax" inputmode="numeric" placeholder="auto"></div></div>
+    </div>
+
+    <details id="cfgPanel">
+      <summary>Operator &amp; thresholds</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="full"><label for="cName">Operator name</label>
+          <input class="plain" type="text" id="cName" value="Ryan, Diamond Edge Financial"></div>
+        <div><label for="cNmls">NMLS #</label>
+          <input class="plain" type="text" id="cNmls" placeholder="required to share" inputmode="numeric"></div>
+        <div><label for="cPhone">Contact</label>
+          <input class="plain" type="text" id="cPhone" placeholder="text for address"></div>
+        <div><label for="cTarget">Qualifying DSCR threshold</label>
+          <div class="in"><input class="plain" type="number" id="cTarget" step="0.01" value="1.15"></div></div>
+        <div><label for="cLtv">Max LTV</label>
+          <div class="in"><input class="plain" type="number" id="cLtv" step="1" value="75"><span class="suf">%</span></div></div>
+        <div><label for="cTaxRate">Tax rate (of price/yr)</label>
+          <div class="in"><input class="plain" type="number" id="cTaxRate" step="0.01" value="1.20"><span class="suf">%</span></div></div>
+        <div><label for="cVac">Vacancy (true DSCR)</label>
+          <div class="in"><input class="plain" type="number" id="cVac" step="1" value="5"><span class="suf">%</span></div></div>
+        <div><label for="cMgmt">Mgmt (true DSCR)</label>
+          <div class="in"><input class="plain" type="number" id="cMgmt" step="1" value="8"><span class="suf">%</span></div></div>
+        <div><label for="cMaint">Maint (true DSCR)</label>
+          <div class="in"><input class="plain" type="number" id="cMaint" step="1" value="5"><span class="suf">%</span></div></div>
+      </div>
+      <p class="disc" style="margin-top:10px">Thresholds and rates are editable inputs, never fixed law. CA tax default is purchase price &times; rate on <b>sale-price reassessment</b> (Prop 13), not the seller's current bill. Insurance is manual (fire-zone). Verify every figure before relying on it.</p>
+    </details>
+  </fieldset>
+</div>
+
+<!-- ============ DISCLAIMER ============ -->
+<div class="card">
+  <p class="disc"><b>Estimates only. Not a commitment to lend.</b> Rates and terms subject to change, credit approval, and underwriting. Figures based on user-entered assumptions. Qualifying DSCR = rent &divide; PITIA; it excludes vacancy, management, and maintenance, which the True DSCR includes. The gap is why a deal can &ldquo;qualify&rdquo; and still run thin. Models properties, not people: enter no borrower names, SSNs, or account numbers.</p>
+  <p class="fin" id="finLine">Financing available. Enter NMLS # to enable sharing.</p>
+  <p class="disc buildtag">coverage-v1</p>
+</div>
+
+<!-- ============ ACTION BAR ============ -->
+<div class="bar-actions">
+  <button class="btn" id="btnSave">Save deal</button>
+  <button class="btn ghost" id="btnSaved">Saved <span class="cnt" id="savedCount">0</span></button>
+  <button class="btn primary" id="btnShare">Share</button>
+</div>
+
+<!-- ============ SAVED SHEET ============ -->
+<div class="sheet" id="savedSheet">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2>Saved deals</h2>
+      <button class="x" data-close>&times;</button>
+    </div>
+    <p class="disc" id="savedHint" style="margin:0 4px 10px">Tap a deal to load it. Check 2 or 3 to compare.</p>
+    <div id="savedList"></div>
+    <div id="selActions" style="display:flex; gap:8px; margin-top:8px">
+      <button class="btn" id="btnCompare" style="flex:1; display:none">Compare</button>
+      <button class="btn primary" id="btnDrop" style="flex:1; display:none">Deal Drop</button>
+    </div>
+    <p class="disc" id="selHint" style="margin:8px 4px 0; display:none"></p>
+  </div>
+</div>
+
+<!-- ============ COMPARE SHEET ============ -->
+<div class="sheet" id="cmpSheet">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2>Compare</h2>
+      <button class="x" data-close>&times;</button>
+    </div>
+    <div class="cmp" id="cmpBody"></div>
+  </div>
+</div>
+
+<!-- ============ SHARE SHEET ============ -->
+<div class="sheet" id="shareSheet">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2>Share deal</h2>
+      <button class="x" data-close>&times;</button>
+    </div>
+    <div id="shareBody"></div>
+  </div>
+</div>
+
+<!-- ============ DEAL DROP SHEET (Phase 7) ============ -->
+<div class="sheet" id="dropSheet">
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <h2>Deal Drop</h2>
+      <button class="x" data-close>&times;</button>
+    </div>
+    <div id="dropBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================= -->
+<!-- MATH CORE: pure, DOM-free, extract-and-eval testable by id.    -->
+<!-- Nothing regulatory is hardcoded; thresholds arrive as inputs.  -->
+<!-- ============================================================= -->
+<script id="deal-math">
+(function(root){
+  "use strict";
+  function pmt(P, annualRatePct, termYears){
+    if (P <= 0) return 0;
+    var n = termYears * 12, r = annualRatePct / 100 / 12;
+    if (r === 0) return P / n;
+    return P * r / (1 - Math.pow(1 + r, -n));
+  }
+  function invPmt(PI, annualRatePct, termYears){
+    if (PI <= 0) return 0;
+    var n = termYears * 12, r = annualRatePct / 100 / 12;
+    if (r === 0) return PI * n;
+    return PI * (1 - Math.pow(1 + r, -n)) / r;
+  }
+  function num(v){ var n = typeof v === "number" ? v : parseFloat(v); return isFinite(n) ? n : 0; }
+
+  function evaluate(x){
+    var price = num(x.price), down = num(x.down), rate = num(x.rate),
+        term  = num(x.term) || 30, rent = num(x.rent),
+        ins   = num(x.ins), hoa = num(x.hoa),
+        target= num(x.target), ltv = num(x.ltv),
+        taxRate = x.taxRate == null ? 0.012 : num(x.taxRate),
+        vac  = x.vac  == null ? 0.05 : num(x.vac),
+        mgmt = x.mgmt == null ? 0.08 : num(x.mgmt),
+        maint= x.maint== null ? 0.05 : num(x.maint),
+        appraisal = x.appraisal == null ? price : num(x.appraisal);
+
+    var taxes = (x.taxesOverride == null || x.taxesOverride === "")
+                  ? price * taxRate / 12 : num(x.taxesOverride);
+
+    var loan = Math.max(price - down, 0);
+    var PI   = pmt(loan, rate, term);
+    var pitia = PI + taxes + ins + hoa;
+    var qualDSCR = pitia > 0 ? rent / pitia : Infinity;
+
+    var noiMonthly = rent - rent*vac - rent*mgmt - rent*maint - taxes - ins - hoa;
+    var annualDebtService = PI * 12;
+    var trueDSCR = annualDebtService > 0 ? (noiMonthly * 12) / annualDebtService : null;
+    var capRate = price > 0 ? (noiMonthly * 12) / price : 0;
+    var cashFlowMonthly = noiMonthly - PI; // after debt service
+
+    var piMax = rent / target - taxes - ins - hoa;
+    var cannot = false, bind = null, minDown = null, minDownPct = null, maxLoan = null;
+    if (piMax <= 0){
+      cannot = true;
+    } else {
+      var pDscr = invPmt(piMax, rate, term);
+      var pLtv  = ltv * Math.min(price, appraisal);
+      maxLoan = Math.min(pDscr, pLtv);
+      bind = pLtv < pDscr ? "LTV" : "DSCR";
+      minDown = Math.max(price - maxLoan, 0);
+      minDownPct = price > 0 ? minDown / price : 0;
+    }
+
+    return {
+      loan: loan, PI: PI, taxes: taxes, pitia: pitia,
+      qualDSCR: qualDSCR, qualifies: qualDSCR >= target,
+      noiMonthly: noiMonthly, trueDSCR: trueDSCR,
+      capRate: capRate, cashFlowMonthly: cashFlowMonthly,
+      cannot: cannot, bind: bind,
+      minDown: minDown, minDownPct: minDownPct, maxLoan: maxLoan,
+      downPct: price > 0 ? down / price : 0
+    };
+  }
+
+  var DealMath = { evaluate: evaluate, pmt: pmt, invPmt: invPmt, VERSION: "1.1.0" };
+  if (typeof module !== "undefined" && module.exports) module.exports = DealMath;
+  root.DealMath = DealMath;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+</script>
+
+<!-- ============================================================= -->
+<!-- UI layer: reads inputs, calls DealMath, paints, saves, shares. -->
+<!-- ============================================================= -->
+<script id="app">
+(function(){
+  "use strict";
+  var $  = function(id){ return document.getElementById(id); };
+  var usd = function(v){ return "$" + Math.round(v).toLocaleString("en-US"); };
+  var usd0 = function(v){ return Math.round(v).toLocaleString("en-US"); };
+  var pct = function(f){ return Math.round(f * 100) + "%"; };
+  var pct1 = function(f){ return (f * 100).toFixed(1) + "%"; };
+  var SCALE = 2; // canvas oversample for crisp exports; PDF page = pixels / SCALE
+
+  var fieldIds = ["iNbhd","iPrice","iDown","iRent","iRate","iTerm","iIns","iHoa","iTax",
+                  "cName","cNmls","cPhone","cTarget","cLtv","cTaxRate","cVac","cMgmt","cMaint"];
+
+  function currentMap(){ var o={}; fieldIds.forEach(function(id){ o[id]=$(id).value; }); return o; }
+  function buildInputs(m){
+    return {
+      price:+m.iPrice||0, down:+m.iDown||0, rate:+m.iRate||0, term:+m.iTerm||30,
+      rent:+m.iRent||0, ins:+m.iIns||0, hoa:+m.iHoa||0,
+      taxesOverride: (m.iTax==="" || m.iTax==null) ? null : +m.iTax,
+      target:+m.cTarget||1.15, ltv:(+m.cLtv||75)/100, taxRate:(+m.cTaxRate||1.20)/100,
+      vac:(+m.cVac||0)/100, mgmt:(+m.cMgmt||0)/100, maint:(+m.cMaint||0)/100
+    };
+  }
+
+  function render(){
+    var m = currentMap();
+    var inp = buildInputs(m);
+    var r = DealMath.evaluate(inp);
+    var target = inp.target;
+
+    $("brandName").textContent = ((m.cName.split(",")[0]||"Coverage").trim()) + " Coverage";
+    $("downPct").textContent = pct(r.downPct);
+    $("taxAuto").textContent = (m.iTax==="") ? "(auto)" : "(manual)";
+
+    var v = $("verdict"), pass = r.qualifies;
+    v.className = "verdict " + (pass ? "pass" : "fail");
+    $("vState").textContent = pass ? "Covers" : "Short";
+    $("vDscr").textContent = isFinite(r.qualDSCR) ? r.qualDSCR.toFixed(2) : "—";
+    $("vSub").textContent = "qualifying DSCR · threshold " + target.toFixed(2);
+
+    var scaleMax = target * 1.5;
+    $("bar").className = "bar " + (pass ? "pass" : "fail");
+    $("barFill").style.width = (Math.max(0, Math.min(r.qualDSCR/scaleMax,1))*100) + "%";
+    $("barTick").style.left = ((target/scaleMax)*100) + "%";
+    $("barTargetLbl").textContent = "▲ " + target.toFixed(2);
+
+    $("oPI").textContent = usd(r.PI) + " /mo";
+    $("oPitia").textContent = usd(r.pitia) + " /mo";
+    var cf = $("oCF"); cf.textContent = (r.cashFlowMonthly<0?"-$":"$") + usd0(Math.abs(r.cashFlowMonthly)) + " /mo";
+    cf.className = "v num" + (r.cashFlowMonthly<0 ? " neg" : "");
+    $("oCap").textContent = pct1(r.capRate);
+    $("oTrue").textContent = r.trueDSCR == null ? "all cash" : r.trueDSCR.toFixed(2);
+
+    if (r.cannot){
+      $("solveLead").innerHTML = "Won't qualify at any down payment.";
+      $("solveWhy").textContent = "Taxes + insurance + HOA already exceed rent ÷ " + target.toFixed(2)
+        + ", so even an all-cash purchase can't reach the threshold on rent alone.";
+    } else {
+      $("solveLead").innerHTML = "Qualifies at <b>" + target.toFixed(2) + "</b> with <b>"
+        + usd(r.minDown) + "</b> down (<b>" + pct(r.minDownPct) + "</b>).";
+      $("solveWhy").textContent = (r.bind === "LTV")
+        ? "LTV cap binds: the " + pct(inp.ltv) + " max-loan limit sets the down payment, not DSCR."
+        : "DSCR binds: this down payment is what the " + target.toFixed(2) + " threshold requires.";
+    }
+
+    var nmls = m.cNmls.trim();
+    $("finLine").textContent = nmls
+      ? "Financing available · " + (m.cName || "operator") + " · NMLS #" + nmls
+      : "Financing available. Enter NMLS # to enable sharing.";
+    $("btnShare").disabled = false; // gate is handled on click so the message can explain
+
+    try{ localStorage.setItem("coverage.v1", JSON.stringify(m)); }catch(e){}
+    return { m:m, inp:inp, r:r };
+  }
+
+  function restore(){
+    try{
+      var o = JSON.parse(localStorage.getItem("coverage.v1")||"null");
+      if (o) fieldIds.forEach(function(id){ if (o[id]!=null && $(id)) $(id).value=o[id]; });
+    }catch(e){}
+  }
+
+  /* ---------- toast ---------- */
+  var toastT;
+  function toast(msg){
+    var t=$("toast"); t.textContent=msg; t.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  /* ---------- IndexedDB: store "deals" ---------- */
+  function idb(){
+    return new Promise(function(res,rej){
+      var rq=indexedDB.open("coverage",1);
+      rq.onupgradeneeded=function(e){ e.target.result.createObjectStore("deals",{keyPath:"id"}); };
+      rq.onsuccess=function(e){ res(e.target.result); };
+      rq.onerror=function(e){ rej(e.target.error); };
+    });
+  }
+  function tx(store,mode,fn){
+    return idb().then(function(db){ return new Promise(function(res,rej){
+      var t=db.transaction(store,mode), s=t.objectStore(store), out;
+      out=fn(s); t.oncomplete=function(){ res(out&&out.result!==undefined?out.result:out); };
+      t.onerror=function(e){ rej(e.target.error); };
+    });});
+  }
+  function dealsPut(rec){ return tx("deals","readwrite",function(s){ s.put(rec); }); }
+  function dealsAll(){ return tx("deals","readonly",function(s){ return s.getAll(); }); }
+  function dealsDel(id){ return tx("deals","readwrite",function(s){ s.delete(id); }); }
+
+  var picks = {}; // id -> true, for compare selection
+
+  function refreshCount(){
+    dealsAll().then(function(list){ $("savedCount").textContent = list.length; }).catch(function(){});
+  }
+
+  function saveCurrent(){
+    var state = render();
+    var label = (state.m.iNbhd||"").trim() || ("Deal " + new Date().toLocaleDateString());
+    var rec = { id: Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+                ts: Date.now(), label: label, fields: state.m };
+    dealsPut(rec).then(function(){ toast("Saved: " + label); refreshCount(); })
+      .catch(function(){ toast("Couldn't save (private mode?)"); });
+  }
+
+  function openSaved(){
+    dealsAll().then(function(list){
+      list.sort(function(a,b){ return b.ts-a.ts; });
+      var host=$("savedList"); host.innerHTML="";
+      if (!list.length){ host.innerHTML='<div class="empty">No saved deals yet.<br>Screen a property, then tap “Save deal”.</div>'; }
+      list.forEach(function(rec){
+        var r = DealMath.evaluate(buildInputs(rec.fields));
+        var sel = !!picks[rec.id];
+        var el=document.createElement("div");
+        el.className="deal"+(sel?" sel":"");
+        el.innerHTML =
+          '<div class="pick" data-pick="'+rec.id+'">✓</div>'+
+          '<div class="body" data-load="'+rec.id+'">'+
+            '<div class="title">'+esc(rec.label)+'</div>'+
+            '<div class="meta">'+usd(+rec.fields.iPrice||0)+' · '+ (isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):'—') +' DSCR · '+
+              (r.cannot?'no-qualify':'min '+pct(r.minDownPct)+' down')+'</div>'+
+          '</div>'+
+          '<span class="chip '+(r.qualifies?'pass':'fail')+'">'+(r.qualifies?'Covers':'Short')+'</span>'+
+          '<button class="del" data-del="'+rec.id+'" title="Delete">🗑</button>';
+        host.appendChild(el);
+      });
+      updateSelActions();
+      $("savedSheet").classList.add("open");
+    }).catch(function(){ toast("Storage unavailable"); });
+  }
+
+  function updateSelActions(){
+    var n=Object.keys(picks).length;
+    var cmp=$("btnCompare"), drop=$("btnDrop"), hint=$("selHint");
+    cmp.style.display = (n>=2 && n<=3) ? "block" : "none";
+    cmp.textContent = "Compare ("+n+")";
+    drop.style.display = (n>=1 && n<=5) ? "block" : "none";
+    drop.textContent = "Deal Drop ("+n+")";
+    if (n>5){ hint.style.display="block"; hint.textContent="Deal Drop takes up to 5 deals. Uncheck "+(n-5)+" to continue."; }
+    else if (n===1){ hint.style.display="block"; hint.textContent="Check one more to compare side-by-side. Deal Drop works with 1 to 5."; }
+    else { hint.style.display="none"; }
+  }
+
+  function loadDeal(id){
+    dealsAll().then(function(list){
+      var rec=list.filter(function(r){return r.id===id;})[0]; if(!rec) return;
+      fieldIds.forEach(function(k){ if($(k)&&rec.fields[k]!=null) $(k).value=rec.fields[k]; });
+      render(); $("savedSheet").classList.remove("open");
+      toast("Loaded: "+rec.label);
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  }
+
+  function openCompare(){
+    var ids=Object.keys(picks);
+    if (ids.length<2||ids.length>3) return;
+    dealsAll().then(function(list){
+      var recs=list.filter(function(r){return picks[r.id];});
+      recs.sort(function(a,b){return b.ts-a.ts;});
+      var rows=[
+        ["Price", function(f,r){return usd(+f.iPrice||0);}],
+        ["Down", function(f,r){return usd(+f.iDown||0)+" ("+pct(r.downPct)+")";}],
+        ["Rent /mo", function(f,r){return usd(+f.iRent||0);}],
+        ["Qualifying DSCR", function(f,r){return {t:(isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):"—"), c:r.qualifies?"v-pass":"v-fail"};}],
+        ["Covers?", function(f,r){return {t:(r.qualifies?"Yes":"No"), c:r.qualifies?"v-pass":"v-fail"};}],
+        ["Min down @ target", function(f,r){return r.cannot?"—":usd(r.minDown)+" ("+pct(r.minDownPct)+")";}],
+        ["Binds on", function(f,r){return r.cannot?"—":r.bind;}],
+        ["Cash flow /mo", function(f,r){return (r.cashFlowMonthly<0?"-$":"$")+usd0(Math.abs(r.cashFlowMonthly));}],
+        ["Cap rate", function(f,r){return pct1(r.capRate);}],
+        ["True DSCR", function(f,r){return r.trueDSCR==null?"all cash":r.trueDSCR.toFixed(2);}],
+        ["Payment (PITIA)", function(f,r){return usd(r.pitia);}]
+      ];
+      var evals=recs.map(function(rec){ return {rec:rec, r:DealMath.evaluate(buildInputs(rec.fields))}; });
+      var html='<table class="cmp-t"><thead><tr><th></th>';
+      evals.forEach(function(e){ html+='<th>'+esc(e.rec.label)+'</th>'; });
+      html+='</tr></thead><tbody>';
+      rows.forEach(function(row){
+        html+='<tr><td>'+row[0]+'</td>';
+        evals.forEach(function(e){
+          var out=row[1](e.rec.fields,e.r);
+          if (out&&typeof out==="object") html+='<td class="num '+out.c+'">'+out.t+'</td>';
+          else html+='<td class="num">'+out+'</td>';
+        });
+        html+='</tr>';
+      });
+      html+='</tbody></table>';
+      $("cmpBody").innerHTML=html;
+      $("cmpSheet").classList.add("open");
+    });
+  }
+
+  /* ---------- Phase 5: NMLS-gated branded share sheet ---------- */
+  // NMLS gate, shared by single-deal share and Deal Drop. Compliance is structural.
+  function showGate(sheetId, bodyId){
+    $(bodyId).innerHTML='<div class="gate"><b>Sharing is locked.</b><br>Enter your <b>NMLS #</b> in “Operator &amp; thresholds”, then share. '+
+      'Compliance is structural: no NMLS, no branded asset.</div>'+
+      '<button class="btn primary" id="gotoCfg" style="width:100%;margin-top:12px">Open Operator &amp; thresholds</button>';
+    $(sheetId).classList.add("open");
+    $("gotoCfg").onclick=function(){ $(sheetId).classList.remove("open"); $("cfgPanel").open=true; $("cNmls").focus(); $("cfgPanel").scrollIntoView({behavior:"smooth"}); };
+  }
+
+  function openShare(){
+    var state=render();
+    var nmls=state.m.cNmls.trim();
+    var body=$("shareBody");
+    if (!nmls){ showGate("shareSheet","shareBody"); return; }
+    var canvas=drawShareSheet(state.m, state.r);
+    var dataUrl=canvas.toDataURL("image/png");
+    body.innerHTML=
+      '<div class="share-prev"><img alt="Deal one-pager preview" src="'+dataUrl+'"></div>'+
+      '<div class="share-actions">'+
+        '<button class="btn primary" id="doShare">Share image</button>'+
+        '<button class="btn" id="doDownload">Save image</button>'+
+      '</div>'+
+      '<p class="disc" style="margin-top:10px">Address is withheld by default. The sheet says “address on request,” which keeps every lead a text to you.</p>';
+    $("shareSheet").classList.add("open");
+    $("doShare").onclick=function(){ shareCanvas(canvas); };
+    $("doDownload").onclick=function(){ downloadCanvas(canvas); };
+  }
+
+  function shareCanvas(canvas){
+    canvas.toBlob(function(blob){
+      if (!blob){ toast("Render failed"); return; }
+      var file=new File([blob], "coverage-deal.png", {type:"image/png"});
+      if (navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:"Deal", text:"Financing preview"}).catch(function(){});
+      } else {
+        downloadBlob(blob); toast("Sharing not supported, saved instead");
+      }
+    }, "image/png");
+  }
+  function downloadCanvas(canvas, name){ canvas.toBlob(function(b){ if(b) downloadBlob(b, name); }, "image/png"); }
+  function downloadBlob(blob, name){
+    var url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=name||"coverage-deal.png"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // Branded portrait one-pager. Monochrome card; color encodes threshold state only.
+  function drawShareSheet(m, r){
+    var W=1080, H=1350, s=SCALE;
+    var c=document.createElement("canvas"); c.width=W*s; c.height=H*s;
+    var g=c.getContext("2d"); g.scale(s,s);
+    var INK="#14171f", MUT="#6b7280", LINE="#e6e9f0", BG="#ffffff", FIELD="#f5f7fb";
+    var PASS="#1a9e5f", FAIL="#e0464b";
+    var pass=r.qualifies, accent=pass?PASS:FAIL;
+    var pad=64;
+    g.fillStyle=BG; g.fillRect(0,0,W,H);
+
+    function text(t,x,y,size,color,weight,align){
+      g.fillStyle=color||INK; g.textAlign=align||"left"; g.textBaseline="alphabetic";
+      g.font=(weight||"400")+" "+size+'px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+      g.fillText(t,x,y);
+    }
+    function rrect(x,y,w,h,rad){ g.beginPath(); g.moveTo(x+rad,y);
+      g.arcTo(x+w,y,x+w,y+h,rad); g.arcTo(x+w,y+h,x,y+h,rad);
+      g.arcTo(x,y+h,x,y,rad); g.arcTo(x,y,x+w,y,rad); g.closePath(); }
+
+    // header
+    text((m.cName.split(",")[0]||"Coverage").trim().toUpperCase()+" · FINANCING PREVIEW", pad, 92, 26, MUT, "700");
+    g.strokeStyle=LINE; g.lineWidth=2; g.beginPath(); g.moveTo(pad,116); g.lineTo(W-pad,116); g.stroke();
+
+    // label
+    text((m.iNbhd||"Investment property"), pad, 186, 46, INK, "800");
+    text("Address on request", pad, 224, 26, MUT, "500");
+
+    // verdict pill + big DSCR
+    var pillW=232, pillH=64, pillY=262;
+    g.fillStyle=accent; rrect(pad,pillY,pillW,pillH,14); g.fill();
+    text(pass?"COVERS":"SHORT", pad+pillW/2, pillY+42, 30, "#fff", "800", "center");
+    text(isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):"—", W-pad, pillY+58, 92, INK, "800", "right");
+    text("qualifying DSCR · threshold "+(+m.cTarget||1.15).toFixed(2), W-pad, pillY-2, 24, MUT, "500", "right");
+
+    // coverage bar
+    var barY=372, barW=W-pad*2, barH=18, target=+m.cTarget||1.15, scaleMax=target*1.5;
+    g.fillStyle=FIELD; rrect(pad,barY,barW,barH,9); g.fill();
+    var fw=Math.max(0,Math.min((isFinite(r.qualDSCR)?r.qualDSCR:0)/scaleMax,1))*barW;
+    g.fillStyle=accent; rrect(pad,barY,Math.max(fw,10),barH,9); g.fill();
+    var tickX=pad+(target/scaleMax)*barW;
+    g.fillStyle=INK; g.fillRect(tickX-1,barY-6,2,barH+12);
+
+    // metric grid (2 cols x 3 rows)
+    var metrics=[
+      ["Min down @ target", r.cannot?"can't qualify":usd(r.minDown)+"  ("+pct(r.minDownPct)+")"],
+      ["Est. cash flow / mo", (r.cashFlowMonthly<0?"-$":"$")+usd0(Math.abs(r.cashFlowMonthly))],
+      ["Cap rate", pct1(r.capRate)],
+      ["Payment (PITIA) / mo", usd(r.pitia)],
+      ["True DSCR", r.trueDSCR==null?"all cash":r.trueDSCR.toFixed(2)],
+      ["Rent / mo", usd(+m.iRent||0)]
+    ];
+    var gx=pad, gy=440, gw=(W-pad*2-24)/2, gh=138, gapx=24, gapy=18;
+    metrics.forEach(function(mm,i){
+      var col=i%2, row=Math.floor(i/2);
+      var x=gx+col*(gw+gapx), y=gy+row*(gh+gapy);
+      g.strokeStyle=LINE; g.lineWidth=2; rrect(x,y,gw,gh,16); g.stroke();
+      text(mm[0], x+26, y+44, 24, MUT, "600");
+      text(mm[1], x+26, y+96, 40, INK, "800");
+    });
+
+    // financing line
+    var fy=gy+3*(gh)+2*gapy+64;
+    g.fillStyle=FIELD; rrect(pad,fy-44,W-pad*2,72,14); g.fill();
+    text("Financing available · "+(m.cName||"operator"), pad+24, fy-8, 27, INK, "700");
+    text("NMLS #"+m.cNmls.trim()+(m.cPhone?("   ·   text "+m.cPhone+" for the address"):"   ·   text for the address"), pad+24, fy+16, 22, MUT, "500");
+
+    // disclaimer footer
+    var disc="Estimates only. Not a commitment to lend. Rates and terms subject to change, credit approval, and underwriting. "+
+             "Figures based on user-entered assumptions. Qualifying DSCR = rent ÷ PITIA and excludes vacancy, management, and maintenance.";
+    wrap(g, disc, pad, fy+72, W-pad*2, 26, 20, MUT);
+    return c;
+  }
+  function wrap(g,t,x,y,maxW,lh,size,color){
+    g.fillStyle=color; g.textAlign="left"; g.textBaseline="alphabetic";
+    g.font="400 "+size+'px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+    var words=t.split(" "), line="", yy=y;
+    for (var i=0;i<words.length;i++){
+      var test=line+words[i]+" ";
+      if (g.measureText(test).width>maxW && line){ g.fillText(line,x,yy); line=words[i]+" "; yy+=lh; }
+      else line=test;
+    }
+    g.fillText(line,x,yy);
+  }
+
+  /* ---------- Phase 7: Deal Drop (multi-deal weekly digest) ---------- */
+  function openDealDrop(){
+    var ids=Object.keys(picks); if(!ids.length || ids.length>5) return;
+    var m=currentMap();
+    if(!m.cNmls.trim()){ showGate("dropSheet","dropBody"); return; }
+    dealsAll().then(function(list){
+      var recs=list.filter(function(r){ return picks[r.id]; });
+      recs.sort(function(a,b){ return b.ts-a.ts; });
+      var canvas=drawDealDrop(recs, m);
+      var url=canvas.toDataURL("image/png");
+      $("dropBody").innerHTML=
+        '<div class="share-prev"><img alt="Deal Drop digest preview" src="'+url+'"></div>'+
+        '<div class="share-actions">'+
+          '<button class="btn primary" id="dropShare">Share image</button>'+
+          '<button class="btn" id="dropPng">Save PNG</button>'+
+          '<button class="btn" id="dropPdf">Save PDF</button>'+
+        '</div>'+
+        '<p class="disc" style="margin-top:10px">One tall image for text/iMessage, plus a PDF for email. Addresses are withheld, so every reply comes back to you. Send it yourself from your own contacts; this tool stores and sends nothing.</p>';
+      $("dropSheet").classList.add("open");
+      $("dropShare").onclick=function(){ shareCanvas(canvas); };
+      $("dropPng").onclick=function(){ downloadCanvas(canvas, "deal-drop.png"); };
+      $("dropPdf").onclick=function(){ downloadBlob(buildPdfFromCanvas(canvas), "deal-drop.pdf"); };
+    }).catch(function(){ toast("Storage unavailable"); });
+  }
+
+  // Tall branded digest: header + one card per selected deal + disclaimer footer.
+  // Monochrome; color encodes threshold state only. Address withheld by default.
+  function drawDealDrop(recs, m){
+    var W=1080, pad=56, s=SCALE;
+    var headH=250, cardH=232, gap=16, footH=150;
+    var H = headH + recs.length*(cardH+gap) + footH;
+    var c=document.createElement("canvas"); c.width=W*s; c.height=H*s;
+    var g=c.getContext("2d"); g.scale(s,s);
+    var INK="#14171f", MUT="#6b7280", LINE="#e6e9f0", BG="#ffffff", PASS="#1a9e5f", FAIL="#e0464b";
+    g.fillStyle=BG; g.fillRect(0,0,W,H);
+    function text(t,x,y,size,color,weight,align){ g.fillStyle=color||INK; g.textAlign=align||"left"; g.textBaseline="alphabetic";
+      g.font=(weight||"400")+" "+size+'px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif'; g.fillText(t,x,y); }
+    function rrect(x,y,w,h,rad){ g.beginPath(); g.moveTo(x+rad,y); g.arcTo(x+w,y,x+w,y+h,rad); g.arcTo(x+w,y+h,x,y+h,rad); g.arcTo(x,y+h,x,y,rad); g.arcTo(x,y,x+w,y,rad); g.closePath(); }
+
+    text((m.cName.split(",")[0]||"Operator").trim().toUpperCase()+" · DEAL DROP", pad, 84, 26, MUT, "700");
+    text("Deals that cover this week", pad, 150, 52, INK, "800");
+    text("Financing available · "+(m.cName||"operator")+" · NMLS #"+m.cNmls.trim(), pad, 196, 24, MUT, "600");
+    g.strokeStyle=LINE; g.lineWidth=2; g.beginPath(); g.moveTo(pad,224); g.lineTo(W-pad,224); g.stroke();
+
+    recs.forEach(function(rec,i){
+      var r=DealMath.evaluate(buildInputs(rec.fields));
+      var y=headH + i*(cardH+gap), pass=r.qualifies, accent=pass?PASS:FAIL, ix=pad+30;
+      g.strokeStyle=LINE; g.lineWidth=2; rrect(pad,y,W-pad*2,cardH,18); g.stroke();
+      text((rec.label||"Property"), ix, y+56, 38, INK, "800");
+      text("Address on request", ix, y+90, 22, MUT, "500");
+      var chipW=150, chipH=48, chipX=W-pad-30-chipW, chipY=y+26;
+      g.fillStyle=accent; rrect(chipX,chipY,chipW,chipH,12); g.fill();
+      text(pass?"COVERS":"SHORT", chipX+chipW/2, chipY+32, 24, "#fff", "800", "center");
+      var mets=[
+        ["Qualifying DSCR", isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):"—"],
+        ["Min down @ "+(+m.cTarget||1.15).toFixed(2), r.cannot?"—":usd(r.minDown)+" ("+pct(r.minDownPct)+")"],
+        ["Cash flow / mo", (r.cashFlowMonthly<0?"-$":"$")+usd0(Math.abs(r.cashFlowMonthly))],
+        ["Cap rate", pct1(r.capRate)]
+      ];
+      var mw=(W-pad*2-60)/4, my=y+132;
+      mets.forEach(function(mm,j){ var mx=ix+j*mw; text(mm[0], mx, my+22, 19, MUT, "600"); text(mm[1], mx, my+60, 29, INK, "800"); });
+    });
+
+    var fy=headH + recs.length*(cardH+gap) + 20;
+    g.strokeStyle=LINE; g.beginPath(); g.moveTo(pad,fy); g.lineTo(W-pad,fy); g.stroke();
+    var disc="Estimates only. Not a commitment to lend. Rates and terms subject to change, credit approval, and underwriting. "+
+             "Figures based on user-entered assumptions. Qualifying DSCR = rent ÷ PITIA and excludes vacancy, management, and maintenance. "+
+             (m.cPhone?("Text "+m.cPhone+" for addresses."):"Text for addresses.");
+    wrap(g, disc, pad, fy+34, W-pad*2, 26, 20, MUT);
+    return c;
+  }
+
+  // Minimal single-image PDF (JPEG via DCTDecode), no library, CSP-safe.
+  function buildPdfFromCanvas(canvas){
+    var iw=canvas.width, ih=canvas.height, pageW=iw/SCALE, pageH=ih/SCALE;
+    var dataUrl=canvas.toDataURL("image/jpeg", 0.92);
+    var b64=dataUrl.substring(dataUrl.indexOf(",")+1), bin=atob(b64);
+    var jpg=new Uint8Array(bin.length);
+    for (var i=0;i<bin.length;i++) jpg[i]=bin.charCodeAt(i);
+    return assemblePdf(jpg, iw, ih, pageW, pageH);
+  }
+  function assemblePdf(jpg, iw, ih, pageW, pageH){
+    var enc=function(s){ return new TextEncoder().encode(s); };
+    var parts=[], len=0, offsets=[];
+    function push(u8){ parts.push(u8); len+=u8.length; }
+    function pushStr(s){ push(enc(s)); }
+    function mark(){ offsets.push(len); }
+    pushStr("%PDF-1.3\n");
+    mark(); pushStr("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+    mark(); pushStr("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+    mark(); pushStr("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pageW+" "+pageH+"] "+
+      "/Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n");
+    mark(); pushStr("4 0 obj\n<< /Type /XObject /Subtype /Image /Width "+iw+" /Height "+ih+
+      " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jpg.length+" >>\nstream\n");
+    push(jpg); pushStr("\nendstream\nendobj\n");
+    var content="q\n"+pageW+" 0 0 "+pageH+" 0 0 cm\n/Im0 Do\nQ\n";
+    mark(); pushStr("5 0 obj\n<< /Length "+enc(content).length+" >>\nstream\n"+content+"endstream\nendobj\n");
+    var xrefOffset=len, nObj=6;
+    var xref="xref\n0 "+nObj+"\n0000000000 65535 f \n";
+    for (var k=0;k<offsets.length;k++) xref+=String(offsets[k]).padStart(10,"0")+" 00000 n \n";
+    pushStr(xref);
+    pushStr("trailer\n<< /Size "+nObj+" /Root 1 0 R >>\nstartxref\n"+xrefOffset+"\n%%EOF");
+    var out=new Uint8Array(len), pos=0;
+    parts.forEach(function(p){ out.set(p,pos); pos+=p.length; });
+    return new Blob([out], {type:"application/pdf"});
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]; }); }
+
+  /* ---------- wiring ---------- */
+  restore();
+  fieldIds.forEach(function(id){ var el=$(id); if(!el) return;
+    el.addEventListener("input", render); el.addEventListener("change", render); });
+
+  $("btnSave").onclick=saveCurrent;
+  $("btnSaved").onclick=openSaved;
+  $("btnShare").onclick=openShare;
+  $("btnCompare").onclick=openCompare;
+  $("btnDrop").onclick=openDealDrop;
+
+  document.querySelectorAll("[data-close]").forEach(function(b){
+    b.onclick=function(){ this.closest(".sheet").classList.remove("open"); };
+  });
+  document.querySelectorAll(".sheet").forEach(function(sh){
+    sh.addEventListener("click", function(e){ if(e.target===sh) sh.classList.remove("open"); });
+  });
+
+  $("savedList").addEventListener("click", function(e){
+    var pk=e.target.closest("[data-pick]"), ld=e.target.closest("[data-load]"), dl=e.target.closest("[data-del]");
+    if (dl){ e.stopPropagation(); var id=dl.getAttribute("data-del");
+      dealsDel(id).then(function(){ delete picks[id]; openSaved(); refreshCount(); toast("Deleted"); }); return; }
+    if (pk){ var id2=pk.getAttribute("data-pick"); if(picks[id2]) delete picks[id2]; else picks[id2]=true; openSaved(); return; }
+    if (ld){ loadDeal(ld.getAttribute("data-load")); return; }
+  });
+
+  render();
+  refreshCount();
+})();
+</script>
+</body>
+</html>
