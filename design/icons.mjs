@@ -34,9 +34,12 @@ const only = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 
 /* PNG sizes each app ships. apple-touch-icon is the iOS home screen; thumb-256
    is what the hub and the marketing pages use. */
+/* marketing/thumb-256.png is NOT in this list and must never return to it.
+   The thumb is recut from Stephen's stripe-thumbnail art (96e3ccd), not drawn
+   from icon.svg, and on 2026-08-21 this list quietly replaced the wedding's
+   rings with a flat icon for five days. Generators do not touch his art. */
 const PNGS = [
   ['apple-touch-icon.png', 180],
-  ['marketing/thumb-256.png', 256],
   ['icon-192.png', 192],
   ['icon-512.png', 512],
 ];
