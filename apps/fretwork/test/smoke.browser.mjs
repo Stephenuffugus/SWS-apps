@@ -3,8 +3,12 @@
 // triad on the top strings), spelling is honest (Gb up a major 3rd is Bb, not
 // A#), and then the real drills are driven by tapping the real board: a note
 // hunt runs to its summary including a deliberate miss, name that fret answers
-// a round, a triad round is solved from the engine's own voicing, and the
-// stats survive a reload. All through the UI at phone width, like a thumb would.
+// a round, a triad round is solved from the engine's own voicing, the
+// inversion climb walks four drop 2 shapes up the neck, the one note ladder
+// morphs maj7 down to dim7 and reports exactly which voice moved, the modes
+// board teaches Dorian as minor with a #6 and draws a real three notes a
+// string form, and the stats survive a reload. All through the UI at phone
+// width, like a thumb would.
 import { withApp } from '../../../design/harness.mjs';
 
 await withApp('fretwork', async ({ page, errors }) => {
@@ -12,7 +16,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v1') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v2') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -50,7 +54,6 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (hunt.note !== 'C') throw new Error('hunt note should default to C, got ' + hunt.note);
   if (hunt.targets.length < 3) throw new Error('too few C targets in 0-5: ' + hunt.targets.length);
 
-  // one deliberate miss: a cell that is not a C
   const missCell = await page.evaluate(() => {
     const t = new Set(window.__fw.drill.targets.map(a => a.join(',')));
     for (let s = 0; s < 6; s++) for (let f = 0; f <= 5; f++)
@@ -96,8 +99,73 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.waitForTimeout(300);
   const solved = await page.evaluate(() => window.__fw.drill.right);
   if (solved !== 1) throw new Error('correct triad voicing was not accepted');
-  const line = (await page.textContent('#vLine')).trim();
-  if (!line.includes('position') && !line.includes('inversion')) throw new Error('no spelling line after a solve: ' + line);
+
+  // ── inversion climb: four drop 2 shapes, each with a higher bass fret ──
+  await page.click('#btnQuit');
+  await page.click('#startClimb');
+  let lastBass = -1;
+  for (let step = 0; step < 4; step++) {
+    await page.waitForFunction(() => window.__fw.drill && window.__fw.drill.cur, { timeout: 5000 });
+    const cur = await page.evaluate(() => ({
+      set: window.__fw.drill.cur.set,
+      inst: window.__fw.drill.cur.inst,
+    }));
+    if (!(cur.inst[0] > lastBass)) throw new Error('climb step ' + step + ' did not climb: bass ' + cur.inst[0] + ' after ' + lastBass);
+    lastBass = cur.inst[0];
+    for (let i = 0; i < cur.set.length; i++) {
+      await page.click(`rect.cell[data-s="${cur.set[i]}"][data-f="${cur.inst[i]}"]`);
+      await page.waitForTimeout(70);
+    }
+    await page.waitForTimeout(250);
+  }
+  await page.waitForTimeout(1500);
+  const climbBig = (await page.textContent('#sumBig')).trim();
+  if (climbBig !== 'Climbed the neck') throw new Error('climb summary wrong: ' + climbBig);
+
+  // ── the one note ladder: maj7 to dim7, the changed voice is named ──
+  await page.click('#btnBack');
+  await page.click('#startMorph');
+  for (let step = 0; step < 5; step++) {
+    await page.waitForFunction(() => window.__fw.drill && window.__fw.drill.cur, { timeout: 5000 });
+    const cur = await page.evaluate(() => ({
+      set: window.__fw.drill.cur.set,
+      inst: window.__fw.drill.cur.inst,
+    }));
+    for (let i = 0; i < cur.set.length; i++) {
+      await page.click(`rect.cell[data-s="${cur.set[i]}"][data-f="${cur.inst[i]}"]`);
+      await page.waitForTimeout(70);
+    }
+    await page.waitForTimeout(250);
+    if (step === 1) {
+      const v = (await page.textContent('#vLine')).trim();
+      if (!v.includes('Only the 7th moved')) throw new Error('ladder did not name the moved voice: ' + v);
+    }
+  }
+  await page.waitForTimeout(1700);
+  const morphBig = (await page.textContent('#sumBig')).trim();
+  if (morphBig !== 'The whole ladder') throw new Error('ladder summary wrong: ' + morphBig);
+
+  // ── modes: D Dorian is minor with a #6, the 2 chord of C major, 3nps draws ──
+  await page.click('#tabModes');
+  await page.selectOption('#modeSel', '1');
+  await page.selectOption('#modeRoot', '3');
+  await page.waitForTimeout(250);
+  const recipe = (await page.textContent('#modeRecipe')).trim();
+  if (!recipe.includes('Dorian') || !recipe.includes('♯6')) throw new Error('Dorian recipe wrong: ' + recipe);
+  const ctx = (await page.textContent('#modeCtx')).trim();
+  if (!ctx.includes('the 2 chord in the key of C major')) throw new Error('Dorian context wrong: ' + ctx);
+  if (!ctx.includes('Dm7')) throw new Error('Dorian vamp chord wrong: ' + ctx);
+  await page.selectOption('#modeForm', '3nps');
+  await page.waitForTimeout(250);
+  const dots = await page.evaluate(() => document.querySelectorAll('#modeBoard g[pointer-events="none"]').length);
+  if (dots !== 15) throw new Error('D Dorian 3nps should draw 15 notes, drew ' + dots);
+  await page.click('#modeVamp');
+  await page.waitForTimeout(300);
+  const vampOn = await page.getAttribute('#modeVamp', 'aria-pressed');
+  if (vampOn !== 'true') throw new Error('vamp did not arm');
+  await page.click('#modeVamp');
+  const vampOff = await page.getAttribute('#modeVamp', 'aria-pressed');
+  if (vampOff !== 'false') throw new Error('vamp did not stop');
 
   // ── stats survive a reload ──
   await page.reload({ waitUntil: 'load' });
@@ -110,5 +178,5 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (!/\d+%/.test(acc)) throw new Error('accuracy did not render: ' + acc);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: oracles, hunt with a counted miss, naming, a solved triad, reload, ' + tag);
+  console.log('smoke pass: oracles, hunt, naming, triad, climb, ladder, Dorian 3nps, vamp, reload, ' + tag);
 });

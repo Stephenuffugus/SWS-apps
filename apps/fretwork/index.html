@@ -161,6 +161,7 @@
 
 <nav class="tabs" role="tablist" aria-label="Sections">
   <button role="tab" id="tabDrills" aria-selected="true">Drills</button>
+  <button role="tab" id="tabModes" aria-selected="false">Modes</button>
   <button role="tab" id="tabExplore" aria-selected="false">Explore</button>
   <button role="tab" id="tabStats" aria-selected="false">Stats</button>
 </nav>
@@ -258,6 +259,46 @@
   </div>
 
   <div class="card dcard">
+    <h3>Inversion climb</h3>
+    <p class="why">Build a seventh chord down low, then move every voice up to its next chord tone. The root climbs to the 3rd, the 7th to the root, the 3rd to the 5th, the 5th to the 7th. Four shapes, bottom to top.</p>
+    <div class="row">
+      <div><label for="clQual">Chord</label><select id="clQual">
+        <option value="maj7">maj7</option>
+        <option value="dom7">7</option>
+        <option value="m7">m7</option>
+        <option value="m7b5">m7&#9837;5</option>
+        <option value="dim7">dim7</option>
+      </select></div>
+      <div><label for="clSet">Strings</label><select id="clSet">
+        <option value="1,2,3,4">5 4 3 2</option>
+        <option value="0,1,2,3">6 5 4 3</option>
+        <option value="2,3,4,5">4 3 2 1</option>
+      </select></div>
+    </div>
+    <button class="btn primary start" id="startClimb">Start climbing</button>
+  </div>
+
+  <div class="card dcard">
+    <h3>The one note ladder</h3>
+    <p class="why">Start on maj7. Flat the 7th and it is a 7. Flat the 3rd for m7. Flat the 5th for m7&#9837;5. Flat the 7th again for dim7. Five chords, one note at a time, same spot on the neck.</p>
+    <div class="row">
+      <div><label for="moSet">Strings</label><select id="moSet">
+        <option value="1,2,3,4">5 4 3 2</option>
+        <option value="0,1,2,3">6 5 4 3</option>
+        <option value="2,3,4,5">4 3 2 1</option>
+      </select></div>
+      <div><label for="moInv">Bass note</label><select id="moInv">
+        <option value="0">Root in the bass</option>
+        <option value="1">3rd in the bass</option>
+        <option value="2">5th in the bass</option>
+        <option value="3">7th in the bass</option>
+        <option value="mix">Surprise me</option>
+      </select></div>
+    </div>
+    <button class="btn primary start" id="startMorph">Start the ladder</button>
+  </div>
+
+  <div class="card dcard">
     <h3 class="sect" style="margin-bottom:10px">Setup</h3>
     <div class="row">
       <div><label for="setTuning">Tuning</label><select id="setTuning">
@@ -275,7 +316,7 @@
     <p>No microphone, so it works on a couch, in class, on a bus, with no guitar in hand. No account, no ads, and nothing leaves your phone.</p>
     <p>On the bench: <b>The Shed</b>, a place to woodshed lines and licks. It stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
-    <p class="buildtag">fretwork-v1</p>
+    <p class="buildtag">fretwork-v2</p>
   </div>
 
 </section>
@@ -305,6 +346,40 @@
       <button class="btn primary" id="btnAgain">Again</button>
       <button class="btn" id="btnBack">Back to drills</button>
     </div>
+  </div>
+</section>
+
+<!-- ============ MODES ============ -->
+<section id="view-modes" hidden>
+  <div class="card">
+    <p class="sect">Modes, one altered note at a time</p>
+    <div class="row">
+      <div><label for="modeSel">Mode</label><select id="modeSel">
+        <option value="0">Ionian: the major scale</option>
+        <option value="1">Dorian: minor, &#9839;6</option>
+        <option value="2">Phrygian: minor, &#9837;2</option>
+        <option value="3">Lydian: major, &#9839;4</option>
+        <option value="4">Mixolydian: major, &#9837;7</option>
+        <option value="5">Aeolian: the minor scale</option>
+        <option value="6">Locrian: minor, &#9837;2 &#9837;5</option>
+      </select></div>
+      <div><label for="modeRoot">Root</label><select id="modeRoot"></select></div>
+    </div>
+    <div class="row">
+      <div><label for="modeForm">Form</label><select id="modeForm">
+        <option value="whole">Whole neck</option>
+        <option value="3nps">Three notes a string</option>
+      </select></div>
+      <div style="display:flex; align-items:flex-end"><button class="chip" id="modeVamp" aria-pressed="false">&#9834; vamp</button></div>
+    </div>
+    <p id="modeRecipe" style="font-size:14px; margin:4px 0 2px"></p>
+    <p class="verdictline" id="modeCtx" style="text-align:left; margin:0 0 6px; min-height:0"></p>
+    <p class="verdictline" id="modeInfo" aria-live="polite" style="min-height:20px; margin:0 0 4px">&nbsp;</p>
+    <div class="boardwrap" id="modeBoard"></div>
+  </div>
+  <div class="card about">
+    <p><b>The system:</b> learn two scales, major and minor. Every mode is one of them with one note bent. The gold notes on the board are the bent ones: that is the sound you are chasing. Park on a mode, run the vamp, and make the gold note land on purpose.</p>
+    <p>Diatonically the majors live at 1, 4 and 5 (the 5 turns dominant), the minors at 2, 3 and 6, and 7 carries two altered tones. Same seven notes, seven doors in.</p>
   </div>
 </section>
 
@@ -390,6 +465,37 @@ var QUAL = {
 };
 var TONE_WORD = ['root','3rd','5th','7th'];
 var INV_WORD = ['root position','1st inversion','2nd inversion'];
+var SUFFIX = { maj7:'maj7', dom7:'7', m7:'m7', m7b5:'m7♭5' };
+
+/* transpose DOWN, for finding the parent key a mode lives in */
+function dn(root, ivName){
+  var st = IV[ivName];
+  var letter = LETTERS[(LETTERS.indexOf(root.letter)-st[0]+7)%7];
+  var acc = (pc(root)-st[1]+120)%12 - LPC[letter];
+  if (acc>6) acc-=12; if (acc<-6) acc+=12;
+  return {letter:letter, acc:acc};
+}
+
+/* Stephen's mode system: two parent scales, one bent note at a time.
+   alts lists the bent interval(s) relative to the parent; those notes
+   render gold on the board because they ARE the mode. */
+var MAJOR_IVS = ['P1','M2','M3','P4','P5','M6','M7'];
+var MODES = [
+  { name:'Ionian',     ivs:['P1','M2','M3','P4','P5','M6','M7'], alts:[],          deg:1, chord:'maj7',
+    line:'The major scale itself. Home base.', ctx:'the 1 chord' },
+  { name:'Dorian',     ivs:['P1','M2','m3','P4','P5','M6','m7'], alts:['M6'],      deg:2, chord:'m7',
+    line:'The minor scale with a ♯6. Gorgeous over a blues too.', ctx:'the 2 chord' },
+  { name:'Phrygian',   ivs:['P1','m2','m3','P4','P5','m6','m7'], alts:['m2'],      deg:3, chord:'m7',
+    line:'The minor scale with a ♭2. Spain lives here.', ctx:'the 3 chord' },
+  { name:'Lydian',     ivs:['P1','M2','M3','A4','P5','M6','M7'], alts:['A4'],      deg:4, chord:'maj7',
+    line:'The major scale with a ♯4. Film scores adore it.', ctx:'the 4 chord' },
+  { name:'Mixolydian', ivs:['P1','M2','M3','P4','P5','M6','m7'], alts:['m7'],      deg:5, chord:'dom7',
+    line:'The major scale with a ♭7. Dominant country.', ctx:'the 5 chord' },
+  { name:'Aeolian',    ivs:['P1','M2','m3','P4','P5','m6','m7'], alts:[],          deg:6, chord:'m7',
+    line:'The natural minor scale itself.', ctx:'the 6 chord' },
+  { name:'Locrian',    ivs:['P1','m2','m3','P4','d5','m6','m7'], alts:['m2','d5'], deg:7, chord:'m7b5',
+    line:'The minor scale with a ♭2 and a ♭5. Two altered tones.', ctx:'the 7 chord' },
+];
 
 /* the seventeen everyday spellings, for pickers */
 var SPELLINGS = [ N('C'),N('C',1),N('D',-1),N('D'),N('D',1),N('E',-1),N('E'),N('F'),N('F',1),
@@ -635,15 +741,18 @@ function shapeFor(root, qual, inv, stringSet, drop2){
 
 /* ── views ─────────────────────────────────────────────────────────────── */
 var $ = function(id){ return document.getElementById(id); };
-var VIEWS = { drills:$('view-drills'), run:$('view-run'), explore:$('view-explore'), stats:$('view-stats') };
-var TABS = { drills:$('tabDrills'), explore:$('tabExplore'), stats:$('tabStats') };
+var VIEWS = { drills:$('view-drills'), run:$('view-run'), modes:$('view-modes'), explore:$('view-explore'), stats:$('view-stats') };
+var TABS = { drills:$('tabDrills'), modes:$('tabModes'), explore:$('tabExplore'), stats:$('tabStats') };
 function show(view){
+  stopVamp();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
   for (var t in TABS) TABS[t].setAttribute('aria-selected', String(t===view || (view==='run'&&t==='drills')));
   if (view==='stats') renderStats();
   if (view==='explore') renderExplore();
+  if (view==='modes') renderModes();
 }
 TABS.drills.onclick = function(){ endDrill(); show('drills'); };
+TABS.modes.onclick = function(){ endDrill(); show('modes'); };
 TABS.explore.onclick = function(){ endDrill(); show('explore'); };
 TABS.stats.onclick = function(){ endDrill(); show('stats'); };
 
@@ -678,6 +787,9 @@ huntNote.value = '0';
 var exRoot = $('exRoot');
 SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); exRoot.appendChild(o); });
 exRoot.value = '0';
+var modeRoot = $('modeRoot');
+SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); modeRoot.appendChild(o); });
+modeRoot.value = '0';
 
 /* interval chips */
 var IVGROUPS = [ ['2nds',['m2','M2']], ['3rds',['m3','M3']], ['4th+tt',['P4','A4']], ['5th',['P5']],
@@ -984,9 +1096,13 @@ function runShapes(cfg){
           vLine.innerHTML = spellLine(D.cur);
           D.cur = null;
           setTimeout(shapeNext, 1600);
+        },
+        solved:function(cur){
+          vLine.innerHTML = spellLine(cur);
+          setTimeout(function(){ vLine.className='verdictline'; shapeNext(); }, 1500);
         } };
   var span = boardWinFor(cfg);
-  board = renderBoard($('runBoard'), { lo:span.lo, hi:span.hi, strings:cfg.set, onTap:shapeTap });
+  board = renderBoard($('runBoard'), { lo:span.lo, hi:span.hi, strings:cfg.set, onTap:voiceTap });
   shapeNext();
   startTimer();
 }
@@ -1003,7 +1119,6 @@ function shapeNext(){
   D.taps = {};
   vLine.textContent='';
   if (D.round>=8){
-    S.stats.shapes += D.right; save();
     finish(D.right+' of 8', D.miss===0 ? 'Every voicing, first try.' : D.miss+' shown or missed. Same set again tomorrow.');
     return;
   }
@@ -1028,8 +1143,9 @@ function shapeNext(){
   }
   finish('No playable shape', 'That combination does not fit the neck. Try another string set.');
 }
-function shapeTap(s,f){
-  if (!D || D.mode!=='shape' || !D.cur) return;
+/* one tap handler for every build-a-voicing drill: shapes, the climb, the ladder */
+function voiceTap(s,f){
+  if (!D || !D.cur || ['shape','climb','morph'].indexOf(D.mode)<0) return;
   if (D.cur.set.indexOf(s)<0) return;
   if (D.taps[s]!==undefined) board.removeDot(s, D.taps[s]);
   D.taps[s] = f;
@@ -1041,18 +1157,29 @@ function shapeTap(s,f){
   D.cur.set.forEach(function(s2,k){
     if (midiAt(s2, D.taps[s2])%12 !== D.cur.shape.pcs[k]) wrongStrings.push(s2);
   });
+  if (!wrongStrings.length && D.cur.gate){
+    var gateMsg = D.cur.gate(D.taps);
+    if (gateMsg){
+      D.cur.set.forEach(function(s2){ board.removeDot(s2, D.taps[s2]); });
+      D.taps = {};
+      vLine.innerHTML = gateMsg;
+      return;
+    }
+  }
   if (!wrongStrings.length){
     D.right++;
+    S.stats.shapes++; save();
     var midis = D.cur.set.map(function(s2){ return midiAt(s2, D.taps[s2]); });
+    var frets = D.cur.set.map(function(s2){ return D.taps[s2]; });
     D.cur.set.forEach(function(s2,k){
       record(s2, D.taps[s2], true);
       board.setDot(s2, D.taps[s2], 'pearl', D.cur.shape.spell[k]);
     });
     strum(midis);
     vLine.className='verdictline good';
-    vLine.innerHTML = spellLine(D.cur);
+    var cur = D.cur;
     D.cur = null;
-    setTimeout(function(){ vLine.className='verdictline'; shapeNext(); }, 1500);
+    D.solved(cur, frets);
   } else {
     D.cur.wrong++; D.miss++;
     wrongStrings.forEach(function(s2){
@@ -1065,6 +1192,239 @@ function shapeTap(s,f){
       (D.cur.wrong>=2 ? 'Show me is right there, no shame in it.' : 'Fix the flagged ones.');
   }
 }
+
+/* ── the inversion climb: every voice up to its next chord tone ────────── */
+$('startClimb').onclick = function(){
+  runClimb($('clQual').value, $('clSet').value.split(',').map(Number));
+};
+function makeClimbChain(qual, set){
+  for (var t=0; t<120; t++){
+    var root = rnd(ROOTS);
+    var lows = [];
+    for (var inv=0; inv<4; inv++){
+      var sh = shapeFor(root, qual, inv, set, true);
+      if (sh.inst.length) lows.push({ inv:inv, sh:sh, inst:sh.inst[0] });
+    }
+    if (!lows.length) continue;
+    lows.sort(function(a,b){ return a.inst[0]-b.inst[0]; });
+    var chain = [lows[0]];
+    for (var step=1; step<4; step++){
+      var prev = chain[step-1];
+      var sh2 = shapeFor(root, qual, (prev.inv+1)%4, set, true);
+      var inst = null;
+      for (var i=0;i<sh2.inst.length;i++) if (sh2.inst[i][0] > prev.inst[0]){ inst = sh2.inst[i]; break; }
+      if (!inst) break;
+      chain.push({ inv:(prev.inv+1)%4, sh:sh2, inst:inst });
+    }
+    if (chain.length===4) return { root:root, chain:chain };
+  }
+  return null;
+}
+function runClimb(qual, set){
+  openRun();
+  var made = makeClimbChain(qual, set);
+  if (!made){ finish('No room to climb', 'That chord will not chain on this string set. Try another.'); return; }
+  D = { mode:'climb', qual:qual, set:set, root:made.root, chain:made.chain, step:0, right:0, miss:0, cur:null, taps:{},
+        again:function(){ runClimb(qual, set); },
+        skip:function(){ runClimb(qual, set); },
+        reveal:function(){
+          if (!D.cur) return;
+          D.miss++;
+          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', D.cur.shape.spell[k]); });
+          vLine.innerHTML = spellLine(D.cur)+'. Tap it in to keep climbing.';
+        },
+        solved: climbSolved };
+  board = renderBoard($('runBoard'), { lo:0, hi:MAXF, strings:set, onTap:voiceTap });
+  climbStep();
+  startTimer();
+}
+function climbStep(){
+  var link = D.chain[D.step];
+  D.taps = {};
+  board.clearDots();
+  if (D.step>0){
+    var prev = D.chain[D.step-1];
+    D.set.forEach(function(s,k){ board.setDot(s, prev.inst[k], 'ringfaint'); });
+  }
+  D.cur = { set:D.set, shape:link.sh, inst:link.inst, root:D.root, qual:D.qual, drop2:true, inv:link.inv, wrong:0,
+            gate: D.step===0 ? null : function(taps){
+              return taps[D.set[0]] > D.chain[D.step-1].inst[0] ? null
+                : 'Right notes, wrong place. Climb up the neck from the last shape.';
+            } };
+  pTask.innerHTML = D.step===0
+    ? '<b>'+nn(D.root)+' '+QUAL[D.qual].name+'</b><small>drop 2, '+TONE_WORD[link.sh.bassIdx]+' in the bass, strings '+D.set.map(gauge).join(' ')+', down low</small>'
+    : '<b>Move every voice up</b><small>each note climbs to its next chord tone: the '+TONE_WORD[link.sh.bassIdx]+' lands in the bass</small>';
+  pProg.innerHTML = 'shape <b>'+(D.step+1)+'</b> of 4';
+}
+function climbSolved(cur){
+  vLine.innerHTML = spellLine(cur)+(D.step>0 ? '. Every voice climbed one chord tone.' : '');
+  D.step++;
+  if (D.step>=4){
+    var extra = D.qual==='dim7'
+      ? ' A dim7 climbs in threes: same shape every three frets, and any note can be the root.'
+      : ' The wheel keeps turning past the 12th fret forever.';
+    setTimeout(function(){ finish('Climbed the neck',
+      nn(D.root)+' '+QUAL[D.qual].name+', four inversions bottom to top, '+(D.miss? D.miss+' shown or missed.' : 'clean.')+extra); }, 1200);
+  } else {
+    setTimeout(function(){ vLine.className='verdictline'; climbStep(); }, 1500);
+  }
+}
+
+/* ── the one note ladder: maj7, 7, m7, m7♭5, dim7 ─────────────────── */
+var MORPH_STEPS = [
+  { q:'maj7', ask:null, sub:null },
+  { q:'dom7', ask:'Flat the 7th', sub:'only one note moves' },
+  { q:'m7',   ask:'Now flat the 3rd', sub:'one note again, and it turns minor' },
+  { q:'m7b5', ask:'Flat the 5th', sub:'half diminished, if you like the fancy name' },
+  { q:'dim7', ask:'Flat the 7th again', sub:'all the way down to the double flat' },
+];
+$('startMorph').onclick = function(){
+  runMorph($('moSet').value.split(',').map(Number), $('moInv').value);
+};
+function nearestInst(sh, bass){
+  var best = sh.inst[0];
+  for (var i=1;i<sh.inst.length;i++)
+    if (Math.abs(sh.inst[i][0]-bass) < Math.abs(best[0]-bass)) best = sh.inst[i];
+  return best;
+}
+function runMorph(set, invSel){
+  openRun();
+  var inv = invSel==='mix' ? Math.floor(Math.random()*4) : (+invSel+2)%4;
+  var root=null, shapes=null;
+  for (var t=0; t<200 && !shapes; t++){
+    var r = rnd(ROOTS), arr=[], ok=true;
+    for (var i=0;i<MORPH_STEPS.length;i++){
+      var sh = shapeFor(r, MORPH_STEPS[i].q, inv, set, true);
+      if (!sh.inst.length){ ok=false; break; }
+      arr.push(sh);
+    }
+    if (ok){ root=r; shapes=arr; }
+  }
+  if (!shapes){ finish('No room on that set', 'Try another string set.'); return; }
+  D = { mode:'morph', set:set, inv:inv, root:root, shapes:shapes, step:0, right:0, miss:0, cur:null, taps:{},
+        prevFrets:null, prevBass:0,
+        again:function(){ runMorph(set, invSel); },
+        skip:function(){ runMorph(set, invSel); },
+        reveal:function(){
+          if (!D.cur) return;
+          D.miss++;
+          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', D.cur.shape.spell[k]); });
+          vLine.innerHTML = spellLine(D.cur)+'. Tap it in.';
+        },
+        solved: morphSolved };
+  board = renderBoard($('runBoard'), { lo:0, hi:MAXF, strings:set, onTap:voiceTap });
+  morphStep();
+  startTimer();
+}
+function morphStep(){
+  var st = MORPH_STEPS[D.step];
+  var sh = D.shapes[D.step];
+  var inst = D.step===0 ? sh.inst[0] : nearestInst(sh, D.prevBass);
+  D.taps = {};
+  board.clearDots();
+  if (D.step>0) D.set.forEach(function(s,k){ board.setDot(s, D.prevFrets[k], 'ringfaint'); });
+  D.cur = { set:D.set, shape:sh, inst:inst, root:D.root, qual:st.q, drop2:true, inv:D.inv, wrong:0, gate:null };
+  pTask.innerHTML = D.step===0
+    ? '<b>'+nn(D.root)+' major 7</b><small>drop 2, '+TONE_WORD[sh.bassIdx]+' in the bass, strings '+D.set.map(gauge).join(' ')+'</small>'
+    : '<b>'+st.ask+'</b><small>'+st.sub+'</small>';
+  pProg.innerHTML = 'rung <b>'+(D.step+1)+'</b> of 5';
+}
+function morphSolved(cur, frets){
+  var line = spellLine(cur);
+  if (D.step>0){
+    var prevSh = D.shapes[D.step-1];
+    for (var k=0;k<cur.set.length;k++){
+      if (prevSh.pcs[k]!==cur.shape.pcs[k]){
+        var ti = cur.shape.tones.findIndex(function(t2){ return pc(t2)===cur.shape.pcs[k]; });
+        line += '. Only the '+TONE_WORD[ti]+' moved: '+prevSh.spell[k]+' down to '+cur.shape.spell[k]+'.';
+        board.setDot(cur.set[k], frets[k], 'gold', cur.shape.spell[k]);
+        break;
+      }
+    }
+  }
+  vLine.innerHTML = line;
+  D.prevFrets = frets; D.prevBass = frets[0];
+  D.step++;
+  if (D.step>=5){
+    setTimeout(function(){ finish('The whole ladder',
+      'maj7 to 7 to m7 to m7♭5 to dim7, one note at a time'+(D.miss? ', '+D.miss+' shown or missed.' : ', clean.')+
+      ' And dim7 repeats every three frets: same shape, four names.'); }, 1400);
+  } else {
+    setTimeout(function(){ vLine.className='verdictline'; morphStep(); }, 1600);
+  }
+}
+
+/* ── modes: two parent scales, one bent note at a time ─────────────────── */
+var modeBoardApi = null, vampTimer = null;
+function currentMode(){ return MODES[+$('modeSel').value]; }
+function threeNPS(root, pcs){
+  /* the standard three notes a string form, walked from the root: start on
+     string 6, or string 5 when the 6th string root sits too high to climb from */
+  var T = tun(), out = [];
+  var s0 = 0, fr = ((pc(root)-T[0])%12+12)%12;
+  if (fr>7){ s0 = 1; fr = ((pc(root)-T[1])%12+12)%12; }
+  var pitch = T[s0]+fr;
+  for (var s=s0; s<6; s++){
+    for (var k=0;k<3;k++){
+      var fret = pitch - T[s];
+      if (fret>=0 && fret<=MAXF) out.push([s,fret]);
+      do { pitch++; } while (pcs.indexOf(((pitch%12)+12)%12)<0);
+    }
+  }
+  return out;
+}
+function paintModeDot(s,f,pcs,altPcs,root,names){
+  var p = midiAt(s,f)%12;
+  if (p===pc(root)) modeBoardApi.setDot(s,f,'ring', nn(root));
+  else if (altPcs.indexOf(p)>=0) modeBoardApi.setDot(s,f,'gold', names[pcs.indexOf(p)]);
+  else modeBoardApi.setDot(s,f,'ringfaint');
+}
+function renderModes(){
+  var m = currentMode(), root = SPELLINGS[+$('modeRoot').value];
+  var notes = m.ivs.map(function(iv){ return up(root,iv); });
+  var pcs = notes.map(pc);
+  var names = notes.map(nn);
+  var altPcs = m.alts.map(function(iv){ return pc(up(root,iv)); });
+  var keyRoot = dn(root, MAJOR_IVS[m.deg-1]);
+  $('modeRecipe').innerHTML = '<b>'+nn(root)+' '+m.name+'</b>: '+m.line;
+  $('modeCtx').innerHTML = nn(root)+' '+m.name+' is '+m.ctx+' in the key of '+nn(keyRoot)+
+    ' major. Vamp chord: <b>'+nn(root)+SUFFIX[m.chord]+'</b>.';
+  modeBoardApi = renderBoard($('modeBoard'), { lo:0, hi:MAXF, strings:null, onTap:modeTap });
+  if ($('modeForm').value==='3nps'){
+    threeNPS(root, pcs).forEach(function(d){ paintModeDot(d[0], d[1], pcs, altPcs, root, names); });
+  } else {
+    for (var s=0;s<6;s++) for (var f=0;f<=MAXF;f++)
+      if (pcs.indexOf(midiAt(s,f)%12)>=0) paintModeDot(s,f,pcs,altPcs,root,names);
+  }
+}
+function modeTap(s,f){
+  var m = midiAt(s,f);
+  renderModes();
+  modeBoardApi.setDot(s,f,'pearl', PADS[m%12][0]);
+  var dual = PADS[m%12].length>1 ? ' (also '+PADS[m%12][1]+')' : '';
+  $('modeInfo').innerHTML = '<b>'+midiName(m)+'</b>'+dual+' &middot; string '+gauge(s)+', fret '+f;
+  pluck(m);
+}
+function vampChordMidis(){
+  var m = currentMode(), root = SPELLINGS[+$('modeRoot').value];
+  var rootMidi = 45 + ((pc(root)-9+12)%12);
+  var semis = { maj7:[0,4,7,11], dom7:[0,4,7,10], m7:[0,3,7,10], m7b5:[0,3,6,10] }[m.chord];
+  return semis.map(function(x){ return rootMidi+x; });
+}
+function stopVamp(){
+  if (vampTimer){ clearInterval(vampTimer); vampTimer = null; }
+  var b = $('modeVamp');
+  if (b) b.setAttribute('aria-pressed','false');
+}
+$('modeVamp').onclick = function(){
+  if (vampTimer){ stopVamp(); return; }
+  this.setAttribute('aria-pressed','true');
+  strum(vampChordMidis());
+  vampTimer = setInterval(function(){ strum(vampChordMidis()); }, 1500);
+};
+$('modeSel').onchange = renderModes;
+$('modeRoot').onchange = renderModes;
+$('modeForm').onchange = renderModes;
 
 /* ── explore ───────────────────────────────────────────────────────────── */
 var exBoardApi = null;
