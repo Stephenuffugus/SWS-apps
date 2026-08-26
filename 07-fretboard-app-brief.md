@@ -40,7 +40,19 @@ One fretboard, many drill types, all sharing the same interaction grammar so lea
 
 ## Stephen's toolbox
 
-This section is deliberately empty. The brief becomes real when Stephen braindumps the drills, sequences, and tricks he has invented across years of teaching, and we translate each into engine terms. Candidates he has already mentioned: the one note at a time full neck hunt. Everything else comes from him, not from me guessing.
+Filling in as he shares it. Shipped so far (v2 and v3):
+
+- **The voice motion rule** for seventh chord inversions: root moves up to the 3rd, 7th to the root, 3rd to the 5th, 5th to the 7th. Shipped as the Inversion climb drill: four drop 2 shapes up the neck, previous shape ghosted, wrong-direction taps corrected with words.
+- **The one note ladder**: maj7, flat the 7th for 7, flat the 3rd for m7, flat the 5th for m7♭5, flat the 7th again for dim7. Shipped as a five rung drill that names the moved voice and lists the common tones held. Ends on the dim7 symmetry fact.
+- **Modes as one alteration of two parents**: Dorian is minor ♯6, Phrygian minor ♭2, Lydian major ♯4, Mixolydian major ♭7, Locrian minor ♭2 ♭5. Shipped as the Modes tab: bent notes gold, diatonic address stated, tonic seventh vamp loop, whole neck and three notes a string forms.
+- **Numbers before names** (2026-08-26, his strongest ruling): a note without a job is trivia; R, 3, 5, 7 is what transfers to charts and keys. Shipped as numbers-first labels across all voicing drills and the modes board, with letter spellings kept in the verdict lines so both worlds stay connected. Watch common tones; ones and roots are the strong anchors when analyzing numerically.
+
+## The road ahead (his direction, not yet built)
+
+- **The Shed**: improv and lick woodshedding over contexts (a blues, a vamp, a named chord). The mode vamp is the seed.
+- **The bass section**: given chords, teach what the bass line should do. For bassists, guitarists who want better bass movement, even piano players. Builds on the numeric analysis idea: chart the progression as numbers, find the common tones, walk between roots.
+- **Numeric chart analysis**: read a progression as numbers so inversions and common tones become obvious at sight.
+- **Chord and note recognition by microphone**, Simply Piano style, ONLY if it can be done on device with zero APIs and zero cost. It can: Web Audio pitch detection (autocorrelation or YIN) is just math on the mic signal. The fleet lesson stands though: mic detection is the most complained about feature in this market, so it must be optional and never the gate to anything.
 
 ## Architecture
 

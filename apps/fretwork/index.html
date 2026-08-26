@@ -307,8 +307,17 @@
         <option value="dadgad">DADGAD</option>
         <option value="openg">Open G</option>
       </select></div>
-      <div style="display:flex; align-items:flex-end"><button class="chip" id="setLefty" aria-pressed="false">left handed</button></div>
+      <div><label for="setFrets">Neck</label><select id="setFrets">
+        <option value="15">15 frets</option>
+        <option value="22">22 frets</option>
+        <option value="24">24 frets</option>
+      </select></div>
     </div>
+    <div class="chips">
+      <button class="chip" id="setLefty" aria-pressed="false">left handed</button>
+      <button class="chip" id="setNumbers" aria-pressed="true" title="Label chord tones R 3 5 7 instead of note names">chord tone numbers</button>
+    </div>
+    <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart.</p>
   </div>
 
   <div class="card about">
@@ -316,7 +325,7 @@
     <p>No microphone, so it works on a couch, in class, on a bus, with no guitar in hand. No account, no ads, and nothing leaves your phone.</p>
     <p>On the bench: <b>The Shed</b>, a place to woodshed lines and licks. It stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
-    <p class="buildtag">fretwork-v2</p>
+    <p class="buildtag">fretwork-v3</p>
   </div>
 
 </section>
@@ -405,9 +414,18 @@
 <section id="view-stats" hidden>
   <div class="card">
     <p class="sect">Where you miss</p>
-    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Every tap you get wrong leaves a mark where you tapped. Red spots are the neck you have not learned yet. That is your practice list.</p>
+    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Every graded tap leaves a mark where you tapped: green where you were right, red where you were not. The red is your practice list.</p>
+    <p class="verdictline" id="heatEmpty" hidden>No marks yet. Run a drill and your record lands here.</p>
     <div class="boardwrap" id="heatBoard"></div>
-    <div class="legend"><span><i style="background:var(--pass)"></i>known</span><span><i style="background:var(--fail)"></i>missed</span></div>
+    <div class="legend"><span><i style="background:var(--pass)"></i>known</span><span><i style="background:#d9a84e"></i>shaky</span><span><i style="background:var(--fail)"></i>missed</span></div>
+  </div>
+  <div class="card" id="weakSpotsCard" hidden>
+    <p class="sect">Your weakest spots</p>
+    <div id="weakSpots"></div>
+  </div>
+  <div class="card" id="weakNotesCard" hidden>
+    <p class="sect">Notes you mistake most</p>
+    <div id="weakNotes"></div>
   </div>
   <div class="card">
     <div class="statline"><span class="k">Taps graded</span><span class="v" id="stTotal">0</span></div>
@@ -466,6 +484,8 @@ var QUAL = {
 var TONE_WORD = ['root','3rd','5th','7th'];
 var INV_WORD = ['root position','1st inversion','2nd inversion'];
 var SUFFIX = { maj7:'maj7', dom7:'7', m7:'m7', m7b5:'m7♭5' };
+/* chord tone numbers: what the note is DOING, which is what transfers */
+var NUM_LABEL = { P1:'R', m3:'♭3', M3:'3', d5:'♭5', P5:'5', A5:'♯5', d7:'𝄫7', m7:'♭7', M7:'7' };
 
 /* transpose DOWN, for finding the parent key a mode lives in */
 function dn(root, ivName){
@@ -483,17 +503,17 @@ var MAJOR_IVS = ['P1','M2','M3','P4','P5','M6','M7'];
 var MODES = [
   { name:'Ionian',     ivs:['P1','M2','M3','P4','P5','M6','M7'], alts:[],          deg:1, chord:'maj7',
     line:'The major scale itself. Home base.', ctx:'the 1 chord' },
-  { name:'Dorian',     ivs:['P1','M2','m3','P4','P5','M6','m7'], alts:['M6'],      deg:2, chord:'m7',
+  { name:'Dorian',     ivs:['P1','M2','m3','P4','P5','M6','m7'], alts:['M6'], altLabels:['♯6'], deg:2, chord:'m7',
     line:'The minor scale with a ♯6. Gorgeous over a blues too.', ctx:'the 2 chord' },
-  { name:'Phrygian',   ivs:['P1','m2','m3','P4','P5','m6','m7'], alts:['m2'],      deg:3, chord:'m7',
+  { name:'Phrygian',   ivs:['P1','m2','m3','P4','P5','m6','m7'], alts:['m2'], altLabels:['♭2'], deg:3, chord:'m7',
     line:'The minor scale with a ♭2. Spain lives here.', ctx:'the 3 chord' },
-  { name:'Lydian',     ivs:['P1','M2','M3','A4','P5','M6','M7'], alts:['A4'],      deg:4, chord:'maj7',
+  { name:'Lydian',     ivs:['P1','M2','M3','A4','P5','M6','M7'], alts:['A4'], altLabels:['♯4'], deg:4, chord:'maj7',
     line:'The major scale with a ♯4. Film scores adore it.', ctx:'the 4 chord' },
-  { name:'Mixolydian', ivs:['P1','M2','M3','P4','P5','M6','m7'], alts:['m7'],      deg:5, chord:'dom7',
+  { name:'Mixolydian', ivs:['P1','M2','M3','P4','P5','M6','m7'], alts:['m7'], altLabels:['♭7'], deg:5, chord:'dom7',
     line:'The major scale with a ♭7. Dominant country.', ctx:'the 5 chord' },
   { name:'Aeolian',    ivs:['P1','M2','m3','P4','P5','m6','m7'], alts:[],          deg:6, chord:'m7',
     line:'The natural minor scale itself.', ctx:'the 6 chord' },
-  { name:'Locrian',    ivs:['P1','m2','m3','P4','d5','m6','m7'], alts:['m2','d5'], deg:7, chord:'m7b5',
+  { name:'Locrian',    ivs:['P1','m2','m3','P4','d5','m6','m7'], alts:['m2','d5'], altLabels:['♭2','♭5'], deg:7, chord:'m7b5',
     line:'The minor scale with a ♭2 and a ♭5. Two altered tones.', ctx:'the 7 chord' },
 ];
 
@@ -515,7 +535,7 @@ var TUNINGS = {
   dadgad: { label:'DADGAD',   midi:[38,45,50,55,57,62] },
   openg:  { label:'Open G',   midi:[38,43,50,55,59,62] },
 };
-var MAXF = 15;
+var MAXF = 15;   /* re-set from S.frets once state loads; the neck is a setting */
 function tun(){ return TUNINGS[S.tuning].midi; }
 function midiAt(s,f){ return tun()[s]+f; }
 /* gauge name: string index 0 is the low E, players call it string 6 */
@@ -523,12 +543,13 @@ function gauge(s){ return 6-s; }
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
-var S = { v:1, sound:true, lefty:false, tuning:'standard',
+var S = { v:1, sound:true, lefty:false, tuning:'standard', frets:15, numbers:true,
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
   var raw = localStorage.getItem(KEY);
   if (raw){ var got = JSON.parse(raw); if (got && got.v===1) S = Object.assign(S, got); }
 } catch(e){}
+MAXF = S.frets || 15;
 var saveT = null;
 function save(){ clearTimeout(saveT); saveT = setTimeout(function(){
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
@@ -613,17 +634,19 @@ function renderBoard(host, opts){
 
   /* wood */
   el('rect', { x:LEFT-4, y:woodTop, width:6*CW+8, height:woodRows*ROWH, rx:10, fill:'url(#gWood'+uid+')' }, svg);
-  /* inlays */
-  var MARKERS = [3,5,7,9,15];
+  /* inlays: singles at 3 5 7 9 15 17 19 21, doubles at the octaves */
+  var MARKERS = [3,5,7,9,15,17,19,21];
   for (var mi=0; mi<MARKERS.length; mi++){
     var mf = MARKERS[mi];
     if (mf>=startFret && mf<=hi)
       el('circle', { cx:LEFT+3*CW, cy:rowCY(mf), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
   }
-  if (12>=startFret && 12<=hi){
-    el('circle', { cx:LEFT+1.5*CW, cy:rowCY(12), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
-    el('circle', { cx:LEFT+4.5*CW, cy:rowCY(12), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
-  }
+  [12,24].forEach(function(oct){
+    if (oct>=startFret && oct<=hi){
+      el('circle', { cx:LEFT+1.5*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
+      el('circle', { cx:LEFT+4.5*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
+    }
+  });
   /* fret wires */
   for (var f=startFret; f<=hi; f++)
     el('rect', { x:LEFT-4, y:woodTop+(f-startFret+1)*ROWH-1.5, width:6*CW+8, height:3, rx:1.5,
@@ -639,7 +662,7 @@ function renderBoard(host, opts){
                  'stroke-width':SW[s], opacity:isActive(s)?0.95:0.32 }, svg);
   }
   /* gutter numbers */
-  var nums = [3,5,7,9,12,15].filter(function(f2){ return f2>=startFret && f2<=hi; });
+  var nums = [3,5,7,9,12,15,17,19,21,24].filter(function(f2){ return f2>=startFret && f2<=hi; });
   if (lo>0 && nums.indexOf(startFret)<0) nums.unshift(startFret);
   for (var ni=0; ni<nums.length; ni++)
     el('text', { x:LEFT-14, y:rowCY(nums[ni])+4.5, 'text-anchor':'middle', 'font-size':12.5,
@@ -690,8 +713,8 @@ function renderBoard(host, opts){
     heatDot: function(s2,f2,ratio,weight){
       var cx = sx(s2), cy = rowCY(f2);
       var color = ratio>0.5 ? 'var(--fail)' : ratio>0.15 ? '#d9a84e' : 'var(--pass)';
-      el('circle', { cx:cx, cy:cy, r:10+7*Math.min(1,weight), fill:color,
-                     opacity:0.3+0.5*Math.min(1,weight), 'pointer-events':'none' }, dotLayer);
+      el('circle', { cx:cx, cy:cy, r:11+8*Math.min(1,weight), fill:color,
+                     opacity:0.45+0.4*Math.min(1,weight), 'pointer-events':'none' }, dotLayer);
     },
     removeDot: function(s2,f2){
       var k = dotKey(s2,f2);
@@ -735,8 +758,12 @@ function shapeFor(root, qual, inv, stringSet, drop2){
     var frets = stringSet.map(function(s,k){ return p0+offsets[k]-T[s]; });
     if (frets.every(function(fr){ return fr>=0 && fr<=MAXF; })) inst.push(frets);
   }
+  var nums = order.map(function(t){
+    var ti = tones.findIndex(function(t2){ return pc(t2)===pc(t); });
+    return NUM_LABEL[QUAL[qual].ivs[ti]];
+  });
   return { tones:tones, order:order, bassIdx:bassIdx, inst:inst,
-           pcs:order.map(pc), spell:order.map(nn) };
+           pcs:order.map(pc), spell:order.map(nn), nums:nums };
 }
 
 /* ── views ─────────────────────────────────────────────────────────────── */
@@ -769,10 +796,15 @@ $('setTuning').onchange = function(){ S.tuning=this.value; save(); };
 var setLefty = $('setLefty');
 setLefty.setAttribute('aria-pressed', String(S.lefty));
 setLefty.onclick = function(){ S.lefty=!S.lefty; save(); this.setAttribute('aria-pressed', String(S.lefty)); };
+$('setFrets').value = String(S.frets);
+$('setFrets').onchange = function(){ S.frets=+this.value; MAXF=S.frets; save(); };
+var setNumbers = $('setNumbers');
+setNumbers.setAttribute('aria-pressed', String(S.numbers));
+setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
 if (TIP_URL) $('tipSlot').innerHTML = ' &middot; <a href="'+TIP_URL+'" target="_blank" rel="noopener">&hearts; Tip jar</a>';
 
 /* pickers */
-var WINDOWS = [ ['0-5','Open to 5'], ['0-12','Open to 12'], ['5-9','5 to 9'], ['7-12','7 to 12'], ['0-15','Whole neck'] ];
+var WINDOWS = [ ['0-5','Open to 5'], ['0-12','Open to 12'], ['5-9','5 to 9'], ['7-12','7 to 12'], ['all','Whole neck'] ];
 document.querySelectorAll('.winSel').forEach(function(sel){
   WINDOWS.forEach(function(w){ var o=document.createElement('option'); o.value=w[0]; o.textContent=w[1]; sel.appendChild(o); });
   sel.value = '0-12';
@@ -809,7 +841,10 @@ ivAnyOct.onclick = function(){
   this.setAttribute('aria-pressed', String(v));
 };
 
-function parseWin(v){ var p=v.split('-'); return { lo:+p[0], hi:+p[1] }; }
+function parseWin(v){
+  if (v==='all') return { lo:0, hi:MAXF };
+  var p=v.split('-'); return { lo:+p[0], hi:+p[1] };
+}
 function parseStr(v){ return v==='all' ? null : v.split(',').map(Number); }
 
 /* ── the drill runner ──────────────────────────────────────────────────── */
@@ -1092,7 +1127,7 @@ function runShapes(cfg){
           if (!D.cur) return;
           D.miss++;
           var inst = D.cur.shape.inst[0];
-          D.cur.set.forEach(function(s,k){ board.setDot(s, inst[k], 'reveal', D.cur.shape.spell[k]); });
+          D.cur.set.forEach(function(s,k){ board.setDot(s, inst[k], 'reveal', shapeLabel(D.cur.shape, k)); });
           vLine.innerHTML = spellLine(D.cur);
           D.cur = null;
           setTimeout(shapeNext, 1600);
@@ -1111,8 +1146,11 @@ function spellLine(cur){
   var s = cur.shape;
   var head = nn(cur.root)+' '+QUAL[cur.qual].name+', '+
     (cur.drop2 ? 'drop 2, '+TONE_WORD[s.bassIdx]+' in the bass' : INV_WORD[cur.inv]);
-  return head+': <b>'+s.spell.join(' ')+'</b>';
+  return head+': <b>'+s.spell.join(' ')+'</b>'+
+    (S.numbers ? ' <span style="opacity:.75">('+s.nums.join(' ')+')</span>' : '');
 }
+/* the label a voicing dot wears: the job when numbers are on, the name when off */
+function shapeLabel(sh, k){ return S.numbers ? sh.nums[k] : sh.spell[k]; }
 function shapeNext(){
   if (!D || D.mode!=='shape') return;
   board.clearDots();
@@ -1149,7 +1187,9 @@ function voiceTap(s,f){
   if (D.cur.set.indexOf(s)<0) return;
   if (D.taps[s]!==undefined) board.removeDot(s, D.taps[s]);
   D.taps[s] = f;
-  board.setDot(s,f,'pick', pcName(midiAt(s,f)%12).split(' / ')[0]);
+  var tpc = midiAt(s,f)%12;
+  var pi = D.cur.shape.pcs.indexOf(tpc);
+  board.setDot(s,f,'pick', (S.numbers && pi>=0) ? D.cur.shape.nums[pi] : pcName(tpc).split(' / ')[0]);
   pluck(midiAt(s,f));
   var done = D.cur.set.every(function(s2){ return D.taps[s2]!==undefined; });
   if (!done) return;
@@ -1173,7 +1213,7 @@ function voiceTap(s,f){
     var frets = D.cur.set.map(function(s2){ return D.taps[s2]; });
     D.cur.set.forEach(function(s2,k){
       record(s2, D.taps[s2], true);
-      board.setDot(s2, D.taps[s2], 'pearl', D.cur.shape.spell[k]);
+      board.setDot(s2, D.taps[s2], 'pearl', shapeLabel(D.cur.shape, k));
     });
     strum(midis);
     vLine.className='verdictline good';
@@ -1230,7 +1270,7 @@ function runClimb(qual, set){
         reveal:function(){
           if (!D.cur) return;
           D.miss++;
-          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', D.cur.shape.spell[k]); });
+          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', shapeLabel(D.cur.shape, k)); });
           vLine.innerHTML = spellLine(D.cur)+'. Tap it in to keep climbing.';
         },
         solved: climbSolved };
@@ -1308,7 +1348,7 @@ function runMorph(set, invSel){
         reveal:function(){
           if (!D.cur) return;
           D.miss++;
-          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', D.cur.shape.spell[k]); });
+          D.cur.set.forEach(function(s,k){ board.setDot(s, D.cur.inst[k], 'reveal', shapeLabel(D.cur.shape, k)); });
           vLine.innerHTML = spellLine(D.cur)+'. Tap it in.';
         },
         solved: morphSolved };
@@ -1333,13 +1373,16 @@ function morphSolved(cur, frets){
   var line = spellLine(cur);
   if (D.step>0){
     var prevSh = D.shapes[D.step-1];
-    for (var k=0;k<cur.set.length;k++){
-      if (prevSh.pcs[k]!==cur.shape.pcs[k]){
-        var ti = cur.shape.tones.findIndex(function(t2){ return pc(t2)===cur.shape.pcs[k]; });
-        line += '. Only the '+TONE_WORD[ti]+' moved: '+prevSh.spell[k]+' down to '+cur.shape.spell[k]+'.';
-        board.setDot(cur.set[k], frets[k], 'gold', cur.shape.spell[k]);
-        break;
-      }
+    var moved = -1;
+    for (var k=0;k<cur.set.length;k++)
+      if (prevSh.pcs[k]!==cur.shape.pcs[k]){ moved = k; break; }
+    if (moved>=0){
+      var ti = cur.shape.tones.findIndex(function(t2){ return pc(t2)===cur.shape.pcs[moved]; });
+      line += '. Only the '+TONE_WORD[ti]+' moved: '+prevSh.spell[moved]+' down to '+cur.shape.spell[moved]+'.';
+      var held = [];
+      for (var k2=0;k2<cur.set.length;k2++) if (k2!==moved) held.push(cur.shape.nums[k2]);
+      line += ' Common tones: '+held.join(', ')+'.';
+      board.setDot(cur.set[moved], frets[moved], 'gold', shapeLabel(cur.shape, moved));
     }
   }
   vLine.innerHTML = line;
@@ -1375,8 +1418,11 @@ function threeNPS(root, pcs){
 }
 function paintModeDot(s,f,pcs,altPcs,root,names){
   var p = midiAt(s,f)%12;
-  if (p===pc(root)) modeBoardApi.setDot(s,f,'ring', nn(root));
-  else if (altPcs.indexOf(p)>=0) modeBoardApi.setDot(s,f,'gold', names[pcs.indexOf(p)]);
+  if (p===pc(root)) modeBoardApi.setDot(s,f,'ring', S.numbers ? '1' : nn(root));
+  else if (altPcs.indexOf(p)>=0){
+    var lbl = S.numbers ? (currentMode().altLabels||[])[altPcs.indexOf(p)] : names[pcs.indexOf(p)];
+    modeBoardApi.setDot(s,f,'gold', lbl);
+  }
   else modeBoardApi.setDot(s,f,'ringfaint');
 }
 function renderModes(){
@@ -1461,13 +1507,40 @@ function exTap(s,f){
 function renderStats(){
   var api = renderBoard($('heatBoard'), { lo:0, hi:MAXF, strings:null, onTap:function(){} });
   var grid = S.stats.grid;
+  var entries = [];
   for (var k in grid){
     var g = grid[k];
     var tot = g.h+g.m;
     if (!tot) continue;
     var parts = k.split(',');
-    api.heatDot(+parts[0], +parts[1], g.m/tot, tot/8);
+    entries.push({ s:+parts[0], f:+parts[1], h:g.h, m:g.m, tot:tot, ratio:g.m/tot });
+    api.heatDot(+parts[0], +parts[1], g.m/tot, tot/6);
   }
+  $('heatEmpty').hidden = entries.length>0;
+  /* the five positions with the most wrong taps: a concrete practice list */
+  var spots = entries.filter(function(e){ return e.m>0; })
+    .sort(function(a,b){ return b.m-a.m || b.ratio-a.ratio; }).slice(0,5);
+  $('weakSpotsCard').hidden = !spots.length;
+  $('weakSpots').innerHTML = spots.map(function(e){
+    return '<div class="statline"><span class="k">String '+gauge(e.s)+', fret '+e.f+': '+pcName(midiAt(e.s,e.f)%12)+'</span>'+
+           '<span class="v">'+e.m+' of '+e.tot+' wrong</span></div>';
+  }).join('');
+  /* the notes those spots turn out to be, aggregated: what you mistake most */
+  var byPc = {};
+  entries.forEach(function(e){
+    var p = midiAt(e.s,e.f)%12;
+    var b = byPc[p] || (byPc[p]={h:0,m:0});
+    b.h += e.h; b.m += e.m;
+  });
+  var notes = Object.keys(byPc).map(function(p){
+    var b = byPc[p]; return { p:+p, h:b.h, m:b.m, tot:b.h+b.m };
+  }).filter(function(n){ return n.m>0; })
+    .sort(function(a,b){ return b.m-a.m || (b.m/b.tot)-(a.m/a.tot); }).slice(0,4);
+  $('weakNotesCard').hidden = !notes.length;
+  $('weakNotes').innerHTML = notes.map(function(n){
+    return '<div class="statline"><span class="k">'+pcName(n.p)+'</span>'+
+           '<span class="v">'+n.h+' of '+n.tot+' right</span></div>';
+  }).join('');
   $('stTotal').textContent = S.stats.taps;
   $('stAcc').innerHTML = S.stats.taps ? Math.round(100*S.stats.hits/S.stats.taps)+'%' : '&mdash;';
   $('stHunts').textContent = S.stats.hunts;

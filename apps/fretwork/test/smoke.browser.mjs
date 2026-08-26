@@ -16,7 +16,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v2') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v3') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -99,6 +99,8 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.waitForTimeout(300);
   const solved = await page.evaluate(() => window.__fw.drill.right);
   if (solved !== 1) throw new Error('correct triad voicing was not accepted');
+  const triLabels = await page.evaluate(() => [...document.querySelectorAll('#runBoard text')].map(t => t.textContent));
+  if (!triLabels.includes('R')) throw new Error('numbers-first labels missing on a solved triad: ' + triLabels.join(','));
 
   // ── inversion climb: four drop 2 shapes, each with a higher bass fret ──
   await page.click('#btnQuit');
@@ -139,6 +141,7 @@ await withApp('fretwork', async ({ page, errors }) => {
     if (step === 1) {
       const v = (await page.textContent('#vLine')).trim();
       if (!v.includes('Only the 7th moved')) throw new Error('ladder did not name the moved voice: ' + v);
+      if (!v.includes('Common tones')) throw new Error('ladder did not name the common tones: ' + v);
     }
   }
   await page.waitForTimeout(1700);
@@ -166,6 +169,24 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.click('#modeVamp');
   const vampOff = await page.getAttribute('#modeVamp', 'aria-pressed');
   if (vampOff !== 'false') throw new Error('vamp did not stop');
+  const modeLabels = await page.evaluate(() => [...document.querySelectorAll('#modeBoard text')].map(t => t.textContent));
+  if (!modeLabels.includes('\u266f6')) throw new Error('Dorian altered tone not labeled #6: ' + modeLabels.slice(0, 8).join(','));
+
+  // ── the neck extends: 24 frets reach the explore board ──
+  await page.click('#tabDrills');
+  await page.selectOption('#setFrets', '24');
+  await page.click('#tabExplore');
+  await page.waitForTimeout(300);
+  const fret24 = await page.$('rect.cell[data-f="24"]');
+  if (!fret24) throw new Error('24 fret neck did not reach the board');
+
+  // ── stats teach: the weak spot list is populated by this session's misses ──
+  await page.click('#tabStats');
+  await page.waitForTimeout(300);
+  const weak = (await page.textContent('#weakSpots')).trim();
+  if (!weak.includes('String')) throw new Error('weak spots list empty despite misses: ' + weak);
+  const hidden = await page.getAttribute('#heatEmpty', 'hidden');
+  if (hidden === null) throw new Error('empty state showing despite recorded taps');
 
   // ── stats survive a reload ──
   await page.reload({ waitUntil: 'load' });
@@ -178,5 +199,5 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (!/\d+%/.test(acc)) throw new Error('accuracy did not render: ' + acc);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: oracles, hunt, naming, triad, climb, ladder, Dorian 3nps, vamp, reload, ' + tag);
+  console.log('smoke pass: oracles, hunt, naming, numbered triad, climb, ladder with common tones, Dorian #6, 24 frets, weak spots, reload, ' + tag);
 });
