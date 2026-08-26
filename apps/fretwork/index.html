@@ -140,6 +140,18 @@
   .legend{display:flex; gap:14px; justify-content:center; font-size:12px; color:var(--muted); margin:10px 0 2px}
   .legend i{display:inline-block; width:10px; height:10px; border-radius:99px; margin-right:5px; vertical-align:-1px}
 
+  .door{display:block; width:100%; text-align:left; background:var(--field); border:1px solid var(--line);
+    border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; color:var(--ink); font:inherit}
+  .door b{display:block; font-size:15.5px; margin-bottom:2px}
+  .door span{font-size:12.5px; color:var(--muted); line-height:1.35; display:block}
+  .door:active{transform:translateY(1px)}
+  details.opts{margin:0 0 10px}
+  details.opts summary{cursor:pointer; font-size:11px; color:var(--muted); letter-spacing:.09em;
+    text-transform:uppercase; list-style:none; padding:2px 0; -webkit-tap-highlight-color:transparent}
+  details.opts summary::-webkit-details-marker{display:none}
+  details.opts summary::before{content:'\25B8\00a0'}
+  details.opts[open] summary::before{content:'\25BE\00a0'}
+  details.opts > *:first-of-type{margin-top:8px}
   .about p{font-size:13px; color:var(--muted); margin:0 0 8px}
   .about p b{color:var(--ink)}
   .foot{font-size:12px; color:var(--muted); text-align:center; margin-top:4px}
@@ -160,52 +172,85 @@
 </header>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
-  <button role="tab" id="tabDrills" aria-selected="true">Drills</button>
+  <button role="tab" id="tabHome" aria-selected="true">Home</button>
+  <button role="tab" id="tabDrills" aria-selected="false">Drills</button>
   <button role="tab" id="tabModes" aria-selected="false">Modes</button>
-  <button role="tab" id="tabExplore" aria-selected="false">Explore</button>
+  <button role="tab" id="tabPlay" aria-selected="false">Play</button>
   <button role="tab" id="tabStats" aria-selected="false">Stats</button>
 </nav>
 
 <main>
 
-<!-- ============ DRILLS (home) ============ -->
-<section id="view-drills">
+<!-- ============ HOME ============ -->
+<section id="view-home">
+  <div class="card">
+    <p class="sect">Welcome</p>
+    <p style="font-size:14.5px; margin:0 0 6px"><b>A practice room, not a course.</b> Built by a working guitar and theory teacher.</p>
+    <p style="font-size:13px; color:var(--muted); margin:0">No microphone, no account, no ads, nothing leaves your phone. Your misses quietly become your practice list.</p>
+  </div>
+  <div class="card">
+    <p class="sect">Where are you today?</p>
+    <button class="door" id="doorNew"><b>Brand new to the neck</b><span>Start with the first drill a teacher assigns: tap every C, open strings to fret 5.</span></button>
+    <button class="door" id="doorChords"><b>I play, and I want tight chords</b><span>Triads, sevenths, the inversion climb and the one note ladder, labeled by the job each note does.</span></button>
+    <button class="door" id="doorModes"><b>Chasing sounds and theory</b><span>Modes as one bent note, with a vamp to play over while you hunt the gold note.</span></button>
+    <div class="chips" style="margin-top:6px">
+      <button class="chip" id="goPlay">just play</button>
+      <button class="chip" id="goDrills">all drills</button>
+      <button class="chip" id="goStats">my weak spots</button>
+    </div>
+  </div>
+  <div class="card about">
+    <p>On the bench: <b>The Shed</b>, a place to woodshed lines and licks. It stays off the menu until it earns its spot.</p>
+    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
+    <p class="buildtag">fretwork-v4</p>
+  </div>
+</section>
+
+<!-- ============ DRILLS ============ -->
+<section id="view-drills" hidden>
 
   <div class="card dcard">
     <h3>Note hunt</h3>
     <p class="why">Where is every C? Tap all of them. The drill a teacher assigns first, because it works.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="huntNote">Note</label><select id="huntNote"></select></div>
       <div><label for="huntWin">Frets</label><select id="huntWin" class="winSel"></select></div>
       <div><label for="huntStr">Strings</label><select id="huntStr" class="strSel"></select></div>
     </div>
+    </details>
     <button class="btn primary start" id="startHunt">Start the hunt</button>
   </div>
 
   <div class="card dcard">
     <h3>Name that fret</h3>
     <p class="why">A note lights up, you name it. The reverse direction, so recall works both ways.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="nameWin">Frets</label><select id="nameWin" class="winSel"></select></div>
       <div><label for="nameStr">Strings</label><select id="nameStr" class="strSel"></select></div>
     </div>
+    </details>
     <button class="btn primary start" id="startName">Start naming</button>
   </div>
 
   <div class="card dcard">
     <h3>Intervals</h3>
     <p class="why">From a gold root, tap the interval up. Chords and lines are built from these.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="chips" id="ivChips" style="margin-bottom:8px"></div>
     <div class="row">
       <div><label for="ivWin">Frets</label><select id="ivWin" class="winSel"></select></div>
       <div style="display:flex; align-items:flex-end"><button class="chip" id="ivAnyOct" aria-pressed="false" title="Accept the right note in any octave">any octave</button></div>
     </div>
+    </details>
     <button class="btn primary start" id="startIv">Start intervals</button>
   </div>
 
-  <div class="card dcard">
+  <div class="card dcard" id="cardTri">
     <h3>Triads</h3>
     <p class="why">Build the shape on a string set: root position, 1st or 2nd inversion, spelled honestly.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="triQual">Qualities</label><select id="triQual">
         <option value="maj,min">Major and minor</option>
@@ -226,12 +271,15 @@
         <option value="2">2nd inversion</option>
       </select></div>
     </div>
+    
+    </details>
     <button class="btn primary start" id="startTri">Start triads</button>
   </div>
 
   <div class="card dcard">
     <h3>Sevenths, drop 2</h3>
     <p class="why">The jazz comping workhorse: four notes, four inversions, one string set at a time.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="sevQual">Qualities</label><select id="sevQual">
         <option value="maj7,dom7,m7">maj7, 7, m7</option>
@@ -255,12 +303,15 @@
         <option value="3">7th in the bass</option>
       </select></div>
     </div>
+    
+    </details>
     <button class="btn primary start" id="startSev">Start sevenths</button>
   </div>
 
   <div class="card dcard">
     <h3>Inversion climb</h3>
     <p class="why">Build a seventh chord down low, then move every voice up to its next chord tone. The root climbs to the 3rd, the 7th to the root, the 3rd to the 5th, the 5th to the 7th. Four shapes, bottom to top.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="clQual">Chord</label><select id="clQual">
         <option value="maj7">maj7</option>
@@ -275,12 +326,15 @@
         <option value="2,3,4,5">4 3 2 1</option>
       </select></div>
     </div>
+    
+    </details>
     <button class="btn primary start" id="startClimb">Start climbing</button>
   </div>
 
   <div class="card dcard">
     <h3>The one note ladder</h3>
     <p class="why">Start on maj7. Flat the 7th and it is a 7. Flat the 3rd for m7. Flat the 5th for m7&#9837;5. Flat the 7th again for dim7. Five chords, one note at a time, same spot on the neck.</p>
+    <details class="opts"><summary>Options</summary>
     <div class="row">
       <div><label for="moSet">Strings</label><select id="moSet">
         <option value="1,2,3,4">5 4 3 2</option>
@@ -295,6 +349,8 @@
         <option value="mix">Surprise me</option>
       </select></div>
     </div>
+    
+    </details>
     <button class="btn primary start" id="startMorph">Start the ladder</button>
   </div>
 
@@ -318,14 +374,6 @@
       <button class="chip" id="setNumbers" aria-pressed="true" title="Label chord tones R 3 5 7 instead of note names">chord tone numbers</button>
     </div>
     <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart.</p>
-  </div>
-
-  <div class="card about">
-    <p><b>Fretwork is a practice tool, not a course.</b> Pick a drill, tap the neck, and let the misses tell you what to practice next. Built by a working guitar and theory teacher.</p>
-    <p>No microphone, so it works on a couch, in class, on a bus, with no guitar in hand. No account, no ads, and nothing leaves your phone.</p>
-    <p>On the bench: <b>The Shed</b>, a place to woodshed lines and licks. It stays off the menu until it earns its spot.</p>
-    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
-    <p class="buildtag">fretwork-v3</p>
   </div>
 
 </section>
@@ -392,21 +440,23 @@
   </div>
 </section>
 
-<!-- ============ EXPLORE ============ -->
-<section id="view-explore" hidden>
+<!-- ============ PLAY ============ -->
+<section id="view-play" hidden>
   <div class="card">
-    <p class="sect">Free board. Tap anything, hear it, see its name.</p>
+    <p class="sect">Play. Two hands welcome.</p>
+    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Hold a note and it sustains. Slide along a string and it slides. Light up a scale and stay inside it, or do not.</p>
     <div class="row">
-      <div><label for="exOverlay">Light up</label><select id="exOverlay">
+      <div><label for="playOverlay">Light up</label><select id="playOverlay">
         <option value="none">Nothing</option>
-        <option value="note">One note everywhere</option>
+        <option value="note">One note</option>
         <option value="major">Major scale</option>
-        <option value="minpent">Minor pentatonic</option>
+        <option value="minpent">Minor pent</option>
       </select></div>
-      <div><label for="exRoot">Root</label><select id="exRoot"></select></div>
+      <div><label for="playRoot">Root</label><select id="playRoot"></select></div>
+      <div><label for="playWin">Frets</label><select id="playWin" class="winSel"></select></div>
     </div>
-    <p class="verdictline" id="exInfo" aria-live="polite">&nbsp;</p>
-    <div class="boardwrap" id="exBoard"></div>
+    <p class="verdictline" id="playInfo" aria-live="polite" style="min-height:20px">&nbsp;</p>
+    <div class="boardwrap" id="playBoard"></div>
   </div>
 </section>
 
@@ -562,24 +612,28 @@ function record(s,f,ok){
   save();
 }
 
-/* ── audio: Karplus-Strong pluck, synthesized, no audio files ──────────── */
-var AC = null, BUFCACHE = {};
+/* ── audio: Karplus-Strong strings, synthesized, no audio files ────────── */
+var AC = null, BUFCACHE = {}, PLAYBUF = {};
+function ac(){
+  if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+  if (AC.state==='suspended') AC.resume();
+  return AC;
+}
+function makeKS(midi, dur, damp){
+  var f = 440*Math.pow(2,(midi-69)/12);
+  var sr = AC.sampleRate, n = Math.round(sr*dur);
+  var buf = AC.createBuffer(1,n,sr);
+  var d = buf.getChannelData(0);
+  var Np = Math.max(2, Math.round(sr/f));
+  for (var i=0;i<Np;i++) d[i] = Math.random()*2-1;
+  for (var j=Np;j<n;j++) d[j] = damp*0.5*(d[j-Np]+d[j-Np+1]);
+  return buf;
+}
 function pluck(midi, delay){
   if (!S.sound) return;
   try {
-    if (!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
-    if (AC.state==='suspended') AC.resume();
-    var buf = BUFCACHE[midi];
-    if (!buf){
-      var f = 440*Math.pow(2,(midi-69)/12);
-      var sr = AC.sampleRate, n = Math.round(sr*1.1);
-      buf = AC.createBuffer(1,n,sr);
-      var d = buf.getChannelData(0);
-      var Np = Math.max(2, Math.round(sr/f));
-      for (var i=0;i<Np;i++) d[i] = Math.random()*2-1;
-      for (var j=Np;j<n;j++) d[j] = 0.996*0.5*(d[j-Np]+d[j-Np+1]);
-      BUFCACHE[midi] = buf;
-    }
+    ac();
+    var buf = BUFCACHE[midi] || (BUFCACHE[midi] = makeKS(midi, 1.1, 0.996));
     var src = AC.createBufferSource(); src.buffer = buf;
     var g = AC.createGain(); g.gain.value = 0.45;
     src.connect(g); g.connect(AC.destination);
@@ -587,6 +641,36 @@ function pluck(midi, delay){
   } catch(e){}
 }
 function strum(midis){ for (var i=0;i<midis.length;i++) pluck(midis[i], i*0.07); }
+/* a held note: rings while the finger stays down, slides along its string */
+function heldVoice(midi){
+  if (!S.sound) return { stop:function(){}, slideTo:function(){} };
+  try {
+    ac();
+    var buf = PLAYBUF[midi] || (PLAYBUF[midi] = makeKS(midi, 3.0, 0.9985));
+    var src = AC.createBufferSource(); src.buffer = buf;
+    var g = AC.createGain(); g.gain.value = 0.38;
+    src.connect(g); g.connect(AC.destination);
+    src.start();
+    return {
+      stop: function(){
+        try {
+          var t = AC.currentTime;
+          g.gain.setValueAtTime(g.gain.value, t);
+          g.gain.linearRampToValueAtTime(0.0001, t+0.12);
+          src.stop(t+0.16);
+        } catch(e){}
+      },
+      slideTo: function(m2){
+        try {
+          var t = AC.currentTime;
+          src.playbackRate.cancelScheduledValues(t);
+          src.playbackRate.setValueAtTime(src.playbackRate.value, t);
+          src.playbackRate.linearRampToValueAtTime(Math.pow(2,(m2-midi)/12), t+0.07);
+        } catch(e){}
+      },
+    };
+  } catch(e){ return { stop:function(){}, slideTo:function(){} }; }
+}
 
 /* ── board renderer: one SVG, generated from data ──────────────────────── */
 var SVGNS = 'http://www.w3.org/2000/svg';
@@ -681,11 +765,45 @@ function renderBoard(host, opts){
                            'data-s':cs, 'data-f':cf,
                            'aria-label':'string '+gauge(cs)+' fret '+cf }, svg);
       (function(rs,rf){
-        var go = function(ev){ ev.preventDefault(); if (opts.onTap) opts.onTap(rs,rf); };
-        r.addEventListener('pointerdown', go);
-        r.addEventListener('keydown', function(ev){ if (ev.key==='Enter'||ev.key===' ') go(ev); });
+        if (opts.playable){
+          r.addEventListener('keydown', function(ev){
+            if (ev.key!=='Enter' && ev.key!==' ') return;
+            ev.preventDefault();
+            opts.playable.down(rs, rf, 'kb');
+            setTimeout(function(){ opts.playable.up('kb'); }, 450);
+          });
+        } else {
+          var go = function(ev){ ev.preventDefault(); if (opts.onTap) opts.onTap(rs,rf); };
+          r.addEventListener('pointerdown', go);
+          r.addEventListener('keydown', function(ev){ if (ev.key==='Enter'||ev.key===' ') go(ev); });
+        }
       })(cs,cf);
     }
+  }
+
+  /* an instrument board owns its gestures: fingers land, hold, and slide */
+  if (opts.playable){
+    svg.style.touchAction = 'none';
+    var cellFromEvent = function(e){
+      var hit = document.elementFromPoint(e.clientX, e.clientY);
+      if (hit && hit.classList && hit.classList.contains('cell'))
+        return { s:+hit.getAttribute('data-s'), f:+hit.getAttribute('data-f') };
+      return null;
+    };
+    svg.addEventListener('pointerdown', function(e){
+      var c = cellFromEvent(e);
+      if (!c) return;
+      e.preventDefault();
+      try { svg.setPointerCapture(e.pointerId); } catch(err){}
+      opts.playable.down(c.s, c.f, e.pointerId);
+    });
+    svg.addEventListener('pointermove', function(e){
+      var c = cellFromEvent(e);
+      if (c) opts.playable.move(c.s, c.f, e.pointerId);
+    });
+    var lift = function(e){ opts.playable.up(e.pointerId); };
+    svg.addEventListener('pointerup', lift);
+    svg.addEventListener('pointercancel', lift);
   }
 
   var dots = {};
@@ -768,20 +886,33 @@ function shapeFor(root, qual, inv, stringSet, drop2){
 
 /* ── views ─────────────────────────────────────────────────────────────── */
 var $ = function(id){ return document.getElementById(id); };
-var VIEWS = { drills:$('view-drills'), run:$('view-run'), modes:$('view-modes'), explore:$('view-explore'), stats:$('view-stats') };
-var TABS = { drills:$('tabDrills'), modes:$('tabModes'), explore:$('tabExplore'), stats:$('tabStats') };
+var VIEWS = { home:$('view-home'), drills:$('view-drills'), run:$('view-run'), modes:$('view-modes'), play:$('view-play'), stats:$('view-stats') };
+var TABS = { home:$('tabHome'), drills:$('tabDrills'), modes:$('tabModes'), play:$('tabPlay'), stats:$('tabStats') };
 function show(view){
   stopVamp();
+  if (view!=='play') stopPlayVoices();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
   for (var t in TABS) TABS[t].setAttribute('aria-selected', String(t===view || (view==='run'&&t==='drills')));
   if (view==='stats') renderStats();
-  if (view==='explore') renderExplore();
+  if (view==='play') renderPlay();
   if (view==='modes') renderModes();
 }
+TABS.home.onclick = function(){ endDrill(); show('home'); };
 TABS.drills.onclick = function(){ endDrill(); show('drills'); };
 TABS.modes.onclick = function(){ endDrill(); show('modes'); };
-TABS.explore.onclick = function(){ endDrill(); show('explore'); };
+TABS.play.onclick = function(){ endDrill(); show('play'); };
 TABS.stats.onclick = function(){ endDrill(); show('stats'); };
+
+/* the front door: comfort first, then the right room */
+$('doorNew').onclick = function(){ runHunt(SPELLINGS[0], {lo:0, hi:5}, null); };
+$('doorChords').onclick = function(){
+  show('drills');
+  setTimeout(function(){ $('cardTri').scrollIntoView({ behavior:'smooth', block:'start' }); }, 80);
+};
+$('doorModes').onclick = function(){ show('modes'); };
+$('goPlay').onclick = function(){ show('play'); };
+$('goDrills').onclick = function(){ show('drills'); };
+$('goStats').onclick = function(){ show('stats'); };
 
 /* sound + setup */
 var btnSound = $('btnSound');
@@ -816,9 +947,9 @@ document.querySelectorAll('.strSel').forEach(function(sel){
 var huntNote = $('huntNote');
 SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); huntNote.appendChild(o); });
 huntNote.value = '0';
-var exRoot = $('exRoot');
-SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); exRoot.appendChild(o); });
-exRoot.value = '0';
+var playRoot = $('playRoot');
+SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); playRoot.appendChild(o); });
+playRoot.value = '0';
 var modeRoot = $('modeRoot');
 SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); modeRoot.appendChild(o); });
 modeRoot.value = '0';
@@ -1472,35 +1603,73 @@ $('modeSel').onchange = renderModes;
 $('modeRoot').onchange = renderModes;
 $('modeForm').onchange = renderModes;
 
-/* ── explore ───────────────────────────────────────────────────────────── */
-var exBoardApi = null;
-function renderExplore(){
-  var overlay = $('exOverlay').value;
-  var root = SPELLINGS[+$('exRoot').value];
-  exBoardApi = renderBoard($('exBoard'), { lo:0, hi:MAXF, strings:null, onTap:exTap });
+/* ── play: the board as a small instrument ─────────────────────────────── */
+var playBoardApi = null, playPtr = {}, playIdleT = null;
+function stopPlayVoices(){
+  for (var id in playPtr) playPtr[id].voice.stop();
+  playPtr = {};
+  clearTimeout(playIdleT);
+}
+function renderPlay(){
+  stopPlayVoices();
+  var win = parseWin($('playWin').value);
+  playBoardApi = renderBoard($('playBoard'), { lo:win.lo, hi:win.hi, strings:null,
+    playable:{ down:playDown, move:playMove, up:playUp } });
+  var overlay = $('playOverlay').value;
+  var root = SPELLINGS[+$('playRoot').value];
   if (overlay==='note'){
-    for (var s=0;s<6;s++) for (var f=0;f<=MAXF;f++)
-      if (midiAt(s,f)%12===pc(root)) exBoardApi.setDot(s,f,'ring');
+    for (var s=0;s<6;s++) for (var f=win.lo;f<=win.hi;f++)
+      if (midiAt(s,f)%12===pc(root)) playBoardApi.setDot(s,f,'ring');
   } else if (overlay==='major' || overlay==='minpent'){
     var ivs = overlay==='major' ? ['P1','M2','M3','P4','P5','M6','M7'] : ['P1','m3','P4','P5','m7'];
     var pcs = ivs.map(function(iv){ return pc(up(root,iv)); });
-    for (var s2=0;s2<6;s2++) for (var f2=0;f2<=MAXF;f2++){
+    for (var s2=0;s2<6;s2++) for (var f2=win.lo;f2<=win.hi;f2++){
       var p = midiAt(s2,f2)%12;
-      if (p===pc(root)) exBoardApi.setDot(s2,f2,'ring');
-      else if (pcs.indexOf(p)>=0) exBoardApi.setDot(s2,f2,'ringfaint');
+      if (p===pc(root)) playBoardApi.setDot(s2,f2,'ring');
+      else if (pcs.indexOf(p)>=0) playBoardApi.setDot(s2,f2,'ringfaint');
     }
   }
 }
-$('exOverlay').onchange = renderExplore;
-$('exRoot').onchange = renderExplore;
-function exTap(s,f){
-  var m = midiAt(s,f);
-  /* rebuild the overlay so a tap never eats a ring it landed on */
-  renderExplore();
-  exBoardApi.setDot(s,f,'pearl', PADS[m%12][0]);
-  var dual = PADS[m%12].length>1 ? ' (also '+PADS[m%12][1]+')' : '';
-  $('exInfo').innerHTML = '<b>'+midiName(m)+'</b>'+dual+' &middot; string '+gauge(s)+', fret '+f;
-  pluck(m);
+$('playOverlay').onchange = renderPlay;
+$('playRoot').onchange = renderPlay;
+$('playWin').onchange = renderPlay;
+function playDown(s,f,id){
+  clearTimeout(playIdleT);
+  if (playPtr[id]) playUp(id);
+  var midi = midiAt(s,f);
+  playPtr[id] = { s:s, f:f, midi:midi, voice:heldVoice(midi) };
+  playBoardApi.setDot(s,f,'pearl', PADS[midi%12][0]);
+  var dual = PADS[midi%12].length>1 ? ' (also '+PADS[midi%12][1]+')' : '';
+  $('playInfo').innerHTML = '<b>'+midiName(midi)+'</b>'+dual+' &middot; string '+gauge(s)+', fret '+f;
+}
+function playMove(s,f,id){
+  var p = playPtr[id];
+  if (!p || (p.s===s && p.f===f)) return;
+  if (s===p.s){
+    var m2 = midiAt(s,f);
+    p.voice.slideTo(m2);
+    playBoardApi.removeDot(p.s, p.f);
+    p.f = f; p.midi = m2;
+    playBoardApi.setDot(s,f,'pearl', PADS[m2%12][0]);
+    $('playInfo').innerHTML = '<b>'+midiName(m2)+'</b> &middot; slide';
+  } else {
+    playUp(id);
+    playDown(s,f,id);
+  }
+}
+function playUp(id){
+  var p = playPtr[id];
+  if (!p) return;
+  p.voice.stop();
+  playBoardApi.removeDot(p.s, p.f);
+  delete playPtr[id];
+  if (!Object.keys(playPtr).length){
+    /* heal any overlay rings a finger landed on, once the hands are off */
+    clearTimeout(playIdleT);
+    playIdleT = setTimeout(function(){
+      if (!VIEWS.play.hidden && !Object.keys(playPtr).length) renderPlay();
+    }, 500);
+  }
 }
 
 /* ── stats ─────────────────────────────────────────────────────────────── */
@@ -1557,6 +1726,7 @@ $('btnClearStats').onclick = function(){
 window.__fw = {
   get drill(){ return D; },
   get state(){ return S; },
+  get playVoices(){ return Object.keys(playPtr).length; },
   up: up, pc: pc, nn: nn, shapeFor: shapeFor, midiAt: midiAt,
 };
 </script>

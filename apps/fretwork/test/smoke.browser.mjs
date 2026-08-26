@@ -16,7 +16,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v3') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v4') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -43,7 +43,15 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (!oracle.triInst.includes('5,5,3')) throw new Error('5-5-3 missing from C major triad instances: ' + oracle.triInst);
   if (oracle.triSpell !== 'C E G') throw new Error('C major spelled ' + oracle.triSpell);
 
+  // ── the front door: brand new goes straight into the gentle hunt ──
+  await page.click('#doorNew');
+  await page.waitForTimeout(300);
+  const door = await page.evaluate(() => ({ mode: window.__fw.drill.mode, hi: window.__fw.drill.win.hi }));
+  if (door.mode !== 'hunt' || door.hi !== 5) throw new Error('brand new door routed wrong: ' + JSON.stringify(door));
+  await page.click('#btnQuit');
+
   // ── note hunt: wrong tap flagged, every C found, summary appears ──
+  await page.evaluate(() => document.querySelectorAll('details.opts').forEach(d => { d.open = true; }));
   await page.selectOption('#huntWin', '0-5');
   await page.click('#startHunt');
   await page.waitForTimeout(300);
@@ -76,6 +84,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // ── name that fret: answer the lit note with the right pad ──
   await page.click('#btnBack');
+  await page.evaluate(() => document.querySelectorAll('details.opts').forEach(d => { d.open = true; }));
   await page.click('#startName');
   await page.waitForTimeout(300);
   const curPc = await page.evaluate(() => window.__fw.drill.cur.p);
@@ -172,13 +181,33 @@ await withApp('fretwork', async ({ page, errors }) => {
   const modeLabels = await page.evaluate(() => [...document.querySelectorAll('#modeBoard text')].map(t => t.textContent));
   if (!modeLabels.includes('\u266f6')) throw new Error('Dorian altered tone not labeled #6: ' + modeLabels.slice(0, 8).join(','));
 
-  // ── the neck extends: 24 frets reach the explore board ──
+  // ── the neck extends: 24 frets reach the play board ──
   await page.click('#tabDrills');
   await page.selectOption('#setFrets', '24');
-  await page.click('#tabExplore');
+  await page.click('#tabPlay');
+  await page.selectOption('#playWin', 'all');
   await page.waitForTimeout(300);
-  const fret24 = await page.$('rect.cell[data-f="24"]');
+  const fret24 = await page.$('#playBoard rect.cell[data-f="24"]');
   if (!fret24) throw new Error('24 fret neck did not reach the board');
+
+  // ── the instrument: hold sustains, slide follows the string, release ends ──
+  await page.evaluate(() => document.querySelector('#playBoard rect.cell[data-s="2"][data-f="5"]').scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(200);
+  const c1 = await (await page.$('#playBoard rect.cell[data-s="2"][data-f="5"]')).boundingBox();
+  await page.mouse.move(c1.x + c1.width/2, c1.y + c1.height/2);
+  await page.mouse.down();
+  await page.waitForTimeout(250);
+  let voices = await page.evaluate(() => window.__fw.playVoices);
+  if (voices !== 1) throw new Error('held note did not open a voice: ' + voices);
+  const c2 = await (await page.$('#playBoard rect.cell[data-s="2"][data-f="7"]')).boundingBox();
+  await page.mouse.move(c2.x + c2.width/2, c2.y + c2.height/2, { steps: 6 });
+  await page.waitForTimeout(200);
+  voices = await page.evaluate(() => window.__fw.playVoices);
+  if (voices !== 1) throw new Error('slide dropped the voice: ' + voices);
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+  voices = await page.evaluate(() => window.__fw.playVoices);
+  if (voices !== 0) throw new Error('release did not close the voice: ' + voices);
 
   // ── stats teach: the weak spot list is populated by this session's misses ──
   await page.click('#tabStats');
@@ -199,5 +228,5 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (!/\d+%/.test(acc)) throw new Error('accuracy did not render: ' + acc);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: oracles, hunt, naming, numbered triad, climb, ladder with common tones, Dorian #6, 24 frets, weak spots, reload, ' + tag);
+  console.log('smoke pass: oracles, door, hunt, naming, numbered triad, climb, ladder with common tones, Dorian #6, 24 frets, held slide voice, weak spots, reload, ' + tag);
 });
