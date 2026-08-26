@@ -13,30 +13,55 @@
     --bg:#0f1115; --card:#171a21; --line:#262b36; --ink:#e9edf4; --muted:#9aa3b2;
     --field:#0b0d11; --pass:#2fbf71; --fail:#ff5a5f; --accent:#4c8dff; --accent-ink:#fff;
     --shadow:0 8px 30px rgba(0,0,0,.35); --r:14px;
+    --frame:rgba(148,163,192,.16); --tickc:rgba(148,163,192,.38);
   }
   @media (prefers-color-scheme:light){
     :root{ --bg:#eef1f6; --card:#ffffff; --line:#e4e8f0; --ink:#141822; --muted:#5a6474;
-           --field:#f6f8fc; --pass:#1a9e5f; --fail:#e0464b; --shadow:0 8px 30px rgba(20,30,60,.10); }
+           --field:#f6f8fc; --pass:#1a9e5f; --fail:#e0464b; --shadow:0 8px 30px rgba(20,30,60,.10);
+           --frame:rgba(30,50,100,.12); --tickc:rgba(30,50,100,.28); }
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
     background:var(--bg); color:var(--ink);
+    background-image:radial-gradient(120% 50% at 50% 0%, rgba(76,141,255,.07), transparent 62%);
+    background-repeat:no-repeat; background-attachment:fixed;
     font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-text-size-adjust:100%;
     padding:max(12px,env(safe-area-inset-top)) 12px calc(96px + env(safe-area-inset-bottom));
     max-width:520px; margin:0 auto;
   }
   .num{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
-  h1{font-size:15px; letter-spacing:.02em; text-transform:uppercase; color:var(--muted); margin:2px 2px 12px; font-weight:600}
-  .brand{color:var(--ink)}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:16px; margin-bottom:12px}
+  h1{font-size:14px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:4px 2px 14px; font-weight:600;
+     display:flex; align-items:center; gap:9px}
+  h1 .mark{width:19px; height:19px; color:var(--accent); flex:none}
+  .brand{color:var(--ink); font-weight:800}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:16px; margin-bottom:12px; position:relative}
+  /* the flourish: a hairline frame inside every card, registered with
+     surveyor plus-marks in the corners, the way a plat map signs its edges */
+  .card::after{content:""; position:absolute; inset:6px; border:1px solid var(--frame); border-radius:5px; pointer-events:none}
+  .card::before{content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--tickc),var(--tickc)),linear-gradient(var(--tickc),var(--tickc)),
+      linear-gradient(var(--tickc),var(--tickc)),linear-gradient(var(--tickc),var(--tickc)),
+      linear-gradient(var(--tickc),var(--tickc)),linear-gradient(var(--tickc),var(--tickc)),
+      linear-gradient(var(--tickc),var(--tickc)),linear-gradient(var(--tickc),var(--tickc));
+    background-position:
+      left 2px top 6px, left 6px top 2px, right 2px top 6px, right 6px top 2px,
+      left 2px bottom 6px, left 6px bottom 2px, right 2px bottom 6px, right 6px bottom 2px;
+    background-size: 9px 1px, 1px 9px, 9px 1px, 1px 9px, 9px 1px, 1px 9px, 9px 1px, 1px 9px;
+    background-repeat:no-repeat}
+  .card > *{position:relative}
+  .sect{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:2px 2px 12px}
 
   .verdict{display:flex; flex-direction:column; gap:2px; text-align:center; padding:18px 16px 6px}
   .verdict .state{font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase}
   .verdict .dscr{font-size:58px; font-weight:800; line-height:1; margin-top:2px}
   .verdict .sub{font-size:13px; color:var(--muted)}
   .verdict.pass .state{color:var(--pass)} .verdict.fail .state{color:var(--fail)}
+  .verdict.pass .dscr{color:var(--pass)} .verdict.fail .dscr{color:var(--fail)}
+  .verdict:not(.pass):not(.fail) .state{color:var(--muted); letter-spacing:.14em}
+  .verdict:not(.pass):not(.fail) .dscr{color:var(--muted); opacity:.6}
 
   .bar{position:relative; height:12px; border-radius:8px; background:var(--field); border:1px solid var(--line); margin:14px 2px 6px; overflow:hidden}
   .bar .fill{position:absolute; left:0; top:0; bottom:0; border-radius:8px 0 0 8px; transition:width .12s linear}
@@ -82,7 +107,7 @@
        border-radius:11px; padding:12px 14px; font-size:15px; font-weight:600; cursor:pointer; display:inline-flex;
        align-items:center; justify-content:center; gap:7px; transition:transform .05s ease, opacity .15s}
   .btn:active{transform:scale(.98)}
-  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent; box-shadow:0 5px 16px rgba(76,141,255,.32)}
   .btn.ghost{background:transparent}
   .btn[disabled]{opacity:.5; cursor:not-allowed}
   .btn .cnt{font-size:12px; background:rgba(128,128,128,.25); border-radius:20px; padding:1px 7px; min-width:20px}
@@ -138,7 +163,7 @@
 </style>
 </head>
 <body>
-<h1><span class="brand" id="brandName">Coverage</span> · deal screener</h1>
+<h1><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 9 13 26h6v17h26V26h6z" fill="currentColor"/><rect x="13" y="49" width="38" height="8" rx="4" fill="currentColor" opacity=".35"/><rect x="35" y="46" width="2.6" height="14" rx="1.3" fill="currentColor"/></svg><span class="brand" id="brandName">Coverage</span> · deal screener</h1>
 
 <!-- ============ VERDICT ============ -->
 <div class="card">
@@ -165,17 +190,18 @@
 <!-- ============ INPUTS ============ -->
 <div class="card">
   <fieldset>
+    <div class="sect">The property</div>
     <div class="grid">
       <div class="full">
         <label for="iNbhd">Neighborhood / label <span style="opacity:.7">(no full address)</span></label>
         <input class="plain" type="text" id="iNbhd" placeholder="e.g. Burbank duplex" autocomplete="off">
       </div>
       <div><label for="iPrice">Purchase price</label>
-        <div class="in"><span class="pre">$</span><input type="number" id="iPrice" inputmode="numeric" value="600000"></div></div>
+        <div class="in"><span class="pre">$</span><input type="number" id="iPrice" inputmode="numeric"></div></div>
       <div><label for="iDown">Down payment</label>
-        <div class="in"><span class="pre">$</span><input type="number" id="iDown" inputmode="numeric" value="180000"><span class="suf" id="downPct">30%</span></div></div>
+        <div class="in"><span class="pre">$</span><input type="number" id="iDown" inputmode="numeric"><span class="suf" id="downPct">30%</span></div></div>
       <div><label for="iRent">Gross monthly rent</label>
-        <div class="in"><span class="pre">$</span><input type="number" id="iRent" inputmode="numeric" value="4200"></div></div>
+        <div class="in"><span class="pre">$</span><input type="number" id="iRent" inputmode="numeric"></div></div>
       <div><label for="iRate">Rate</label>
         <div class="in"><input class="plain" type="number" id="iRate" inputmode="decimal" step="0.01" value="7.5"><span class="suf">% / yr</span></div></div>
       <div><label for="iTerm">Term</label>
@@ -219,7 +245,7 @@
 <div class="card">
   <p class="disc"><b>Estimates only. Not a commitment to lend.</b> Rates and terms subject to change, credit approval, and underwriting. Figures based on user-entered assumptions. Qualifying DSCR = rent &divide; PITIA; it excludes vacancy, management, and maintenance, which the True DSCR includes. The gap is why a deal can &ldquo;qualify&rdquo; and still run thin. Models properties, not people: enter no borrower names, SSNs, or account numbers.</p>
   <p class="fin" id="finLine">Financing available. Enter NMLS # to enable sharing.</p>
-  <p class="disc buildtag">coverage-v1</p>
+  <p class="disc buildtag">coverage-v2</p>
 </div>
 
 <!-- ============ ACTION BAR ============ -->
@@ -392,29 +418,33 @@
 
     var opFirst = (m.cName.split(",")[0]||"").trim();
     $("brandName").textContent = opFirst ? opFirst + "’s Coverage" : "Coverage";
-    $("downPct").textContent = pct(r.downPct);
+    $("downPct").textContent = ((parseFloat(m.iPrice)||0) > 0 && m.iDown !== "") ? pct(r.downPct) : "";
     $("taxAuto").textContent = (m.iTax==="") ? "(auto)" : "(manual)";
 
+    var ready = inp.price > 0 && inp.rent > 0;
     var v = $("verdict"), pass = r.qualifies;
-    v.className = "verdict " + (pass ? "pass" : "fail");
-    $("vState").textContent = pass ? "Covers" : "Short";
-    $("vDscr").textContent = isFinite(r.qualDSCR) ? r.qualDSCR.toFixed(2) : "—";
+    v.className = "verdict " + (ready ? (pass ? "pass" : "fail") : "");
+    $("vState").textContent = ready ? (pass ? "Covers" : "Short") : "Ready";
+    $("vDscr").textContent = ready && isFinite(r.qualDSCR) ? r.qualDSCR.toFixed(2) : "—";
     $("vSub").textContent = "qualifying DSCR · threshold " + target.toFixed(2);
 
     var scaleMax = target * 1.5;
-    $("bar").className = "bar " + (pass ? "pass" : "fail");
-    $("barFill").style.width = (Math.max(0, Math.min(r.qualDSCR/scaleMax,1))*100) + "%";
+    $("bar").className = "bar " + (ready ? (pass ? "pass" : "fail") : "");
+    $("barFill").style.width = (ready ? Math.max(0, Math.min(r.qualDSCR/scaleMax,1))*100 : 0) + "%";
     $("barTick").style.left = ((target/scaleMax)*100) + "%";
     $("barTargetLbl").textContent = "▲ " + target.toFixed(2);
 
-    $("oPI").textContent = usd(r.PI) + " /mo";
-    $("oPitia").textContent = usd(r.pitia) + " /mo";
-    var cf = $("oCF"); cf.textContent = (r.cashFlowMonthly<0?"-$":"$") + usd0(Math.abs(r.cashFlowMonthly)) + " /mo";
-    cf.className = "v num" + (r.cashFlowMonthly<0 ? " neg" : "");
-    $("oCap").textContent = pct1(r.capRate);
-    $("oTrue").textContent = r.trueDSCR == null ? "all cash" : r.trueDSCR.toFixed(2);
+    $("oPI").textContent = ready ? usd(r.PI) + " /mo" : "—";
+    $("oPitia").textContent = ready ? usd(r.pitia) + " /mo" : "—";
+    var cf = $("oCF"); cf.textContent = ready ? (r.cashFlowMonthly<0?"-$":"$") + usd0(Math.abs(r.cashFlowMonthly)) + " /mo" : "—";
+    cf.className = "v num" + (ready && r.cashFlowMonthly<0 ? " neg" : "");
+    $("oCap").textContent = ready ? pct1(r.capRate) : "—";
+    $("oTrue").textContent = ready ? (r.trueDSCR == null ? "all cash" : r.trueDSCR.toFixed(2)) : "—";
 
-    if (r.cannot){
+    if (!ready){
+      $("solveLead").textContent = "Type a price and the monthly rent to screen a deal.";
+      $("solveWhy").textContent = "Two numbers start the screen; everything else has a working default. The solver then prints the exact down payment that makes it qualify.";
+    } else if (r.cannot){
       $("solveLead").innerHTML = "Won't qualify at any down payment.";
       $("solveWhy").textContent = "Taxes + insurance + HOA already exceed rent ÷ " + target.toFixed(2)
         + ", so even an all-cash purchase can't reach the threshold on rent alone.";
@@ -432,13 +462,20 @@
       : "Financing available. Enter NMLS # to enable sharing.";
     $("btnShare").disabled = false; // gate is handled on click so the message can explain
 
-    try{ localStorage.setItem("coverage.v1", JSON.stringify(m)); }catch(e){}
-    return { m:m, inp:inp, r:r };
+    try{ localStorage.setItem("coverage.v2", JSON.stringify(m)); }catch(e){}
+    return { m:m, inp:inp, r:r, ready:ready };
   }
 
   function restore(){
     try{
-      var o = JSON.parse(localStorage.getItem("coverage.v1")||"null");
+      var o = JSON.parse(localStorage.getItem("coverage.v2")||"null");
+      if (!o){
+        // one-time move off the old key: the operator panel carries over,
+        // the demo property numbers stay behind so the screen starts blank
+        var v1 = JSON.parse(localStorage.getItem("coverage.v1")||"null");
+        if (v1){ o = {}; ["cName","cNmls","cPhone","cTarget","cLtv","cTaxRate","cVac","cMgmt","cMaint"]
+          .forEach(function(k){ if (v1[k]!=null) o[k]=v1[k]; }); }
+      }
       if (o) fieldIds.forEach(function(id){ if (o[id]!=null && $(id)) $(id).value=o[id]; });
     }catch(e){}
   }
@@ -478,6 +515,7 @@
 
   function saveCurrent(){
     var state = render();
+    if (!state.ready){ toast("Enter a price and rent first"); return; }
     var label = (state.m.iNbhd||"").trim() || ("Deal " + new Date().toLocaleDateString());
     var rec = { id: Date.now().toString(36)+Math.random().toString(36).slice(2,7),
                 ts: Date.now(), label: label, fields: state.m };
@@ -583,6 +621,7 @@
 
   function openShare(){
     var state=render();
+    if (!state.ready){ toast("Screen a deal first: price and rent"); return; }
     var nmls=state.m.cNmls.trim();
     var body=$("shareBody");
     if (!nmls){ showGate("shareSheet","shareBody"); return; }
@@ -596,20 +635,37 @@
       '</div>'+
       '<p class="disc" style="margin-top:10px">Address is withheld by default. The sheet says “address on request,” which keeps every lead a text to you.</p>';
     $("shareSheet").classList.add("open");
-    $("doShare").onclick=function(){ shareCanvas(canvas); };
+    var onePager = fileFromCanvas(canvas, "coverage-deal.png");
+    $("doShare").onclick=function(){ shareFile(onePager); };
     $("doDownload").onclick=function(){ downloadCanvas(canvas); };
   }
 
-  function shareCanvas(canvas){
-    canvas.toBlob(function(blob){
-      if (!blob){ toast("Render failed"); return; }
-      var file=new File([blob], "coverage-deal.png", {type:"image/png"});
-      if (navigator.canShare && navigator.canShare({files:[file]})){
-        navigator.share({files:[file], title:"Deal", text:"Financing preview"}).catch(function(){});
+  /* The file is rendered the moment the preview opens, not when the button is
+     tapped: iOS only lets navigator.share run inside a fresh user gesture, and
+     waiting on toBlob inside the tap is exactly the kind of async gap that
+     makes Safari refuse. Files only, no text: iMessage keeps the image that
+     way instead of demoting it to a caption. Every failure path lands on a
+     download with words, never on a button that silently does nothing. */
+  function fileFromCanvas(canvas, name, type){
+    return new Promise(function(res){
+      canvas.toBlob(function(b){ res(b ? new File([b], name, {type:type||"image/png"}) : null); }, type||"image/png");
+    });
+  }
+  function canShareFiles(file){
+    return !!(navigator.share && navigator.canShare && navigator.canShare({files:[file]}));
+  }
+  function shareFile(filePromise){
+    filePromise.then(function(file){
+      if (!file){ toast("Render failed"); return; }
+      if (canShareFiles(file)){
+        navigator.share({files:[file]}).catch(function(err){
+          if (err && err.name === "AbortError") return;      // they closed the sheet
+          downloadBlob(file, file.name); toast("Share failed, saved instead");
+        });
       } else {
-        downloadBlob(blob); toast("Sharing not supported, saved instead");
+        downloadBlob(file, file.name); toast("Saved. Attach it from your files");
       }
-    }, "image/png");
+    });
   }
   function downloadCanvas(canvas, name){ canvas.toBlob(function(b){ if(b) downloadBlob(b, name); }, "image/png"); }
   function downloadBlob(blob, name){
@@ -650,8 +706,8 @@
     var pillW=232, pillH=64, pillY=262;
     g.fillStyle=accent; rrect(pad,pillY,pillW,pillH,14); g.fill();
     text(pass?"COVERS":"SHORT", pad+pillW/2, pillY+42, 30, "#fff", "800", "center");
-    text(isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):"—", W-pad, pillY+58, 92, INK, "800", "right");
-    text("qualifying DSCR · threshold "+(+m.cTarget||1.15).toFixed(2), W-pad, pillY-2, 24, MUT, "500", "right");
+    text(isFinite(r.qualDSCR)?r.qualDSCR.toFixed(2):"—", W-pad, pillY+66, 92, INK, "800", "right");
+    text("qualifying DSCR · threshold "+(+m.cTarget||1.15).toFixed(2), W-pad, pillY-12, 24, MUT, "500", "right");
 
     // coverage bar
     var barY=372, barW=W-pad*2, barH=18, target=+m.cTarget||1.15, scaleMax=target*1.5;
@@ -722,9 +778,24 @@
         '</div>'+
         '<p class="disc" style="margin-top:10px">One tall image for text/iMessage, plus a PDF for email. Addresses are withheld, so every reply comes back to you. Send it yourself from your own contacts; this tool stores and sends nothing.</p>';
       $("dropSheet").classList.add("open");
-      $("dropShare").onclick=function(){ shareCanvas(canvas); };
+      var digest = fileFromCanvas(canvas, "deal-drop.png");
+      $("dropShare").onclick=function(){ shareFile(digest); };
       $("dropPng").onclick=function(){ downloadCanvas(canvas, "deal-drop.png"); };
-      $("dropPdf").onclick=function(){ downloadBlob(buildPdfFromCanvas(canvas), "deal-drop.pdf"); };
+      /* The PDF blob builds synchronously, so it can ride the same tap
+         straight into the share sheet and Ryan can hand it to Mail without a
+         trip through Files. Anywhere that cannot happen, it downloads. */
+      var pdfProbe = new File([""], "x.pdf", {type:"application/pdf"});
+      if (canShareFiles(pdfProbe)) $("dropPdf").textContent = "Share PDF";
+      $("dropPdf").onclick=function(){
+        var blob = buildPdfFromCanvas(canvas);
+        var f = new File([blob], "deal-drop.pdf", {type:"application/pdf"});
+        if (canShareFiles(f)){
+          navigator.share({files:[f]}).catch(function(err){
+            if (err && err.name === "AbortError") return;
+            downloadBlob(blob, "deal-drop.pdf"); toast("Share failed, saved instead");
+          });
+        } else downloadBlob(blob, "deal-drop.pdf");
+      };
     }).catch(function(){ toast("Storage unavailable"); });
   }
 
