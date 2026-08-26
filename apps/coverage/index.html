@@ -390,7 +390,8 @@
     var r = DealMath.evaluate(inp);
     var target = inp.target;
 
-    $("brandName").textContent = ((m.cName.split(",")[0]||"Coverage").trim()) + " Coverage";
+    var opFirst = (m.cName.split(",")[0]||"").trim();
+    $("brandName").textContent = opFirst ? opFirst + "’s Coverage" : "Coverage";
     $("downPct").textContent = pct(r.downPct);
     $("taxAuto").textContent = (m.iTax==="") ? "(auto)" : "(manual)";
 
