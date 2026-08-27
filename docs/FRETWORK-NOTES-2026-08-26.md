@@ -139,8 +139,8 @@ ROADMAP = designed and queued, not built yet. WAITING = blocked on Stephen.
 
 ## Waiting on Stephen
 
-- Stripe payment link for the Fretwork tip jar (drop into TIP_URL in index.html and
-  bump the sw.js cache version).
+- Stripe payment link for the Fretwork tip jar: ARRIVED 2026-08-27, wired and
+  live in v6. See docs/FRETWORK-NOTES-2026-08-27.md for the v6 batch.
 - The Suno backing track library, when it is ready.
 - Sprites for the celebration animation, if we want to get crazy.
 

@@ -227,6 +227,12 @@
   details.opts > *:first-of-type{margin-top:8px}
   .about p{font-size:13px; color:var(--muted); margin:0 0 8px}
   .about p b{color:var(--ink)}
+  /* ── the feedback dialog: one honest box, straight to Stephen ── */
+  .fbwrap{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center;
+    justify-content:center; z-index:70; padding:16px}
+  .fbwrap .card{width:100%; max-width:420px; margin:0}
+  textarea.namer{resize:vertical; min-height:110px; line-height:1.4; font-weight:500; font-size:14px}
+
   .foot{font-size:12px; color:var(--muted); text-align:center; margin-top:4px}
   .foot a{color:var(--muted)}
   .buildtag{font-size:11px; color:var(--muted); opacity:.7; text-align:center; margin:10px 0 0}
@@ -277,8 +283,8 @@
     <button class="btn start" id="btnA2HS" hidden>Add to home screen</button>
     <p id="a2hsIos" hidden style="font-size:13px; color:var(--muted); margin:0 0 8px">On iPhone: tap the share button in Safari, then <b>Add to Home Screen</b>. Fretwork works offline once it is on there.</p>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
-    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
-    <p class="buildtag">fretwork-v5</p>
+    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
+    <p class="buildtag">fretwork-v6</p>
   </div>
 </section>
 
@@ -459,10 +465,10 @@
       </select></div>
     </div>
     <div class="chips">
-      <button class="chip" id="setLefty" aria-pressed="false">left handed</button>
+      <button class="chip" id="setLefty" aria-pressed="false" title="Mirror the strings: for left handed players, or for a phone lying flat in front of you">reverse the strings</button>
       <button class="chip" id="setNumbers" aria-pressed="true" title="Label chord tones R 3 5 7 instead of note names">chord tone numbers</button>
     </div>
-    <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart.</p>
+    <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart. Reverse the strings if you play left handed, or when the phone lies flat in front of you like a real neck: no perspective is assumed here.</p>
   </div>
 
 </section>
@@ -535,7 +541,7 @@
   </div>
   <div class="card about">
     <p><b>The system:</b> learn two scales, major and minor. Every mode is one of them with one note bent. The gold notes are the bent ones: that is the sound you are chasing. Park on a scale, run the vamp, and make the gold note land on purpose.</p>
-    <p><b>Numbers, not letters:</b> every dot wears the job it does in the scale. Dorian is minor with a &#9839;6, so find the 6 and see that it is sharp. No key math required.</p>
+    <p><b>Intervals, not letters:</b> every dot wears the job it does, named the way intervals are named. A bare number is major or perfect, m3 is a minor 3rd, m7 a minor 7th, TT the tritone. Dorian is minor with a major 6th: find the 6 and hear it raised. These are the intervals stacking against the root to make the sound, and no key math is required.</p>
     <p><b>Shapes travel.</b> You do not learn C Dorian and then G Dorian. You learn Dorian once, and it is Dorian anywhere you slide it.</p>
     <p>In the stacked view every position wears its own color. A note wearing two colors belongs to both positions: that is your doorway to slide up or down the neck.</p>
   </div>
@@ -546,7 +552,7 @@
   <div class="card">
     <div id="playSetup">
       <p class="sect">Play. Two hands welcome.</p>
-      <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Hold a note and it sustains. Slide along a string and it slides. Light up a scale and stay inside it, or do not. Zoom to a chunk of the neck and go full screen for fast parts.</p>
+      <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Hold a note and it sustains. Slide along a string and it slides. Light up a scale and stay inside it, or do not. Zoom to a chunk of the neck and go full screen for fast parts. Got a MIDI keyboard? Plug it in, tap the midi chip, and improvise through these voices.</p>
       <div class="row">
         <div><label for="playOverlay">Light up</label><select id="playOverlay">
           <option value="none">Nothing</option>
@@ -558,6 +564,8 @@
         <div><label for="playVoice">Voice</label><select id="playVoice">
           <option value="steel">Steel</option>
           <option value="warm">Warm</option>
+          <option value="nylon">Nylon</option>
+          <option value="keys">Keys</option>
           <option value="bass">Bass</option>
           <option value="drive">Drive</option>
           <option value="mute">Mute</option>
@@ -566,10 +574,12 @@
       <div class="row">
         <div><label for="playFrom">From fret</label><select id="playFrom"></select></div>
         <div><label for="playTo">To fret</label><select id="playTo"></select></div>
-        <div style="display:flex; align-items:flex-end; gap:6px">
+        <div style="display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap">
           <button class="chip" id="loopRec" aria-pressed="false" title="Record a loop of what you play">&#9679; loop</button>
           <button class="chip" id="loopPlay" aria-pressed="false" hidden>&#9654; play</button>
           <button class="chip" id="loopClear" hidden>&#10005;</button>
+          <button class="chip" id="midiChip" aria-pressed="false" title="Play these voices from a MIDI keyboard plugged into this device">&#9836; midi</button>
+          <button class="chip" id="playMirror" aria-pressed="false" title="Mirror the strings: lefty, or phone flat in front of you">&#8644; strings</button>
         </div>
       </div>
     </div>
@@ -585,7 +595,7 @@
 <section id="view-charts" hidden>
   <div class="card" id="chartListCard">
     <p class="sect">Your chord charts</p>
-    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Build your own chords, call them anything, put them in any order, and hear the progression in your meter at your tempo. It all lives on your phone.</p>
+    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Build your own chords or grab them from the bank, call them anything, put them in any order, and hear the progression in your meter at your tempo. Keep favorites and reuse them in every song. It all lives on your phone.</p>
     <div id="chartList"></div>
     <button class="btn primary start" id="btnNewChart">New chart</button>
   </div>
@@ -597,33 +607,59 @@
     <p class="rlabel" style="margin-top:8px">The progression, in order</p>
     <div class="chordstrip" id="chordStrip"></div>
     <div class="row">
-      <div><label for="chartBeats">Beats each</label><select id="chartBeats">
-        <option value="2">2 beats</option>
-        <option value="3">3 beats</option>
-        <option value="4" selected>4 beats</option>
-        <option value="6">6 beats</option>
-        <option value="8">8 beats</option>
-      </select></div>
-      <div><label for="chartTempo">Tempo</label><select id="chartTempo">
-        <option value="60">60 slow</option>
-        <option value="80" selected>80 easy</option>
-        <option value="100">100 mid</option>
-        <option value="120">120 up</option>
-        <option value="144">144 quick</option>
-      </select></div>
+      <div><label for="chartBeats">Beats a chord</label><select id="chartBeats"></select></div>
+      <div><label for="chartTempo">Tempo</label><select id="chartTempo"></select></div>
       <div style="display:flex; align-items:flex-end"><button class="btn primary" id="btnChartPlay" style="width:100%">Play</button></div>
     </div>
+    <div class="row">
+      <div><label for="chartVoice">Sound</label><select id="chartVoice">
+        <option value="warm">Warm</option>
+        <option value="nylon">Nylon</option>
+        <option value="steel">Steel</option>
+        <option value="keys">Keys</option>
+      </select></div>
+      <div><label for="chartClick">Count</label><select id="chartClick">
+        <option value="click">Soft click</option>
+        <option value="wood">Wood</option>
+        <option value="beep">Beep</option>
+        <option value="off">No count</option>
+      </select></div>
+      <div style="display:flex; align-items:flex-end"><button class="chip" id="jamChip" aria-pressed="false" title="A playable fretboard under the chart, for ideas when there is no guitar around" style="width:100%; text-align:center">jam board</button></div>
+    </div>
+    <p class="why" style="font-size:12px;color:var(--muted);margin:0 0 6px">Beats and tempo here are the chart's meter. Any single chord can hold its own count and tempo: edit the chord and set it there. That is how you write a 5 beat bar or a tempo change mid song.</p>
     <p class="verdictline" id="chartVerdict" style="min-height:18px"></p>
+    <div class="boardwrap" id="jamBoard" hidden></div>
+  </div>
+  <div class="card" id="chordPickCard" hidden>
+    <p class="sect">Add a chord</p>
+    <button class="btn primary start" id="btnBuildNew" style="margin-bottom:12px">Build one on the fretboard</button>
+    <p class="rlabel">My chords</p>
+    <div class="chips" id="libChips" style="margin-bottom:8px"></div>
+    <p class="rlabel">The bank: the shapes everyone meets first</p>
+    <div class="chips" id="bankChips"></div>
+    <p class="why" id="bankNote" style="font-size:12px;color:var(--muted);margin:8px 0 0">Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.</p>
+    <p class="verdictline" id="pickVerdict" style="min-height:18px"></p>
+    <button class="btn ghost start" id="btnPickBack">Back to the chart</button>
   </div>
   <div class="card" id="chordEditCard" hidden>
     <p class="sect" id="chordEditTitle">Build a chord</p>
-    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 8px">Tap the board to put a finger down, tap it again to lift it. The buttons under the neck mute or open each string.</p>
+    <p class="why" style="font-size:12.5px;color:var(--muted);margin:0 0 8px">Tap the board to put a finger down, tap it again to lift it. The buttons under the neck mute or open each string. As notes land, Fretwork guesses what you built: tap a guess to use it as the name, or ignore it. The name is yours.</p>
     <div class="boardwrap" id="chordBoard"></div>
     <div class="strstate" id="strState"></div>
+    <div class="chips" id="guessChips" style="margin-top:8px"></div>
     <input class="namer" id="chordName" maxlength="24" placeholder="Call it anything: Am7, Stormy, The Sad One" style="margin-top:8px">
+    <div class="row" style="margin-top:8px">
+      <div><label for="chordBeatsSel">Held for</label><select id="chordBeatsSel"></select></div>
+      <div><label for="chordTempoSel">Tempo here</label><select id="chordTempoSel"></select></div>
+    </div>
     <div class="minirow">
       <button class="btn" id="btnChordHear">Hear it</button>
+      <button class="btn" id="btnNudgeDown" title="Slide the whole shape one fret down">&#9660; a fret</button>
+      <button class="btn" id="btnNudgeUp" title="Slide the whole shape one fret up">&#9650; a fret</button>
+    </div>
+    <div class="minirow">
       <button class="btn primary" id="btnChordSave">Save chord</button>
+      <button class="btn" id="btnChordKeep" title="Keep this chord in My chords, ready for every chart">&#9734; keep</button>
       <button class="btn ghost" id="btnChordDelete" hidden>Remove</button>
       <button class="btn ghost" id="btnChordCancel">Back</button>
     </div>
@@ -670,6 +706,19 @@
   </div>
 </section>
 
+<!-- ============ FEEDBACK ============ -->
+<div class="fbwrap" id="fbWrap" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-label="Send feedback">
+    <p class="sect">Found a bug? Want a thing?</p>
+    <textarea class="namer" id="fbText" rows="5" maxlength="1500" placeholder="Say it plainly: what happened, what you expected, and what phone you are on if it is a bug."></textarea>
+    <p class="verdictline" id="fbStatus" style="min-height:18px; text-align:left; margin:6px 0 0"></p>
+    <div class="minirow">
+      <button class="btn primary" id="fbSend">Send it</button>
+      <button class="btn ghost" id="fbCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <script>
@@ -680,7 +729,11 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* config seam, fleet pattern: an empty string hides the tip jar link */
-var TIP_URL = '';
+var TIP_URL = 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
+/* a Discord webhook URL turns the footer Feedback link into an in app report
+   that lands in Stephen's server the moment somebody hits send. An empty
+   string keeps the plain email link. */
+var FEEDBACK_WEBHOOK = '';
 
 /* ── theory ────────────────────────────────────────────────────────────── */
 var LETTERS = ['C','D','E','F','G','A','B'];
@@ -717,12 +770,15 @@ var QUAL = {
 };
 var TONE_WORD = ['root','3rd','5th','7th'];
 var INV_WORD = ['root position','1st inversion','2nd inversion'];
-var SUFFIX = { maj7:'maj7', dom7:'7', m7:'m7', m7b5:'m7♭5', min:'m', maj:'', mmaj7:'m(maj7)', sus:'7sus4' };
+var SUFFIX = { maj7:'maj7', dom7:'7', m7:'m7', m7b5:'m7♭5', min:'m', maj:'', mmaj7:'m(maj7)', sus:'7sus4', aug:'aug', dim7:'dim7' };
 /* chord tone numbers: what the note is DOING, which is what transfers */
 var NUM_LABEL = { P1:'R', m3:'♭3', M3:'3', d5:'♭5', P5:'5', A5:'♯5', d7:'𝄫7', m7:'♭7', M7:'7' };
-/* scale degree labels: every dot on a scale board wears its job */
-var DEG_LABEL = { P1:'1', m2:'♭2', M2:'2', m3:'♭3', M3:'3', P4:'4', A4:'♯4', d5:'♭5',
-                  P5:'5', A5:'♯5', m6:'♭6', M6:'6', d7:'𝄫7', m7:'♭7', M7:'7' };
+/* scale interval labels: quality first, the way intervals are actually named.
+   A bare number is major or perfect, m is minor, TT is the tritone whichever
+   way it is spelled. Stephen's ruling: a flat 3 is trivia, a minor 3rd is a
+   sound. These are the intervals stacking against the root. */
+var DEG_LABEL = { P1:'1', m2:'m2', M2:'2', m3:'m3', M3:'3', P4:'4', A4:'TT', d5:'TT',
+                  P5:'5', A5:'A5', m6:'m6', M6:'6', d7:'d7', m7:'m7', M7:'7' };
 
 /* transpose DOWN, for finding the parent key a mode lives in */
 function dn(root, ivName){
@@ -743,48 +799,66 @@ var MAJOR_IVS = ['P1','M2','M3','P4','P5','M6','M7'];
 var MODES = [
   { name:'Ionian',     grp:'The seven modes', ivs:['P1','M2','M3','P4','P5','M6','M7'], alts:[],          deg:1, chord:'maj7',
     line:'The major scale itself. Home base.', ctx:'the 1 chord' },
-  { name:'Dorian',     grp:'The seven modes', ivs:['P1','M2','m3','P4','P5','M6','m7'], alts:['M6'], altLabels:['♯6'], deg:2, chord:'m7',
-    line:'The minor scale with a ♯6. Gorgeous over a blues too.', ctx:'the 2 chord' },
-  { name:'Phrygian',   grp:'The seven modes', ivs:['P1','m2','m3','P4','P5','m6','m7'], alts:['m2'], altLabels:['♭2'], deg:3, chord:'m7',
-    line:'The minor scale with a ♭2. Spain lives here.', ctx:'the 3 chord' },
-  { name:'Lydian',     grp:'The seven modes', ivs:['P1','M2','M3','A4','P5','M6','M7'], alts:['A4'], altLabels:['♯4'], deg:4, chord:'maj7',
-    line:'The major scale with a ♯4. Film scores adore it.', ctx:'the 4 chord' },
-  { name:'Mixolydian', grp:'The seven modes', ivs:['P1','M2','M3','P4','P5','M6','m7'], alts:['m7'], altLabels:['♭7'], deg:5, chord:'dom7',
-    line:'The major scale with a ♭7. Dominant country.', ctx:'the 5 chord' },
+  { name:'Dorian',     grp:'The seven modes', ivs:['P1','M2','m3','P4','P5','M6','m7'], alts:['M6'], altLabels:['6'], altWords:['major 6th'], deg:2, chord:'m7',
+    line:'The minor scale with its 6th raised to a major 6th. Gorgeous over a blues too.', ctx:'the 2 chord' },
+  { name:'Phrygian',   grp:'The seven modes', ivs:['P1','m2','m3','P4','P5','m6','m7'], alts:['m2'], altLabels:['m2'], altWords:['minor 2nd'], deg:3, chord:'m7',
+    line:'The minor scale with a minor 2nd. Spain lives here.', ctx:'the 3 chord' },
+  { name:'Lydian',     grp:'The seven modes', ivs:['P1','M2','M3','A4','P5','M6','M7'], alts:['A4'], altLabels:['TT'], altWords:['tritone 4th'], deg:4, chord:'maj7',
+    line:'The major scale with its 4th raised to the tritone. Film scores adore it.', ctx:'the 4 chord' },
+  { name:'Mixolydian', grp:'The seven modes', ivs:['P1','M2','M3','P4','P5','M6','m7'], alts:['m7'], altLabels:['m7'], altWords:['minor 7th'], deg:5, chord:'dom7',
+    line:'The major scale with a minor 7th. Dominant country.', ctx:'the 5 chord' },
   { name:'Aeolian',    grp:'The seven modes', ivs:['P1','M2','m3','P4','P5','m6','m7'], alts:[],          deg:6, chord:'m7',
-    line:'The natural minor scale itself.', ctx:'the 6 chord' },
-  { name:'Locrian',    grp:'The seven modes', ivs:['P1','m2','m3','P4','d5','m6','m7'], alts:['m2','d5'], altLabels:['♭2','♭5'], deg:7, chord:'m7b5',
-    line:'The minor scale with a ♭2 and a ♭5. Two altered tones.', ctx:'the 7 chord' },
+    line:'The natural minor scale itself: minor 3rd, minor 6th, minor 7th.', ctx:'the 6 chord' },
+  { name:'Locrian',    grp:'The seven modes', ivs:['P1','m2','m3','P4','d5','m6','m7'], alts:['m2','d5'], altLabels:['m2','TT'], altWords:['minor 2nd','tritone 5th'], deg:7, chord:'m7b5',
+    line:'The minor scale with a minor 2nd and its 5th shrunk to the tritone. Two altered tones.', ctx:'the 7 chord' },
   { name:'Major pentatonic', grp:'Pentatonic and blues', ivs:['P1','M2','M3','P5','M6'], alts:[], chord:'maj',
     line:'The major scale minus the 4 and the 7.',
     ctx2:'A pentatonic is a seven note scale with two notes removed. Take out the 4 and the 7 and nothing is left that can clash.' },
   { name:'Minor pentatonic', grp:'Pentatonic and blues', ivs:['P1','m3','P4','P5','m7'], alts:[], chord:'m7',
-    line:'The minor scale minus the 2 and the ♭6.',
+    line:'The minor scale minus the 2 and the minor 6th.',
     ctx2:'Home base for almost everything. Same five notes as its relative major pentatonic, and the box every variation hangs off of.' },
-  { name:'Blues', grp:'Pentatonic and blues', ivs:['P1','m3','P4','d5','P5','m7'], alts:['d5'], altLabels:['♭5'], chord:'dom7',
-    line:'Minor pentatonic plus the ♭5.',
-    ctx2:'The blue note slides between 4 and 5. It is passing through, not moving in.' },
-  { name:'Harmonic minor', grp:'The jazz minors', ivs:['P1','M2','m3','P4','P5','m6','M7'], alts:['M7'], altLabels:['♯7'], chord:'min',
-    line:'The minor scale with the 7 raised.',
-    ctx2:'Raise the 7 and the 5 chord turns dominant, so it pulls home hard. That pull is why this scale exists.' },
-  { name:'Melodic minor', grp:'The jazz minors', ivs:['P1','M2','m3','P4','P5','M6','M7'], alts:['M6','M7'], altLabels:['♯6','♯7'], chord:'mmaj7',
-    line:'Minor with the 6 and the 7 both raised.',
+  { name:'Blues', grp:'Pentatonic and blues', ivs:['P1','m3','P4','d5','P5','m7'], alts:['d5'], altLabels:['TT'], chord:'dom7',
+    line:'Minor pentatonic plus the tritone.',
+    ctx2:'The blue note is the tritone between the 4 and the 5. It is passing through, not moving in.' },
+  { name:'Harmonic minor', grp:'The jazz minors', ivs:['P1','M2','m3','P4','P5','m6','M7'], alts:['M7'], altLabels:['7'], chord:'min',
+    line:'The minor scale with its 7th raised to a major 7th.',
+    ctx2:'Raise the 7th and the 5 chord turns dominant, so it pulls home hard. That pull is why this scale exists.' },
+  { name:'Melodic minor', grp:'The jazz minors', ivs:['P1','M2','m3','P4','P5','M6','M7'], alts:['M6','M7'], altLabels:['6','7'], chord:'mmaj7',
+    line:'Minor with the 6th and the 7th both raised to major.',
     ctx2:'The smooth way up a minor key: the top of the scale walks straight to the root. Jazz runs it up and down.' },
   { name:'Phrygian dominant', grp:'The jazz minors', ivs:['P1','m2','M3','P4','P5','m6','m7'], alts:['M3'], altLabels:['3'], chord:'dom7',
-    line:'Phrygian with a major 3.',
+    line:'Phrygian with a major 3rd.',
     ctx2:'Harmonic minor played from its 5th note. Spain, surf, and the Middle East all drink from this well.' },
-  { name:'Lydian dominant', grp:'The jazz minors', ivs:['P1','M2','M3','A4','P5','M6','m7'], alts:['A4','m7'], altLabels:['♯4','♭7'], chord:'dom7',
-    line:'Major with a ♯4 and a ♭7 at once.',
+  { name:'Lydian dominant', grp:'The jazz minors', ivs:['P1','M2','M3','A4','P5','M6','m7'], alts:['A4','m7'], altLabels:['TT','m7'], chord:'dom7',
+    line:'Major with a tritone 4th and a minor 7th at once.',
     ctx2:'Melodic minor played from its 4th note. The go to sound over a 7♯11 chord, straight out of bebop.' },
-  { name:'Hirajoshi', grp:'Around the world', ivs:['P1','M2','m3','P5','m6'], alts:['m6'], altLabels:['♭6'], chord:'min',
-    line:'A Japanese five note scale: 1, 2, ♭3, 5, ♭6.',
-    ctx2:'Tuned for koto. Sparse on purpose: every note is a destination, and the ♭6 is the color.' },
-  { name:'In sen', grp:'Around the world', ivs:['P1','m2','P4','P5','m7'], alts:['m2'], altLabels:['♭2'], chord:'sus',
-    line:'A Japanese five note scale with the ♭2 exposed.',
-    ctx2:'The ♭2 sits right on top of the root. Sparse, dark, and instantly recognizable.' },
-  { name:'Double harmonic', grp:'Around the world', ivs:['P1','m2','M3','P4','P5','m6','M7'], alts:['m2','m6'], altLabels:['♭2','♭6'], chord:'maj',
-    line:'The major scale with a ♭2 and a ♭6.',
+  { name:'Hirajoshi', grp:'Around the world', ivs:['P1','M2','m3','P5','m6'], alts:['m6'], altLabels:['m6'], chord:'min',
+    line:'A Japanese five note scale: 1, 2, minor 3rd, 5, minor 6th.',
+    ctx2:'Tuned for koto. Sparse on purpose: every note is a destination, and the minor 6th is the color.' },
+  { name:'In sen', grp:'Around the world', ivs:['P1','m2','P4','P5','m7'], alts:['m2'], altLabels:['m2'], chord:'sus',
+    line:'A Japanese five note scale with the minor 2nd exposed.',
+    ctx2:'The minor 2nd sits right on top of the root. Sparse, dark, and instantly recognizable.' },
+  { name:'Double harmonic', grp:'Around the world', ivs:['P1','m2','M3','P4','P5','m6','M7'], alts:['m2','m6'], altLabels:['m2','m6'], chord:'maj',
+    line:'The major scale with a minor 2nd and a minor 6th.',
     ctx2:'Two augmented 2nd leaps give it that snake charmer pull. Also called Byzantine.' },
+  /* the symmetric scales, Messiaen's modes of limited transposition: built
+     from repeating chunks, so the same pitch keeps offering two hearings.
+     That double reading is the lesson, and the ctx2 lines teach it. */
+  { name:'Whole tone', grp:'Messiaen and the symmetric scales', ivs:['P1','M2','M3','A4','A5','m7'], alts:['A5'], altLabels:['A5'], chord:'aug',
+    line:'Six notes, nothing but whole steps. Messiaen counted it as his first mode.',
+    ctx2:'No half steps means nothing pulls home, so the whole scale floats. And the augmented 5th is one pitch your ear can also read as a minor 6th: two hearings of the same note, and leaning on one or the other is where the dreamy tension comes from.' },
+  { name:'Diminished, half whole', grp:'Messiaen and the symmetric scales', ivs:['P1','m2','m3','M3','A4','P5','M6','m7'], alts:['m2'], altLabels:['m2'], chord:'dom7',
+    line:'Eight notes: half step, whole step, over and over. Messiaen mode 2.',
+    ctx2:'It holds both thirds at once, the minor 3rd and the major 3rd, one half step apart. Treat them as two spellings of the same idea and your line bends between them: that bend is the tension jazz runs over a dominant chord.' },
+  { name:'Diminished, whole half', grp:'Messiaen and the symmetric scales', ivs:['P1','M2','m3','P4','d5','m6','M6','M7'], alts:['d5'], altLabels:['TT'], chord:'dim7',
+    line:'The same eight notes started whole step first. Home over a dim7.',
+    ctx2:'Like the dim7 chord it feeds, the shape repeats every three frets. The tritone and the major 6th give it the carousel spin.' },
+  { name:'Messiaen mode 3', grp:'Messiaen and the symmetric scales', ivs:['P1','M2','m3','M3','A4','P5','m6','m7','M7'], alts:['m3','M3'], altLabels:['m3','3'], chord:'aug',
+    line:'Nine notes in three matching chunks: whole step, half, half.',
+    ctx2:'Both thirds live here and both 7ths too, so the color shifts with whichever one the melody leans on. That shimmer between two hearings of the same spot is the Messiaen sound.' },
+  { name:'Augmented scale', grp:'Messiaen and the symmetric scales', ivs:['P1','m3','M3','P5','m6','M7'], alts:['m6'], altLabels:['m6'], chord:'aug',
+    line:'Six notes leaping in thirds: minor 3rd, half step, again and again.',
+    ctx2:'The minor 6th here is one pitch with two jobs: lean on it as an augmented 5th and the chord glows, hear it as a minor 6th and it aches. The shape repeats every four frets.' },
 ];
 
 /* the seventeen everyday spellings, for pickers */
@@ -814,7 +888,7 @@ function gauge(s){ return 6-s; }
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
 var S = { v:1, sound:true, lefty:false, tuning:'standard', frets:15, numbers:true,
-          charts:[],
+          charts:[], chordLib:[],
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
   var raw = localStorage.getItem(KEY);
@@ -850,14 +924,35 @@ function makeKS(midi, dur, damp){
   for (var j=Np;j<n;j++) d[j] = damp*0.5*(d[j-Np]+d[j-Np+1]);
   return buf;
 }
-/* the instrument voices the Play board can wear */
+/* a rounder tone rendered by hand: a sine with two dying partials, the keys
+   voice, because the steel string is bright and not everything should be */
+function makeAdd(midi, dur){
+  var f = 440*Math.pow(2,(midi-69)/12);
+  var sr = AC.sampleRate, n = Math.round(sr*dur);
+  var buf = AC.createBuffer(1,n,sr);
+  var d = buf.getChannelData(0);
+  for (var i=0;i<n;i++){
+    var t = i/sr;
+    var env = Math.exp(-3.0*t)*Math.min(1, t*180);
+    d[i] = env*( Math.sin(2*Math.PI*f*t)*0.6
+               + Math.sin(2*Math.PI*f*2*t)*0.22*Math.exp(-6*t)
+               + Math.sin(2*Math.PI*f*4.01*t)*0.1*Math.exp(-9*t) );
+  }
+  return buf;
+}
+/* the instrument voices the boards can wear */
 var VOICES = {
   steel: { damp:0.996,  dur:1.1, gain:0.45, lp:0,    shift:0,   drive:0 },
   warm:  { damp:0.9965, dur:1.5, gain:0.55, lp:1600, shift:0,   drive:0 },
+  nylon: { damp:0.995,  dur:1.4, gain:0.6,  lp:1050, shift:0,   drive:0 },
+  keys:  { kind:'add',  dur:2.2, gain:0.55, lp:0,    shift:0,   drive:0, damp:0 },
   bass:  { damp:0.998,  dur:1.8, gain:0.6,  lp:900,  shift:-12, drive:0 },
   drive: { damp:0.9965, dur:1.3, gain:0.3,  lp:2400, shift:0,   drive:16 },
   mute:  { damp:0.9,    dur:0.5, gain:0.6,  lp:0,    shift:0,   drive:0 },
 };
+function voiceBuf(v, midi, dur, damp){
+  return v.kind==='add' ? makeAdd(midi+v.shift, dur) : makeKS(midi+v.shift, dur, damp);
+}
 var SHAPERS = {};
 function driveCurve(k){
   if (SHAPERS[k]) return SHAPERS[k];
@@ -879,7 +974,7 @@ function pluckV(midi, delay, vName){
     ac();
     var v = VOICES[vName||'steel'];
     var key = (vName||'steel')+':'+midi;
-    var buf = BUFCACHE[key] || (BUFCACHE[key] = makeKS(midi+v.shift, v.dur, v.damp));
+    var buf = BUFCACHE[key] || (BUFCACHE[key] = voiceBuf(v, midi, v.dur, v.damp));
     var src = AC.createBufferSource(); src.buffer = buf;
     chainOut(src, v, v.gain);
     src.start(AC.currentTime + (delay||0));
@@ -914,7 +1009,7 @@ function loopNote(midi, vName, dur, delay){
     ac();
     var v = VOICES[vName||'steel'];
     var key = 'held:'+(vName||'steel')+':'+midi;
-    var buf = PLAYBUF[key] || (PLAYBUF[key] = makeKS(midi+v.shift, 3.0, 0.9985));
+    var buf = PLAYBUF[key] || (PLAYBUF[key] = voiceBuf(v, midi, 3.0, 0.9985));
     var src = AC.createBufferSource(); src.buffer = buf;
     var g = chainOut(src, v, 0.38);
     var t = AC.currentTime + (delay||0);
@@ -924,18 +1019,28 @@ function loopNote(midi, vName, dur, delay){
     src.start(t); src.stop(end+0.16);
   } catch(e){}
 }
-/* the quiet metronome tick under a chart */
-function tick(strong){
-  if (!S.sound) return;
+/* the metronome tick under a chart: a few voices for taste, or silence */
+function tick(strong, kind){
+  if (!S.sound || kind==='off') return;
   try {
     ac();
     var o = AC.createOscillator(), g = AC.createGain();
-    o.type='sine'; o.frequency.value = strong ? 1250 : 900;
-    var t = AC.currentTime;
-    g.gain.setValueAtTime(strong ? 0.09 : 0.05, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
+    var t = AC.currentTime, dur = 0.08;
+    if (kind==='wood'){
+      o.type='triangle'; o.frequency.value = strong ? 2050 : 1400;
+      g.gain.setValueAtTime(strong ? 0.17 : 0.11, t); dur = 0.05;
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.035);
+    } else if (kind==='beep'){
+      o.type='square'; o.frequency.value = strong ? 880 : 660;
+      g.gain.setValueAtTime(strong ? 0.05 : 0.035, t); dur = 0.1;
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.09);
+    } else {
+      o.type='sine'; o.frequency.value = strong ? 1250 : 900;
+      g.gain.setValueAtTime(strong ? 0.09 : 0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
+    }
     o.connect(g); g.connect(AC.destination);
-    o.start(t); o.stop(t+0.08);
+    o.start(t); o.stop(t+dur);
   } catch(e){}
 }
 /* a held note: rings while the finger stays down, slides along its string */
@@ -945,7 +1050,7 @@ function heldVoice(midi, vName){
     ac();
     var v = VOICES[vName||'steel'];
     var key = 'held:'+(vName||'steel')+':'+midi;
-    var buf = PLAYBUF[key] || (PLAYBUF[key] = makeKS(midi+v.shift, 3.0, 0.9985));
+    var buf = PLAYBUF[key] || (PLAYBUF[key] = voiceBuf(v, midi, 3.0, 0.9985));
     var src = AC.createBufferSource(); src.buffer = buf;
     var g = chainOut(src, v, 0.38);
     src.start();
@@ -1204,7 +1309,7 @@ var TAB_OF = { run:'drills', rhythm:'drills' };
 function show(view){
   stopVamp();
   if (view!=='play'){ stopPlayVoices(); stopLoop(); exitPlayFS(); }
-  if (view!=='charts') stopChartPlay();
+  if (view!=='charts'){ stopChartPlay(); stopJamVoices(); }
   if (view!=='rhythm') stopPoly();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
   var lit = TAB_OF[view] || view;
@@ -1243,9 +1348,23 @@ btnSound.onclick = function(){ S.sound=!S.sound; save(); paintSound(); if (S.sou
 paintSound();
 $('setTuning').value = S.tuning;
 $('setTuning').onchange = function(){ S.tuning=this.value; save(); };
+/* one mirror, two doors: the Setup chip and the Play chip flip the same
+   state, because a lefty and a phone lying flat both deserve a neck that
+   reads their way, and no view should assume a right handed player */
 var setLefty = $('setLefty');
-setLefty.setAttribute('aria-pressed', String(S.lefty));
-setLefty.onclick = function(){ S.lefty=!S.lefty; save(); this.setAttribute('aria-pressed', String(S.lefty)); };
+function paintMirror(){
+  setLefty.setAttribute('aria-pressed', String(S.lefty));
+  $('playMirror').setAttribute('aria-pressed', String(S.lefty));
+}
+function rerenderVisible(){
+  if (!VIEWS.play.hidden) renderPlay();
+  if (!VIEWS.modes.hidden) renderModes();
+  if (!VIEWS.charts.hidden) renderCharts();
+}
+function flipMirror(){ S.lefty=!S.lefty; save(); paintMirror(); rerenderVisible(); }
+setLefty.onclick = flipMirror;
+$('playMirror').onclick = flipMirror;
+paintMirror();
 $('setFrets').value = String(S.frets);
 $('setFrets').onchange = function(){
   S.frets=+this.value; MAXF=S.frets; save();
@@ -1258,6 +1377,41 @@ var setNumbers = $('setNumbers');
 setNumbers.setAttribute('aria-pressed', String(S.numbers));
 setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
 if (TIP_URL) $('tipSlot').innerHTML = ' &middot; <a href="'+TIP_URL+'" target="_blank" rel="noopener">&hearts; Tip jar</a>';
+
+/* feedback: with a webhook wired, the footer link opens a box that lands the
+   message straight in Stephen's Discord. Without one, plain email stands. */
+if (FEEDBACK_WEBHOOK){
+  $('feedbackLink').onclick = function(ev){
+    ev.preventDefault();
+    $('fbWrap').hidden = false;
+    $('fbStatus').textContent = '';
+    setTimeout(function(){ $('fbText').focus(); }, 60);
+  };
+}
+$('fbCancel').onclick = function(){ $('fbWrap').hidden = true; };
+$('fbWrap').addEventListener('click', function(ev){ if (ev.target===this) this.hidden = true; });
+$('fbSend').onclick = function(){
+  var txt = $('fbText').value.trim();
+  if (!txt){ $('fbStatus').textContent = 'Say something first.'; return; }
+  var btn = $('fbSend');
+  btn.disabled = true;
+  $('fbStatus').textContent = 'Sending...';
+  fetch(FEEDBACK_WEBHOOK, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ content:'**Fretwork feedback**\n'+txt.slice(0,1500)+
+      '\n`fretwork-v6 · '+navigator.userAgent.slice(0,110)+'`' }),
+  }).then(function(r){
+    btn.disabled = false;
+    if (!(r.ok || r.status===204)) throw new Error('bad status');
+    $('fbStatus').textContent = 'Sent. It goes straight to Stephen. Thank you.';
+    $('fbText').value = '';
+    setTimeout(function(){ $('fbWrap').hidden = true; }, 1500);
+  }).catch(function(){
+    btn.disabled = false;
+    $('fbStatus').innerHTML = 'Could not send from here. Email still works: <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">tap to open it</a>.';
+  });
+};
 
 /* pickers */
 var WINDOWS = [ ['0-5','Open to 5'], ['0-12','Open to 12'], ['5-9','5 to 9'], ['7-12','7 to 12'], ['all','Whole neck'] ];
@@ -1287,7 +1441,7 @@ modeRoot.value = '0';
     var og = groups[m.grp];
     if (!og){ og = document.createElement('optgroup'); og.label = m.grp; groups[m.grp] = og; sel.appendChild(og); }
     var o = document.createElement('option'); o.value = i;
-    o.textContent = m.name + (m.altLabels && m.grp==='The seven modes' ? ': '+(m.deg<=1||m.deg===4||m.deg===5?'major':'minor')+', '+m.altLabels.join(' ') :
+    o.textContent = m.name + (m.altWords && m.grp==='The seven modes' ? ': '+(m.deg<=1||m.deg===4||m.deg===5?'major':'minor')+', '+m.altWords.join(', ') :
       m.deg===1 ? ': the major scale' : m.deg===6 ? ': the minor scale' : '');
     og.appendChild(o);
   });
@@ -1302,6 +1456,19 @@ document.querySelectorAll('.helpSel').forEach(function(sel){
   });
   sel.value = 'walk';
 });
+
+/* meter pickers: beats 1 to 12 so odd meters are first class citizens, and a
+   wide tempo list. The same lists serve the chart and any single chord. */
+var TEMPOS = [40,46,52,58,60,66,72,80,88,96,100,104,112,120,126,132,138,144,152,160,168,176,184,192,200,208];
+(function(){
+  function opt(sel, v, txt){ var o=document.createElement('option'); o.value=v; o.textContent=txt; sel.appendChild(o); }
+  for (var b=1;b<=12;b++) opt($('chartBeats'), b, b+(b===1?' beat':' beats'));
+  TEMPOS.forEach(function(t){ opt($('chartTempo'), t, String(t)); });
+  opt($('chordBeatsSel'), '', 'Chart setting');
+  for (var b2=1;b2<=12;b2++) opt($('chordBeatsSel'), b2, b2+(b2===1?' beat':' beats'));
+  opt($('chordTempoSel'), '', 'Chart setting');
+  TEMPOS.forEach(function(t){ opt($('chordTempoSel'), t, String(t)); });
+})();
 
 /* the play zoom: any chunk of the neck, at least a hand's width */
 function fillFretSel(sel, from, to, val){
@@ -2137,7 +2304,8 @@ function vampChordMidis(){
   var m = currentMode(), root = SPELLINGS[+$('modeRoot').value];
   var rootMidi = 45 + ((pc(root)-9+12)%12);
   var semis = { maj7:[0,4,7,11], dom7:[0,4,7,10], m7:[0,3,7,10], m7b5:[0,3,6,10],
-                min:[0,3,7,12], maj:[0,4,7,12], mmaj7:[0,3,7,11], sus:[0,5,7,10] }[m.chord];
+                min:[0,3,7,12], maj:[0,4,7,12], mmaj7:[0,3,7,11], sus:[0,5,7,10],
+                aug:[0,4,8,12], dim7:[0,3,6,9] }[m.chord];
   return semis.map(function(x){ return rootMidi+x; });
 }
 function stopVamp(){
@@ -2328,8 +2496,73 @@ document.addEventListener('fullscreenchange', function(){
   }
 });
 
+/* ── midi in: plug a keyboard into the phone and play these voices.
+   Stephen's MPK Mini into a phone, improvising through the guitar, was the
+   ask. Web MIDI lives in Chrome and Edge; everywhere else the chip says so
+   honestly instead of pretending. Notes land in the looper too. ──────────── */
+var MIDI = { on:false, access:null, notes:{} };
+function hookMidiInputs(){
+  if (!MIDI.access) return;
+  MIDI.access.inputs.forEach(function(inp){ inp.onmidimessage = onMidiMsg; });
+}
+function onMidiMsg(e){
+  if (!MIDI.on || !e.data || e.data.length<3) return;
+  var st = e.data[0] & 0xF0, note = e.data[1], vel = e.data[2];
+  if (st===0x90 && vel>0) midiNoteOn(note);
+  else if (st===0x80 || (st===0x90 && vel===0)) midiNoteOff(note);
+}
+function midiNoteOn(note){
+  if (MIDI.notes[note]) return;
+  ac();
+  var vName = playVoiceName();
+  var rec = { midi:note, voice:heldVoice(note, vName), t0:performance.now(), cell:null };
+  rec.loopEv = loopCapture(note, vName);
+  if (!VIEWS.play.hidden && playBoardApi){
+    var win = syncPlayZoom();
+    for (var s=0; s<6 && !rec.cell; s++)
+      for (var f=win.lo; f<=win.hi; f++)
+        if (midiAt(s,f)===note){ playBoardApi.setDot(s,f,'pearl',PADS[note%12][0]); rec.cell=[s,f]; break; }
+  }
+  MIDI.notes[note] = rec;
+}
+function midiNoteOff(note){
+  var rec = MIDI.notes[note];
+  if (!rec) return;
+  rec.voice.stop();
+  loopRelease(rec);
+  if (rec.cell && playBoardApi) playBoardApi.removeDot(rec.cell[0], rec.cell[1]);
+  delete MIDI.notes[note];
+}
+function stopMidiVoices(){ for (var n in MIDI.notes) midiNoteOff(+n); }
+$('midiChip').onclick = function(){
+  var chip = this;
+  if (MIDI.on){
+    MIDI.on = false;
+    stopMidiVoices();
+    chip.setAttribute('aria-pressed','false');
+    $('playInfo').innerHTML = 'MIDI off.';
+    return;
+  }
+  if (!navigator.requestMIDIAccess){
+    $('playInfo').innerHTML = 'This browser has no MIDI. Chrome or Edge can do it.';
+    return;
+  }
+  navigator.requestMIDIAccess({ sysex:false }).then(function(access){
+    MIDI.access = access; MIDI.on = true;
+    hookMidiInputs();
+    access.onstatechange = hookMidiInputs;
+    chip.setAttribute('aria-pressed','true');
+    var names = [];
+    access.inputs.forEach(function(inp){ names.push(String(inp.name||'keyboard').replace(/[<>&]/g,'')); });
+    $('playInfo').innerHTML = names.length ? 'MIDI on: <b>'+names.join(', ')+'</b>. Play.'
+      : 'MIDI on. Plug a keyboard in and play.';
+  }, function(){
+    $('playInfo').innerHTML = 'MIDI was blocked. Allow it and tap the chip again.';
+  });
+};
+
 /* ── chord charts: your chords, your names, your order, your meter ─────── */
-var CH = { chartId:null, chordIdx:null, selIdx:null, playTimer:null };
+var CH = { chartId:null, chordIdx:null, selIdx:null, playTimer:null, picking:false, libEdit:false };
 function curChart(){
   for (var i=0;i<S.charts.length;i++) if (S.charts[i].id===CH.chartId) return S.charts[i];
   return null;
@@ -2339,17 +2572,101 @@ function chordMidis(frets){
   for (var s=0;s<6;s++) if (frets[s]>=0) out.push(T[s]+frets[s]);
   return out;
 }
-function hearChord(frets){
-  chordMidis(frets).forEach(function(m,i){ pluckV(m, i*0.055, 'warm'); });
+function hearChord(frets, vName){
+  chordMidis(frets).forEach(function(m,i){ pluckV(m, i*0.055, vName||'warm'); });
 }
+function chartVoice(c){ return (c && c.voice) || 'warm'; }
+
+/* ── the chord brain: look at the tapped notes and offer names ──────────
+   Every played pitch gets a turn as the root against the everyday recipes.
+   An exact match wins, a missing 5th is forgiven because guitars drop it
+   constantly, and a bass that is not the root earns its slash. These are
+   offers, never verdicts: the name stays the player's. */
+var CHORD_FORMULAS = [
+  { n:'',        semis:[0,4,7] },
+  { n:'m',       semis:[0,3,7] },
+  { n:'5',       semis:[0,7] },
+  { n:'dim',     semis:[0,3,6] },
+  { n:'aug',     semis:[0,4,8] },
+  { n:'sus2',    semis:[0,2,7] },
+  { n:'sus4',    semis:[0,5,7] },
+  { n:'6',       semis:[0,4,7,9] },
+  { n:'m6',      semis:[0,3,7,9] },
+  { n:'7',       semis:[0,4,7,10] },
+  { n:'maj7',    semis:[0,4,7,11] },
+  { n:'m7',      semis:[0,3,7,10] },
+  { n:'m(maj7)', semis:[0,3,7,11] },
+  { n:'m7♭5',   semis:[0,3,6,10] },
+  { n:'dim7',    semis:[0,3,6,9] },
+  { n:'add9',    semis:[0,2,4,7] },
+  { n:'m(add9)', semis:[0,2,3,7] },
+  { n:'7sus4',   semis:[0,5,7,10] },
+  { n:'9',       semis:[0,2,4,7,10] },
+  { n:'maj9',    semis:[0,2,4,7,11] },
+  { n:'m9',      semis:[0,2,3,7,10] },
+];
+function analyzeChord(frets){
+  var midis = chordMidis(frets);
+  if (midis.length<2) return [];
+  var have = {};
+  midis.forEach(function(m){ have[((m%12)+12)%12] = 1; });
+  var played = Object.keys(have).map(Number);
+  var bass = Math.min.apply(null, midis)%12;
+  var offers = [];
+  played.forEach(function(rootPc){
+    CHORD_FORMULAS.forEach(function(fm, fi){
+      var needSet = {};
+      fm.semis.forEach(function(s2){ needSet[(rootPc+s2)%12] = 1; });
+      for (var i=0;i<played.length;i++) if (!needSet[played[i]]) return;
+      var missing = [];
+      for (var p2 in needSet) if (!have[p2]) missing.push(+p2);
+      if (missing.length>1) return;
+      if (missing.length===1 && missing[0]!==(rootPc+7)%12) return;
+      var name = PADS[rootPc][0]+fm.n+(bass!==rootPc ? '/'+PADS[bass][0] : '');
+      offers.push({ name:name,
+        score:(missing.length?0:2)+(bass===rootPc?2:0)+(fm.semis.length===played.length?1:0)-fi*0.01 });
+    });
+  });
+  offers.sort(function(a,b){ return b.score-a.score; });
+  var seen = {};
+  return offers.filter(function(o){ return seen[o.name] ? false : (seen[o.name]=1); }).slice(0,3);
+}
+
+/* the bank: the open shapes everybody meets first plus the barre seeds.
+   Standard tuning frets, low E first, minus one means do not play that
+   string. With the nudge buttons every barre chord is one of these slid
+   up the neck, which is exactly how a guitarist learns that fact. */
+var BANK = [
+  { n:'C',     f:[-1,3,2,0,1,0] },   { n:'A',     f:[-1,0,2,2,2,0] },
+  { n:'G',     f:[3,2,0,0,0,3] },    { n:'E',     f:[0,2,2,1,0,0] },
+  { n:'D',     f:[-1,-1,0,2,3,2] },
+  { n:'Am',    f:[-1,0,2,2,1,0] },   { n:'Em',    f:[0,2,2,0,0,0] },
+  { n:'Dm',    f:[-1,-1,0,2,3,1] },
+  { n:'F',     f:[1,3,3,2,1,1] },    { n:'B',     f:[-1,2,4,4,4,2] },
+  { n:'Bm',    f:[-1,2,4,4,3,2] },   { n:'F♯m',  f:[2,4,4,2,2,2] },
+  { n:'E7',    f:[0,2,0,1,0,0] },    { n:'A7',    f:[-1,0,2,0,2,0] },
+  { n:'B7',    f:[-1,2,1,2,0,2] },   { n:'D7',    f:[-1,-1,0,2,1,2] },
+  { n:'G7',    f:[3,2,0,0,0,1] },    { n:'C7',    f:[-1,3,2,3,1,0] },
+  { n:'Cmaj7', f:[-1,3,2,0,0,0] },   { n:'Fmaj7', f:[-1,-1,3,2,1,0] },
+  { n:'Amaj7', f:[-1,0,2,1,2,0] },   { n:'Dmaj7', f:[-1,-1,0,2,2,2] },
+  { n:'Em7',   f:[0,2,0,0,0,0] },    { n:'Am7',   f:[-1,0,2,0,1,0] },
+  { n:'Dm7',   f:[-1,-1,0,2,1,1] },
+  { n:'Asus2', f:[-1,0,2,2,0,0] },   { n:'Asus4', f:[-1,0,2,2,3,0] },
+  { n:'Dsus2', f:[-1,-1,0,2,3,0] },  { n:'Dsus4', f:[-1,-1,0,2,3,3] },
+  { n:'Esus4', f:[0,2,2,2,0,0] },    { n:'Cadd9', f:[-1,3,2,0,3,0] },
+];
 function renderCharts(){
   stopChartPlay();
+  stopJamVoices();
   var chart = curChart();
   var inChord = CH.chordIdx!==null && chart;
+  var picking = CH.picking && chart && !inChord;
   $('chartListCard').hidden = !!chart;
-  $('chartEditCard').hidden = !chart || inChord;
+  $('chartEditCard').hidden = !chart || inChord || picking;
+  $('chordPickCard').hidden = !picking;
   $('chordEditCard').hidden = !inChord;
   if (inChord){ renderChordEditor(); return; }
+  if (picking){ renderChordPick(); return; }
   if (chart){ renderChartEditor(); return; }
   var host = $('chartList');
   host.innerHTML = '';
@@ -2376,7 +2693,7 @@ function renderCharts(){
 }
 $('btnNewChart').onclick = function(){
   var c = { id: Date.now().toString(36)+Math.floor(Math.random()*999),
-            name:'', beats:4, tempo:80, chords:[] };
+            name:'', beats:4, tempo:80, voice:'warm', click:'click', chords:[] };
   S.charts.push(c); save();
   CH.chartId = c.id; CH.selIdx = null;
   renderCharts();
@@ -2388,25 +2705,33 @@ function renderChartEditor(){
   $('chartName').value = c.name;
   $('chartBeats').value = String(c.beats);
   $('chartTempo').value = String(c.tempo);
+  $('chartVoice').value = chartVoice(c);
+  $('chartClick').value = c.click || 'click';
   var strip = $('chordStrip');
   strip.innerHTML = '';
   c.chords.forEach(function(ch, i){
     var box = document.createElement('button');
     box.type='button'; box.className='chordbox'+(CH.selIdx===i?' selected':'');
     box.setAttribute('data-ci', i);
-    box.innerHTML = '<span></span><small>'+(i+1)+'</small>';
+    box.innerHTML = '<span></span><small></small>';
     box.firstChild.textContent = ch.n || 'Chord '+(i+1);
+    /* a chord holding its own count or tempo says so on its face */
+    box.lastChild.textContent = (i+1)
+      + (ch.b ? ' · '+ch.b+' beats' : '')
+      + (ch.t ? ' · '+ch.t : '');
     box.onclick = function(){
       CH.selIdx = CH.selIdx===i ? null : i;
-      hearChord(ch.f);
+      hearChord(ch.f, chartVoice(c));
       renderChartEditor();
     };
     strip.appendChild(box);
   });
   var add = document.createElement('button');
   add.type='button'; add.className='chordbox addbox'; add.textContent='+ add a chord';
-  add.onclick = function(){ CH.chordIdx = -1; renderCharts(); };
+  add.onclick = function(){ CH.picking = true; renderCharts(); };
   strip.appendChild(add);
+  $('jamChip').setAttribute('aria-pressed', String(JAM.on));
+  renderJam();
   /* the selected chord grows a little toolbar: move it, change it, drop it */
   var old = $('chordTools'); if (old) old.remove();
   if (CH.selIdx!==null && c.chords[CH.selIdx]){
@@ -2431,6 +2756,58 @@ function renderChartEditor(){
 $('chartName').oninput = function(){ var c=curChart(); if (c){ c.name=this.value; save(); } };
 $('chartBeats').onchange = function(){ var c=curChart(); if (c){ c.beats=+this.value; save(); } };
 $('chartTempo').onchange = function(){ var c=curChart(); if (c){ c.tempo=+this.value; save(); } };
+$('chartVoice').onchange = function(){ var c=curChart(); if (c){ c.voice=this.value; save(); } };
+$('chartClick').onchange = function(){ var c=curChart(); if (c){ c.click=this.value; save(); } };
+
+/* ── the jam board: a playable neck under the chart, for ideas on the road
+   when there is no guitar within reach. It speaks the chart's voice, and it
+   keeps working while the progression loops so harmonies can be hunted. ── */
+var JAM = { on:false, api:null, ptr:{} };
+function stopJamVoices(){
+  for (var id in JAM.ptr) JAM.ptr[id].voice.stop();
+  JAM.ptr = {};
+}
+function jamVoiceName(){ return chartVoice(curChart()); }
+function jamDown(s,f,id){
+  if (JAM.ptr[id]) jamUp(id);
+  var m = midiAt(s,f);
+  JAM.ptr[id] = { s:s, f:f, midi:m, voice:heldVoice(m, jamVoiceName()) };
+  JAM.api.setDot(s,f,'pearl', PADS[m%12][0]);
+}
+function jamMove(s,f,id){
+  var p = JAM.ptr[id];
+  if (!p || (p.s===s && p.f===f)) return;
+  if (s===p.s){
+    var m2 = midiAt(s,f);
+    p.voice.slideTo(m2);
+    JAM.api.removeDot(p.s, p.f);
+    p.f = f; p.midi = m2;
+    JAM.api.setDot(s,f,'pearl', PADS[m2%12][0]);
+  } else {
+    jamUp(id);
+    jamDown(s,f,id);
+  }
+}
+function jamUp(id){
+  var p = JAM.ptr[id];
+  if (!p) return;
+  p.voice.stop();
+  JAM.api.removeDot(p.s, p.f);
+  delete JAM.ptr[id];
+}
+function renderJam(){
+  var host = $('jamBoard');
+  stopJamVoices();
+  if (!JAM.on){ host.hidden = true; host.innerHTML = ''; JAM.api = null; return; }
+  host.hidden = false;
+  JAM.api = renderBoard(host, { lo:0, hi:12, strings:null,
+    playable:{ down:jamDown, move:jamMove, up:jamUp } });
+}
+$('jamChip').onclick = function(){
+  JAM.on = !JAM.on;
+  this.setAttribute('aria-pressed', String(JAM.on));
+  renderJam();
+};
 
 /* the player: each chord blooms on its downbeat, quiet ticks keep the meter */
 function stopChartPlay(){
@@ -2444,25 +2821,90 @@ $('btnChartPlay').onclick = function(){
   if (CH.playTimer){ stopChartPlay(); return; }
   var c = curChart();
   if (!c || !c.chords.length){ $('chartVerdict').textContent = 'Add a chord first.'; return; }
-  var beatMs = 60000/c.tempo;
   var pos = 0, beat = 0;
   $('btnChartPlay').textContent = 'Stop';
+  /* each chord is its own block: it can carry its own beat count and its own
+     tempo, inherited from the chart unless the chord says otherwise. That is
+     the whole programmable metronome: odd bars and tempo changes are just
+     chords that speak up. */
   function step(){
     var ch = c.chords[pos];
+    var beats = ch.b || c.beats;
+    var beatMs = 60000/(ch.t || c.tempo);
     if (beat===0){
       document.querySelectorAll('.chordbox.playingnow').forEach(function(b){ b.classList.remove('playingnow'); });
       var box = document.querySelector('.chordbox[data-ci="'+pos+'"]');
       if (box) box.classList.add('playingnow');
-      $('chartVerdict').innerHTML = '<b>'+(ch.n||'Chord '+(pos+1))+'</b>';
-      hearChord(ch.f);
-      tick(true);
-    } else tick(false);
+      $('chartVerdict').innerHTML = '<b>'+(ch.n||'Chord '+(pos+1))+'</b>'
+        + (ch.b || ch.t ? ' <span style="opacity:.7">'+beats+' beats at '+(ch.t||c.tempo)+'</span>' : '');
+      hearChord(ch.f, chartVoice(c));
+      tick(true, c.click||'click');
+    } else tick(false, c.click||'click');
     beat++;
-    if (beat>=c.beats){ beat = 0; pos = (pos+1)%c.chords.length; }
+    if (beat>=beats){ beat = 0; pos = (pos+1)%c.chords.length; }
     CH.playTimer = setTimeout(step, beatMs);
   }
   step();
 };
+
+/* ── the chord picker: my chords, then the bank, then the blank neck ───── */
+function addPickedChord(src){
+  var c = curChart();
+  if (!c) return;
+  var prev = c.chords[c.chords.length-1];
+  var chord = { n:src.n, f:src.f.slice() };
+  /* a new block keeps the meter of the block before it, Stephen's rule */
+  if (prev && prev.b) chord.b = prev.b;
+  if (prev && prev.t) chord.t = prev.t;
+  c.chords.push(chord);
+  save();
+  hearChord(chord.f, chartVoice(c));
+  $('pickVerdict').innerHTML = '<b>'+chord.n+'</b> is in. '+c.chords.length+' chord'+(c.chords.length===1?'':'s')+' on the chart.';
+}
+function renderChordPick(){
+  var lib = $('libChips');
+  lib.innerHTML = '';
+  if (!S.chordLib.length){
+    var none = document.createElement('span');
+    none.style.cssText = 'font-size:12px;color:var(--muted)';
+    none.textContent = 'Nothing kept yet. Build a chord, tap keep, and it will wait here for every chart.';
+    lib.appendChild(none);
+  }
+  S.chordLib.forEach(function(ch, i){
+    var b = document.createElement('button');
+    b.type='button'; b.className='chip';
+    b.textContent = (CH.libEdit ? '✕ ' : '')+ch.n;
+    b.onclick = function(){
+      if (CH.libEdit){ S.chordLib.splice(i,1); save(); renderChordPick(); }
+      else addPickedChord(ch);
+    };
+    lib.appendChild(b);
+  });
+  if (S.chordLib.length){
+    var ed = document.createElement('button');
+    ed.type='button'; ed.className='chip';
+    ed.setAttribute('aria-pressed', String(CH.libEdit));
+    ed.textContent = CH.libEdit ? 'done' : 'edit';
+    ed.onclick = function(){ CH.libEdit = !CH.libEdit; renderChordPick(); };
+    lib.appendChild(ed);
+  }
+  var bank = $('bankChips');
+  bank.innerHTML = '';
+  BANK.forEach(function(ch){
+    var b = document.createElement('button');
+    b.type='button'; b.className='chip';
+    b.textContent = ch.n;
+    b.onclick = function(){ addPickedChord(ch); };
+    bank.appendChild(b);
+  });
+  var note = 'Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.';
+  if (S.tuning!=='standard')
+    note = 'You are tuned to '+TUNINGS[S.tuning].label+'. The bank speaks standard tuning, so these shapes will sound different here. '+note;
+  $('bankNote').textContent = note;
+  $('pickVerdict').textContent = '';
+}
+$('btnBuildNew').onclick = function(){ CH.picking = false; CH.chordIdx = -1; renderCharts(); };
+$('btnPickBack').onclick = function(){ CH.picking = false; CH.libEdit = false; renderCharts(); };
 
 /* the chord editor: a fretboard you dress one finger at a time */
 var EDITC = null, chordBoardApi = null;
@@ -2470,14 +2912,21 @@ function renderChordEditor(){
   var c = curChart();
   if (!EDITC){
     var src = CH.chordIdx>=0 ? c.chords[CH.chordIdx] : null;
-    EDITC = src ? { n:src.n, f:src.f.slice() } : { n:'', f:[-1,-1,-1,-1,-1,-1] };
+    if (src) EDITC = { n:src.n, f:src.f.slice(), b:src.b, t:src.t };
+    else {
+      /* a fresh block inherits the meter of the block before it */
+      var prev = c.chords[c.chords.length-1];
+      EDITC = { n:'', f:[-1,-1,-1,-1,-1,-1], b:prev&&prev.b, t:prev&&prev.t };
+    }
   }
   $('chordEditTitle').textContent = CH.chordIdx>=0 ? 'Change this chord' : 'Build a chord';
   $('chordName').value = EDITC.n;
+  $('chordBeatsSel').value = EDITC.b ? String(EDITC.b) : '';
+  $('chordTempoSel').value = EDITC.t ? String(EDITC.t) : '';
   $('btnChordDelete').hidden = CH.chordIdx<0;
-  chordBoardApi = renderBoard($('chordBoard'), { lo:0, hi:10, strings:null, onTap:function(s,f){
+  chordBoardApi = renderBoard($('chordBoard'), { lo:0, hi:12, strings:null, onTap:function(s,f){
     EDITC.f[s] = EDITC.f[s]===f ? -1 : f;
-    if (EDITC.f[s]>=0) pluckV(midiAt(s,f), 0, 'warm');
+    if (EDITC.f[s]>=0) pluckV(midiAt(s,f), 0, chartVoice(curChart()));
     paintChordEditor();
   } });
   paintChordEditor();
@@ -2506,9 +2955,55 @@ function paintChordEditor(){
       strip.appendChild(b);
     })(s2);
   }
+  /* the chord brain speaks: offers, tappable as names, never a verdict */
+  var gh = $('guessChips');
+  gh.innerHTML = '';
+  var offers = analyzeChord(EDITC.f);
+  if (offers.length){
+    var lab = document.createElement('span');
+    lab.style.cssText = 'font-size:12px;color:var(--muted);align-self:center';
+    lab.textContent = 'Looks like:';
+    gh.appendChild(lab);
+    offers.forEach(function(o){
+      var b = document.createElement('button');
+      b.type='button'; b.className='chip'; b.textContent = o.name;
+      b.title = 'Use '+o.name+' as the name';
+      b.onclick = function(){ EDITC.n = o.name; $('chordName').value = o.name; };
+      gh.appendChild(b);
+    });
+  }
 }
 $('chordName').oninput = function(){ if (EDITC) EDITC.n = this.value; };
-$('btnChordHear').onclick = function(){ if (EDITC) hearChord(EDITC.f); };
+$('chordBeatsSel').onchange = function(){ if (EDITC) EDITC.b = this.value ? +this.value : undefined; };
+$('chordTempoSel').onchange = function(){ if (EDITC) EDITC.t = this.value ? +this.value : undefined; };
+$('btnChordHear').onclick = function(){ if (EDITC) hearChord(EDITC.f, chartVoice(curChart())); };
+/* slide the whole shape: open strings ride up to fret 1, and a shape with an
+   open string cannot slide down because there is nowhere below open */
+function nudgeChord(dir){
+  if (!EDITC) return;
+  if (dir<0 && EDITC.f.some(function(f){ return f===0; })) return;
+  var moved = EDITC.f.map(function(f){ return f<0 ? f : f+dir; });
+  if (moved.some(function(f){ return f>12; })) return;
+  EDITC.f = moved;
+  paintChordEditor();
+  hearChord(EDITC.f, chartVoice(curChart()));
+}
+$('btnNudgeUp').onclick = function(){ nudgeChord(1); };
+$('btnNudgeDown').onclick = function(){ nudgeChord(-1); };
+/* keep: the chord joins My chords and waits there for every future chart */
+$('btnChordKeep').onclick = function(){
+  if (!EDITC || EDITC.f.every(function(f){ return f<0; })){
+    alert('Put at least one finger down first.');
+    return;
+  }
+  var name = EDITC.n.trim() || (analyzeChord(EDITC.f)[0]||{}).name || 'My chord '+(S.chordLib.length+1);
+  var key = EDITC.f.join(',');
+  var dup = S.chordLib.some(function(ch){ return ch.n===name && ch.f.join(',')===key; });
+  if (!dup){ S.chordLib.push({ n:name, f:EDITC.f.slice() }); save(); }
+  var btn = this;
+  btn.innerHTML = '&#9733; kept';
+  setTimeout(function(){ btn.innerHTML = '&#9734; keep'; }, 1300);
+};
 $('btnChordSave').onclick = function(){
   var c = curChart();
   if (!EDITC || !c) return;
@@ -2516,7 +3011,10 @@ $('btnChordSave').onclick = function(){
     alert('Put at least one finger down first.');
     return;
   }
-  var chord = { n: EDITC.n.trim() || 'Chord '+(c.chords.length+1), f: EDITC.f.slice() };
+  var chord = { n: EDITC.n.trim() || (analyzeChord(EDITC.f)[0]||{}).name || 'Chord '+(c.chords.length+1),
+                f: EDITC.f.slice() };
+  if (EDITC.b) chord.b = EDITC.b;
+  if (EDITC.t) chord.t = EDITC.t;
   if (CH.chordIdx>=0) c.chords[CH.chordIdx] = chord;
   else { c.chords.push(chord); CH.selIdx = c.chords.length-1; }
   save();
@@ -2625,7 +3123,7 @@ window.__fw = {
   get state(){ return S; },
   get playVoices(){ return Object.keys(playPtr).length; },
   get loop(){ return LOOP; },
-  up: up, pc: pc, nn: nn, shapeFor: shapeFor, midiAt: midiAt,
+  up: up, pc: pc, nn: nn, shapeFor: shapeFor, midiAt: midiAt, analyze: analyzeChord,
 };
 </script>
 </body>

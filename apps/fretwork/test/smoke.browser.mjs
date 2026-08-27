@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v5') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v6') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -176,7 +176,7 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.selectOption('#modeRoot', '3');
   await page.waitForTimeout(250);
   const recipe = (await page.textContent('#modeRecipe')).trim();
-  if (!recipe.includes('Dorian') || !recipe.includes('♯6')) throw new Error('Dorian recipe wrong: ' + recipe);
+  if (!recipe.includes('Dorian') || !recipe.includes('major 6th')) throw new Error('Dorian recipe wrong: ' + recipe);
   const ctx = (await page.textContent('#modeCtx')).trim();
   if (!ctx.includes('the 2 chord in the key of C major')) throw new Error('Dorian context wrong: ' + ctx);
   if (!ctx.includes('Dm7')) throw new Error('Dorian vamp chord wrong: ' + ctx);
@@ -198,8 +198,8 @@ await withApp('fretwork', async ({ page, errors }) => {
   const vampOff = await page.getAttribute('#modeVamp', 'aria-pressed');
   if (vampOff !== 'false') throw new Error('vamp did not stop');
   const modeLabels = await page.evaluate(() => [...document.querySelectorAll('#modeBoard text')].map(t => t.textContent));
-  if (!modeLabels.includes('♯6')) throw new Error('Dorian altered tone not labeled #6: ' + modeLabels.slice(0, 8).join(','));
-  if (!modeLabels.includes('♭3')) throw new Error('scale notes should wear their degree numbers: ' + modeLabels.slice(0, 8).join(','));
+  if (!modeLabels.includes('6')) throw new Error('Dorian altered tone not labeled 6: ' + modeLabels.slice(0, 8).join(','));
+  if (!modeLabels.includes('m3')) throw new Error('scale notes should wear their interval quality: ' + modeLabels.slice(0, 8).join(','));
   // stacked positions paint position colors
   await page.selectOption('#modeForm', 'stack');
   await page.waitForTimeout(250);
@@ -212,6 +212,14 @@ await withApp('fretwork', async ({ page, errors }) => {
   const hiddenDots = await page.evaluate(() => document.querySelectorAll('#modeBoard g[pointer-events="none"]').length);
   if (!(hiddenDots > 0 && hiddenDots < 20)) throw new Error('hide the map should leave only the roots: ' + hiddenDots);
   await page.click('#modeHide');
+
+  // ── the Messiaen shelf: whole tone renders with its aug vamp ──
+  await page.selectOption('#modeSel', '17');
+  await page.waitForTimeout(250);
+  const wtRecipe = (await page.textContent('#modeRecipe')).trim();
+  if (!wtRecipe.includes('Whole tone')) throw new Error('whole tone missing: ' + wtRecipe);
+  const wtCtx = (await page.textContent('#modeCtx')).trim();
+  if (!wtCtx.includes('aug')) throw new Error('whole tone vamp chord should be aug: ' + wtCtx);
 
   // ── the neck extends: 24 frets reach the play board through the zoom ──
   await page.click('#tabDrills');
@@ -264,20 +272,56 @@ await withApp('fretwork', async ({ page, errors }) => {
   const fsOff = await page.evaluate(() => document.body.classList.contains('playfs'));
   if (fsOff) throw new Error('full screen did not release');
 
+  // ── v6 on the play deck: the new voices exist and the strings chip mirrors ──
+  const hasNylon = await page.evaluate(() => [...document.querySelectorAll('#playVoice option')].map(o => o.value));
+  if (!hasNylon.includes('nylon') || !hasNylon.includes('keys')) throw new Error('new voices missing: ' + hasNylon.join(','));
+  await page.click('#playMirror');
+  await page.waitForTimeout(150);
+  if (!(await page.evaluate(() => window.__fw.state.lefty))) throw new Error('the strings chip did not mirror the neck');
+  await page.click('#playMirror');
+  await page.waitForTimeout(150);
+
   // ── chord charts: build, name, order, play, survive a reload ──
   await page.click('#tabCharts');
   await page.click('#btnNewChart');
   await page.fill('#chartName', 'Smoke Test Jam');
   await page.click('.chordbox.addbox');
   await page.waitForTimeout(200);
+  // the add flow opens the picker: the bank is stocked and one tap adds
+  const bankN = await page.evaluate(() => document.querySelectorAll('#bankChips .chip').length);
+  if (bankN < 25) throw new Error('the bank looks thin: ' + bankN);
+  await page.click('#bankChips .chip');
+  await page.waitForTimeout(150);
+  const picked = await page.evaluate(() => window.__fw.state.charts[window.__fw.state.charts.length-1].chords.length);
+  if (picked !== 1) throw new Error('a bank tap did not add a chord: ' + picked);
+  // the chord brain: an open Am7 reads as Am7 before anything is typed
+  const offers = await page.evaluate(() => window.__fw.analyze([-1,0,2,0,1,0]).map(o => o.name));
+  if (offers[0] !== 'Am7') throw new Error('the chord brain misread x02010: ' + offers.join(','));
+  await page.click('#btnBuildNew');
+  await page.waitForTimeout(200);
   await page.click('#chordBoard rect.cell[data-s="0"][data-f="5"]');
   await page.click('#chordBoard rect.cell[data-s="2"][data-f="5"]');
   await page.click('#chordBoard rect.cell[data-s="3"][data-f="5"]');
+  const guessN = await page.evaluate(() => document.querySelectorAll('#guessChips .chip').length);
+  if (!guessN) throw new Error('no name offers appeared on a built chord');
   await page.fill('#chordName', 'The Big One');
+  await page.selectOption('#chordBeatsSel', '5');
+  await page.click('#btnChordKeep');
   await page.click('#btnChordSave');
   await page.waitForTimeout(200);
   const boxTxt = (await page.textContent('#chordStrip')).trim();
   if (!boxTxt.includes('The Big One')) throw new Error('saved chord missing from the strip: ' + boxTxt);
+  if (!boxTxt.includes('5 beats')) throw new Error('the odd bar is not marked on its block: ' + boxTxt);
+  const kept = await page.evaluate(() => window.__fw.state.chordLib.map(c => c.n));
+  if (kept.indexOf('The Big One') < 0) throw new Error('keep did not reach My chords: ' + kept.join(','));
+  const lastChord = await page.evaluate(() => { const cs = window.__fw.state.charts; return cs[cs.length-1].chords[cs[cs.length-1].chords.length-1]; });
+  if (lastChord.b !== 5) throw new Error('the 5 beat block did not save: ' + JSON.stringify(lastChord));
+  // the jam board unfolds under the chart and is playable
+  await page.click('#jamChip');
+  await page.waitForTimeout(250);
+  const jamCells = await page.evaluate(() => document.querySelectorAll('#jamBoard rect.cell').length);
+  if (!jamCells) throw new Error('the jam board did not draw');
+  await page.click('#jamChip');
   await page.click('#btnChartPlay');
   await page.waitForTimeout(400);
   const nowBox = await page.$('.chordbox.playingnow');
@@ -310,8 +354,8 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.click('#tabCharts');
   await page.waitForTimeout(200);
   const rowTxt = (await page.textContent('#chartList')).trim();
-  if (!rowTxt.includes('Smoke Test Jam') || !rowTxt.includes('1 chord')) throw new Error('chart did not survive the reload: ' + rowTxt);
+  if (!rowTxt.includes('Smoke Test Jam') || !rowTxt.includes('2 chords')) throw new Error('chart did not survive the reload: ' + rowTxt);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian #6 in positions, stacked colors, hide the map, 24 frets, held slide voice, looper, full screen, chord chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
+  console.log('smoke pass: oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
 });
