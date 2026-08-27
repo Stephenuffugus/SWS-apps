@@ -733,7 +733,7 @@ var TIP_URL = 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
 /* a Discord webhook URL turns the footer Feedback link into an in app report
    that lands in Stephen's server the moment somebody hits send. An empty
    string keeps the plain email link. */
-var FEEDBACK_WEBHOOK = '';
+var FEEDBACK_WEBHOOK = 'https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha';
 
 /* ── theory ────────────────────────────────────────────────────────────── */
 var LETTERS = ['C','D','E','F','G','A','B'];
@@ -1396,7 +1396,9 @@ $('fbSend').onclick = function(){
   var btn = $('fbSend');
   btn.disabled = true;
   $('fbStatus').textContent = 'Sending...';
-  fetch(FEEDBACK_WEBHOOK, {
+  /* wait=true makes Discord answer with the created message, so a sent
+     report is provably sent, and reading the body keeps the network tidy */
+  fetch(FEEDBACK_WEBHOOK+'?wait=true', {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ content:'**Fretwork feedback**\n'+txt.slice(0,1500)+
@@ -1404,6 +1406,7 @@ $('fbSend').onclick = function(){
   }).then(function(r){
     btn.disabled = false;
     if (!(r.ok || r.status===204)) throw new Error('bad status');
+    r.text().catch(function(){});
     $('fbStatus').textContent = 'Sent. It goes straight to Stephen. Thank you.';
     $('fbText').value = '';
     setTimeout(function(){ $('fbWrap').hidden = true; }, 1500);

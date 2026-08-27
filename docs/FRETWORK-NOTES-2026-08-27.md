@@ -98,20 +98,19 @@ do. WAITING = blocked on Stephen.
     Stripe link, the heart is in the footer.
 
 14. **A feedback button that pings straight to a Discord, so bugs arrive the
-    moment people find them.** PARTIAL: the whole flow is built and shipped
-    behind a seam. A FEEDBACK_WEBHOOK constant at the top of index.html turns
-    the footer Feedback link into an in app box that posts straight to a
-    Discord channel, with the build tag and device line attached, and falls
-    back to email if the post fails. WAITING on the webhook URL: in Discord,
-    Server Settings, Integrations, Webhooks, New Webhook, pick the channel,
-    Copy Webhook URL, and hand it over. Anyone who finds the URL in the page
-    source could post spam to that channel; if that ever happens, delete the
-    webhook and make a fresh one.
+    moment people find them.** SHIPPED v6: Stephen handed over the webhook the
+    same day and it is wired into FEEDBACK_WEBHOOK. The footer Feedback link
+    opens an in app box that posts straight to his Discord channel with the
+    build tag and device line attached, asks Discord to hand back the created
+    message so a sent report is provably sent, and falls back to email if the
+    post fails. Verified end to end by driving the real dialog in a real
+    browser: the test messages are sitting in the channel. One caution to
+    remember: anyone who reads the page source can find the webhook URL and
+    post spam to that channel. If that ever happens, delete the webhook in
+    Discord, make a fresh one, and swap the constant.
 
 ## Waiting on Stephen
 
-- The Discord webhook URL for the feedback button (item 14). Paste into
-  FEEDBACK_WEBHOOK in index.html and bump the sw.js cache version.
 - The Suno backing track library, carried from the v5 list.
 - Sprites for the celebration animation, carried, if we want to get crazy.
 
