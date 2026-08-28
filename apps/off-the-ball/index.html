@@ -897,6 +897,21 @@ function finish(S,carrier){
 }
 
 /* ================================================================ RENDER */
+/* Everything a play carries, player names, the call name, a custom move name,
+   arrives from a URL hash or an imported file, which means it arrives from a
+   stranger. All of it lands in innerHTML somewhere below. Escape it here,
+   once, at every sink.
+
+   This was a real stored cross site scripting hole, proven on 2026-08-28 by
+   opening a crafted #p= link and tapping the defender: the scouting card put
+   his NAME straight into innerHTML, so an <img onerror> in that name ran in
+   the reader's page. The author had already escaped the same value inside an
+   attribute two lines lower, so the gap was the text node, not the idea.
+   Sharing is the whole point of this app, so the pipe gets fixed before it
+   gets widened. */
+const esc = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const cv=document.getElementById('pitch'),ctx=cv.getContext('2d');
 let VW=0,VH=0,SC=1,OX=0,OY=0;
 function resize(){
@@ -1112,9 +1127,9 @@ function renderDcard(d){
   const host=$('pcardHost');
   const arch=ARCHETYPES[d.prof.arch]||ARCHETYPES.balanced;
   host.innerHTML=`<div class="pcard dcard">
-    <div class="who"><span class="pnum dnum">${d.label}</span><b>Scouting this defender</b></div>
+    <div class="who"><span class="pnum dnum">${esc(d.label)}</span><b>Scouting this defender</b></div>
     <div class="two" style="margin-top:0">
-      <input type="text" class="mini" id="dname" value="${d.label.replace(/"/g,'&quot;')}"
+      <input type="text" class="mini" id="dname" value="${esc(d.label)}"
         maxlength="12" placeholder="Name or number">
       <select class="mini" id="drole">
         <option value="zone"${d.mode==='zone'?' selected':''}>Holds a zone</option>
@@ -1122,7 +1137,7 @@ function renderDcard(d){
       </select>
     </div>
     ${d.mode==='man'?`<select class="mini" id="dmark" style="margin-top:6px">
-      ${play.attackers.map(a=>`<option value="${a.id}"${d.mark===a.id?' selected':''}>Marks #${a.label}</option>`).join('')}
+      ${play.attackers.map(a=>`<option value="${esc(a.id)}"${d.mark===a.id?' selected':''}>Marks #${esc(a.label)}</option>`).join('')}
     </select>`:''}
     <select class="mini" id="darch" style="margin-top:6px">
       ${Object.entries(ARCHETYPES).map(([k,v])=>`<option value="${k}"${d.prof.arch===k?' selected':''}>${v.name}</option>`).join('')}
@@ -1177,7 +1192,7 @@ function renderPcard(){
       ${a.moves.length>1?`<button class="btn small" id="namecombo">Name it</button>`:''}
       ${a.path.length>1?`<button class="btn small" id="clearpath">Clear run</button>`:''}
     </div>
-    ${a.custom?`<div class="none" style="margin:9px 0 0">Called “${a.custom}”</div>`:''}
+    ${a.custom?`<div class="none" style="margin:9px 0 0">Called “${esc(a.custom)}”</div>`:''}
   </div>`;
   host.querySelectorAll('[data-rm]').forEach(x=>x.addEventListener('click',ev=>{
     ev.stopPropagation();a.moves.splice(+x.dataset.rm,1);renderAll();
@@ -1237,10 +1252,10 @@ function renderCallSheet(){
     host.innerHTML='<div class="callempty">Nobody has a move yet. Tap a player, add a move, and this becomes the thing you send to the group chat: every run named, and what each teammate should do when they see it.</div>';
     return;
   }
-  host.innerHTML=rows.map(r=>`<div class="callrow"><span class="pnum">${r.num}</span>
-    <div><div class="seq">${r.seq}</div>
-    ${r.sub?`<div class="say" style="color:var(--muted)">${r.sub}</div>`:''}
-    ${r.say.map(s=>`<div class="say"><em>“${s}”</em></div>`).join('')}</div></div>`).join('');
+  host.innerHTML=rows.map(r=>`<div class="callrow"><span class="pnum">${esc(r.num)}</span>
+    <div><div class="seq">${esc(r.seq)}</div>
+    ${r.sub?`<div class="say" style="color:var(--muted)">${esc(r.sub)}</div>`:''}
+    ${r.say.map(s=>`<div class="say"><em>“${esc(s)}”</em></div>`).join('')}</div></div>`).join('');
 }
 function callSheetText(){
   const rows=callSheetRows();
@@ -1252,7 +1267,7 @@ function callSheetText(){
 function renderLedger(){
   if(!sim||!sim.events.length){elLedger.innerHTML=LEDGER_EMPTY;return;}
   elLedger.innerHTML=sim.events.map(e=>
-    `<div class="ev ${e.cls}"><div class="t">${e.t.toFixed(2)}s</div><div class="msg">${e.msg}</div></div>`).join('');
+    `<div class="ev ${e.cls}"><div class="t">${e.t.toFixed(2)}s</div><div class="msg">${esc(e.msg)}</div></div>`).join('');
   elLedger.scrollTop=elLedger.scrollHeight;
 }
 function showVerdict(v){
@@ -1307,16 +1322,27 @@ function encodePlay(){
   return btoa(unescape(encodeURIComponent(JSON.stringify(d))))
     .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
-function decodePlay(s){
+/* `quiet` decodes WITHOUT adopting the play's opposition tier. Loading a
+   shared link should adopt it, that is the point of sharing one. Validating
+   an imported file should not: the playbook importer decodes every entry to
+   check it opens, and without this a file could silently reset the tier the
+   person was working at. */
+function decodePlay(s,quiet){
   try{
     const j=JSON.parse(decodeURIComponent(escape(
       atob(s.replace(/-/g,'+').replace(/_/g,'/'))))); 
+    /* names arrive from strangers: clamp them here, escape them at render.
+       Declared BEFORE first use, which it was not for one commit, and every
+       shared link silently failed to open because the dead zone threw
+       straight into the catch. The browser test below now opens a real link
+       and reads the name back, so that cannot repeat quietly. */
+    const nm=v=>String(v==null?'':v).slice(0,24);
     const p=clonePlay(j.k||'blank');
-    p.callName=j.n||'';
-    p.attackers=j.a.map(a=>({id:a[0],label:a[1],x:a[2],y:a[3],moves:a[4]||[],
-      custom:a[5]||'',hasBall:!!a[6],path:(a[7]||[]).map(q=>({x:q[0],y:q[1]}))}));
+    p.callName=nm(j.n);
+    p.attackers=j.a.map(a=>({id:a[0],label:nm(a[1]),x:a[2],y:a[3],moves:a[4]||[],
+      custom:nm(a[5]),hasBall:!!a[6],path:(a[7]||[]).map(q=>({x:q[0],y:q[1]}))}));
     p.defenders=j.d.map(d=>{
-      const o={id:d[0],label:d[1],x:d[2],y:d[3],mode:d[4],mark:d[5]||null,anchor:{x:d[2],y:d[3]}};
+      const o={id:d[0],label:nm(d[1]),x:d[2],y:d[3],mode:d[4],mark:d[5]||null,anchor:{x:d[2],y:d[3]}};
       if(d[6]&&d[6].length===PROF_KEYS.length+2){
         o.prof={arch:d[6][PROF_KEYS.length],tier:d[6][PROF_KEYS.length+1]};
         PROF_KEYS.forEach((k,i)=>o.prof[k]=d[6][i]);
@@ -1324,7 +1350,7 @@ function decodePlay(s){
       return o;
     });
     p.passes=(j.p||[]).map(x=>({from:x[0],to:x[1],t:x[2]}));
-    if(j.s&&SKILLS[j.s])skill=SKILLS[j.s];
+    if(!quiet&&j.s&&SKILLS[j.s])skill=SKILLS[j.s];
     return p;
   }catch(e){return null;}
 }
@@ -1360,7 +1386,7 @@ const saveBook=b=>STORE.set('otb.playbook',JSON.stringify(b));
 function renderBook(){
   const b=loadBook(),sel=$('playbook'),cur=sel.value;
   sel.innerHTML='<option value="">'+(b.length?'saved plays':'playbook is empty')+'</option>'+
-    b.map((e,i)=>`<option value="${i}">${e.n}</option>`).join('');
+    b.map((e,i)=>`<option value="${i}">${esc(e.n)}</option>`).join('');
   if(cur&&b[cur])sel.value=cur;
   $('storenote').textContent = STORE.ok
     ? `${b.length} play${b.length===1?'':'s'} saved on this device.`
@@ -1477,7 +1503,7 @@ $('bookfile').addEventListener('change',ev=>{
     let added=0,replaced=0,bad=0;
     for(const e of incoming){
       if(!e||typeof e.n!=='string'||typeof e.d!=='string'){bad++;continue;}
-      if(!decodePlay(e.d)){bad++;continue;}    /* it must actually open */
+      if(!decodePlay(e.d,true)){bad++;continue;}  /* it must open, quietly */
       const name=e.n.slice(0,28);
       const at=book.findIndex(x=>x.n===name);
       if(at>=0){book[at]={n:name,d:e.d};replaced++;}
@@ -1511,7 +1537,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v2';
+var BUILD = 'otb-v3';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';

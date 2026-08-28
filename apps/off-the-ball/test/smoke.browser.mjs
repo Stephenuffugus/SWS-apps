@@ -106,6 +106,55 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
     (await fresh.evaluate(() => document.getElementById('callname').value)) === 'Round Trip');
   await fresh.close();
 
+  /* ---- a shared link is a link from a stranger ----
+     On 2026-08-28 a crafted #p= link ran script in the reader's page: the
+     scouting card put the defender's NAME into innerHTML, so an img onerror
+     in that name fired the moment you tapped him. Sharing is the whole
+     product, so this is the check that keeps the pipe safe while it widens.
+     The payload is inert and only sets a flag. */
+  const enc = (o) => Buffer.from(JSON.stringify(o), 'utf8').toString('base64')
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const payload = '<img src=x onerror="window.__pwned=1">';
+  const hostile = enc({ k: 'giveandgo', n: payload, s: 'rec',
+    a: [['a10', payload, 46, 26, [], payload, 1, []], ['a9', '9', 36, 37, ['check'], '', 0, []]],
+    d: [['d2', payload, 46, 33, 'man', 'a10', null]], p: [] });
+  const eve = await page.context().newPage();
+  await eve.goto((await page.evaluate(() => location.origin + location.pathname)) + '#p=' + hostile,
+    { waitUntil: 'load' });
+  await eve.waitForTimeout(1100);
+  /* tap the defender, which is the sink that fired */
+  const pt = await eve.evaluate(() => {
+    const cv = document.getElementById('pitch'), r = cv.getBoundingClientRect();
+    return { x: r.left + r.width * (46 / 68), y: r.top + r.height * (1 - (33 + 10) / 62.5) };
+  });
+  await eve.mouse.click(pt.x, pt.y);
+  await eve.waitForTimeout(600);
+  await eve.click('#play');
+  await eve.waitForTimeout(4200);
+  const evil = await eve.evaluate(() => ({
+    pwned: !!window.__pwned,
+    injected: !!document.querySelector('img[src="x"]'),
+    nameIsText: document.getElementById('callname').value.indexOf('<img') === 0,
+  }));
+  check('a hostile share link runs no script', !evil.pwned);
+  check('a hostile share link injects no element', !evil.injected);
+  check('a hostile name survives as inert text', evil.nameIsText,
+    'the name should still be readable, just not executable');
+  await eve.close();
+
+  /* and an ordinary link must still open, which a careless escape fix broke
+     once by using a helper one line before declaring it */
+  const good = enc({ k: 'giveandgo', n: 'Plain Link', s: 'rec',
+    a: [['a10', '10', 46, 26, [], '', 1, []], ['a9', '9', 36, 37, ['check'], '', 0, []]],
+    d: [['d2', '2', 46, 33, 'man', 'a10', null]], p: [] });
+  const plain = await page.context().newPage();
+  await plain.goto((await page.evaluate(() => location.origin + location.pathname)) + '#p=' + good,
+    { waitUntil: 'load' });
+  await plain.waitForTimeout(900);
+  check('an ordinary shared link still opens',
+    (await plain.evaluate(() => document.getElementById('callname').value)) === 'Plain Link');
+  await plain.close();
+
   const real = errors.filter((e) => !/favicon/i.test(e));
   check('no page errors', real.length === 0, real.slice(0, 2).join(' | '));
 });
