@@ -109,6 +109,56 @@ for (const key of KEYS) for (const t of TIERS) {
         hung ? 'ran past the frame cap' : 'no verdict produced');
 }
 
+/* ---------------------------------------------------------------- golden
+   THE SWEEP IS THE CONTRACT, per HANDOFF section 6, and until now it was a
+   contract enforced by a human reading a terminal. Pinned here as a literal
+   so any change to the simulation has to be argued for rather than noticed.
+
+   Re-bless it deliberately:  node apps/off-the-ball/test/engine-test.mjs --bless
+   That prints the block to paste in, so a change to tuned behaviour always
+   shows up as a diff somebody signed off, never as a silent drift.
+
+   Recorded honestly: giveandgo and isolate read CLEAR CHANCE at all three
+   tiers today, so for a third of the library the sweep is not currently
+   discriminating between opposition levels. That is a tuning question for
+   Stephen, not something to paper over, and pinning it is what makes the
+   question visible instead of theoretical. */
+const GOLDEN = {
+  giveandgo: ['CLEAR CHANCE', 'CLEAR CHANCE', 'CLEAR CHANCE'],
+  decoy:     ['SMOTHERED', 'SMOTHERED', 'HALF A YARD'],
+  overlap:   ['HALF A YARD', 'NO PASS ON', 'HALF A YARD'],
+  trap:      ['NO PASS ON', 'NO PASS ON', 'CLEAR CHANCE'],
+  isolate:   ['CLEAR CHANCE', 'CLEAR CHANCE', 'CLEAR CHANCE'],
+  blank:     ['NOTHING HAPPENS', 'NOTHING HAPPENS', 'NOTHING HAPPENS'],
+};
+const sweepRow = (key) =>
+  TIERS.map((t) => simulate(preset(key, t), t).S.verdict.text.split(': ')[0]);
+
+if (process.argv.includes('--bless')) {
+  console.log('\nconst GOLDEN = {');
+  for (const key of KEYS) console.log(`  ${key}: ${JSON.stringify(sweepRow(key))},`);
+  console.log('};\n');
+  process.exit(0);
+}
+
+console.log('\nthe sweep contract');
+{
+  const moved = [];
+  for (const key of KEYS) {
+    const want = GOLDEN[key];
+    if (!want) { moved.push(`${key} is new and unpinned`); continue; }
+    const got = sweepRow(key);
+    got.forEach((cell, i) => {
+      if (cell !== want[i]) moved.push(`${key}/${TIERS[i]}: ${want[i]} became ${cell}`);
+    });
+  }
+  for (const key of Object.keys(GOLDEN)) {
+    if (!KEYS.includes(key)) moved.push(`${key} is pinned but no longer exists`);
+  }
+  check('the preset x tier matrix is unchanged', moved.length === 0,
+    moved.join(' | ') + '  (run with --bless if this change was intended)');
+}
+
 console.log('\nmove library');
 {
   const bad = [];
