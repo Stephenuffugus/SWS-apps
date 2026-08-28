@@ -21,7 +21,7 @@ import { withApp } from './harness.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APPS = join(HERE, '..', 'apps');
-const ORIGIN = 'https://sws-apps-9646d.web.app';
+const ORIGIN = 'https://skywolfstudio.com';
 const LIVE = process.argv.includes('--live');
 
 const slugs = readdirSync(APPS)

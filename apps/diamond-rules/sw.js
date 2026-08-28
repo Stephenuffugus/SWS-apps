@@ -25,7 +25,11 @@ self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
-        if (k !== CACHE) return caches.delete(k);
+        /* caches.keys() is origin wide and every app in the studio shares
+           skywolfstudio.com, so an unfiltered sweep here deletes the offline
+           caches of Hush, Grocery List and everything else the visitor has
+           installed. Only ever delete this app's own older versions. */
+        if (k.indexOf('diamond-') === 0 && k !== CACHE) return caches.delete(k);
       }));
     }).then(function () { return self.clients.claim(); })
   );

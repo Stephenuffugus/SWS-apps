@@ -1,52 +1,93 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   SWS STUDIO, the hub page
+   SKY WOLF STUDIO, the hub page
 
-   Generates apps/index.html: the front door to every app in the studio.
-
-   The hub wears the SAME premium setup as the business card portfolio and
-   the Lucid Winds landing (Stephen, 2026-08-19: "use the same setup as the
-   virtual portfolio and the game studio", the earlier flat-list hub with a
-   gold border pass was not it). That means: near-black #0e1113, drifting
-   aurora, Bricolage Grotesque display type, glassy 20px-radius cards, and a
-   hero of Stephen's real thumbnails drifting in strips, the treatment the
-   business card miniaturised and credited to "the apps landing page hero".
-   Each card still carries its app's accent as the left spine; the colours
-   come from design/out/palette.json so the wall can never drift from the
-   pictures, and all art is read from disk, never regenerated.
+   Generates apps/index.html (the front door), apps/catalogue.json (the
+   catalogue as data, for anything downstream) and apps/manifest.webmanifest.
 
      node design/hub.mjs
+
+   ── 2026-08-28, THE REDESIGN ───────────────────────────────────────────────
+   Stephen scanned his business card at somebody, watched them land on the
+   arcade's mirror of this page instead of skywolfstudio.com, and said the
+   quiet part: he likes the mirror better. "It's got nice borders and the
+   images are larger. It feels a little more comfortable." He was right. The
+   old hub was a wall of 17rem cards with 64px thumbnails down the left,
+   which is a list wearing a grid's clothes. His art was the smallest thing
+   on a page whose whole job is showing his art.
+
+   So the hub now wears the treatment the arcade page wore: the ornate gold
+   filigree frame down all four edges flowing with the scroll, his
+   thumbnails big and square at the top of every card, category sections
+   that open with the question the visitor actually arrived with, film
+   strips of his art, and room to breathe between all of it. The studio's
+   own machinery survives inside it: the live search over every app, the per
+   app install arrows, the per app accent colour, the counted promises.
+
+   The apps landing page at lucidwinds.com/portal/apps.html is now built
+   from apps/catalogue.json rather than by scraping this page's HTML, which
+   is the bug that kept it two apps behind.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+/* The studio's own domain. Every absolute URL the page or the catalogue
+   states uses it, never the raw Firebase address it also answers on. */
+const ORIGIN = 'https://skywolfstudio.com';
+
 const palette = JSON.parse(readFileSync(join(HERE, 'out', 'palette.json'), 'utf8'));
 
-/* The catalogue. `find` holds the words someone would actually type looking
-   for this, the filter matches against it, so "insurance" finds Home
-   Inventory and "teacher" finds both school apps.
+/* Thumbnails are cached for a week (see firebase.json). A version stamp on
+   the URL is the only way replaced art reaches a phone that already holds
+   the old file, and a hand-typed stamp has already failed once: Stephen's
+   wedding rings were restored, the page was hand-edited to ?v=5, this
+   generator still said ?v=4, and the next regeneration would have pointed
+   every visitor back at the URL holding the wrong picture. The stamp is now
+   the file's own content hash. Changed art always gets a fresh URL,
+   unchanged art keeps a stable one, and nobody has to remember. */
 
-   A fifth field, 'shared', marks the apps whose whole point is that two
-   phones see the same thing, which means the data lives on a server and
-   the person who creates the board signs in. Those two facts are true and
-   unavoidable, so the hub states them on the card rather than printing a
-   blanket on-device promise it cannot keep. See findings/TRUST-COPY-CLOUD-APPS.md;
-   the in-app copy was fixed there and this page was the half left behind. */
-/* Hush ships from the arcade repo and lives at lucidwinds.com, so the hub
-   links out to the app itself instead of hosting a copy. Its colours are
-   read from the app's own CSS on lucidwinds.com/hush (--glow and --deep),
-   not the studio palette; its thumb is Stephen's art mirrored from
-   portal-assets/sws-thumbs/hush.png in the arcade repo. */
-const OFFSITE = {
-  hush: { href: 'https://lucidwinds.com/hush/', darkAccent: '#F2B872', accent: '#C87F3C' },
+/* The card art is shown around 196 CSS px wide on a laptop and 173 on a
+   phone, which on any retina screen asks for more pixels than a 256 file
+   has. marketing/thumb-512.png is cut from his own 1254px stripe original
+   (design/hub.mjs never draws art, it only ever downscales his), so the
+   redesign shows his pictures sharp instead of upscaled. thumb-256 is the
+   fallback for anything with no larger source, which today is Hush. */
+const ART = new Map();
+const artOf = (slug) => {
+  if (!ART.has(slug)) {
+    let found = null;
+    for (const [name, dim] of [['thumb-512.png', 512], ['thumb-256.png', 256]]) {
+      const p = join(HERE, '..', 'apps', slug, 'marketing', name);
+      if (!existsSync(p)) continue;
+      found = { name, dim, hash: createHash('sha1').update(readFileSync(p)).digest('hex').slice(0, 8) };
+      break;
+    }
+    ART.set(slug, found);
+  }
+  return ART.get(slug);
 };
+const artUrl = (slug, base = `./${slug}/`) => {
+  const a = artOf(slug);
+  return a ? `${base}marketing/${a.name}?v=${a.hash}` : `${base}icon.svg`;
+};
+const artDim = (slug) => (artOf(slug) ? artOf(slug).dim : 64);
 
-/* Two apps ship with their own full identities (paper notebook; gym poster)
-   rather than a studio skin, so they are not in skins.mjs/palette.json. Their
-   card accents are read from their own CSS, the same treatment Hush gets. */
+/* Apps the studio advertises but does not host. Empty, and that is the point:
+   Hush used to live here pointing at lucidwinds.com/hush, but Hush moved home
+   on 2026-08-20 and its canonical address is skywolfstudio.com/hush. The
+   generator was never told, so a regeneration would have quietly sent every
+   visitor back to the stale arcade mirror. Anything added here must be an app
+   that genuinely is not in apps/. */
+const OFFSITE = {};
+
+/* Apps that ship with their own full identity rather than a studio skin, so
+   they are not in skins.mjs/palette.json. Their card accents are read from
+   their own CSS. */
 const SELF_STYLED = {
   'cross-off': { darkAccent: '#F9E547', accent: '#B99B00' },
   'overload': { darkAccent: '#5C8AD4', accent: '#3F6DB5' },
@@ -61,10 +102,39 @@ const SELF_STYLED = {
      a hub regeneration can never drop them. */
   'fretwork': { darkAccent: '#c9974c', accent: '#8a5f22' },
   'diamond-rules': { darkAccent: '#3FA35C', accent: '#1C3529' },
+  /* Hush came home from the arcade on 2026-08-20 and is a local app now.
+     Its colours are its own (--glow and --deep), not a studio skin. */
+  'hush': { darkAccent: '#F2B872', accent: '#C87F3C' },
+  /* Coverage was hand-added to the page and never to this catalogue, so
+     every regeneration since would have deleted it. Its own investor blue. */
+  'coverage': { darkAccent: '#4c8dff', accent: '#2b62c4' },
 };
 
+/* ───────────────────────────────────────────────────────────────────────────
+   The catalogue.
+
+   Each category is [title, meta, apps]. `meta` is how the section introduces
+   itself: a kicker, the question the visitor arrived with, and a line of
+   plain talk. That wording used to live only in the arcade repo's generator,
+   which meant a new category here reached that page with no sentence to
+   introduce it and hard-failed its build. It lives here now and ships in
+   catalogue.json, so the words travel with the apps.
+
+   Each app is [slug, name, line, find, kind]. `find` holds the words someone
+   would actually type looking for this: the filter matches against it, so
+   "insurance" finds Home Inventory and "teacher" finds both school apps.
+
+   `kind` is 'shared' for the apps whose whole point is that two phones see
+   the same thing, which means the data lives on a server and the person who
+   creates the board signs in. Those two facts are true and unavoidable, so
+   the card states them rather than printing a blanket on-device promise the
+   page cannot keep. See findings/TRUST-COPY-CLOUD-APPS.md. 'beta' is an app
+   still in testing.
+   ─────────────────────────────────────────────────────────────────────────── */
 const CATALOGUE = [
-  ['Family &amp; Home', [
+  ['Family &amp; Home',
+    { id: 'family-home', kick: 'The household', q: 'Keeping the house running?',
+      sub: 'The sitter, the baby, the meds, the groceries, the sound that finally gets everyone to sleep. The everyday logistics of the people you love.' }, [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
     ['baby-log', 'Baby Log', 'Feeds, sleep and nappies with one thumb at 3am', 'newborn infant feeding nursing diaper tracker night'],
     ['hush', 'Hush', 'Pick your sound. Go to sleep', 'white noise sleep sound machine baby nursery newborn night bedtime settle offline honest science'],
@@ -72,12 +142,16 @@ const CATALOGUE = [
     ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
     ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
   ]],
-  ['School', [
+  ['School',
+    { id: 'school', kick: 'The school year', q: 'Teaching this year?',
+      sub: 'Plan the whole year once, keep grades on your own computer, and have the sub folder ready before you are sick.' }, [
     ['specials-planner', 'Specials Planner', 'Art, music, PE, library. Plan the whole year once', 'teacher lesson plan rotation schedule elementary'],
     ['sub-plans', 'Sub Plans', 'Your substitute folder, ready before you are sick', 'teacher substitute emergency plans binder classroom'],
     ['grade-sheet', 'Grade Sheet', 'Grades for every class you teach, on this device only', 'gradebook grades teacher marks roster rubric report card averages specials elementary substitute homeschool'],
   ]],
-  ['Events &amp; Groups', [
+  ['Events &amp; Groups',
+    { id: 'events-groups', kick: 'The big days', q: 'Planning a big day?',
+      sub: 'Weddings, seasons, sign-ups, game nights. One link for everyone instead of a group-chat avalanche.' }, [
     /* "no account, ever" was false for the one person who makes the sheet, they sign in. True for everyone who signs up, which is the many. */
     ['signup-sheets', 'Signup Sheets', 'Claim a spot in seconds, no account needed', 'volunteer potluck conference slots roster shifts', 'shared'],
     ['team-parent', 'Team Parent', 'One link for the whole season', 'youth sports snack schedule roster coach league', 'shared'],
@@ -87,362 +161,435 @@ const CATALOGUE = [
     ['bracket-maker', 'Bracket Maker', 'Game night, settled properly', 'tournament elimination playoff league office pool'],
     ['wheel-picker', 'Wheel Picker', 'Spin to choose. No ads spinning back', 'random name picker classroom raffle prize chore'],
   ]],
-  ['Paper &amp; Files', [
+  ['Paper &amp; Files',
+    { id: 'paper-files', kick: 'The paperwork', q: 'Drowning in paperwork?',
+      sub: 'Scan it, merge it, sign it, shrink it, all on your device. Nothing gets uploaded and nothing holds your file for ransom.' }, [
     ['scan-to-pdf', 'Scan to PDF', 'No watermark, no ransom, no upload', 'scanner document camera receipt paperwork'],
     ['pdf-tools', 'PDF Tools', 'Merge, split and rotate. Nothing gets uploaded', 'combine pages reorder delete extract'],
     ['image-compressor', 'Image Compressor', 'Shrink photos without uploading them', 'resize optimise jpeg png file size email'],
     ['signature-maker', 'Signature Maker', 'Draw it once, use it everywhere', 'sign document esign transparent png contract'],
     ['qr-maker', 'QR Maker', 'Codes that never expire', 'qr code wifi menu flyer link generator'],
   ]],
-  ['Moving &amp; Travel', [
+  ['Moving &amp; Travel',
+    { id: 'moving-travel', kick: 'The move', q: 'On the move?',
+      sub: 'Which box has the can opener, what goes in the suitcase, and photos of everything before the insurance claim needs them.' }, [
     ['moving-boxes', 'Moving Boxes', 'Which box has the can opener?', 'move house packing labels inventory qr'],
     ['packing-list', 'Packing List', 'Never forget the charger again', 'travel trip suitcase checklist holiday'],
     ['home-inventory', 'Home Inventory', 'Photograph it before you need it', 'insurance claim contents valuables fire flood'],
   ]],
-  ['Money', [
+  ['Money',
+    { id: 'money', kick: 'Settling up', q: 'Who owes what?',
+      sub: 'Split the trip, the dinner, the house bills. Fairly, on your device, no accounts. And a screener that says whether the rental actually pays for itself.' }, [
     ['bill-splitter', 'Bill Splitter', 'Split it, settle up, nothing leaves your device', 'split expenses group trip dinner iou owe'],
+    ['coverage', 'Coverage', 'Does the rental qualify? If not, the down payment that would', 'dscr deal screener rental loan qualify investor real estate down payment cash flow cap rate mortgage financing landlord property', 'beta'],
   ]],
-  ['Body &amp; Mind', [
+  ['Body &amp; Mind',
+    { id: 'body-mind', kick: 'Your own corner', q: 'Working on you?',
+      sub: 'A to-do list that feels as good as paper to cross off, and a strength app that writes your next workout for you. Small wins, stacked up.' }, [
     ['cross-off', 'Cross Off', 'A paper list you cross off with real highlighters', 'todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying'],
     ['overload', 'OVERLOAD', 'It writes your next workout. You just lift', 'gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise'],
   ]],
-  ['Music', [
+  ['Music',
+    { id: 'music', kick: 'The woodshed', q: 'Learning the neck?',
+      sub: 'Tap drills, scales in positions, chord charts and rhythm, built by somebody who teaches this for a living. The fretboard stops being a mystery.' }, [
     ['fretwork', 'Fretwork', 'Know the neck: tap drills, scales in positions, chord charts and rhythm', 'guitar fretboard notes learn the neck memorize triads inversions seventh chords intervals scales modes pentatonic chord charts rhythm polyrhythm drills practice music theory jazz trainer teacher'],
   ]],
-  ['Night Sky', [
+  ['Night Sky',
+    { id: 'night-sky', kick: 'The night sky', q: 'Looking up tonight?',
+      sub: 'A star atlas you collect from: real planet positions, live NASA data, lessons and citizen science. In testing while it grows.' }, [
     ['astravault', 'Astra Vault', 'Scan the cosmos and collect the sky', 'stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space', 'beta'],
   ]],
-  ['Outdoors', [
+  ['Outdoors',
+    { id: 'outdoors', kick: 'The field', q: 'Out in the field?',
+      sub: 'A rockhounding log for every find: photo, GPS and label, all on your device. In testing while it grows.' }, [
     ['rock-stops', 'Rock Stops', 'Every rock, fossil and sea glass find, logged where you stood', 'rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps', 'beta'],
   ]],
-  ['Sports', [
+  ['Sports',
+    { id: 'sports', kick: 'The ballpark', q: 'First season on the diamond?',
+      sub: 'The rules little leagues skip, on a diamond kids can tap. Force outs, tag ups and the infield fly, gated to the level your league actually plays.' }, [
     ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers', 'beta'],
   ]],
 ];
 
-const card = ([slug, name, line, find, kind]) => {
+/* ── counted, never typed ──────────────────────────────────────────────────
+   The moment someone adds a shared app and hand-edits "nineteen" the page
+   starts lying again, which is exactly how it got into this state the first
+   time. Every number below is derived. */
+const count = CATALOGUE.reduce((n, [, , a]) => n + a.length, 0);
+const sharedCount = CATALOGUE.reduce((n, [, , a]) => n + a.filter((x) => x[4] === 'shared').length, 0);
+const localCount = count - sharedCount;
+const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const word = (n) => WORDS[n] || String(n);
+
+/* ── the ornament ──────────────────────────────────────────────────────────
+   Thin-lined gold, eclectic on purpose (Stephen: "a little more eclectic and
+   unique"): one long strip mixing motifs so it reads collected rather than
+   tiled. Stem, leaf, lozenge, starburst, fern curl, crescent, dot run,
+   diamond chain, mirrored stem. Vertical for the side rails, horizontal for
+   the top and bottom bands, a lozenge for the corners. The same drawing the
+   arcade's apps page wears: this is the border Stephen pointed at. */
+const VINE = 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='26' height='340' viewBox='0 0 26 340' fill='none' stroke='#e4bd5f' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'>` +
+  `<path d='M13 0 C 5 24, 21 46, 13 70'/>` +
+  `<path d='M12 38 C 7 36, 4 31, 4 25 C 10 27, 12 32, 12 38 Z'/>` +
+  `<path d='M13 70 L17 76 L13 82 L9 76 Z'/><circle cx='13' cy='76' r='1.1'/>` +
+  `<path d='M13 82 C 16 90, 10 94, 13 100'/>` +
+  `<path d='M13 102 V106 M13 112 V116 M6 109 H10 M16 109 H20 M8.5 104.5 L11 107 M15 111 L17.5 113.5 M17.5 104.5 L15 107 M11 111 L8.5 113.5'/><circle cx='13' cy='109' r='1.3'/>` +
+  `<path d='M13 118 C 17 126, 9 132, 13 140'/>` +
+  `<path d='M13 140 C 6 154, 20 168, 13 182'/>` +
+  `<path d='M15 158 C 20 156, 23 151, 21 147 C 19 145, 16 148, 18 152'/>` +
+  `<path d='M8 190 Q13 197 18 190'/><path d='M10 192.5 Q13 196.5 16 192.5'/>` +
+  `<circle cx='13' cy='204' r='1.5'/><circle cx='13' cy='210' r='1.1'/><circle cx='13' cy='215' r='0.8'/>` +
+  `<path d='M13 222 L16.5 227.5 L13 233 L9.5 227.5 Z'/><path d='M13 233 L15.5 237.5 L13 242 L10.5 237.5 Z'/>` +
+  `<path d='M13 248 C 21 270, 5 296, 13 318'/>` +
+  `<path d='M14 276 C 19 274, 22 269, 22 263 C 16 265, 14 270, 14 276 Z'/>` +
+  `<circle cx='13' cy='300' r='1.4'/>` +
+  `<path d='M13 318 C 11 326, 15 333, 13 340'/>` +
+  `</svg>`);
+const BAND = 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='340' height='18' viewBox='0 0 340 18' fill='none' stroke='#e4bd5f' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'>` +
+  `<path d='M0 9 C 24 3, 46 15, 70 9'/>` +
+  `<path d='M38 8 C 36 3, 31 1, 25 1 C 27 6, 32 8, 38 8 Z'/>` +
+  `<path d='M70 9 L76 5 L82 9 L76 13 Z'/><circle cx='76' cy='9' r='1.1'/>` +
+  `<path d='M82 9 C 90 12, 94 6, 100 9'/>` +
+  `<path d='M102 9 H106 M112 9 H116 M109 2 V6 M109 12 V16 M104.5 4.5 L107 7 M111 11 L113.5 13.5 M104.5 13.5 L107 11 M111 7 L113.5 4.5'/><circle cx='109' cy='9' r='1.3'/>` +
+  `<path d='M118 9 C 126 5, 132 13, 140 9'/>` +
+  `<path d='M140 9 C 154 2, 168 16, 182 9'/>` +
+  `<path d='M158 7 C 156 2, 151 -1, 147 1 C 145 3, 148 6, 152 4'/>` +
+  `<path d='M190 6 Q197 13 204 6'/><path d='M192.5 8.5 Q197 12.5 201.5 8.5'/>` +
+  `<circle cx='214' cy='9' r='1.5'/><circle cx='220' cy='9' r='1.1'/><circle cx='225' cy='9' r='0.8'/>` +
+  `<path d='M232 9 L237.5 5.5 L243 9 L237.5 12.5 Z'/><path d='M243 9 L247.5 6.5 L252 9 L247.5 11.5 Z'/>` +
+  `<path d='M258 9 C 280 1, 296 17, 318 9'/>` +
+  `<path d='M286 10 C 284 15, 279 17, 273 17 C 275 12, 280 10, 286 10 Z'/>` +
+  `<path d='M318 9 C 326 7, 333 11, 340 9'/>` +
+  `</svg>`);
+const CORNER = 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='#e4bd5f' stroke-width='1' stroke-linejoin='round'><path d='M7 1 L13 7 L7 13 L1 7 Z'/><circle cx='7' cy='7' r='1.4'/></svg>`);
+
+const FLOURISH = `<div class="flourish" aria-hidden="true"><svg width="120" height="16" viewBox="0 0 120 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M60 2 L67 8 L60 14 L53 8 Z"/><path d="M47 8 C 40 3, 32 3, 26 8 C 32 13, 40 13, 47 8 Z"/><path d="M73 8 C 80 3, 88 3, 94 8 C 88 13, 80 13, 73 8 Z"/><circle cx="60" cy="8" r="1.6"/><path d="M0 8 H 20"/><path d="M100 8 H 120"/></svg></div>`;
+
+/* ── the card ──────────────────────────────────────────────────────────────
+   His art at the top, full width of the card, square. The name and the line
+   under it. The app's own accent lights the border on hover and rings the
+   focus outline, which is where the old left-edge spine went: a wall of
+   coloured 3px hairlines was the studio's colour system whispered, and this
+   states it at full card width the moment you reach for one.
+
+   The install arrow has to sit OUTSIDE the link (an anchor cannot contain an
+   anchor), so the card is a wrapper carrying the search index and the accent,
+   with the link and the arrow as siblings inside it. */
+const card = ([slug, name, line, find, kind], i) => {
   const p = palette[slug] || OFFSITE[slug] || SELF_STYLED[slug];
   const href = OFFSITE[slug] ? OFFSITE[slug].href : `./${slug}/`;
-  /* "shared online" is searchable too, someone deciding whether to trust a
+  const tag = kind === 'shared'
+    ? `\n            <span class="tag">Shared online</span>`
+    : kind === 'beta'
+      ? `\n            <span class="tag">In testing</span>`
+      : '';
+  /* "shared online" is searchable too: someone deciding whether to trust a
      list with the school run should be able to find the ones that leave the
      device by typing the thing they are worried about. */
-  const tag = kind === 'shared'
-    ? `<span class="tag">Shared online</span>`
-    : kind === 'beta'
-      ? `<span class="tag">In testing</span>`
-      : '';
   const extra = kind === 'shared'
     ? ' shared online cloud server link'
     : kind === 'beta'
       ? ' beta in development testing'
       : '';
-  /* Stephen's thumbnail art, when it exists on disk, falling back to the
-     icon only until an app's art is filed. The art was silently dropped for
-     icon.svg once (see git 36c52a6) and he rightly noticed; disk is the
-     authority here so a regenerate can never lose it again. */
-  /* ?v=2: the first thumb-256 generation was generic icons that were never
-     cut from his stripe art (found 2026-08-17); images are cached for a week
-     by firebase.json, so replacing the content requires a new URL. */
-  /* v3: sub-plans' thumb content changed under the same URL when Stephen's
-     real art replaced the folder placeholder (2026-08-17). */
-  const art = existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png'))
-    ? `./${slug}/marketing/thumb-256.png?v=4`
-    : `./${slug}/icon.svg`;
-  /* Per-card install: a page can only prompt for ITS OWN app, so the ⤓ opens
-     the app with ?sws-install=1 and the app's studio-wide install affordance
-     greets them as a banner instead of hiding in the footer. Only offered
-     where that affordance actually exists in the app's HTML. */
+  /* Per-card install: a page can only prompt for ITS OWN app, so the arrow
+     opens the app with ?sws-install=1 and the app's studio-wide install
+     affordance greets them as a banner instead of hiding in the footer. Only
+     offered where that affordance actually exists in the app's HTML. */
   const installable = !OFFSITE[slug]
     && existsSync(join(HERE, '..', 'apps', slug, 'index.html'))
     && readFileSync(join(HERE, '..', 'apps', slug, 'index.html'), 'utf8').includes('swsInstall');
   const get = installable
-    ? `
-        <a class="getbtn" href="./${slug}/?sws-install=1" aria-label="Install ${name.replace(/"/g, '&quot;')}" title="Install this app">&#10515;</a>`
+    ? `\n          <a class="getbtn" href="./${slug}/?sws-install=1" aria-label="Install ${name.replace(/"/g, '&quot;')}" title="Install this app">&#10515;</a>`
     : '';
-  return `      <div class="card reveal" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
-         style="--app:${p.darkAccent};--app-deep:${p.accent}">
-        <a class="applink" href="${href}">
-          <img class="swatch" src="${art}" alt="" width="64" height="64" loading="lazy" decoding="async">
-          <span class="meta"><b>${name}</b><span>${line}</span>${tag}</span>
-        </a>${get}
-      </div>`;
+  return `        <div class="app" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
+          style="--i:${i};--app:${p.darkAccent};--app-deep:${p.accent}">
+          <a class="applink" href="${href}">
+            <img src="${artUrl(slug)}" alt="" width="${artDim(slug)}" height="${artDim(slug)}" loading="lazy" decoding="async">
+            <b>${name}</b>
+            <small>${line}</small>${tag}
+          </a>${get}
+        </div>`;
 };
 
-const sections = CATALOGUE.map(([title, apps]) => `
-    <section class="group" data-group>
-      <div class="section-head reveal"><h2>${title}</h2></div>
+const section = ([title, meta, apps], idx) => `
+    <section class="need reveal" data-group${idx === 0 ? ' id="needs"' : ''}>
+${idx === 0 ? '' : '      ' + FLOURISH + '\n'}      <span class="kick">${String(idx + 1).padStart(2, '0')} &middot; ${meta.kick}</span>
+      <h2>${meta.q}</h2>
+      <p class="sub">${meta.sub}</p>
       <div class="grid">
 ${apps.map(card).join('\n')}
       </div>
-    </section>`).join('\n');
+    </section>`;
 
-const count = CATALOGUE.reduce((n, [, a]) => n + a.length, 0);
+const sections = CATALOGUE.map(section).join('\n');
 
-/* Counted, never typed. The moment someone adds a shared app and hand-edits
-   "nineteen" the page starts lying again, which is exactly how it got into
-   this state the first time. */
-const sharedCount = CATALOGUE.reduce((n, [, a]) => n + a.filter(x => x[4] === 'shared').length, 0);
-const localCount = count - sharedCount;
-const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-const word = (n) => WORDS[n] || String(n);
-const Word = (n) => { const w = word(n); return w[0].toUpperCase() + w.slice(1); };
-
-/* The hero strips: every app whose real thumbnail art exists on disk, split
-   over two rows drifting opposite ways, each row doubled for the seamless
-   -50% loop. Decorative (aria-hidden); the cards below carry the links. */
-const thumbed = CATALOGUE.flatMap(([, apps]) => apps.map(a => a[0]))
-  .filter(slug => existsSync(join(HERE, '..', 'apps', slug, 'marketing', 'thumb-256.png')));
-const half = Math.ceil(thumbed.length / 2);
-const stripImgs = slugs => slugs.map(s =>
-  `<img src="./${s}/marketing/thumb-256.png?v=4" alt="" width="84" height="84" loading="lazy" decoding="async">`).join('');
-const strips = `<div class="hero-strips" aria-hidden="true">
-      <div class="apps-strip"><div class="apps-track">${stripImgs(thumbed.slice(0, half))}${stripImgs(thumbed.slice(0, half))}</div></div>
-      <div class="apps-strip rev"><div class="apps-track">${stripImgs(thumbed.slice(half))}${stripImgs(thumbed.slice(half))}</div></div>
-    </div>`;
+/* ── the hero strips ───────────────────────────────────────────────────────
+   Every app whose real thumbnail art exists on disk, split over two rows
+   drifting opposite ways, each row doubled for the seamless -50% loop.
+   Decorative (aria-hidden); the cards below carry the links. */
+const thumbed = CATALOGUE.flatMap(([, , apps]) => apps.map((a) => a[0])).filter(artOf);
+const halfway = Math.ceil(thumbed.length / 2);
+const stripImgs = (slugs) => slugs.map((s) =>
+  `<img src="${artUrl(s)}" alt="" width="${artDim(s)}" height="${artDim(s)}" loading="lazy" decoding="async">`).join('');
+const strip = (slugs, cls) =>
+  `    <div class="strip${cls}" aria-hidden="true"><div class="track">${stripImgs(slugs)}${stripImgs(slugs)}</div></div>`;
 
 const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="canonical" href="${ORIGIN}/">
 <title>Sky Wolf Studio: ${count} free, ad-free apps</title>
-<meta name="description" content="${count} free utility apps from Sky Wolf Studio. No ads, no subscription, no tracking. ${localCount} keep everything on your device; the ${word(sharedCount)} shared ones say so.">
-<meta name="theme-color" content="#0e1113">
+<meta name="description" content="${count} free apps for real life from Sky Wolf Studio. No ads, no subscription, no tracking. ${localCount} keep everything on your device; the ${word(sharedCount)} shared ones say so.">
+<meta name="theme-color" content="#080c09">
 <meta property="og:title" content="Sky Wolf Studio: ${count} free apps">
-<meta property="og:description" content="${count} free, ad-free utilities: signup sheets, lesson planner, sub plans, PDF tools and more. ${localCount} keep everything on your device.">
-<meta property="og:image" content="https://skywolfstudio.com/signup-sheets/marketing/stripe-thumbnail.png">
-<meta property="og:url" content="https://skywolfstudio.com/">
+<meta property="og:description" content="${count} free, ad-free apps: signup sheets, lesson planner, sub plans, PDF tools and more. ${localCount} keep everything on your device.">
+<meta property="og:image" content="${ORIGIN}/signup-sheets/marketing/stripe-thumbnail.png">
+<meta property="og:url" content="${ORIGIN}/">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="./brand/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="./brand/apple-touch-icon.png">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700;12..96,800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script>document.documentElement.classList.add('js');</script>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js');
+/* Thumbs are cached for a week. One bad response, a transfer dropped on weak
+   signal or a request landing mid-deploy, and that blank result can sit in a
+   phone's cache for days looking like the art was lost. If a thumb fails to
+   load, retry it exactly once with a fresh URL that no cache has seen. */
+document.addEventListener('error', function(e){
+  var img = e.target;
+  if (!img || img.tagName !== 'IMG' || img.dataset.retried) return;
+  img.dataset.retried = '1';
+  img.src = img.src + (img.src.indexOf('?') > -1 ? '&' : '?') + 'r=' + Date.now();
+}, true);</script>
 <style>
 /* Generated by design/hub.mjs, edit the catalogue there, not here.
-   Design language shared with the business card portfolio and the arcade:
-   near-black, drifting aurora, Bricolage Grotesque, glassy cards. */
+   Night-forest ground, gold filigree, his art large. The treatment the
+   arcade's apps page wears, because Stephen looked at both and picked it. */
 :root{
   color-scheme:dark;
-  --bg:#0e1113; --surface:#161b1e; --ink:#eef0ea; --sub:#b8bfb6; --line:#262d30;
-  --emerald:#46b98c; --emerald-deep:#1f6f54; --steel:#7fa3c9; --gold:#d9a441;
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:32px; --s8:48px;
-  --ease:cubic-bezier(.2,.7,.2,1);
+  --bg:#080c09; --panel:#121a13; --panel2:#1a251b;
+  --ink:#f1e9d8; --cream:#f1e9d8; --muted:#98a28e;
+  --line:#2a3722; --gold:#e4bd5f; --gold-deep:#c19a41; --leaf:#82ddcd;
+  --disp:'Fredoka',ui-rounded,'Segoe UI',system-ui,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
-html,body{overflow-x:hidden}
-body{
-  margin:0; color:var(--ink);
-  background:
-    radial-gradient(900px 500px at 15% -5%, rgba(70,185,140,.10), transparent 60%),
-    radial-gradient(800px 500px at 110% 30%, rgba(127,163,201,.09), transparent 60%),
-    radial-gradient(700px 600px at 50% 110%, rgba(217,164,65,.06), transparent 60%),
-    var(--bg);
-  font-family:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  line-height:1.6; -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(var(--s8) + env(safe-area-inset-bottom));
-}
-.wrap{max-width:74rem; margin-inline:auto; padding-inline:max(var(--s5), env(safe-area-inset-left))}
+html{scroll-behavior:smooth;overflow-x:clip;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 'Nunito',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(48px + env(safe-area-inset-bottom));overflow-x:hidden}
+.wrap{max-width:1060px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
 
-/* ---------- drifting aurora ---------- */
-.aurora{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
-.aurora span{position:absolute; border-radius:50%; filter:blur(100px)}
-.aurora .a1{width:620px;height:620px;background:rgba(70,185,140,.14);top:-180px;left:-160px;animation:drift1 24s ease-in-out infinite}
-.aurora .a2{width:520px;height:520px;background:rgba(127,163,201,.12);bottom:-160px;right:-140px;animation:drift2 28s ease-in-out infinite}
-.aurora .a3{width:440px;height:440px;background:rgba(217,164,65,.09);top:44%;left:60%;animation:drift3 32s ease-in-out infinite}
-@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(70px,50px) scale(1.12)}}
-@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-40px) scale(1.15)}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,40px) scale(.9)}}
-
-.skip{position:absolute;left:var(--s4);top:var(--s4);z-index:20;padding:var(--s3) var(--s4);
-  background:var(--emerald);color:#06231a;border-radius:10px;font-weight:600;text-decoration:none;
-  transform:translateY(-200%);transition:transform .2s var(--ease)}
+.skip{position:absolute;left:16px;top:16px;z-index:20;padding:12px 16px;
+  background:var(--gold);color:#12160f;border-radius:10px;font-weight:800;text-decoration:none;
+  transform:translateY(-250%);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
 .skip:focus-visible{transform:none}
 
-/* ---------- hero ---------- */
-header{padding:var(--s8) 0 var(--s5); text-align:center}
-h1{
-  font-weight:800; font-size:clamp(2.6rem,7vw,3.6rem);
-  letter-spacing:-1.4px; line-height:.98; margin:0;
-}
-h1 .dot{color:var(--gold)}
-.promise{
-  display:inline-flex; align-items:center; gap:var(--s2); flex-wrap:wrap; justify-content:center;
-  margin:var(--s4) auto 0; padding:var(--s3) var(--s5);
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:999px;
-  box-shadow:0 6px 20px rgba(0,0,0,.25);
-  color:var(--sub); font-size:.9375rem;
-}
-.promise b{color:var(--ink); font-weight:600}
-.promise svg{width:18px;height:18px;color:var(--emerald);flex:none}
-
-/* Stephen's thumbnails on the move: the apps landing page hero itself,
-   the treatment the business card borrowed in miniature */
-.hero-strips{margin:var(--s6) auto 0; max-width:62rem}
-.apps-strip{overflow:hidden;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
-  mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent)}
-.apps-strip + .apps-strip{margin-top:12px}
-.apps-track{display:flex; gap:12px; width:max-content; animation:apps-drift 55s linear infinite}
-.apps-strip.rev .apps-track{animation-name:apps-drift-rev; animation-duration:70s}
-.apps-track img{width:84px;height:84px;border-radius:18px;flex:none;display:block;
-  border:1px solid rgba(255,255,255,.10); box-shadow:0 10px 26px rgba(0,0,0,.45)}
-@keyframes apps-drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes apps-drift-rev{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-
-/* ---------- search ---------- */
-.searchbar{position:sticky; top:0; z-index:10; padding:var(--s4) 0;
-  background:linear-gradient(var(--bg) 72%, transparent); margin-bottom:var(--s3)}
-.search{position:relative; max-width:32rem; margin-inline:auto}
-.search input{
-  width:100%; min-height:48px; padding:0 var(--s5) 0 44px;
-  font-size:1rem; font-family:inherit; color:var(--ink);
-  background:var(--surface); border:1px solid var(--line); border-radius:999px;
-  box-shadow:0 6px 20px rgba(0,0,0,.25);
-}
-.search input::placeholder{color:var(--sub)}
-.search svg{position:absolute; left:16px; top:50%; transform:translateY(-50%);
-  width:18px; height:18px; color:var(--sub); pointer-events:none}
-.search input:focus-visible{outline:2px solid var(--emerald); outline-offset:2px; border-color:var(--emerald)}
-
-/* ---------- sections ---------- */
-.group{margin-bottom:var(--s6)}
-.section-head{display:flex; align-items:center; gap:12px; margin:38px 0 16px}
-.section-head h2{
-  font-size:20px; font-weight:700; letter-spacing:-.3px;
-  color:var(--ink); white-space:nowrap; margin:0;
-}
-.section-head::after{
-  content:""; flex:1; height:2px; border-radius:1px;
-  background:linear-gradient(90deg, var(--emerald), var(--gold), var(--steel), transparent);
-  opacity:.45;
-}
-.js .section-head::after{transform:scaleX(.15); transform-origin:left; transition:transform .9s var(--ease)}
-.js .section-head.in::after{transform:scaleX(1)}
-.grid{display:grid; gap:var(--s3); grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
-
-/* ---------- cards ---------- */
-.card{
-  position:relative; display:flex;
-  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0)), var(--surface);
-  border:1px solid rgba(255,255,255,.06); border-radius:20px;
-  box-shadow:0 14px 44px rgba(0,0,0,.35);
-  overflow:hidden;
-  transition:border-color .14s var(--ease), transform .14s var(--ease), background .14s var(--ease);
-}
-/* The app's own accent, as a spine down the left edge. Twenty-nine of these
-   in a grid is the portfolio's colour system stated in one glance. */
-.card::before{
-  content:''; position:absolute; inset:0 auto 0 0; width:3px; background:var(--app);
-}
-.card:hover{transform:translateY(-2px); border-color:var(--emerald); background:rgba(255,255,255,.05)}
-.applink{
-  display:flex; gap:var(--s4); align-items:flex-start; flex:1; min-width:0;
-  padding:var(--s4) 52px var(--s4) var(--s4);
-  text-decoration:none; color:inherit;
-}
-.applink:focus-visible{outline:2px solid var(--app); outline-offset:-2px; border-radius:20px}
-.getbtn{
-  position:absolute; top:10px; right:10px; width:36px; height:36px;
-  display:flex; align-items:center; justify-content:center;
-  border-radius:50%; border:1px solid rgba(255,255,255,.12);
-  color:var(--sub); background:rgba(255,255,255,.03);
-  text-decoration:none; font-size:16px; line-height:1;
-  transition:color .12s ease, border-color .12s ease, background .12s ease;
-}
-.getbtn:hover{color:#fff; border-color:var(--emerald); background:var(--emerald-deep)}
-.getbtn:focus-visible{outline:2px solid var(--emerald); outline-offset:2px}
-.swatch{
-  width:64px; height:64px; flex:none; border-radius:16px; margin-top:2px;
-  background:var(--app-deep);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 8px 22px rgba(0,0,0,.4);
-  transition:transform .6s var(--ease);
-}
-.card:hover .swatch{transform:scale(1.06)}
-.meta{display:block; min-width:0}
-.meta b{display:block; font-size:1.0625rem; font-weight:700; letter-spacing:-.01em; margin-bottom:2px}
-.meta span{display:block; color:var(--sub); font-size:.875rem; line-height:1.4}
-/* Two classes deep on purpose: '.meta span' above is (0,1,1) and would
-   otherwise win and force this back to a full-width block. */
-.meta .tag{
-  display:inline-block; margin-top:var(--s2); padding:2px var(--s2);
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); border-radius:999px;
-  color:var(--sub); font-family:"Space Mono",monospace; font-size:.6875rem; font-weight:700;
-  letter-spacing:.04em; text-transform:uppercase; line-height:1.5;
+/* ── the ornate frame: eclectic gold filigree on all four edges, flowing
+      with the scroll. One fixed inset:0 container with four absolute bars.
+      This sizes to the real viewport (Pixel 9 included), where separate
+      right-anchored fixed divs proved unreliable. ── */
+.frame{position:fixed;inset:0;pointer-events:none;z-index:0}
+.fr{position:absolute;opacity:.34}
+.fr.l,.fr.r{top:20px;bottom:20px;width:26px;background:url("${VINE}") repeat-y center 0/26px auto}
+.fr.l{left:10px}
+.fr.r{right:10px;transform:scaleX(-1)}
+.fr.t,.fr.b{left:20px;right:20px;height:18px;background:url("${BAND}") repeat-x 0 center/auto 18px}
+.fr.t{top:6px}
+.fr.b{bottom:6px;transform:scaleY(-1)}
+.fr.c{width:14px;height:14px;background:url("${CORNER}") no-repeat center/contain}
+.fr.c.tl{top:8px;left:8px}.fr.c.tr{top:8px;right:8px}
+.fr.c.bl{bottom:8px;left:8px}.fr.c.br{bottom:8px;right:8px}
+/* Slimmer on the phone, but every edge still framed. */
+@media (max-width:1180px){
+  .fr{opacity:.26}
+  .fr.l,.fr.r{width:13px;background-size:13px auto;top:16px;bottom:16px}
+  .fr.l{left:max(2px,env(safe-area-inset-left))}
+  .fr.r{right:max(2px,env(safe-area-inset-right))}
+  .fr.t,.fr.b{height:12px;background-size:auto 12px;left:16px;right:16px}
+  .fr.t{top:max(3px,env(safe-area-inset-top))}
+  .fr.b{bottom:max(3px,env(safe-area-inset-bottom))}
+  .fr.c{width:11px;height:11px}
+  .fr.c.tl,.fr.c.tr{top:4px}.fr.c.bl,.fr.c.br{bottom:4px}
+  .fr.c.tl,.fr.c.bl{left:3px}.fr.c.tr,.fr.c.br{right:3px}
 }
 
-/* ---------- scroll reveal ---------- */
-.js .reveal{opacity:0; transform:translateY(26px);
-  transition:opacity .7s var(--ease), transform .85s var(--ease); will-change:opacity,transform}
-.js .reveal.in{opacity:1; transform:none}
+/* ── section flourishes: the same line, horizontal ── */
+.flourish{display:flex;justify-content:center;color:var(--gold);opacity:.5;margin:0 0 40px}
 
-.empty{display:none; text-align:center; color:var(--sub); padding:var(--s8) var(--s4)}
+/* ── hero ── */
+.hero{text-align:center;padding:44px 0 8px;position:relative}
+.hero::before{content:"";position:absolute;left:50%;top:-30%;width:100vw;height:150%;
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(46% 55% at 50% 32%,rgba(228,189,95,.12),transparent 70%)}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border:1px solid var(--line);
+  border-radius:999px;color:var(--leaf);font-weight:800;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
+h1{font-family:var(--disp);font-weight:600;color:var(--cream);
+  font-size:clamp(2.5rem,8vw,4.4rem);line-height:1.0;margin:18px auto 14px;max-width:14ch}
+h1 em{font-style:normal;color:var(--gold)}
+.lede{color:var(--muted);font-size:clamp(1.02rem,2.6vw,1.22rem);max-width:46ch;margin:0 auto 24px}
+.lede b{color:var(--cream)}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:34px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 30px;
+  border-radius:999px;font-weight:800;font-size:1.02rem;text-decoration:none;font-family:var(--disp);
+  cursor:pointer;border:1px solid transparent}
+.btn.gold{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#12160f;
+  box-shadow:0 6px 24px rgba(228,189,95,.25)}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:var(--line);color:var(--cream);background:none}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ── the film strips: his art, front and centre, drifting ── */
+.strips{margin:0 0 10px;display:grid;gap:12px}
+.strip{overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.strip .track{display:flex;gap:12px;width:max-content;animation:drift 60s linear infinite}
+.strip.rev .track{animation-name:drift-rev;animation-duration:75s}
+.strip img{width:132px;height:132px;border-radius:22px;flex:none;display:block}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes drift-rev{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@media (max-width:600px){.strip img{width:88px;height:88px;border-radius:15px}}
+
+/* ── trust strip ── */
+.trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:26px 0 8px}
+.trust div{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;text-align:center}
+.trust b{display:block;color:var(--gold);font-family:var(--disp);font-weight:600;font-size:1.05rem}
+.trust small{color:var(--muted)}
+
+/* ── search. Thirty-odd apps is past the point where scanning is pleasant,
+      and the whole brief for these apps is "easy to find, easy to use". ── */
+.searchbar{position:sticky;top:0;z-index:6;padding:16px 0 12px;margin-top:10px;
+  background:linear-gradient(var(--bg) 72%,rgba(8,12,9,0))}
+.search{position:relative;max-width:32rem;margin-inline:auto}
+.search input{width:100%;min-height:52px;padding:0 20px 0 46px;
+  font:600 1rem 'Nunito',system-ui,sans-serif;color:var(--ink);
+  background:var(--panel);border:1px solid var(--line);border-radius:999px;
+  box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.search input::placeholder{color:var(--muted);font-weight:400}
+.search svg{position:absolute;left:17px;top:50%;transform:translateY(-50%);
+  width:18px;height:18px;color:var(--muted);pointer-events:none}
+.search input:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
+
+/* ── category sections ── */
+.need{margin-top:34px}
+.kick{display:block;color:var(--gold);font-weight:800;font-size:.75rem;
+  letter-spacing:.16em;text-transform:uppercase;margin-bottom:7px}
+h2{font-family:var(--disp);font-weight:600;color:var(--cream);font-size:clamp(1.6rem,4.5vw,2.2rem);
+  line-height:1.05;margin:0 0 6px}
+.need .sub{color:var(--muted);font-size:1.02rem;max-width:56ch;margin:0 0 16px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(178px,1fr))}
+
+/* ── the card: his art large, the app's own colour on the edge when you
+      reach for it ── */
+.app{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  transition:border-color .18s,transform .18s,background .18s}
+.app:hover{border-color:var(--app,var(--gold));background:var(--panel2);transform:translateY(-3px)}
+.applink{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;padding:12px}
+.applink:focus-visible{outline:2px solid var(--app,var(--gold));outline-offset:-3px;border-radius:18px}
+.app img{width:100%;height:auto;aspect-ratio:1;border-radius:12px;object-fit:cover;display:block;
+  background:var(--app-deep,var(--panel2))}
+.app b{font-size:1.05rem;line-height:1.25;color:var(--cream)}
+.app small{color:var(--muted);font-size:.85rem;line-height:1.4}
+.app .tag{align-self:flex-start;margin-top:2px;padding:2px 9px;border:1px solid var(--line);
+  border-radius:999px;color:var(--leaf);font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.getbtn{position:absolute;top:20px;right:20px;width:36px;height:36px;z-index:2;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  border:1px solid rgba(241,233,216,.22);color:var(--cream);background:rgba(8,12,9,.62);
+  backdrop-filter:blur(3px);text-decoration:none;font-size:16px;line-height:1;
+  transition:color .14s,border-color .14s,background .14s}
+.getbtn:hover{color:#12160f;border-color:var(--gold);background:var(--gold)}
+.getbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* Stephen: cards "could probably be two wide" on a phone. His art carries
+   the card, so two-up stays readable down to small screens. */
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .app b{font-size:.95rem}
+  .app small{font-size:.8rem}
+  .getbtn{top:16px;right:16px}
+}
+
+.empty{display:none;text-align:center;color:var(--muted);padding:48px 16px}
 .empty.show{display:block}
+.empty button{background:none;border:0;color:var(--gold);font:inherit;cursor:pointer;text-decoration:underline}
 
-/* ---------- footer ---------- */
-footer{
-  margin-top:var(--s8); padding-top:var(--s6); border-top:1px solid var(--line);
-  text-align:center; color:var(--sub); font-size:.875rem; line-height:1.6;
-}
-footer a{color:var(--ink)}
-footer a:hover{color:var(--emerald)}
-footer .tip{color:var(--gold)}
-.btn{
-  display:inline-flex; align-items:center; gap:8px; padding:12px 22px;
-  border-radius:999px; font-size:15px; font-weight:600; letter-spacing:.2px;
-  text-decoration:none; cursor:pointer; font-family:inherit;
-  border:1px solid rgba(255,255,255,.09); color:var(--ink); background:rgba(255,255,255,.04);
-  box-shadow:0 6px 20px rgba(0,0,0,.25);
-  transition:transform .12s ease, border-color .12s ease, background .12s ease;
-}
-.btn:hover{transform:translateY(-1px); border-color:var(--emerald); background:rgba(255,255,255,.07); color:var(--ink)}
-.btn.primary{
-  position:relative; overflow:hidden;
-  background:linear-gradient(135deg, var(--emerald), var(--emerald-deep));
-  color:#fff; border-color:transparent;
-  box-shadow:0 8px 26px rgba(70,185,140,.28);
-}
-.btn.primary:hover{color:#fff}
-.btn.primary::after{
-  content:""; position:absolute; top:0; left:-130%; width:55%; height:100%;
-  background:linear-gradient(100deg, transparent, rgba(255,255,255,.30), transparent);
-  transform:skewX(-20deg); transition:left .7s ease; pointer-events:none;
-}
-.btn.primary:hover::after{left:150%}
-.cta{margin:var(--s5) 0 0}
+/* ── closer, with thin ornate corner ticks ── */
+.closer{margin-top:56px;text-align:center;background:var(--panel);border:1px solid rgba(228,189,95,.45);
+  border-radius:24px;padding:38px 22px;position:relative}
+.closer::before,.closer::after{content:"";position:absolute;width:26px;height:26px;
+  border:1px solid rgba(228,189,95,.7);pointer-events:none}
+.closer::before{top:9px;left:9px;border-right:none;border-bottom:none;border-top-left-radius:14px}
+.closer::after{bottom:9px;right:9px;border-left:none;border-top:none;border-bottom-right-radius:14px}
+.closer h2{margin-bottom:8px}
+.closer p{color:var(--muted);max-width:48ch;margin:0 auto 20px}
+.closer .tip{color:var(--gold)}
+footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.9rem;text-align:center;line-height:1.7}
+footer a{color:var(--leaf)}
+footer a:hover{color:var(--gold)}
+
+/* ── cascade. Gated on .js so a browser with no JavaScript shows the whole
+      page plainly instead of a column of invisible sections. ── */
+.js .reveal{opacity:0;transform:translateY(28px);
+  transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+.js .reveal .app{opacity:0;transform:translateY(16px)}
+.js .reveal.in .app{opacity:1;transform:none;
+  transition:opacity .55s cubic-bezier(.2,.7,.2,1) calc(var(--i,0)*70ms),transform .55s cubic-bezier(.2,.7,.2,1) calc(var(--i,0)*70ms),border-color .18s,background .18s}
+.js .reveal.in .app:hover{transform:translateY(-3px)}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important}
-  .aurora span,.apps-track{animation:none !important}
-  .card:hover,.btn:hover{transform:none}
-  .js .reveal{opacity:1 !important; transform:none !important}
-  .js .section-head::after{transform:none !important}
+  .strip .track{animation:none !important}
+  .app:hover{transform:none}
+  .js .reveal,.js .reveal .app{opacity:1 !important;transform:none !important}
 }
 </style>
 </head>
 <body>
-<div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+<div class="frame" aria-hidden="true">
+  <i class="fr t"></i><i class="fr b"></i><i class="fr l"></i><i class="fr r"></i>
+  <i class="fr c tl"></i><i class="fr c tr"></i><i class="fr c bl"></i><i class="fr c br"></i>
+</div>
 <a class="skip" href="#apps">Skip to the apps</a>
 <div class="wrap">
 
-  <header>
-    <h1>Sky Wolf Studio<span class="dot">.</span></h1>
-    <p class="promise">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span><b>No ads. No subscription. No tracking.</b> ${Word(localCount)} keep everything on your device. The ${word(sharedCount)} shared ones are marked.</span>
-    </p>
-    <p class="cta"><button class="btn primary" id="installStudio" hidden>&#10515; Save the studio to your home screen</button></p>
-    ${strips}
-  </header>
+  <div class="hero">
+    <span class="badge">Sky Wolf Studio &middot; free apps</span>
+    <h1>What are you <em>planning?</em></h1>
+    <p class="lede">A wedding. A season. A school year. A move. A night you actually sleep.
+      We build free apps for real life. <b>${count} so far</b>, every one free forever.
+      <b>No ads. No subscriptions. No tracking.</b></p>
+    <div class="cta-row">
+      <a class="btn gold" href="#needs">Find your app</a>
+      <button class="btn ghost" id="installStudio" type="button" hidden>&#10515; Save the studio to your home screen</button>
+    </div>
+  </div>
+
+  <div class="strips">
+${strip(thumbed.slice(0, halfway), '')}
+${strip(thumbed.slice(halfway), ' rev')}
+  </div>
+
+  <div class="trust">
+    <div><b>Free forever</b><small>tip jar if you love one</small></div>
+    <div><b>No ads, ever</b><small>nothing spinning back at you</small></div>
+    <div><b>Nothing tracked</b><small>no accounts to try anything</small></div>
+    <div><b>${localCount} of ${count} offline</b><small>the ${word(sharedCount)} shared ones say so</small></div>
+  </div>
 
   <div class="searchbar">
     <div class="search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <label class="sr-only" for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search the apps</label>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search the apps</label>
       <input id="q" type="search" placeholder="Search ${count} apps. Try &ldquo;teacher&rdquo; or &ldquo;insurance&rdquo;" autocomplete="off">
     </div>
   </div>
@@ -450,23 +597,29 @@ footer .tip{color:var(--gold)}
   <main id="apps">
 ${sections}
 
-    <p class="empty" id="noResults">Nothing matches that. <button type="button" id="clearSearch" style="background:none;border:0;color:var(--teal);font:inherit;cursor:pointer;text-decoration:underline">Show all ${count} apps</button></p>
+    <p class="empty" id="noResults">Nothing matches that. <button type="button" id="clearSearch">Show all ${count} apps</button></p>
   </main>
 
+  <div class="closer reveal">
+    <h2>It&rsquo;s all free. Seriously.</h2>
+    <p>One small studio, ${count} apps, zero ads. If one of them saves your week, the tip jar inside it is the whole business model. <span class="tip">&#9829;</span></p>
+    <div class="cta-row" style="margin:0">
+      <a class="btn gold" href="https://lucidwinds.com/portal/">&#127918; We make games too. 160+ free in the Arcade</a>
+      <a class="btn ghost" href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studio%20Apps%20feedback">Send feedback</a>
+    </div>
+  </div>
+
   <footer>
-    <p>Every app here is free and always will be. If one saved your day, each has a tip jar. <span class="tip">&#9829;</span></p>
-    <p style="margin-top:16px"><a class="btn" href="https://lucidwinds.com/portal">&#127918; We make games too. Play free in the Arcade</a></p>
-    <p style="margin-top:12px"><a href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studio%20Apps%20feedback">Send feedback</a></p>
-    <p style="margin-top:20px">Sky Wolf Studio &middot; SWS Strategic Media LLC</p>
+    <p>Sky Wolf Studio &middot; SWS Strategic Media LLC</p>
+    <p><a href="https://lucidwinds.com/portal/">The Arcade</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studio%20Apps%20feedback">Send feedback</a></p>
   </footer>
 </div>
 
 <script>
-/* Live filter. Twenty-three cards is past the point where scanning is pleasant,
-   and the whole brief for these apps is "easy to find, easy to use". */
+/* Live filter over every card's search index. */
 (function(){
   var q = document.getElementById('q');
-  var cards = [].slice.call(document.querySelectorAll('.card'));
+  var cards = [].slice.call(document.querySelectorAll('.app'));
   var groups = [].slice.call(document.querySelectorAll('[data-group]'));
   var none = document.getElementById('noResults');
 
@@ -478,10 +631,14 @@ ${sections}
       c.style.display = show ? '' : 'none';
       if (show) hits++;
     });
-    // hide a category heading once everything under it is filtered out
+    /* hide a whole section, its question and its flourish, once everything
+       under it is filtered out */
     groups.forEach(function(g){
-      var any = [].slice.call(g.querySelectorAll('.card')).some(function(c){ return c.style.display !== 'none'; });
+      var any = [].slice.call(g.querySelectorAll('.app')).some(function(c){ return c.style.display !== 'none'; });
       g.style.display = any ? '' : 'none';
+      /* a section further down the page can still be waiting at opacity 0
+         when a search brings it up into view, so a search reveals it */
+      if (any) g.classList.add('in');
     });
     none.classList.toggle('show', hits === 0);
   }
@@ -497,23 +654,51 @@ ${sections}
 })();
 </script>
 <script>
-/* Scroll reveal, same feel as the portfolio. The .js gate on <html> means a
-   browser with no JS (or no IntersectionObserver) shows everything plainly. */
+/* Scroll reveal. The .js gate on <html> means a browser with no JS (or no
+   IntersectionObserver) shows everything plainly. Belt and braces after
+   that: anything already on screen is revealed at 900ms and the whole page
+   at 4s, so a stalled observer can never leave the apps blank. */
 (function(){
   var els = [].slice.call(document.querySelectorAll('.reveal'));
-  if (!('IntersectionObserver' in window)){ els.forEach(function(el){ el.classList.add('in'); }); return; }
+  function showAll(){ els.forEach(function(el){ el.classList.add('in'); }); }
+  if (!('IntersectionObserver' in window)){ showAll(); return; }
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
     });
-  }, { threshold: .08 });
+  }, { rootMargin:'0px 0px -6% 0px', threshold:.05 });
   els.forEach(function(el){ io.observe(el); });
+  setTimeout(function(){
+    els.forEach(function(el){ if (el.getBoundingClientRect().top < innerHeight) el.classList.add('in'); });
+  }, 900);
+  setTimeout(showAll, 4000);
 })();
 </script>
 <script>
-/* The studio install button, up top where Stephen wants it. Always visible
-   when the page is not already installed: Chrome hands over the real prompt,
-   iOS gets Share-sheet directions, everything else gets its menu path. */
+/* The whole frame flows with the scroll: the side rails drift up, the top
+   band slides one way and the bottom band the other. */
+(function(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var sides = document.querySelectorAll('.fr.l,.fr.r');
+  var top = document.querySelector('.fr.t'), bot = document.querySelector('.fr.b');
+  if (!sides.length) return;
+  var ticking = false;
+  addEventListener('scroll', function(){
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function(){
+      var d = Math.round(-scrollY * 0.25);
+      for (var i = 0; i < sides.length; i++) sides[i].style.backgroundPositionY = d + 'px';
+      if (top) top.style.backgroundPositionX = d + 'px';
+      if (bot) bot.style.backgroundPositionX = (-d) + 'px';
+      ticking = false;
+    });
+  }, { passive:true });
+})();
+</script>
+<script>
+/* The studio install button. Visible whenever the page is not already
+   installed: Chrome hands over the real prompt, iOS gets Share-sheet
+   directions, everything else gets its menu path. */
 (function(){
   if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return;
   var evt = null;
@@ -533,5 +718,145 @@ ${sections}
 </html>
 `;
 
+/* The page and the catalogue must agree, always. A card hand-added to the
+   generated HTML is how this page came to render 32 apps while announcing
+   31 in six places, and how Coverage came to exist on a shelf its own
+   generator had never heard of. Count what was actually rendered and refuse
+   to write a page that does not match the catalogue it came from. */
+const rendered = (html.match(/<div class="app" data-find=/g) || []).length;
+if (rendered !== count) {
+  console.error(`the page renders ${rendered} cards but the catalogue holds ${count}. Refusing to write.`);
+  process.exit(1);
+}
+
+/* And every address the page states must resolve to something on disk. A
+   card pointing at a folder that is not there, or an <img> pointing at a
+   picture that is not there, is the exact shape of every art incident this
+   repo has had. Off-site links are checked by the audits, not here. */
+const broken = [];
+for (const m of html.matchAll(/(?:href|src)="\.\/([^"?#]+)(?:\?[^"]*)?"/g)) {
+  const rel = m[1].replace(/\/$/, '');
+  if (!existsSync(join(HERE, '..', 'apps', rel))) broken.push(m[0]);
+}
+if (broken.length) {
+  console.error('the page points at files that are not on disk:\n  ' + [...new Set(broken)].join('\n  '));
+  process.exit(1);
+}
+
 writeFileSync(join(HERE, '..', 'apps', 'index.html'), html);
-console.log(`Wrote apps/index.html, ${count} apps, ${CATALOGUE.length} categories`);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   apps/catalogue.json, the studio's catalogue as DATA.
+
+   The arcade repo builds lucidwinds.com/portal/apps.html from this list. It
+   used to do that by scraping this page's HTML with two regexes. The markup
+   here changed, both regexes fell to zero matches, and that page sat two
+   apps behind because its generator hard-failed every time it ran. A page
+   one repo away must never depend on this page's CSS class names, so the
+   catalogue is published as a contract instead: markup moves freely on
+   either side, only these field names are promised.
+
+   Plain text, not markup: consumers escape for their own output.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const plain = (s) => s
+  .replace(/&amp;/g, '&').replace(/&ldquo;/g, '“').replace(/&rdquo;/g, '”')
+  .replace(/&lsquo;/g, '‘').replace(/&rsquo;/g, '’')
+  .replace(/&middot;/g, '·').replace(/&hellip;/g, '…');
+
+const betaCount = CATALOGUE.reduce((n, [, , a]) => n + a.filter((x) => x[4] === 'beta').length, 0);
+const catalogueJson = {
+  /* Bump this only for a breaking change to the field names below. A
+     consumer refuses a version it was not written for, which turns a
+     silent misread into a loud stop. */
+  contract: 1,
+  origin: ORIGIN,
+  generator: 'design/hub.mjs',
+  count, sharedCount, betaCount, localCount,
+  categories: CATALOGUE.map(([title, meta, apps]) => ({
+    /* The id is the join key, never the title: retitling a section should
+       not break a build one repo away. */
+    id: meta.id,
+    title: plain(title),
+    kick: plain(meta.kick),
+    question: plain(meta.q),
+    sub: plain(meta.sub),
+    slugs: apps.map((a) => a[0]),
+  })),
+  apps: Object.fromEntries(CATALOGUE.flatMap(([title, , apps]) => apps.map(([slug, name, line, find, kind]) => {
+    const p = palette[slug] || OFFSITE[slug] || SELF_STYLED[slug];
+    return [slug, {
+      slug,
+      name: plain(name),
+      line: plain(line),
+      category: plain(title),
+      categoryId: CATALOGUE.find(([t]) => t === title)[1].id,
+      tag: kind === 'shared' ? 'shared' : kind === 'beta' ? 'beta' : null,
+      href: OFFSITE[slug] ? OFFSITE[slug].href : `${ORIGIN}/${slug}/`,
+      offsite: !!OFFSITE[slug],
+      art: artUrl(slug, `${ORIGIN}/${slug}/`),
+      /* The art's own content hash. A mirror in another repo can compare
+         its copy against this and stop rather than serve last month's
+         picture. null means no thumbnail is filed and the icon stands in. */
+      artHash: artOf(slug) ? artOf(slug).hash : null,
+      artPixels: artOf(slug) ? artOf(slug).dim : null,
+      accent: p.darkAccent,
+      accentDeep: p.accent,
+      find: plain(find),
+    }];
+  }))),
+};
+/* The contract promises plain text. plain() knows a fixed set of entities,
+   so anything the copy grows that it does not know has to stop the build
+   rather than travel to another repo as literal "&hellip;". */
+const leftovers = [];
+(function walk(v, path){
+  if (typeof v === 'string') { if (/&[a-z]+;/i.test(v)) leftovers.push(`${path}: ${v}`); return; }
+  if (v && typeof v === 'object') for (const k of Object.keys(v)) walk(v[k], `${path}.${k}`);
+})(catalogueJson, 'catalogue');
+if (leftovers.length) {
+  console.error('HTML entities survived into the catalogue contract:\n  ' + leftovers.join('\n  ')
+    + '\nAdd them to plain(), or take them out of the copy.');
+  process.exit(1);
+}
+
+writeFileSync(join(HERE, '..', 'apps', 'catalogue.json'), JSON.stringify(catalogueJson, null, 2) + '\n');
+
+/* The manifest states the app count and the page's ground colour, and it
+   drifted for the same reason everything else drifted: nobody regenerates a
+   file that nothing generates. It is generated now. */
+const manifest = {
+  name: 'Sky Wolf Studio',
+  short_name: 'Sky Wolf',
+  id: '/',
+  start_url: '/',
+  scope: '/',
+  display: 'standalone',
+  background_color: '#080c09',
+  theme_color: '#080c09',
+  description: `${count} free, ad-free apps from Sky Wolf Studio. No accounts, no tracking, and a tip jar if one saved your day.`,
+  icons: [
+    { src: 'brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: 'brand/icon-512.png', sizes: '512x512', type: 'image/png' },
+    { src: 'brand/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+  ],
+};
+writeFileSync(join(HERE, '..', 'apps', 'manifest.webmanifest'), JSON.stringify(manifest, null, 2) + '\n');
+
+/* The sitemap was the last list kept by hand, which is why it still
+   advertised Coverage to Google on a day the generator would have deleted
+   its card. Same array, same origin, one source of truth. */
+const sitemap = ['<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  `  <url><loc>${ORIGIN}/</loc></url>`,
+  ...CATALOGUE.flatMap(([, , apps]) => apps
+    .filter(([slug]) => !OFFSITE[slug])
+    .map(([slug]) => slug))
+    .sort()
+    .map((slug) => `  <url><loc>${ORIGIN}/${slug}/</loc></url>`),
+  '</urlset>', ''].join('\n');
+writeFileSync(join(HERE, '..', 'apps', 'sitemap.xml'), sitemap);
+
+console.log(`Wrote apps/index.html, ${count} apps in ${CATALOGUE.length} categories, ${localCount} on-device and ${sharedCount} shared`);
+console.log('Wrote apps/sitemap.xml');
+console.log('Wrote apps/catalogue.json, the contract the arcade page builds from');
+console.log('Wrote apps/manifest.webmanifest');
