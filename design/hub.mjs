@@ -56,6 +56,11 @@ const SELF_STYLED = {
   /* Rock Stops (built as Float) carries its own mineral palette: agate
      amber on serpentine. Still gated for Stephen and Jessie's testing. */
   'rock-stops': { darkAccent: '#C9873B', accent: '#2E5C51' },
+  /* Fretwork wears its own woodshop gold; Diamond Rules its own grass and
+     chalk. Both integrated by hand into apps/index.html first; kept here so
+     a hub regeneration can never drop them. */
+  'fretwork': { darkAccent: '#c9974c', accent: '#8a5f22' },
+  'diamond-rules': { darkAccent: '#3FA35C', accent: '#1C3529' },
 };
 
 const CATALOGUE = [
@@ -101,11 +106,17 @@ const CATALOGUE = [
     ['cross-off', 'Cross Off', 'A paper list you cross off with real highlighters', 'todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying'],
     ['overload', 'OVERLOAD', 'It writes your next workout. You just lift', 'gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise'],
   ]],
+  ['Music', [
+    ['fretwork', 'Fretwork', 'Know the neck: tap drills, scales in positions, chord charts and rhythm', 'guitar fretboard notes learn the neck memorize triads inversions seventh chords intervals scales modes pentatonic chord charts rhythm polyrhythm drills practice music theory jazz trainer teacher'],
+  ]],
   ['Night Sky', [
     ['astravault', 'Astra Vault', 'Scan the cosmos and collect the sky', 'stargazing astronomy stars planets moon meteor telescope constellation collect learn lessons bortle night sky space', 'beta'],
   ]],
   ['Outdoors', [
     ['rock-stops', 'Rock Stops', 'Every rock, fossil and sea glass find, logged where you stood', 'rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps', 'beta'],
+  ]],
+  ['Sports', [
+    ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers', 'beta'],
   ]],
 ];
 
