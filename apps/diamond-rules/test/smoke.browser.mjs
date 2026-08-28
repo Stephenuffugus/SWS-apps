@@ -95,7 +95,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
 
   // ── copy sweep: no em or en dashes anywhere in the app's words ──
   const dashes = await page.evaluate(() => {
-    const banks = [window.__dr.FLY_BANK, window.__dr.POS_BANK, window.__dr.SMART_BANK]
+    const banks = [window.__dr.FLY_BANK, window.__dr.POS_BANK, window.__dr.SMART_BANK, window.__dr.RUN_BANK]
       .flat().map((s) => s.prompt + s.why + (s.tip || '') + (s.choices || []).map((c) => c[1]).join(''))
       .join('');
     return (document.body.innerHTML + banks).match(/[–—]/g)?.length ?? 0;
@@ -107,7 +107,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   const chipHiddenCount = await page.evaluate(() => document.getElementById('holdChip').hidden);
   if (!chipHiddenCount) fail('hold chip should hide in count mode');
   const sport = await page.evaluate(() => window.__dr.S.sport);
-  if (sport !== 'softball') fail('default sport should be softball');
+  if (sport !== 'softball8') fail('default should be softball 8U, got ' + sport);
   for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');
   let msg = await page.textContent('#ask');
   if (!msg.includes('0 and 3')) fail('3 strikes should not be out in softball: ' + msg);
@@ -328,16 +328,65 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   const note1 = await page.textContent('#sportNote');
   if (!note1.includes('3 strikes')) fail('baseball note missing: ' + note1);
 
+  // ── 10U kid pitch: 3 strikes, dropped third strike, runner IQ unlocks ──
+  await page.click('[data-sport="softball10"]');
+  const note10 = await page.textContent('#sportNote');
+  if (!note10.includes('10U kid pitch')) fail('10U note missing: ' + note10);
+  const gates = await page.evaluate(() => {
+    const d = window.__dr, out = {}, cur = d.S.sport;
+    for (const k of ['softball8', 'softball10', 'baseball']) { d.S.sport = k; out[k] = d.scenarioMakers().length; }
+    d.S.sport = cur;
+    return out;
+  });
+  if (gates.softball8 !== 3 || gates.baseball !== 3) fail('runner IQ leaked below 10U: ' + JSON.stringify(gates));
+  if (gates.softball10 !== 4) fail('runner IQ missing at 10U: ' + JSON.stringify(gates));
+  await page.click('#closeSettings');
+  await page.click('#tab-count');
+  await page.waitForTimeout(250);
+  for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');
+  msg = await page.textContent('#ask');
+  if (!msg.includes('RUN to first')) fail('10U strikeout should teach dropped third strike: ' + msg);
+  await page.click('#tab-mix');
+  let sawRun = false;
+  const RUNCHIPS = ['No early leadoffs', 'Steal it!', 'Dropped third strike'];
+  for (let i = 0; i < 40 && !sawRun; i++) {
+    await page.waitForTimeout(200);
+    s = await page.evaluate(() => window.__dr.S.scenario);
+    if (RUNCHIPS.includes(s.chip)) sawRun = true;
+    if (s.kind === 'choice') await page.click(`[data-c="${s.correct}"]`);
+    else if (s.kind === 'pos') await page.click('#pos-' + s.correct, { force: true });
+    else if (s.correct === 'HOLD') await page.click('#holdChip');
+    else await page.click('#base-' + s.correct, { force: true });
+    await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+    await page.click('#next');
+  }
+  if (!sawRun) fail('runner IQ never served in 40 mix plays at 10U');
+  await page.click('#gear');
+  await page.click('[data-sport="baseball"]');
+
   // tip jar link renders, feedback box opens from the settings card
   const tipHref = await page.evaluate(() => {
     const a = document.querySelector('#tipSlot a');
     return a ? a.href : '';
   });
   if (!tipHref.includes('buy.stripe.com')) fail('tip jar link missing from settings');
+  // add to home screen: offered in settings, and as a banner from the hub link
+  const installShown = await page.evaluate(() => !document.getElementById('swsInstall').hidden);
+  if (!installShown) fail('add to home screen button missing from settings');
   await page.click('#feedbackLink');
   const fbOpen = await page.evaluate(() => !document.getElementById('fbWrap').classList.contains('hidden'));
   if (!fbOpen) fail('feedback box did not open');
   await page.click('#fbCancel');
+  const base = page.url().split('?')[0];
+  await page.goto(base + '?sws-install=1');
+  await page.waitForTimeout(500);
+  const banner = await page.evaluate(() => !!document.getElementById('installBanner'));
+  if (!banner) fail('hub install link did not raise the banner');
+  await page.goto(base);
+  await page.waitForTimeout(400);
+  await page.click('#gear');
+  await page.click('[data-sport="baseball"]');
+  await page.click('#closeSettings');
 
   await page.reload();
   await page.waitForTimeout(400);
@@ -356,6 +405,13 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   // best streak persisted
   const best = await page.evaluate(() => JSON.parse(localStorage.getItem('diamond1')).best);
   if (!(best >= 1)) fail('best streak not persisted: ' + best);
+
+  // stored pre-level saves migrate: 'softball' becomes 8U
+  await page.evaluate(() => localStorage.setItem('diamond1', JSON.stringify({ sport: 'softball' })));
+  await page.reload();
+  await page.waitForTimeout(400);
+  const mig = await page.evaluate(() => window.__dr.S.sport);
+  if (mig !== 'softball8') fail("old 'softball' save did not migrate to 8U: " + mig);
 
   if (errors.length) fail('console errors: ' + errors.join(' | '));
   console.log('Diamond Rules smoke: all green');

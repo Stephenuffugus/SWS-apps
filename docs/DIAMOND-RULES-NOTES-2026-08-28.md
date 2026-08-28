@@ -74,3 +74,12 @@ Stephen approved the competitor-research picks; tiers wait for his league answer
 3. Smoke suite: a full scored round with one planned miss must land at exactly 9 / 10 ALL-STAR, picker offers 10 choices, SS bias measured over 100 draws, choice survives reload.
 
 Still open for the weekend: difficulty tiers (needs Stephen's league answers: steals? no leadoff? dropped third strike?), plus the parent-notes round.
+
+## v9, install button + league levels, same night
+
+1. **Add to home screen**: fleet `swsInstall` affordance adapted to the app: a real button in the settings card (Chrome fires the native prompt; iPhone gets Share sheet directions; hidden once installed), a top banner greeting when arriving via `?sws-install=1`, and the hub card gained the ⤓ install button.
+2. **League levels** (Stephen's answers arrived mid-build): the Game seg became Game & level: Softball 8U (coach pitch, 4 strikes, no steals or leadoffs, no dropped third strike), Softball 10U (kid pitch, 3 strikes, steals and leadoffs ON, dropped third strike live), Baseball. Old saved `sport:"softball"` migrates to softball8.
+3. **Runner IQ bank** (RUN_BANK, 10U only via `cfg().steals`): leave-on-release leadoffs, steal on a passed ball, dropped third strike with the first-base-open nuance. Served through the Mix tab; 8U players can never meet them. 10U strikeouts in Batting also teach the dropped-third RUN line.
+4. Smoke: level gates checked deterministically (3 makers at 8U/baseball, 4 at 10U), 10U strikeout message, runner IQ appears within 40 mix plays at 10U, migration asserted, install button + hub banner asserted.
+
+The tiers item from the roadmap is now SHIPPED as real league levels instead of invented difficulty names.

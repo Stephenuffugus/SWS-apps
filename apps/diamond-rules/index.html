@@ -316,9 +316,10 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <div class="scard">
     <h2>⚙️ Options</h2>
     <div class="setrow">
-      <p class="setlbl">Game</p>
+      <p class="setlbl">Game &amp; level</p>
       <div class="seg" id="sportSeg">
-        <button class="btn" data-sport="softball">🥎 Softball</button>
+        <button class="btn" data-sport="softball8">🥎 8U</button>
+        <button class="btn" data-sport="softball10">🥎 10U</button>
         <button class="btn" data-sport="baseball">⚾ Baseball</button>
       </div>
       <p class="setnote" id="sportNote"></p>
@@ -337,6 +338,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
     </div>
     <p class="setnote">⭐ Best streak: <b id="bestOut">0</b></p>
     <button class="btn fill big" id="closeSettings">Play ball! ▶</button>
+    <button class="btn ghost big" id="swsInstall" style="margin-top:8px" hidden>⤓ Add to home screen</button>
     <p class="foot">A free game from <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Diamond%20Rules">Feedback</a><span id="tipSlot"></span></p>
     <p class="buildtag" id="buildTag"></p>
   </div>
@@ -363,20 +365,26 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v8";
+var BUILD="diamond-v9";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
    lands in Stephen's server. Empty string keeps the plain email link. */
 var FEEDBACK_WEBHOOK="https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha";
 
-/* ================= sport config =================
-   League rules are data, not code. Softball uses a
-   4 strike house rule for young players (configurable). */
+/* ================= league config =================
+   League rules are data, not code, straight from Stephen's league:
+   8U is coach pitch, 4 strikes, no steals or leadoffs, no dropped third
+   strike. 10U is kid pitch, 3 strikes, steals and leadoffs ON, dropped
+   third strike live. `steals` gates the runner IQ scenarios. */
 const SPORTS = {
-  softball:{label:"Softball",icon:"🥎",strikesForOut:4,ballsForWalk:4,
-    ballFill:"#FFE93B",ballStroke:"#D9B400",note:"League rule: 4 strikes = out · 4 balls = walk"},
-  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,
+  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,
+    ballFill:"#FFE93B",ballStroke:"#D9B400",
+    note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs"},
+  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,
+    ballFill:"#FFE93B",ballStroke:"#D9B400",
+    note:"10U kid pitch: 3 strikes = out · steals and leadoffs are ON"},
+  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,
     ballFill:"#FFF9EE",ballStroke:"#E0955B",note:"3 strikes = out · 4 balls = walk"}
 };
 
@@ -424,13 +432,14 @@ function fitView(){
 addEventListener("resize",fitView);
 
 /* ================= state + persistence ================= */
-const S = {mode:"count",sport:"softball",sound:true,myPos:"",
+const S = {mode:"count",sport:"softball8",sound:true,myPos:"",
   balls:0,strikes:0,outs:0,streak:0,best:0,scenario:null,answered:false,
   round:null,missedThis:false};
 const KEY="diamond1";
 try{
   const d=JSON.parse(localStorage.getItem(KEY)||"{}");
   if(SPORTS[d.sport])S.sport=d.sport;
+  else if(d.sport==="softball")S.sport="softball8";  /* pre-level saves */
   if(d.sound===false)S.sound=false;
   if(typeof d.myPos==="string")S.myPos=d.myPos;
   S.best=d.best|0;
@@ -663,7 +672,8 @@ function pitch(kind){
     if(S.strikes>=c.strikesForOut){
       S.balls=0;S.strikes=0;S.outs=Math.min(3,S.outs+1);
       msg=`<b>Strike ${c.strikesForOut}! The batter is out.</b>`+
-        (S.outs>=3?" That's 3 outs! The inning is over and the teams switch sides!":` That's out number ${S.outs}.`);
+        (S.outs>=3?" That's 3 outs! The inning is over and the teams switch sides!":` That's out number ${S.outs}.`)+
+        (c.steals?" Catcher dropped it? With first base open (or 2 outs) you can <b>RUN to first</b>!":"");
       if(S.outs>=3)S.outs=0;
     } else msg=`Strike ${S.strikes}. The count is <b>${S.balls} and ${S.strikes}</b>.`+fullCountNote();
   }
@@ -874,6 +884,42 @@ function makePosition(){
   return s;
 }
 
+/* ================= RUNNER IQ (10U and up: steals unlock) =================
+   These only exist where cfg().steals is true, so the 8U girls never get
+   quizzed on rules their league does not play. */
+const RUN_BANK=[
+  {kind:"choice",runners:[1],outs:0,ballAt:POS[1],correct:"release",chip:"No early leadoffs",
+   prompt:`<span class="tag">Kid pitch!</span>You're the runner on first. When are you allowed to <b>leave the base</b>?`,
+   choices:[["release","When the pitch leaves the pitcher's hand!"],["any","Whenever I want"],["never","Never, stay glued to it"]],
+   why:"In fastpitch you can leave your base the moment the pitch <b>leaves the pitcher's hand</b>. Leave early and the umpire calls you OUT!",
+   tip:"Watch the pitcher's hand, not the batter."},
+  {kind:"choice",runners:[1],outs:1,ballAt:{x:222,y:505},correct:"go",chip:"Steal it!",
+   prompt:`<span class="tag">Passed ball!</span>You're on first. The pitch skips PAST the catcher and rolls away! What do you do?`,
+   choices:[["go","GO! Steal second!"],["stay","Stay, stealing is not allowed"],["carry","Wait for the coach to carry me"]],
+   why:"At 10U you CAN steal! The ball is loose behind the catcher, so take off for second and <b>slide in</b>!",
+   tip:"At 8U this is not allowed yet. The rules grow with you!"},
+  {kind:"choice",runners:[],outs:1,ballAt:{x:200,y:490},correct:"run",chip:"Dropped third strike",
+   prompt:`<span class="tag">Strike three!</span>But the catcher <b>DROPS it</b>! First base is empty. What can the batter do?`,
+   choices:[["run","RUN to first!"],["bench","Walk back to the bench"],["walk","Take a free walk"]],
+   why:"At kid pitch, if the catcher misses strike three and first base is open (or there are 2 outs), the batter can <b>RUN</b>! The catcher has to throw you out.",
+   tip:"Run it out EVERY time. Make the catcher make the play!"}
+];
+let lastRun=-1;
+function makeRunnerIQ(){
+  let i;
+  do{i=Math.floor(Math.random()*RUN_BANK.length);}while(i===lastRun);
+  lastRun=i;
+  const s={...RUN_BANK[i]};
+  s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
+  return s;
+}
+/* what the Mix tab can serve, by league level */
+function scenarioMakers(){
+  const m=[makeGroundBall,makeFlyBall,makePosition];
+  if(cfg().steals)m.push(makeRunnerIQ);
+  return m;
+}
+
 /* ================= quiz flow ================= */
 function loadScenario(){
   S.answered=false;S.missedThis=false;
@@ -883,7 +929,7 @@ function loadScenario(){
   const s=S.mode==="play"?makeGroundBall()
     :S.mode==="fly"?makeFlyBall()
     :S.mode==="pos"?makePosition()
-    :pick([makeGroundBall,makeFlyBall,makePosition])();
+    :pick(scenarioMakers())();
   S.scenario=s;
   S.outs=s.outs;S.balls=0;S.strikes=0;
   paintBoard();drawRunners(s.runners);
@@ -1110,6 +1156,33 @@ el("fbSend").addEventListener("click",()=>{
   });
 });
 
+/* ================= add to home screen =================
+   Fleet affordance: Chrome hands over a real install prompt, iPhone gets
+   directions, and nothing shows once the app is already installed. Arriving
+   from the hub's install button greets them with a banner. */
+(function(){
+  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)return;
+  let evt=null;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  function go(){
+    if(evt){evt.prompt();return;}
+    alert(ios?'To add it: tap the Share button, then "Add to Home Screen".'
+      :'In your browser menu, choose "Add to Home Screen" or "Install app".');
+  }
+  const btn=el("swsInstall");
+  btn.hidden=false;
+  btn.addEventListener("click",go);
+  addEventListener("beforeinstallprompt",e=>{e.preventDefault();evt=e;});
+  if(/[?&]sws-install/.test(location.search)){
+    const b=document.createElement("button");
+    b.type="button";b.id="installBanner";b.textContent="⤓ Add to home screen";
+    b.style.cssText="position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 62px);transform:translateX(-50%);z-index:40;font:900 15px Nunito,sans-serif;padding:12px 22px;border-radius:999px;background:var(--ink);color:#fff;border:0;box-shadow:0 8px 26px rgba(0,0,0,.35);cursor:pointer";
+    document.body.appendChild(b);
+    b.addEventListener("click",()=>{go();b.remove();});
+    setTimeout(()=>b.remove(),15000);
+  }
+})();
+
 /* ================= boot ================= */
 fitView();drawFielders(false);drawBases();paintBallSkin();paintStreak();setMode("count");
 /* the bubble grows and shrinks with every question, and the camera keeps the
@@ -1119,8 +1192,8 @@ if("serviceWorker" in navigator)
   addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
 
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
-window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,cfg,setMode,loadScenario,BUILD,
-  SPORTS,POS_BANK,FLY_BANK,SMART_BANK};
+window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
+  cfg,setMode,loadScenario,BUILD,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK};
 </script>
 </body>
 </html>
