@@ -1,20 +1,36 @@
-// Browser smoke for Diamond Rules v1: the force engine is checked against the
-// full runner truth table, the generated ground balls always name the lead
-// force base (plus first with 2 outs), and then the real app is driven by
-// tapping the real field at phone width: a softball strikeout takes 4 strikes
-// and a foul can never be the last one, a force play is answered on the
-// diamond, a fly ball question is answered from its choices, the positioning
-// mode is answered by tapping a fielder, a wrong answer lights the right one,
-// settings switch the sport to baseball and the choice survives a reload, the
-// feedback box opens from the settings card, the copy carries zero em dashes,
-// and the service worker cache is pinned to the build tag.
+// Browser smoke for Diamond Rules: the force engine is checked against the
+// full runner truth table; generated ground balls always name the lead force,
+// accept EVERY forced bag with 2 outs, and grade other forced bags as
+// "That works!" with fewer than 2; then the real app is driven by tapping the
+// real field at phone width: a softball strikeout takes 4 strikes and a foul
+// can never be the last one, a wrong answer never ends the play (flash, try
+// again, no reveal), the eventual right answer still teaches, positioning is
+// answered on the fielders, the camera keeps home plate out from under the
+// question bubble in every mode, settings survive a reload, the feedback box
+// opens, the copy carries zero em dashes, and the worker cache is pinned to
+// the build tag.
 import { withApp } from '../../../design/harness.mjs';
 import { readFile } from 'node:fs/promises';
 
 const fail = (m) => { throw new Error(m); };
+const GOOD = ['Nice play!', 'You got it!', 'Heads-up play!', 'Way to go!'];
 
 await withApp('diamond-rules', async ({ page, errors }) => {
   await page.waitForTimeout(400);
+
+  // the camera contract: every base (home especially) sits between the top
+  // bar and the question bubble, whatever the bubble's current height
+  async function assertFieldClear(where) {
+    const r = await page.evaluate(() => {
+      const home = document.getElementById('base-HOME').getBoundingClientRect();
+      const b2 = document.getElementById('base-B2').getBoundingClientRect();
+      const bub = document.querySelector('.bubble').getBoundingClientRect();
+      const top = document.querySelector('.topbar').getBoundingClientRect();
+      return { homeBottom: home.bottom, b2Top: b2.top, bubTop: bub.top, topBottom: top.bottom };
+    });
+    if (r.homeBottom > r.bubTop + 1) fail(`home plate under the bubble in ${where}: ${Math.round(r.homeBottom)} vs ${Math.round(r.bubTop)}`);
+    if (r.b2Top < r.topBottom - 1) fail(`second base under the top bar in ${where}`);
+  }
 
   // ── build tag pinned to the worker cache ──
   const build = await page.evaluate(() => window.__dr.BUILD);
@@ -38,37 +54,47 @@ await withApp('diamond-rules', async ({ page, errors }) => {
     if (f.HOME !== (has(1) && has(2) && has(3))) fail(`HOME force wrong for ${r}`);
   }
 
-  // every generated ground ball names the lead force, and first is an
-  // accepted alternative exactly when there are 2 outs and a lead above 1st
+  // generated ground balls: lead force is correct; with 2 outs every forced
+  // bag is fully accepted; with fewer, other forced bags land in the okay tier
   const gen = await page.evaluate(() => {
     const out = [];
     for (let i = 0; i < 300; i++) {
       const s = window.__dr.makeGroundBall();
-      out.push({ runners: s.runners, outs: s.outs, correct: s.correct, alt: s.alt || [], chip: s.chip });
+      out.push({ runners: s.runners, outs: s.outs, correct: s.correct, alt: s.alt || [], okay: s.okay, chip: s.chip });
     }
     return out;
   });
-  let sawSmart = false;
+  let sawSmart = false, sawOkay = false;
   for (const s of gen) {
     if (s.correct === 'HOLD') { sawSmart = true; continue; }
-    const f = { B1: true, B2: s.runners.includes(1), B3: s.runners.includes(1) && s.runners.includes(2), HOME: s.runners.length === 3 };
+    const has = (n) => s.runners.includes(n);
+    const f = { B1: true, B2: has(1), B3: has(1) && has(2), HOME: has(1) && has(2) && has(3) };
     const lead = f.HOME ? 'HOME' : f.B3 ? 'B3' : f.B2 ? 'B2' : 'B1';
     if (s.correct !== lead) fail(`lead force ${lead} expected, got ${s.correct} for ${s.runners}`);
-    const wantAlt = s.outs === 2 && lead !== 'B1';
-    if (wantAlt !== s.alt.includes('B1')) fail(`2-out alternative wrong for ${s.runners} outs ${s.outs}`);
+    const others = ['B1', 'B2', 'B3', 'HOME'].filter((b) => f[b] && b !== lead);
+    if (lead === 'B1') continue;
+    if (s.outs === 2) {
+      for (const b of others) if (!s.alt.includes(b)) fail(`2-out force at ${b} not accepted for ${s.runners}`);
+    } else {
+      if (s.alt.length) fail(`alt should be empty under 2 outs for ${s.runners}`);
+      for (const b of others) if (!s.okay || !s.okay[b]) fail(`okay tier missing ${b} for ${s.runners} outs ${s.outs}`);
+      sawOkay = true;
+    }
   }
   if (!sawSmart) fail('smart-ball HOLD scenarios never appeared in 300 ground balls');
+  if (!sawOkay) fail('okay-tier scenarios never appeared in 300 ground balls');
 
   // ── copy sweep: no em or en dashes anywhere in the app's words ──
   const dashes = await page.evaluate(() => {
     const banks = [window.__dr.FLY_BANK, window.__dr.POS_BANK, window.__dr.SMART_BANK]
-      .flat().map((s) => s.prompt + s.why + (s.choices || []).map((c) => c[1]).join(''))
+      .flat().map((s) => s.prompt + s.why + (s.tip || '') + (s.choices || []).map((c) => c[1]).join(''))
       .join('');
     return (document.body.innerHTML + banks).match(/[–—]/g)?.length ?? 0;
   });
   if (dashes) fail(`${dashes} em or en dashes in live copy`);
 
   // ── the count, softball house rules: 4 strikes, foul never the last ──
+  await assertFieldClear('count');
   const sport = await page.evaluate(() => window.__dr.S.sport);
   if (sport !== 'softball') fail('default sport should be softball');
   for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');
@@ -81,82 +107,102 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   msg = await page.textContent('#ask');
   if (!msg.includes('Strike 4! The batter is out.')) fail('4th strike should end the softball at bat: ' + msg);
 
-  // ── the play: answer a force on the real diamond ──
+  // ── the play: a wrong answer flashes and lets them try again ──
   await page.click('#tab-play');
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
+  await assertFieldClear('play');
   let s = await page.evaluate(() => window.__dr.S.scenario);
+  if (s.correct !== 'HOLD') {
+    await page.click('#holdBtn');   // holding is wrong on every live force play
+    await page.waitForTimeout(300);
+    const open = await page.evaluate(() => !document.getElementById('overlay').classList.contains('hidden'));
+    if (open) fail('a wrong answer should not end the play');
+    const hint = await page.textContent('#hint');
+    if (!hint.includes('Try again')) fail('no try-again hint after a miss: ' + hint);
+    const streak0 = await page.evaluate(() => window.__dr.S.streak);
+    if (streak0 !== 0) fail('streak should reset on a miss');
+  }
   if (s.correct === 'HOLD') await page.click('#holdBtn');
   else await page.click('#base-' + s.correct, { force: true });
   await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
   let word = await page.textContent('#vWord');
-  if (!['Nice play!', 'You got it!', 'Heads-up play!', 'Way to go!'].includes(word)) fail('correct base read as wrong: ' + word);
+  if (!GOOD.includes(word)) fail('correct answer after a retry read as wrong: ' + word);
   const streak = await page.evaluate(() => window.__dr.S.streak);
-  if (streak !== 1) fail('streak should be 1, got ' + streak);
+  if (streak !== 1) fail('streak should be 1 after the right answer, got ' + streak);
   await page.click('#next');
 
-  // and a deliberate miss lights the correct base green
-  await page.waitForTimeout(200);
-  s = await page.evaluate(() => window.__dr.S.scenario);
-  const wrongBase = s.correct === 'B1' ? 'B2' : 'B1';
-  if (s.correct === 'HOLD' || (s.alt || []).includes(wrongBase)) { await page.click('#holdBtn').catch(() => {}); }
-  await page.evaluate(() => {}); // keep hold path simple: only assert on plain force scenarios
-  if (s.correct !== 'HOLD' && !(s.alt || []).includes(wrongBase)) {
-    await page.click('#base-' + wrongBase, { force: true });
-    await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
-    word = await page.textContent('#vWord');
-    if (word !== 'Not quite!') fail('wrong base read as right');
-    const lit = await page.evaluate((c) => document.getElementById('base-' + c).classList.contains('hit'), s.correct);
-    if (!lit) fail('correct base not shown after a miss');
-    const streak0 = await page.evaluate(() => window.__dr.S.streak);
-    if (streak0 !== 0) fail('streak should reset on a miss');
+  // okay tier on the field: a force out at the wrong bag is a real out
+  let okayDone = false;
+  for (let tries = 0; tries < 25 && !okayDone; tries++) {
+    await page.waitForTimeout(250);
+    s = await page.evaluate(() => window.__dr.S.scenario);
+    const okayBases = s.okay ? Object.keys(s.okay) : [];
+    if (okayBases.length) {
+      await page.click('#base-' + okayBases[0], { force: true });
+      await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+      word = await page.textContent('#vWord');
+      if (word !== 'That works!') fail('okay-tier answer got the wrong verdict: ' + word);
+      okayDone = true;
+    } else if (s.correct === 'HOLD') {
+      await page.click('#holdBtn');
+      await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+    } else {
+      await page.click('#base-' + s.correct, { force: true });
+      await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+    }
+    await page.click('#next');
   }
-  await page.click('#next');
+  if (!okayDone) fail('never met an okay-tier scenario in 25 plays');
 
-  // ── fly balls: answer from the choices or the diamond ──
+  // ── fly balls: wrong choice dims and play continues; right one teaches ──
   await page.click('#tab-fly');
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(300);
+  await assertFieldClear('fly');
   s = await page.evaluate(() => window.__dr.S.scenario);
+  if (s.kind === 'choice' && s.choices.length > 1) {
+    const wrong = s.choices.find((c) => c[0] !== s.correct)[0];
+    await page.click(`[data-c="${wrong}"]`);
+    await page.waitForTimeout(300);
+    const open = await page.evaluate(() => !document.getElementById('overlay').classList.contains('hidden'));
+    if (open) fail('a wrong choice should not end the play');
+    const dimmed = await page.evaluate((w) => {
+      const b = document.querySelector(`[data-c="${w}"]`);
+      return b.disabled;
+    }, wrong);
+    if (!dimmed) fail('wrong choice not disabled for elimination');
+  }
   if (s.kind === 'choice') await page.click(`[data-c="${s.correct}"]`);
   else await page.click('#base-' + s.correct, { force: true });
   await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
   word = await page.textContent('#vWord');
-  if (word === 'Not quite!') fail('correct fly answer read as wrong');
+  if (!GOOD.includes(word)) fail('correct fly answer read as wrong: ' + word);
   await page.click('#next');
 
-  // ── take the field: tap the fielder who covers ──
+  // ── take the field: wrong fielder flashes, right fielder finishes ──
   await page.click('#tab-pos');
-  await page.waitForTimeout(200);
-  s = await page.evaluate(() => window.__dr.S.scenario);
-  if (s.kind === 'pos') {
-    await page.click('#pos-' + s.correct, { force: true });
-  } else {
-    await page.click(`[data-c="${s.correct}"]`);
-  }
-  await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
-  word = await page.textContent('#vWord');
-  if (word === 'Not quite!') fail('correct positioning answer read as wrong');
-  await page.click('#next');
-
-  // a wrong fielder lights the right one
-  await page.waitForTimeout(200);
-  for (let tries = 0; tries < 10; tries++) {
+  await page.waitForTimeout(300);
+  await assertFieldClear('pos');
+  let posDone = false;
+  for (let tries = 0; tries < 12 && !posDone; tries++) {
     s = await page.evaluate(() => window.__dr.S.scenario);
-    if (s.kind === 'pos') break;
-    await page.click(`[data-c="${s.correct}"]`);
-    await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
-    await page.click('#next');
-    await page.waitForTimeout(200);
-  }
-  if (s.kind === 'pos') {
-    const wrongPos = s.correct === '8' ? '7' : '8';
-    await page.click('#pos-' + wrongPos, { force: true });
+    if (s.kind === 'pos') {
+      const wrongPos = s.correct === '8' ? '7' : '8';
+      await page.click('#pos-' + wrongPos, { force: true });
+      await page.waitForTimeout(300);
+      const open = await page.evaluate(() => !document.getElementById('overlay').classList.contains('hidden'));
+      if (open) fail('a wrong fielder should not end the play');
+      await page.click('#pos-' + s.correct, { force: true });
+      posDone = true;
+    } else {
+      await page.click(`[data-c="${s.correct}"]`);
+    }
     await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
     word = await page.textContent('#vWord');
-    if (word !== 'Not quite!') fail('wrong fielder read as right');
-    const lit = await page.evaluate((c) => document.getElementById('pos-' + c).classList.contains('hit'), s.correct);
-    if (!lit) fail('correct fielder not shown after a miss');
+    if (word === 'Not quite!') fail('positioning answer read as wrong');
     await page.click('#next');
+    await page.waitForTimeout(250);
   }
+  if (!posDone) fail('never met a tap-a-fielder scenario in 12 plays');
 
   // ── settings: sport flips to baseball and survives a reload ──
   await page.click('#gear');
@@ -166,7 +212,12 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   const note1 = await page.textContent('#sportNote');
   if (!note1.includes('3 strikes')) fail('baseball note missing: ' + note1);
 
-  // feedback box opens from the settings card
+  // tip jar link renders, feedback box opens from the settings card
+  const tipHref = await page.evaluate(() => {
+    const a = document.querySelector('#tipSlot a');
+    return a ? a.href : '';
+  });
+  if (!tipHref.includes('buy.stripe.com')) fail('tip jar link missing from settings');
   await page.click('#feedbackLink');
   const fbOpen = await page.evaluate(() => !document.getElementById('fbWrap').classList.contains('hidden'));
   if (!fbOpen) fail('feedback box did not open');

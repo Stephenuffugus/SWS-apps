@@ -33,3 +33,14 @@ The v2 prototype set `transform-box:fill-box; transform-origin:center` on `.base
 ## Next build candidates (handoff roadmap)
 
 At-bat mode (one continuous half-inning: count into play into where's-the-play, outs carry over) is the big one. Then difficulty tiers, badges per rule chip, install prompt affordance (`swsInstall`) so the hub card gets the install button.
+
+## v4, Stephen's first-run notes, same night
+
+His four notes, all shipped as diamond-v4:
+
+1. **Home plate was under the question bubble.** The camera now measures the top bar and the live bubble (ResizeObserver, since the bubble grows with its words) and fits the safe box into the uncovered strip; the field still paints edge to edge. Safe box retuned (CY 310, SAFE_H 440) so the diamond got bigger, not smaller. Smoke test asserts home plate clears the bubble in all four modes, and the worst case (infield fly, three long choices) clears by 41px at phone size.
+2. **Wrong answers now mean try again**, not move on. A miss flashes red, breaks the streak, shows "Not quite! Try again," and never reveals the answer; wrong choice buttons disable for honest elimination. The verdict card with the why only comes when they find it.
+3. **Coach says tips + the okay tier.** Scenarios carry an optional `tip` (amber line on the verdict): lead-runner-when-you-can, sure-out-when-you-can't, one run is okay. And a force out at a non-lead bag is now a real out: with 2 outs EVERY forced bag is fully correct (any force ends the inning); with fewer it lands in the `okay` map and gets a "That works!" verdict teaching the lead runner. Whys compacted hard for short attention spans; the extra nugget moved into the tip.
+4. **Infield fly 8U note**: the tip on that card says most 8U leagues skip the rule.
+
+Next: parents test via Stephen's text-out; their notes drive the next round.

@@ -102,6 +102,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .btn.fill{background:var(--sun);border-color:var(--sun)}
 .btn.ghost{border-color:#C9D8CE;color:#5E7568;box-shadow:none;background:rgba(255,255,255,.75)}
 .hint{font-size:13px;color:#5E7568;margin:8px 0 0}
+.hint.no{color:#C2312B;font-weight:900}
 .hint:empty{display:none}
 
 .tabs{display:flex;justify-content:center;gap:10px}
@@ -121,11 +122,14 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 @media (prefers-reduced-motion:reduce){.vcard{animation:none}}
 .bigword{font-family:'Anton',sans-serif;font-size:46px;letter-spacing:.03em;line-height:1;
   margin:0 0 10px;text-transform:uppercase}
-.bigword.good{color:var(--safe)} .bigword.bad{color:var(--out)}
+.bigword.good{color:var(--safe)} .bigword.bad{color:var(--out)} .bigword.mid{color:#C77F06}
 .rulechip{display:inline-block;font-family:'Anton',sans-serif;font-size:11px;letter-spacing:.12em;
   text-transform:uppercase;color:#fff;background:var(--ink);border-radius:20px;padding:4px 12px;margin-bottom:10px}
 .vbody{margin:0 0 16px;font-size:16px;font-weight:800;line-height:1.45;text-align:left}
 .vbody b{color:#D9702B}
+.tipline{margin:-6px 0 16px;font-size:13px;font-weight:800;line-height:1.4;text-align:left;
+  background:#FFF6DC;border-radius:12px;padding:8px 10px;color:#6B5410}
+.tipline:empty{display:none}
 .btn.big{width:100%;font-size:18px;min-height:56px}
 .scard{background:#fff;border-radius:22px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 0 rgba(0,0,0,.2);
   max-height:calc(100dvh - 40px);overflow-y:auto}
@@ -223,6 +227,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
     <p class="bigword good" id="vWord">Nice play!</p>
     <span class="rulechip" id="vChip"></span>
     <p class="vbody" id="vBody"></p>
+    <p class="tipline" id="vTip"></p>
     <button class="btn fill big" id="next">Next play ▶</button>
   </div>
 </div>
@@ -274,7 +279,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v3";
+var BUILD="diamond-v4";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -292,8 +297,8 @@ const SPORTS = {
 };
 
 /* ================= geometry (viewBox units) ================= */
-const CX=200, CY=330;          /* scene center the camera locks onto */
-const SAFE_W=400, SAFE_H=580;  /* box that must always be visible    */
+const CX=200, CY=310;          /* scene center the camera locks onto */
+const SAFE_W=400, SAFE_H=440;  /* box that must always be visible    */
 const BASE_XY = {
   HOME:{x:200,y:460,label:"HOME"},
   B1:{x:318,y:342,label:"1ST"},
@@ -312,14 +317,22 @@ const POS = {
   9:{n:"right fielder",s:"RF",x:308,y:172}
 };
 
-/* camera: resize the viewBox so the field always fills the screen
-   edge to edge with the safe box in view. No cards, no letterbox. */
+/* camera: the field fills the whole screen edge to edge, but the safe box
+   (every base, fielder and label) must land in the strip of screen the
+   floating UI does NOT cover, so the question bubble can never sit on home
+   plate. Measured live because the bubble grows and shrinks with its words. */
 function fitView(){
-  const w=innerWidth,h=innerHeight,a=w/h;
-  let W,H;
-  if(a < SAFE_W/SAFE_H){ W=SAFE_W; H=SAFE_W/a; } else { H=SAFE_H; W=SAFE_H*a; }
+  const w=innerWidth,h=innerHeight;
+  const topEl=document.querySelector(".topbar"),botEl=document.querySelector(".bottom");
+  const topH=topEl?topEl.getBoundingClientRect().bottom+6:0;
+  const botT=botEl?botEl.getBoundingClientRect().top-6:h;
+  let visH=botT-topH;
+  if(!(visH>h*.32))visH=h*.32;   /* floor: a huge bubble may overlap, never swallow */
+  const s=Math.min(w/SAFE_W,visH/SAFE_H);
+  const W=w/s,H=h/s;
+  const midPix=Math.min(topH+visH/2,h-visH/2);
   document.getElementById("dia").setAttribute("viewBox",
-    `${CX-W/2} ${CY-H/2} ${W} ${H}`);
+    `${CX-W/2} ${CY-midPix*H/h} ${W} ${H}`);
 }
 addEventListener("resize",fitView);
 
@@ -456,6 +469,7 @@ function countScreen(msg){
     `<button class="btn ghost" data-p="reset">New batter</button>`;
   a.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>pitch(b.dataset.p)));
   el("hint").textContent="";
+  el("hint").className="hint";
   paintBoard();
 }
 function pitch(kind){
@@ -535,27 +549,39 @@ function makeGroundBall(){
   lastGround=key;
   const f=forces(runners);
   const lead=f.HOME?"HOME":f.B3?"B3":f.B2?"B2":"B1";
-  let correct=lead,alt=[],why,chip="Force play";
+  const forcedOthers=["B1","B2","B3","HOME"].filter(b=>f[b]&&b!==lead);
+  let correct=lead,alt=[],okay=null,tip="",why,chip="Force play";
   if(lead==="B1"){
     why=runners.length===0
-      ?"The batter is the only runner. Throw to first for the easy out!"
-      :`${runnerWords(runners)}, but first base is <b>empty</b> behind them, so they do NOT have to run. Nobody can force them! Throw to first and take the sure out.`;
+      ?"The batter is the only runner. Throw to first. Easy out!"
+      :`${runnerWords(runners)}, but first base is <b>empty</b> behind them. They do NOT have to run! Take the sure out at first.`;
     chip=runners.length===0?"Sure out":"No force";
   } else if(lead==="B2"){
-    why="The runner on first <b>has to run</b>! The batter is taking their base, so that is a force. Step on second (no tag needed!), then fire to first for two.";
+    why="The runner on first <b>has to run</b>! That's a force. Step on second, no tag needed. Then fire to first for two!";
+    tip="No time for two? One sure out beats a wild throw!";
   } else if(lead==="B3"){
-    why="Everyone gets pushed up one base! The runner on second <b>has to run</b> to third. Touch the bag, no tag needed. Always get the lead runner when you can.";
+    why="Everybody moves up one! The runner heading to third is <b>forced</b>. Touch the bag. No tag needed!";
+    tip="Get the lead runner when you can. Can't? First base is always there!";
   } else {
-    why="Bases loaded! <b>Everybody has to run</b>, even the runner on third. Throw home and the catcher just steps on the plate. No tag needed.";
+    why="Bases loaded! <b>Everybody has to run</b>, even from third. Step on home plate. No tag needed!";
+    tip="Can't stop the run in time? Take a sure out instead. One run is okay!";
   }
-  if(outs===2&&lead!=="B1"){
-    alt.push("B1");
-    why+=" And with <b>2 outs</b>, any force out ends the inning, so first base works too!";
+  if(lead!=="B1"){
+    if(outs===2){
+      alt=forcedOthers;
+      why+=" And with <b>2 outs</b>, ANY force out ends the inning. Every bag works!";
+    } else {
+      /* a force out at another bag is a real out, just not the best one */
+      okay={};
+      forcedOthers.forEach(b=>okay[b]=lead==="HOME"
+        ?"A real out! The force was on there too. But the run crossed home. When you can, <b>stop the run</b>!"
+        :"A real out! The force was on there too. But the <b>lead runner</b> is the big prize. Look ahead first!");
+    }
   }
   const p=POS[pos];
   return{kind:"base",runners,outs,ballAt:{x:p.x,y:p.y},
     prompt:`<span class="tag">Ground ball!</span>You're the <b>${p.n}</b>! ${runnerWords(runners)}, <b>${outs} out${outs===1?"":"s"}</b>. Where's the throw?`,
-    correct,alt,why,chip};
+    correct,alt,okay,tip,why,chip};
 }
 
 /* ================= FLY BALLS ================= */
@@ -564,35 +590,40 @@ const FLY_BANK=[
    prompt:`<span class="tag">Fly ball!</span>Runner on second, <b>1 out</b>. Deep fly to center... <b>caught!</b> What does the runner do before going to third?`,
    choices:[["tag","Touch second AFTER the catch, then go!"],["free","Just run, the ball was hit"],["stay","Stay on second no matter what"]],
    correct:"tag",chip:"Tag up",
-   why:"On a caught fly ball, a runner must be touching their base <b>when the ball is caught</b>. Then they can go! That's <b>tagging up</b>. On a deep fly, second to third is an easy trip."},
+   why:"On a caught fly, be ON your base when the ball is caught. THEN run! That's <b>tagging up</b>.",
+   tip:"Deep fly? Second to third is an easy trip!"},
   {runners:[1],outs:0,ballAt:POS[6],kind:"base",
    prompt:`<span class="tag">Pop up!</span>Runner on first, <b>no outs</b>. The runner takes off on the swing... but you catch it at shortstop! Where's the throw?`,
    correct:"B1",alt:[],chip:"Double off!",
-   why:"The catch is out number one, and that runner left first base too early! They have to run all the way back and touch it. Throw to first, step on the bag, and that's <b>two outs on one pop up</b>."},
+   why:"The catch is out one. That runner left too early and must run back! Throw to first, step on the bag. <b>Two outs, one pop up!</b>"},
   {runners:[3],outs:1,ballAt:POS[9],kind:"choice",
    prompt:`<span class="tag">Sac fly!</span>Runner on third, <b>1 out</b>. Fly to right... caught! The runner waits on the base, then takes off after the catch and scores. Does the run count?`,
    choices:[["yes","YES! They tagged up first"],["no","No, you can't score on a caught ball"]],
    correct:"yes",chip:"Sacrifice fly",
-   why:"They did it perfectly! Stay on the base until the catch, THEN run. That's a <b>sacrifice fly</b>: the batter is out, but the team gets a run. A great trade!"},
+   why:"Perfect! Stay on the base until the catch, THEN run. That's a <b>sacrifice fly</b>: batter out, run counts.",
+   tip:"One out for one run is a great trade!"},
   {runners:[1,2],outs:1,ballAt:POS[4],kind:"choice",
    prompt:`<span class="tag">Infield fly!</span>Runners on first and second, <b>1 out</b>. Easy pop up over second base. The umpire yells <b>"INFIELD FLY!"</b> What does that mean?`,
    choices:[["auto","Batter is out right away, caught or not!"],["force","The runners must run"],["nothing","Nothing, play on"]],
    correct:"auto",chip:"Infield fly rule",
-   why:"With runners on first and second (or bases loaded) and fewer than 2 outs, an easy infield pop up makes the batter out <b>automatically</b>. That stops sneaky fielders from dropping it on purpose for a cheap double play. The runners can stay put. They're safe!"},
+   why:"Runners on first and second, fewer than 2 outs, easy pop up? The batter is just <b>out</b>, caught or dropped. It stops sneaky drop-it-on-purpose tricks. Runners can stay. They're safe!",
+   tip:"Most 8U leagues skip this rule! You'll meet it when you're older."},
   {runners:[2,3],outs:0,ballAt:POS[7],kind:"choice",
    prompt:`<span class="tag">Foul ball!</span>Runners on second and third, <b>no outs</b>. A high foul drifts near the fence... the left fielder <b>catches it!</b> Can the runner on third tag up and score?`,
    choices:[["yes","YES! A foul catch is still a catch"],["no","No way, the ball was foul"]],
    correct:"yes",chip:"Foul catch",
-   why:"A caught foul ball is a real out, and runners can tag up on it just like a fair fly ball! That's why fielders sometimes let a deep foul <b>drop</b> when a fast runner is on third."},
+   why:"A caught foul is a real out. Runners can tag up on it, same as a fair fly!",
+   tip:"That's why fielders sometimes let a deep foul drop on purpose!"},
   {runners:[1],outs:1,ballAt:POS[3],kind:"base",
    prompt:`<span class="tag">It drops!</span>Runner on first, <b>1 out</b>. The pop up near first base <b>falls in! No catch!</b> Where's the play?`,
    correct:"B2",alt:["B1"],chip:"Force is ON",
-   why:"No catch means the batter is running to first, so the runner on first is <b>forced</b> to second! Second base is the lead out. First base works too if you can't get there."},
+   why:"No catch means the batter runs. So the runner on first is <b>forced</b> to second again! Lead out at second.",
+   tip:"Can't get there in time? First base works too!"},
   {runners:[1,2,3],outs:2,ballAt:POS[8],kind:"choice",
    prompt:`<span class="tag">2 outs!</span>Bases loaded, <b>2 outs</b>. Fly to center... caught for out number three! The runner from third crossed home <b>before</b> the catch. Does the run count?`,
    choices:[["no","NO! The inning ended on the catch"],["yes","Yes, they touched home first"]],
    correct:"no",chip:"Third out",
-   why:"When the third out is a <b>caught fly ball</b>, no runs can score on the play, even if a runner crossed the plate first. The inning ends the moment the ball hits the glove."}
+   why:"When the third out is a <b>caught fly</b>, no runs can score on the play. The inning ends the moment the ball hits the glove!"}
 ];
 let lastFly=-1;
 function makeFlyBall(){
@@ -613,7 +644,8 @@ const POS_BANK=[
    why:"When the first baseman leaves the bag to field the ball, the <b>pitcher</b> sprints over to take the throw at first! Ball to the first base side? Pitcher covers."},
   {kind:"pos",runners:[1],outs:0,ballAt:POS[4],correct:"6",alt:[],chip:"Partners cover",
    prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>second baseman</b>! Runner on first. Somebody has to be standing on second for the force. Who covers <b>second base</b>?`,
-   why:"The shortstop and second baseman are partners! When one goes for the ball, the other covers second. Ball on the first base side? The <b>shortstop</b> takes the bag."},
+   why:"The shortstop and second baseman are partners! When one goes for the ball, the other covers second. Ball on the first base side? The <b>shortstop</b> takes the bag.",
+   tip:"Before the pitch, point at your partner: you cover, I cover!"},
   {kind:"pos",runners:[1],outs:1,ballAt:POS[6],correct:"4",alt:[],chip:"Partners cover",
    prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>shortstop</b>! Runner on first. Who covers <b>second base</b> for the throw?`,
    why:"Ball on the third base side? The <b>second baseman</b> covers the bag. Partners take turns so second base is never empty!"},
@@ -651,6 +683,7 @@ function makePosition(){
 /* ================= quiz flow ================= */
 function loadScenario(){
   S.answered=false;
+  el("hint").className="hint";
   el("overlay").classList.add("hidden");
   const s=S.mode==="play"?makeGroundBall():S.mode==="fly"?makeFlyBall():makePosition();
   S.scenario=s;
@@ -690,35 +723,46 @@ function answer(choice){
   if(s.kind==="base"&&!isBase)return;
   if(s.kind==="pos"&&!isPos)return;
   if(s.kind==="choice"&&(isBase||isPos))return;
-  S.answered=true;setBasePulse(false);setFielderPulse(false);
   const ok=(choice===s.correct)||(s.alt||[]).includes(choice);
-  if(s.kind==="base"){
-    if(choice!=="HOLD"){
-      const n=el("base-"+choice);
-      if(n)n.classList.add(ok?"hit":"miss");
-      const b=BASE_XY[choice];
-      if(b)moveBall(b.x,b.y);
+  const okayMsg=!ok&&s.okay?s.okay[choice]:null;
+  if(!ok&&!okayMsg){
+    /* a miss does not end the play: flash it, break the streak, try again.
+       The right answer is never given away; finding it is the learning. */
+    sfx("bad");S.streak=0;paintStreak();
+    if(s.kind==="choice"){
+      const b=el("answers").querySelector(`[data-c="${choice}"]`);
+      if(b){b.disabled=true;b.classList.add("wrong");
+        setTimeout(()=>{b.classList.remove("wrong");b.classList.add("dim");},650);}
+    } else {
+      const n=choice==="HOLD"?el("holdBtn"):el((s.kind==="pos"?"pos-":"base-")+choice);
+      if(n){n.classList.add(choice==="HOLD"?"wrong":"miss");
+        setTimeout(()=>n.classList.remove("miss","wrong"),650);}
     }
-    if(!ok){
-      if(s.correct==="HOLD"){const h=el("holdBtn");if(h)h.classList.add("right");}
-      else{const r=el("base-"+s.correct);if(r)r.classList.add("hit");}
-    }
+    const hint=el("hint");
+    hint.textContent="❌ Not quite! Try again.";
+    hint.className="hint no";
+    return;
+  }
+  S.answered=true;setBasePulse(false);setFielderPulse(false);
+  if(s.kind==="base"&&choice!=="HOLD"){
+    const n=el("base-"+choice),b=BASE_XY[choice];
+    if(n)n.classList.add("hit");
+    if(b)moveBall(b.x,b.y);
   }
   if(s.kind==="pos"){
     const n=el("pos-"+choice);
-    if(n)n.classList.add(ok?"hit":"miss");
-    if(!ok){const r=el("pos-"+s.correct);if(r)r.classList.add("hit");}
-    const p=POS[s.correct];
+    if(n)n.classList.add("hit");
+    const p=POS[choice];
     moveBall(p.x,p.y);
   }
-  if(ok){S.streak++;if(S.streak>S.best){S.best=S.streak;save();}confetti();sfx("good");}
-  else{S.streak=0;sfx("bad");}
+  S.streak++;if(S.streak>S.best){S.best=S.streak;save();}confetti();sfx("good");
   paintStreak();
   const w=el("vWord");
-  w.textContent=ok?pick(["Nice play!","You got it!","Heads-up play!","Way to go!"]):"Not quite!";
-  w.className="bigword "+(ok?"good":"bad");
+  w.textContent=ok?pick(["Nice play!","You got it!","Heads-up play!","Way to go!"]):"That works!";
+  w.className="bigword "+(ok?"good":"mid");
   el("vChip").textContent=s.chip;
-  el("vBody").innerHTML=s.why;
+  el("vBody").innerHTML=okayMsg||s.why;
+  el("vTip").textContent=(ok&&s.tip)?"🧢 Coach says: "+s.tip:"";
   setTimeout(()=>el("overlay").classList.remove("hidden"),s.kind==="choice"?150:550);
 }
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -800,6 +844,9 @@ el("fbSend").addEventListener("click",()=>{
 
 /* ================= boot ================= */
 fitView();drawFielders(false);drawBases();paintBallSkin();paintStreak();setMode("count");
+/* the bubble grows and shrinks with every question, and the camera keeps the
+   diamond out from under it, so refit whenever the bubble changes size */
+if(window.ResizeObserver)new ResizeObserver(fitView).observe(document.querySelector(".bubble"));
 if("serviceWorker" in navigator)
   addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
 
