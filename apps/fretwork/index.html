@@ -106,6 +106,16 @@
   .btn.ghost{color:var(--muted)}
   .btn:active{transform:translateY(1px)}
   .start{width:100%; margin-top:4px}
+  /* The tip jar is the whole business model of a free, ad free app, and it
+     was a 53 by 18 pixel text link the colour of a footnote, sitting in the
+     footer sentence between the studio credit and Feedback. Diamond Rules
+     hit the same thing in its v13 and fixed it the same way: a real button.
+     #c23b35 is Fretwork's own light scheme --fail, hardcoded because the
+     dark token is #ff5d54, where white text is 3.02:1 and fails AA, and
+     because "fail" is the wrong meaning for a thank you. */
+  .btn.tip{display:flex; align-items:center; justify-content:center; gap:6px;
+    width:100%; min-height:48px; margin-top:10px; font-size:15px; text-decoration:none;
+    background:#c23b35; border-color:#c23b35; color:#fff}
 
   .prompt{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:8px; min-height:40px}
   .prompt .task{font-size:16px; font-weight:700}
@@ -282,8 +292,9 @@
   <div class="card about">
     <button class="btn start" id="btnA2HS" hidden>Add to home screen</button>
     <p id="a2hsIos" hidden style="font-size:13px; color:var(--muted); margin:0 0 8px">On iPhone: tap the share button in Safari, then <b>Add to Home Screen</b>. Fretwork works offline once it is on there.</p>
+    <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
-    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a><span id="tipSlot"></span></p>
+    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
     <p class="buildtag">fretwork-v6</p>
   </div>
 </section>
@@ -1376,7 +1387,7 @@ $('setFrets').onchange = function(){
 var setNumbers = $('setNumbers');
 setNumbers.setAttribute('aria-pressed', String(S.numbers));
 setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
-if (TIP_URL) $('tipSlot').innerHTML = ' &middot; <a href="'+TIP_URL+'" target="_blank" rel="noopener">&hearts; Tip jar</a>';
+if (TIP_URL){ var tipBtn = $('tipBtn'); tipBtn.href = TIP_URL; tipBtn.hidden = false; }
 
 /* feedback: with a webhook wired, the footer link opens a box that lands the
    message straight in Stephen's Discord. Without one, plain email stands. */

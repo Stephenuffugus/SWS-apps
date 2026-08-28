@@ -1,6 +1,6 @@
 /* Sub Plans service worker, fully offline. Bump VERSION on deploy. */
-const VERSION = 'subplans-v29';
-const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./privacy.html","./vendor-qrcode.js", "./fonts/fraunces-latin.woff2", "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js"];
+const VERSION = 'subplans-v30';
+const ASSETS = ["./","./app.js","./apple-touch-icon.png","./icon.svg","./index.html","./manifest.webmanifest","./privacy.html","./vendor-qrcode.js", "./fonts/fraunces-latin.woff2", "./sws-prefs.js", "./sws-ui.js", "./sws-backup.js", "./sws-install.js"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });

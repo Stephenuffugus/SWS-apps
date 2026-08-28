@@ -73,6 +73,11 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    dead centre of the pitcher's circle, so without this it sat on top of the
    circle target and ate the tap. Same class of bug as the pitcher's marker
    covering it, found the same way: by clicking it in a browser. */
+/* .btn.tip sets display:flex, which beats the browser's own [hidden] rule,
+   so the tip button would show even when the code hides it. Latent today
+   because TIP_URL is populated, and a trap the moment anyone blanks it or
+   copies this pattern. Fretwork carries the same rule for the same reason. */
+[hidden]{display:none !important}
 .ball,#runners,#clouds{pointer-events:none}
 .ball{transition:transform .55s cubic-bezier(.34,.9,.4,1)}
 #ballSkin{transform-box:fill-box;transform-origin:center}
@@ -474,7 +479,7 @@ body.movemode .hint{min-height:34px}
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v21";
+var BUILD="diamond-v22";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that

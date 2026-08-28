@@ -297,9 +297,50 @@ async function guardWorkerCacheScope(slug) {
   checked++;
 }
 
+/* ── 6. a strict CSP and an inline script cannot both be true ──────────────
+   Sub Plans carries script-src 'self' with no unsafe-inline, on purpose. The
+   fleet's install affordance ships INLINE in every app, so on that one app
+   the browser silently refused to run it and a teacher could not add Sub
+   Plans to her home screen. The hub even drew an install arrow for it,
+   because that arrow appears wherever the app HTML contains swsInstall, so
+   the studio advertised an install that did nothing. It sat there until the
+   app's own CSP test was read rather than tolerated.
+
+   Nothing announces this class of break at runtime: a blocked script is a
+   console line nobody sees. So it gets checked here, statically, for every
+   app whose deployed policy actually forbids inline script. */
+function guardCspInline() {
+  const fb = JSON.parse(readFileSync(join(HERE, '..', 'firebase.json'), 'utf8'));
+  const strict = [];
+  for (const h of fb.hosting.headers || []) {
+    const csp = (h.headers || []).find((k) => k.key === 'Content-Security-Policy');
+    if (!csp) continue;
+    const scriptSrc = (csp.value.match(/script-src([^;]*)/) || [])[1] || '';
+    if (scriptSrc.includes("'unsafe-inline'")) continue;      /* it allows them */
+    const slug = (h.source.match(/^\/([a-z-]+)/) || [])[1];
+    if (slug) strict.push(slug);
+  }
+  for (const slug of strict) {
+    checked++;
+    const p = join(APPS, slug, 'index.html');
+    if (!existsSync(p)) continue;
+    const html = readFileSync(p, 'utf8');
+    /* an inline script is a <script> with no src whose body is not empty */
+    const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+      .filter((m) => m[1].trim().length)
+      .filter((m) => !/type=["'](application\/(ld\+json|json)|text\/template)["']/i.test(m[0]));
+    if (inline.length) {
+      const first = inline[0][1].trim().split('\n')[0].slice(0, 60);
+      fail(slug, 'csp-inline-script',
+        `${inline.length} inline script(s) under a CSP that forbids them. The browser will refuse to run them. First: ${first}`);
+    }
+  }
+}
+
 /* ── run ────────────────────────────────────────────────────────────────── */
 console.log(`\nguards, ${slugs.length} apps${LIVE ? ' + live' : ''}\n`);
 guardCssPlacement();
+guardCspInline();
 for (const slug of slugs) {
   try {
     await guardControls(slug);

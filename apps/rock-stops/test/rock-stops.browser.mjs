@@ -13,7 +13,7 @@
  *    histograms across a wipe and restore, none of which existed when the
  *    format was written.
  *
- * Run from the repo root:  node apps/float/test/float.browser.mjs
+ * Run from the repo root:  node apps/rock-stops/test/rock-stops.browser.mjs
  */
 import { withApp } from '../../../design/harness.mjs';
 
@@ -23,7 +23,12 @@ const check = (name, cond, extra) => {
   else { failed++; console.error('  FAIL:', name, extra === undefined ? '' : JSON.stringify(extra)); }
 };
 
-await withApp('float', async ({ page, errors }) => {
+/* 2026-08-28: this said withApp('float'). Commit 99dfb21 renamed apps/float
+   to apps/rock-stops and this line did not move, so the harness served a 404
+   and every assertion below had been running against an empty page for weeks.
+   The DEV_KEY on the next line is NOT a leftover: the app still ships
+   'float.dev.unlocked' deliberately, so it stays. */
+await withApp('rock-stops', async ({ page, errors }) => {
   /* The harness has already navigated, so unlock and reload rather than trying
      to get in before the first load. */
   await page.evaluate(() => {
