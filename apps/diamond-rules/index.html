@@ -358,7 +358,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v11";
+var BUILD="diamond-v12";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -1144,19 +1144,25 @@ el("fbSend").addEventListener("click",()=>{
 });
 
 /* ================= add to home screen =================
-   Fleet affordance: Chrome hands over a real install prompt, iPhone gets
-   directions, and nothing shows once the app is already installed. Arriving
-   from the hub's install button greets them with a banner. */
+   Fleet affordance: Chrome hands over a real install prompt and iPhone gets
+   directions. Inside an installed app window (the studio hub installed, or
+   this app itself) the phone cannot add an icon from here, so the button
+   stays visible but hands out the way that works: open the address in the
+   real browser first. Arriving from the hub's install link raises a banner. */
 (function(){
-  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)return;
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
   let evt=null;
   const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  const btn=el("swsInstall");
   function go(){
     if(evt){evt.prompt();return;}
-    alert(ios?'To add it: tap the Share button, then "Add to Home Screen".'
+    alert(standalone
+      ?"You are inside the installed studio app, and phones can only add icons from the browser. Open skywolfstudio.com/diamond-rules in "+(ios?"Safari, tap the Share button, then \"Add to Home Screen\".":"Chrome, then pick \"Add to Home Screen\" from the menu.")
+      :ios
+      ?'To add it: tap the Share button, then "Add to Home Screen".'
       :'In your browser menu, choose "Add to Home Screen" or "Install app".');
   }
-  const btn=el("swsInstall");
+  if(standalone)btn.textContent="⤓ Give this game its own icon";
   btn.hidden=false;
   btn.addEventListener("click",go);
   addEventListener("beforeinstallprompt",e=>{e.preventDefault();evt=e;});

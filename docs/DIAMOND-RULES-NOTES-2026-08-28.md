@@ -96,3 +96,7 @@ Lesson written in ink: transcribe, never recall, anything a human will hold up a
 ## v11, the rhythm was the real bug
 
 Stephen "cleared the browser five times" and still heard "only quarter notes": he WAS on the new build; v10's pitches were right but its rhythm was a flat march (one syllable per beat). The actual song lilts. v11's note values are read bar by bar from the ORIGINAL 1908 engraving (Teller, Sons & Dorner plates, Levy Sheet Music Collection scan, levysheetmusic.mse.jhu.edu 027.125a): every phrase opens long short ("Taaake me", "I don't", "root root", "they don't", "Craaack er"), walks in quarters, and parks on full bar holds (ball, game, home, old); "Let me" and "For it's" are quick pickup eighths. Smoke now pins the opening half note lilt too. Lesson appended to [[transcribe-never-recall]]: rhythm IS part of the transcription; letter notation sites drop it, engravings carry it.
+
+## v12, install button inside the installed studio
+
+Stephen could not find the install button: he browses Diamond Rules from inside the INSTALLED studio hub, which runs standalone, and the v9 affordance hid itself in any standalone window. Now standalone keeps the button ("Give this game its own icon") and explains the one path that works: open skywolfstudio.com/diamond-rules in the real browser (Safari share sheet / Chrome menu), because phones only add icons from a browser. Regular browser behavior unchanged (native prompt on Chrome, directions on iPhone, settings card + hub banner).
