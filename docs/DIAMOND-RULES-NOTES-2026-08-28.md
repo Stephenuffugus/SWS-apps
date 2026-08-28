@@ -44,3 +44,7 @@ His four notes, all shipped as diamond-v4:
 4. **Infield fly 8U note**: the tip on that card says most 8U leagues skip the rule.
 
 Next: parents test via Stephen's text-out; their notes drive the next round.
+
+## v5, same night
+
+Stephen: runners should look like players, not gold dots. `runnerSprite()` now draws a little ink player mid stride in a gold batting helmet (dome + brim) standing on their bag; still decorative (pointer-events none), still var() driven so it recolors with the theme tokens.

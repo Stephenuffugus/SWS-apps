@@ -279,7 +279,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v4";
+var BUILD="diamond-v5";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -412,12 +412,23 @@ function setBasePulse(on){
 function setFielderPulse(on){
   document.querySelectorAll(".fielder").forEach(f=>f.classList.toggle("pulse",on));
 }
+/* a runner is a little player mid stride in a gold batting helmet,
+   standing on their bag, not an abstract dot */
+function runnerSprite(x,y){
+  return `<g transform="translate(${x} ${y-26})" pointer-events="none">`+
+    `<path d="M-3 9 L-8 19 M3 9 L8 17" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" fill="none"/>`+
+    `<path d="M-8 1 L-13 8 M8 1 L13 6" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round" fill="none"/>`+
+    `<rect x="-8" y="-4" width="16" height="16" rx="6" fill="var(--ink)"/>`+
+    `<circle cx="0" cy="-12" r="8" fill="var(--ink)"/>`+
+    `<path d="M-8.5 -13 A8.5 8.5 0 0 1 8.5 -13 L8.5 -11 L-8.5 -11 Z" fill="var(--sun)"/>`+
+    `<rect x="4" y="-13.5" width="9" height="4" rx="2" fill="var(--sun)"/>`+
+  `</g>`;
+}
 function drawRunners(list){
   const g=el("runners");g.innerHTML="";
   (list||[]).forEach(r=>{
     const b=BASE_XY["B"+r];
-    g.insertAdjacentHTML("beforeend",
-      `<g><circle cx="${b.x}" cy="${b.y-24}" r="12" fill="var(--ink)" stroke="var(--sun)" stroke-width="4"/></g>`);
+    g.insertAdjacentHTML("beforeend",runnerSprite(b.x,b.y));
   });
 }
 function moveBall(x,y){el("ballG").style.transform=`translate(${x}px,${y}px)`;}
