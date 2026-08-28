@@ -26,7 +26,7 @@ The v2 prototype set `transform-box:fill-box; transform-origin:center` on `.base
 
 ## Awaiting Stephen
 
-- Thumbnail art (marketing/thumb-256.png, og-image.png and icon set are interim flat placeholders drawn tonight; his art replaces the marketing set, hub card then needs a `?v=` bump since images cache for a week).
+- ~~Thumbnail art~~ LANDED same night: diamondrules.png (1254x1254, filed at repo root, original is sacred) cut into stripe-thumbnail, og-image, thumb-256 (hub at ?v=2) and the full icon set; diamond-v2.
 - Stripe payment link for `TIP_URL` (bump sw CACHE when wiring).
 - League answers for future tiers: does the league steal? no-leadoff rule? That gates roadmap items 4 and 5.
 
