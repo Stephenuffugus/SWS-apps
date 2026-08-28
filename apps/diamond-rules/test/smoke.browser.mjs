@@ -501,7 +501,8 @@ await withApp('diamond-rules', async ({ page, errors }) => {
      rather than sampled: every tap on a grid over the whole field, every
      base state. */
   const mv = await page.evaluate(() => {
-    const d = window.__dr;
+    const d = window.__dr, wasSport = d.S.sport;
+    d.S.sport = 'baseball';            /* the only level with every zone in play */
     const states = [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]];
     let cases = 0, minSep = Infinity;
     const zones = {}, bad = [];
@@ -527,12 +528,35 @@ await withApp('diamond-rules', async ({ page, errors }) => {
       for (let i = 0; i < ks.length; i++) for (let j2 = i + 1; j2 < ks.length; j2++)
         minSep = Math.min(minSep, Math.hypot(J[ks[i]].x - J[ks[j2]].x, J[ks[i]].y - J[ks[j2]].y));
     }
+    d.S.sport = wasSport;
     return { cases, minSep, zones: Object.keys(zones).sort(), bad };
   });
   if (mv.bad.length) fail('everybody moves: ' + mv.bad.join(' | '));
   if (mv.cases < 10000) fail('the move sweep barely ran: ' + mv.cases);
   if (mv.zones.length !== 10) fail('not every zone is reachable, got ' + mv.zones.join(','));
   if (mv.minSep < 20) fail('two girls land on top of each other: ' + mv.minSep.toFixed(1));
+
+  /* Stephen: "kids in 8u don't bunt." So a tap anywhere near the plate at 8U
+     is an ordinary dribbler, never the bunt picture, and 10U and baseball
+     still get it. */
+  const bunting = await page.evaluate(() => {
+    const d = window.__dr, was = d.S.sport, out = {};
+    for (const lvl of ['softball8', 'softball10', 'baseball']) {
+      d.S.sport = lvl;
+      let sawBunt = false, nearPlate = null;
+      for (let x = 150; x <= 250; x += 5) for (let y = 400; y <= 500; y += 5) {
+        const z = d.mvZone(x, y);
+        if (z.key === 'BUNT') sawBunt = true; else nearPlate = z.key;
+      }
+      out[lvl] = { sawBunt, nearPlate };
+    }
+    d.S.sport = was;
+    return out;
+  });
+  if (bunting.softball8.sawBunt) fail('8U got a bunt picture, and 8U does not bunt');
+  if (!bunting.softball8.nearPlate) fail('8U taps near the plate resolve to nothing');
+  if (!bunting.softball10.sawBunt) fail('10U lost its bunt coverage');
+  if (!bunting.baseball.sawBunt) fail('baseball lost its bunt coverage');
 
   /* The room must never send a girl to throw to an empty bag, and it must
      never disagree with the Grounders room about the same picture. The lead
@@ -682,7 +706,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
       new MouseEvent('click', { clientX: s.x, clientY: s.y, bubbles: true }));
     return null;
   });
-  await page.waitForTimeout(3400);
+  await page.waitForTimeout(4200);
   const row = await page.evaluate(() => ({
     ghost: document.querySelectorAll('#answers .btn.ghost').length,
     btns: document.querySelectorAll('#answers .btn').length,
@@ -719,7 +743,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.waitForTimeout(120);
   const fast = await page.evaluate(() => window.__dr.MV.runners.join(','));
   if (fast !== '2,3') fail('fast runner taps were dropped mid animation, got: ' + fast);
-  await page.waitForTimeout(3200);
+  await page.waitForTimeout(4200);
   const power = await page.evaluate(() => document.getElementById('ask').textContent);
   if (!/Nobody is forced/i.test(power)) fail('the power play is not called with runners on second and third: ' + power);
 

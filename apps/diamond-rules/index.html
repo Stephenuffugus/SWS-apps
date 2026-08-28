@@ -184,7 +184,7 @@ body.movemode #hitPad{display:block;pointer-events:auto;cursor:crosshair}
 /* the fielders are already placed by a transform, so the walk is one
    transition on the group. Scoped to this room so the five quiz rooms keep
    snapping instantly. */
-body.movemode .fielder{transition:transform var(--walk,2200ms) cubic-bezier(.4,0,.2,1)}
+body.movemode .fielder{transition:transform var(--walk,2700ms) cubic-bezier(.4,0,.2,1)}
 body.movemode .fielder .body{transition:fill .5s}
 body.movemode .fielder.r-ball .body{fill:var(--sun);opacity:1}
 body.movemode .fielder.r-cover .body{fill:var(--safe);opacity:1}
@@ -193,7 +193,7 @@ body.movemode .poslbl{paint-order:stroke;stroke:rgba(28,53,41,.55);stroke-width:
 /* the chalk trail draws itself under her feet, which is what makes a third
    baseman's honest two step shuffle to her own bag readable at all */
 .trail{fill:none;stroke-width:3.5;stroke-linecap:round;opacity:.5;
-  transition:stroke-dashoffset var(--walk,2200ms) cubic-bezier(.4,0,.2,1)}
+  transition:stroke-dashoffset var(--walk,2700ms) cubic-bezier(.4,0,.2,1)}
 .trail.back{opacity:.3;stroke-width:3}
 /* ball, through the cut girl, to the bag: how a cut reads even when the cut
    girl only takes two steps */
@@ -474,7 +474,7 @@ body.movemode .hint{min-height:34px}
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v20";
+var BUILD="diamond-v21";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -506,16 +506,21 @@ var FEEDBACK_WEBHOOK="https://discord.com/api/webhooks/1542619447804567572/WWTb3
    because teaching a baseball kid to expect runners to freeze would be
    teaching her something false.
 
+   `bunts` is Stephen again, 2026-08-28: "kids in 8u don't bunt." So the
+   bunt picture in the Move room never appears at 8U, and a tap near the
+   plate resolves to an ordinary dribbler the pitcher comes and gets, which
+   is what those games actually look like. 10U and baseball keep it.
+
    `steals` gates the runner IQ scenarios; `infieldFly` and `circle` gate
    any scenario that declares needs:"infieldFly" or needs:"circle". */
 const SPORTS = {
-  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,circle:true,
+  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,circle:true,bunts:false,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs, no infield fly"},
-  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:false,circle:true,
+  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:false,circle:true,bunts:true,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"10U kid pitch: 3 strikes = out · steals and leadoffs are ON"},
-  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,circle:false,
+  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,circle:false,bunts:true,
     ballFill:"#FFF9EE",ballStroke:"#E0955B",note:"3 strikes = out · 4 balls = walk"}
 };
 
@@ -1439,11 +1444,12 @@ function mvNearest(p,ids){let k=ids[0],d=Infinity;
 function mvZone(rawX,rawY,forced){
   const ball=mvFair(rawX,rawY);
   let by,where,bunt;
+  const bunting=!!cfg().bunts;
   if(forced){ by=forced; where=MV_OUT.indexOf(forced)>=0?"grass":"dirt";
-              bunt=where==="dirt"&&mvD(ball,BASE_XY.HOME)<90; }
+              bunt=bunting&&where==="dirt"&&mvD(ball,BASE_XY.HOME)<90; }
   else{ const dirt=mvOnDirt(ball);
         where=dirt?"dirt":"grass";
-        bunt=dirt&&mvD(ball,BASE_XY.HOME)<90;
+        bunt=bunting&&dirt&&mvD(ball,BASE_XY.HOME)<90;
         by=dirt?mvNearest(ball,bunt?["1","2","3","5"]:MV_IN):mvNearest(ball,MV_OUT); }
   const key=bunt?"BUNT":where==="grass"?(by==="7"?"LF":by==="8"?"CF":"RF")
     :((by==="4"||by==="6")&&Math.abs(ball.x-200)<30)?"MIDDLE"
@@ -1559,7 +1565,9 @@ const MV_SAY={ball:"Go get it!",crash:"Charge it! Call it!",chase:"Sprint in beh
   backup:t=>"Back up "+MV_BAG[t]+"."};
 
 const MV={runners:[],last:null,busy:false,plan:null,zone:null,t1:null,t2:null};
-const MV_WALK=2200;                       /* the coach's "very slow"       */
+/* Stephen watched it: "the move speed is pretty okay. it wouldn't hurt to be
+   a little slower but it's pretty good." */
+const MV_WALK=2700;
 const MV_W={ball:150,cover:400,back:650}; /* Ball, then Base, then Back-up */
 const mvReduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
 const MV_ROLECLASS={ball:"r-ball",crash:"r-ball",cover:"r-cover",cut:"r-cover",
