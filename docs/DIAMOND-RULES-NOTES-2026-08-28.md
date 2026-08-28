@@ -104,3 +104,116 @@ Stephen could not find the install button: he browses Diamond Rules from inside 
 ## v13, install on the front door, tip jar grows up
 
 Stephen: the install button should be large and on the main screen; the tip jar can stay in settings but bigger; the footer text was too small. Shipped: a bold "Add to home screen" pill on the main screen right under the top bar (inside .topstack so the camera accounts for it; hides after a real install via appinstalled + localStorage flag, same standalone relabel as settings), the tip jar as a full-width red heart button in settings (replaces the tiny inline link), and the footer bumped from 13 to 15px.
+
+---
+
+# Day two, same date: v14 to v22
+
+Everything below came from Stephen watching a kid play, or from his coach,
+who started sending notes within an hour of getting the link. Read the league
+config in `SPORTS` first: it is the spine of the whole app now.
+
+## The league config is the spine
+
+`SPORTS` in index.html carries one object per level and every rule difference
+hangs off it. Adding a level, or correcting one, is a data edit.
+
+| flag | 8U | 10U | Baseball | who said so |
+|---|---|---|---|---|
+| `strikesForOut` | 4 | 3 | 3 | Stephen, his league |
+| `steals` (and leadoffs, dropped third) | no | yes | no | Stephen, v9 |
+| `infieldFly` | no | no | yes | Stephen: "there's no infield fly rule in 8U cuz the girls can hardly catch", and later "I don't think 10u does either but I'm not sure" |
+| `circle` (look back rule) | yes | yes | **no** | his coach; fast pitch only, baseball has no equivalent |
+| `bunts` | no | yes | yes | Stephen: "kids in 8u don't bunt" |
+
+**Still unconfirmed:** whether 10U plays the infield fly. Off there on
+Stephen's read, and neither of us found a source that settles youth rec 10U.
+One word in `SPORTS` when a coach who is actually at 10U says so. Do not
+change it on a hunch in either direction.
+
+## v14, the infield fly leaves 8U
+It was sitting ungated in FLY_BANK while strikes, steals, leadoffs and the
+dropped third strike were all gated, so every 8U girl was one random draw
+from it. Its own tip even apologised ("most 8U leagues skip this rule"). A
+scenario can now declare `needs:"<flag>"` and the picker only draws what the
+league plays.
+
+## v15, two bugs Stephen caught by watching
+**All TEN multiple choice questions had the correct answer in slot one**, so a
+kid could score 100 percent tapping the top button without reading. The
+render shuffles now (authoring still puts the right answer first, because it
+reads well in source; the child must never see that order).
+**Repeats came fast** because every bank avoided only the previous question: a
+seven question bank served five unique in seven pulls. Each bank is a bag
+now, dealt shuffled, refilled only when empty.
+The In testing badge came off the hub card the same round: his coach wanted
+to share it with a travel coach neighbour, and that badge is the one the
+genuinely passphrase locked Rock Stops wears.
+
+## v16, the coach's first two notes
+The **pitcher's circle is a tappable target** (look back rule, transcribed
+from the USA Softball 2023 Rule Book, Rule 8 Section 7T, not recalled).
+**Feedback carries the play**: room, league, chip, the question as asked, the
+right answer, whether they answered and whether they missed first.
+One bug worth remembering: the circle took no taps at all, because its ring
+and its ping are both `fill:none`, and **an SVG shape with no fill receives no
+pointer events**. The fielders carry a transparent disc for exactly this.
+
+## v17, plain words, and the second baseman
+The copy was measured before it was touched: vocabulary was already fine
+(Flesch-Kincaid 1.3), the problem was VOLUME at a mean 58 words per question.
+Rewritten to a mean of 33.9, worst 45. **Any new scenario should hold to about
+35 words** across prompt, choice labels, why and tip.
+His coach on the cover-first play: "pitcher or second base could run to cover
+first and he's not wrong". The second baseman is accepted with her own
+coaching line rather than a buzzer.
+A bulk copy edit wrote one scenario's words into another's object because a
+POS_BANK entry began `,{` instead of `{`. The suite now refuses two scenarios
+sharing a prompt, and any question whose correct key is not among its choices.
+
+## v18 to v22, EVERYBODY MOVES
+The coach's big ask, and the first room that is not a quiz. Tap a bag for a
+runner, tap anywhere, all nine walk to where they belong. Gold = handle the
+BALL, green = cover a BASE, blue = BACK-UP a throw, which is Baseball
+Positive's own three job sentence painted rather than written.
+
+**`MV_TABLE` is data and it is sourced. Read `docs/DIAMOND-RULES-MOVE-SOURCES.md`
+before touching a row.** Two researchers built the nine player matrix
+independently, a third pass cross checked it, ten disagreements were resolved
+in writing rather than averaged, and anything neither could source was cut.
+
+Verified by sweep, not sampling: 112,288 tap-and-base-state cases. Always
+nine jobs, exactly one on the ball, no bag covered twice, nobody off frame,
+and **the base the app names as the best play always has somebody standing on
+it**. The best play uses the SAME `forces()` the Grounders room uses, so the
+two rooms cannot disagree about the same picture, and the suite compares them
+directly.
+
+Gotchas from these five versions, all found by driving it rather than reading:
+- The bases paint above the fielders everywhere else, so girls standing on
+  bags were invisible. In Move only, the fielders layer moves on top.
+- Then a covering fielder's transparent 24 unit hit circle swallowed the bag
+  beneath her, so after one play you could not add a runner to second. The
+  bags have their own tap layer above everything (`#baseHit`).
+- Toggling a runner started a 2700ms walk and every tap during it was
+  dropped. The runner switches are always live and cancel the walk in flight.
+- The tab row holds EIGHT items with zero overflow down to 320px, measured
+  and pinned. `html` is `overflow:hidden`, so a ninth room would silently
+  clip the Feedback tab rather than scroll.
+- `.btn.tip` sets `display:flex`, which beats the browser's `[hidden]` rule.
+  v22 added `[hidden]{display:none !important}`. Do not copy that button
+  pattern anywhere without it.
+
+Walk speed is 2700ms after Stephen watched it ("pretty good, wouldn't hurt to
+be a little slower"). Zoom is deliberately not implemented: the lesson is the
+whole field, and any zoom that magnifies a detail must crop players out of
+frame. `user-scalable=no` was removed instead, so the phone can pinch.
+
+## Open, waiting on the coach
+1. Does 10U actually play the infield fly?
+2. Is the look back circle taught the same way at 10U as 8U? On at both now.
+3. Should the second baseman covering first be fully correct rather than the
+   "that works too" answer she is?
+4. Any assignment in the Move room that does not match how he coaches it.
+   That is the highest value note he can send, and feedback from that room
+   arrives with the zone, the runners and all nine assignments attached.
