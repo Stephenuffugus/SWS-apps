@@ -46,6 +46,10 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .base.miss rect{fill:var(--out);stroke:var(--out)}
 .base:focus-visible rect{stroke:var(--ink);stroke-width:5}
 .pulse rect{animation:pulse 1.1s ease-in-out infinite}
+/* sonar ping: the "you can tap this" cue kids actually notice */
+.ping{fill:none;stroke:var(--chalk);stroke-width:3;opacity:0;transform-box:fill-box;transform-origin:center}
+.base.pulse .ping,.fielder.pulse .ping{animation:ping 1.1s ease-out infinite}
+@keyframes ping{0%{opacity:.85;transform:scale(.75)}70%{opacity:0;transform:scale(1.8)}100%{opacity:0}}
 .fielder .body{transition:fill .15s,stroke .15s;transform-box:fill-box;transform-origin:center}
 .fielder.tappable{cursor:pointer}
 .fielder.hit .body{fill:var(--safe)}
@@ -54,9 +58,17 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .fielder.pulse .body{animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
 .ball{transition:transform .55s cubic-bezier(.34,.9,.4,1)}
+#ballSkin{transform-box:fill-box;transform-origin:center}
+#ballSkin.thump{animation:thump .32s ease-out}
+@keyframes thump{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}
+.runnerbob{animation:bob 1.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+#clouds{animation:cdrift 46s ease-in-out infinite alternate}
+@keyframes cdrift{from{transform:translateX(0)}to{transform:translateX(26px)}}
 @media (prefers-reduced-motion:reduce){
   .ball{transition:none}
-  .pulse rect,.fielder.pulse .body{animation:none}
+  .pulse rect,.fielder.pulse .body,.base.pulse .ping,.fielder.pulse .ping{animation:none}
+  #ballSkin.thump,.runnerbob,#clouds,.holdchip.pulse::before,.streak.pop{animation:none}
 }
 .poslbl{font-family:'Anton',sans-serif;font-size:12px;fill:#fff;pointer-events:none}
 .baselbl{font-family:'Anton',sans-serif;font-size:13px;fill:#fff;letter-spacing:.06em;
@@ -71,6 +83,8 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .pill{background:var(--glass);border-radius:999px;box-shadow:var(--shadow);padding:6px 12px;
   display:flex;align-items:center;gap:8px}
 .streak{font-family:'Anton',sans-serif;font-size:13px;letter-spacing:.05em}
+.streak.pop{animation:stpop .35s ease-out}
+@keyframes stpop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
 .gear{appearance:none;border:0;background:var(--glass);border-radius:999px;width:38px;height:38px;
   font-size:17px;cursor:pointer;box-shadow:var(--shadow);flex:0 0 auto}
 .gear:active{transform:translateY(2px);box-shadow:none}
@@ -82,6 +96,23 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 
 .bottom{display:flex;flex-direction:column;gap:8px;max-width:480px;width:100%;margin:0 auto;pointer-events:none}
 .bottom > *{pointer-events:auto}
+
+/* holding the ball is a play you make ON the field, so it lives there:
+   a fifth base that pulses with the real four */
+.holdchip{appearance:none;border:0;background:none;cursor:pointer;align-self:flex-start;
+  position:relative;width:84px;height:88px;margin-left:4px;padding:0;font-family:'Anton',sans-serif}
+.holdchip::before{content:"";position:absolute;left:17px;top:8px;width:50px;height:50px;
+  background:var(--chalk);border:3px solid #1C3529;border-radius:10px;transform:rotate(45deg);
+  box-shadow:var(--shadow)}
+.holdchip.pulse::before{animation:holdpulse 1.1s ease-in-out infinite}
+@keyframes holdpulse{0%,100%{transform:rotate(45deg) scale(1)}50%{transform:rotate(45deg) scale(1.16)}}
+.holdchip.miss::before{background:var(--out);border-color:var(--out)}
+.holdchip.hit::before{background:var(--safe);border-color:var(--safe)}
+.holdchip .hand{position:relative;display:block;font-size:24px;line-height:1;margin-top:20px}
+.holdchip .hlbl{position:relative;display:block;font-size:12px;letter-spacing:.06em;color:#fff;margin-top:16px;
+  text-shadow:-1px -1px 0 rgba(28,53,41,.45),1px -1px 0 rgba(28,53,41,.45),-1px 1px 0 rgba(28,53,41,.45),1px 1px 0 rgba(28,53,41,.45)}
+.holdchip:focus-visible::before{outline:3px solid var(--sun);outline-offset:2px}
+.holdchip:active{transform:translateY(2px)}
 .bubble{background:var(--glass);border-radius:20px;box-shadow:var(--shadow);padding:12px 14px;
   max-height:44dvh;overflow-y:auto}
 .ask{margin:0 0 10px;font-size:18px;font-weight:900;line-height:1.35}
@@ -166,7 +197,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <rect x="-800" y="-800" width="2000" height="2400" fill="#7CC9EE"/>
   <circle cx="52" cy="14" r="30" fill="#FFE27A"/>
   <circle cx="52" cy="14" r="42" fill="#FFE27A" opacity=".3"/>
-  <g fill="#fff" opacity=".9">
+  <g id="clouds" fill="#fff" opacity=".9">
     <ellipse cx="310" cy="26" rx="42" ry="15"/><ellipse cx="342" cy="16" rx="30" ry="12"/>
     <ellipse cx="120" cy="70" rx="34" ry="12" opacity=".7"/>
   </g>
@@ -189,8 +220,10 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <g id="bases"></g>
   <g id="runners" pointer-events="none"></g>
   <g id="ballG" class="ball" style="transform:translate(200px,352px)">
-    <circle id="ballC" r="10" fill="#FFE93B" stroke="#D9B400" stroke-width="2.5"/>
-    <path d="M-4.5 -8 Q0 0 -4.5 8 M4.5 -8 Q0 0 4.5 8" stroke="#E05B5B" stroke-width="1.7" fill="none"/>
+    <g id="ballSkin">
+      <circle id="ballC" r="10" fill="#FFE93B" stroke="#D9B400" stroke-width="2.5"/>
+      <path d="M-4.5 -8 Q0 0 -4.5 8 M4.5 -8 Q0 0 4.5 8" stroke="#E05B5B" stroke-width="1.7" fill="none"/>
+    </g>
   </g>
 </svg>
 
@@ -207,6 +240,9 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   </div>
 
   <div class="bottom">
+    <button class="holdchip" id="holdChip" hidden aria-label="Hold the ball, no play">
+      <span class="hand">🖐</span><span class="hlbl">HOLD IT!</span>
+    </button>
     <div class="bubble">
       <p class="ask" id="ask"></p>
       <div class="answers" id="answers"></div>
@@ -279,7 +315,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v5";
+var BUILD="diamond-v6";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -382,6 +418,7 @@ function drawFielders(tappable){
       `<g class="fielder${tappable?" tappable":""}" id="pos-${k}" data-pos="${k}"`+
       (tappable?` tabindex="0" role="button" aria-label="${p.n}"`:` pointer-events="none"`)+`>`+
       `<circle cx="${p.x}" cy="${p.y}" r="24" fill="transparent"/>`+
+      `<circle class="ping" cx="${p.x}" cy="${p.y}" r="20"/>`+
       `<circle class="body" cx="${p.x}" cy="${p.y}" r="14" fill="var(--ink)" opacity=".85"/>`+
       `<text class="poslbl" x="${p.x}" y="${p.y+4.5}" text-anchor="middle">${p.s}</text></g>`);
   }
@@ -396,6 +433,7 @@ function drawBases(){
     const b=BASE_XY[k];
     g.insertAdjacentHTML("beforeend",
       `<g class="base" id="base-${k}" data-base="${k}" tabindex="0" role="button" aria-label="${b.label} base">`+
+      `<circle class="ping" cx="${b.x}" cy="${b.y}" r="27"/>`+
       /* the rotation lives on a wrapper group so the pulse animation's CSS
          scale on the rect can never override it */
       `<g transform="rotate(45 ${b.x} ${b.y})"><rect x="${b.x-18}" y="${b.y-18}" width="36" height="36" rx="6" fill="var(--chalk)" stroke="#1C3529" stroke-width="3"/></g>`+
@@ -408,30 +446,43 @@ function drawBases(){
 }
 function setBasePulse(on){
   document.querySelectorAll(".base").forEach(b=>b.classList.toggle("pulse",on));
+  const hc=el("holdChip");
+  hc.classList.toggle("pulse",on&&!hc.hidden);
 }
 function setFielderPulse(on){
   document.querySelectorAll(".fielder").forEach(f=>f.classList.toggle("pulse",on));
 }
-/* a runner is a little player mid stride in a gold batting helmet,
-   standing on their bag, not an abstract dot */
-function runnerSprite(x,y){
+/* a runner is a little player mid stride, white jersey, gold belt, gold
+   batting helmet with a brim and an ear flap, bobbing on their bag. The bob
+   lives on an inner group so it can never override the outer translate. */
+function runnerSprite(x,y,i){
   return `<g transform="translate(${x} ${y-26})" pointer-events="none">`+
+    `<g class="runnerbob" style="animation-delay:${(i||0)*.25}s">`+
     `<path d="M-3 9 L-8 19 M3 9 L8 17" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" fill="none"/>`+
     `<path d="M-8 1 L-13 8 M8 1 L13 6" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round" fill="none"/>`+
-    `<rect x="-8" y="-4" width="16" height="16" rx="6" fill="var(--ink)"/>`+
+    `<rect x="-8" y="-4" width="16" height="16" rx="6" fill="var(--chalk)" stroke="var(--ink)" stroke-width="2.5"/>`+
+    `<rect x="-6" y="7" width="12" height="3" rx="1.5" fill="var(--sun)"/>`+
     `<circle cx="0" cy="-12" r="8" fill="var(--ink)"/>`+
-    `<path d="M-8.5 -13 A8.5 8.5 0 0 1 8.5 -13 L8.5 -11 L-8.5 -11 Z" fill="var(--sun)"/>`+
-    `<rect x="4" y="-13.5" width="9" height="4" rx="2" fill="var(--sun)"/>`+
-  `</g>`;
+    `<path d="M-8.5 -13 A8.5 8.5 0 0 1 8.5 -13 L8.5 -10.5 L-8.5 -10.5 Z" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>`+
+    `<rect x="4" y="-13.5" width="9.5" height="4" rx="2" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>`+
+    `<circle cx="-5.5" cy="-9.5" r="2.8" fill="var(--sun)" stroke="var(--ink)" stroke-width="1.6"/>`+
+  `</g></g>`;
 }
 function drawRunners(list){
   const g=el("runners");g.innerHTML="";
-  (list||[]).forEach(r=>{
+  (list||[]).forEach((r,i)=>{
     const b=BASE_XY["B"+r];
-    g.insertAdjacentHTML("beforeend",runnerSprite(b.x,b.y));
+    g.insertAdjacentHTML("beforeend",runnerSprite(b.x,b.y,i));
   });
 }
-function moveBall(x,y){el("ballG").style.transform=`translate(${x}px,${y}px)`;}
+let thumpT=null;
+function moveBall(x,y){
+  el("ballG").style.transform=`translate(${x}px,${y}px)`;
+  const s=el("ballSkin");
+  s.classList.remove("thump");
+  clearTimeout(thumpT);
+  thumpT=setTimeout(()=>s.classList.add("thump"),560);
+}
 function paintBallSkin(){
   el("ballC").setAttribute("fill",cfg().ballFill);
   el("ballC").setAttribute("stroke",cfg().ballStroke);
@@ -449,7 +500,13 @@ function paintBoard(){
   bulbs(el("bStrikes"),S.strikes,cfg().strikesForOut-1,false);
   bulbs(el("bOuts"),S.outs,2,true);
 }
-function paintStreak(){el("streak").textContent=`⭐ ${S.streak}`;}
+let lastStreak=0;
+function paintStreak(){
+  const p=el("streak");
+  p.textContent=`⭐ ${S.streak}`;
+  if(S.streak>lastStreak){p.classList.remove("pop");void p.offsetWidth;p.classList.add("pop");}
+  lastStreak=S.streak;
+}
 
 /* ================= confetti ================= */
 function confetti(){
@@ -468,7 +525,9 @@ function confetti(){
 
 /* ================= THE COUNT ================= */
 function countScreen(msg){
-  S.scenario=null;S.answered=false;setBasePulse(false);setFielderPulse(false);
+  S.scenario=null;S.answered=false;
+  const hc=el("holdChip");hc.hidden=true;hc.classList.remove("hit","miss");
+  setBasePulse(false);setFielderPulse(false);
   el("ask").innerHTML = msg || `<span class="tag">Pitch by pitch</span>Tap a pitch! <b>${cfg().note}</b>.`;
   drawRunners([]);moveBall(200,352);
   const a=el("answers");
@@ -563,10 +622,20 @@ function makeGroundBall(){
   const forcedOthers=["B1","B2","B3","HOME"].filter(b=>f[b]&&b!==lead);
   let correct=lead,alt=[],okay=null,tip="",why,chip="Force play";
   if(lead==="B1"){
-    why=runners.length===0
-      ?"The batter is the only runner. Throw to first. Easy out!"
-      :`${runnerWords(runners)}, but first base is <b>empty</b> behind them. They do NOT have to run! Take the sure out at first.`;
-    chip=runners.length===0?"Sure out":"No force";
+    if(runners.includes(2)&&runners.includes(3)&&outs<2){
+      /* Stephen's power play: nobody is forced, so eat the ball, give the
+         batter first, and now every base is a force, even home */
+      correct="HOLD";chip="Power play";
+      why="No force is on, so nobody HAS to run! Hold the ball. Let the batter take first. Now the bases are <b>loaded</b> and EVERY base is a force, even home!";
+      tip="While you hold, watch the runner on third. Never let them sneak home!";
+      okay={B1:"A real out! But here's the <b>power play</b>: hold the ball, let the batter have first, and now EVERY base is a force!"};
+    } else {
+      why=runners.length===0
+        ?"The batter is the only runner. Throw to first. Easy out!"
+        :`${runnerWords(runners)}, but first base is <b>empty</b> behind them. They do NOT have to run! Take the sure out at first.`;
+      chip=runners.length===0?"Sure out":"No force";
+      if(outs===2&&runners.length)tip="2 outs? Just take the out. Inning over!";
+    }
   } else if(lead==="B2"){
     why="The runner on first <b>has to run</b>! That's a force. Step on second, no tag needed. Then fire to first for two!";
     tip="No time for two? One sure out beats a wild throw!";
@@ -591,7 +660,7 @@ function makeGroundBall(){
   }
   const p=POS[pos];
   return{kind:"base",runners,outs,ballAt:{x:p.x,y:p.y},
-    prompt:`<span class="tag">Ground ball!</span>You're the <b>${p.n}</b>! ${runnerWords(runners)}, <b>${outs} out${outs===1?"":"s"}</b>. Where's the throw?`,
+    prompt:`<span class="tag">Ground ball!</span>You're the <b>${p.n}</b>! ${runnerWords(runners)}, <b>${outs} out${outs===1?"":"s"}</b>. What's the play?`,
     correct,alt,okay,tip,why,chip};
 }
 
@@ -705,21 +774,22 @@ function loadScenario(){
   setTimeout(()=>moveBall(s.ballAt.x,s.ballAt.y),80);
   document.querySelectorAll(".base").forEach(b=>b.classList.remove("hit","miss"));
   document.querySelectorAll(".fielder").forEach(f=>f.classList.remove("hit","miss"));
-  const a=el("answers");
+  const a=el("answers"),hc=el("holdChip");
+  hc.classList.remove("hit","miss");
+  a.className="answers one";
   if(s.kind==="base"){
+    hc.hidden=false;
     setBasePulse(true);setFielderPulse(false);
-    a.className="answers one";
-    a.innerHTML=`<button class="btn ghost" id="holdBtn" data-base="HOLD">🖐 Hold the ball! No play</button>`;
-    a.querySelector("button").addEventListener("click",()=>answer("HOLD"));
-    el("hint").textContent="👆 Tap a base on the field!";
+    a.innerHTML="";
+    el("hint").textContent="👆 Tap a base, or hold the ball!";
   } else if(s.kind==="pos"){
+    hc.hidden=true;
     setBasePulse(false);setFielderPulse(true);
-    a.className="answers one";
     a.innerHTML="";
     el("hint").textContent="👆 Tap a player on the field!";
   } else {
+    hc.hidden=true;
     setBasePulse(false);setFielderPulse(false);
-    a.className="answers one";
     a.innerHTML=s.choices.map(c=>`<button class="btn" data-c="${c[0]}">${c[1]}</button>`).join("");
     a.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
     el("hint").textContent="";
@@ -745,9 +815,9 @@ function answer(choice){
       if(b){b.disabled=true;b.classList.add("wrong");
         setTimeout(()=>{b.classList.remove("wrong");b.classList.add("dim");},650);}
     } else {
-      const n=choice==="HOLD"?el("holdBtn"):el((s.kind==="pos"?"pos-":"base-")+choice);
-      if(n){n.classList.add(choice==="HOLD"?"wrong":"miss");
-        setTimeout(()=>n.classList.remove("miss","wrong"),650);}
+      const n=choice==="HOLD"?el("holdChip"):el((s.kind==="pos"?"pos-":"base-")+choice);
+      if(n){n.classList.add("miss");
+        setTimeout(()=>n.classList.remove("miss"),650);}
     }
     const hint=el("hint");
     hint.textContent="❌ Not quite! Try again.";
@@ -755,10 +825,13 @@ function answer(choice){
     return;
   }
   S.answered=true;setBasePulse(false);setFielderPulse(false);
-  if(s.kind==="base"&&choice!=="HOLD"){
-    const n=el("base-"+choice),b=BASE_XY[choice];
-    if(n)n.classList.add("hit");
-    if(b)moveBall(b.x,b.y);
+  if(s.kind==="base"){
+    if(choice==="HOLD")el("holdChip").classList.add("hit");
+    else{
+      const n=el("base-"+choice),b=BASE_XY[choice];
+      if(n)n.classList.add("hit");
+      if(b)moveBall(b.x,b.y);
+    }
   }
   if(s.kind==="pos"){
     const n=el("pos-"+choice);
@@ -778,6 +851,7 @@ function answer(choice){
 }
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 el("next").addEventListener("click",loadScenario);
+el("holdChip").addEventListener("click",()=>answer("HOLD"));
 
 /* ================= tabs & settings ================= */
 function setMode(m){

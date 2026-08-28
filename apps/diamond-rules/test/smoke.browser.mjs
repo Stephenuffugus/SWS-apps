@@ -64,10 +64,18 @@ await withApp('diamond-rules', async ({ page, errors }) => {
     }
     return out;
   });
-  let sawSmart = false, sawOkay = false;
+  let sawSmart = false, sawOkay = false, sawPower = false;
   for (const s of gen) {
-    if (s.correct === 'HOLD') { sawSmart = true; continue; }
+    if (s.chip === 'Smart ball') { sawSmart = true; continue; }
     const has = (n) => s.runners.includes(n);
+    // runners on 2nd and 3rd with fewer than 2 outs is the power play:
+    // hold, concede first, and every base becomes a force
+    if (has(2) && has(3) && !has(1) && s.outs < 2) {
+      if (s.correct !== 'HOLD' || s.chip !== 'Power play') fail(`power play not taught for [2,3] with ${s.outs} outs: ${s.correct}/${s.chip}`);
+      if (!s.okay || !s.okay.B1) fail('power play must still grade first base as a real out');
+      sawPower = true;
+      continue;
+    }
     const f = { B1: true, B2: has(1), B3: has(1) && has(2), HOME: has(1) && has(2) && has(3) };
     const lead = f.HOME ? 'HOME' : f.B3 ? 'B3' : f.B2 ? 'B2' : 'B1';
     if (s.correct !== lead) fail(`lead force ${lead} expected, got ${s.correct} for ${s.runners}`);
@@ -83,6 +91,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   }
   if (!sawSmart) fail('smart-ball HOLD scenarios never appeared in 300 ground balls');
   if (!sawOkay) fail('okay-tier scenarios never appeared in 300 ground balls');
+  if (!sawPower) fail('the power play never appeared in 300 ground balls');
 
   // ── copy sweep: no em or en dashes anywhere in the app's words ──
   const dashes = await page.evaluate(() => {
@@ -95,6 +104,8 @@ await withApp('diamond-rules', async ({ page, errors }) => {
 
   // ── the count, softball house rules: 4 strikes, foul never the last ──
   await assertFieldClear('count');
+  const chipHiddenCount = await page.evaluate(() => document.getElementById('holdChip').hidden);
+  if (!chipHiddenCount) fail('hold chip should hide in count mode');
   const sport = await page.evaluate(() => window.__dr.S.sport);
   if (sport !== 'softball') fail('default sport should be softball');
   for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');
@@ -111,9 +122,11 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.click('#tab-play');
   await page.waitForTimeout(300);
   await assertFieldClear('play');
+  const chipShown = await page.evaluate(() => !document.getElementById('holdChip').hidden);
+  if (!chipShown) fail('hold chip should show on the field in play mode');
   let s = await page.evaluate(() => window.__dr.S.scenario);
   if (s.correct !== 'HOLD') {
-    await page.click('#holdBtn');   // holding is wrong on every live force play
+    await page.click('#holdChip');   // holding is wrong on every live force play
     await page.waitForTimeout(300);
     const open = await page.evaluate(() => !document.getElementById('overlay').classList.contains('hidden'));
     if (open) fail('a wrong answer should not end the play');
@@ -122,7 +135,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
     const streak0 = await page.evaluate(() => window.__dr.S.streak);
     if (streak0 !== 0) fail('streak should reset on a miss');
   }
-  if (s.correct === 'HOLD') await page.click('#holdBtn');
+  if (s.correct === 'HOLD') await page.click('#holdChip');
   else await page.click('#base-' + s.correct, { force: true });
   await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
   let word = await page.textContent('#vWord');
@@ -144,7 +157,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
       if (word !== 'That works!') fail('okay-tier answer got the wrong verdict: ' + word);
       okayDone = true;
     } else if (s.correct === 'HOLD') {
-      await page.click('#holdBtn');
+      await page.click('#holdChip');
       await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
     } else {
       await page.click('#base-' + s.correct, { force: true });

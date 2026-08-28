@@ -48,3 +48,11 @@ Next: parents test via Stephen's text-out; their notes drive the next round.
 ## v5, same night
 
 Stephen: runners should look like players, not gold dots. `runnerSprite()` now draws a little ink player mid stride in a gold batting helmet (dome + brim) standing on their bag; still decorative (pointer-events none), still var() driven so it recolors with the theme tokens.
+
+## v6, Stephen's second run, same night
+
+1. **Hold the ball moved onto the field.** It is now a fifth chalk base (rotated square, HOLD IT! label, pulses and flashes with the real four) floating over the field above the bubble; the answers area under a ground ball question is now empty, so the field is the whole answer surface. Hint reads "Tap a base, or hold the ball!"
+2. **The power play** (his coaching note): runners on 2nd and 3rd, fewer than 2 outs, ground ball. Correct = HOLD, chip "Power play": let the batter take first, now the bases are loaded and every base is a force, even home. Throwing to first still grades "That works!" with the secret explained. With 2 outs it stays take-the-out. Guarded by the smoke suite.
+3. **Tap affordance**: sonar ping rings radiate from every tappable base and fielder while they pulse.
+4. **Runner detail**: white jersey with ink outline, gold belt, outlined helmet with brim and ear flap, gentle staggered bob.
+5. **Juice**: ball does a little thump when it lands, clouds drift, streak star pops when it grows. All animation honors prefers-reduced-motion.
