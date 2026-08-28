@@ -48,7 +48,14 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .pulse rect{animation:pulse 1.1s ease-in-out infinite}
 /* sonar ping: the "you can tap this" cue kids actually notice */
 .ping{fill:none;stroke:var(--chalk);stroke-width:3;opacity:0;transform-box:fill-box;transform-origin:center}
-.base.pulse .ping,.fielder.pulse .ping{animation:ping 1.1s ease-out infinite}
+.base.pulse .ping,.fielder.pulse .ping,.circleTgt.pulse .ping{animation:ping 1.1s ease-out infinite}
+/* the pitcher's circle, borrowed from the field itself so a kid taps the
+   dirt she already sees rather than a new invented widget */
+.circleTgt{cursor:pointer;pointer-events:auto}
+.circleTgt .ring{transition:stroke .15s,fill .15s}
+.circleTgt.hit .ring{fill:var(--safe);stroke:var(--safe)}
+.circleTgt.miss .ring{fill:var(--out);stroke:var(--out)}
+.circleTgt:focus-visible .ring{stroke:var(--ink);stroke-width:5}
 @keyframes ping{0%{opacity:.85;transform:scale(.75)}70%{opacity:0;transform:scale(1.8)}100%{opacity:0}}
 .fielder .body{transition:fill .15s,stroke .15s;transform-box:fill-box;transform-origin:center}
 .fielder.tappable{cursor:pointer}
@@ -67,7 +74,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 @keyframes cdrift{from{transform:translateX(0)}to{transform:translateX(26px)}}
 @media (prefers-reduced-motion:reduce){
   .ball{transition:none}
-  .pulse rect,.fielder.pulse .body,.base.pulse .ping,.fielder.pulse .ping{animation:none}
+  .pulse rect,.fielder.pulse .body,.base.pulse .ping,.fielder.pulse .ping,.circleTgt.pulse .ping{animation:none}
   #ballSkin.thump,.runnerbob,#clouds,.holdchip.pulse::before,.streak.pop{animation:none}
 }
 .poslbl{font-family:'Anton',sans-serif;font-size:12px;fill:#fff;pointer-events:none}
@@ -210,6 +217,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .fbcard h2{font-family:'Anton',sans-serif;font-weight:400;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;font-size:20px}
 .fbcard textarea{width:100%;min-height:110px;border:3px solid var(--ink);border-radius:14px;padding:10px;
   font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;resize:vertical;user-select:text;-webkit-user-select:text}
+.fbctx{margin:6px 0 0;font-size:13px;line-height:1.4;opacity:.75}
 .fbstatus{font-size:13px;color:#6E8578;min-height:18px;margin:8px 0;font-weight:800}
 .fbrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
@@ -245,6 +253,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <path d="M200 460 L318 342 L200 224 L82 342 Z" fill="none" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L1000 -340" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L-600 -340" stroke="var(--chalk)" stroke-width="4"/>
+  <g id="circleT"></g>
   <g id="fielders"></g>
   <g id="bases"></g>
   <g id="runners" pointer-events="none"></g>
@@ -352,6 +361,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <div class="fbcard" role="dialog" aria-modal="true" aria-label="Send feedback">
     <h2>Found a bug? Want a thing?</h2>
     <textarea id="fbText" rows="5" maxlength="1500" placeholder="Say it plainly: what happened, what you expected, and what phone you are on if it is a bug."></textarea>
+    <p class="fbctx" id="fbCtx" hidden></p>
     <p class="fbstatus" id="fbStatus"></p>
     <div class="fbrow">
       <button class="btn fill" id="fbSend">Send it</button>
@@ -368,7 +378,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v15";
+var BUILD="diamond-v16";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -387,16 +397,29 @@ var FEEDBACK_WEBHOOK="https://discord.com/api/webhooks/1542619447804567572/WWTb3
    strike live, and Stephen does not believe 10U plays the infield fly
    either, so it is off there too. Baseball keeps it. If his league proves
    otherwise it is one word: infieldFly:true on softball10.
-   `steals` gates the runner IQ scenarios; `infieldFly` gates any scenario
-   that declares needs:"infieldFly". */
+   `circle` is the LOOK BACK RULE, and it is fast pitch only. Stephen's
+   coach, 2026-08-28: "in 8u on a ball hit to the outfield the runner can
+   keep running until the pitcher has the ball in the circle." Transcribed
+   from the USA Softball 2023 Rule Book, Rule 8 Section 7T, rather than
+   recalled: the Look Back rule is in effect when the ball is live, the
+   batter-runner has reached first or been declared out, and the pitcher has
+   possession and control of the ball within the eight foot circle. A runner
+   legitimately off base may stop once, then must immediately return to her
+   base or attempt to advance. Failing to do so, she is out. BASEBALL HAS NO
+   SUCH RULE, so `circle` is false there and the circle is not even tappable,
+   because teaching a baseball kid to expect runners to freeze would be
+   teaching her something false.
+
+   `steals` gates the runner IQ scenarios; `infieldFly` and `circle` gate
+   any scenario that declares needs:"infieldFly" or needs:"circle". */
 const SPORTS = {
-  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,
+  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,circle:true,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs, no infield fly"},
-  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:false,
+  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:false,circle:true,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"10U kid pitch: 3 strikes = out · steals and leadoffs are ON"},
-  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,
+  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,circle:false,
     ballFill:"#FFF9EE",ballStroke:"#E0955B",note:"3 strikes = out · 4 balls = walk"}
 };
 
@@ -562,6 +585,25 @@ function drawFielders(tappable){
     n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();answer(n.dataset.pos);}});
   });
 }
+/* The pitcher's circle as somewhere to throw. It is already painted on the
+   field at 200,352, so the target sits exactly on the dirt a kid can see,
+   and it only exists where the Look Back rule does. */
+function drawCircle(on){
+  const g=el("circleT");g.innerHTML="";
+  if(!on)return;
+  g.insertAdjacentHTML("beforeend",
+    `<g class="circleTgt" id="base-CIRCLE" data-base="CIRCLE" tabindex="0" role="button" aria-label="Throw it to the pitcher in the circle">`+
+    /* an explicitly filled disc IS the hit area. The ring and the ping are
+       both fill:none, and an SVG shape with no fill takes no taps, which is
+       why the fielders carry a transparent circle too. */
+    `<circle cx="200" cy="352" r="30" fill="transparent"/>`+
+    `<circle class="ping" cx="200" cy="352" r="30"/>`+
+    `<circle class="ring" cx="200" cy="352" r="26" fill="none" stroke="var(--chalk)" stroke-width="3"/>`+
+    `<text class="baselbl" x="200" y="391" text-anchor="middle">CIRCLE</text></g>`);
+  const n=g.querySelector(".circleTgt");
+  n.addEventListener("click",()=>answer("CIRCLE"));
+  n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();answer("CIRCLE");}});
+}
 function drawBases(){
   const g=el("bases");g.innerHTML="";
   for(const k in BASE_XY){
@@ -581,6 +623,8 @@ function drawBases(){
 }
 function setBasePulse(on){
   document.querySelectorAll(".base").forEach(b=>b.classList.toggle("pulse",on));
+  const ct=document.querySelector(".circleTgt");
+  if(ct)ct.classList.toggle("pulse",on);
   const hc=el("holdChip");
   hc.classList.toggle("pulse",on&&!hc.hidden);
 }
@@ -819,6 +863,16 @@ const FLY_BANK=[
    correct:"yes",chip:"Sacrifice fly",
    why:"Perfect! Stay on the base until the catch, THEN run. That's a <b>sacrifice fly</b>: batter out, run counts.",
    tip:"One out for one run is a great trade!"},
+  {runners:[1],outs:1,ballAt:POS[8],kind:"base",needs:"circle",correct:"CIRCLE",alt:[],chip:"Circle it up",
+   prompt:`<span class="tag">Base hit!</span>You chase it down in <b>center field</b>. The runner keeps on running. What stops her?`,
+   why:"The ball in the <b>pitcher's circle</b>! Then she must pick a base and go.",
+   tip:"Hit the circle, stop the play.",
+   okay:{HOLD:"Holding it out there does not stop her. It has to reach the <b>circle</b>."}},
+  {runners:[1,2],outs:0,ballAt:POS[9],kind:"base",needs:"circle",correct:"CIRCLE",alt:[],chip:"No play? Circle.",
+   prompt:`<span class="tag">Overthrow!</span>The ball got by first. You pick it up in <b>right field</b>. Runners are moving. Where?`,
+   why:"To the <b>circle</b>. Wild throws at running kids just give away more bases.",
+   tip:"Circle first. Look after.",
+   okay:{HOLD:"Out in right field, holding it lets them keep going. Get it to the <b>circle</b>."}},
   {runners:[1,2],outs:1,ballAt:POS[4],kind:"choice",needs:"infieldFly",
    prompt:`<span class="tag">Infield fly!</span>Runners on first and second, <b>1 out</b>. Easy pop up over second base. The umpire yells <b>"INFIELD FLY!"</b> What does that mean?`,
    choices:[["auto","Batter is out right away, caught or not!"],["force","The runners must run"],["nothing","Nothing, play on"]],
@@ -984,16 +1038,19 @@ function loadScenario(){
   a.className="answers one";
   if(s.kind==="base"){
     hc.hidden=false;
+    drawCircle(!!cfg().circle);
     setBasePulse(true);setFielderPulse(false);
     a.innerHTML="";
-    el("hint").textContent="👆 Tap a base, or hold the ball!";
+    el("hint").textContent=cfg().circle?"👆 Tap a base or the circle!":"👆 Tap a base, or hold the ball!";
   } else if(s.kind==="pos"){
     hc.hidden=true;
+    drawCircle(false);
     setBasePulse(false);setFielderPulse(true);
     a.innerHTML="";
     el("hint").textContent="👆 Tap a player on the field!";
   } else {
     hc.hidden=true;
+    drawCircle(false);
     setBasePulse(false);setFielderPulse(false);
     a.innerHTML=shuffled(s.choices).map(c=>`<button class="btn" data-c="${c[0]}">${c[1]}</button>`).join("");
     a.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
@@ -1004,7 +1061,7 @@ function answer(choice){
   const s=S.scenario;
   if(!s||S.answered)return;
   /* only the answer type this scenario asks for counts */
-  const isBase=choice==="HOLD"||!!BASE_XY[choice];
+  const isBase=choice==="HOLD"||choice==="CIRCLE"||!!BASE_XY[choice];
   const isPos=!!POS[choice];
   if(s.kind==="base"&&!isBase)return;
   if(s.kind==="pos"&&!isPos)return;
@@ -1021,6 +1078,7 @@ function answer(choice){
         setTimeout(()=>{b.classList.remove("wrong");b.classList.add("dim");},650);}
     } else {
       const n=choice==="HOLD"?el("holdChip"):el((s.kind==="pos"?"pos-":"base-")+choice);
+      /* base-CIRCLE is drawn in its own layer but answers to the same id */
       if(n){n.classList.add("miss");
         setTimeout(()=>n.classList.remove("miss"),650);}
     }
@@ -1033,7 +1091,7 @@ function answer(choice){
   if(s.kind==="base"){
     if(choice==="HOLD")el("holdChip").classList.add("hit");
     else{
-      const n=el("base-"+choice),b=BASE_XY[choice];
+      const n=el("base-"+choice),b=BASE_XY[choice]||(choice==="CIRCLE"?{x:200,y:352}:null);
       if(n)n.classList.add("hit");
       if(b)moveBall(b.x,b.y);
     }
@@ -1147,6 +1205,7 @@ function openFeedback(){
   el("settings").classList.add("hidden");
   el("fbWrap").classList.remove("hidden");
   el("fbStatus").textContent="";
+  paintFbContext();
   setTimeout(()=>el("fbText").focus(),60);
 }
 if(FEEDBACK_WEBHOOK){
@@ -1160,9 +1219,36 @@ if(FEEDBACK_WEBHOOK){
 el("musicBtn").addEventListener("click",()=>setMusic(!musicOn));
 el("fbCancel").addEventListener("click",()=>el("fbWrap").classList.add("hidden"));
 el("fbWrap").addEventListener("click",function(ev){if(ev.target===this)this.classList.add("hidden");});
+/* What the report carries besides the words: the league, the room, and the
+   exact question on screen. Plain app state, no personal anything, and the
+   dialog says so before they send it. */
+function playContext(){
+  const sc=S.scenario;
+  if(!sc)return null;
+  const strip=t=>String(t||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+  return {
+    league:cfg().label,
+    room:MODE_NAMES[S.mode]||S.mode,
+    chip:sc.chip||"",
+    asked:strip(sc.prompt).slice(0,220),
+    correct:Array.isArray(sc.choices)
+      ?strip((sc.choices.find(c=>c[0]===sc.correct)||[])[1])
+      :String(sc.correct||""),
+    answered:S.answered?"yes":"not yet",
+    missedFirst:S.missedThis?"yes":"no"
+  };
+}
+function paintFbContext(){
+  const c=playContext(),n=el("fbCtx");
+  if(!c){n.hidden=true;return;}
+  n.hidden=false;
+  n.textContent="This play comes with your note: "+c.room+" · "+c.league+
+    (c.chip?" · "+c.chip:"");
+}
 el("fbSend").addEventListener("click",()=>{
   const txt=el("fbText").value.trim();
   if(!txt){el("fbStatus").textContent="Say something first.";return;}
+  const ctx=playContext();
   const btn=el("fbSend");
   btn.disabled=true;
   el("fbStatus").textContent="Sending...";
@@ -1172,6 +1258,10 @@ el("fbSend").addEventListener("click",()=>{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({content:"**Diamond Rules feedback**\n"+txt.slice(0,1500)+
+      (ctx?"\n**On this play**\n> "+ctx.room+" · "+ctx.league+(ctx.chip?" · "+ctx.chip:"")+
+        "\n> "+ctx.asked+
+        "\n> right answer: "+ctx.correct+" · answered: "+ctx.answered+" · missed first: "+ctx.missedFirst:
+        "\n_(not on a play)_")+
       "\n`"+BUILD+" · "+navigator.userAgent.slice(0,110)+"`"})
   }).then(r=>{
     btn.disabled=false;
@@ -1246,7 +1336,7 @@ if("serviceWorker" in navigator)
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
 window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
   cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank,
-  shuffled,__draw:drawFrom};
+  shuffled,__draw:drawFrom,playContext,MODE_NAMES};
 </script>
 </body>
 </html>

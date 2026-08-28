@@ -401,6 +401,49 @@ await withApp('diamond-rules', async ({ page, errors }) => {
     return { size, unique };
   });
   if (bag.unique !== bag.size) fail('a bank repeated before it was exhausted: ' + JSON.stringify(bag));
+
+  /* The Look Back rule is FAST PITCH ONLY. Baseball has no equivalent, so
+     the circle must never be an answer there or a kid learns that runners
+     freeze when the pitcher has the ball, which in baseball they do not.
+     Stephen's coach asked for the option; a travel coach will check it. */
+  const circle = await page.evaluate(() => {
+    const d = window.__dr, out = {}, cur = d.S.sport;
+    for (const k of ['softball8', 'softball10', 'baseball']) {
+      d.S.sport = k;
+      out[k] = { flag: !!d.cfg().circle, inBank: d.flyBank().some(x => x.needs === 'circle') };
+    }
+    d.S.sport = cur;
+    return out;
+  });
+  if (!circle.softball8.flag || !circle.softball8.inBank) fail('circle plays missing at 8U: ' + JSON.stringify(circle));
+  if (!circle.softball10.flag || !circle.softball10.inBank) fail('circle plays missing at 10U: ' + JSON.stringify(circle));
+  if (circle.baseball.flag || circle.baseball.inBank) fail('look back rule leaked into baseball: ' + JSON.stringify(circle));
+
+  /* And the circle is only tappable where the rule exists. */
+  const tappable = await page.evaluate(async () => {
+    const d = window.__dr, out = {}, cur = d.S.sport;
+    for (const k of ['softball8', 'baseball']) {
+      d.S.sport = k;
+      d.setMode('fly');
+      let seen = false;
+      for (let i = 0; i < 25; i++) { d.loadScenario(); if (document.querySelector('.circleTgt')) { seen = true; break; } }
+      out[k] = seen;
+    }
+    d.S.sport = cur;
+    return out;
+  });
+  if (!tappable.softball8) fail('the circle never became tappable at 8U');
+  if (tappable.baseball) fail('the circle was tappable in baseball, where the rule does not exist');
+
+  /* The coach asked: "If I click the feedback button during a certain play
+     quiz will it reference that play?" It does. */
+  const fb = await page.evaluate(() => {
+    const d = window.__dr;
+    d.setMode('fly'); d.loadScenario();
+    return d.playContext();
+  });
+  if (!fb || !fb.asked || !fb.room || !fb.league) fail('feedback lost the play context: ' + JSON.stringify(fb));
+  if (!/<|>/.test('x') && /<[a-z]/i.test(fb.asked)) fail('feedback context leaked raw markup: ' + fb.asked);
   await page.click('#closeSettings');
   await page.click('#tab-count');
   await page.waitForTimeout(250);
