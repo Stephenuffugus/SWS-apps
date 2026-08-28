@@ -106,6 +106,34 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
     (await fresh.evaluate(() => document.getElementById('callname').value)) === 'Round Trip');
   await fresh.close();
 
+  /* ---- the squad ----
+     Fixed rosters are a category wide complaint, HANDOFF section 10. Adding
+     and removing has to clean up after itself or the play breaks quietly:
+     the ball cannot leave with a removed attacker, a pass cannot point at
+     somebody who is gone, and a defender cannot go on marking a ghost. */
+  await page.goto(await page.evaluate(() => location.origin + location.pathname), { waitUntil: 'load' });
+  await page.waitForTimeout(800);
+  const squad = () => page.evaluate(() => document.getElementById('squadnote').textContent);
+  check('the board says who is on it', /4 attackers against 4 defenders/.test(await squad()), await squad());
+  await page.click('#addatt'); await page.waitForTimeout(350);
+  await page.click('#adddef'); await page.waitForTimeout(350);
+  check('players can be added', /5 attackers against 5 defenders/.test(await squad()), await squad());
+  await page.fill('#dname', 'Big Lad');
+  await page.dispatchEvent('#dname', 'change');
+  await page.waitForTimeout(350);
+  check('a defender can be renamed',
+    /Big Lad/.test(await page.evaluate(() => document.getElementById('pcardHost').textContent)));
+  await page.click('#rmdef'); await page.waitForTimeout(350);
+  check('players can be removed', /5 attackers against 4 defenders/.test(await squad()), await squad());
+
+  /* Removing the ball carrier must hand the ball on rather than lose it, so
+     the check is that the play still produces a real verdict afterwards
+     rather than falling to "nothing happens". */
+  await page.click('#play');
+  await page.waitForTimeout(4200);
+  check('the play still runs on a changed roster',
+    (await page.textContent('#verdict')).trim().length > 8, await page.textContent('#verdict'));
+
   /* ---- a shared link is a link from a stranger ----
      On 2026-08-28 a crafted #p= link ran script in the reader's page: the
      scouting card put the defender's NAME into innerHTML, so an img onerror

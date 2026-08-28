@@ -216,6 +216,13 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
 
   <div id="pcardHost"></div>
 
+  <div class="lab">Squad</div>
+  <div class="row" style="margin-top:0">
+    <button class="btn small wide" id="addatt">Add attacker</button>
+    <button class="btn small wide" id="adddef">Add defender</button>
+  </div>
+  <div class="none" id="squadnote" style="margin:7px 2px 0"></div>
+
   <div class="lab">Playbook</div>
   <div class="row" style="margin-top:0">
     <select id="playbook" aria-label="Saved plays in your playbook"><option value="">saved plays</option></select>
@@ -1151,11 +1158,17 @@ function renderDcard(d){
         <div class="why">${sl.why}</div>
       </div>`;
     }).join('')}
-    <div class="row"><button class="btn small wide" id="dall">Apply to whole back line</button></div>
+    <div class="row"><button class="btn small wide" id="dall">Apply to whole back line</button>
+      <button class="btn small" id="rmdef">Remove</button></div>
   </div>`;
 
+  /* The change event fires ON BLUR, and renderAll replaces this card's
+     innerHTML, which yanks the very input the browser is still blurring out
+     of the tree. Chrome throws "the node to be removed is no longer a child
+     of this node". Let the blur finish, then redraw. Same for the attacker
+     field below. */
   $('dname').addEventListener('change',e=>{
-    d.label=(e.target.value.trim()||d.label).slice(0,12);renderAll();});
+    d.label=(e.target.value.trim()||d.label).slice(0,12);setTimeout(renderAll,0);});
   $('drole').addEventListener('change',e=>{
     d.mode=e.target.value;
     if(d.mode==='man'&&!d.mark)d.mark=(play.attackers[0]||{}).id||null;
@@ -1171,7 +1184,87 @@ function renderDcard(d){
   $('dall').addEventListener('click',()=>{
     for(const o of play.defenders) if(o.id!==d.id) o.prof={...d.prof};
     toast('Whole back line set to this profile');renderAll();});
+  $('rmdef').addEventListener('click',()=>removePlayer(d.id));
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   THE SQUAD
+
+   The board was fixed at whatever a preset shipped with, which HANDOFF
+   section 10 lists as a category wide complaint: youth and small sided
+   rosters are not eleven, and a rec player mostly wants to plan a 3v2 in a
+   corner rather than a full team shape. So players can be added and removed,
+   and attackers can be named the way defenders already could.
+
+   Removing somebody has to clean up after him or the play quietly breaks:
+   passes to or from him, a defender still marking him, and the ball itself.
+   ══════════════════════════════════════════════════════════════════════════ */
+const SQUAD_MAX=8;              /* until formats land and set their own cap */
+
+/* a free spot, so a new player never lands on top of somebody */
+function freeSpot(prefY){
+  const all=play.attackers.concat(play.defenders);
+  for(let ring=0;ring<9;ring++){
+    for(let i=0;i<12;i++){
+      const x=8+ (i/11)*52, y=prefY-ring*4;
+      if(y<FIELD.yMin+4||y>FIELD.goalY-3) continue;
+      if(all.every(p=>Math.hypot(p.x-x,p.y-y)>5)) return {x:+x.toFixed(1),y:+y.toFixed(1)};
+    }
+  }
+  return {x:34,y:prefY};
+}
+const nextId=(pre,list)=>{
+  let n=1; while(list.some(p=>p.id===pre+n)) n++;
+  return pre+n;
+};
+function addAttacker(){
+  if(play.attackers.length>=SQUAD_MAX){toast(`That is as many as the board takes`);return;}
+  const spot=freeSpot(28);
+  const id=nextId('ax',play.attackers);
+  const used=play.attackers.map(a=>a.label);
+  let num=7; while(used.includes(String(num))&&num<20) num++;
+  play.attackers.push({id,label:String(num),x:spot.x,y:spot.y,hasBall:false,
+    moves:[],custom:'',path:[]});
+  selected=id;renderAll();toast('Attacker added');
+}
+function addDefender(){
+  if(play.defenders.length>=SQUAD_MAX){toast(`That is as many as the board takes`);return;}
+  const spot=freeSpot(40);
+  const id=nextId('dx',play.defenders);
+  const used=play.defenders.map(d=>d.label);
+  let num=2; while(used.includes(String(num))&&num<20) num++;
+  play.defenders.push({id,label:String(num),x:spot.x,y:spot.y,mode:'zone',mark:null,
+    anchor:{x:spot.x,y:spot.y},prof:makeProfile(skill.key,'balanced')});
+  selected=id;renderAll();toast('Defender added');
+}
+function removePlayer(id){
+  const ai=play.attackers.findIndex(a=>a.id===id);
+  if(ai>=0){
+    if(play.attackers.length<=1){toast('Somebody has to be on the ball');return;}
+    const gone=play.attackers[ai];
+    play.attackers.splice(ai,1);
+    /* the ball cannot leave with him */
+    if(gone.hasBall) play.attackers[0].hasBall=true;
+    /* nor can passes to or from a player who is not there */
+    play.passes=play.passes.filter(p=>p.from!==id&&p.to!==id);
+    /* nor can a defender go on marking him */
+    for(const d of play.defenders) if(d.mark===id){d.mark=play.attackers[0].id;}
+    selected=null;renderAll();toast(`#${gone.label} removed`);
+    return;
+  }
+  const di=play.defenders.findIndex(d=>d.id===id);
+  if(di<0)return;
+  if(play.defenders.length<=1){toast('Leave at least one defender to beat');return;}
+  const gone=play.defenders[di];
+  play.defenders.splice(di,1);
+  selected=null;renderAll();toast(`#${gone.label} removed`);
+}
+function renderSquadNote(){
+  const a=play.attackers.length,d=play.defenders.length;
+  $('squadnote').textContent=`${a} attacker${a===1?'':'s'} against ${d} defender${d===1?'':'s'}. Tap anyone to name or remove them.`;
+}
+$('addatt').addEventListener('click',addAttacker);
+$('adddef').addEventListener('click',addDefender);
+
 function renderPcard(){
   const host=$('pcardHost');
   if(sim){host.innerHTML='';return;}
@@ -1184,7 +1277,12 @@ function renderPcard(){
     return `<span class="chip ${m.kind==='onball'?'onball':''}"><span class="n">${i+1}</span>${m.name}<span class="x" data-rm="${i}">×</span></span>`;
   }).join('');
   host.innerHTML=`<div class="pcard">
-    <div class="who"><span class="pnum">${a.label}</span><b>${a.hasBall?'On the ball':'Off the ball'}</b></div>
+    <div class="who"><span class="pnum">${esc(a.label)}</span><b>${a.hasBall?'On the ball':'Off the ball'}</b></div>
+    <div class="two" style="margin-top:0">
+      <input type="text" class="mini" id="aname" value="${esc(a.label)}"
+        maxlength="12" placeholder="Name or number" aria-label="Name this attacker">
+      <button class="btn small" id="rmatt">Remove</button>
+    </div>
     ${a.moves.length?`<div class="chips">${chips}</div>`:`<div class="none">No moves yet. Give them something to do.</div>`}
     ${a.path.length>1?`<div class="none">Freehand run drawn, it overrides the moves above.</div>`:''}
     <div class="row" style="margin-top:0">
@@ -1194,6 +1292,9 @@ function renderPcard(){
     </div>
     ${a.custom?`<div class="none" style="margin:9px 0 0">Called “${esc(a.custom)}”</div>`:''}
   </div>`;
+  $('aname').addEventListener('change',ev=>{
+    a.label=(ev.target.value.trim()||a.label).slice(0,12);setTimeout(renderAll,0);});
+  $('rmatt').addEventListener('click',()=>removePlayer(a.id));
   host.querySelectorAll('[data-rm]').forEach(x=>x.addEventListener('click',ev=>{
     ev.stopPropagation();a.moves.splice(+x.dataset.rm,1);renderAll();
   }));
@@ -1275,7 +1376,7 @@ function showVerdict(v){
   elVerdict.textContent=v.text;
   elVerdict.className='verdict show '+(v.ok?'good':'bad');
 }
-function renderAll(){draw();renderPcard();renderCallSheet();updateSkillStats();updateHint();}
+function renderAll(){draw();renderPcard();renderCallSheet();updateSkillStats();updateHint();renderSquadNote();}
 
 let raf=null,lastN=0;
 function runPlay(){
@@ -1537,7 +1638,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v3';
+var BUILD = 'otb-v4';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
