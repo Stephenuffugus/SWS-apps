@@ -106,6 +106,16 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .getpill{appearance:none;border:0;background:var(--ink);color:#fff;font-family:'Nunito',sans-serif;
   font-weight:900;font-size:15px;padding:11px 20px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
 .getpill:active{transform:translateY(2px);box-shadow:none}
+/* Stephen, 2026-08-28: "in the middle of the sky it says give this game its
+   own icon and its annoying and wont go away." It could not: it only hid on
+   the appinstalled event, which never fires for this app inside the already
+   installed studio, so for him it was permanent. It closes now, and stays
+   closed. The real button in the settings card is its permanent home. */
+.pillwrap{display:inline-flex;align-items:center;gap:6px}
+.pillx{appearance:none;border:0;background:var(--ink);color:#fff;opacity:.75;
+  width:30px;height:30px;border-radius:50%;font:900 13px Nunito,sans-serif;
+  cursor:pointer;box-shadow:var(--shadow)}
+.pillx:active{transform:translateY(2px);box-shadow:none}
 .pill{background:var(--glass);border-radius:999px;box-shadow:var(--shadow);padding:6px 12px;
   display:flex;align-items:center;gap:8px}
 .streak{font-family:'Anton',sans-serif;font-size:13px;letter-spacing:.05em}
@@ -210,8 +220,14 @@ body.movemode .poslbl{paint-order:stroke;stroke:rgba(28,53,41,.55);stroke-width:
 .cov{fill:none;stroke:var(--chalk);stroke-width:4;opacity:0;transition:opacity .45s}
 .cov.on{opacity:.95}
 .ghost{opacity:.34}
-.baghit{cursor:pointer;pointer-events:auto}
+/* A focusable SVG shape keeps focus after a tap and Chrome draws its default
+   ring as a rectangle round the bounding box, which is the black box Stephen
+   saw sitting on the last bag he touched. Keyboard users still get a visible
+   ring, from the stroke below; a tap gets nothing. */
+.baghit{cursor:pointer;pointer-events:auto;outline:none}
 .baghit:focus-visible{stroke:var(--sun);stroke-width:3}
+.base{outline:none}
+.base:focus-visible .ping{opacity:.9;stroke:var(--sun)}
 /* fitView runs on a ResizeObserver watching .bubble, so the second caption
    line reserves its height or the field rescales under the walking players */
 body.movemode .hint{min-height:34px}
@@ -377,7 +393,10 @@ body.movemode .hint{min-height:34px}
       </div>
       <button class="gear" id="gear" aria-label="Settings">⚙️</button>
     </div>
-    <button class="getpill" id="getPill" hidden>⤓ Add to home screen</button>
+    <span class="pillwrap" id="getPillWrap" hidden>
+      <button class="getpill" id="getPill">⤓ Add to home screen</button>
+      <button class="pillx" id="getPillX" type="button" aria-label="Hide this">✕</button>
+    </span>
   </div>
 
   <div class="bottom">
@@ -479,7 +498,7 @@ body.movemode .hint{min-height:34px}
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v22";
+var BUILD="diamond-v23";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -1739,7 +1758,7 @@ function mvLayer(up){
     return `<circle class="baghit" data-base="B${n}" cx="${b.x}" cy="${b.y}" r="24" `+
            `fill="transparent" tabindex="0" role="button" aria-label="Runner on ${MV_BAG["B"+n]}"/>`;}).join("");
   h.querySelectorAll(".baghit").forEach(n=>{
-    n.addEventListener("click",()=>mvTap(n.dataset.base));
+    n.addEventListener("click",e=>{mvTap(n.dataset.base);e.currentTarget.blur();});
     n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();mvTap(n.dataset.base);}});
   });
 }
@@ -1873,20 +1892,27 @@ el("fbSend").addEventListener("click",()=>{
       ?'To add it: tap the Share button, then "Add to Home Screen".'
       :'In your browser menu, choose "Add to Home Screen" or "Install app".');
   }
-  const pill=el("getPill");
-  let installed=false;
+  const pill=el("getPill"),wrap=el("getPillWrap"),pillx=el("getPillX");
+  let installed=false,hushed=false;
   try{installed=localStorage.getItem("diamond-installed")==="1";}catch(e){}
+  try{hushed=localStorage.getItem("diamond-pill-hushed")==="1";}catch(e){}
   if(standalone){
     btn.textContent="⤓ Give this game its own icon";
     pill.textContent="⤓ Give this game its own icon";
   }
   btn.hidden=false;
-  pill.hidden=installed;
+  wrap.hidden=installed||hushed;
   btn.addEventListener("click",go);
   pill.addEventListener("click",go);
+  pillx.addEventListener("click",()=>{
+    wrap.hidden=true;
+    try{localStorage.setItem("diamond-pill-hushed","1");}catch(e){}
+    /* the camera measures around the UI, so it re-fits once the pill goes */
+    if(typeof fitView==="function")fitView();
+  });
   addEventListener("beforeinstallprompt",e=>{e.preventDefault();evt=e;});
   addEventListener("appinstalled",()=>{
-    pill.hidden=true;
+    wrap.hidden=true;
     try{localStorage.setItem("diamond-installed","1");}catch(e){}
   });
   if(/[?&]sws-install/.test(location.search)){

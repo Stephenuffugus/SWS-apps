@@ -758,6 +758,38 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (left.body) fail('move mode did not disarm on the way out');
   if (left.trails) fail('move mode left its chalk behind');
   if (left.above) fail('move mode did not put the layers back');
+  /* Stephen: the install pill "is annoying and wont go away". It could not:
+     it only hid on appinstalled, which never fires inside the already
+     installed studio. It closes now and stays closed, and the real button in
+     the settings card is unaffected, since that is its permanent home. */
+  await page.goto(await page.evaluate(() => location.origin + location.pathname), { waitUntil: 'load' });
+  await page.waitForTimeout(700);
+  const pillOn = await page.evaluate(() => !document.getElementById('getPillWrap').hidden);
+  if (!pillOn) fail('the install pill did not appear at all');
+  await page.click('#getPillX');
+  await page.waitForTimeout(300);
+  if (await page.evaluate(() => !document.getElementById('getPillWrap').hidden))
+    fail('the install pill did not close');
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(700);
+  if (await page.evaluate(() => !document.getElementById('getPillWrap').hidden))
+    fail('the install pill came back after a reload');
+  if (await page.evaluate(() => document.getElementById('swsInstall').hidden))
+    fail('dismissing the pill also hid the settings button, which is its real home');
+
+  /* And a tapped bag must not keep the browser's focus ring, which Chrome
+     draws as a black rectangle round an SVG shape's bounding box. */
+  await page.click('#tab-move');
+  await page.waitForTimeout(600);
+  await page.click('.baghit[data-base="B2"]');
+  await page.waitForTimeout(400);
+  if (await page.evaluate(() => document.activeElement &&
+      document.activeElement.classList.contains('baghit')))
+    fail('a tapped bag kept focus, so the browser will draw a box on it');
+  /* hand the app back the way the next assertion expects to find it */
+  await page.click('#tab-pos');
+  await page.waitForTimeout(400);
+
   const stray = await page.evaluate(() => document.querySelectorAll('.baghit').length);
   if (stray) fail('move mode left its bag tap targets behind: ' + stray);
 
