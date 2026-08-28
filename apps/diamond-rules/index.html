@@ -193,8 +193,6 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .seg .btn{min-height:56px}
 .seg .btn.sel{background:var(--sun);border-color:var(--ink)}
-.seg.pos9{grid-template-columns:repeat(5,1fr);gap:6px}
-.seg.pos9 .btn{min-height:44px;font-size:13px;padding:6px 2px}
 .setnote{font-size:13px;color:#6E8578;margin:8px 0 0;font-weight:800}
 .foot{font-size:13px;color:#6E8578;margin:14px 0 0;font-weight:800;text-align:center}
 .foot a{color:#4A7A5E}
@@ -325,11 +323,6 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
       <p class="setnote" id="sportNote"></p>
     </div>
     <div class="setrow">
-      <p class="setlbl">Your position</p>
-      <div class="seg pos9" id="posSeg"></div>
-      <p class="setnote">Pick your spot and drills come your way more often!</p>
-    </div>
-    <div class="setrow">
       <p class="setlbl">Sound</p>
       <div class="seg" id="soundSeg">
         <button class="btn" data-snd="on">🔊 On</button>
@@ -365,7 +358,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v9";
+var BUILD="diamond-v10";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -432,7 +425,7 @@ function fitView(){
 addEventListener("resize",fitView);
 
 /* ================= state + persistence ================= */
-const S = {mode:"count",sport:"softball8",sound:true,myPos:"",
+const S = {mode:"count",sport:"softball8",sound:true,
   balls:0,strikes:0,outs:0,streak:0,best:0,scenario:null,answered:false,
   round:null,missedThis:false};
 const KEY="diamond1";
@@ -441,11 +434,10 @@ try{
   if(SPORTS[d.sport])S.sport=d.sport;
   else if(d.sport==="softball")S.sport="softball8";  /* pre-level saves */
   if(d.sound===false)S.sound=false;
-  if(typeof d.myPos==="string")S.myPos=d.myPos;
   S.best=d.best|0;
 }catch(e){}
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify({sport:S.sport,sound:S.sound,best:S.best,myPos:S.myPos}))}catch(e){}
+  try{localStorage.setItem(KEY,JSON.stringify({sport:S.sport,sound:S.sound,best:S.best}))}catch(e){}
 }
 const cfg=()=>SPORTS[S.sport];
 const el=id=>document.getElementById(id);
@@ -474,16 +466,25 @@ function sfx(kind){
 /* ================= ballpark organ =================
    Take Me Out to the Ball Game (Von Tilzer/Norworth, 1908, public domain),
    one chiptune voice, sequenced live in WebAudio so the app stays one file.
-   Notes are [semitones above middle C, beats] in 3/4; -1 is a rest. */
+   Notes are [semitones above middle C, beats] in 3/4. The full 32 bar chorus,
+   transcribed from published sheet music (letternoteplayer.com letter
+   notation in C, rhythm checked against an engraved edition), NOT from
+   memory. Waltz: one syllable per beat, phrase endings held. */
 const SONG=[
-  [0,1],[12,1],[9,1],[7,1],[4,1],[7,1],[2,3],
-  [0,1],[12,1],[9,1],[7,1],[4,1],[7,2],[-1,1],
-  [9,1],[9,1],[9,1],[11,1],[12,1],[14,1],[16,1],[14,1],[11,2],[-1,1],
-  [9,1],[11,1],[12,1],[14,1],[11,1],[9,1],[4,1],[7,2],[-1,1],
-  [4,1],[7,1],[12,1],[12,1],[12,1],[9,1],[7,1],[4,1],[2,3],
-  [9,1],[9,1],[11,1],[12,1],[14,1],[16,2],[-1,1],
-  [7,1],[7,1],[12,2],[14,2],[16,2],[16,1],[14,1],[12,2],[-1,1],
-  [7,1],[9,1],[11,1],[14,2],[12,4],[-1,2]
+  /* Take me out to the ball game */
+  [0,1],[12,1],[9,1], [7,1],[4,1],[7,1], [2,6],
+  /* Take me out with the crowd */
+  [0,1],[12,1],[9,1], [7,1],[4,1],[7,7],
+  /* Buy me some peanuts and Cracker Jack (the G sharp is real) */
+  [9,1],[8,1],[9,1], [4,1],[5,1],[7,1], [9,2],[5,1], [2,3],
+  /* I don't care if I never get back, let me */
+  [9,1],[9,1],[9,1], [11,1],[12,1],[14,1], [11,1],[9,1],[7,2],[4,1],[2,1],
+  /* root, root, root for the home team (the opening leap again) */
+  [0,1],[12,1],[9,1], [7,1],[4,1],[7,1], [2,6],
+  /* if they don't win it's a shame. For it's */
+  [2,1],[0,1],[2,1], [4,1],[5,1],[7,1], [9,4],[9,1],[11,1],
+  /* one, two, three strikes you're out at the old ball game */
+  [12,3],[12,3], [12,1],[11,1],[9,1], [7,1],[6,1],[7,1], [9,3],[11,3],[12,6]
 ];
 const BEAT=.4;
 let musicOn=false,musicT=null,musicOsc=[];
@@ -728,10 +729,7 @@ function makeGroundBall(){
   do{
     runners=RUNNER_POOL[Math.floor(Math.random()*RUNNER_POOL.length)];
     outs=Math.floor(Math.random()*3);
-    /* a kid who picked their spot gets the ball hit to them more often */
-    pos=(S.myPos&&INFIELD.includes(+S.myPos)&&Math.random()<.5)
-      ?+S.myPos
-      :INFIELD[Math.floor(Math.random()*INFIELD.length)];
+    pos=INFIELD[Math.floor(Math.random()*INFIELD.length)];
     key=runners.join(",")+"|"+outs+"|"+pos;
   }while(key===lastGround);
   lastGround=key;
@@ -874,10 +872,8 @@ const POS_BANK=[
 ];
 let lastPos=-1;
 function makePosition(){
-  /* weighted draw: scenarios featuring the kid's own position count triple */
-  const w=POS_BANK.map((s,i)=>i===lastPos?0:(S.myPos&&(s.who||[]).includes(S.myPos))?3:1);
-  let r=Math.random()*w.reduce((a,b)=>a+b,0),i=0;
-  while(r>=w[i]){r-=w[i];i++;}
+  let i;
+  do{i=Math.floor(Math.random()*POS_BANK.length);}while(i===lastPos);
   lastPos=i;
   const s={...POS_BANK[i]};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
@@ -1080,20 +1076,9 @@ function setMode(m){
 ["count","play","fly","pos","mix"].forEach(m=>
   el("tab-"+m).addEventListener("click",()=>setMode(m)));
 
-/* the kid picks their spot; drills lean their way in every scenario mode */
-(function(){
-  const seg=el("posSeg");
-  let html=`<button class="btn" data-mypos="">Every spot</button>`;
-  for(const k in POS)html+=`<button class="btn" data-mypos="${k}">${POS[k].s}</button>`;
-  seg.innerHTML=html;
-  seg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
-    S.myPos=b.dataset.mypos;save();paintSettings();sfx("tap");
-  }));
-})();
 function paintSettings(){
   el("sportSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.sport===S.sport));
   el("soundSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",(b.dataset.snd==="on")===S.sound));
-  el("posSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.mypos===S.myPos));
   el("sportNote").textContent=cfg().note;
   el("bestOut").textContent=S.best;
 }
@@ -1193,7 +1178,7 @@ if("serviceWorker" in navigator)
 
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
 window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
-  cfg,setMode,loadScenario,BUILD,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK};
+  cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK};
 </script>
 </body>
 </html>

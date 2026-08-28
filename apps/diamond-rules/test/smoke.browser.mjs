@@ -304,21 +304,16 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   const freed = await page.evaluate(() => window.__dr.S.round === null);
   if (!freed) fail('free play did not end the round');
 
-  // ── pick your position: ten choices, drills lean that way, choice persists ──
-  await page.click('#gear');
-  const posCount = await page.evaluate(() => document.querySelectorAll('#posSeg button').length);
-  if (posCount !== 10) fail('position picker should offer 10 choices, got ' + posCount);
-  await page.click('#posSeg [data-mypos="6"]');
-  await page.click('#closeSettings');
-  const bias = await page.evaluate(() => {
-    let n = 0;
-    for (let i = 0; i < 100; i++) {
-      const sc = window.__dr.makePosition();
-      if ((sc.who || []).includes('6')) n++;
-    }
-    return n;
-  });
-  if (bias < 25) fail('shortstop drills not favored: ' + bias + ' of 100');
+  // ── the ballpark organ carries the real 1908 melody, not a guess ──
+  const song = await page.evaluate(() => window.__dr.SONG);
+  const beats = song.reduce((a, n) => a + n[1], 0);
+  if (beats !== 96) fail('chorus should be 32 bars of 3/4 (96 beats), got ' + beats);
+  if (song[1][0] !== 12) fail('the opening octave leap is missing');
+  if (!song.some((n) => n[0] === 8)) fail('the G sharp in the Cracker Jack line is missing');
+  if (!song.some((n) => n[0] === 6)) fail('the F sharp under "at the old" is missing');
+  const oneTwoThree = song.map((n) => n.join(',')).join(' ');
+  if (!oneTwoThree.includes('12,3 12,3 12,1 11,1 9,1')) fail('one, two, three strikes must sit on the same high C');
+  if (song[song.length - 1].join(',') !== '12,6') fail('the final "game" should hold high C');
 
   // ── settings: sport flips to baseball and survives a reload ──
   await page.click('#gear');
@@ -392,8 +387,6 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.waitForTimeout(400);
   const kept = await page.evaluate(() => window.__dr.S.sport);
   if (kept !== 'baseball') fail('sport choice did not survive a reload: ' + kept);
-  const keptPos = await page.evaluate(() => window.__dr.S.myPos);
-  if (keptPos !== '6') fail('position choice did not survive a reload: ' + keptPos);
   const rbCount = await page.evaluate(() => document.getElementById('roundBtn').hidden);
   if (!rbCount) fail('Play 10 button should hide in batting mode');
 

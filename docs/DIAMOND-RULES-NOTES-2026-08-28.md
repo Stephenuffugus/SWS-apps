@@ -83,3 +83,12 @@ Still open for the weekend: difficulty tiers (needs Stephen's league answers: st
 4. Smoke: level gates checked deterministically (3 makers at 8U/baseball, 4 at 10U), 10U strikeout message, runner IQ appears within 40 mix plays at 10U, migration asserted, install button + hub banner asserted.
 
 The tiers item from the roadmap is now SHIPPED as real league levels instead of invented difficulty names.
+
+## v10, the song gets fixed for real, picker comes out
+
+Stephen: the song was wrong and the position picker was not earning its place.
+
+1. **The melody is now transcribed, not recalled.** Pitches taken syllable by syllable from letternoteplayer.com's letter notation in C (all three sheet images read directly), rhythm checked against an engraved edition (music-for-music-teachers.com), assembled into the standard 32 bar 3/4 chorus. What the guessed version got wrong: the Cracker Jack line is A G# A E F G A F D (chromatic G#, falling tail), "root root root" repeats the opening octave leap C C' A (not three repeated notes), and "one two three" sits entirely on high C with an F# passing tone under "at the old". The smoke test now pins 96 beats, the octave leap, the G#, the F#, the high C plateau and the held final C, so the tune cannot drift again.
+2. **Position picker removed** (his call: no visible difference, not needed now). myPos state, persistence, weighting and the settings row are gone; the `who` tags stay on POS_BANK entries as inert documentation so the feature can return cheaply if wanted. The 3B bunt drill stays, it is good content regardless.
+
+Lesson written in ink: transcribe, never recall, anything a human will hold up against a known original (music, lyrics, quotes, rules).
