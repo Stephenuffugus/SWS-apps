@@ -278,8 +278,29 @@ const FLOURISH = `<div class="flourish" aria-hidden="true"><svg width="120" heig
    The install arrow has to sit OUTSIDE the link (an anchor cannot contain an
    anchor), so the card is a wrapper carrying the search index and the accent,
    with the link and the arrow as siblings inside it. */
-const card = ([slug, name, line, find, kind], i) => {
+/* The app's accent, at 34 percent, for the keyline that sits on the art at
+   rest. The hover border alone put the whole colour system behind a hover,
+   which on half the traffic does not exist. */
+const ring = (hex, a = 0.34) => {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+};
+
+/* Thirty two slugs are covered by twenty four palette entries and eight
+   hand-filed ones. The thirty third is a trap, and an undefined lookup here
+   throws a TypeError three lines later with nothing useful in it. */
+const accentOf = (slug) => {
   const p = palette[slug] || OFFSITE[slug] || SELF_STYLED[slug];
+  if (!p) {
+    console.error(`no accent filed for ${slug}. Add it to design/out/palette.json, or to SELF_STYLED in this file if the app carries its own identity. Refusing to write.`);
+    process.exit(1);
+  }
+  return p;
+};
+
+const card = ([slug, name, line, find, kind], i) => {
+  const p = accentOf(slug);
   const href = OFFSITE[slug] ? OFFSITE[slug].href : `./${slug}/`;
   const tag = kind === 'shared'
     ? `\n            <span class="tag">Shared online</span>`
@@ -304,10 +325,17 @@ const card = ([slug, name, line, find, kind], i) => {
   const get = installable
     ? `\n          <a class="getbtn" href="./${slug}/?sws-install=1" aria-label="Install ${name.replace(/"/g, '&quot;')}" title="Install this app">&#10515;</a>`
     : '';
-  return `        <div class="app" data-find="${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}"
-          style="--i:${i};--app:${p.darkAccent};--app-deep:${p.accent}">
+  /* The index goes into a double-quoted attribute. No tagline carries a
+     quote today; the next one that does would silently disable search for
+     its card. */
+  const find_ = `${name.toLowerCase()} ${line.replace(/&[a-z]+;/g, '').toLowerCase()} ${find}${extra}`.replace(/"/g, '&quot;');
+  /* An unstyled SVG inside object-fit:cover at card width is a stretched
+     smear, so the icon fallback gets told it is a fallback. */
+  const fallback = artOf(slug) ? '' : ' class="fallback"';
+  return `        <div class="app" data-find="${find_}"
+          style="--i:${i};--app:${p.darkAccent};--app-deep:${p.accent};--app-ring:${ring(p.darkAccent)}">
           <a class="applink" href="${href}">
-            <img src="${artUrl(slug)}" alt="" width="${artDim(slug)}" height="${artDim(slug)}" loading="lazy" decoding="async">
+            <img${fallback} src="${artUrl(slug)}" alt="" width="${artDim(slug)}" height="${artDim(slug)}" loading="lazy" decoding="async">
             <b>${name}</b>
             <small>${line}</small>${tag}
           </a>${get}
@@ -332,10 +360,13 @@ const sections = CATALOGUE.map(section).join('\n');
    Decorative (aria-hidden); the cards below carry the links. */
 const thumbed = CATALOGUE.flatMap(([, , apps]) => apps.map((a) => a[0])).filter(artOf);
 const halfway = Math.ceil(thumbed.length / 2);
-const stripImgs = (slugs) => slugs.map((s) =>
-  `<img src="${artUrl(s)}" alt="" width="${artDim(s)}" height="${artDim(s)}" loading="lazy" decoding="async">`).join('');
+const stripImgs = (slugs, eager) => slugs.map((s, i) =>
+  `<img src="${artUrl(s)}" alt="" width="${artDim(s)}" height="${artDim(s)}"${
+    eager && i < 4 ? (i === 0 ? ' fetchpriority="high"' : '') : ' loading="lazy"'} decoding="async">`).join('');
+/* Each track is printed twice for the seamless -50% loop. Only the first
+   copy's opening images are on screen at load, so only those are eager. */
 const strip = (slugs, cls) =>
-  `    <div class="strip${cls}" aria-hidden="true"><div class="track">${stripImgs(slugs)}${stripImgs(slugs)}</div></div>`;
+  `    <div class="strip${cls}" aria-hidden="true"><div class="track">${stripImgs(slugs, true)}${stripImgs(slugs, false)}</div></div>`;
 
 const html = `<!doctype html>
 <html lang="en">
@@ -380,11 +411,21 @@ document.addEventListener('error', function(e){
   --disp:'Fredoka',ui-rounded,'Segoe UI',system-ui,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth;overflow-x:clip;-webkit-text-size-adjust:100%}
+/* The overflow lives on html, never on body: overflow-x on body computes
+   overflow-y:auto, which can make the body the scroll box and silently kill
+   position:sticky on iOS Safari, taking the search bar with it. The doubled
+   declaration is deliberate. Safari 15 and older take hidden, everything
+   newer takes clip, and clip is what lets the 100vw hero bloom bleed
+   without a horizontal scrollbar.
+   scroll-padding-top keeps the skip link and Find your app from landing
+   with the section kicker hidden behind the sticky bar. Keep it in step
+   with the searchbar padding below. */
+html{scroll-behavior:smooth;overflow-x:hidden;overflow-x:clip;
+  scroll-padding-top:100px;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);
   font:16px/1.5 'Nunito',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:calc(48px + env(safe-area-inset-bottom));overflow-x:hidden}
+  padding-bottom:calc(48px + env(safe-area-inset-bottom))}
 .wrap{max-width:1060px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
 
 .skip{position:absolute;left:16px;top:16px;z-index:20;padding:12px 16px;
@@ -397,6 +438,13 @@ body{margin:0;background:var(--bg);color:var(--ink);
       This sizes to the real viewport (Pixel 9 included), where separate
       right-anchored fixed divs proved unreliable. ── */
 .frame{position:fixed;inset:0;pointer-events:none;z-index:0}
+/* Only the top band and its two corners ride above the sticky search bar.
+   The rails and the bottom band stay under the content, the way they do on
+   the page Stephen picked, so a card at the foot of the viewport still
+   passes over the bottom band instead of being crossed by it. The rails
+   never need raising: they sit outside the wrap's content box at every
+   width the desktop frame applies to. */
+.frame.top{z-index:7}
 .fr{position:absolute;opacity:.34}
 .fr.l,.fr.r{top:20px;bottom:20px;width:26px;background:url("${VINE}") repeat-y center 0/26px auto}
 .fr.l{left:10px}
@@ -409,6 +457,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .fr.c.bl{bottom:8px;left:8px}.fr.c.br{bottom:8px;right:8px}
 /* Slimmer on the phone, but every edge still framed. */
 @media (max-width:1180px){
+  html{scroll-padding-top:88px}
+  .searchbar{padding:22px 0 10px}
   .fr{opacity:.26}
   .fr.l,.fr.r{width:13px;background-size:13px auto;top:16px;bottom:16px}
   .fr.l{left:max(2px,env(safe-area-inset-left))}
@@ -423,6 +473,10 @@ body{margin:0;background:var(--bg);color:var(--ink);
 
 /* ── section flourishes: the same line, horizontal ── */
 .flourish{display:flex;justify-content:center;color:var(--gold);opacity:.5;margin:0 0 40px}
+/* Search for "wedding" and section one disappears, leaving whichever
+   section survives first opening with a divider under the search bar
+   dividing nothing. */
+.need.lead .flourish{display:none}
 
 /* ── hero ── */
 .hero{text-align:center;padding:44px 0 8px;position:relative}
@@ -457,7 +511,13 @@ h1 em{font-style:normal;color:var(--gold)}
 .strip img{width:132px;height:132px;border-radius:22px;flex:none;display:block}
 @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes drift-rev{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-@media (max-width:600px){.strip img{width:88px;height:88px;border-radius:15px}}
+/* One strip on a phone, not two: hero plus two strips plus four trust tiles
+   plus the search bar pushes the first card a long way down, and reaching a
+   card in one screen is the one thing the old hub did better. */
+@media (max-width:600px){
+  .strip img{width:88px;height:88px;border-radius:15px}
+  .strips .strip:nth-child(2){display:none}
+}
 
 /* ── trust strip ── */
 .trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:26px 0 8px}
@@ -467,8 +527,10 @@ h1 em{font-style:normal;color:var(--gold)}
 
 /* ── search. Thirty-odd apps is past the point where scanning is pleasant,
       and the whole brief for these apps is "easy to find, easy to use". ── */
-.searchbar{position:sticky;top:0;z-index:6;padding:16px 0 12px;margin-top:10px;
+.searchbar{position:sticky;top:0;z-index:6;padding:30px 0 12px;margin-top:10px;
   background:linear-gradient(var(--bg) 72%,rgba(8,12,9,0))}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .search{position:relative;max-width:32rem;margin-inline:auto}
 .search input{width:100%;min-height:52px;padding:0 20px 0 46px;
   font:600 1rem 'Nunito',system-ui,sans-serif;color:var(--ink);
@@ -493,10 +555,15 @@ h2{font-family:var(--disp);font-weight:600;color:var(--cream);font-size:clamp(1.
 .app{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;
   transition:border-color .18s,transform .18s,background .18s}
 .app:hover{border-color:var(--app,var(--gold));background:var(--panel2);transform:translateY(-3px)}
-.applink{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;padding:12px}
-.applink:focus-visible{outline:2px solid var(--app,var(--gold));outline-offset:-3px;border-radius:18px}
+.applink{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;padding:12px;border-radius:18px}
+.applink:focus-visible{outline:2px solid var(--app,var(--gold));outline-offset:-3px}
+/* --app-deep holds the tile before the picture lands; the --app-ring
+   keyline is where the old left-edge spine went, and it is on at rest so
+   the app's colour exists on a phone, which has no hover to reveal it. */
 .app img{width:100%;height:auto;aspect-ratio:1;border-radius:12px;object-fit:cover;display:block;
-  background:var(--app-deep,var(--panel2))}
+  background:var(--app-deep,var(--panel2));
+  border:1px solid var(--app-ring,rgba(241,233,216,.10))}
+.app img.fallback{object-fit:contain;padding:18%}
 .app b{font-size:1.05rem;line-height:1.25;color:var(--cream)}
 .app small{color:var(--muted);font-size:.85rem;line-height:1.4}
 .app .tag{align-self:flex-start;margin-top:2px;padding:2px 9px;border:1px solid var(--line);
@@ -504,7 +571,8 @@ h2{font-family:var(--disp);font-weight:600;color:var(--cream);font-size:clamp(1.
 .getbtn{position:absolute;top:20px;right:20px;width:36px;height:36px;z-index:2;
   display:flex;align-items:center;justify-content:center;border-radius:50%;
   border:1px solid rgba(241,233,216,.22);color:var(--cream);background:rgba(8,12,9,.62);
-  backdrop-filter:blur(3px);text-decoration:none;font-size:16px;line-height:1;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  text-decoration:none;font-size:16px;line-height:1;
   transition:color .14s,border-color .14s,background .14s}
 .getbtn:hover{color:#12160f;border-color:var(--gold);background:var(--gold)}
 .getbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -512,9 +580,10 @@ h2{font-family:var(--disp);font-weight:600;color:var(--cream);font-size:clamp(1.
    the card, so two-up stays readable down to small screens. */
 @media (max-width:640px){
   .grid{grid-template-columns:repeat(2,1fr)}
-  .app b{font-size:.95rem}
+  .app b{font-size:.95rem;hyphens:auto;overflow-wrap:anywhere}
   .app small{font-size:.8rem}
-  .getbtn{top:16px;right:16px}
+  /* a 36px disc covers a quarter of a 150px tile */
+  .getbtn{top:16px;right:16px;width:32px;height:32px;font-size:14px}
 }
 
 .empty{display:none;text-align:center;color:var(--muted);padding:48px 16px}
@@ -556,8 +625,11 @@ footer a:hover{color:var(--gold)}
 </head>
 <body>
 <div class="frame" aria-hidden="true">
-  <i class="fr t"></i><i class="fr b"></i><i class="fr l"></i><i class="fr r"></i>
-  <i class="fr c tl"></i><i class="fr c tr"></i><i class="fr c bl"></i><i class="fr c br"></i>
+  <i class="fr b"></i><i class="fr l"></i><i class="fr r"></i>
+  <i class="fr c bl"></i><i class="fr c br"></i>
+</div>
+<div class="frame top" aria-hidden="true">
+  <i class="fr t"></i><i class="fr c tl"></i><i class="fr c tr"></i>
 </div>
 <a class="skip" href="#apps">Skip to the apps</a>
 <div class="wrap">
@@ -589,7 +661,7 @@ ${strip(thumbed.slice(halfway), ' rev')}
   <div class="searchbar">
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search the apps</label>
+      <label class="sr-only" for="q">Search the apps</label>
       <input id="q" type="search" placeholder="Search ${count} apps. Try &ldquo;teacher&rdquo; or &ldquo;insurance&rdquo;" autocomplete="off">
     </div>
   </div>
@@ -604,7 +676,7 @@ ${sections}
     <h2>It&rsquo;s all free. Seriously.</h2>
     <p>One small studio, ${count} apps, zero ads. If one of them saves your week, the tip jar inside it is the whole business model. <span class="tip">&#9829;</span></p>
     <div class="cta-row" style="margin:0">
-      <a class="btn gold" href="https://lucidwinds.com/portal/">&#127918; We make games too. 160+ free in the Arcade</a>
+      <a class="btn gold" href="https://lucidwinds.com/portal/">&#127918; We make games too. Play free in the Arcade</a>
       <a class="btn ghost" href="mailto:stephenfurpahs@gmail.com?subject=Sky%20Wolf%20Studio%20Apps%20feedback">Send feedback</a>
     </div>
   </div>
@@ -636,10 +708,16 @@ ${sections}
     groups.forEach(function(g){
       var any = [].slice.call(g.querySelectorAll('.app')).some(function(c){ return c.style.display !== 'none'; });
       g.style.display = any ? '' : 'none';
+      g.classList.remove('lead');
       /* a section further down the page can still be waiting at opacity 0
          when a search brings it up into view, so a search reveals it */
       if (any) g.classList.add('in');
     });
+    /* whichever section survives first opens the results, so it is the one
+       that must not carry a divider. With no search term this resolves to
+       section one, which has no flourish, and nothing changes. */
+    var first = groups.filter(function(g){ return g.style.display !== 'none'; })[0];
+    if (first) first.classList.add('lead');
     none.classList.toggle('show', hits === 0);
   }
 
@@ -783,7 +861,7 @@ const catalogueJson = {
     slugs: apps.map((a) => a[0]),
   })),
   apps: Object.fromEntries(CATALOGUE.flatMap(([title, , apps]) => apps.map(([slug, name, line, find, kind]) => {
-    const p = palette[slug] || OFFSITE[slug] || SELF_STYLED[slug];
+    const p = accentOf(slug);
     return [slug, {
       slug,
       name: plain(name),
