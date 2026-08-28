@@ -256,9 +256,15 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   // the center fielder stands inside the fence (curve is at y=133 mid-field),
   // and the corner infielders stand off their baselines, not on them
   const geom = await page.evaluate(() => {
+    /* Fielders are placed by a transform on the group now, so their circles
+       sit at 0,0 and the only honest reading is where the browser actually
+       put them. getCTM gives that in viewBox units, which is what the
+       thresholds below are written in. */
     const at = (k) => {
-      const c = document.querySelector('#pos-' + k + ' .body');
-      return { x: +c.getAttribute('cx'), y: +c.getAttribute('cy') };
+      const g = document.getElementById('pos-' + k);
+      const m = g.getCTM(), svg = document.getElementById('dia').getScreenCTM();
+      const p = svg.inverse().multiply(m);
+      return { x: p.e, y: p.f };
     };
     return { cf: at(8), b1: at(3), b3: at(5) };
   });
