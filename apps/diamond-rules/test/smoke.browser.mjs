@@ -217,6 +217,57 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   }
   if (!posDone) fail('never met a tap-a-fielder scenario in 12 plays');
 
+  // ── mix mode serves every kind of question on one tab ──
+  await page.click('#tab-mix');
+  await page.waitForTimeout(300);
+  await assertFieldClear('mix');
+  const kinds = new Set();
+  for (let i = 0; i < 20 && kinds.size < 3; i++) {
+    s = await page.evaluate(() => window.__dr.S.scenario);
+    kinds.add(s.kind);
+    if (s.kind === 'choice') await page.click(`[data-c="${s.correct}"]`);
+    else if (s.kind === 'pos') await page.click('#pos-' + s.correct, { force: true });
+    else if (s.correct === 'HOLD') await page.click('#holdChip');
+    else await page.click('#base-' + s.correct, { force: true });
+    await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+    word = await page.textContent('#vWord');
+    if (word === 'Not quite!') fail('correct mix answer read as wrong (' + s.kind + ')');
+    await page.click('#next');
+    await page.waitForTimeout(250);
+  }
+  if (kinds.size < 2) fail('mix mode never varied its question kind: ' + [...kinds]);
+
+  // ── the bottom row carries labels, feedback, and the ballpark organ ──
+  const labels = await page.evaluate(() => [...document.querySelectorAll('.tlbl')].map((l) => l.textContent));
+  for (const want of ['Music', 'Batting', 'Grounders', 'Fly balls', 'Positions', 'Mix', 'Feedback'])
+    if (!labels.includes(want)) fail('tab label missing: ' + want + ' (got ' + labels + ')');
+  await page.click('#fbBtn');
+  const fbMain = await page.evaluate(() => !document.getElementById('fbWrap').classList.contains('hidden'));
+  if (!fbMain) fail('feedback box did not open from the main screen');
+  await page.click('#fbCancel');
+  await page.click('#musicBtn');
+  await page.waitForTimeout(400);
+  const musicOn = await page.evaluate(() => document.getElementById('musicBtn').getAttribute('aria-pressed'));
+  if (musicOn !== 'true') fail('music button did not arm');
+  await page.click('#musicBtn');
+  const musicOff = await page.evaluate(() => document.getElementById('musicBtn').getAttribute('aria-pressed'));
+  if (musicOff !== 'false') fail('music button did not disarm');
+
+  // the center fielder stands inside the fence (curve is at y=133 mid-field),
+  // and the corner infielders stand off their baselines, not on them
+  const geom = await page.evaluate(() => {
+    const at = (k) => {
+      const c = document.querySelector('#pos-' + k + ' .body');
+      return { x: +c.getAttribute('cx'), y: +c.getAttribute('cy') };
+    };
+    return { cf: at(8), b1: at(3), b3: at(5) };
+  });
+  if (geom.cf.y < 148) fail('center fielder is in the sky: y=' + geom.cf.y);
+  const off1 = Math.abs((460 - (geom.b1.x - 200)) - geom.b1.y);
+  const off3 = Math.abs((460 - (200 - geom.b3.x)) - geom.b3.y);
+  if (off1 < 10) fail('first baseman standing on the baseline');
+  if (off3 < 10) fail('third baseman standing on the baseline');
+
   // ── settings: sport flips to baseball and survives a reload ──
   await page.click('#gear');
   const note0 = await page.textContent('#sportNote');

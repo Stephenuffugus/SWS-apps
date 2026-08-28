@@ -56,3 +56,11 @@ Stephen: runners should look like players, not gold dots. `runnerSprite()` now d
 3. **Tap affordance**: sonar ping rings radiate from every tappable base and fielder while they pulse.
 4. **Runner detail**: white jersey with ink outline, gold belt, outlined helmet with brim and ear flap, gentle staggered bob.
 5. **Juice**: ball does a little thump when it lands, clouds drift, streak star pops when it grows. All animation honors prefers-reduced-motion.
+
+## v7, Stephen's pre-shutdown round, same night
+
+1. **Labeled modes**: every bottom tab wears a name (Music, Batting, Grounders, Fly balls, Positions, Mix, Feedback), and switching pops a big mode title over the field for a second. Narrow-phone media query keeps the 7-item row inside 360px.
+2. **Mix tab** (his "combination of them"): one tab that shuffles grounders, fly balls and positioning questions; fielders stay tappable there.
+3. **Field truth**: CF moved inside the fence (was in the sky at y=122, fence curve is y=133; now y=160), and 1B/3B moved OFF their baselines to where corner infielders actually stand (282,360 / 118,360). Smoke test now measures the DOM against the baseline equations.
+4. **Feedback on the front door**: a 💬 tab at the end of the row opens the feedback box straight from the main screen (settings link still works).
+5. **Ballpark organ**: Take Me Out to the Ball Game (1908, public domain), the full chorus sequenced as [semitone, beats] pairs through one WebAudio triangle voice, looping while the 🎵 tab is armed. No audio files, app stays one file. Off by default; a tap is the gesture autoplay policy wants anyway.

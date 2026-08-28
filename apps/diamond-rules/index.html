@@ -136,12 +136,28 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .hint.no{color:#C2312B;font-weight:900}
 .hint:empty{display:none}
 
-.tabs{display:flex;justify-content:center;gap:10px}
-.tab{appearance:none;border:0;background:var(--glass);border-radius:999px;width:52px;height:52px;
-  cursor:pointer;box-shadow:var(--shadow);font-size:23px;display:flex;align-items:center;justify-content:center}
-.tab[aria-selected="true"]{background:var(--sun);outline:3px solid rgba(28,53,41,.25)}
+.tabs{display:flex;justify-content:center;align-items:flex-start;gap:6px}
+.tabwrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab{appearance:none;border:0;background:var(--glass);border-radius:999px;width:48px;height:48px;
+  cursor:pointer;box-shadow:var(--shadow);font-size:21px;display:flex;align-items:center;justify-content:center}
+.tab.util{width:44px;height:44px;font-size:19px;margin-top:2px}
+.tab[aria-selected="true"],.tab.util[aria-pressed="true"]{background:var(--sun);outline:3px solid rgba(28,53,41,.25)}
 .tab:active{transform:translateY(2px);box-shadow:none}
 .tab:focus-visible{outline:3px solid var(--ink)}
+.tlbl{font-family:'Anton',sans-serif;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:#fff;
+  text-shadow:-1px -1px 0 rgba(28,53,41,.5),1px -1px 0 rgba(28,53,41,.5),-1px 1px 0 rgba(28,53,41,.5),1px 1px 0 rgba(28,53,41,.5)}
+@media (max-width:380px){
+  .tabs{gap:3px}
+  .tab{width:44px;height:44px;font-size:19px}
+  .tab.util{width:40px;height:40px;font-size:17px}
+}
+
+/* mode title, pops when you land in a room */
+.modetoast{position:fixed;top:16%;left:0;right:0;text-align:center;pointer-events:none;z-index:15;
+  font-family:'Anton',sans-serif;font-size:36px;letter-spacing:.05em;text-transform:uppercase;color:#fff;
+  text-shadow:0 3px 0 rgba(28,53,41,.4),-2px -2px 0 rgba(28,53,41,.35),2px -2px 0 rgba(28,53,41,.35),-2px 2px 0 rgba(28,53,41,.35),2px 2px 0 rgba(28,53,41,.35);
+  opacity:0;transition:opacity .3s}
+.modetoast.show{opacity:1}
 
 /* ---------- overlays ---------- */
 .overlay{position:fixed;inset:0;background:rgba(28,53,41,.55);backdrop-filter:blur(3px);
@@ -249,13 +265,18 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
       <p class="hint" id="hint"></p>
     </div>
     <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" id="tab-count" aria-selected="true" aria-label="The count"><span id="tabBallIco">🥎</span></button>
-      <button class="tab" role="tab" id="tab-play" aria-selected="false" aria-label="Where's the play">🧤</button>
-      <button class="tab" role="tab" id="tab-fly" aria-selected="false" aria-label="Fly balls">⛅</button>
-      <button class="tab" role="tab" id="tab-pos" aria-selected="false" aria-label="Take the field">🧢</button>
+      <div class="tabwrap"><button class="tab util" id="musicBtn" aria-pressed="false" aria-label="Ballpark music on or off">🎵</button><span class="tlbl">Music</span></div>
+      <div class="tabwrap"><button class="tab" role="tab" id="tab-count" aria-selected="true" aria-label="Batting: the count"><span id="tabBallIco">🥎</span></button><span class="tlbl">Batting</span></div>
+      <div class="tabwrap"><button class="tab" role="tab" id="tab-play" aria-selected="false" aria-label="Grounders: where's the play">🧤</button><span class="tlbl">Grounders</span></div>
+      <div class="tabwrap"><button class="tab" role="tab" id="tab-fly" aria-selected="false" aria-label="Fly balls">⛅</button><span class="tlbl">Fly balls</span></div>
+      <div class="tabwrap"><button class="tab" role="tab" id="tab-pos" aria-selected="false" aria-label="Positions: who covers">🧢</button><span class="tlbl">Positions</span></div>
+      <div class="tabwrap"><button class="tab" role="tab" id="tab-mix" aria-selected="false" aria-label="Mix: every kind of play">🎲</button><span class="tlbl">Mix</span></div>
+      <div class="tabwrap"><button class="tab util" id="fbBtn" aria-label="Send feedback">💬</button><span class="tlbl">Feedback</span></div>
     </nav>
   </div>
 </div>
+
+<div class="modetoast" id="modeToast" aria-hidden="true"></div>
 
 <!-- verdict -->
 <div class="overlay hidden" id="overlay">
@@ -315,7 +336,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v6";
+var BUILD="diamond-v7";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -341,15 +362,18 @@ const BASE_XY = {
   B2:{x:200,y:224,label:"2ND"},
   B3:{x:82,y:342,label:"3RD"}
 };
+/* corner infielders stand OFF the baseline, inside and near their bag, and
+   the center fielder stands inside the fence, not in the sky. Both were
+   Stephen's field notes: draw where players really stand. */
 const POS = {
   1:{n:"pitcher",s:"P",x:200,y:352},
   2:{n:"catcher",s:"C",x:200,y:496},
-  3:{n:"first baseman",s:"1B",x:292,y:376},
+  3:{n:"first baseman",s:"1B",x:282,y:360},
   4:{n:"second baseman",s:"2B",x:252,y:288},
-  5:{n:"third baseman",s:"3B",x:108,y:376},
+  5:{n:"third baseman",s:"3B",x:118,y:360},
   6:{n:"shortstop",s:"SS",x:148,y:288},
   7:{n:"left fielder",s:"LF",x:92,y:172},
-  8:{n:"center fielder",s:"CF",x:200,y:122},
+  8:{n:"center fielder",s:"CF",x:200,y:160},
   9:{n:"right fielder",s:"RF",x:308,y:172}
 };
 
@@ -407,6 +431,57 @@ function sfx(kind){
     else if(kind==="bad"){tone(196,0,.22,"sawtooth",.08);tone(155,.12,.3,"sawtooth",.08);}
     else tone(660,0,.08,"square",.06);
   }catch(e){}
+}
+
+/* ================= ballpark organ =================
+   Take Me Out to the Ball Game (Von Tilzer/Norworth, 1908, public domain),
+   one chiptune voice, sequenced live in WebAudio so the app stays one file.
+   Notes are [semitones above middle C, beats] in 3/4; -1 is a rest. */
+const SONG=[
+  [0,1],[12,1],[9,1],[7,1],[4,1],[7,1],[2,3],
+  [0,1],[12,1],[9,1],[7,1],[4,1],[7,2],[-1,1],
+  [9,1],[9,1],[9,1],[11,1],[12,1],[14,1],[16,1],[14,1],[11,2],[-1,1],
+  [9,1],[11,1],[12,1],[14,1],[11,1],[9,1],[4,1],[7,2],[-1,1],
+  [4,1],[7,1],[12,1],[12,1],[12,1],[9,1],[7,1],[4,1],[2,3],
+  [9,1],[9,1],[11,1],[12,1],[14,1],[16,2],[-1,1],
+  [7,1],[7,1],[12,2],[14,2],[16,2],[16,1],[14,1],[12,2],[-1,1],
+  [7,1],[9,1],[11,1],[14,2],[12,4],[-1,2]
+];
+const BEAT=.4;
+let musicOn=false,musicT=null,musicOsc=[];
+function playSong(){
+  if(!musicOn)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended")AC.resume();
+    let t=AC.currentTime+.08,total=0;
+    musicOsc=[];
+    SONG.forEach(n=>{
+      const dur=n[1]*BEAT;
+      if(n[0]>=0){
+        const o=AC.createOscillator(),g=AC.createGain();
+        o.type="triangle";
+        o.frequency.value=261.63*Math.pow(2,n[0]/12);
+        g.gain.setValueAtTime(.09,t+total);
+        g.gain.exponentialRampToValueAtTime(.001,t+total+dur*.9);
+        o.connect(g).connect(AC.destination);
+        o.start(t+total);o.stop(t+total+dur*.92);
+        musicOsc.push(o);
+      }
+      total+=dur;
+    });
+    musicT=setTimeout(playSong,(total+.8)*1000);
+  }catch(e){}
+}
+function setMusic(on){
+  musicOn=on;
+  el("musicBtn").setAttribute("aria-pressed",String(on));
+  if(on)playSong();
+  else{
+    clearTimeout(musicT);
+    musicOsc.forEach(o=>{try{o.stop()}catch(e){}});
+    musicOsc=[];
+  }
 }
 
 /* ================= drawing ================= */
@@ -765,7 +840,10 @@ function loadScenario(){
   S.answered=false;
   el("hint").className="hint";
   el("overlay").classList.add("hidden");
-  const s=S.mode==="play"?makeGroundBall():S.mode==="fly"?makeFlyBall():makePosition();
+  const s=S.mode==="play"?makeGroundBall()
+    :S.mode==="fly"?makeFlyBall()
+    :S.mode==="pos"?makePosition()
+    :pick([makeGroundBall,makeFlyBall,makePosition])();
   S.scenario=s;
   S.outs=s.outs;S.balls=0;S.strikes=0;
   paintBoard();drawRunners(s.runners);
@@ -854,19 +932,28 @@ el("next").addEventListener("click",loadScenario);
 el("holdChip").addEventListener("click",()=>answer("HOLD"));
 
 /* ================= tabs & settings ================= */
+const MODE_NAMES={count:"Batting",play:"Grounders",fly:"Fly balls",pos:"Positions",mix:"Mix it up"};
+let toastT=null;
+function showToast(txt){
+  const t=el("modeToast");
+  t.textContent=txt;
+  t.classList.add("show");
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),1200);
+}
 function setMode(m){
   S.mode=m;
-  ["tab-count","tab-play","tab-fly","tab-pos"].forEach(id=>el(id).setAttribute("aria-selected","false"));
+  ["tab-count","tab-play","tab-fly","tab-pos","tab-mix"].forEach(id=>el(id).setAttribute("aria-selected","false"));
   el("tab-"+m).setAttribute("aria-selected","true");
-  drawFielders(m==="pos");
+  /* mix serves positioning questions too, so the fielders stay tappable */
+  drawFielders(m==="pos"||m==="mix");
+  showToast(MODE_NAMES[m]);
   S.streak=0;paintStreak();
   if(m==="count"){S.balls=0;S.strikes=0;S.outs=0;countScreen();}
   else loadScenario();
 }
-el("tab-count").addEventListener("click",()=>setMode("count"));
-el("tab-play").addEventListener("click",()=>setMode("play"));
-el("tab-fly").addEventListener("click",()=>setMode("fly"));
-el("tab-pos").addEventListener("click",()=>setMode("pos"));
+["count","play","fly","pos","mix"].forEach(m=>
+  el("tab-"+m).addEventListener("click",()=>setMode(m)));
 
 function paintSettings(){
   el("sportSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.sport===S.sport));
@@ -890,15 +977,21 @@ el("closeSettings").addEventListener("click",()=>{
 /* ================= tip jar + feedback ================= */
 if(TIP_URL)el("tipSlot").innerHTML=' &middot; <a href="'+TIP_URL+'" target="_blank" rel="noopener">&hearts; Tip jar</a>';
 el("buildTag").textContent=BUILD;
+function openFeedback(){
+  el("settings").classList.add("hidden");
+  el("fbWrap").classList.remove("hidden");
+  el("fbStatus").textContent="";
+  setTimeout(()=>el("fbText").focus(),60);
+}
 if(FEEDBACK_WEBHOOK){
-  el("feedbackLink").addEventListener("click",ev=>{
-    ev.preventDefault();
-    el("settings").classList.add("hidden");
-    el("fbWrap").classList.remove("hidden");
-    el("fbStatus").textContent="";
-    setTimeout(()=>el("fbText").focus(),60);
+  el("feedbackLink").addEventListener("click",ev=>{ev.preventDefault();openFeedback();});
+  el("fbBtn").addEventListener("click",openFeedback);
+}else{
+  el("fbBtn").addEventListener("click",()=>{
+    location.href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Diamond%20Rules";
   });
 }
+el("musicBtn").addEventListener("click",()=>setMusic(!musicOn));
 el("fbCancel").addEventListener("click",()=>el("fbWrap").classList.add("hidden"));
 el("fbWrap").addEventListener("click",function(ev){if(ev.target===this)this.classList.add("hidden");});
 el("fbSend").addEventListener("click",()=>{
