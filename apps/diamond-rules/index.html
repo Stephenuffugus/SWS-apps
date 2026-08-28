@@ -464,7 +464,7 @@ body.movemode .hint{min-height:34px}
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v18";
+var BUILD="diamond-v19";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -1718,6 +1718,24 @@ el("fbWrap").addEventListener("click",function(ev){if(ev.target===this)this.clas
    exact question on screen. Plain app state, no personal anything, and the
    dialog says so before they send it. */
 function playContext(){
+  /* The Move room has no scenario object, so without this a report from the
+     one room whose content a coach is most likely to argue with would arrive
+     saying "not on a play". Send the picture he is looking at instead. */
+  if(S.mode==="move"&&MV.zone){
+    const runners=MV.runners.length?MV.runners.map(n=>MV_BAG["B"+n]).join(" and "):"nobody on";
+    return{
+      league:cfg().label,
+      room:MODE_NAMES.move,
+      chip:MV.zone.key+" / "+MV.zone.state,
+      asked:"ball hit to "+MV_SHORT[MV.zone.by]+", "+runners+
+            ". "+(MV_LINE2[MV.zone.key+"."+MV.zone.state]||""),
+      correct:Object.keys(MV.plan||{}).sort()
+        .map(k=>MV_SHORT[k]+" "+MV.plan[k].role+(MV.plan[k].target?" "+MV.plan[k].target:""))
+        .join("; "),
+      answered:"n/a",
+      missedFirst:"n/a"
+    };
+  }
   const sc=S.scenario;
   if(!sc)return null;
   const strip=t=>String(t||"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
