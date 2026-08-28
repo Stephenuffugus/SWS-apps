@@ -108,6 +108,9 @@ const SELF_STYLED = {
   /* Coverage was hand-added to the page and never to this catalogue, so
      every regeneration since would have deleted it. Its own investor blue. */
   'coverage': { darkAccent: '#4c8dff', accent: '#2b62c4' },
+  /* Off the Ball arrived with its own chalk-on-a-dark-pitch identity and
+     keeps it: the attacking gold over the deep pitch green. */
+  'off-the-ball': { darkAccent: '#F4B740', accent: '#0B1B1A' },
 };
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -205,13 +208,19 @@ const CATALOGUE = [
     ['rock-stops', 'Rock Stops', 'Every rock, fossil and sea glass find, logged where you stood', 'rockhounding rocks fossils sea glass minerals geology field log collection specimens beach camera gps', 'beta'],
   ]],
   ['Sports',
-    { id: 'sports', kick: 'The ballpark', q: 'First season on the diamond?',
-      sub: 'The rules little leagues skip, on a diamond kids can tap. Force outs, tag ups and the infield fly, gated to the level your league actually plays.' }, [
+    { id: 'sports', kick: 'The pitch and the diamond', q: 'Coaching a team this season?',
+      sub: 'The baseball rules little leagues skip, on a diamond kids can tap. And a soccer board where the defence reacts instead of standing still, so you find out whether the play actually works.' }, [
     /* The In testing badge came off on 2026-08-28: Stephen's coach wants to
        share it with a travel coach, and the badge is the same one the
        genuinely passphrase-locked Rock Stops wears, so it read as a door
        that was shut. Diamond Rules is finished enough to hand to a stranger. */
     ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers'],
+    /* Arrived 2026-08-28 as a v0.3 prototype with its own engine harness and
+       a handoff that says plainly it is not shippable yet, so it wears the
+       In testing badge until the blocking list in apps/off-the-ball/HANDOFF.md
+       is worked through. Not gated: there is nothing to hide, it just is not
+       finished. */
+    ['off-the-ball', 'Off the Ball', 'Plan a play against a defence that reacts', 'soccer football play designer tactics board planning runs off the ball movement overlap third man run give and go one two wall pass decoy feint sunday league rec coach team playbook positioning defence reacts simulation', 'beta'],
   ]],
 ];
 

@@ -1,0 +1,218 @@
+#!/usr/bin/env node
+/**
+ * Off the Ball, headless engine harness
+ * ---------------------------------------------------------------------------
+ *   node apps/off-the-ball/test/engine-test.mjs            run all checks
+ *   node apps/off-the-ball/test/engine-test.mjs --sweep    print the preset x skill matrix
+ *   node apps/off-the-ball/test/engine-test.mjs --scout    print one preset against every archetype
+ *
+ * Every engine bug found so far was found by this file, not by looking at the
+ * animation. Run it before and after any change to the simulation.
+ *
+ * It works by slicing the <script> block out of index.html and taking
+ * everything above the RENDER banner, which is deliberately free of DOM calls.
+ * That split is load-bearing: keep all canvas and document access below the
+ * banner or this harness stops working.
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+/* The app moved into the studio at apps/off-the-ball/ and this harness moved
+   with it into test/, so the page is one directory up and is called
+   index.html like every other app in the fleet. The RENDER split it depends
+   on is unchanged and must stay that way. */
+const HTML = path.join(HERE, '..', 'index.html');
+const BANNER = '/* ================================================================ RENDER';
+
+function loadEngine() {
+  const html = fs.readFileSync(HTML, 'utf8');
+  const m = html.match(/<script>\n([\s\S]*?)<\/script>/);
+  if (!m) throw new Error('no <script> block found in index.html');
+  const js = m[1];
+  const cut = js.indexOf(BANNER);
+  if (cut < 0) throw new Error('RENDER banner missing, the DOM/engine split is gone');
+
+  const shim = `
+    export const API = { clonePlay, buildSim, step, compile, makeProfile,
+      SKILLS, PRESETS, MOVES, ARCHETYPES, PROF_KEYS, PROF_LIMITS,
+      setPlay: p => { play = p; }, setSkill: s => { skill = s; },
+      getPlay: () => play };
+  `;
+  const tmp = path.join(HERE, '.engine.tmp.mjs');
+  fs.writeFileSync(tmp, js.slice(0, cut) + shim);
+  return tmp;
+}
+
+const tmp = loadEngine();
+const { API } = await import(pathToFileURL(tmp).href);
+fs.unlinkSync(tmp);
+
+/* ------------------------------------------------------------------ utils */
+const MAX_FRAMES = 3000;                       // 50s of sim at 1/60
+
+function simulate(playObj, tierKey) {
+  API.setPlay(playObj);
+  API.setSkill(API.SKILLS[tierKey]);
+  const S = API.buildSim();
+  let n = 0;
+  while (!S.done && n < MAX_FRAMES) { API.step(S); n++; }
+  return { S, frames: n, hung: n >= MAX_FRAMES };
+}
+
+function preset(key, tierKey, arch = 'balanced') {
+  const p = API.clonePlay(key);
+  for (const d of p.defenders) d.prof = API.makeProfile(tierKey, arch);
+  return p;
+}
+
+const TIERS = Object.keys(API.SKILLS);
+const KEYS = Object.keys(API.PRESETS);
+
+let failures = 0;
+const check = (name, ok, detail = '') => {
+  if (!ok) { failures++; console.log(`  FAIL  ${name}${detail ? ': ' + detail : ''}`); }
+  else console.log(`  ok    ${name}`);
+};
+
+/* ------------------------------------------------------------ reporting */
+if (process.argv.includes('--sweep')) {
+  console.log('\npreset x opposition baseline\n');
+  for (const key of KEYS) {
+    const row = TIERS.map(t => simulate(preset(key, t), t).S.verdict.text.split(': ')[0].padEnd(15));
+    console.log('  ' + key.padEnd(12) + row.join('| '));
+  }
+  console.log('');
+  process.exit(0);
+}
+
+if (process.argv.includes('--scout')) {
+  const key = process.argv[process.argv.indexOf('--scout') + 1] || 'overlap';
+  console.log(`\n${key} vs every scouted back line (Sunday league base)\n`);
+  for (const arch of Object.keys(API.ARCHETYPES)) {
+    const { S } = simulate(preset(key, 'rec', arch), 'rec');
+    console.log('  ' + API.ARCHETYPES[arch].name.padEnd(22) + S.verdict.text);
+  }
+  console.log('');
+  process.exit(0);
+}
+
+/* ------------------------------------------------------------ the checks */
+console.log('\nOff the Ball, engine checks\n');
+
+console.log('termination');
+for (const key of KEYS) for (const t of TIERS) {
+  const { S, hung } = simulate(preset(key, t), t);
+  check(`${key}/${t} settles`, !hung && S.done && !!S.verdict,
+        hung ? 'ran past the frame cap' : 'no verdict produced');
+}
+
+console.log('\nmove library');
+{
+  const bad = [];
+  for (const [id, m] of Object.entries(API.MOVES)) {
+    const p = preset('blank', 'rec');
+    p.attackers[1].moves = [id];
+    const { S } = simulate(p, 'rec');
+    const a = S.attackers[1];
+    if (m.kind !== 'combo' && a.len < 0.5) bad.push(`${id}: produced no run`);
+    if (a.pos.x < 0 || a.pos.x > 68 || a.pos.y > 52.5) bad.push(`${id}: ended off the pitch`);
+    if (!m.name || !m.aka || !m.teach || !m.signal) bad.push(`${id}: missing copy`);
+    if (!(m.diff >= 1 && m.diff <= 3)) bad.push(`${id}: bad difficulty`);
+  }
+  check(`all ${Object.keys(API.MOVES).length} moves compile, stay in play, carry copy`,
+        bad.length === 0, bad.join('; '));
+}
+
+console.log('\nprofiles');
+{
+  // Every archetype must stay inside the documented limits.
+  const bad = [];
+  for (const t of TIERS) for (const a of Object.keys(API.ARCHETYPES)) {
+    const p = API.makeProfile(t, a);
+    for (const k of API.PROF_KEYS) {
+      const [lo, hi] = API.PROF_LIMITS[k];
+      if (!(p[k] >= lo && p[k] <= hi)) bad.push(`${t}/${a}.${k}=${p[k]}`);
+    }
+  }
+  check('every tier x archetype stays inside PROF_LIMITS', bad.length === 0, bad.join(' '));
+
+  // Scouting one defender differently must change what happens to him. If this
+  // ever passes trivially the per-defender plumbing has been broken again.
+  const line = arch => {
+    const p = preset('giveandgo', 'rec');
+    p.defenders[0].prof = API.makeProfile('rec', arch);
+    const { S } = simulate(p, 'rec');
+    /* The ledger writes "<label>: <what he did>". This used to look for an
+       em dash, and when the studio dash sweep changed the separator the
+       find returned nothing for all three archetypes, so three empty
+       strings compared equal and the check failed as "all three identical"
+       rather than "I could not find the line". Match the label, and say so
+       when there is no line at all. */
+    const ev = S.events.find(e => e.msg.startsWith(`${S.defenders[0].label}:`));
+    return ev ? ev.msg : '';
+  };
+  const straight = line('balanced'), diver = line('diver'), deep = line('deep');
+  check('the ledger reports on the rescouted defender at all',
+        !!straight, 'no ledger line found for the first defender');
+  check('rescouting one defender changes his own outcome',
+        !!straight && straight !== diver && straight !== deep,
+        `all three identical: ${straight}`);
+
+  // An aggressive defender must be draggable further than a disciplined one.
+  const drift = arch => {
+    const p = preset('giveandgo', 'rec');
+    p.defenders[0].prof = API.makeProfile('rec', arch);
+    return simulate(p, 'rec').S.defenders[0].maxDrift;
+  };
+  check('"dives in" is dragged further than "sits deep"', drift('diver') > drift('deep'),
+        `diver ${drift('diver').toFixed(1)}m vs deep ${drift('deep').toFixed(1)}m`);
+}
+
+console.log('\nperception and feints');
+{
+  // A slow-reacting defender must buy a feint harder than a quick-reading one.
+  const bought = arch => {
+    const p = preset('isolate', 'rec', arch);
+    const { S } = simulate(p, 'rec');
+    const ev = S.events.find(e => e.cls === 'trick');
+    return ev ? parseFloat(ev.msg.match(/([\d.]+)m/)?.[1] ?? 0) : 0;
+  };
+  check('a reader buys a feint less than a plain defender',
+        bought('reader') < bought('balanced'),
+        `reader ${bought('reader')}m vs balanced ${bought('balanced')}m`);
+}
+
+console.log('\npassing');
+{
+  // A pass must be withheld rather than played into a defender.
+  let anySkipped = false;
+  for (const key of KEYS) for (const t of TIERS) for (const a of Object.keys(API.ARCHETYPES)) {
+    const { S } = simulate(preset(key, t, a), t);
+    if (S.passes.some(p => p.skipped)) { anySkipped = true; break; }
+  }
+  check('a covered pass is withheld, not forced', anySkipped);
+
+  // No pass may ever be logged as played while its receiver is offside.
+  const bad = [];
+  for (const key of KEYS) for (const t of TIERS) {
+    const { S } = simulate(preset(key, t), t);
+    if (S.events.some(e => e.cls === 'pass') && /offside/i.test(S.verdict.text)) bad.push(`${key}/${t}`);
+  }
+  check('no pass is played to an offside runner', bad.length === 0, bad.join(' '));
+}
+
+console.log('\nshare round-trip');
+{
+  // encode/decode lives below the RENDER banner, so this only checks that the
+  // profile shape a share link has to carry is stable.
+  const p = preset('overlap', 'rec', 'watcher');
+  const keys = API.PROF_KEYS.every(k => typeof p.defenders[0].prof[k] === 'number');
+  check('defender profiles are all numeric and serialisable',
+        keys && typeof p.defenders[0].prof.arch === 'string');
+}
+
+console.log(`\n${failures === 0 ? 'all checks passed' : failures + ' check(s) failed'}\n`);
+process.exit(failures === 0 ? 0 : 1);
