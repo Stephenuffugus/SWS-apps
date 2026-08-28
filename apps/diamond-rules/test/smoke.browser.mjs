@@ -25,7 +25,7 @@ await withApp('diamond-rules', async ({ page, errors }) => {
       const home = document.getElementById('base-HOME').getBoundingClientRect();
       const b2 = document.getElementById('base-B2').getBoundingClientRect();
       const bub = document.querySelector('.bubble').getBoundingClientRect();
-      const top = document.querySelector('.topbar').getBoundingClientRect();
+      const top = document.querySelector('.topstack').getBoundingClientRect();
       return { homeBottom: home.bottom, b2Top: b2.top, bubTop: bub.top, topBottom: top.bottom };
     });
     if (r.homeBottom > r.bubTop + 1) fail(`home plate under the bubble in ${where}: ${Math.round(r.homeBottom)} vs ${Math.round(r.bubTop)}`);
@@ -362,14 +362,16 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.click('[data-sport="baseball"]');
 
   // tip jar link renders, feedback box opens from the settings card
-  const tipHref = await page.evaluate(() => {
-    const a = document.querySelector('#tipSlot a');
-    return a ? a.href : '';
+  const tip = await page.evaluate(() => {
+    const a = document.getElementById('tipBtn');
+    return { hidden: a.hidden, href: a.href || '' };
   });
-  if (!tipHref.includes('buy.stripe.com')) fail('tip jar link missing from settings');
-  // add to home screen: offered in settings, and as a banner from the hub link
+  if (tip.hidden || !tip.href.includes('buy.stripe.com')) fail('tip jar button missing from settings');
+  // add to home screen: on the main screen, in settings, and via the hub link
   const installShown = await page.evaluate(() => !document.getElementById('swsInstall').hidden);
   if (!installShown) fail('add to home screen button missing from settings');
+  const pillShown = await page.evaluate(() => !document.getElementById('getPill').hidden);
+  if (!pillShown) fail('add to home screen pill missing from the main screen');
   await page.click('#feedbackLink');
   const fbOpen = await page.evaluate(() => !document.getElementById('fbWrap').classList.contains('hidden'));
   if (!fbOpen) fail('feedback box did not open');

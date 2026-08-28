@@ -79,7 +79,11 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   pointer-events:none;padding:calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 8px);}
 .ui > *{pointer-events:auto}
 
+.topstack{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:520px;width:100%;margin:0 auto}
+.getpill{appearance:none;border:0;background:var(--ink);color:#fff;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:15px;padding:11px 20px;border-radius:999px;box-shadow:var(--shadow);cursor:pointer}
+.getpill:active{transform:translateY(2px);box-shadow:none}
 .pill{background:var(--glass);border-radius:999px;box-shadow:var(--shadow);padding:6px 12px;
   display:flex;align-items:center;gap:8px}
 .streak{font-family:'Anton',sans-serif;font-size:13px;letter-spacing:.05em}
@@ -194,8 +198,10 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .seg .btn{min-height:56px}
 .seg .btn.sel{background:var(--sun);border-color:var(--ink)}
 .setnote{font-size:13px;color:#6E8578;margin:8px 0 0;font-weight:800}
-.foot{font-size:13px;color:#6E8578;margin:14px 0 0;font-weight:800;text-align:center}
-.foot a{color:#4A7A5E}
+.foot{font-size:15px;color:#5E7568;margin:14px 0 0;font-weight:800;text-align:center}
+.foot a{color:#33664B}
+.btn.tip{background:#E4574F;border-color:#E4574F;color:#fff;display:flex;align-items:center;
+  justify-content:center;text-decoration:none;margin-top:8px}
 .buildtag{font-family:'Anton',sans-serif;font-size:10px;letter-spacing:.12em;color:#A9BDB1;
   text-align:center;margin:6px 0 0;text-transform:uppercase}
 
@@ -252,14 +258,17 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 
 <!-- ============ floating UI ============ -->
 <div class="ui">
-  <div class="topbar">
-    <div class="pill streak" id="streak">⭐ 0</div>
-    <div class="pill">
-      <span class="lbl">B</span><span class="bulbs" id="bBalls"></span>
-      <span class="lbl">S</span><span class="bulbs" id="bStrikes"></span>
-      <span class="lbl">O</span><span class="bulbs" id="bOuts"></span>
+  <div class="topstack">
+    <div class="topbar">
+      <div class="pill streak" id="streak">⭐ 0</div>
+      <div class="pill">
+        <span class="lbl">B</span><span class="bulbs" id="bBalls"></span>
+        <span class="lbl">S</span><span class="bulbs" id="bStrikes"></span>
+        <span class="lbl">O</span><span class="bulbs" id="bOuts"></span>
+      </div>
+      <button class="gear" id="gear" aria-label="Settings">⚙️</button>
     </div>
-    <button class="gear" id="gear" aria-label="Settings">⚙️</button>
+    <button class="getpill" id="getPill" hidden>⤓ Add to home screen</button>
   </div>
 
   <div class="bottom">
@@ -332,7 +341,8 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
     <p class="setnote">⭐ Best streak: <b id="bestOut">0</b></p>
     <button class="btn fill big" id="closeSettings">Play ball! ▶</button>
     <button class="btn ghost big" id="swsInstall" style="margin-top:8px" hidden>⤓ Add to home screen</button>
-    <p class="foot">A free game from <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Diamond%20Rules">Feedback</a><span id="tipSlot"></span></p>
+    <a class="btn tip big" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
+    <p class="foot">A free game from <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Diamond%20Rules">Feedback</a></p>
     <p class="buildtag" id="buildTag"></p>
   </div>
 </div>
@@ -358,7 +368,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v12";
+var BUILD="diamond-v13";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -411,7 +421,7 @@ const POS = {
    plate. Measured live because the bubble grows and shrinks with its words. */
 function fitView(){
   const w=innerWidth,h=innerHeight;
-  const topEl=document.querySelector(".topbar"),botEl=document.querySelector(".bottom");
+  const topEl=document.querySelector(".topstack"),botEl=document.querySelector(".bottom");
   const topH=topEl?topEl.getBoundingClientRect().bottom+6:0;
   const botT=botEl?botEl.getBoundingClientRect().top-6:h;
   let visH=botT-topH;
@@ -1098,7 +1108,7 @@ el("closeSettings").addEventListener("click",()=>{
 });
 
 /* ================= tip jar + feedback ================= */
-if(TIP_URL)el("tipSlot").innerHTML=' &middot; <a href="'+TIP_URL+'" target="_blank" rel="noopener">&hearts; Tip jar</a>';
+if(TIP_URL){const t=el("tipBtn");t.href=TIP_URL;t.hidden=false;}
 el("buildTag").textContent=BUILD;
 function openFeedback(){
   el("settings").classList.add("hidden");
@@ -1162,10 +1172,22 @@ el("fbSend").addEventListener("click",()=>{
       ?'To add it: tap the Share button, then "Add to Home Screen".'
       :'In your browser menu, choose "Add to Home Screen" or "Install app".');
   }
-  if(standalone)btn.textContent="⤓ Give this game its own icon";
+  const pill=el("getPill");
+  let installed=false;
+  try{installed=localStorage.getItem("diamond-installed")==="1";}catch(e){}
+  if(standalone){
+    btn.textContent="⤓ Give this game its own icon";
+    pill.textContent="⤓ Give this game its own icon";
+  }
   btn.hidden=false;
+  pill.hidden=installed;
   btn.addEventListener("click",go);
+  pill.addEventListener("click",go);
   addEventListener("beforeinstallprompt",e=>{e.preventDefault();evt=e;});
+  addEventListener("appinstalled",()=>{
+    pill.hidden=true;
+    try{localStorage.setItem("diamond-installed","1");}catch(e){}
+  });
   if(/[?&]sws-install/.test(location.search)){
     const b=document.createElement("button");
     b.type="button";b.id="installBanner";b.textContent="⤓ Add to home screen";
@@ -1180,7 +1202,11 @@ el("fbSend").addEventListener("click",()=>{
 fitView();drawFielders(false);drawBases();paintBallSkin();paintStreak();setMode("count");
 /* the bubble grows and shrinks with every question, and the camera keeps the
    diamond out from under it, so refit whenever the bubble changes size */
-if(window.ResizeObserver)new ResizeObserver(fitView).observe(document.querySelector(".bubble"));
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(fitView);
+  ro.observe(document.querySelector(".bubble"));
+  ro.observe(document.querySelector(".topstack"));
+}
 if("serviceWorker" in navigator)
   addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
 

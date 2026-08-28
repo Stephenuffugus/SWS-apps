@@ -100,3 +100,7 @@ Stephen "cleared the browser five times" and still heard "only quarter notes": h
 ## v12, install button inside the installed studio
 
 Stephen could not find the install button: he browses Diamond Rules from inside the INSTALLED studio hub, which runs standalone, and the v9 affordance hid itself in any standalone window. Now standalone keeps the button ("Give this game its own icon") and explains the one path that works: open skywolfstudio.com/diamond-rules in the real browser (Safari share sheet / Chrome menu), because phones only add icons from a browser. Regular browser behavior unchanged (native prompt on Chrome, directions on iPhone, settings card + hub banner).
+
+## v13, install on the front door, tip jar grows up
+
+Stephen: the install button should be large and on the main screen; the tip jar can stay in settings but bigger; the footer text was too small. Shipped: a bold "Add to home screen" pill on the main screen right under the top bar (inside .topstack so the camera accounts for it; hides after a real install via appinstalled + localStorage flag, same standalone relabel as settings), the tip jar as a full-width red heart button in settings (replaces the tiny inline link), and the footer bumped from 13 to 15px.
