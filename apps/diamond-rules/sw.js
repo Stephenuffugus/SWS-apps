@@ -1,7 +1,7 @@
 /* Diamond Rules service worker: offline once installed, and the page itself
    is network first so a fix never strands on a stale phone. Bump CACHE with
    every shipped change or nobody who already installed ever receives it. */
-var CACHE = 'diamond-v13';
+var CACHE = 'diamond-v14';
 var ASSETS = [
   './',
   'index.html',

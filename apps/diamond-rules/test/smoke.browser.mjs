@@ -337,6 +337,31 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   });
   if (gates.softball8 !== 3 || gates.baseball !== 3) fail('runner IQ leaked below 10U: ' + JSON.stringify(gates));
   if (gates.softball10 !== 4) fail('runner IQ missing at 10U: ' + JSON.stringify(gates));
+
+  /* The infield fly is not an 8U rule. Stephen: "there's no infield fly
+     rule in 8U cuz the girls can hardly catch." Proven per league rather
+     than trusted, and proven by drawing the bank a few hundred times as
+     well as by inspecting it, because the gate that matters is the one the
+     picker honours. */
+  const iff = await page.evaluate(() => {
+    const d = window.__dr, out = {}, cur = d.S.sport;
+    for (const k of ['softball8', 'softball10', 'baseball']) {
+      d.S.sport = k;
+      const inBank = d.flyBank().some(x => x.chip === 'Infield fly rule');
+      let drawn = false;
+      for (let i = 0; i < 400; i++) if (d.FLY_BANK && d.flyBank().length) {
+        const s = d.flyBank()[Math.floor(Math.random() * d.flyBank().length)];
+        if (s.chip === 'Infield fly rule') drawn = true;
+      }
+      out[k] = { inBank, drawn, bankSize: d.flyBank().length };
+    }
+    d.S.sport = cur;
+    return out;
+  });
+  if (iff.softball8.inBank || iff.softball8.drawn) fail('infield fly reached 8U: ' + JSON.stringify(iff.softball8));
+  if (iff.softball8.bankSize < 5) fail('8U fly bank got too thin: ' + JSON.stringify(iff.softball8));
+  if (!iff.softball10.inBank) fail('infield fly missing at 10U: ' + JSON.stringify(iff.softball10));
+  if (!iff.baseball.inBank) fail('infield fly missing at baseball: ' + JSON.stringify(iff.baseball));
   await page.click('#closeSettings');
   await page.click('#tab-count');
   await page.waitForTimeout(250);

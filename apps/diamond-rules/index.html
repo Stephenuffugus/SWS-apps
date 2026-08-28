@@ -368,7 +368,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v13";
+var BUILD="diamond-v14";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -378,16 +378,23 @@ var FEEDBACK_WEBHOOK="https://discord.com/api/webhooks/1542619447804567572/WWTb3
 /* ================= league config =================
    League rules are data, not code, straight from Stephen's league:
    8U is coach pitch, 4 strikes, no steals or leadoffs, no dropped third
-   strike. 10U is kid pitch, 3 strikes, steals and leadoffs ON, dropped
-   third strike live. `steals` gates the runner IQ scenarios. */
+   strike, and NO INFIELD FLY. Stephen, 2026-08-28: "there's no infield fly
+   rule in 8U cuz the girls can hardly catch." That is the whole point of
+   the rule and the reason it does not belong there: it exists to stop a
+   fielder dropping an easy pop on purpose to get a cheap double play, and
+   at 8U an easy pop is not easy and nobody is dropping it on purpose.
+   10U is kid pitch, 3 strikes, steals and leadoffs ON, dropped third
+   strike live, infield fly in play.
+   `steals` gates the runner IQ scenarios; `infieldFly` gates any scenario
+   that declares needs:"infieldFly". */
 const SPORTS = {
-  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,
+  softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
-    note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs"},
-  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,
+    note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs, no infield fly"},
+  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:true,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"10U kid pitch: 3 strikes = out · steals and leadoffs are ON"},
-  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,
+  baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,
     ballFill:"#FFF9EE",ballStroke:"#E0955B",note:"3 strikes = out · 4 balls = walk"}
 };
 
@@ -810,12 +817,12 @@ const FLY_BANK=[
    correct:"yes",chip:"Sacrifice fly",
    why:"Perfect! Stay on the base until the catch, THEN run. That's a <b>sacrifice fly</b>: batter out, run counts.",
    tip:"One out for one run is a great trade!"},
-  {runners:[1,2],outs:1,ballAt:POS[4],kind:"choice",
+  {runners:[1,2],outs:1,ballAt:POS[4],kind:"choice",needs:"infieldFly",
    prompt:`<span class="tag">Infield fly!</span>Runners on first and second, <b>1 out</b>. Easy pop up over second base. The umpire yells <b>"INFIELD FLY!"</b> What does that mean?`,
    choices:[["auto","Batter is out right away, caught or not!"],["force","The runners must run"],["nothing","Nothing, play on"]],
    correct:"auto",chip:"Infield fly rule",
    why:"Runners on first and second, fewer than 2 outs, easy pop up? The batter is just <b>out</b>, caught or dropped. It stops sneaky drop-it-on-purpose tricks. Runners can stay. They're safe!",
-   tip:"Most 8U leagues skip this rule! You'll meet it when you're older."},
+   tip:"You will not see this one at 8U. The rules grow with you!"},
   {runners:[2,3],outs:0,ballAt:POS[7],kind:"choice",
    prompt:`<span class="tag">Foul ball!</span>Runners on second and third, <b>no outs</b>. A high foul drifts near the fence... the left fielder <b>catches it!</b> Can the runner on third tag up and score?`,
    choices:[["yes","YES! A foul catch is still a catch"],["no","No way, the ball was foul"]],
@@ -833,12 +840,22 @@ const FLY_BANK=[
    correct:"no",chip:"Third out",
    why:"When the third out is a <b>caught fly</b>, no runs can score on the play. The inning ends the moment the ball hits the glove!"}
 ];
-let lastFly=-1;
+/* A scenario may name the league rule it depends on. Anything without a
+   `needs` is universal. This is the same promise the runner IQ bank makes:
+   a kid is never quizzed on a rule her league does not play. */
+function allowed(s){ return !s.needs || !!cfg()[s.needs]; }
+function flyBank(){ return FLY_BANK.filter(allowed); }
+
+/* The no-repeat latch remembers the PROMPT, not the index. An index is
+   meaningless once the bank is filtered per league, and would have pinned
+   the wrong question the moment the level changed. */
+let lastFly="";
 function makeFlyBall(){
-  let i;
-  do{i=Math.floor(Math.random()*FLY_BANK.length);}while(i===lastFly);
-  lastFly=i;
-  const s={...FLY_BANK[i]};
+  const bank=flyBank();
+  let pick;
+  do{pick=bank[Math.floor(Math.random()*bank.length)];}while(bank.length>1&&pick.prompt===lastFly);
+  lastFly=pick.prompt;
+  const s={...pick};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
   return s;
 }
@@ -1212,7 +1229,7 @@ if("serviceWorker" in navigator)
 
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
 window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
-  cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK};
+  cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank};
 </script>
 </body>
 </html>
