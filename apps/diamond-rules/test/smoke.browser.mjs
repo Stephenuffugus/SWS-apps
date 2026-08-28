@@ -268,6 +268,58 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (off1 < 10) fail('first baseman standing on the baseline');
   if (off3 < 10) fail('third baseman standing on the baseline');
 
+  // ── Play 10: a scored round with one planned miss lands at 9 of 10 ──
+  await page.click('#tab-play');
+  await page.waitForTimeout(300);
+  const rbShown = await page.evaluate(() => !document.getElementById('roundBtn').hidden);
+  if (!rbShown) fail('Play 10 button missing in a scenario mode');
+  await page.click('#roundBtn');
+  await page.waitForTimeout(300);
+  for (let i = 0; i < 10; i++) {
+    s = await page.evaluate(() => window.__dr.S.scenario);
+    if (i === 0) {
+      // planned miss: hold on a force play, or a bag that is neither correct nor okay
+      if (s.correct !== 'HOLD') await page.click('#holdChip');
+      else await page.click('#base-B2', { force: true });
+      await page.waitForTimeout(300);
+      const open = await page.evaluate(() => !document.getElementById('overlay').classList.contains('hidden'));
+      if (open) fail('round miss should not end the play');
+    }
+    if (s.correct === 'HOLD') await page.click('#holdChip');
+    else await page.click('#base-' + s.correct, { force: true });
+    await page.waitForSelector('#overlay:not(.hidden)', { timeout: 3000 });
+    const line = await page.textContent('#vRound');
+    if (!line.includes('10') && !line.includes('Round over')) fail('round progress line missing: ' + line);
+    await page.click('#next');
+    await page.waitForTimeout(250);
+  }
+  const cardUp = await page.evaluate(() => !document.getElementById('roundCard').classList.contains('hidden'));
+  if (!cardUp) fail('round card did not appear after 10 plays');
+  const score = (await page.textContent('#rdScore')).trim();
+  if (score !== '9 / 10') fail('planned-miss round should score 9 / 10, got ' + score);
+  const wordR = await page.textContent('#rdWord');
+  if (wordR !== 'ALL-STAR!') fail('9 of 10 should be ALL-STAR!, got ' + wordR);
+  await page.click('#roundFree');
+  await page.waitForTimeout(250);
+  const freed = await page.evaluate(() => window.__dr.S.round === null);
+  if (!freed) fail('free play did not end the round');
+
+  // ── pick your position: ten choices, drills lean that way, choice persists ──
+  await page.click('#gear');
+  const posCount = await page.evaluate(() => document.querySelectorAll('#posSeg button').length);
+  if (posCount !== 10) fail('position picker should offer 10 choices, got ' + posCount);
+  await page.click('#posSeg [data-mypos="6"]');
+  await page.click('#closeSettings');
+  const bias = await page.evaluate(() => {
+    let n = 0;
+    for (let i = 0; i < 100; i++) {
+      const sc = window.__dr.makePosition();
+      if ((sc.who || []).includes('6')) n++;
+    }
+    return n;
+  });
+  if (bias < 25) fail('shortstop drills not favored: ' + bias + ' of 100');
+
   // ── settings: sport flips to baseball and survives a reload ──
   await page.click('#gear');
   const note0 = await page.textContent('#sportNote');
@@ -291,6 +343,10 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.waitForTimeout(400);
   const kept = await page.evaluate(() => window.__dr.S.sport);
   if (kept !== 'baseball') fail('sport choice did not survive a reload: ' + kept);
+  const keptPos = await page.evaluate(() => window.__dr.S.myPos);
+  if (keptPos !== '6') fail('position choice did not survive a reload: ' + keptPos);
+  const rbCount = await page.evaluate(() => document.getElementById('roundBtn').hidden);
+  if (!rbCount) fail('Play 10 button should hide in batting mode');
 
   // baseball strikeout takes 3
   for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');

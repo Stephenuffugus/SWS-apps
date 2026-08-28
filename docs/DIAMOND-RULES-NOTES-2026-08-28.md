@@ -64,3 +64,13 @@ Stephen: runners should look like players, not gold dots. `runnerSprite()` now d
 3. **Field truth**: CF moved inside the fence (was in the sky at y=122, fence curve is y=133; now y=160), and 1B/3B moved OFF their baselines to where corner infielders actually stand (282,360 / 118,360). Smoke test now measures the DOM against the baseline equations.
 4. **Feedback on the front door**: a 💬 tab at the end of the row opens the feedback box straight from the main screen (settings link still works).
 5. **Ballpark organ**: Take Me Out to the Ball Game (1908, public domain), the full chorus sequenced as [semitone, beats] pairs through one WebAudio triangle voice, looping while the 🎵 tab is armed. No audio files, app stays one file. Off by default; a tap is the gesture autoplay policy wants anyway.
+
+## v8, the go-ahead round, same night
+
+Stephen approved the competitor-research picks; tiers wait for his league answers this weekend.
+
+1. **Play 10**: a scored round in any scenario mode (button in the bubble; hidden during a round and in Batting). First tap right (or okay tier) = a point; misses still teach but score nothing. Progress rides the streak pill and the verdict card; after ten plays a score card shows N / 10 with a star row (missed ones dimmed) and a title: 10 PERFECT GAME, 8+ ALL-STAR, 6+ GREAT GAME, 3+ GOOD HUSTLE, else KEEP SWINGING. Play again or free play. Mode switch cancels a round.
+2. **Pick your position**: a Your Position grid in settings (Every spot + all 9), persisted in `diamond1.myPos`. Positioning drills weight scenarios featuring your spot at triple (every POS_BANK entry now carries `who`; a new Charge the Bunt drill gives 3B its own), and grounders come to your position half the time if you play infield.
+3. Smoke suite: a full scored round with one planned miss must land at exactly 9 / 10 ALL-STAR, picker offers 10 choices, SS bias measured over 100 draws, choice survives reload.
+
+Still open for the weekend: difficulty tiers (needs Stephen's league answers: steals? no leadoff? dropped third strike?), plus the parent-notes round.

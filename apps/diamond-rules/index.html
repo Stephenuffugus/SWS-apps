@@ -135,6 +135,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .hint{font-size:13px;color:#5E7568;margin:8px 0 0}
 .hint.no{color:#C2312B;font-weight:900}
 .hint:empty{display:none}
+.btn.mini{min-height:40px;font-size:14px;padding:8px;width:100%;margin-top:8px}
 
 .tabs{display:flex;justify-content:center;align-items:flex-start;gap:6px}
 .tabwrap{display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -177,6 +178,12 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .tipline{margin:-6px 0 16px;font-size:13px;font-weight:800;line-height:1.4;text-align:left;
   background:#FFF6DC;border-radius:12px;padding:8px 10px;color:#6B5410}
 .tipline:empty{display:none}
+.roundline{font-family:'Anton',sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  color:#7C9488;margin:0 0 10px}
+.roundline:empty{display:none}
+.rdscore{font-family:'Anton',sans-serif;font-size:44px;margin:0 0 8px;color:var(--ink)}
+.rdstars{font-size:21px;letter-spacing:2px;margin:0 0 16px;line-height:1.5}
+.dimst{opacity:.22}
 .btn.big{width:100%;font-size:18px;min-height:56px}
 .scard{background:#fff;border-radius:22px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 0 rgba(0,0,0,.2);
   max-height:calc(100dvh - 40px);overflow-y:auto}
@@ -186,6 +193,8 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .seg .btn{min-height:56px}
 .seg .btn.sel{background:var(--sun);border-color:var(--ink)}
+.seg.pos9{grid-template-columns:repeat(5,1fr);gap:6px}
+.seg.pos9 .btn{min-height:44px;font-size:13px;padding:6px 2px}
 .setnote{font-size:13px;color:#6E8578;margin:8px 0 0;font-weight:800}
 .foot{font-size:13px;color:#6E8578;margin:14px 0 0;font-weight:800;text-align:center}
 .foot a{color:#4A7A5E}
@@ -263,6 +272,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
       <p class="ask" id="ask"></p>
       <div class="answers" id="answers"></div>
       <p class="hint" id="hint"></p>
+      <button class="btn ghost mini" id="roundBtn" hidden>🏆 Play a 10 round!</button>
     </div>
     <nav class="tabs" role="tablist">
       <div class="tabwrap"><button class="tab util" id="musicBtn" aria-pressed="false" aria-label="Ballpark music on or off">🎵</button><span class="tlbl">Music</span></div>
@@ -285,7 +295,19 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
     <span class="rulechip" id="vChip"></span>
     <p class="vbody" id="vBody"></p>
     <p class="tipline" id="vTip"></p>
+    <p class="roundline" id="vRound"></p>
     <button class="btn fill big" id="next">Next play ▶</button>
+  </div>
+</div>
+
+<!-- round score -->
+<div class="overlay hidden" id="roundCard">
+  <div class="vcard">
+    <p class="bigword good" id="rdWord">ALL-STAR!</p>
+    <p class="rdscore" id="rdScore">10 / 10</p>
+    <div class="rdstars" id="rdStars"></div>
+    <button class="btn fill big" id="roundAgain">🏆 Play 10 again!</button>
+    <button class="btn ghost big" id="roundFree" style="margin-top:8px">Free play</button>
   </div>
 </div>
 
@@ -300,6 +322,11 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
         <button class="btn" data-sport="baseball">⚾ Baseball</button>
       </div>
       <p class="setnote" id="sportNote"></p>
+    </div>
+    <div class="setrow">
+      <p class="setlbl">Your position</p>
+      <div class="seg pos9" id="posSeg"></div>
+      <p class="setnote">Pick your spot and drills come your way more often!</p>
     </div>
     <div class="setrow">
       <p class="setlbl">Sound</p>
@@ -336,7 +363,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v7";
+var BUILD="diamond-v8";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -397,17 +424,19 @@ function fitView(){
 addEventListener("resize",fitView);
 
 /* ================= state + persistence ================= */
-const S = {mode:"count",sport:"softball",sound:true,
-  balls:0,strikes:0,outs:0,streak:0,best:0,scenario:null,answered:false};
+const S = {mode:"count",sport:"softball",sound:true,myPos:"",
+  balls:0,strikes:0,outs:0,streak:0,best:0,scenario:null,answered:false,
+  round:null,missedThis:false};
 const KEY="diamond1";
 try{
   const d=JSON.parse(localStorage.getItem(KEY)||"{}");
   if(SPORTS[d.sport])S.sport=d.sport;
   if(d.sound===false)S.sound=false;
+  if(typeof d.myPos==="string")S.myPos=d.myPos;
   S.best=d.best|0;
 }catch(e){}
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify({sport:S.sport,sound:S.sound,best:S.best}))}catch(e){}
+  try{localStorage.setItem(KEY,JSON.stringify({sport:S.sport,sound:S.sound,best:S.best,myPos:S.myPos}))}catch(e){}
 }
 const cfg=()=>SPORTS[S.sport];
 const el=id=>document.getElementById(id);
@@ -578,7 +607,7 @@ function paintBoard(){
 let lastStreak=0;
 function paintStreak(){
   const p=el("streak");
-  p.textContent=`⭐ ${S.streak}`;
+  p.textContent=S.round?`⭐ ${S.streak} · ${S.round.n}/${S.round.total}`:`⭐ ${S.streak}`;
   if(S.streak>lastStreak){p.classList.remove("pop");void p.offsetWidth;p.classList.add("pop");}
   lastStreak=S.streak;
 }
@@ -601,6 +630,7 @@ function confetti(){
 /* ================= THE COUNT ================= */
 function countScreen(msg){
   S.scenario=null;S.answered=false;
+  el("roundBtn").hidden=true;
   const hc=el("holdChip");hc.hidden=true;hc.classList.remove("hit","miss");
   setBasePulse(false);setFielderPulse(false);
   el("ask").innerHTML = msg || `<span class="tag">Pitch by pitch</span>Tap a pitch! <b>${cfg().note}</b>.`;
@@ -688,7 +718,10 @@ function makeGroundBall(){
   do{
     runners=RUNNER_POOL[Math.floor(Math.random()*RUNNER_POOL.length)];
     outs=Math.floor(Math.random()*3);
-    pos=INFIELD[Math.floor(Math.random()*INFIELD.length)];
+    /* a kid who picked their spot gets the ball hit to them more often */
+    pos=(S.myPos&&INFIELD.includes(+S.myPos)&&Math.random()<.5)
+      ?+S.myPos
+      :INFIELD[Math.floor(Math.random()*INFIELD.length)];
     key=runners.join(",")+"|"+outs+"|"+pos;
   }while(key===lastGround);
   lastGround=key;
@@ -794,41 +827,47 @@ function makeFlyBall(){
    The other half of knowing the rules: knowing where YOU go.
    Answers are the fielders themselves. */
 const POS_BANK=[
-  {kind:"pos",runners:[],outs:0,ballAt:POS[3],correct:"1",alt:[],chip:"Pitcher covers first",
+  {kind:"pos",runners:[],outs:0,ballAt:POS[3],correct:"1",alt:[],chip:"Pitcher covers first",who:["1","3"],
    prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>first baseman</b>, way off the bag! The batter is racing up the line. Who runs to <b>cover first base</b>?`,
    why:"When the first baseman leaves the bag to field the ball, the <b>pitcher</b> sprints over to take the throw at first! Ball to the first base side? Pitcher covers."},
-  {kind:"pos",runners:[1],outs:0,ballAt:POS[4],correct:"6",alt:[],chip:"Partners cover",
+  {kind:"pos",runners:[1],outs:0,ballAt:POS[4],correct:"6",alt:[],chip:"Partners cover",who:["6","4"],
    prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>second baseman</b>! Runner on first. Somebody has to be standing on second for the force. Who covers <b>second base</b>?`,
    why:"The shortstop and second baseman are partners! When one goes for the ball, the other covers second. Ball on the first base side? The <b>shortstop</b> takes the bag.",
    tip:"Before the pitch, point at your partner: you cover, I cover!"},
-  {kind:"pos",runners:[1],outs:1,ballAt:POS[6],correct:"4",alt:[],chip:"Partners cover",
+  {kind:"pos",runners:[1],outs:1,ballAt:POS[6],correct:"4",alt:[],chip:"Partners cover",who:["4","6"],
    prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>shortstop</b>! Runner on first. Who covers <b>second base</b> for the throw?`,
    why:"Ball on the third base side? The <b>second baseman</b> covers the bag. Partners take turns so second base is never empty!"},
-  {kind:"pos",runners:[],outs:1,ballAt:POS[5],correct:"9",alt:[],chip:"Back up every throw",
+  {kind:"pos",runners:[],outs:1,ballAt:POS[5],correct:"9",alt:[],chip:"Back up every throw",who:["9","5"],
    prompt:`<span class="tag">Back it up!</span>Ground ball to <b>third</b>! It is a looong throw across to first. If the throw gets past first base, who is <b>backing it up</b>?`,
    why:"The <b>right fielder</b> sneaks in behind first base on every infield grounder. If the throw skips away, they grab it and save a base!"},
-  {kind:"pos",runners:[2],outs:1,ballAt:POS[7],correct:"1",alt:[],chip:"Back up home",
+  {kind:"pos",runners:[2],outs:1,ballAt:POS[7],correct:"1",alt:[],chip:"Back up home",who:["1","7","2"],
    prompt:`<span class="tag">Back it up!</span>Base hit to <b>left field</b>! The runner from second is heading for home and the throw is coming in! Who <b>backs up the catcher</b> behind home plate?`,
    why:"On a throw home from the outfield, the <b>pitcher</b> runs behind the catcher. If the ball gets past, there is no free run!"},
-  {kind:"pos",runners:[3],outs:1,ballAt:POS[1],correct:"2",alt:[],chip:"Guard the plate",
+  {kind:"pos",runners:[3],outs:1,ballAt:POS[1],correct:"2",alt:[],chip:"Guard the plate",who:["2","1"],
    prompt:`<span class="tag">Heads up!</span>The runner on third is dancing off the bag and the pitcher has the ball. If that runner breaks for home, who <b>guards home plate</b>?`,
    why:"Home plate belongs to the <b>catcher</b>! Stay home, take the throw, and make the runner beat the tag."},
-  {kind:"choice",runners:[],outs:0,ballAt:POS[9],correct:"backup",chip:"Back up your buddy",
+  {kind:"choice",runners:[],outs:0,ballAt:POS[9],correct:"backup",chip:"Back up your buddy",who:["8","9"],
    prompt:`<span class="tag">Fly ball!</span>High fly to <b>right field</b>. You play <b>center field</b>, so it is not yours. What do you do?`,
    choices:[["backup","Run behind right field, just in case!"],["watch","Stand still and watch"],["infield","Run to the infield"]],
    why:"Outfielders back each other up on <b>every</b> fly ball! If it pops out of the glove or skips by, you are right there to grab it."},
-  {kind:"pos",runners:[],outs:2,ballAt:POS[1],correct:"3",alt:[],chip:"Take your bag",
+  {kind:"pos",runners:[],outs:2,ballAt:POS[1],correct:"3",alt:[],chip:"Take your bag",who:["3","1"],
    prompt:`<span class="tag">Cover it!</span>Easy grounder right back to the <b>pitcher</b>! Who covers <b>first base</b> for the throw?`,
    why:"That one belongs to the <b>first baseman</b>: run to the bag, put a foot on it, and give a big target! The pitcher only covers when the first baseman is busy fielding."},
-  {kind:"choice",runners:[1],outs:0,ballAt:POS[8],correct:"yes",chip:"Everybody moves",
+  {kind:"choice",runners:[1],outs:0,ballAt:POS[8],correct:"yes",chip:"Everybody moves",who:["7","8"],
    prompt:`<span class="tag">Base hit!</span>Line drive to <b>center field</b>! You play <b>left field</b>. The ball is nowhere near you. Do you have a job?`,
    choices:[["yes","YES! Run over and back up center"],["no","Nope, take a little break"]],
    why:"Every player has a job on every play! Back up the fielder next to you. Nobody ever just watches."}
+  ,{kind:"pos",runners:[],outs:1,ballAt:{x:145,y:405},correct:"5",alt:[],chip:"Charge the bunt",who:["5","2","1"],
+   prompt:`<span class="tag">Bunt!</span>The batter taps a little bunt down the <b>third base line</b>! It is rolling slow. Who charges in to grab it?`,
+   why:"The <b>third baseman</b> charges the bunt! Run in hard, scoop it, and make a strong throw to first.",
+   tip:"Call it LOUD: I got it, I got it!"}
 ];
 let lastPos=-1;
 function makePosition(){
-  let i;
-  do{i=Math.floor(Math.random()*POS_BANK.length);}while(i===lastPos);
+  /* weighted draw: scenarios featuring the kid's own position count triple */
+  const w=POS_BANK.map((s,i)=>i===lastPos?0:(S.myPos&&(s.who||[]).includes(S.myPos))?3:1);
+  let r=Math.random()*w.reduce((a,b)=>a+b,0),i=0;
+  while(r>=w[i]){r-=w[i];i++;}
   lastPos=i;
   const s={...POS_BANK[i]};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
@@ -837,8 +876,9 @@ function makePosition(){
 
 /* ================= quiz flow ================= */
 function loadScenario(){
-  S.answered=false;
+  S.answered=false;S.missedThis=false;
   el("hint").className="hint";
+  el("roundBtn").hidden=!!S.round;
   el("overlay").classList.add("hidden");
   const s=S.mode==="play"?makeGroundBall()
     :S.mode==="fly"?makeFlyBall()
@@ -887,7 +927,7 @@ function answer(choice){
   if(!ok&&!okayMsg){
     /* a miss does not end the play: flash it, break the streak, try again.
        The right answer is never given away; finding it is the learning. */
-    sfx("bad");S.streak=0;paintStreak();
+    sfx("bad");S.streak=0;S.missedThis=true;paintStreak();
     if(s.kind==="choice"){
       const b=el("answers").querySelector(`[data-c="${choice}"]`);
       if(b){b.disabled=true;b.classList.add("wrong");
@@ -925,11 +965,49 @@ function answer(choice){
   el("vChip").textContent=s.chip;
   el("vBody").innerHTML=okayMsg||s.why;
   el("vTip").textContent=(ok&&s.tip)?"🧢 Coach says: "+s.tip:"";
+  if(S.round){
+    S.round.n++;
+    if(!S.missedThis)S.round.score++;
+    el("vRound").textContent=S.round.n>=S.round.total
+      ?`Round over! Tap for your score!`
+      :`Play ${S.round.n} of ${S.round.total} · ${S.round.score} right`;
+    paintStreak();
+  }else el("vRound").textContent="";
   setTimeout(()=>el("overlay").classList.remove("hidden"),s.kind==="choice"?150:550);
 }
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-el("next").addEventListener("click",loadScenario);
+el("next").addEventListener("click",()=>{
+  if(S.round&&S.round.n>=S.round.total){showRoundCard();return;}
+  loadScenario();
+});
 el("holdChip").addEventListener("click",()=>answer("HOLD"));
+
+/* ================= Play 10: a round with a score ================= */
+function showRoundCard(){
+  el("overlay").classList.add("hidden");
+  const r=S.round,sc=r.score;
+  el("rdScore").textContent=`${sc} / ${r.total}`;
+  const wEl=el("rdWord");
+  wEl.textContent=sc>=10?"PERFECT GAME!":sc>=8?"ALL-STAR!":sc>=6?"GREAT GAME!":sc>=3?"GOOD HUSTLE!":"KEEP SWINGING!";
+  wEl.className="bigword "+(sc>=6?"good":"mid");
+  el("rdStars").innerHTML="⭐".repeat(sc)+`<span class="dimst">${"⭐".repeat(r.total-sc)}</span>`;
+  el("roundCard").classList.remove("hidden");
+  if(sc>=8){confetti();confetti();}
+  sfx(sc>=6?"good":"tap");
+}
+function startRound(){
+  S.round={n:0,score:0,total:10};
+  el("roundCard").classList.add("hidden");
+  showToast("Play 10!");sfx("tap");
+  loadScenario();paintStreak();
+}
+el("roundBtn").addEventListener("click",startRound);
+el("roundAgain").addEventListener("click",startRound);
+el("roundFree").addEventListener("click",()=>{
+  S.round=null;
+  el("roundCard").classList.add("hidden");
+  loadScenario();paintStreak();
+});
 
 /* ================= tabs & settings ================= */
 const MODE_NAMES={count:"Batting",play:"Grounders",fly:"Fly balls",pos:"Positions",mix:"Mix it up"};
@@ -942,7 +1020,8 @@ function showToast(txt){
   toastT=setTimeout(()=>t.classList.remove("show"),1200);
 }
 function setMode(m){
-  S.mode=m;
+  S.mode=m;S.round=null;
+  el("roundCard").classList.add("hidden");
   ["tab-count","tab-play","tab-fly","tab-pos","tab-mix"].forEach(id=>el(id).setAttribute("aria-selected","false"));
   el("tab-"+m).setAttribute("aria-selected","true");
   /* mix serves positioning questions too, so the fielders stay tappable */
@@ -955,9 +1034,20 @@ function setMode(m){
 ["count","play","fly","pos","mix"].forEach(m=>
   el("tab-"+m).addEventListener("click",()=>setMode(m)));
 
+/* the kid picks their spot; drills lean their way in every scenario mode */
+(function(){
+  const seg=el("posSeg");
+  let html=`<button class="btn" data-mypos="">Every spot</button>`;
+  for(const k in POS)html+=`<button class="btn" data-mypos="${k}">${POS[k].s}</button>`;
+  seg.innerHTML=html;
+  seg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    S.myPos=b.dataset.mypos;save();paintSettings();sfx("tap");
+  }));
+})();
 function paintSettings(){
   el("sportSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.sport===S.sport));
   el("soundSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",(b.dataset.snd==="on")===S.sound));
+  el("posSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.mypos===S.myPos));
   el("sportNote").textContent=cfg().note;
   el("bestOut").textContent=S.best;
 }
