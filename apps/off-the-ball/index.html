@@ -225,6 +225,11 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
     <button class="btn small" id="delplay">Delete</button>
     <button class="btn small" id="download">Download</button>
   </div>
+  <div class="row">
+    <button class="btn small wide" id="exportbook">Export playbook</button>
+    <button class="btn small wide" id="importbook">Import playbook</button>
+    <input type="file" id="bookfile" accept="application/json,.json" hidden>
+  </div>
   <div class="none" id="storenote" style="margin:7px 2px 0"></div>
 
   <div class="lab">The call</div>
@@ -1427,6 +1432,65 @@ $('delplay').addEventListener('click',()=>{
 });
 $('download').addEventListener('click',downloadCard);
 
+/* ---- the playbook as a file -----------------------------------------------
+   HANDOFF item 3: local storage plus share links is not durable enough for a
+   team. A browser clear takes the lot. So the whole playbook exports as one
+   small JSON file that somebody can keep, back up, or send to a teammate who
+   imports it, which is also the cheapest way for a squad to share a set of
+   plays without anybody signing in to anything.
+
+   The file is self describing and versioned so a future reader can tell what
+   it is looking at, and the importer is deliberately forgiving about shape
+   but strict about content: every play is decoded before it is accepted, and
+   anything that does not decode is counted and reported rather than silently
+   dropped. */
+const BOOK_FILE_V = 1;
+
+$('exportbook').addEventListener('click',()=>{
+  const b=loadBook();
+  if(!b.length){toast('Nothing saved yet');return;}
+  const doc={app:'off-the-ball',kind:'playbook',v:BOOK_FILE_V,
+    exported:new Date().toISOString(),plays:b};
+  const a=document.createElement('a');
+  a.download='off-the-ball-playbook.json';
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(doc,null,1)],{type:'application/json'}));
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast(`${b.length} play${b.length===1?'':'s'} exported`);
+});
+
+$('importbook').addEventListener('click',()=>$('bookfile').click());
+$('bookfile').addEventListener('change',ev=>{
+  const f=ev.target.files&&ev.target.files[0];
+  ev.target.value='';                       /* so the same file can be picked twice */
+  if(!f)return;
+  const r=new FileReader();
+  r.onerror=()=>toast('That file could not be read');
+  r.onload=()=>{
+    let doc;
+    try{doc=JSON.parse(String(r.result));}catch(e){toast('That is not a playbook file');return;}
+    /* tolerate a bare array, since somebody will hand edit one */
+    const incoming=Array.isArray(doc)?doc:(doc&&Array.isArray(doc.plays)?doc.plays:null);
+    if(!incoming){toast('That is not a playbook file');return;}
+    if(doc&&doc.v&&doc.v>BOOK_FILE_V){toast('That playbook came from a newer version');return;}
+    const book=loadBook();
+    let added=0,replaced=0,bad=0;
+    for(const e of incoming){
+      if(!e||typeof e.n!=='string'||typeof e.d!=='string'){bad++;continue;}
+      if(!decodePlay(e.d)){bad++;continue;}    /* it must actually open */
+      const name=e.n.slice(0,28);
+      const at=book.findIndex(x=>x.n===name);
+      if(at>=0){book[at]={n:name,d:e.d};replaced++;}
+      else{book.push({n:name,d:e.d});added++;}
+    }
+    saveBook(book);renderBook();
+    const said=[added?`${added} added`:'',replaced?`${replaced} replaced`:'',bad?`${bad} could not be read`:'']
+      .filter(Boolean).join(', ');
+    toast(said||'Nothing in that file');
+  };
+  r.readAsText(f);
+});
+
 function updateSkillStats(){
   const ds=play?play.defenders:[];
   const avg=k=>ds.length?ds.reduce((m,d)=>m+d.prof[k],0)/ds.length:skill[k];
@@ -1447,7 +1511,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v1';
+var BUILD = 'otb-v2';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
