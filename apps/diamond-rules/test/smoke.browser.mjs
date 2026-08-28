@@ -495,6 +495,59 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (!mixTap.reachable) fail('the circle is covered in mix, blocked by ' + mixTap.blockedBy);
   if (tappable.baseball) fail('the circle was tappable in baseball, where the rule does not exist');
 
+  /* ── EVERYBODY MOVES ──────────────────────────────────────────────────
+     The coach's room. Nothing here is right or wrong, so what has to hold is
+     that the picture is always complete and always inside the frame. Swept
+     rather than sampled: every tap on a grid over the whole field, every
+     base state. */
+  const mv = await page.evaluate(() => {
+    const d = window.__dr;
+    const states = [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]];
+    let cases = 0, minSep = Infinity;
+    const zones = {}, bad = [];
+    for (let x = -40; x <= 440; x += 10) for (let y = 100; y <= 560; y += 10) for (const st of states) {
+      const z = d.mvZone(x, y), J = d.mvPlan(z, st), ks = Object.keys(J);
+      cases++; zones[z.key] = 1;
+      if (ks.length !== 9 && bad.length < 4) bad.push('not nine jobs at ' + x + ',' + y + ' ' + z.key);
+      if (ks.filter(k => J[k].role === 'ball').length !== 1 && bad.length < 4)
+        bad.push('not exactly one on the ball at ' + x + ',' + y + ' ' + z.key);
+      const bags = {};
+      for (const k of ks) if (J[k].role === 'cover') {
+        if (bags[J[k].target] && bad.length < 4) bad.push('two girls covering ' + J[k].target + ' at ' + z.key);
+        bags[J[k].target] = 1;
+      }
+      for (const k of ks) {
+        const j = J[k];
+        if ((!isFinite(j.x) || !isFinite(j.y)) && bad.length < 4) bad.push('NaN destination ' + z.key);
+        if ((j.x < d.MV_BOX.x0 - 0.01 || j.x > d.MV_BOX.x1 + 0.01 ||
+             j.y < d.MV_BOX.y0 - 0.01 || j.y > d.MV_BOX.y1 + 0.01) && bad.length < 4)
+          bad.push('player off the frame at ' + z.key + ': ' + j.x.toFixed(0) + ',' + j.y.toFixed(0));
+      }
+      if (!d.MV_LINE2[z.key + '.' + z.state] && bad.length < 4) bad.push('no caption for ' + z.key + '.' + z.state);
+      for (let i = 0; i < ks.length; i++) for (let j2 = i + 1; j2 < ks.length; j2++)
+        minSep = Math.min(minSep, Math.hypot(J[ks[i]].x - J[ks[j2]].x, J[ks[i]].y - J[ks[j2]].y));
+    }
+    return { cases, minSep, zones: Object.keys(zones).sort(), bad };
+  });
+  if (mv.bad.length) fail('everybody moves: ' + mv.bad.join(' | '));
+  if (mv.cases < 10000) fail('the move sweep barely ran: ' + mv.cases);
+  if (mv.zones.length !== 10) fail('not every zone is reachable, got ' + mv.zones.join(','));
+  if (mv.minSep < 20) fail('two girls land on top of each other: ' + mv.minSep.toFixed(1));
+
+  /* The play the coach actually asked for, pinned by name. If this row ever
+     changes, somebody changed a coaching decision and should have to say so. */
+  const coachPlay = await page.evaluate(() => {
+    const d = window.__dr;
+    const z = d.mvZone(282, 372);           /* grounder to the first baseman */
+    const J = d.mvPlan(z, []);
+    return { by: z.by, key: z.key, p: J['1'].role + ':' + J['1'].target,
+             second: J['4'].role + ':' + J['4'].target, ss: J['6'].role + ':' + J['6'].target };
+  });
+  if (coachPlay.key !== '1B') fail('a grounder at the first baseman is not the 1B zone: ' + coachPlay.key);
+  if (coachPlay.p !== 'cover:B1') fail('the pitcher stopped covering first: ' + coachPlay.p);
+  if (coachPlay.second !== 'backin:B1') fail('the second baseman stopped backing up first: ' + coachPlay.second);
+  if (coachPlay.ss !== 'cover:B2') fail('the shortstop stopped taking second: ' + coachPlay.ss);
+
   /* The coach asked: "If I click the feedback button during a certain play
      quiz will it reference that play?" It does. */
   const fb = await page.evaluate(() => {
@@ -580,5 +633,49 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (mig !== 'softball8') fail("old 'softball' save did not migrate to 8U: " + mig);
 
   if (errors.length) fail('console errors: ' + errors.join(' | '));
+  /* the room really opens, really animates, and really hands the field back */
+  await page.click('#tab-move');
+  await page.waitForTimeout(500);
+  const opened = await page.evaluate(() => ({
+    body: document.body.classList.contains('movemode'),
+    ghosts: document.querySelectorAll('#runners .ghost').length,
+    above: [...document.getElementById('dia').children].indexOf(document.getElementById('fielders')) >
+           [...document.getElementById('dia').children].indexOf(document.getElementById('bases')),
+  }));
+  if (!opened.body) fail('move mode did not arm the body class');
+  if (opened.ghosts !== 3) fail('the three ghost runners are missing: ' + opened.ghosts);
+  if (!opened.above) fail('the players are still under the bags in move mode');
+  await page.click('#tab-pos');
+  await page.waitForTimeout(400);
+  const left = await page.evaluate(() => ({
+    body: document.body.classList.contains('movemode'),
+    trails: document.getElementById('trails').childElementCount,
+    above: [...document.getElementById('dia').children].indexOf(document.getElementById('fielders')) >
+           [...document.getElementById('dia').children].indexOf(document.getElementById('bases')),
+  }));
+  if (left.body) fail('move mode did not disarm on the way out');
+  if (left.trails) fail('move mode left its chalk behind');
+  if (left.above) fail('move mode did not put the layers back');
+
+
+  /* Eight tabs is as many as this row can hold. html is overflow:hidden, so
+     an overflow would silently clip the Feedback button rather than show a
+     scrollbar, which is how a seventh room would quietly break the sixth. */
+  const was = page.viewportSize();
+  for (const w of [320, 360, 375, 390, 430]) {
+    await page.setViewportSize({ width: w, height: 800 });
+    await page.waitForTimeout(120);
+    const row = await page.evaluate(() => {
+      const t = document.querySelector('.tabs'), kids = [...t.children];
+      return { n: kids.length, overflow: t.scrollWidth - t.clientWidth,
+               allVisible: kids.every(k => { const r = k.getBoundingClientRect();
+                 return r.left >= -1 && r.right <= innerWidth + 1; }) };
+    });
+    if (row.n !== 8) fail('the tab row is not eight items at ' + w + ': ' + row.n);
+    if (row.overflow > 0) fail('the tab row overflows at ' + w + 'px by ' + row.overflow);
+    if (!row.allVisible) fail('a tab is off screen at ' + w + 'px');
+  }
+  if (was) await page.setViewportSize(was);
+
   console.log('Diamond Rules smoke: all green');
 });

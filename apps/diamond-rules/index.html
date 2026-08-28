@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<!-- user-scalable=no is gone: it blocked pinch zoom, which is a WCAG
+     failure and also the thing the coach asked for when he said "maybe you
+     could even zoom in and out". The field is the whole lesson, so the app
+     never zooms the camera itself; the phone does it, on request. -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Diamond Rules</title>
 <meta name="theme-color" content="#6FC3EA">
 <meta name="description" content="Learn the count, force outs, tag ups, the infield fly rule and who covers the bag by tapping a real diamond. Made for young ballplayers. Free, no account.">
@@ -30,7 +34,7 @@
   --sky:#6FC3EA; --grass:#3FA35C;
   --dirt:#E0955B; --dirt-lt:#EDB183;
   --chalk:#FFF9EE; --ink:#1C3529;
-  --sun:#FFCE3B; --safe:#2FBF66; --out:#F45B5B;
+  --sun:#FFCE3B; --safe:#2FBF66; --out:#F45B5B; --backup:#2F7FB5;
   --glass:rgba(255,255,255,.92);
   --shadow:0 3px 0 rgba(28,53,41,.2);
 }
@@ -159,15 +163,74 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .tab{appearance:none;border:0;background:var(--glass);border-radius:999px;width:48px;height:48px;
   cursor:pointer;box-shadow:var(--shadow);font-size:21px;display:flex;align-items:center;justify-content:center}
 .tab.util{width:44px;height:44px;font-size:19px;margin-top:2px}
-.tab[aria-selected="true"],.tab.util[aria-pressed="true"]{background:var(--sun);outline:3px solid rgba(28,53,41,.25)}
+.tab[aria-pressed="true"]{background:var(--sun);outline:3px solid rgba(28,53,41,.25)}
 .tab:active{transform:translateY(2px);box-shadow:none}
 .tab:focus-visible{outline:3px solid var(--ink)}
 .tlbl{font-family:'Anton',sans-serif;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:#fff;
   text-shadow:-1px -1px 0 rgba(28,53,41,.5),1px -1px 0 rgba(28,53,41,.5),-1px 1px 0 rgba(28,53,41,.5),1px 1px 0 rgba(28,53,41,.5)}
-@media (max-width:380px){
+/* ---------- Everybody moves: the sandbox ----------
+   The coach: "it needs to be done in a slow simple animation without
+   overwording everything." So the words are two short lines and the teaching
+   is carried by colour and by geometry. Gold means I am going to the BALL,
+   green means I am covering a BASE, blue means I am BACKING UP. That is the
+   whole published system, Ball then Base then Back-up, painted rather than
+   written. Source: Baseball Positive, "each player on defense has one of
+   three responsibilities: handle the BALL, cover a BASE, or BACK-UP a
+   throw." */
+#hitPad{display:none}
+body.movemode #hitPad{display:block;pointer-events:auto;cursor:crosshair}
+/* the fielders are already placed by a transform, so the walk is one
+   transition on the group. Scoped to this room so the five quiz rooms keep
+   snapping instantly. */
+body.movemode .fielder{transition:transform var(--walk,2200ms) cubic-bezier(.4,0,.2,1)}
+body.movemode .fielder .body{transition:fill .5s}
+body.movemode .fielder.r-ball .body{fill:var(--sun);opacity:1}
+body.movemode .fielder.r-cover .body{fill:var(--safe);opacity:1}
+body.movemode .fielder.r-back .body{fill:var(--backup);opacity:1}
+body.movemode .poslbl{paint-order:stroke;stroke:rgba(28,53,41,.55);stroke-width:2.5px}
+/* the chalk trail draws itself under her feet, which is what makes a third
+   baseman's honest two step shuffle to her own bag readable at all */
+.trail{fill:none;stroke-width:3.5;stroke-linecap:round;opacity:.5;
+  transition:stroke-dashoffset var(--walk,2200ms) cubic-bezier(.4,0,.2,1)}
+.trail.back{opacity:.3;stroke-width:3}
+/* ball, through the cut girl, to the bag: how a cut reads even when the cut
+   girl only takes two steps */
+.throwline{fill:none;stroke:var(--chalk);stroke-width:3;stroke-dasharray:9 7;
+  opacity:0;transition:opacity .4s}
+.throwline.on{opacity:.8}
+/* a bag lights when its coverer actually arrives. Deliberately NOT the green
+   that means "correct" elsewhere: nothing in this room is right or wrong. */
+.cov{fill:none;stroke:var(--chalk);stroke-width:4;opacity:0;transition:opacity .45s}
+.cov.on{opacity:.95}
+.ghost{opacity:.34}
+/* fitView runs on a ResizeObserver watching .bubble, so the second caption
+   line reserves its height or the field rescales under the walking players */
+body.movemode .hint{min-height:34px}
+@media (prefers-reduced-motion:reduce){
+  /* the movement still happens. It just happens now. */
+  body.movemode .fielder{transition:none}
+  .trail,.throwline,.cov{transition:none}
+}
+
+/* the tab row carries eight items now. The row's width is set by the LABELS
+   rather than the buttons, and html is overflow:hidden, so an overflow would
+   silently clip the Feedback tab. It scrolls instead. */
+.tabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+@media (max-width:470px){
   .tabs{gap:3px}
-  .tab{width:44px;height:44px;font-size:19px}
-  .tab.util{width:40px;height:40px;font-size:17px}
+  .tab{width:42px;height:42px;font-size:18px}
+  .tab.util{width:38px;height:38px;font-size:16px}
+}
+@media (max-width:380px){
+  .tabs{gap:2px}
+  .tab{width:38px;height:38px;font-size:17px}
+  .tab.util{width:34px;height:34px;font-size:15px}
+  .tlbl{font-size:8px;letter-spacing:.03em}
+}
+@media (max-width:340px){
+  .tab{width:34px;height:34px;font-size:15px}
+  .tab.util{width:30px;height:30px;font-size:14px}
 }
 
 /* mode title, pops when you land in a room */
@@ -235,7 +298,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 <body>
 
 <!-- ============ the field fills the whole screen ============ -->
-<svg id="dia" viewBox="0 -104 400 869" preserveAspectRatio="none" role="img" aria-label="Ball field">
+<svg id="dia" viewBox="0 -104 400 869" preserveAspectRatio="none" role="group" aria-label="Ball field">
   <!-- sky -->
   <rect x="-800" y="-800" width="2000" height="2400" fill="#7CC9EE"/>
   <circle cx="52" cy="14" r="30" fill="#FFE27A"/>
@@ -259,6 +322,16 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <path d="M200 460 L318 342 L200 224 L82 342 Z" fill="none" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L1000 -340" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L-600 -340" stroke="var(--chalk)" stroke-width="4"/>
+  <!-- the whole field is the answer surface in the Move room, so the hit pad
+       is a real filled shape. It sits UNDER the bases and the players on
+       purpose: a tap on a bag means "put a runner here", a tap on a girl
+       means "hit it right at her", and only the leftovers are hits. -->
+  <rect id="hitPad" x="-800" y="-800" width="2000" height="2400" fill="transparent"/>
+  <!-- where each mover has been, plus the throw line. Under the players, so
+       they ride on top of their own chalk. -->
+  <g id="trails" pointer-events="none"></g>
+  <!-- a halo that lights when a bag's coverer actually arrives -->
+  <g id="covers" pointer-events="none"></g>
   <g id="fielders"></g>
   <g id="bases"></g>
   <!-- the circle target paints ABOVE the fielders on purpose. The pitcher
@@ -302,13 +375,14 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
       <p class="hint" id="hint"></p>
       <button class="btn ghost mini" id="roundBtn" hidden>🏆 Play a 10 round!</button>
     </div>
-    <nav class="tabs" role="tablist">
+    <nav class="tabs" aria-label="Choose a room">
       <div class="tabwrap"><button class="tab util" id="musicBtn" aria-pressed="false" aria-label="Ballpark music on or off">🎵</button><span class="tlbl">Music</span></div>
-      <div class="tabwrap"><button class="tab" role="tab" id="tab-count" aria-selected="true" aria-label="Batting: the count"><span id="tabBallIco">🥎</span></button><span class="tlbl">Batting</span></div>
-      <div class="tabwrap"><button class="tab" role="tab" id="tab-play" aria-selected="false" aria-label="Grounders: where's the play">🧤</button><span class="tlbl">Grounders</span></div>
-      <div class="tabwrap"><button class="tab" role="tab" id="tab-fly" aria-selected="false" aria-label="Fly balls">⛅</button><span class="tlbl">Fly balls</span></div>
-      <div class="tabwrap"><button class="tab" role="tab" id="tab-pos" aria-selected="false" aria-label="Positions: who covers">🧢</button><span class="tlbl">Positions</span></div>
-      <div class="tabwrap"><button class="tab" role="tab" id="tab-mix" aria-selected="false" aria-label="Mix: every kind of play">🎲</button><span class="tlbl">Mix</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-count" aria-pressed="true" aria-label="Batting: the count"><span id="tabBallIco">🥎</span></button><span class="tlbl">Batting</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-play" aria-pressed="false" aria-label="Grounders: where's the play">🧤</button><span class="tlbl">Grounders</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-fly" aria-pressed="false" aria-label="Fly balls">⛅</button><span class="tlbl">Fly balls</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-pos" aria-pressed="false" aria-label="Positions: who covers">🧢</button><span class="tlbl">Positions</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-move" aria-pressed="false" aria-label="Everybody moves: where to go when the ball is hit">🏃</button><span class="tlbl">Move</span></div>
+      <div class="tabwrap"><button class="tab" id="tab-mix" aria-pressed="false" aria-label="Mix: every kind of play">🎲</button><span class="tlbl">Mix</span></div>
       <div class="tabwrap"><button class="tab util" id="fbBtn" aria-label="Send feedback">💬</button><span class="tlbl">Feedback</span></div>
     </nav>
   </div>
@@ -390,7 +464,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v17";
+var BUILD="diamond-v18";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -1088,6 +1162,8 @@ function loadScenario(){
   }
 }
 function answer(choice){
+  /* the Move room is a sandbox: it takes its own taps and never grades */
+  if(S.mode==="move"){mvTap(choice);return;}
   const s=S.scenario;
   if(!s||S.answered)return;
   /* only the answer type this scenario asks for counts */
@@ -1185,7 +1261,8 @@ el("roundFree").addEventListener("click",()=>{
 });
 
 /* ================= tabs & settings ================= */
-const MODE_NAMES={count:"Batting",play:"Grounders",fly:"Fly balls",pos:"Positions",mix:"Mix it up"};
+const MODE_NAMES={count:"Batting",play:"Grounders",fly:"Fly balls",pos:"Positions",
+  move:"Everybody moves",mix:"Mix it up"};
 let toastT=null;
 function showToast(txt){
   const t=el("modeToast");
@@ -1197,16 +1274,23 @@ function showToast(txt){
 function setMode(m){
   S.mode=m;S.round=null;
   el("roundCard").classList.add("hidden");
-  ["tab-count","tab-play","tab-fly","tab-pos","tab-mix"].forEach(id=>el(id).setAttribute("aria-selected","false"));
-  el("tab-"+m).setAttribute("aria-selected","true");
-  /* mix serves positioning questions too, so the fielders stay tappable */
-  drawFielders(m==="pos"||m==="mix");
+  mvExit();
+  ["tab-count","tab-play","tab-fly","tab-pos","tab-move","tab-mix"]
+    .forEach(id=>el(id).setAttribute("aria-pressed","false"));
+  el("tab-"+m).setAttribute("aria-pressed","true");
+  /* mix serves positioning questions too, so the fielders stay tappable.
+     In Move they are tappable as well: tapping a girl means the ball is hit
+     right at her, and after the play she shows her own job. It is also the
+     only way to place a hit from a keyboard. */
+  drawFielders(m==="pos"||m==="mix"||m==="move");
+  document.body.classList.toggle("movemode",m==="move");
   showToast(MODE_NAMES[m]);
   S.streak=0;paintStreak();
   if(m==="count"){S.balls=0;S.strikes=0;S.outs=0;countScreen();}
+  else if(m==="move")mvStart();
   else loadScenario();
 }
-["count","play","fly","pos","mix"].forEach(m=>
+["count","play","fly","pos","move","mix"].forEach(m=>
   el("tab-"+m).addEventListener("click",()=>setMode(m)));
 
 function paintSettings(){
@@ -1226,6 +1310,387 @@ el("soundSeg").querySelectorAll("button").forEach(b=>b.addEventListener("click",
 el("closeSettings").addEventListener("click",()=>{
   el("settings").classList.add("hidden");
   if(S.mode==="count")countScreen();
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EVERYBODY MOVES
+
+   Stephen's coach, 2026-08-28: "Right now we're dealing with little girls who
+   think if the ball isn't hit right to them they don't have to do anything
+   and it costs us plays and outs and runs." So this room is not a quiz. No
+   score, no streak, no verdict, nothing right and nothing wrong. Set the
+   runners, tap where the ball is hit, watch all nine walk to where they
+   belong, read one short line, tap again.
+
+   Every assignment below traces to a published coaching line, cross checked
+   between two independent researchers; the sources and the disagreement
+   table live in docs/DIAMOND-RULES-MOVE-SOURCES.md. Nothing here is
+   remembered. Where the sources genuinely disagreed, the resolution is
+   recorded in that file rather than smoothed away, and anything neither
+   could source was cut rather than guessed.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ---- the responsibility matrix. Zone, then base state, then all nine.
+   Jobs: ball   play it              crash  converge on a bunt
+         middle you two call it      chase  sprint in behind the infielder
+         buddy  run to your teammate behind get behind the girl fielding it
+         step   one step to the ball cover  stand on the bag
+         backin just behind the bag  backup 52 units beyond it, in line
+         cut    on the line between the ball and the base
+         halfway the fixed spot between the mound and second
+   INFIELD ROWS ARE RUNNER INDEPENDENT ON PURPOSE: in every source, where the
+   nine go on an infield grounder does not change with the base state. What
+   changes is where the ball gets thrown, and forces() already knows that. */
+const MV_TABLE = {
+ P:{any:{1:["ball"],2:["cover","HOME"],3:["cover","B1"],4:["backin","B2"],5:["cover","B3"],
+         6:["cover","B2"],7:["backup","B3"],8:["backup","B2"],9:["backup","B1"]}},
+ /* the play the coach asked for: pitcher covers, second baseman runs to
+    first and backs her up, shortstop takes second. His own sentence. */
+ "1B":{any:{3:["ball"],1:["cover","B1"],4:["backin","B1"],6:["cover","B2"],5:["cover","B3"],
+            2:["cover","HOME"],9:["chase"],8:["backup","B2"],7:["backup","B3"]}},
+ "2B":{any:{4:["ball"],3:["cover","B1"],1:["backin","B1"],6:["cover","B2"],5:["cover","B3"],
+            2:["cover","HOME"],9:["chase"],8:["backup","B2"],7:["backup","B3"]}},
+ MIDDLE:{any:{6:["middle"],4:["middle"],1:["step"],3:["cover","B1"],5:["cover","B3"],
+              2:["cover","HOME"],8:["chase"],7:["backup","B3"],9:["backup","B1"]}},
+ SS:{any:{6:["ball"],4:["cover","B2"],3:["cover","B1"],5:["cover","B3"],1:["backin","B3"],
+          2:["cover","HOME"],7:["chase"],8:["backup","B2"],9:["backup","B1"]}},
+ "3B":{any:{5:["ball"],1:["cover","B3"],6:["behind"],4:["cover","B2"],3:["cover","B1"],
+            2:["cover","HOME"],7:["chase"],8:["backup","B2"],9:["backup","B1"]}},
+ BUNT:{
+  crash:{1:["crash"],2:["crash"],3:["crash"],5:["crash"],4:["cover","B1"],6:["cover","B2"],
+         7:["cover","B3"],8:["backup","B2"],9:["backup","B1"]},
+  hold3:{1:["crash"],2:["crash"],3:["crash"],5:["cover","B3"],4:["cover","B1"],6:["cover","B2"],
+         7:["backup","B3"],8:["backup","B2"],9:["backup","B1"]},
+  home: {1:["crash"],3:["crash"],5:["crash"],2:["cover","HOME"],4:["cover","B1"],6:["cover","B3"],
+         8:["cover","B2"],7:["backup","B3"],9:["backup","B1"]}},
+ LF:{
+  empty:  {7:["ball"],8:["buddy"],6:["cut","B2"],4:["cover","B2"],3:["cover","B1"],
+           5:["cover","B3"],9:["backup","B2"],1:["halfway"],2:["cover","HOME"]},
+  r1:     {7:["ball"],8:["buddy"],6:["cut","B3"],5:["cover","B3"],4:["cover","B2"],
+           3:["cover","B1"],9:["backup","B2"],1:["backup","B3"],2:["cover","HOME"]},
+  scoring:{7:["ball"],8:["buddy"],5:["cut","HOME"],6:["cover","B3"],4:["cover","B2"],
+           3:["cover","B1"],9:["backup","B1"],1:["backup","HOME"],2:["cover","HOME"]}},
+ CF:{
+  empty:  {8:["ball"],7:["buddy"],9:["buddy"],6:["cut","B2"],4:["cover","B2"],
+           3:["cover","B1"],5:["cover","B3"],1:["halfway"],2:["cover","HOME"]},
+  r1:     {8:["ball"],7:["buddy"],9:["buddy"],6:["cut","B3"],5:["cover","B3"],
+           4:["cover","B2"],3:["cover","B1"],1:["backup","B3"],2:["cover","HOME"]},
+  scoring:{8:["ball"],7:["buddy"],9:["buddy"],3:["cut","HOME"],4:["cover","B1"],
+           6:["cover","B2"],5:["cover","B3"],1:["backup","HOME"],2:["cover","HOME"]}},
+ RF:{
+  empty:  {9:["ball"],8:["buddy"],4:["cut","B2"],6:["cover","B2"],3:["cover","B1"],
+           5:["cover","B3"],7:["backup","B2"],1:["halfway"],2:["cover","HOME"]},
+  r1:     {9:["ball"],8:["buddy"],6:["cut","B3"],5:["cover","B3"],4:["cover","B2"],
+           3:["cover","B1"],7:["backup","B3"],1:["backup","B3"],2:["cover","HOME"]},
+  scoring:{9:["ball"],8:["buddy"],3:["cut","HOME"],4:["cover","B1"],6:["cover","B2"],
+           5:["cover","B3"],7:["backup","B3"],1:["backup","HOME"],2:["cover","HOME"]}}
+};
+/* the outfield sheets group the base states exactly this way: "Runner at 1st
+   OR 1st & 3rd" is one page, "2nd, 1st and 2nd, or Bases Loaded" is another */
+const mvOfState  = r => r.indexOf(2)>=0 ? "scoring"
+                      : r.indexOf(1)>=0 ? "r1"
+                      : r.indexOf(3)>=0 ? "scoring" : "empty";
+/* the bunt sheet's own three headings */
+const mvBuntState= r => r.indexOf(3)>=0 ? "home"
+                      : r.indexOf(2)>=0 ? "hold3" : "crash";
+
+/* ---- the geometry. Home to first is 118*sqrt(2) = 166.88 units and 60 real
+   feet, so a unit is 0.36 ft in the infield. The OUTFIELD is drawn about 1.4
+   times short, so never turn an outfield length back into feet. */
+const MV_HALFWAY={x:200,y:288};
+const MV_COVER=30,MV_BACKIN=30,
+      MV_BACKOUT=52,  /* 18.7 ft beyond the bag. The only distance here
+                         anchored to a source: Baseball Positive wants 20 to
+                         25 feet, and 52 is the most this drawing holds. */
+      MV_CHASE=78,MV_BUDDY=46,MV_BEHIND=38,MV_CRASH=40,MV_STEP=40,
+      MV_CUTF=.45,MV_ATBALL=14,MV_SEP=34;
+const MV_BOX={x0:26,x1:374,y0:140,y1:512};
+const mvD=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
+const mvU=(a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;return{x:dx/d,y:dy/d};};
+const mvGo=(p,v,n)=>({x:p.x+v.x*n,y:p.y+v.y*n});
+/* the chalk lines are exactly x+y=660 and y-x=260. A tap in the stands is
+   projected onto the nearer line so the ball lands ON the foul line instead
+   of nothing happening, which teaches the lines by feel. */
+function mvFair(x,y){
+  if(x+y>660){const k=(x-y+660)/2;x=k;y=660-k;}
+  if(y-x>260){const k=(x+y-260)/2;x=k;y=k+260;}
+  y=Math.max(145,Math.min(500,y));x=Math.max(30,Math.min(370,x));
+  if(x+y>660){const k=(x-y+660)/2;x=k;y=660-k;}
+  if(y-x>260){const k=(x+y-260)/2;x=k;y=k+260;}
+  return{x:x,y:y};
+}
+/* the dirt arc Q200 176 fits a circle at (200,425) r 163.5 to within 2.71
+   units, one real foot, so use the circle and skip isPointInPath */
+const mvOnDirt=p=>((p.x-200)*(p.x-200)+(p.y-425)*(p.y-425))<26732.25;
+const MV_IN=["1","3","5","6","4"],MV_OUT=["7","8","9"];
+function mvNearest(p,ids){let k=ids[0],d=Infinity;
+  for(let i=0;i<ids.length;i++){const t=mvD(p,POS[ids[i]]);if(t<d){d=t;k=ids[i];}}return k;}
+function mvZone(rawX,rawY,forced){
+  const ball=mvFair(rawX,rawY);
+  let by,where,bunt;
+  if(forced){ by=forced; where=MV_OUT.indexOf(forced)>=0?"grass":"dirt";
+              bunt=where==="dirt"&&mvD(ball,BASE_XY.HOME)<90; }
+  else{ const dirt=mvOnDirt(ball);
+        where=dirt?"dirt":"grass";
+        bunt=dirt&&mvD(ball,BASE_XY.HOME)<90;
+        by=dirt?mvNearest(ball,bunt?["1","2","3","5"]:MV_IN):mvNearest(ball,MV_OUT); }
+  const key=bunt?"BUNT":where==="grass"?(by==="7"?"LF":by==="8"?"CF":"RF")
+    :((by==="4"||by==="6")&&Math.abs(ball.x-200)<30)?"MIDDLE"
+    :by==="1"?"P":by==="3"?"1B":by==="4"?"2B":by==="5"?"3B":"SS";
+  return{ball:ball,by:by,where:where,bunt:bunt,key:key};
+}
+function mvStateFor(key,r){
+  return key==="BUNT"?mvBuntState(r)
+    :(key==="LF"||key==="CF"||key==="RF")?mvOfState(r):"any";
+}
+function mvPlan(z,runners){
+  const st=mvStateFor(z.key,runners),row=MV_TABLE[z.key][st],b=z.ball,B=BASE_XY,J={};
+  let F=z.by;
+  /* the bunt crew shrinks as runners advance, so the girl nearest the ball
+     may no longer be charging. Whoever is closest AND still charging has it. */
+  if(z.key==="BUNT"){
+    const crew=Object.keys(row).filter(k=>row[k][0]==="crash");
+    if(crew.indexOf(F)<0)F=mvNearest(b,crew);
+  }
+  for(const k in row){
+    const a=row[k][0],t=row[k][1],T=t?B[t]:null;let p,role=a,tgt=t||null;
+    if(a==="middle"){
+      if(k===F){p=mvGo(b,mvU(b,POS[k]),MV_ATBALL);role="ball";}
+      else{p=mvGo(B.B2,mvU(B.B2,b),MV_COVER);role="cover";tgt="B2";}
+    }
+    else if(a==="crash"&&k===F){p=mvGo(b,mvU(b,POS[k]),MV_ATBALL);role="ball";}
+    else if(a==="crash")p=mvGo(b,mvU(b,POS[k]),MV_CRASH);
+    else if(a==="ball")  p=mvGo(b,mvU(b,POS[k]),MV_ATBALL);
+    else if(a==="cover") p=mvGo(T,mvU(T,b),MV_COVER);
+    else if(a==="backup")p=mvGo(T,mvU(b,T),MV_BACKOUT);
+    else if(a==="backin")p=mvGo(T,mvU(b,T),MV_BACKIN);
+    else if(a==="cut")   p={x:b.x+(T.x-b.x)*MV_CUTF,y:b.y+(T.y-b.y)*MV_CUTF};
+    else if(a==="chase") p=mvGo(b,mvU(BASE_XY.HOME,b),MV_CHASE);
+    else if(a==="buddy") p=mvGo(b,mvU(b,POS[k]),MV_BUDDY);
+    else if(a==="behind")p=mvGo(b,mvU(BASE_XY.HOME,b),MV_BEHIND);
+    else if(a==="step")  p=mvGo(POS[1],mvU(POS[1],b),MV_STEP);
+    else { p={x:MV_HALFWAY.x,y:MV_HALFWAY.y}; tgt="B2"; role="backup"; }
+    J[k]={role:role,x:p.x,y:p.y,target:tgt};
+  }
+  z.by=F;z.state=st;
+  return mvSeparate(J,F);
+}
+/* Three girls converge on first base and their discs stack, because on this
+   drawing the bag, the first baseman's spot and the ball are all inside 50
+   units. Push them apart, pin whoever is playing the ball, clamp back into
+   the camera box. Eight passes settles it. */
+function mvSeparate(J,pinned){
+  const ks=Object.keys(J);
+  for(let pass=0;pass<8;pass++){
+    for(let i=0;i<ks.length;i++)for(let j=i+1;j<ks.length;j++){
+      const a=J[ks[i]],c=J[ks[j]];
+      let dx=c.x-a.x,dy=c.y-a.y,L=Math.hypot(dx,dy);
+      if(L>=MV_SEP)continue;
+      if(L<.01){dx=(i%2)?1:.5;dy=(i%2)?.5:-1;L=Math.hypot(dx,dy);}
+      const push=(MV_SEP-L)/L+.001;
+      const wa=ks[i]===pinned?0:(ks[j]===pinned?1:.5),
+            wb=ks[j]===pinned?0:(ks[i]===pinned?1:.5);
+      a.x-=dx*push*wa;a.y-=dy*push*wa;c.x+=dx*push*wb;c.y+=dy*push*wb;
+    }
+    for(const k of ks){J[k].x=Math.min(MV_BOX.x1,Math.max(MV_BOX.x0,J[k].x));
+                       J[k].y=Math.min(MV_BOX.y1,Math.max(MV_BOX.y0,J[k].y));}
+  }
+  return J;
+}
+
+/* ---- the words. One line naming who has it, one naming the two jobs an
+   eight year old actually misses. Nothing else gets words. */
+const MV_SHORT={1:"Pitcher",2:"Catcher",3:"First base",4:"Second base",5:"Third base",
+                6:"Shortstop",7:"Left field",8:"Center field",9:"Right field"};
+const MV_LINE2={
+ "P.any":      "Shortstop takes second. Second base backs her up.",
+ "1B.any":     "Pitcher covers first! Second base backs her up.",
+ "2B.any":     "Pitcher runs to first. Shortstop takes second.",
+ "MIDDLE.any": "Both middles go. The other one takes second.",
+ "SS.any":     "Second base takes second. Pitcher backs up third.",
+ "3B.any":     "Pitcher covers third. Shortstop gets behind her.",
+ "BUNT.crash": "Second base covers first. Left field takes third!",
+ "BUNT.hold3": "Third base stays on the bag. Force is there.",
+ "BUNT.home":  "Catcher stays home. Center field covers second!",
+ "LF.empty":   "Shortstop is the cutoff. Pitcher heads toward second.",
+ "LF.r1":      "Shortstop is the cutoff to third. Pitcher backs it up.",
+ "LF.scoring": "Third base is the cutoff home. Shortstop takes third.",
+ "CF.empty":   "Shortstop is the cutoff. Left and right run over.",
+ "CF.r1":      "Shortstop is the cutoff to third. Pitcher backs it up.",
+ "CF.scoring": "First base is the cutoff home. Second base takes first.",
+ "RF.empty":   "Second base is the cutoff. Shortstop takes second.",
+ "RF.r1":      "Shortstop is the cutoff to third. Pitcher backs it up.",
+ "RF.scoring": "First base is the cutoff home. Second base takes first."
+};
+const MV_BAG={B1:"first base",B2:"second base",B3:"third base",HOME:"home"};
+const MV_SAY={ball:"Go get it!",crash:"Charge it! Call it!",chase:"Sprint in behind her.",
+  buddy:"Run behind your teammate.",behind:"Get behind her.",step:"Step toward the ball.",
+  cut:"Line up the cut!",
+  cover:t=>"Cover "+MV_BAG[t]+".", backin:t=>"Back up "+MV_BAG[t]+".",
+  backup:t=>"Back up "+MV_BAG[t]+"."};
+
+const MV={runners:[],last:null,busy:false,plan:null,zone:null};
+const MV_WALK=2200;                       /* the coach's "very slow"       */
+const MV_W={ball:150,cover:400,back:650}; /* Ball, then Base, then Back-up */
+const mvReduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MV_ROLECLASS={ball:"r-ball",crash:"r-ball",cover:"r-cover",cut:"r-cover",
+  chase:"r-ball",buddy:"r-back",behind:"r-back",step:"r-ball",backup:"r-back",backin:"r-back"};
+const MV_WAVE={ball:"ball",crash:"ball",chase:"ball",step:"ball",
+  cover:"cover",cut:"cover",backup:"back",backin:"back",buddy:"back",behind:"back"};
+
+function mvPoint(ev){
+  const svg=el("dia"),pt=svg.createSVGPoint();
+  pt.x=ev.clientX;pt.y=ev.clientY;
+  const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+  return{x:p.x,y:p.y};
+}
+/* an empty bag wears a faded runner. That is the entire runner control. */
+function mvDrawRunners(){
+  let h="";
+  [1,2,3].forEach((n,i)=>{
+    const b=BASE_XY["B"+n];
+    h+=MV.runners.indexOf(n)>=0?runnerSprite(b.x,b.y,i)
+      :`<g class="ghost">${runnerSprite(b.x,b.y,i)}</g>`;
+  });
+  el("runners").innerHTML=h;
+}
+function mvTrail(from,to,role,delay){
+  const len=Math.hypot(to.x-from.x,to.y-from.y);
+  if(len<8)return;
+  const col=role==="ball"?"var(--sun)":role==="cover"?"var(--safe)":"var(--backup)";
+  el("trails").insertAdjacentHTML("beforeend",
+    `<line class="trail${role==="back"?" back":""}" x1="${from.x}" y1="${from.y}" `+
+    `x2="${to.x.toFixed(1)}" y2="${to.y.toFixed(1)}" stroke="${col}" `+
+    `stroke-dasharray="${len.toFixed(1)}" stroke-dashoffset="${len.toFixed(1)}" `+
+    `style="transition-delay:${delay}ms"/>`);
+  const n=el("trails").lastElementChild;
+  n.getBoundingClientRect();
+  n.style.strokeDashoffset="0";
+}
+function mvThrowLine(ball,cut,base,delay){
+  el("trails").insertAdjacentHTML("beforeend",
+    `<polyline class="throwline" points="${ball.x.toFixed(0)},${ball.y.toFixed(0)} `+
+    `${cut.x.toFixed(0)},${cut.y.toFixed(0)} ${base.x},${base.y}"/>`);
+  const n=el("trails").lastElementChild;
+  setTimeout(()=>n.classList.add("on"),delay);
+}
+function mvCovers(on){
+  document.querySelectorAll(".cov").forEach(c=>{
+    c.classList.toggle("on",!!on);if(!on)c.style.transitionDelay="0ms";});
+}
+/* everybody back to her real spot. anim=false snaps and forces a reflow so
+   Again walks from the true positions instead of teleporting. */
+function mvHome(anim){
+  for(const k in POS){
+    const g=el("pos-"+k);if(!g)continue;
+    if(!anim)g.style.transition="none";
+    g.style.transitionDelay="0ms";
+    g.classList.remove("r-ball","r-cover","r-back");
+    g.style.transform=`translate(${POS[k].x}px,${POS[k].y}px)`;
+  }
+  if(anim)return;
+  el("dia").getBoundingClientRect();
+  for(const k in POS){const g=el("pos-"+k);if(g)g.style.transition="";}
+}
+function mvChips(){
+  const a=el("answers");
+  if(a.querySelector("#mvAgain"))return;
+  a.className="answers";
+  a.innerHTML=`<button class="btn ghost" id="mvAgain">&#8635; Again</button>`+
+              `<button class="btn ghost" id="mvClear">&#10006; Start over</button>`;
+  el("mvAgain").addEventListener("click",()=>{if(MV.last&&!MV.busy)mvRun(MV.last);});
+  el("mvClear").addEventListener("click",mvStart);
+}
+function mvRun(raw,forced){
+  if(MV.busy)return;
+  const fast=mvReduced(),dur=fast?0:MV_WALK;
+  document.documentElement.style.setProperty("--walk",dur+"ms");
+  const z=mvZone(raw.x,raw.y,forced),J=mvPlan(z,MV.runners);
+  MV.busy=true;MV.last=raw;MV.zone=z;MV.plan=J;
+  [1,2,3].forEach(n=>el("base-B"+n).classList.remove("pulse"));
+  mvHome(false);
+  el("trails").innerHTML="";mvCovers(false);
+  moveBall(z.ball.x,z.ball.y);sfx("tap");
+  for(const k in J){
+    const j=J[k],g=el("pos-"+k);if(!g)continue;
+    const wave=MV_WAVE[j.role],delay=fast?0:MV_W[wave];
+    g.classList.add(MV_ROLECLASS[j.role]);
+    g.style.transitionDelay=delay+"ms";
+    g.style.transform=`translate(${j.x.toFixed(1)}px,${j.y.toFixed(1)}px)`;
+    mvTrail(POS[k],j,wave,delay);
+    if(j.role==="cover"){const c=el("cov-"+j.target);
+      if(c){c.style.transitionDelay=(delay+dur)+"ms";c.classList.add("on");}}
+    if(j.role==="cut")mvThrowLine(z.ball,j,BASE_XY[j.target],delay+dur);
+  }
+  el("ask").innerHTML=`${cfg().icon} <b>${MV_SHORT[z.by]}</b> gets it!`;
+  el("hint").className="hint";
+  el("hint").innerHTML="&nbsp;";
+  setTimeout(()=>{el("hint").textContent=MV_LINE2[z.key+"."+z.state]||"";},fast?0:MV_W.cover+250);
+  setTimeout(()=>{MV.busy=false;mvChips();},fast?0:MV_W.back+dur+150);
+}
+/* the tap means something different in every room, so this room takes its
+   taps before the grader ever sees them. A bag is a runner switch. A girl is
+   "hit it right at her", and after the play she shows her own job. */
+function mvTap(choice){
+  if(MV.busy)return;
+  if(POS[choice]){
+    if(MV.plan&&MV.plan[choice]){
+      const j=MV.plan[choice],s=MV_SAY[j.role];
+      el("hint").textContent=MV_SHORT[choice]+": "+(typeof s==="function"?s(j.target):s);
+      sfx("tap");return;
+    }
+    mvRun({x:POS[choice].x,y:POS[choice].y},choice);return;
+  }
+  if(choice==="B1"||choice==="B2"||choice==="B3"){
+    const n=+choice[1];
+    MV.runners=MV.runners.indexOf(n)>=0?MV.runners.filter(r=>r!==n)
+                                       :MV.runners.concat(n).sort();
+    sfx("tap");mvDrawRunners();
+    if(MV.last)mvRun(MV.last);
+  }
+  /* HOME and CIRCLE are inert here: the batter is always running to first,
+     which is why first base is always a force. */
+}
+function mvStart(){
+  S.scenario=null;S.answered=false;
+  S.balls=0;S.strikes=0;S.outs=0;paintBoard();
+  el("roundBtn").hidden=true;
+  const hc=el("holdChip");hc.hidden=true;hc.classList.remove("hit","miss");
+  drawCircle(false);setFielderPulse(false);setBasePulse(false);
+  document.querySelectorAll(".base,.fielder").forEach(n=>n.classList.remove("hit","miss"));
+  MV.runners=[];MV.last=null;MV.busy=false;MV.plan=null;MV.zone=null;
+  el("trails").innerHTML="";mvCovers(false);
+  mvLayer(true);
+  mvHome(true);
+  mvDrawRunners();moveBall(200,352);
+  el("ask").innerHTML=`<span class="tag">Everybody moves</span>Tap where the ball is hit!`;
+  el("hint").className="hint";
+  el("hint").textContent="Tap a base to add a runner.";
+  el("answers").className="answers";el("answers").innerHTML="";
+  [1,2,3].forEach(n=>el("base-B"+n).classList.add("pulse"));
+}
+/* The bases paint above the fielders everywhere else, which is right: nobody
+   stands on a bag in the other five rooms. Here they do, constantly, and the
+   whole point is watching WHO arrives at the bag, so in this room only the
+   players ride on top. Put back on the way out. */
+function mvLayer(up){
+  const f=el("fielders"),dia=f.parentNode;
+  if(up)dia.appendChild(f); else dia.insertBefore(f,el("bases"));
+}
+function mvExit(){
+  mvLayer(false);
+  el("trails").innerHTML="";mvCovers(false);
+  [1,2,3].forEach(n=>{const b=el("base-B"+n);if(b)b.classList.remove("pulse");});
+  MV.busy=false;MV.plan=null;
+}
+/* the halos, built once: three bags and the plate */
+(function(){let h="";for(const k in BASE_XY){const b=BASE_XY[k];
+  h+=`<circle class="cov" id="cov-${k}" cx="${b.x}" cy="${b.y}" r="26"/>`;}
+  el("covers").innerHTML=h;})();
+el("hitPad").addEventListener("click",ev=>{
+  if(S.mode!=="move"||MV.busy)return;
+  mvRun(mvPoint(ev));
 });
 
 /* ================= tip jar + feedback ================= */
@@ -1366,7 +1831,9 @@ if("serviceWorker" in navigator)
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
 window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
   cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank,
-  shuffled,__draw:drawFrom,playContext,MODE_NAMES};
+  shuffled,__draw:drawFrom,playContext,MODE_NAMES,
+  MV_TABLE,mvZone,mvPlan,mvStateFor,mvOfState,mvBuntState,MV,MV_LINE2,MV_SHORT,MV_BOX,
+  mvFair,mvOnDirt};
 </script>
 </body>
 </html>
