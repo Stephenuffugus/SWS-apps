@@ -363,6 +363,28 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (iff.softball10.inBank || iff.softball10.drawn) fail('infield fly reached 10U: ' + JSON.stringify(iff.softball10));
   if (!iff.baseball.inBank) fail('infield fly missing at baseball: ' + JSON.stringify(iff.baseball));
 
+  /* Every scenario must be internally coherent, and no two may share a
+     prompt. A copy pass once wrote one scenario's words into another's
+     object, leaving a bunt question sitting above "back up center" answers,
+     and identical prompts is exactly that bug's fingerprint. Also proves
+     every multiple choice question can actually be answered correctly. */
+  const coherent = await page.evaluate(() => {
+    const d = window.__dr;
+    const all = [...d.FLY_BANK, ...d.POS_BANK, ...d.RUN_BANK, ...d.SMART_BANK];
+    const strip = (t) => String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    const prompts = {}, dupes = [], unanswerable = [];
+    for (const s of all) {
+      const k = strip(s.prompt);
+      if (prompts[k]) dupes.push(s.chip + ' == ' + prompts[k]);
+      prompts[k] = s.chip;
+      if (s.choices && !s.choices.some(c => c[0] === s.correct)) unanswerable.push(s.chip);
+      if (!s.choices && s.kind === 'choice') unanswerable.push(s.chip + ' (no choices)');
+    }
+    return { count: all.length, dupes, unanswerable };
+  });
+  if (coherent.dupes.length) fail('two scenarios share a prompt: ' + coherent.dupes.join(' | '));
+  if (coherent.unanswerable.length) fail('scenario cannot be answered correctly: ' + coherent.unanswerable.join(', '));
+
   /* Stephen, watching a kid play: "it seems like the answers are always the
      first choice". They were, in all ten authored questions, so a kid could
      score a hundred percent by tapping the top button without reading. The
@@ -433,6 +455,38 @@ await withApp('diamond-rules', async ({ page, errors }) => {
     return out;
   });
   if (!tappable.softball8) fail('the circle never became tappable at 8U');
+
+  /* And it has to actually TAKE the tap in Mix, where the fielders stay
+     tappable all mode long and the pitcher's marker sits on the very same
+     coordinates. It did not, and only in Mix, which is why the suite went
+     flaky one run in three instead of failing honestly. */
+  const mixTap = await page.evaluate(() => {
+    const d = window.__dr;
+    /* borrow the app, then hand it back exactly as it was: the assertions
+       after this one are still mid-conversation with 10U and the count */
+    const wasSport = d.S.sport, wasMode = d.S.mode;
+    const give = (v) => { d.S.sport = wasSport; d.setMode(wasMode); return v; };
+    d.S.sport = 'softball8'; d.setMode('mix');
+    for (let i = 0; i < 60; i++) {
+      d.loadScenario();
+      if (d.S.scenario.correct !== 'CIRCLE') continue;
+      const el = document.getElementById('base-CIRCLE');
+      if (!el) return give({ found: true, drawn: false });
+      /* hit test the FIELD, not whatever dialog this point in the suite
+         happens to have open over it */
+      const lids = [...document.querySelectorAll('.overlay:not(.hidden)')];
+      lids.forEach(n => n.classList.add('hidden'));
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      lids.forEach(n => n.classList.remove('hidden'));
+      return give({ found: true, drawn: true, reachable: !!(top && top.closest('.circleTgt')),
+               blockedBy: top ? top.tagName + '.' + (top.getAttribute('class') || '') + '#' + (top.parentElement && top.parentElement.id) : 'none' });
+    }
+    return give({ found: false });
+  });
+  if (!mixTap.found) fail('never drew a circle scenario in mix to test');
+  if (!mixTap.drawn) fail('circle scenario in mix drew no target');
+  if (!mixTap.reachable) fail('the circle is covered in mix, blocked by ' + mixTap.blockedBy);
   if (tappable.baseball) fail('the circle was tappable in baseball, where the rule does not exist');
 
   /* The coach asked: "If I click the feedback button during a certain play
@@ -449,7 +503,9 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   await page.waitForTimeout(250);
   for (let i = 0; i < 3; i++) await page.click('[data-p="strike"]');
   msg = await page.textContent('#ask');
-  if (!msg.includes('RUN to first')) fail('10U strikeout should teach dropped third strike: ' + msg);
+  /* the concept, not the capitalisation: the copy pass for second graders
+     changed "RUN to first" to "Run to first!" and the rule is the same */
+  if (!/run to first/i.test(msg)) fail('10U strikeout should teach dropped third strike: ' + msg);
   await page.click('#tab-mix');
   let sawRun = false;
   const RUNCHIPS = ['No early leadoffs', 'Steal it!', 'Dropped third strike'];

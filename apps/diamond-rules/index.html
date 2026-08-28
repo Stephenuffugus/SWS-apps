@@ -64,6 +64,12 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .fielder:focus-visible .body{stroke:#fff;stroke-width:4}
 .fielder.pulse .body{animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+/* Every decorative layer on the field is untappable, so the only things
+   that can take a tap are the answers. The ball rests at 200,352, which is
+   dead centre of the pitcher's circle, so without this it sat on top of the
+   circle target and ate the tap. Same class of bug as the pitcher's marker
+   covering it, found the same way: by clicking it in a browser. */
+.ball,#runners,#clouds{pointer-events:none}
 .ball{transition:transform .55s cubic-bezier(.34,.9,.4,1)}
 #ballSkin{transform-box:fill-box;transform-origin:center}
 #ballSkin.thump{animation:thump .32s ease-out}
@@ -253,9 +259,15 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
   <path d="M200 460 L318 342 L200 224 L82 342 Z" fill="none" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L1000 -340" stroke="var(--chalk)" stroke-width="4"/>
   <path d="M200 460 L-600 -340" stroke="var(--chalk)" stroke-width="4"/>
-  <g id="circleT"></g>
   <g id="fielders"></g>
   <g id="bases"></g>
+  <!-- the circle target paints ABOVE the fielders on purpose. The pitcher
+       marker sits on the very same spot, and in Mix the fielders are left
+       tappable for the whole mode because a positioning question can come
+       up at any time, so underneath here the pitcher's disc swallowed every
+       tap meant for the circle. It is only ever drawn when the circle is a
+       legal answer, so being on top costs nothing. -->
+  <g id="circleT"></g>
   <g id="runners" pointer-events="none"></g>
   <g id="ballG" class="ball" style="transform:translate(200px,352px)">
     <g id="ballSkin">
@@ -378,7 +390,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v16";
+var BUILD="diamond-v17";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -708,7 +720,7 @@ function countScreen(msg){
   el("roundBtn").hidden=true;
   const hc=el("holdChip");hc.hidden=true;hc.classList.remove("hit","miss");
   setBasePulse(false);setFielderPulse(false);
-  el("ask").innerHTML = msg || `<span class="tag">Pitch by pitch</span>Tap a pitch! <b>${cfg().note}</b>.`;
+  el("ask").innerHTML = msg || `<span class="tag">Pitch by pitch</span>Tap a pitch! <b>${cfg().strikesForOut} strikes</b> and the batter is out.`;
   drawRunners([]);moveBall(200,352);
   const a=el("answers");
   a.className="answers";
@@ -724,31 +736,31 @@ function countScreen(msg){
 }
 function pitch(kind){
   const c=cfg();let msg="";sfx("tap");
-  if(kind==="reset"){S.balls=0;S.strikes=0;countScreen(`<span class="tag">New batter</span>Fresh count: <b>0 and 0</b>. Here comes the pitch!`);return;}
+  if(kind==="reset"){S.balls=0;S.strikes=0;countScreen(`<span class="tag">New batter</span>Fresh count: <b>0 and 0</b>. Play ball!`);return;}
   if(kind==="ball"){
     S.balls++;
     if(S.balls>=c.ballsForWalk){
       S.balls=0;S.strikes=0;
-      msg=`<b>Ball ${c.ballsForWalk}! That's a walk.</b> The batter gets first base for free. New batter, fresh count.`;
+      msg=`<b>Ball ${c.ballsForWalk}! That's a walk.</b> The batter gets first base for free. Fresh count!`;
       confetti();
-    } else msg=`Ball ${S.balls}. The count is <b>${S.balls} and ${S.strikes}</b>.`+fullCountNote();
+    } else msg=`Ball ${S.balls}! The count is <b>${S.balls} and ${S.strikes}</b>.`+fullCountNote();
   }
   if(kind==="strike"){
     S.strikes++;
     if(S.strikes>=c.strikesForOut){
       S.balls=0;S.strikes=0;S.outs=Math.min(3,S.outs+1);
       msg=`<b>Strike ${c.strikesForOut}! The batter is out.</b>`+
-        (S.outs>=3?" That's 3 outs! The inning is over and the teams switch sides!":` That's out number ${S.outs}.`)+
-        (c.steals?" Catcher dropped it? With first base open (or 2 outs) you can <b>RUN to first</b>!":"");
+        (S.outs>=3?" That's 3 outs! Inning over. Switch sides!":` That's out number ${S.outs}.`)+
+        (c.steals?" Catcher dropped it? First base open, or 2 outs? <b>Run to first!</b>":"");
       if(S.outs>=3)S.outs=0;
-    } else msg=`Strike ${S.strikes}. The count is <b>${S.balls} and ${S.strikes}</b>.`+fullCountNote();
+    } else msg=`Strike ${S.strikes}! The count is <b>${S.balls} and ${S.strikes}</b>.`+fullCountNote();
   }
   if(kind==="foul"){
     if(S.strikes<c.strikesForOut-1){
       S.strikes++;
-      msg=`A foul ball counts as a strike! The count is <b>${S.balls} and ${S.strikes}</b>.`;
+      msg=`A foul is a strike! The count is <b>${S.balls} and ${S.strikes}</b>.`;
     } else {
-      msg=`<b>Foul ball! The count stays ${S.balls} and ${S.strikes}.</b> A foul can never be the last strike. Keep swinging!`;
+      msg=`<b>Foul ball! The count stays ${S.balls} and ${S.strikes}.</b> A foul is never the last strike. Keep swinging!`;
     }
   }
   paintBoard();
@@ -756,7 +768,7 @@ function pitch(kind){
 }
 function fullCountNote(){
   return (S.balls===cfg().ballsForWalk-1&&S.strikes===cfg().strikesForOut-1)
-    ?" That's a <b>full count</b>! The next pitch decides it!":"";
+    ?" That's a <b>full count</b>! Next pitch decides it!":"";
 }
 
 /* ================= THE PLAY (ground balls) ================= */
@@ -778,11 +790,13 @@ function forces(r){
 /* dead ball smarts: sometimes the right play is NO play */
 const SMART_BANK=[
   {kind:"base",runners:[1,3],outs:1,ballAt:POS[6],correct:"HOLD",alt:[],chip:"Smart ball",
-   prompt:`<span class="tag">Hit to the outfield!</span>The batter stops at first. The runner stops at third. The ball comes back in to you at <b>shortstop</b>. Now what?`,
-   why:"Nobody is running, so there is <b>no play</b>! Hold the ball high and walk it to the pitcher. Throwing it around just gives away free bases."},
+   prompt:`<span class="tag">Base hit!</span>Runners stopped on first and third. You have the ball at <b>shortstop</b>. What now?`,
+   why:"Nobody is running, so there is <b>no play</b>! Hold it.",
+   tip:"Walk it in. Wild throws give free bases."},
   {kind:"base",runners:[2],outs:0,ballAt:POS[4],correct:"HOLD",alt:[],chip:"Smart ball",
-   prompt:`<span class="tag">Double!</span>The batter smacks one past everybody and slides into second, safe! The ball comes in to you at <b>second base</b>. The runner is standing right on the bag. Now what?`,
-   why:"They are safe on the base, so there is <b>no play</b>. Hold it and give it to the pitcher! Wild throws are how free runs happen."}
+   prompt:`<span class="tag">Double!</span>The runner slides into second, <b>safe</b>! The ball comes to you at the bag.`,
+   why:"The runner is safe on the bag. <b>No play</b>! Hold it.",
+   tip:"A wild throw here means a free run."}
 ];
 let lastGround="";
 function makeGroundBall(){
@@ -807,62 +821,63 @@ function makeGroundBall(){
       /* Stephen's power play: nobody is forced, so eat the ball, give the
          batter first, and now every base is a force, even home */
       correct="HOLD";chip="Power play";
-      why="No force is on, so nobody HAS to run! Hold the ball. Let the batter take first. Now the bases are <b>loaded</b> and EVERY base is a force, even home!";
-      tip="While you hold, watch the runner on third. Never let them sneak home!";
-      okay={B1:"A real out! But here's the <b>power play</b>: hold the ball, let the batter have first, and now EVERY base is a force!"};
+      why="Nobody has to run! <b>Hold it.</b> Batter gets first. Now everybody must run!";
+      tip="Even home is a force!";
+      okay={B1:"A real out! But <b>hold it</b>. The batter takes first, then everybody must run!"};
     } else {
       why=runners.length===0
         ?"The batter is the only runner. Throw to first. Easy out!"
-        :`${runnerWords(runners)}, but first base is <b>empty</b> behind them. They do NOT have to run! Take the sure out at first.`;
+        :`First base is <b>empty</b>! Nobody has to run. Take the out at first.`;
       chip=runners.length===0?"Sure out":"No force";
-      if(outs===2&&runners.length)tip="2 outs? Just take the out. Inning over!";
+      if(outs===2&&runners.length)tip="That out ends the inning!";
     }
   } else if(lead==="B2"){
-    why="The runner on first <b>has to run</b>! That's a force. Step on second, no tag needed. Then fire to first for two!";
-    tip="No time for two? One sure out beats a wild throw!";
+    why="Runner on first <b>has to run</b>! Step on second, no tag. Then first!";
+    tip="";
   } else if(lead==="B3"){
-    why="Everybody moves up one! The runner heading to third is <b>forced</b>. Touch the bag. No tag needed!";
-    tip="Get the lead runner when you can. Can't? First base is always there!";
+    why="Someone is behind them, so they <b>have to run</b>! Touch third, no tag!";
+    tip="";
   } else {
-    why="Bases loaded! <b>Everybody has to run</b>, even from third. Step on home plate. No tag needed!";
-    tip="Can't stop the run in time? Take a sure out instead. One run is okay!";
+    why="Bases loaded! <b>Everybody has to run</b>, even from third. Step on home. No tag!";
+    tip="";
   }
   if(lead!=="B1"){
     if(outs===2){
       alt=forcedOthers;
-      why+=" And with <b>2 outs</b>, ANY force out ends the inning. Every bag works!";
+      why+=" <b>2 outs</b>? Any force ends the inning!";
     } else {
       /* a force out at another bag is a real out, just not the best one */
       okay={};
       forcedOthers.forEach(b=>okay[b]=lead==="HOME"
-        ?"A real out! The force was on there too. But the run crossed home. When you can, <b>stop the run</b>!"
-        :"A real out! The force was on there too. But the <b>lead runner</b> is the big prize. Look ahead first!");
+        ?"A real out! But the run scored. <b>Stop the run</b> when you can!"
+        :"A real out! But the <b>lead runner</b> is the big prize. Look ahead!");
     }
   }
   const p=POS[pos];
   return{kind:"base",runners,outs,ballAt:{x:p.x,y:p.y},
-    prompt:`<span class="tag">Ground ball!</span>You're the <b>${p.n}</b>! ${runnerWords(runners)}, <b>${outs} out${outs===1?"":"s"}</b>. What's the play?`,
+    prompt:`<span class="tag">Ground ball!</span>You're the <b>${p.n}</b>! ${runnerWords(runners)}, <b>${outs} out${outs===1?"":"s"}</b>. Now what?`,
     correct,alt,okay,tip,why,chip};
 }
 
 /* ================= FLY BALLS ================= */
 const FLY_BANK=[
   {runners:[2],outs:1,ballAt:POS[8],kind:"choice",
-   prompt:`<span class="tag">Fly ball!</span>Runner on second, <b>1 out</b>. Deep fly to center... <b>caught!</b> What does the runner do before going to third?`,
-   choices:[["tag","Touch second AFTER the catch, then go!"],["free","Just run, the ball was hit"],["stay","Stay on second no matter what"]],
+   prompt:`<span class="tag">Fly ball!</span>Runner on second. Deep fly to center, <b>caught!</b> What now?`,
+   choices:[["tag","Wait on the bag, then go"],["free","Go right away"],["stay","Never leave second"]],
    correct:"tag",chip:"Tag up",
-   why:"On a caught fly, be ON your base when the ball is caught. THEN run! That's <b>tagging up</b>.",
-   tip:"Deep fly? Second to third is an easy trip!"},
+   why:"Stay on the bag until the <b>catch</b>. That's a tag up!",
+   tip:""},
   {runners:[1],outs:0,ballAt:POS[6],kind:"base",
-   prompt:`<span class="tag">Pop up!</span>Runner on first, <b>no outs</b>. The runner takes off on the swing... but you catch it at shortstop! Where's the throw?`,
+   prompt:`<span class="tag">Pop up!</span>Runner on first takes off... but you <b>catch it!</b> Where's the throw?`,
    correct:"B1",alt:[],chip:"Double off!",
-   why:"The catch is out one. That runner left too early and must run back! Throw to first, step on the bag. <b>Two outs, one pop up!</b>"},
+   why:"Catch is out one! The runner left early, so throw to first. Out <b>two!</b>",
+   tip:"Pop up? Runners wait and watch!"},
   {runners:[3],outs:1,ballAt:POS[9],kind:"choice",
-   prompt:`<span class="tag">Sac fly!</span>Runner on third, <b>1 out</b>. Fly to right... caught! The runner waits on the base, then takes off after the catch and scores. Does the run count?`,
-   choices:[["yes","YES! They tagged up first"],["no","No, you can't score on a caught ball"]],
-   correct:"yes",chip:"Sacrifice fly",
-   why:"Perfect! Stay on the base until the catch, THEN run. That's a <b>sacrifice fly</b>: batter out, run counts.",
-   tip:"One out for one run is a great trade!"},
+   prompt:`<span class="tag">Sac fly!</span>Runner on third, <b>1 out</b>. Fly caught! The runner tags up and <b>scores</b>. Count it?`,
+   choices:[["yes","Yes, it counts!"],["no","No, it was caught"]],
+   correct:"yes",chip:"Sac fly",
+   why:"Tag up, then go! Batter is out, but the <b>run counts</b>.",
+   tip:""},
   {runners:[1],outs:1,ballAt:POS[8],kind:"base",needs:"circle",correct:"CIRCLE",alt:[],chip:"Circle it up",
    prompt:`<span class="tag">Base hit!</span>You chase it down in <b>center field</b>. The runner keeps on running. What stops her?`,
    why:"The ball in the <b>pitcher's circle</b>! Then she must pick a base and go.",
@@ -874,27 +889,27 @@ const FLY_BANK=[
    tip:"Circle first. Look after.",
    okay:{HOLD:"Out in right field, holding it lets them keep going. Get it to the <b>circle</b>."}},
   {runners:[1,2],outs:1,ballAt:POS[4],kind:"choice",needs:"infieldFly",
-   prompt:`<span class="tag">Infield fly!</span>Runners on first and second, <b>1 out</b>. Easy pop up over second base. The umpire yells <b>"INFIELD FLY!"</b> What does that mean?`,
-   choices:[["auto","Batter is out right away, caught or not!"],["force","The runners must run"],["nothing","Nothing, play on"]],
+   prompt:`<span class="tag">Easy pop!</span>Runners on first and second, <b>1 out</b>. The ump yells <b>"Infield fly!"</b> What now?`,
+   choices:[["auto","Batter is out now"],["force","Runners must run"],["nothing","Nothing happens"]],
    correct:"auto",chip:"Infield fly rule",
-   why:"Runners on first and second, fewer than 2 outs, easy pop up? The batter is just <b>out</b>, caught or dropped. It stops sneaky drop-it-on-purpose tricks. Runners can stay. They're safe!",
-   tip:"You will not see this one at 8U. The rules grow with you!"},
+   why:"The batter is <b>out</b>, caught or dropped. Runners can stay! It stops the defense dropping it on purpose for two outs.",
+   tip:""},
   {runners:[2,3],outs:0,ballAt:POS[7],kind:"choice",
-   prompt:`<span class="tag">Foul ball!</span>Runners on second and third, <b>no outs</b>. A high foul drifts near the fence... the left fielder <b>catches it!</b> Can the runner on third tag up and score?`,
-   choices:[["yes","YES! A foul catch is still a catch"],["no","No way, the ball was foul"]],
+   prompt:`<span class="tag">Foul ball!</span>Runners on second and third. The left fielder <b>catches it!</b> Can they tag up?`,
+   choices:[["yes","Yes! A catch counts"],["no","No, fouls don't count"]],
    correct:"yes",chip:"Foul catch",
-   why:"A caught foul is a real out. Runners can tag up on it, same as a fair fly!",
-   tip:"That's why fielders sometimes let a deep foul drop on purpose!"},
+   why:"A caught foul is a real out. Runners can <b>tag up!</b>",
+   tip:""},
   {runners:[1],outs:1,ballAt:POS[3],kind:"base",
-   prompt:`<span class="tag">It drops!</span>Runner on first, <b>1 out</b>. The pop up near first base <b>falls in! No catch!</b> Where's the play?`,
+   prompt:`<span class="tag">It drops!</span>Runner on first, <b>1 out</b>. The pop up <b>falls in!</b> Where's the play?`,
    correct:"B2",alt:["B1"],chip:"Force is ON",
-   why:"No catch means the batter runs. So the runner on first is <b>forced</b> to second again! Lead out at second.",
-   tip:"Can't get there in time? First base works too!"},
+   why:"No catch! The batter runs, so the runner is <b>forced</b> to second.",
+   tip:"Can't make it? Throw to first!"},
   {runners:[1,2,3],outs:2,ballAt:POS[8],kind:"choice",
-   prompt:`<span class="tag">2 outs!</span>Bases loaded, <b>2 outs</b>. Fly to center... caught for out number three! The runner from third crossed home <b>before</b> the catch. Does the run count?`,
-   choices:[["no","NO! The inning ended on the catch"],["yes","Yes, they touched home first"]],
+   prompt:`<span class="tag">2 outs!</span>The runner touches home. Then the fly is <b>caught</b>: out three! Count it?`,
+   choices:[["no","No! The inning ended"],["yes","Yes, they scored"]],
    correct:"no",chip:"Third out",
-   why:"When the third out is a <b>caught fly</b>, no runs can score on the play. The inning ends the moment the ball hits the glove!"}
+   why:"The third out was a <b>catch</b>, so no runs score. Inning over!"}
 ];
 /* Fisher-Yates. Authoring puts the right answer first because that reads
    well in the source; the child must never see that order. */
@@ -942,40 +957,51 @@ function makeFlyBall(){
    The other half of knowing the rules: knowing where YOU go.
    Answers are the fielders themselves. */
 const POS_BANK=[
+  /* Stephen's coach, 2026-08-28: "he's saying pitcher or second base could
+     run to cover first and he's not wrong especially when you're playing in
+     the league." He is right. The pitcher covering is the play every kid
+     should learn first, but the second baseman taking the bag is a real
+     answer, and at this age it is often the one that actually beats the
+     runner there. So it is accepted and celebrated, with its own coaching
+     line rather than a buzzer. */
   {kind:"pos",runners:[],outs:0,ballAt:POS[3],correct:"1",alt:[],chip:"Pitcher covers first",who:["1","3"],
-   prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>first baseman</b>, way off the bag! The batter is racing up the line. Who runs to <b>cover first base</b>?`,
-   why:"When the first baseman leaves the bag to field the ball, the <b>pitcher</b> sprints over to take the throw at first! Ball to the first base side? Pitcher covers."},
-  {kind:"pos",runners:[1],outs:0,ballAt:POS[4],correct:"6",alt:[],chip:"Partners cover",who:["6","4"],
-   prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>second baseman</b>! Runner on first. Somebody has to be standing on second for the force. Who covers <b>second base</b>?`,
-   why:"The shortstop and second baseman are partners! When one goes for the ball, the other covers second. Ball on the first base side? The <b>shortstop</b> takes the bag.",
-   tip:"Before the pitch, point at your partner: you cover, I cover!"},
-  {kind:"pos",runners:[1],outs:1,ballAt:POS[6],correct:"4",alt:[],chip:"Partners cover",who:["4","6"],
-   prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>shortstop</b>! Runner on first. Who covers <b>second base</b> for the throw?`,
-   why:"Ball on the third base side? The <b>second baseman</b> covers the bag. Partners take turns so second base is never empty!"},
+   prompt:`<span class="tag">Cover it!</span>The <b>first baseman</b> runs off the bag for the ground ball. Who covers <b>first</b>?`,
+   why:"The <b>pitcher</b> sprints over and takes the throw at the bag!",
+   tip:"Ball near first base? Pitcher, run!",
+   okay:{"4":"That works too! If the pitcher cannot beat the runner there, the <b>second baseman</b> takes the bag."}},
+  {kind:"pos",runners:[1],outs:0,ballAt:POS[4],correct:"6",alt:[],chip:"Shortstop covers",who:["6","4"],
+   prompt:`<span class="tag">Cover it!</span>Runner on first! Ground ball to the <b>second baseman</b>. Who covers <b>second</b> for the force?`,
+   why:"The <b>shortstop</b> covers! Your partner gets the ball, you take the bag.",
+   tip:"Point at your partner every pitch!"},
+  {kind:"pos",runners:[1],outs:1,ballAt:POS[6],correct:"4",alt:[],chip:"Second baseman covers",who:["4","6"],
+   prompt:`<span class="tag">Cover it!</span>Ground ball to the <b>shortstop</b>! Runner on first. Who covers <b>second base</b>?`,
+   why:"The <b>second baseman</b> covers this time! Partners take turns so second is never empty.",
+   tip:"Ball toward third? Second baseman covers."},
   {kind:"pos",runners:[],outs:1,ballAt:POS[5],correct:"9",alt:[],chip:"Back up every throw",who:["9","5"],
-   prompt:`<span class="tag">Back it up!</span>Ground ball to <b>third</b>! It is a looong throw across to first. If the throw gets past first base, who is <b>backing it up</b>?`,
-   why:"The <b>right fielder</b> sneaks in behind first base on every infield grounder. If the throw skips away, they grab it and save a base!"},
+   prompt:`<span class="tag">Back it up!</span>Long throw from <b>third</b> to first! Who <b>backs it up</b>?`,
+   why:"The <b>right fielder</b> runs behind first on every infield ground ball. Save a base!"},
   {kind:"pos",runners:[2],outs:1,ballAt:POS[7],correct:"1",alt:[],chip:"Back up home",who:["1","7","2"],
-   prompt:`<span class="tag">Back it up!</span>Base hit to <b>left field</b>! The runner from second is heading for home and the throw is coming in! Who <b>backs up the catcher</b> behind home plate?`,
-   why:"On a throw home from the outfield, the <b>pitcher</b> runs behind the catcher. If the ball gets past, there is no free run!"},
+   prompt:`<span class="tag">Back it up!</span>Hit to <b>left field</b>! Throw coming home! Who backs up the <b>catcher</b>?`,
+   why:"The <b>pitcher</b> runs behind home plate. If the throw gets past, no free run!"},
   {kind:"pos",runners:[3],outs:1,ballAt:POS[1],correct:"2",alt:[],chip:"Guard the plate",who:["2","1"],
-   prompt:`<span class="tag">Heads up!</span>The runner on third is dancing off the bag and the pitcher has the ball. If that runner breaks for home, who <b>guards home plate</b>?`,
-   why:"Home plate belongs to the <b>catcher</b>! Stay home, take the throw, and make the runner beat the tag."},
+   prompt:`<span class="tag">Heads up!</span>The runner on third takes off for <b>home</b>! Who <b>guards the plate</b>?`,
+   why:"Home plate belongs to the <b>catcher</b>! Stay there, take the throw, tag the runner!"},
   {kind:"choice",runners:[],outs:0,ballAt:POS[9],correct:"backup",chip:"Back up your buddy",who:["8","9"],
-   prompt:`<span class="tag">Fly ball!</span>High fly to <b>right field</b>. You play <b>center field</b>, so it is not yours. What do you do?`,
-   choices:[["backup","Run behind right field, just in case!"],["watch","Stand still and watch"],["infield","Run to the infield"]],
-   why:"Outfielders back each other up on <b>every</b> fly ball! If it pops out of the glove or skips by, you are right there to grab it."},
+   prompt:`<span class="tag">Fly ball!</span>High fly to <b>right field</b>. You play <b>center</b>. What now?`,
+   choices:[["backup","Run behind right field!"],["watch","Stand and watch"],["infield","Run to the infield"]],
+   why:"Outfielders back up <b>every</b> fly ball. Be there if it pops loose!"},
   {kind:"pos",runners:[],outs:2,ballAt:POS[1],correct:"3",alt:[],chip:"Take your bag",who:["3","1"],
-   prompt:`<span class="tag">Cover it!</span>Easy grounder right back to the <b>pitcher</b>! Who covers <b>first base</b> for the throw?`,
-   why:"That one belongs to the <b>first baseman</b>: run to the bag, put a foot on it, and give a big target! The pitcher only covers when the first baseman is busy fielding."},
+   prompt:`<span class="tag">Cover it!</span>Easy ground ball back to the <b>pitcher</b>! Who covers <b>first base</b>?`,
+   why:"The <b>first baseman</b> covers! The pitcher only runs over when the bag is empty.",
+   tip:"Foot on the bag, big target!"},
   {kind:"choice",runners:[1],outs:0,ballAt:POS[8],correct:"yes",chip:"Everybody moves",who:["7","8"],
-   prompt:`<span class="tag">Base hit!</span>Line drive to <b>center field</b>! You play <b>left field</b>. The ball is nowhere near you. Do you have a job?`,
-   choices:[["yes","YES! Run over and back up center"],["no","Nope, take a little break"]],
-   why:"Every player has a job on every play! Back up the fielder next to you. Nobody ever just watches."}
-  ,{kind:"pos",runners:[],outs:1,ballAt:{x:145,y:405},correct:"5",alt:[],chip:"Charge the bunt",who:["5","2","1"],
-   prompt:`<span class="tag">Bunt!</span>The batter taps a little bunt down the <b>third base line</b>! It is rolling slow. Who charges in to grab it?`,
-   why:"The <b>third baseman</b> charges the bunt! Run in hard, scoop it, and make a strong throw to first.",
-   tip:"Call it LOUD: I got it, I got it!"}
+   prompt:`<span class="tag">Base hit!</span>The ball drops in <b>center field</b>. You play <b>left</b>. Do you have a job?`,
+   choices:[["yes","YES! Back up center!"],["no","Nope, take a break"]],
+   why:"Everybody has a job on every play! Back up your teammate."},
+  {kind:"pos",runners:[],outs:1,ballAt:{x:145,y:405},correct:"5",alt:[],chip:"Charge the bunt",who:["5","2","1"],
+   prompt:`<span class="tag">Bunt!</span>The ball rolls slow down the <b>third base line</b>. Who runs in to get it?`,
+   why:"The <b>third baseman</b> charges! Run in hard, scoop it, and throw to first.",
+   tip:"Call it LOUD: I got it!"}
 ];
 function makePosition(){
   const s={...drawFrom("pos",POS_BANK)};
@@ -987,21 +1013,21 @@ function makePosition(){
    These only exist where cfg().steals is true, so the 8U girls never get
    quizzed on rules their league does not play. */
 const RUN_BANK=[
-  {kind:"choice",runners:[1],outs:0,ballAt:POS[1],correct:"release",chip:"No early leadoffs",
-   prompt:`<span class="tag">Kid pitch!</span>You're the runner on first. When are you allowed to <b>leave the base</b>?`,
-   choices:[["release","When the pitch leaves the pitcher's hand!"],["any","Whenever I want"],["never","Never, stay glued to it"]],
-   why:"In fastpitch you can leave your base the moment the pitch <b>leaves the pitcher's hand</b>. Leave early and the umpire calls you OUT!",
-   tip:"Watch the pitcher's hand, not the batter."},
+  {kind:"choice",runners:[1],outs:0,ballAt:POS[1],correct:"release",chip:"When to go",
+   prompt:`<span class="tag">Kid pitch!</span>You're on first. When can you <b>leave the base</b>?`,
+   choices:[["release","When the pitcher lets go!"],["any","Whenever I want"],["never","Never, stay put!"]],
+   why:"Wait for the pitcher to <b>let go</b>. Leave early and you're out!",
+   tip:""},
   {kind:"choice",runners:[1],outs:1,ballAt:{x:222,y:505},correct:"go",chip:"Steal it!",
-   prompt:`<span class="tag">Passed ball!</span>You're on first. The pitch skips PAST the catcher and rolls away! What do you do?`,
-   choices:[["go","GO! Steal second!"],["stay","Stay, stealing is not allowed"],["carry","Wait for the coach to carry me"]],
-   why:"At 10U you CAN steal! The ball is loose behind the catcher, so take off for second and <b>slide in</b>!",
-   tip:"At 8U this is not allowed yet. The rules grow with you!"},
+   prompt:`<span class="tag">Passed ball!</span>The ball rolls <b>past the catcher</b>! You're on first.`,
+   choices:[["go","GO! Steal second!"],["stay","Stay. No stealing."],["carry","Wait for a piggyback!"]],
+   why:"At 10U you CAN steal! The ball is loose, so <b>go</b>!",
+   tip:"Slide into second!"},
   {kind:"choice",runners:[],outs:1,ballAt:{x:200,y:490},correct:"run",chip:"Dropped third strike",
-   prompt:`<span class="tag">Strike three!</span>But the catcher <b>DROPS it</b>! First base is empty. What can the batter do?`,
-   choices:[["run","RUN to first!"],["bench","Walk back to the bench"],["walk","Take a free walk"]],
-   why:"At kid pitch, if the catcher misses strike three and first base is open (or there are 2 outs), the batter can <b>RUN</b>! The catcher has to throw you out.",
-   tip:"Run it out EVERY time. Make the catcher make the play!"}
+   prompt:`<span class="tag">Strike three!</span>The catcher <b>drops it</b>! First base is empty. Now what?`,
+   choices:[["run","RUN to first!"],["bench","Head to the bench"],["walk","Take a walk"]],
+   why:"Is first base open, or 2 outs? <b>Run</b>! Make them throw you out.",
+   tip:""}
 ];
 function makeRunnerIQ(){
   const s={...drawFrom("run",RUN_BANK)};
