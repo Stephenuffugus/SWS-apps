@@ -308,12 +308,14 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   const song = await page.evaluate(() => window.__dr.SONG);
   const beats = song.reduce((a, n) => a + n[1], 0);
   if (beats !== 96) fail('chorus should be 32 bars of 3/4 (96 beats), got ' + beats);
+  if (song[0].join(',') !== '0,2') fail('the opening lilt is missing: "Take" must be a held half note');
   if (song[1][0] !== 12) fail('the opening octave leap is missing');
   if (!song.some((n) => n[0] === 8)) fail('the G sharp in the Cracker Jack line is missing');
   if (!song.some((n) => n[0] === 6)) fail('the F sharp under "at the old" is missing');
   const oneTwoThree = song.map((n) => n.join(',')).join(' ');
   if (!oneTwoThree.includes('12,3 12,3 12,1 11,1 9,1')) fail('one, two, three strikes must sit on the same high C');
-  if (song[song.length - 1].join(',') !== '12,6') fail('the final "game" should hold high C');
+  const lastNote = [...song].reverse().find((n) => n[0] >= 0);
+  if (lastNote.join(',') !== '12,5') fail('the final "game" should hold high C');
 
   // ── settings: sport flips to baseball and survives a reload ──
   await page.click('#gear');

@@ -92,3 +92,7 @@ Stephen: the song was wrong and the position picker was not earning its place.
 2. **Position picker removed** (his call: no visible difference, not needed now). myPos state, persistence, weighting and the settings row are gone; the `who` tags stay on POS_BANK entries as inert documentation so the feature can return cheaply if wanted. The 3B bunt drill stays, it is good content regardless.
 
 Lesson written in ink: transcribe, never recall, anything a human will hold up against a known original (music, lyrics, quotes, rules).
+
+## v11, the rhythm was the real bug
+
+Stephen "cleared the browser five times" and still heard "only quarter notes": he WAS on the new build; v10's pitches were right but its rhythm was a flat march (one syllable per beat). The actual song lilts. v11's note values are read bar by bar from the ORIGINAL 1908 engraving (Teller, Sons & Dorner plates, Levy Sheet Music Collection scan, levysheetmusic.mse.jhu.edu 027.125a): every phrase opens long short ("Taaake me", "I don't", "root root", "they don't", "Craaack er"), walks in quarters, and parks on full bar holds (ball, game, home, old); "Let me" and "For it's" are quick pickup eighths. Smoke now pins the opening half note lilt too. Lesson appended to [[transcribe-never-recall]]: rhythm IS part of the transcription; letter notation sites drop it, engravings carry it.

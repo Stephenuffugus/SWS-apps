@@ -358,7 +358,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v10";
+var BUILD="diamond-v11";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -466,25 +466,27 @@ function sfx(kind){
 /* ================= ballpark organ =================
    Take Me Out to the Ball Game (Von Tilzer/Norworth, 1908, public domain),
    one chiptune voice, sequenced live in WebAudio so the app stays one file.
-   Notes are [semitones above middle C, beats] in 3/4. The full 32 bar chorus,
-   transcribed from published sheet music (letternoteplayer.com letter
-   notation in C, rhythm checked against an engraved edition), NOT from
-   memory. Waltz: one syllable per beat, phrase endings held. */
+   Notes are [semitones above middle C, beats] in 3/4; -1 is a rest. The full
+   32 bar chorus, note values read bar by bar from the ORIGINAL 1908
+   engraving (Teller, Sons & Dorner; Levy Collection scan, transposed D to
+   C). The lilt is the song: long short openings (Taaake me), quick walking
+   quarters, full bar holds on ball / game / home / old, and Let me / For
+   it's as quick pickups. */
 const SONG=[
   /* Take me out to the ball game */
-  [0,1],[12,1],[9,1], [7,1],[4,1],[7,1], [2,6],
-  /* Take me out with the crowd */
-  [0,1],[12,1],[9,1], [7,1],[4,1],[7,7],
+  [0,2],[12,1], [9,1],[7,1],[4,1], [7,3], [2,3],
+  /* Take me out with the crowd (held, then breathe) */
+  [0,2],[12,1], [9,1],[7,1],[4,1], [7,5],[-1,1],
   /* Buy me some peanuts and Cracker Jack (the G sharp is real) */
   [9,1],[8,1],[9,1], [4,1],[5,1],[7,1], [9,2],[5,1], [2,3],
   /* I don't care if I never get back, let me */
-  [9,1],[9,1],[9,1], [11,1],[12,1],[14,1], [11,1],[9,1],[7,2],[4,1],[2,1],
+  [9,2],[9,1], [9,1],[11,1],[12,1], [14,1],[11,1],[9,1], [7,2],[4,.5],[2,.5],
   /* root, root, root for the home team (the opening leap again) */
-  [0,1],[12,1],[9,1], [7,1],[4,1],[7,1], [2,6],
-  /* if they don't win it's a shame. For it's */
-  [2,1],[0,1],[2,1], [4,1],[5,1],[7,1], [9,4],[9,1],[11,1],
+  [0,2],[12,1], [9,1],[7,1],[4,1], [7,3], [2,2],
+  /* If they don't win it's a shame. For it's */
+  [2,1], [0,2],[2,1], [4,1],[5,1],[7,1], [9,5],[9,.5],[11,.5],
   /* one, two, three strikes you're out at the old ball game */
-  [12,3],[12,3], [12,1],[11,1],[9,1], [7,1],[6,1],[7,1], [9,3],[11,3],[12,6]
+  [12,3],[12,3], [12,1],[11,1],[9,1], [7,1],[6,1],[7,1], [9,3],[11,3],[12,5],[-1,1]
 ];
 const BEAT=.4;
 let musicOn=false,musicT=null,musicOsc=[];
