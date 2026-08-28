@@ -106,6 +106,31 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
     (await fresh.evaluate(() => document.getElementById('callname').value)) === 'Round Trip');
   await fresh.close();
 
+  /* ---- formats ----
+     The pitch is not one size. Offside is genuinely off at 5 and 7 a side,
+     per The FA's own Rule 34, so the board must stop drawing a line it does
+     not play, and every format must still run a play without throwing. */
+  for (const f of ['5v5', '7v7', '9v9', '11v11']) {
+    await page.click(`#fmtseg button[data-fmt="${f}"]`);
+    await page.waitForTimeout(650);
+    const on = await page.evaluate((k) =>
+      document.querySelector(`#fmtseg button[data-fmt="${k}"]`).getAttribute('aria-pressed'), f);
+    check(`${f} selects`, on === 'true');
+    const cite = await page.textContent('#fmtnote');
+    check(`${f} says where its numbers came from`, /FA|Laws of the Game/.test(cite), cite.slice(0, 40));
+    await page.click('#play');
+    await page.waitForTimeout(4200);
+    check(`${f} runs a play`, (await page.textContent('#verdict')).trim().length > 8);
+  }
+  /* choosing a preset is choosing an 11 a side play, and it says so */
+  await page.click('#fmtseg button[data-fmt="5v5"]');
+  await page.waitForTimeout(500);
+  await page.selectOption('#preset', 'decoy');
+  await page.waitForTimeout(600);
+  check('picking a preset returns the board to 11 a side',
+    (await page.evaluate(() =>
+      document.querySelector('#fmtseg button[data-fmt="11v11"]').getAttribute('aria-pressed'))) === 'true');
+
   /* ---- the squad ----
      Fixed rosters are a category wide complaint, HANDOFF section 10. Adding
      and removing has to clean up after itself or the play breaks quietly:

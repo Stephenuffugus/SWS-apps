@@ -38,6 +38,7 @@ function loadEngine() {
   const shim = `
     export const API = { clonePlay, buildSim, step, compile, makeProfile,
       SKILLS, PRESETS, MOVES, ARCHETYPES, PROF_KEYS, PROF_LIMITS,
+      FORMATS, setFormat, offsideLine, getField: () => FIELD,
       setPlay: p => { play = p; }, setSkill: s => { skill = s; },
       getPlay: () => play };
   `;
@@ -157,6 +158,50 @@ console.log('\nthe sweep contract');
   }
   check('the preset x tier matrix is unchanged', moved.length === 0,
     moved.join(' | ') + '  (run with --bless if this change was intended)');
+}
+
+console.log('\nformats');
+{
+  /* The 11v11 row must reproduce the literals FIELD used to be typed as,
+     exactly, because the sweep contract is pinned to plays measured on it.
+     If this ever drifts, every pinned cell is meaningless. */
+  API.setFormat('11v11');
+  const F = API.getField();
+  check('11v11 reproduces the original geometry exactly',
+    F.w === 68 && F.goalY === 52.5 && F.yMin === -10 && F.cx === 34 &&
+    F.pen.x0 === 13.84 && F.pen.x1 === 54.16 && F.pen.y0 === 36 &&
+    F.ga.x0 === 24.84 && F.ga.x1 === 43.16 && F.ga.y0 === 47 &&
+    F.spotY === 41.5 && F.postL === 30.34 && F.postR === 37.66 &&
+    F.keeperY === 48 && F.circleR === 9.15 && F.k === 1,
+    JSON.stringify({ w: F.w, goalY: F.goalY, yMin: F.yMin, pen: F.pen, keeperY: F.keeperY }));
+
+  for (const k of Object.keys(API.FORMATS)) {
+    API.setFormat(k);
+    const G = API.getField();
+    check(`${k}: the goal fits inside the penalty area`,
+      G.pen.shape === 'arc' ? G.pen.r > (G.postR - G.postL) / 2
+                            : G.pen.x0 < G.postL && G.pen.x1 > G.postR);
+    check(`${k}: the penalty spot is on the pitch`, G.spotY > 0 && G.spotY < G.goalY);
+    check(`${k}: the keeper stands in front of his own line`,
+      G.keeperY > 0 && G.keeperY < G.goalY);
+  }
+
+  /* Offside is the rule that actually differs, and it is the one that would
+     silently ruin a small sided board: null+0.4 reads as 0.4 and flags
+     almost everybody offside, so this asserts Infinity rather than falsy. */
+  API.setFormat('5v5');
+  check('5 a side plays no offside',
+    API.offsideLine({ defenders: [{ pos: { x: 10, y: 16 } }, { pos: { x: 14, y: 15 } }] }) === Infinity);
+  API.setFormat('7v7');
+  check('7 a side plays no offside',
+    API.offsideLine({ defenders: [{ pos: { x: 10, y: 16 } }, { pos: { x: 14, y: 15 } }] }) === Infinity);
+  API.setFormat('9v9');
+  check('9 v 9 takes the second deepest player',
+    API.offsideLine({ defenders: [{ pos: { x: 10, y: 30 } }, { pos: { x: 14, y: 28 } }] }) === 30);
+  API.setFormat('11v11');
+  check('11 a side still takes the second deepest player',
+    API.offsideLine({ defenders: [{ pos: { x: 10, y: 44 } }, { pos: { x: 14, y: 40 } }] }) === 44);
+  API.setFormat('11v11');
 }
 
 console.log('\nmove library');

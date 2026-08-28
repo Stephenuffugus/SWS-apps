@@ -216,6 +216,15 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
 
   <div id="pcardHost"></div>
 
+  <div class="lab">Format</div>
+  <div class="seg" role="group" aria-label="Format" id="fmtseg">
+    <button data-fmt="5v5" type="button" aria-pressed="false">5v5</button>
+    <button data-fmt="7v7" type="button" aria-pressed="false">7v7</button>
+    <button data-fmt="9v9" type="button" aria-pressed="false">9v9</button>
+    <button data-fmt="11v11" type="button" aria-pressed="true">11v11</button>
+  </div>
+  <div class="none" id="fmtnote" style="margin:7px 2px 0"></div>
+
   <div class="lab">Squad</div>
   <div class="row" style="margin-top:0">
     <button class="btn small wide" id="addatt">Add attacker</button>
@@ -321,7 +330,70 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
    defenders harder than fast ones with no special-casing anywhere.
    ========================================================================== */
 
-const FIELD={w:68,yMin:-10,yMax:52.5,goalY:52.5};
+/* ═══════════════════════════════════════════════════════════════ FORMATS
+   Every marking below is TRANSCRIBED from a primary document, never scaled
+   from another format, because small sided pitches publish their own
+   markings and they are not miniature versions of the big one.
+
+   5v5, 7v7   The FA, Rules of the Association 2025-26, s.34 Small-Sided
+              Football. Semicircular 6m penalty area, 6m penalty mark, 3m
+              centre circle, and verbatim: "there is no offside in
+              Small-Sided Football". Pitch sizes from s.38, both sitting
+              inside s.34's published bands.
+              These ship as ADULT small sided rather than mini-soccer,
+              because the FA publishes no penalty area for mini-soccer at
+              all, and because a Sunday league player is who this is for.
+   9v9        The FA Laws for 9v9 Football, Law 1 diagram. Law 11 verbatim:
+              "Normal rules apply, as per Laws of Association Football."
+   11v11      IFAB Law 1 on 105 x 68. These numbers are UNCHANGED and
+              reproduce the old FIELD literals exactly, which is what keeps
+              the sweep contract honest across this change.
+   ══════════════════════════════════════════════════════════════════════ */
+const YD=0.9144, FT=0.3048;
+const FORMATS={
+  '5v5':{key:'5v5',label:'5 a side',outfield:4,
+    len:40*YD,wid:30*YD,goalW:3.66,
+    pen:{shape:'arc',r:6},ga:null,spot:6,arcR:0,circleR:3,
+    offside:false,keeper:2.5,
+    cite:'FA small sided football, 40 by 30 yards, 6 metre D. No offside.'},
+  '7v7':{key:'7v7',label:'7 a side',outfield:6,
+    len:60*YD,wid:40*YD,goalW:3.66,
+    pen:{shape:'arc',r:6},ga:null,spot:6,arcR:0,circleR:3,
+    offside:false,keeper:3.0,
+    cite:'FA small sided football, 60 by 40 yards, 6 metre D. No offside.'},
+  '9v9':{key:'9v9',label:'9 v 9',outfield:8,
+    len:80*YD,wid:50*YD,goalW:16*FT,
+    pen:{shape:'rect',w:32*YD,d:14*YD},ga:{w:13*YD,d:4*YD},
+    spot:8*YD,arcR:7*YD,circleR:7*YD,
+    offside:true,keeper:3.5,
+    cite:'FA 9v9 Laws, 80 by 50 yards. Offside applies.'},
+  '11v11':{key:'11v11',label:'11 a side',outfield:10,
+    len:105,wid:68,goalW:7.32,
+    pen:{shape:'rect',w:40.32,d:16.5},ga:{w:18.32,d:5.5},
+    spot:11,arcR:9.15,circleR:9.15,
+    offside:true,keeper:4.5,
+    cite:'Laws of the Game, 105 by 68 metres.'}
+};
+/* FIELD is derived, never typed. The board shows the attacking half plus a
+   strip of the other one: 4/21 of the half, which is exactly the 10 metres
+   the original literal used, in exact binary. */
+let FIELD={};
+function setFormat(key){
+  const f=FORMATS[key]||FORMATS['11v11'];
+  const goalY=f.len/2, cx=f.wid/2;
+  FIELD={key:f.key,label:f.label,outfield:f.outfield,cite:f.cite,
+    w:f.wid, goalY, yMax:goalY, yMin:-(goalY*4/21), cx,
+    k:f.wid/68,
+    offside:f.offside, keeperY:goalY-f.keeper,
+    spotY:goalY-f.spot, arcR:f.arcR, circleR:f.circleR,
+    postL:cx-f.goalW/2, postR:cx+f.goalW/2,
+    pen:f.pen.shape==='rect'
+      ?{shape:'rect',x0:cx-f.pen.w/2,x1:cx+f.pen.w/2,y0:goalY-f.pen.d}
+      :{shape:'arc',r:f.pen.r},
+    ga:f.ga?{x0:cx-f.ga.w/2,x1:cx+f.ga.w/2,y0:goalY-f.ga.d}:null};
+  return FIELD;
+}
+setFormat('11v11');
 const V={
   add:(a,b)=>({x:a.x+b.x,y:a.y+b.y}), sub:(a,b)=>({x:a.x-b.x,y:a.y-b.y}),
   mul:(a,s)=>({x:a.x*s,y:a.y*s}), len:a=>Math.hypot(a.x,a.y),
@@ -389,7 +461,7 @@ function makeProfile(tier,arch){
    build(c) -> { path:[absolute points], fakes:[{at,dur,dir}] }
    ========================================================================== */
 function ctxFor(p,ballPos){
-  const g=V.norm(V.sub({x:34,y:FIELD.goalY},p));
+  const g=V.norm(V.sub({x:FIELD.cx,y:FIELD.goalY},p));
   const b=V.dist(p,ballPos)<0.4?{x:0,y:-1}:V.norm(V.sub(ballPos,p));
   const side=p.x<34?-1:1;
   return {p,g,b,lat:{x:side,y:0},inw:{x:-side,y:0},side};
@@ -446,7 +518,7 @@ drop:{kind:'run',name:'Drop into the pocket',aka:'between the lines · finding s
 split:{kind:'run',name:'Split the centre backs',aka:'through the middle · down the gut',diff:3,
   teach:'Straight run through the gap between the two centre backs. Only on when they are wide apart.',
   signal:'They have split. Straight through the middle, first time.',
-  build:c=>({path:[c.p,{x:34,y:Math.min(FIELD.goalY-3,c.p.y+6)},{x:34,y:Math.min(FIELD.goalY-1.5,c.p.y+14)}]})},
+  build:c=>({path:[c.p,{x:FIELD.cx,y:Math.min(FIELD.goalY-3,c.p.y+6)},{x:FIELD.cx,y:Math.min(FIELD.goalY-1.5,c.p.y+14)}]})},
 
 /* ---- on the ball ---- */
 stepover:{kind:'onball',name:'Step-over',aka:'pedalada · the Ronaldo',diff:1,
@@ -706,7 +778,12 @@ function perceive(S,tau){
   return S.history[0];
 }
 function offsideLine(S){
-  const ys=S.defenders.map(d=>d.pos.y).concat([48]);ys.sort((a,b)=>b-a);return ys[1];
+  /* Infinity, never null: the caller does `to.pos.y > line+0.4`, and
+     null+0.4 is 0.4, which would flag almost every runner offside in a
+     format that does not play offside at all. Infinity is a true no-op. */
+  if(!FIELD.offside) return Infinity;
+  const ys=S.defenders.map(d=>d.pos.y).concat([FIELD.keeperY]);
+  ys.sort((a,b)=>b-a);return ys[1];
 }
 const log=(S,cls,msg)=>S.events.push({t:S.t,cls,msg});
 const labelOf=id=>{const a=play.attackers.find(x=>x.id===id);return a?a.label:id;};
@@ -942,17 +1019,28 @@ function drawPitch(){
   ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
   ctx.strokeStyle='rgba(232,228,217,.26)';ctx.lineWidth=1.2;
   const box=(x0,y0,x1,y1)=>ctx.strokeRect(sx(x0),sy(y1),(x1-x0)*SC,(y1-y0)*SC);
-  box(0.4,FIELD.yMin+0.4,67.6,52.5);
-  box(13.84,36,54.16,52.5);
-  box(24.84,47,43.16,52.5);
+  /* every marking comes from FIELD now, so the pitch is whatever format is
+     selected. A small sided box is a D, not a rectangle, which is the FA's
+     own Rule 34 shape and not a scaled 11v11 box. */
+  const G=FIELD, inset=0.4*G.k;
+  box(inset,G.yMin+inset,G.w-inset,G.goalY);
+  if(G.pen.shape==='rect'){
+    box(G.pen.x0,G.pen.y0,G.pen.x1,G.goalY);
+    if(G.ga) box(G.ga.x0,G.ga.y0,G.ga.x1,G.goalY);
+  } else {
+    ctx.strokeStyle='rgba(232,228,217,.22)';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(sx(G.cx),sy(G.goalY),G.pen.r*SC,Math.PI*0.06,Math.PI*0.94);ctx.stroke();
+  }
   ctx.strokeStyle='rgba(232,228,217,.55)';ctx.lineWidth=2.6;
-  ctx.beginPath();ctx.moveTo(sx(30.34),sy(52.5));ctx.lineTo(sx(37.66),sy(52.5));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx(G.postL),sy(G.goalY));ctx.lineTo(sx(G.postR),sy(G.goalY));ctx.stroke();
   ctx.fillStyle='rgba(232,228,217,.3)';
-  ctx.beginPath();ctx.arc(sx(34),sy(41.5),2,0,7);ctx.fill();
+  ctx.beginPath();ctx.arc(sx(G.cx),sy(G.spotY),2,0,7);ctx.fill();
   ctx.strokeStyle='rgba(232,228,217,.22)';ctx.lineWidth=1.2;
-  ctx.beginPath();ctx.arc(sx(34),sy(41.5),9.15*SC,Math.PI*0.2,Math.PI*0.8);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(sx(0.4),sy(0));ctx.lineTo(sx(67.6),sy(0));ctx.stroke();
-  ctx.beginPath();ctx.arc(sx(34),sy(0),9.15*SC,Math.PI,0);ctx.stroke();
+  if(G.arcR>0){
+    ctx.beginPath();ctx.arc(sx(G.cx),sy(G.spotY),G.arcR*SC,Math.PI*0.2,Math.PI*0.8);ctx.stroke();
+  }
+  ctx.beginPath();ctx.moveTo(sx(inset),sy(0));ctx.lineTo(sx(G.w-inset),sy(0));ctx.stroke();
+  ctx.beginPath();ctx.arc(sx(G.cx),sy(0),G.circleR*SC,Math.PI,0);ctx.stroke();
 }
 function drawPath(path,colour){
   if(path.length<2)return;
@@ -979,7 +1067,10 @@ function disc(x,y,r,fill,stroke,label,lc){
 function draw(){
   drawPitch();
   const S=sim,r=R();
-  if(S){
+  /* Infinity means this format does not play offside, so there is no line to
+     draw. Guard the BLOCK, never return: an early return here would exit
+     draw() and leave a 5 a side board with no players on it. */
+  if(S&&isFinite(offsideLine(S))){
     ctx.save();ctx.setLineDash([3,5]);
     ctx.strokeStyle='rgba(111,216,180,.42)';ctx.lineWidth=1.2;
     const L=offsideLine(S);
@@ -1198,7 +1289,8 @@ function renderDcard(d){
    Removing somebody has to clean up after him or the play quietly breaks:
    passes to or from him, a defender still marking him, and the ball itself.
    ══════════════════════════════════════════════════════════════════════════ */
-const SQUAD_MAX=8;              /* until formats land and set their own cap */
+/* The roster cap is the format's own outfield count now. */
+const squadMax=()=>FIELD.outfield;
 
 /* a free spot, so a new player never lands on top of somebody */
 function freeSpot(prefY){
@@ -1217,7 +1309,7 @@ const nextId=(pre,list)=>{
   return pre+n;
 };
 function addAttacker(){
-  if(play.attackers.length>=SQUAD_MAX){toast(`That is as many as the board takes`);return;}
+  if(play.attackers.length>=squadMax()){toast(`That is as many as the board takes`);return;}
   const spot=freeSpot(28);
   const id=nextId('ax',play.attackers);
   const used=play.attackers.map(a=>a.label);
@@ -1227,7 +1319,7 @@ function addAttacker(){
   selected=id;renderAll();toast('Attacker added');
 }
 function addDefender(){
-  if(play.defenders.length>=SQUAD_MAX){toast(`That is as many as the board takes`);return;}
+  if(play.defenders.length>=squadMax()){toast(`That is as many as the board takes`);return;}
   const spot=freeSpot(40);
   const id=nextId('dx',play.defenders);
   const used=play.defenders.map(d=>d.label);
@@ -1262,6 +1354,70 @@ function renderSquadNote(){
   const a=play.attackers.length,d=play.defenders.length;
   $('squadnote').textContent=`${a} attacker${a===1?'':'s'} against ${d} defender${d===1?'':'s'}. Tap anyone to name or remove them.`;
 }
+/* Switching format changes the pitch under the play, so it trims a roster
+   that no longer fits and SAYS which players came off, rather than silently
+   dropping somebody's work. The presets are tuned for a full pitch and are
+   not rescaled: a give and go tuned for 68 metres is a genuinely more
+   congested play on 27, so scaling would produce a different play, not the
+   same play smaller. Small sided formats start from a blank board until
+   presets are authored natively for them. */
+function applyFormat(key){
+  if(!FORMATS[key]||key===FIELD.key)return;
+  setFormat(key);
+  const cut=[];
+  for(const side of ['attackers','defenders']){
+    while(play[side].length>FIELD.outfield&&play[side].length>1){
+      const gone=play[side][play[side].length-1];
+      cut.push('#'+gone.label);
+      removePlayer(gone.id);
+    }
+  }
+  /* Positions are in METRES, so an 11v11 shape does not survive the move to
+     a 27 metre pitch: clamping alone piles everybody onto the goal line,
+     which is what the first build of this did. Lay the roster out fresh for
+     the new pitch instead, proportionally, keeping every player's name, and
+     say so. The play's MOVES are kept: they are named intentions, and they
+     rebuild against the new geometry when it runs. */
+  layoutForFormat();
+  selected=null;
+  $('fmtseg').querySelectorAll('button').forEach(b=>
+    b.setAttribute('aria-pressed',String(b.dataset.fmt===key)));
+  renderFmtNote();resize();resetPlay();renderAll();
+  toast(cut.length
+    ? `${FIELD.label}. ${cut.join(', ')} came off, and the shape was laid out for the new pitch.`
+    : `${FIELD.label}. Shape laid out for the new pitch.`);
+}
+/* A neutral shape for whatever pitch is now underneath: attackers spread
+   across the attacking third, defenders in a band in front of the box, the
+   ball carrier deepest. Proportional to the pitch, so it reads the same at
+   5 a side as at 11. */
+function layoutForFormat(){
+  const G=FIELD, A=play.attackers, D=play.defenders;
+  const span=(n,i)=>G.w*(0.5+(n===1?0:(i-(n-1)/2)/(n)))*(n===1?1:1);
+  A.forEach((a,i)=>{
+    const t=A.length===1?0.5:i/(A.length-1);
+    a.x=+(G.w*(0.16+0.68*t)).toFixed(1);
+    a.y=+(G.goalY*(a.hasBall?0.46:0.68)).toFixed(1);
+    a.path=[];
+  });
+  /* the carrier drops off so there is somewhere to play from */
+  const carrier=A.find(a=>a.hasBall)||A[0];
+  if(carrier){carrier.y=+(G.goalY*0.42).toFixed(1);}
+  D.forEach((d,i)=>{
+    const t=D.length===1?0.5:i/(D.length-1);
+    d.x=+(G.w*(0.2+0.6*t)).toFixed(1);
+    d.y=+(G.goalY*0.8).toFixed(1);
+    if(d.anchor){d.anchor.x=d.x;d.anchor.y=d.y;}
+  });
+  play.passes=play.passes.filter(p=>
+    A.some(a=>a.id===p.from)&&A.some(a=>a.id===p.to));
+}
+function renderFmtNote(){
+  $('fmtnote').textContent=FIELD.cite+
+    ' These are The FA\u2019s recommended sizes. Your league sets its own, so check your handbook. The pitch changes what the board tells you; the moves do not.';
+}
+$('fmtseg').querySelectorAll('button').forEach(b=>
+  b.addEventListener('click',()=>applyFormat(b.dataset.fmt)));
 $('addatt').addEventListener('click',addAttacker);
 $('adddef').addEventListener('click',addDefender);
 
@@ -1405,7 +1561,19 @@ document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',(
 elPlay.addEventListener('click',()=>{if(sim&&sim.done)resetPlay();runPlay();});
 $('reset').addEventListener('click',()=>{play=clonePlay(play.key);selected=null;syncInputs();resetPlay();});
 $('ghosts').addEventListener('change',e=>{showGhosts=e.target.checked;draw();});
-$('preset').addEventListener('change',e=>{play=clonePlay(e.target.value);selected=null;syncInputs();resetPlay();});
+$('preset').addEventListener('change',e=>{
+  /* The six presets are tuned metre coordinates for a full pitch, and the
+     sweep contract is pinned to them, so they are 11v11 plays and nothing
+     else. Choosing one moves the board back to 11v11 and says so, rather
+     than squashing a play onto a pitch it was never measured for. */
+  if(FIELD.key!=='11v11'){
+    setFormat('11v11');
+    $('fmtseg').querySelectorAll('button').forEach(b=>
+      b.setAttribute('aria-pressed',String(b.dataset.fmt==='11v11')));
+    renderFmtNote();resize();
+    toast('These plays are drawn for 11 a side, so the board went back to it');
+  }
+  play=clonePlay(e.target.value);selected=null;syncInputs();resetPlay();});
 $('skill').addEventListener('change',e=>{
   skill=SKILLS[e.target.value];
   for(const d of play.defenders) d.prof=makeProfile(skill.key,d.prof?d.prof.arch:'balanced');
@@ -1638,7 +1806,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v4';
+var BUILD = 'otb-v5';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
@@ -1687,7 +1855,7 @@ var TIP_URL = '';
   const m=location.hash.match(/#p=(.+)$/);
   play=(m&&decodePlay(m[1]))||clonePlay('giveandgo');
   elLedger.innerHTML=LEDGER_EMPTY;
-  updateSkillStats();syncInputs();renderBook();
+  updateSkillStats();syncInputs();renderBook();renderFmtNote();
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
   resize();renderAll();
