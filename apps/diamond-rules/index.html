@@ -154,6 +154,8 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
 .btn.fill{background:var(--sun);border-color:var(--sun)}
 .btn.ghost{border-color:#C9D8CE;color:#5E7568;box-shadow:none;background:rgba(255,255,255,.75)}
 .hint{font-size:13px;color:#5E7568;margin:8px 0 0}
+/* spans both button columns */
+.mvnote{grid-column:1 / -1;margin:2px 0 0;font-size:12.5px;color:#5E7568;text-align:center}
 .hint.no{color:#C2312B;font-weight:900}
 .hint:empty{display:none}
 .btn.mini{min-height:40px;font-size:14px;padding:8px;width:100%;margin-top:8px}
@@ -203,6 +205,8 @@ body.movemode .poslbl{paint-order:stroke;stroke:rgba(28,53,41,.55);stroke-width:
 .cov{fill:none;stroke:var(--chalk);stroke-width:4;opacity:0;transition:opacity .45s}
 .cov.on{opacity:.95}
 .ghost{opacity:.34}
+.baghit{cursor:pointer;pointer-events:auto}
+.baghit:focus-visible{stroke:var(--sun);stroke-width:3}
 /* fitView runs on a ResizeObserver watching .bubble, so the second caption
    line reserves its height or the field rescales under the walking players */
 body.movemode .hint{min-height:34px}
@@ -341,6 +345,12 @@ body.movemode .hint{min-height:34px}
        tap meant for the circle. It is only ever drawn when the circle is a
        legal answer, so being on top costs nothing. -->
   <g id="circleT"></g>
+  <!-- Move room only. A covering fielder's transparent 24 unit hit circle
+       sits right on the bag she is covering and was swallowing every tap
+       meant for the bag, so after one play you could no longer add a runner
+       to second. The bag wins that contest: it is a fixed target a kid
+       learns once, and a player standing on it is still readable by colour. -->
+  <g id="baseHit"></g>
   <g id="runners" pointer-events="none"></g>
   <g id="ballG" class="ball" style="transform:translate(200px,352px)">
     <g id="ballSkin">
@@ -464,7 +474,7 @@ body.movemode .hint{min-height:34px}
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v19";
+var BUILD="diamond-v20";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -1524,13 +1534,31 @@ const MV_LINE2={
  "RF.scoring": "First base is the cutoff home. Second base takes first."
 };
 const MV_BAG={B1:"first base",B2:"second base",B3:"third base",HOME:"home"};
+const MV_SHORTBAG={B1:"first",B2:"second",B3:"third",HOME:"home"};
+/* Where the throw goes. On an infield ball this is the lead force, computed
+   by the SAME forces() the Grounders room uses, so the two rooms can never
+   disagree about the same picture. On an outfield ball it is wherever the
+   cut is already lined up, which the sourced matrix names. The one exception
+   is Stephen's power play, already taught in Grounders: with runners on
+   second and third nobody is forced, so you eat the ball, give up first, and
+   every base becomes a force. */
+function mvBestPlay(z,runners){
+  if(z.key==="LF"||z.key==="CF"||z.key==="RF"){
+    const row=MV_TABLE[z.key][z.state];
+    for(const k in row) if(row[k][0]==="cut") return{bag:row[k][1]};
+  }
+  const f=forces(runners);
+  const lead=f.HOME?"HOME":f.B3?"B3":f.B2?"B2":"B1";
+  if(lead==="B1"&&runners.indexOf(2)>=0&&runners.indexOf(3)>=0) return{hold:true,bag:"B1"};
+  return{bag:lead};
+}
 const MV_SAY={ball:"Go get it!",crash:"Charge it! Call it!",chase:"Sprint in behind her.",
   buddy:"Run behind your teammate.",behind:"Get behind her.",step:"Step toward the ball.",
   cut:"Line up the cut!",
   cover:t=>"Cover "+MV_BAG[t]+".", backin:t=>"Back up "+MV_BAG[t]+".",
   backup:t=>"Back up "+MV_BAG[t]+"."};
 
-const MV={runners:[],last:null,busy:false,plan:null,zone:null};
+const MV={runners:[],last:null,busy:false,plan:null,zone:null,t1:null,t2:null};
 const MV_WALK=2200;                       /* the coach's "very slow"       */
 const MV_W={ball:150,cover:400,back:650}; /* Ball, then Base, then Back-up */
 const mvReduced=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1597,8 +1625,13 @@ function mvChips(){
   const a=el("answers");
   if(a.querySelector("#mvAgain"))return;
   a.className="answers";
-  a.innerHTML=`<button class="btn ghost" id="mvAgain">&#8635; Again</button>`+
-              `<button class="btn ghost" id="mvClear">&#10006; Start over</button>`;
+  /* plain .btn, not .btn.ghost: ghost is grey on grey with no shadow, which
+     is what a dead control looks like, and Stephen read them as dead. And a
+     line saying the thing that is not obvious: the field itself is still
+     live, and the runners stay put. */
+  a.innerHTML=`<button class="btn" id="mvAgain">&#8635; Again</button>`+
+              `<button class="btn" id="mvClear">&#10006; Start over</button>`+
+              `<p class="mvnote">Tap anywhere else to try a new spot. Your runners stay.</p>`;
   el("mvAgain").addEventListener("click",()=>{if(MV.last&&!MV.busy)mvRun(MV.last);});
   el("mvClear").addEventListener("click",mvStart);
 }
@@ -1623,16 +1656,31 @@ function mvRun(raw,forced){
       if(c){c.style.transitionDelay=(delay+dur)+"ms";c.classList.add("on");}}
     if(j.role==="cut")mvThrowLine(z.ball,j,BASE_XY[j.target],delay+dur);
   }
-  el("ask").innerHTML=`${cfg().icon} <b>${MV_SHORT[z.by]}</b> gets it!`;
+  const play=mvBestPlay(z,MV.runners);
+  el("ask").innerHTML=`${cfg().icon} <b>${MV_SHORT[z.by]}</b> gets it. `+
+    (play.hold?`Nobody is forced. Take <b>first</b>.`
+             :`Best play: <b>${MV_SHORTBAG[play.bag]}</b>.`);
   el("hint").className="hint";
   el("hint").innerHTML="&nbsp;";
-  setTimeout(()=>{el("hint").textContent=MV_LINE2[z.key+"."+z.state]||"";},fast?0:MV_W.cover+250);
-  setTimeout(()=>{MV.busy=false;mvChips();},fast?0:MV_W.back+dur+150);
+  clearTimeout(MV.t1);clearTimeout(MV.t2);
+  MV.t1=setTimeout(()=>{el("hint").textContent=MV_LINE2[z.key+"."+z.state]||"";},fast?0:MV_W.cover+250);
+  MV.t2=setTimeout(()=>{MV.busy=false;mvChips();},fast?0:MV_W.back+dur+150);
 }
 /* the tap means something different in every room, so this room takes its
    taps before the grader ever sees them. A bag is a runner switch. A girl is
    "hit it right at her", and after the play she shows her own job. */
 function mvTap(choice){
+  /* the runner switches are ALWAYS live. Tapping a bag is how you build the
+     picture, and a coach builds it three taps in a row; making him wait out
+     a 2.2 second walk between them loses the second and third tap silently. */
+  if(choice==="B1"||choice==="B2"||choice==="B3"){
+    const n=+choice[1];
+    MV.runners=MV.runners.indexOf(n)>=0?MV.runners.filter(r=>r!==n)
+                                       :MV.runners.concat(n).sort();
+    sfx("tap");mvDrawRunners();
+    if(MV.last){clearTimeout(MV.t1);clearTimeout(MV.t2);MV.busy=false;mvRun(MV.last);}
+    return;
+  }
   if(MV.busy)return;
   if(POS[choice]){
     if(MV.plan&&MV.plan[choice]){
@@ -1641,13 +1689,6 @@ function mvTap(choice){
       sfx("tap");return;
     }
     mvRun({x:POS[choice].x,y:POS[choice].y},choice);return;
-  }
-  if(choice==="B1"||choice==="B2"||choice==="B3"){
-    const n=+choice[1];
-    MV.runners=MV.runners.indexOf(n)>=0?MV.runners.filter(r=>r!==n)
-                                       :MV.runners.concat(n).sort();
-    sfx("tap");mvDrawRunners();
-    if(MV.last)mvRun(MV.last);
   }
   /* HOME and CIRCLE are inert here: the batter is always running to first,
      which is why first base is always a force. */
@@ -1677,6 +1718,17 @@ function mvStart(){
 function mvLayer(up){
   const f=el("fielders"),dia=f.parentNode;
   if(up)dia.appendChild(f); else dia.insertBefore(f,el("bases"));
+  /* and the bag tap targets ride above even the players */
+  const h=el("baseHit");
+  if(!up){h.innerHTML="";return;}
+  dia.appendChild(h);
+  h.innerHTML=[1,2,3].map(n=>{const b=BASE_XY["B"+n];
+    return `<circle class="baghit" data-base="B${n}" cx="${b.x}" cy="${b.y}" r="24" `+
+           `fill="transparent" tabindex="0" role="button" aria-label="Runner on ${MV_BAG["B"+n]}"/>`;}).join("");
+  h.querySelectorAll(".baghit").forEach(n=>{
+    n.addEventListener("click",()=>mvTap(n.dataset.base));
+    n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();mvTap(n.dataset.base);}});
+  });
 }
 function mvExit(){
   mvLayer(false);
@@ -1851,7 +1903,7 @@ window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scena
   cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank,
   shuffled,__draw:drawFrom,playContext,MODE_NAMES,
   MV_TABLE,mvZone,mvPlan,mvStateFor,mvOfState,mvBuntState,MV,MV_LINE2,MV_SHORT,MV_BOX,
-  mvFair,mvOnDirt};
+  mvFair,mvOnDirt,mvBestPlay,MV_SHORTBAG,forces};
 </script>
 </body>
 </html>

@@ -534,6 +534,34 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (mv.zones.length !== 10) fail('not every zone is reachable, got ' + mv.zones.join(','));
   if (mv.minSep < 20) fail('two girls land on top of each other: ' + mv.minSep.toFixed(1));
 
+  /* The room must never send a girl to throw to an empty bag, and it must
+     never disagree with the Grounders room about the same picture. The lead
+     force comes from the same forces() both rooms share, so the second check
+     is a real cross-room comparison rather than a restatement. */
+  const play = await page.evaluate(() => {
+    const d = window.__dr;
+    const states = [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]];
+    const bad = [];
+    for (let x = -40; x <= 440; x += 10) for (let y = 100; y <= 560; y += 10) for (const st of states) {
+      const z = d.mvZone(x, y), J = d.mvPlan(z, st), p2 = d.mvBestPlay(z, st);
+      const coverer = Object.keys(J).find(k => J[k].role === 'cover' && J[k].target === p2.bag);
+      if (!coverer && bad.length < 4) bad.push(z.key + ' ' + (st.join('') || 'empty') + ' throws to ' + p2.bag + ' with nobody there');
+      if (!d.MV_SHORTBAG[p2.bag] && bad.length < 4) bad.push('unnamed bag ' + p2.bag);
+      /* infield: the same lead force the Grounders room computes */
+      if (['P','1B','2B','SS','3B','MIDDLE','BUNT'].indexOf(z.key) >= 0) {
+        const f = d.forces(st);
+        const lead = f.HOME ? 'HOME' : f.B3 ? 'B3' : f.B2 ? 'B2' : 'B1';
+        const powerPlay = lead === 'B1' && st.indexOf(2) >= 0 && st.indexOf(3) >= 0;
+        if (powerPlay !== !!p2.hold && bad.length < 4)
+          bad.push('power play disagreement at ' + z.key + ' ' + st.join(''));
+        if (!powerPlay && p2.bag !== lead && bad.length < 4)
+          bad.push('move says ' + p2.bag + ' where grounders says ' + lead + ' at ' + z.key + ' ' + st.join(''));
+      }
+    }
+    return bad;
+  });
+  if (play.length) fail('best play: ' + play.join(' | '));
+
   /* The play the coach actually asked for, pinned by name. If this row ever
      changes, somebody changed a coaching decision and should have to say so. */
   const coachPlay = await page.evaluate(() => {
@@ -645,6 +673,56 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (!opened.body) fail('move mode did not arm the body class');
   if (opened.ghosts !== 3) fail('the three ghost runners are missing: ' + opened.ghosts);
   if (!opened.above) fail('the players are still under the bags in move mode');
+  /* Stephen read the ghost styled buttons as disabled, so they are plain
+     buttons now, and the field being still live is said out loud. */
+  const chips = await page.evaluate(() => {
+    const svg = document.getElementById('dia'), q = svg.createSVGPoint();
+    q.x = 282; q.y = 372; const s = q.matrixTransform(svg.getScreenCTM());
+    document.getElementById('hitPad').dispatchEvent(
+      new MouseEvent('click', { clientX: s.x, clientY: s.y, bubbles: true }));
+    return null;
+  });
+  await page.waitForTimeout(3400);
+  const row = await page.evaluate(() => ({
+    ghost: document.querySelectorAll('#answers .btn.ghost').length,
+    btns: document.querySelectorAll('#answers .btn').length,
+    note: (document.querySelector('.mvnote') || {}).textContent || '',
+    ask: document.getElementById('ask').textContent,
+  }));
+  if (row.btns !== 2) fail('the again and start over buttons are missing: ' + row.btns);
+  if (row.ghost) fail('the move buttons are ghost styled again, which reads as disabled');
+  if (!/anywhere else/i.test(row.note)) fail('the note about tapping elsewhere is missing: ' + row.note);
+  if (!/Best play/i.test(row.ask)) fail('the headline does not name the best play: ' + row.ask);
+
+  /* A covering fielder's transparent hit circle sits right on the bag she is
+     covering, so after one play the bag could no longer be tapped and you
+     could not add a runner to second. The bag wins that contest now. */
+  const bags = await page.evaluate(() => {
+    const out = { hits: document.querySelectorAll('.baghit').length, reach: {} };
+    for (const n of ['B1','B2','B3']) {
+      const c = document.querySelector('.baghit[data-base="' + n + '"]');
+      const r = c.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2);
+      out.reach[n] = !!(top && top.classList.contains('baghit'));
+    }
+    return out;
+  });
+  if (bags.hits !== 3) fail('the bag tap targets are missing: ' + bags.hits);
+  for (const n of ['B1','B2','B3'])
+    if (!bags.reach[n]) fail('a fielder is covering the tap target on ' + n + ' after a play');
+
+  /* And a coach builds a picture three taps in a row, so the runner switches
+     must stay live through the 2.2 second walk rather than being eaten. */
+  await page.click('.baghit[data-base="B2"]');
+  await page.waitForTimeout(120);
+  await page.click('.baghit[data-base="B3"]');
+  await page.waitForTimeout(120);
+  const fast = await page.evaluate(() => window.__dr.MV.runners.join(','));
+  if (fast !== '2,3') fail('fast runner taps were dropped mid animation, got: ' + fast);
+  await page.waitForTimeout(3200);
+  const power = await page.evaluate(() => document.getElementById('ask').textContent);
+  if (!/Nobody is forced/i.test(power)) fail('the power play is not called with runners on second and third: ' + power);
+
   await page.click('#tab-pos');
   await page.waitForTimeout(400);
   const left = await page.evaluate(() => ({
@@ -656,6 +734,8 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   if (left.body) fail('move mode did not disarm on the way out');
   if (left.trails) fail('move mode left its chalk behind');
   if (left.above) fail('move mode did not put the layers back');
+  const stray = await page.evaluate(() => document.querySelectorAll('.baghit').length);
+  if (stray) fail('move mode left its bag tap targets behind: ' + stray);
 
 
   /* Eight tabs is as many as this row can hold. html is overflow:hidden, so
