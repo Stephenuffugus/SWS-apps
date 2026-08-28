@@ -360,8 +360,47 @@ await withApp('diamond-rules', async ({ page, errors }) => {
   });
   if (iff.softball8.inBank || iff.softball8.drawn) fail('infield fly reached 8U: ' + JSON.stringify(iff.softball8));
   if (iff.softball8.bankSize < 5) fail('8U fly bank got too thin: ' + JSON.stringify(iff.softball8));
-  if (!iff.softball10.inBank) fail('infield fly missing at 10U: ' + JSON.stringify(iff.softball10));
+  if (iff.softball10.inBank || iff.softball10.drawn) fail('infield fly reached 10U: ' + JSON.stringify(iff.softball10));
   if (!iff.baseball.inBank) fail('infield fly missing at baseball: ' + JSON.stringify(iff.baseball));
+
+  /* Stephen, watching a kid play: "it seems like the answers are always the
+     first choice". They were, in all ten authored questions, so a kid could
+     score a hundred percent by tapping the top button without reading. The
+     render shuffles now, and this proves it over enough draws that a stuck
+     order cannot hide. */
+  const slots = await page.evaluate(() => {
+    const d = window.__dr;
+    const withChoices = [...d.FLY_BANK, ...d.POS_BANK, ...d.RUN_BANK].filter(x => x.choices);
+    const authoredFirst = withChoices.filter(x => x.choices[0][0] === x.correct).length;
+    const counts = {};
+    for (let i = 0; i < 600; i++) {
+      const q = withChoices[i % withChoices.length];
+      const order = d.shuffled(q.choices);
+      const at = order.findIndex(c => c[0] === q.correct);
+      counts[at] = (counts[at] || 0) + 1;
+    }
+    return { questions: withChoices.length, authoredFirst, counts };
+  });
+  const slotTotal = Object.values(slots.counts).reduce((a, b) => a + b, 0);
+  const inSlotOne = (slots.counts[0] || 0) / slotTotal;
+  if (inSlotOne > 0.6) fail('correct answer still favours the top button: ' + JSON.stringify(slots));
+  if (!slots.counts[1]) fail('correct answer never appears in slot two: ' + JSON.stringify(slots));
+
+  /* And: "i was getting repeat questions really fast". Every bank dealt at
+     random while only avoiding the immediately previous question, so a bank
+     of six repeated within a few taps and the three question runner bank
+     just alternated. The bag deals each scenario once before any repeats. */
+  const bag = await page.evaluate(() => {
+    const d = window.__dr, cur = d.S.sport;
+    d.S.sport = 'baseball';
+    const size = d.flyBank().length;
+    const seen = [];
+    for (let i = 0; i < size; i++) seen.push(d.__draw('fly', d.flyBank()).prompt);
+    const unique = new Set(seen).size;
+    d.S.sport = cur;
+    return { size, unique };
+  });
+  if (bag.unique !== bag.size) fail('a bank repeated before it was exhausted: ' + JSON.stringify(bag));
   await page.click('#closeSettings');
   await page.click('#tab-count');
   await page.waitForTimeout(250);

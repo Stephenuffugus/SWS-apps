@@ -368,7 +368,7 @@ body{background:var(--sky);color:var(--ink);font-family:'Nunito',system-ui,sans-
    One file, no build, no server, no account.
    ══════════════════════════════════════════════════════════════ */
 
-var BUILD="diamond-v14";
+var BUILD="diamond-v15";
 /* config seam, fleet pattern: an empty string hides the tip jar link */
 var TIP_URL="https://buy.stripe.com/7sYfZi0rfb9tbLT1XH7EQ0v";
 /* a Discord webhook turns the Feedback link into an in app report that
@@ -384,14 +384,16 @@ var FEEDBACK_WEBHOOK="https://discord.com/api/webhooks/1542619447804567572/WWTb3
    fielder dropping an easy pop on purpose to get a cheap double play, and
    at 8U an easy pop is not easy and nobody is dropping it on purpose.
    10U is kid pitch, 3 strikes, steals and leadoffs ON, dropped third
-   strike live, infield fly in play.
+   strike live, and Stephen does not believe 10U plays the infield fly
+   either, so it is off there too. Baseball keeps it. If his league proves
+   otherwise it is one word: infieldFly:true on softball10.
    `steals` gates the runner IQ scenarios; `infieldFly` gates any scenario
    that declares needs:"infieldFly". */
 const SPORTS = {
   softball8:{label:"Softball 8U",icon:"🥎",strikesForOut:4,ballsForWalk:4,steals:false,infieldFly:false,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"8U coach pitch: 4 strikes = out · no steals, no leadoffs, no infield fly"},
-  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:true,
+  softball10:{label:"Softball 10U",icon:"🥎",strikesForOut:3,ballsForWalk:4,steals:true,infieldFly:false,
     ballFill:"#FFE93B",ballStroke:"#D9B400",
     note:"10U kid pitch: 3 strikes = out · steals and leadoffs are ON"},
   baseball:{label:"Baseball",icon:"⚾",strikesForOut:3,ballsForWalk:4,steals:false,infieldFly:true,
@@ -840,22 +842,44 @@ const FLY_BANK=[
    correct:"no",chip:"Third out",
    why:"When the third out is a <b>caught fly</b>, no runs can score on the play. The inning ends the moment the ball hits the glove!"}
 ];
+/* Fisher-Yates. Authoring puts the right answer first because that reads
+   well in the source; the child must never see that order. */
+function shuffled(a){
+  const c=a.slice();
+  for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];}
+  return c;
+}
+
+/* Draw without replacement. Avoiding only the previous question meant a
+   bank of six repeated inside a handful of taps, and the three question
+   runner bank just alternated. A bag is dealt out in a shuffled order and
+   only refilled once it is empty, so every scenario appears once before
+   any appears twice. The bag is keyed by name and by league, because
+   changing level changes which questions are legal to draw. */
+const bags={};
+function drawFrom(name,list){
+  if(!list.length) return null;
+  const key=name+"|"+S.sport+"|"+list.length;
+  let bag=bags[key];
+  if(!bag||!bag.length){
+    bag=shuffled(list.map((_,i)=>i));
+    /* do not open a fresh bag with the card that just closed the last one */
+    if(bag.length>1&&list[bag[0]].prompt===bags[key+":last"])bag.push(bag.shift());
+    bags[key]=bag;
+  }
+  const pick=list[bag.shift()];
+  bags[key+":last"]=pick.prompt;
+  return pick;
+}
+
 /* A scenario may name the league rule it depends on. Anything without a
    `needs` is universal. This is the same promise the runner IQ bank makes:
    a kid is never quizzed on a rule her league does not play. */
 function allowed(s){ return !s.needs || !!cfg()[s.needs]; }
 function flyBank(){ return FLY_BANK.filter(allowed); }
 
-/* The no-repeat latch remembers the PROMPT, not the index. An index is
-   meaningless once the bank is filtered per league, and would have pinned
-   the wrong question the moment the level changed. */
-let lastFly="";
 function makeFlyBall(){
-  const bank=flyBank();
-  let pick;
-  do{pick=bank[Math.floor(Math.random()*bank.length)];}while(bank.length>1&&pick.prompt===lastFly);
-  lastFly=pick.prompt;
-  const s={...pick};
+  const s={...drawFrom("fly",flyBank())};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
   return s;
 }
@@ -899,12 +923,8 @@ const POS_BANK=[
    why:"The <b>third baseman</b> charges the bunt! Run in hard, scoop it, and make a strong throw to first.",
    tip:"Call it LOUD: I got it, I got it!"}
 ];
-let lastPos=-1;
 function makePosition(){
-  let i;
-  do{i=Math.floor(Math.random()*POS_BANK.length);}while(i===lastPos);
-  lastPos=i;
-  const s={...POS_BANK[i]};
+  const s={...drawFrom("pos",POS_BANK)};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
   return s;
 }
@@ -929,12 +949,8 @@ const RUN_BANK=[
    why:"At kid pitch, if the catcher misses strike three and first base is open (or there are 2 outs), the batter can <b>RUN</b>! The catcher has to throw you out.",
    tip:"Run it out EVERY time. Make the catcher make the play!"}
 ];
-let lastRun=-1;
 function makeRunnerIQ(){
-  let i;
-  do{i=Math.floor(Math.random()*RUN_BANK.length);}while(i===lastRun);
-  lastRun=i;
-  const s={...RUN_BANK[i]};
+  const s={...drawFrom("run",RUN_BANK)};
   s.ballAt={x:s.ballAt.x,y:s.ballAt.y};
   return s;
 }
@@ -979,7 +995,7 @@ function loadScenario(){
   } else {
     hc.hidden=true;
     setBasePulse(false);setFielderPulse(false);
-    a.innerHTML=s.choices.map(c=>`<button class="btn" data-c="${c[0]}">${c[1]}</button>`).join("");
+    a.innerHTML=shuffled(s.choices).map(c=>`<button class="btn" data-c="${c[0]}">${c[1]}</button>`).join("");
     a.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>answer(b.dataset.c)));
     el("hint").textContent="";
   }
@@ -1229,7 +1245,8 @@ if("serviceWorker" in navigator)
 
 /* test hooks: the smoke suite drives the real UI and checks these oracles */
 window.__dr={S,forces,makeGroundBall,makeFlyBall,makePosition,makeRunnerIQ,scenarioMakers,
-  cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank};
+  cfg,setMode,loadScenario,BUILD,SONG,SPORTS,POS_BANK,FLY_BANK,SMART_BANK,RUN_BANK,flyBank,
+  shuffled,__draw:drawFrom};
 </script>
 </body>
 </html>

@@ -207,7 +207,11 @@ const CATALOGUE = [
   ['Sports',
     { id: 'sports', kick: 'The ballpark', q: 'First season on the diamond?',
       sub: 'The rules little leagues skip, on a diamond kids can tap. Force outs, tag ups and the infield fly, gated to the level your league actually plays.' }, [
-    ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers', 'beta'],
+    /* The In testing badge came off on 2026-08-28: Stephen's coach wants to
+       share it with a travel coach, and the badge is the same one the
+       genuinely passphrase-locked Rock Stops wears, so it read as a door
+       that was shut. Diamond Rules is finished enough to hand to a stranger. */
+    ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers'],
   ]],
 ];
 
