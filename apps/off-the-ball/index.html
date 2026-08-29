@@ -1037,9 +1037,20 @@ function goalSightSpan(P,K){
   const gy=FIELD.goalY, lo=FIELD.postL, hi=FIELD.postR;
   const all={a:lo,b:hi,w:hi-lo};
   if(P.y>=gy-0.3)return {a:lo,b:lo,w:0};      /* level with the line, no angle */
-  if(!K||K.y<=P.y)return all;                 /* he is not between you and it */
+  if(!K)return all;
   const reach=keeperReach(), d=V.dist(P,K);
+  /* SMOTHERED IS ASKED FIRST, and the order is the whole bug. keeperTarget
+     clamps him so he is never goalside of the ball, so from inside keeperMax
+     his y equals the shooter's EXACTLY. Asking "is he behind me" first, with a
+     <= that the clamp makes true on the nose, meant the board reported the
+     entire goal open while the keeper stood on the ball: a striker 3.5m out
+     with him 0.48m away was told CLEAR CHANCE, 7.3m of open goal, and the
+     renderer painted the full width stripe under the keeper's own disc. That
+     shipped in v8 and was live until it was caught. The engine test had a
+     keeper on top of the ball and a keeper behind the ball, and passed both,
+     because neither one put him at the same y. */
   if(d<=reach)return {a:lo,b:lo,w:0};         /* he is on top of the ball */
+  if(K.y<P.y)return all;                      /* strictly behind: beaten, and it is open */
   const a=Math.atan2(K.y-P.y,K.x-P.x), half=Math.asin(Math.min(1,reach/d));
   const cast=(ang)=>{
     const dy=Math.sin(ang); if(dy<=1e-6)return null;

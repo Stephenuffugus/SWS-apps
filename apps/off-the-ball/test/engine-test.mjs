@@ -202,6 +202,33 @@ console.log('\nthe keeper and the shot');
     Math.abs(API.goalSight({ x: F.cx, y: F.goalY - 1 },
                            { x: F.cx, y: F.goalY - 3 }) - wide) < 0.01);
 
+  /* THE CASE THAT WAS MISSED. The two checks above put the keeper in FRONT of
+     the ball and BEHIND the ball, and v8 passed both while being wrong in
+     between: keeperTarget clamps him so he is never goalside of the shooter,
+     so from close range his y is EXACTLY the shooter's, and the "he is behind
+     me" test used <=. The board told a striker 3.5m out with the keeper half a
+     metre away that he had the whole 7.32m goal to aim at. Walk in along the
+     centre and assert the number never jumps up as the shooter gets closer,
+     because that inversion is what a coach would actually notice. */
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  let prev = null;
+  for (let out = 12; out >= 2; out -= 0.5) {
+    const P = { x: F.cx, y: F.goalY - out };
+    const K = API.keeperTarget(P);
+    const w = API.goalSight(P, K);
+    const onTheBall = Math.abs(K.y - P.y) < 1e-6;
+    check(`walking in at ${out}m: the keeper on the ball never opens the goal`,
+      !onTheBall || w <= 0.01,
+      `keeper at the shooter's own y (gap ${API.getField() && dist(P, K).toFixed(2)}m)`
+      + ` and yet ${w.toFixed(2)}m of goal reported open`);
+    if (prev !== null) {
+      check(`walking in at ${out}m: the open goal does not jump wider`,
+        w <= prev + 0.01,
+        `it went from ${prev.toFixed(2)}m to ${w.toFixed(2)}m as he got CLOSER`);
+    }
+    prev = w;
+  }
+
   /* central shooter, central keeper: both slivers equal, and each is less
      than half the goal because the body covers the middle */
   const mid = API.goalSightSpan(far, { x: F.cx, y: F.goalY - 4 });
