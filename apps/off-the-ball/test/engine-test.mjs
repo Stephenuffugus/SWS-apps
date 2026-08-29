@@ -39,6 +39,7 @@ function loadEngine() {
     export const API = { clonePlay, buildSim, step, compile, makeProfile,
       SKILLS, PRESETS, MOVES, ARCHETYPES, PROF_KEYS, PROF_LIMITS,
       FORMATS, setFormat, offsideLine, getField: () => FIELD,
+      goalSight, goalSightSpan, keeperTarget, inPenaltyArea, shotRange,
       setPlay: p => { play = p; }, setSkill: s => { skill = s; },
       getPlay: () => play };
   `;
@@ -119,14 +120,21 @@ for (const key of KEYS) for (const t of TIERS) {
    That prints the block to paste in, so a change to tuned behaviour always
    shows up as a diff somebody signed off, never as a silent drift.
 
-   Recorded honestly: giveandgo and isolate read CLEAR CHANCE at all three
-   tiers today, so for a third of the library the sweep is not currently
-   discriminating between opposition levels. That is a tuning question for
-   Stephen, not something to paper over, and pinning it is what makes the
-   question visible instead of theoretical. */
+   Recorded honestly: giveandgo and isolate still read CLEAR CHANCE at all
+   three tiers, so by LABEL a third of the library does not discriminate
+   between opposition levels. Since the shot model landed the numbers inside
+   those verdicts do move (giveandgo shows 2.6, 2.2 and 2.3 metres of open
+   goal across the tiers), so the sweep is no longer blind there, only coarse.
+   Still a tuning question for Stephen rather than something to paper over. */
 const GOLDEN = {
   giveandgo: ['CLEAR CHANCE', 'CLEAR CHANCE', 'CLEAR CHANCE'],
-  decoy:     ['SMOTHERED', 'SMOTHERED', 'HALF A YARD'],
+  /* Moved 2026-08-29 by the keeper and the shot model. The competitive cell
+     was HALF A YARD, which described the 2.3m of space around the receiver
+     and said nothing about the goal, because there was no goalkeeper to say
+     anything about. He is in the area with 2.1m of net showing past the
+     keeper, so it is a half chance, and HALF CHANCE is the honest name for
+     it. Watched in the browser before blessing. */
+  decoy:     ['SMOTHERED', 'SMOTHERED', 'HALF CHANCE'],
   /* Moved 2026-08-29 by attacker reactivity, and this is the row that
      increment was for. HANDOFF issue 1 was that the overlapping fullback
      sprinted past his own passing lane and killed the move; at rec that read
@@ -165,6 +173,100 @@ console.log('\nthe sweep contract');
   }
   check('the preset x tier matrix is unchanged', moved.length === 0,
     moved.join(' | ') + '  (run with --bless if this change was intended)');
+}
+
+/* ------------------------------------------------------------- the keeper
+   HANDOFF issues 2 and 3. The geometry is worth pinning by hand because it is
+   the one place in this engine where a plausible looking number can be
+   completely wrong and nobody would notice from the animation. */
+console.log('\nthe keeper and the shot');
+{
+  API.setFormat('11v11');
+  const F = API.getField();
+  const goal = { x: F.cx, y: F.goalY };
+  const wide = F.postR - F.postL;
+
+  check('the goal is the width the Laws say', Math.abs(wide - 7.32) < 0.01, String(wide));
+
+  /* nobody in the way */
+  const far = { x: F.cx, y: F.goalY - 20 };
+  check('with no keeper the whole goal is open',
+    Math.abs(API.goalSight(far, null) - wide) < 0.01);
+
+  /* a keeper right on top of the ball leaves nothing */
+  check('a keeper on top of the ball leaves no goal',
+    API.goalSight(far, { x: far.x, y: far.y + 0.2 }) === 0);
+
+  /* a keeper BEHIND the shooter is not blocking anything */
+  check('a keeper the runner has gone past blocks nothing',
+    Math.abs(API.goalSight({ x: F.cx, y: F.goalY - 1 },
+                           { x: F.cx, y: F.goalY - 3 }) - wide) < 0.01);
+
+  /* central shooter, central keeper: both slivers equal, and each is less
+     than half the goal because the body covers the middle */
+  const mid = API.goalSightSpan(far, { x: F.cx, y: F.goalY - 4 });
+  check('a set keeper narrows a central shot', mid.w > 0 && mid.w < wide / 2,
+    `gap was ${mid.w.toFixed(2)}m of ${wide}m`);
+
+  /* the gap opens on the FAR side from a wide shooter, which is the whole
+     reason a keeper covers his near post */
+  const fromRight = { x: F.postR + 8, y: F.goalY - 12 };
+  const k = API.keeperTarget(fromRight);
+  const span = API.goalSightSpan(fromRight, k);
+  check('from a wide angle the keeper covers the near post',
+    span.b <= F.cx + 0.01,
+    `the visible gap was ${span.a.toFixed(1)}..${span.b.toFixed(1)} with centre ${F.cx}`);
+  check('and a wide angle leaves less goal than a central one',
+    span.w < mid.w * 2 + 0.01);
+
+  /* he walks out as the ball comes, and gives ground back rather than being
+     rounded, which was a real bug: the bisector rule alone stood him four
+     metres behind a runner who was 1.5m from the line */
+  const outFar = F.goalY - API.keeperTarget({ x: F.cx, y: F.goalY - 40 }).y;
+  const outMid = F.goalY - API.keeperTarget({ x: F.cx, y: F.goalY - 14 }).y;
+  const outNear = F.goalY - API.keeperTarget({ x: F.cx, y: F.goalY - 1.2 }).y;
+  check('he stays home when the ball is miles away', outFar < 2.0, `${outFar.toFixed(2)}m`);
+  check('he comes out as it approaches', outMid > outFar, `${outMid.toFixed(2)}m`);
+  check('and he never lets the ball get goalside of him',
+    outNear <= 1.2 + 1e-6, `he was ${outNear.toFixed(2)}m out with the ball 1.2m from the line`);
+
+  /* the penalty area is the real one, per format, not 11v11 literals */
+  for (const key of ['5v5', '7v7', '9v9', '11v11']) {
+    API.setFormat(key);
+    const f = API.getField();
+    check(`${key}: the spot is inside its own penalty area`,
+      API.inPenaltyArea({ x: f.cx, y: f.spotY }),
+      'inBox used hardcoded 11v11 numbers and was false on every small pitch');
+    check(`${key}: the halfway line is not in the penalty area`,
+      !API.inPenaltyArea({ x: f.cx, y: 0 }));
+    check(`${key}: shooting range fits the pitch`,
+      API.shotRange() > 0 && API.shotRange() <= f.goalY,
+      `range ${API.shotRange().toFixed(1)} on a half pitch of ${f.goalY.toFixed(1)}`);
+  }
+  API.setFormat('11v11');
+
+  /* the stripe on the goal line is driven by S.shot, so a play that never got
+     to a shot must not leave one behind for the renderer to draw */
+  const shotOf = (key, tier) => {
+    const p = API.clonePlay(key);
+    for (const d of p.defenders) d.prof = API.makeProfile(tier, 'balanced');
+    API.setPlay(p); API.setSkill(API.SKILLS[tier]);
+    const S = API.buildSim();
+    let n = 0; while (!S.done && n < 3000) { API.step(S); n += 1; }
+    return { shot: S.shot, verdict: S.verdict.text };
+  };
+  const broke = shotOf('trap', 'rec');
+  check('a play that broke down records no shot',
+    /NO PASS ON|BROKE DOWN/.test(broke.verdict) && !broke.shot, broke.verdict);
+  const scored = shotOf('giveandgo', 'rec');
+  check('a play that reached a shooting position records one',
+    !!scored.shot && scored.shot.w > 0, scored.verdict);
+  check('and the recorded gap is inside the posts',
+    scored.shot.a >= API.getField().postL - 1e-6
+    && scored.shot.b <= API.getField().postR + 1e-6,
+    `${scored.shot.a.toFixed(2)}..${scored.shot.b.toFixed(2)}`);
+  check('and it matches the width the verdict quotes',
+    Math.abs(scored.shot.w - parseFloat(scored.verdict.match(/([\d.]+)m of open goal/)[1])) < 0.06);
 }
 
 console.log('\nformats');

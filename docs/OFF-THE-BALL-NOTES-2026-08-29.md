@@ -11,7 +11,7 @@ integrated as app 33 the same evening.
 | 2 | Small sided formats | Done. 5v5, 7v7, 9v9, 11v11 with real FA dimensions. |
 | 3 | Playbook durability | Done. Export and import the whole book as a file. |
 | 4 | Attacker reactivity | Done, otb-v6. |
-| 5 | Goalkeeper and shot model | Not started. |
+| 5 | Goalkeeper and shot model | Done, otb-v8. |
 | 6 | Onboarding | Done, otb-v7. |
 
 ## Attacker reactivity, what it actually does
@@ -96,6 +96,81 @@ on a defender landed on the welcome instead of the canvas, and a click that
 never arrives also fails to pwn anything. That test now dismisses the panel
 first and asserts the scouting sheet actually opened, so it cannot go hollow
 again.
+
+## The goalkeeper, and the end of the proximity guess
+
+Handoff issues 2 and 3 were written as two problems and they were one. There
+was no keeper on the pitch, so the offside line used a nominal one pinned at a
+fixed depth and every preset near the byline was approximate. And with nobody
+to shoot past, CLEAR CHANCE meant "in the box, with the nearest defender more
+than four metres away". That is a statement about space wearing the language of
+a chance, and a coach who trusted it would have been told a play worked when
+the angle was closed.
+
+He stands on the bisector of the two posts as seen from the ball, not on the
+line from the centre of the goal. For a shot down the middle those are the same
+thing. From wide they are not, and the difference is the entire near post:
+bisecting from the goal centre left equal slivers showing at both posts, so a
+keeper facing a shooter out by the corner of the box stood in the middle of his
+net covering nothing in particular. Bisecting the posts is what narrowing the
+angle actually means.
+
+He walks out as the ball comes and he gives ground back rather than being
+rounded. That second half was a real bug caught by a test: the bisector rule on
+its own stood him four metres behind a runner who was 1.5m from the line, with
+the whole goal open behind him. He is still speed limited getting to where he
+wants to be, so arriving late is possible, and that is the point.
+
+**He is not scoutable and he is not draggable.** Every other player on the board
+is a decision you are making. He is the thing you are trying to beat. The moment
+he becomes a slider somebody tunes him until the play always works, which is the
+exact failure this whole app exists to avoid. He plays the same for everyone,
+and the browser suite asserts he never appears in the defender picker.
+
+### What the verdict says now
+
+It quotes metres of open goal past him, and the board draws that gap as a bright
+stripe on the goal line with a shaded cone back to where the ball ended up.
+Seeing it is the difference between being told there is a chance and
+understanding why there is one. The stripe is handed to the renderer by the
+engine rather than recomputed, so it is always the same number the verdict just
+quoted, and a play that never reached a shooting position leaves no stripe
+behind.
+
+The banner itself moved to the bottom of the board. It used to drop across the
+top, which is where the goal mouth is, and the goal mouth is now where the
+answer is drawn. A banner that covers the thing it is describing is the wrong
+banner. It takes the hint line's place, which has done its job by the time a
+play has been run.
+
+### Two bugs that fell out of it
+
+`inBox` was the 11v11 penalty area typed as three literals, left behind when the
+pitch stopped being one size. On a five a side pitch 36 metres is past the goal
+line, so `inBox` was false everywhere and **a small sided board could never
+produce a chance at all**. It reads the real area for the real format now, and
+the test walks all four formats.
+
+The offside line took a keeper at a fixed depth. When a real keeper comes off
+his line to narrow an angle he stops being the last man and the second last
+opponent becomes a defender. That is the Law, and it was previously
+unrepresentable.
+
+### The golden row that moved
+
+`decoy` at competitive went from HALF A YARD to HALF CHANCE. The old cell
+described 2.3m of space around the receiver and said nothing about the goal,
+because there was no goalkeeper to say anything about. He is in the area with
+2.1m of net showing past the keeper, so it is a half chance, and HALF CHANCE is
+the honest name for it. Watched in the browser before blessing, argued for in
+`test/engine-test.mjs` beside the row.
+
+Recorded honestly: `giveandgo` and `isolate` still read CLEAR CHANCE at all
+three tiers, so by label a third of the library still does not discriminate
+between opposition levels. The numbers inside those verdicts do move now
+(`giveandgo` shows 2.6, 2.2 and 2.3 metres of open goal across the tiers), so
+the sweep is no longer blind there, only coarse. Still a tuning question rather
+than something to paper over.
 
 ## Still needed from Stephen
 

@@ -205,9 +205,9 @@ Runs are fixed polylines. Once drawn, the runner executes it regardless of what 
 
 The fix, roughly: give each run one or two decision points where the attacker evaluates whether the target space is occupied and can switch to a fallback path (usually "come short"). Keep it to a small number of discrete options; a full attacking AI is not wanted and would make the tool unpredictable to plan with.
 
-**2. No goalkeeper.** The offside line uses a nominal keeper pinned at `y = 48`. Any preset near the byline is approximate. A real keeper also unblocks shot modelling.
+**2. No goalkeeper.** RESOLVED in otb-v8. A real keeper narrows the angle on the bisector of the posts, comes out as the ball approaches, and is the last man for the offside line until he leaves it. He is deliberately not scoutable and not draggable.
 
-**3. No shot model.** The verdict stops at "space created". `CLEAR CHANCE` is a proximity heuristic (in the box, nearest defender > 4m), not an xG.
+**3. No shot model.** RESOLVED in otb-v8. The verdict quotes metres of open goal past the keeper and the board draws that gap on the goal line. It is not an xG and does not claim to be; it is the geometry of what is actually showing.
 
 **4. Small-sided formats are not supported.** Fixed 4v4 on a full pitch. This is the single loudest complaint in reviews of every competing app — 5-a-side, 7v7 and 9v9 coaches cannot use tools that assume eleven. Pitch dimensions, player counts and offside rules all need to become configurable. High commercial priority.
 
@@ -221,14 +221,14 @@ The fix, roughly: give each run one or two decision points where the attacker ev
 
 ## 9. Blocking work before app store
 
-In order. Items 1 to 4 and item 6 shipped between 2026-08-28 and 2026-08-29;
-see `docs/OFF-THE-BALL-NOTES-2026-08-29.md`. Item 5 is still open.
+In order. All six shipped between 2026-08-28 and 2026-08-29; see
+`docs/OFF-THE-BALL-NOTES-2026-08-29.md`. The blocking list is closed.
 
 1. DONE. **PWA shell.** Manifest, icons, service worker, offline. It is a single file; this is quick and it is the difference between a link and an app.
 2. DONE. **Small-sided formats.** Configurable pitch size and player counts. 5v5 / 7v7 / 9v9 / 11v11. Biggest addressable gap versus every competitor.
 3. DONE. **Playbook durability.** Right now it is `localStorage` plus share links. Needs export/import of the whole playbook as a file at minimum, so a team does not lose everything on a browser clear.
 4. DONE. **Attacker reactivity** (issue 1). This is the thing that makes the tool trustworthy rather than illustrative.
-5. **Goalkeeper + shot model.**
+5. DONE. **Goalkeeper + shot model.** Resolves known issues 2 and 3, which were one issue.
 6. DONE. **Onboarding.** Right now the app assumes you already know what a third-man run is. The `teach` copy exists but nothing surfaces it on first open.
 
 ---

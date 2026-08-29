@@ -233,22 +233,55 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
   await page.selectOption('#skill', 'rec');
   await page.click('#play');
   await page.waitForTimeout(4200);
-  const read = await page.evaluate(() => ({
-    ledger: [...document.querySelectorAll('#ledger .ev')].map((n) => n.textContent),
-    verdict: document.getElementById('verdict').textContent,
-    judged: document.querySelector('.board').classList.contains('judged'),
-  }));
+  const read = await page.evaluate(() => {
+    const v = document.getElementById('verdict').getBoundingClientRect();
+    const c = document.getElementById('callchip').getBoundingClientRect();
+    const b = document.querySelector('.board').getBoundingClientRect();
+    const overlap = (p, q) => p.left < q.right && q.left < p.right
+                           && p.top < q.bottom && q.top < p.bottom;
+    return {
+      ledger: [...document.querySelectorAll('#ledger .ev')].map((n) => n.textContent),
+      verdict: document.getElementById('verdict').textContent,
+      judged: document.querySelector('.board').classList.contains('judged'),
+      clear: !overlap(v, c),
+      /* the goal mouth is the top eighth of the board */
+      goalClear: v.top > b.top + b.height / 8,
+    };
+  });
   check('a runner reading the space is reported to the coach',
     read.ledger.some((l) => /checks back|stops his run|runs into it anyway/.test(l)),
     'no divert reached the ledger');
   check('the overlap now finds the pass', /SPACE CREATED/.test(read.verdict),
     `verdict was ${read.verdict}`);
-  check('the call sign steps clear of the verdict', read.judged,
-    'the board never got the judged class, so the two would overlap');
+  check('the call sign and the verdict never overlap', read.clear,
+    'the verdict banner is sitting on top of the play call');
+  check('the verdict does not cover the goal mouth', read.goalClear,
+    'the banner is over the goal line, which is where the open goal is drawn');
   await page.click('#reset');
   await page.waitForTimeout(300);
-  check('resetting puts the call sign back',
+  check('resetting clears the judged state',
     !(await page.evaluate(() => document.querySelector('.board').classList.contains('judged'))));
+
+  /* ------------------------------------------------------- the keeper
+     He is drawn, he is not a control, and the verdict talks about him. */
+  await page.selectOption('#preset', 'giveandgo');
+  await page.selectOption('#skill', 'rec');
+  await page.click('#play');
+  await page.waitForTimeout(4200);
+  const gk = await page.evaluate(() => ({
+    verdict: document.getElementById('verdict').textContent,
+    ledger: [...document.querySelectorAll('#ledger .ev')].map((n) => n.textContent).join(' '),
+  }));
+  check('the verdict is a shot, not a proximity guess',
+    /open goal|of goal showing|down to .*of goal/.test(gk.verdict), gk.verdict);
+  check('the ledger says where the keeper was',
+    /keeper .* off his line/.test(gk.ledger), 'no keeper line reached the ledger');
+  check('the keeper is not a scoutable control',
+    await page.evaluate(() => {
+      const sel = document.getElementById('dsel');
+      const txt = sel ? sel.textContent : '';
+      return !/goalkeeper|\bGK\b/i.test(txt);
+    }), 'the keeper turned up in the defender picker, which makes him tunable');
 
   /* ------------------------------------------------------ the welcome
      HANDOFF issue 6. Storage is shared across pages in this context and the

@@ -49,13 +49,17 @@ canvas{display:block;width:100%;touch-action:none}
   letter-spacing:.1em;text-transform:uppercase;color:var(--attack);background:rgba(7,22,20,.75);
   padding:4px 8px;border-radius:4px;pointer-events:none;
   transition:transform .28s cubic-bezier(.2,.8,.3,1)}
-/* The verdict drops in across the top of the board and used to land on top of
-   the call sign. The call is the name a teammate shouts, so it steps down out
-   of the way instead of being buried. */
-.board.judged .callchip{transform:translateY(32px)}
-.verdict{position:absolute;left:0;right:0;top:0;padding:9px 12px;font-family:var(--mono);font-size:11px;
-  font-weight:600;letter-spacing:.04em;background:rgba(7,22,20,.9);border-bottom:1px solid var(--hair);
-  transform:translateY(-110%);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+/* The hint stands down once there is a verdict to read in its place. */
+.board.judged .hint{opacity:0;transition:opacity .2s}
+/* The verdict lives at the BOTTOM of the board. It used to drop across the
+   top, which is where the goal mouth is, and the goal mouth is now where the
+   answer is drawn: the bright stripe showing how much net is actually open
+   past the keeper. A banner that covers the thing it is describing is the
+   wrong banner. It takes the hint line's place, which has done its job by the
+   time a play has been run. */
+.verdict{position:absolute;left:0;right:0;bottom:0;padding:9px 12px;font-family:var(--mono);font-size:11px;
+  font-weight:600;letter-spacing:.04em;background:rgba(7,22,20,.92);border-top:1px solid var(--hair);
+  transform:translateY(110%);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
 .verdict.show{transform:translateY(0)}
 .verdict.good{color:var(--open)} .verdict.bad{color:var(--alarm)}
 
@@ -429,11 +433,14 @@ function setFormat(key){
   const f=FORMATS[key]||FORMATS['11v11'];
   const goalY=f.len/2, cx=f.wid/2;
   FIELD={key:f.key,label:f.label,outfield:f.outfield,cite:f.cite,
-    w:f.wid, goalY, yMax:goalY, yMin:-(goalY*4/21), cx,
+    /* yMax is a VIEW bound only, never a rule. A little headroom past the goal
+       line keeps the posts, the keeper and the open goal stripe off the top
+       edge of the canvas instead of clipped against it. */
+    w:f.wid, goalY, yMax:goalY+f.len*0.035, yMin:-(goalY*4/21), cx,
     k:f.wid/68,
-    offside:f.offside, keeperY:goalY-f.keeper,
+    offside:f.offside, keeperY:goalY-f.keeper, keeperMax:f.keeper,
     spotY:goalY-f.spot, arcR:f.arcR, circleR:f.circleR,
-    postL:cx-f.goalW/2, postR:cx+f.goalW/2,
+    postL:cx-f.goalW/2, postR:cx+f.goalW/2, goalW2:f.goalW/2,
     pen:f.pen.shape==='rect'
       ?{shape:'rect',x0:cx-f.pen.w/2,x1:cx+f.pen.w/2,y0:goalY-f.pen.d}
       :{shape:'arc',r:f.pen.r},
@@ -807,6 +814,7 @@ function buildSim(){
     lock:0,bitten:false,fooled:false,maxDrift:0}));
   const src=play.attackers.find(a=>a.hasBall)||play.attackers[0];
   S.carrier=src.id; S.ball={x:src.x,y:src.y};
+  S.keeper={pos:keeperTarget(S.ball),vel:{x:0,y:0},out:0};
   return S;
 }
 function activeFake(S){
@@ -950,12 +958,123 @@ function readTheRun(S,a){
 }
 const CROWD_TIGHT=2.5;
 
+/* ══════════════════════════════════════════════════════════════════════════
+   THE GOALKEEPER
+
+   HANDOFF issues 2 and 3, which are one issue. The offside line used a
+   nominal keeper pinned at a fixed depth, so every preset near the byline was
+   approximate, and with no keeper on the pitch there was nothing to shoot
+   past: CLEAR CHANCE was "in the box, nearest defender over four metres",
+   a statement about space that borrowed the language of a chance.
+
+   He is deliberately not scoutable and not draggable. Every other player on
+   this board is a decision you are making; he is the thing you are trying to
+   beat, and the moment he becomes a slider somebody will tune him until the
+   play always works, which is the exact failure this whole app exists to
+   avoid. He plays the same for everyone.
+   ══════════════════════════════════════════════════════════════════════════ */
+const GOAL=()=>({x:FIELD.cx,y:FIELD.goalY});
+
+/* Where a keeper wants to stand: on the line between his goal and the ball,
+   further off it the closer the ball gets. This is the "set position" every
+   keeper is taught, narrowing the angle by walking down the bisector. */
+function keeperTarget(ball){
+  const g=GOAL(), far=FIELD.goalY||1;
+  const t=Math.max(0,Math.min(1,1-V.dist(ball,g)/far));
+  const out=0.4+(FIELD.keeperMax-0.4)*t;
+  /* On the bisector of the two POSTS as seen from the ball, not on the line
+     from the centre of the goal. They are the same thing for a central shot
+     and quite different from a wide one, and the difference is the entire
+     near post: bisecting from the goal centre left equal slivers at both
+     posts, so a keeper faced with a shooter out by the corner of the box was
+     standing in the middle of his goal covering nothing in particular. This
+     is what "narrowing the angle" actually means. */
+  const uL=V.norm(V.sub({x:FIELD.postL,y:g.y},ball));
+  const uR=V.norm(V.sub({x:FIELD.postR,y:g.y},ball));
+  const bis=V.norm(V.add(uL,uR));
+  let p;
+  if(bis.y>1e-3){
+    const t2=(g.y-out-ball.y)/bis.y;
+    p={x:ball.x+bis.x*t2,y:g.y-out};
+  } else {
+    p=V.add(g,V.mul(V.norm(V.sub(ball,g)),out));  /* level with the line */
+  }
+  /* He stays in front of his goal. Without the clamp a ball wide by the
+     corner flag walks him out of the frame chasing the bisector. */
+  const span=FIELD.goalW2*1.6;
+  /* And he never lets the ball get goalside of him. Walking down the bisector
+     is right until the attacker is closer to the line than the keeper is, at
+     which point coming out further means being beaten, not narrowing an
+     angle: with a runner 1.5m from goal the bisector rule stood the keeper
+     four metres behind him with the whole goal open. He gives ground back.
+     He is still speed limited getting there, so arriving late is possible and
+     that is the point. */
+  const deep=Math.min(FIELD.goalY-0.2,Math.max(ball.y,FIELD.goalY-FIELD.keeperMax));
+  return {x:Math.max(FIELD.cx-span,Math.min(FIELD.cx+span,p.x)),
+          y:Math.max(deep,Math.min(FIELD.goalY-0.2,p.y))};
+}
+
+function stepKeeper(S){
+  const seen=perceive(S,skill.tau).ball;      /* he reacts late like everyone */
+  const want=keeperTarget(seen);
+  const to=V.sub(want,S.keeper.pos);
+  const d=V.len(to);
+  const spd=skill.topSpeed*0.72;              /* set and shuffling, not sprinting */
+  const stepLen=Math.min(d,spd*DT);
+  if(d>1e-6){
+    const mv=V.mul(V.norm(to),stepLen);
+    S.keeper.pos=V.add(S.keeper.pos,mv);
+    S.keeper.vel=V.mul(mv,1/DT);
+  } else S.keeper.vel={x:0,y:0};
+  S.keeper.out=FIELD.goalY-S.keeper.pos.y;    /* how far off his line, for the copy */
+}
+
+/* How much goal is actually visible past him, in metres, and it is the widest
+   SINGLE gap rather than the sum of both slivers, because you shoot through
+   one side of a keeper, not through both at once. */
+const keeperReach=()=>0.55+FIELD.goalW2*0.15;
+function goalSightSpan(P,K){
+  const gy=FIELD.goalY, lo=FIELD.postL, hi=FIELD.postR;
+  const all={a:lo,b:hi,w:hi-lo};
+  if(P.y>=gy-0.3)return {a:lo,b:lo,w:0};      /* level with the line, no angle */
+  if(!K||K.y<=P.y)return all;                 /* he is not between you and it */
+  const reach=keeperReach(), d=V.dist(P,K);
+  if(d<=reach)return {a:lo,b:lo,w:0};         /* he is on top of the ball */
+  const a=Math.atan2(K.y-P.y,K.x-P.x), half=Math.asin(Math.min(1,reach/d));
+  const cast=(ang)=>{
+    const dy=Math.sin(ang); if(dy<=1e-6)return null;
+    return P.x+Math.cos(ang)*((gy-P.y)/dy);
+  };
+  const c1=cast(a-half), c2=cast(a+half);
+  if(c1==null||c2==null)return all;           /* his shadow misses the line */
+  const s0=Math.min(c1,c2), s1=Math.max(c1,c2);
+  const L={a:lo,b:Math.min(hi,s0)}, Rg={a:Math.max(lo,s1),b:hi};
+  L.w=Math.max(0,L.b-L.a); Rg.w=Math.max(0,Rg.b-Rg.a);
+  return L.w>=Rg.w?L:Rg;
+}
+const goalSight=(P,K)=>goalSightSpan(P,K).w;
+
+/* A shot is only a shot from somewhere you would actually hit it. Scaled to
+   the pitch, because eighteen metres is a sensible range on a full field and
+   most of the way to halfway on a five a side one. */
+const shotRange=()=>Math.min(18,FIELD.goalY*0.55);
+const GOOD_SIGHT=1.8, TIGHT_SIGHT=0.8;
+function inPenaltyArea(p){
+  const pen=FIELD.pen;
+  if(pen.shape==='rect') return p.y>=pen.y0&&p.x>=pen.x0&&p.x<=pen.x1;
+  return V.dist(p,GOAL())<=pen.r;
+}
+
 function offsideLine(S){
   /* Infinity, never null: the caller does `to.pos.y > line+0.4`, and
      null+0.4 is 0.4, which would flag almost every runner offside in a
      format that does not play offside at all. Infinity is a true no-op. */
   if(!FIELD.offside) return Infinity;
-  const ys=S.defenders.map(d=>d.pos.y).concat([FIELD.keeperY]);
+  /* The real keeper, not a nominal one at a fixed depth. When he comes off
+     his line to narrow an angle he stops being the last man, and the second
+     last opponent is then a defender, which is the Law and was previously
+     unrepresentable. */
+  const ys=S.defenders.map(d=>d.pos.y).concat([S.keeper?S.keeper.pos.y:FIELD.keeperY]);
   ys.sort((a,b)=>b-a);return ys[1];
 }
 const log=(S,cls,msg)=>S.events.push({t:S.t,cls,msg});
@@ -963,6 +1082,7 @@ const labelOf=id=>{const a=play.attackers.find(x=>x.id===id);return a?a.label:id
 
 function step(S){
   S.t+=DT;
+  stepKeeper(S);
 
   for(const a of S.attackers){
     if(a.len>0.01 && S.t>=a.delay){
@@ -1130,7 +1250,11 @@ function finish(S,carrier){
     S.verdict={ok:false,text:'NOTHING HAPPENS: give someone a move'};return;
   }
   const near=S.defenders.reduce((m,d)=>Math.min(m,V.dist(d.pos,carrier.pos)),99);
-  const inBox=carrier.pos.y>36&&carrier.pos.x>13.8&&carrier.pos.x<54.2;
+  /* These were the 11v11 penalty area typed as literals, left behind when the
+     board stopped being one size. On a 5 a side pitch 36 metres is past the
+     goal line, so inBox was simply false everywhere and a five a side board
+     could never produce a chance. It reads the real area now. */
+  const inBox=inPenaltyArea(carrier.pos);
   const stretch=S.defenders.reduce((m,d)=>Math.max(m,d.maxDrift),0);
   const bit=S.defenders.filter(d=>d.bitten||d.fooled).length;
   const closest=S.defenders.reduce((b,d)=>
@@ -1148,10 +1272,32 @@ function finish(S,carrier){
   log(S,'',`shape stretched ${stretch.toFixed(1)}m · ${bit} of ${S.defenders.length} beaten or pulled out`);
 
   const tail=` (nearest: ${closest?closest.label:'—'})`;
-  if(inBox&&near>4)S.verdict={ok:true,text:`CLEAR CHANCE: ${carrier.label} free in the box by ${near.toFixed(1)}m${tail}`};
-  else if(near>4) S.verdict={ok:true,text:`SPACE CREATED: ${carrier.label} open by ${near.toFixed(1)}m${tail}`};
-  else if(near>2) S.verdict={ok:true,text:`HALF A YARD: ${carrier.label} has ${near.toFixed(1)}m${tail}`};
-  else            S.verdict={ok:false,text:`SMOTHERED: ${carrier.label} closed down at ${near.toFixed(1)}m${tail}`};
+
+  /* THE SHOT. Only asked when he is actually in a shooting position, and it
+     is asked of the keeper rather than of the nearest defender, because a
+     yard of space twenty five metres out with the angle closed is not a
+     chance and the old heuristic called it one. */
+  const shooting=inBox||V.dist(carrier.pos,GOAL())<=shotRange();
+  const span=shooting?goalSightSpan(carrier.pos,S.keeper.pos):null;
+  const sight=span?span.w:0;
+  const kOut=S.keeper?S.keeper.out:0;
+  if(shooting){
+    /* Handed to the renderer rather than recomputed there, so the stripe on
+       the goal line is always the same number the verdict just quoted, and so
+       a play that never got to a shot draws no stripe at all. */
+    S.shot={a:span.a,b:span.b,w:span.w,from:{x:carrier.pos.x,y:carrier.pos.y}};
+    log(S,sight>=GOOD_SIGHT?'open':'',
+      `keeper ${kOut.toFixed(1)}m off his line, ${sight.toFixed(1)}m of goal showing`);
+  }
+
+  if(near<=2)      S.verdict={ok:false,text:`SMOTHERED: ${carrier.label} closed down at ${near.toFixed(1)}m${tail}`};
+  else if(shooting&&sight>=GOOD_SIGHT&&near>3.5)
+                   S.verdict={ok:true,text:`CLEAR CHANCE: ${carrier.label} shooting at ${sight.toFixed(1)}m of open goal${tail}`};
+  else if(shooting&&sight>=TIGHT_SIGHT)
+                   S.verdict={ok:true,text:`HALF CHANCE: ${sight.toFixed(1)}m of goal showing, ${carrier.label} has ${near.toFixed(1)}m to work in${tail}`};
+  else if(shooting)S.verdict={ok:false,text:`ANGLE CLOSED: the keeper has ${carrier.label} down to ${sight.toFixed(1)}m of goal${tail}`};
+  else if(near>4)  S.verdict={ok:true,text:`SPACE CREATED: ${carrier.label} open by ${near.toFixed(1)}m${tail}`};
+  else             S.verdict={ok:true,text:`HALF A YARD: ${carrier.label} has ${near.toFixed(1)}m${tail}`};
 }
 
 /* ================================================================ RENDER */
@@ -1290,6 +1436,28 @@ function draw(){
       Math.min(VW-120,sx(seen.ball.x)+r*0.8),Math.max(12,sy(seen.ball.y)-r*0.9));
     ctx.restore();
   }
+  /* The keeper, and what he is leaving you. Drawn under the outfield players
+     so a defender tracking back still reads on top of him. The bright stripe
+     on the goal line is the widest single gap past him from where the ball
+     actually ended up, which is the number the verdict quotes: seeing it is
+     the difference between being told there is a chance and understanding
+     why. */
+  const kp=S?S.keeper.pos:keeperTarget(ballStart());
+  const g=S&&S.shot;
+  if(g&&g.w>0.05){
+    ctx.save();
+    ctx.strokeStyle=g.w>=GOOD_SIGHT?'#6FD8B4':'#F4B740';
+    ctx.lineWidth=4;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(sx(g.a),sy(FIELD.goalY));
+    ctx.lineTo(sx(g.b),sy(FIELD.goalY));ctx.stroke();
+    ctx.globalAlpha=.16;ctx.fillStyle=ctx.strokeStyle;
+    ctx.beginPath();ctx.moveTo(sx(g.from.x),sy(g.from.y));
+    ctx.lineTo(sx(g.a),sy(FIELD.goalY));ctx.lineTo(sx(g.b),sy(FIELD.goalY));
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  disc(sx(kp.x),sy(kp.y),r*0.94,'#2E5B45','#7FBF9A','GK','#CFE9DA');
+
   for(const d of defs){
     const beat=d.bitten||d.fooled;
     disc(sx(d.x),sy(d.y),r,beat?'#3A2523':'#2B4351',
@@ -2040,7 +2208,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v7';
+var BUILD = 'otb-v8';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
