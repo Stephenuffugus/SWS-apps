@@ -36,19 +36,27 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 echo "repo: $ROOT"
-echo "signed in as: $(npx firebase login:list 2>/dev/null | tail -1)"
+echo "signed in as: $(npx --yes firebase-tools login:list 2>/dev/null | tail -1)"
 echo
+
+# 2026-08-29: every `npx firebase` here became `npx --yes firebase-tools`.
+# `npx firebase` resolves the package named `firebase`, which is the JS SDK and
+# ships no executable; this only ever worked because an npx CACHE entry happened
+# to provide the binary. An unrelated `npm install` invalidated that cache and
+# the deploy died with "could not determine executable to run" on a day when the
+# only thing that had changed was a dev dependency. Naming the real package
+# makes it independent of cache state.
 
 fail() { echo; echo "FAILED at: $1"; echo "Nothing further was attempted. Paste this output back to Claude."; exit 1; }
 
 echo "==> 1/2  hosting (all apps)"
-npx firebase deploy --only hosting --project sws-apps-9646d || fail "hosting deploy"
+npx --yes firebase-tools deploy --only hosting --project sws-apps-9646d || fail "hosting deploy"
 
 echo
 echo "==> 2/2  firestore rules"
 # The repo root config declares hosting only; the firestore config lives here.
 cd "$ROOT/apps/signup-sheets" || fail "cd to apps/signup-sheets"
-npx firebase deploy --only firestore:rules --project sws-apps-9646d || fail "rules deploy"
+npx --yes firebase-tools deploy --only firestore:rules --project sws-apps-9646d || fail "rules deploy"
 cd "$ROOT"
 
 echo
