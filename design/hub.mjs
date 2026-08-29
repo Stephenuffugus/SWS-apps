@@ -105,6 +105,11 @@ const SELF_STYLED = {
   /* Hush came home from the arcade on 2026-08-20 and is a local app now.
      Its colours are its own (--glow and --deep), not a studio skin. */
   'hush': { darkAccent: '#F2B872', accent: '#C87F3C' },
+  /* Music Studio came across from the Lucid Winds arcade on 2026-08-29 and
+     keeps its own grove palette: sage and gold on near-black, read from its
+     own :root. It is the SAME app that still lives at lucidwinds.com, which
+     means two copies that will drift; see the notes doc. */
+  'music-studio': { darkAccent: '#7ab356', accent: '#4a7c35' },
   /* Beacon is warm on purpose: a page somebody opens when they need a person
      should not look like an alarm panel. Its own signal orange on cream, read
      from its own CSS (#FF7A3D on #FFF4E6, with #D2551D as the deeper stroke). */
@@ -210,8 +215,14 @@ const CATALOGUE = [
   ]],
   ['Music',
     { id: 'music', kick: 'The woodshed', q: 'Learning the neck?',
-      sub: 'Tap drills, scales in positions, chord charts and rhythm, built by somebody who teaches this for a living. The fretboard stops being a mystery.' }, [
+      sub: 'Tap drills, scales in positions, chord charts and rhythm, built by somebody who teaches this for a living. And a little studio for when you want to write something rather than practise it.' }, [
     ['fretwork', 'Fretwork', 'Know the neck: tap drills, scales in positions, chord charts and rhythm', 'guitar fretboard notes learn the neck memorize triads inversions seventh chords intervals scales modes pentatonic chord charts rhythm polyrhythm drills practice music theory jazz trainer teacher'],
+    /* Came across from the arcade on 2026-08-29, byte for byte the same v2.2
+       app, rebranded and given the fleet's seams. It still lives at
+       lucidwinds.com/studio.html, so this is deliberately a SECOND copy rather
+       than a move, which is how Hush ended up with a stale mirror. Whichever
+       one stops being edited is the one that rots. */
+    ['music-studio', 'Music Studio', 'Sequence a track in a browser tab, and keep it on your device', 'music studio sequencer daw beat maker drum machine bass melody chords loop bpm metronome song writing make music browser offline no account synth pattern step sequencer'],
   ]],
   ['Night Sky',
     { id: 'night-sky', kick: 'The night sky', q: 'Looking up tonight?',
