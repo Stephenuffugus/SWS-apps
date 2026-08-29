@@ -120,11 +120,21 @@ await withApp('music-studio', async ({ page, errors, overflow }) => {
   check('there is a build tag to quote in a support message',
     (await page.textContent('#buildTag')).trim().length > 0,
     await page.textContent('#buildTag'));
-  check('the tip jar stays hidden until there is a link for it',
-    await page.evaluate(() => {
-      const t = document.getElementById('tipBtn');
-      return !!t && getComputedStyle(t).display === 'none';
-    }), 'an empty tip jar that is visible is a dead button');
+  /* This used to assert the jar stayed HIDDEN while TIP_URL was empty. The
+     link landed on 2026-08-29 so the invariant flipped: the only revenue in
+     this app has no symptom when it breaks except a button quietly not being
+     there, so it is pinned wired rather than pinned absent. */
+  const tip = await page.evaluate(() => {
+    const t = document.getElementById('tipBtn');
+    if (!t) return null;
+    return { href: t.getAttribute('href'), shown: getComputedStyle(t).display !== 'none',
+             target: t.target, rel: t.rel };
+  });
+  check('the tip jar is wired and visible', !!tip && tip.shown, JSON.stringify(tip));
+  check('and it points at Stripe',
+    !!tip && /^https:\/\/buy\.stripe\.com\//.test(tip.href || ''), tip && tip.href);
+  check('and it opens away from the studio',
+    !!tip && tip.target === '_blank' && /noopener/.test(tip.rel));
   check('the install button is offered',
     await page.evaluate(() => {
       const b = document.getElementById('swsInstall');

@@ -38,3 +38,20 @@ statement, and are not recoverable as JSON; they would need re-exporting from
 Stephen's phone.
 
 Art for it is at `docs/art/partyline.png`.
+
+## There is a tip jar with nothing to link it to
+
+Stephen made the Stripe payment link on 2026-08-29, before deciding not to
+build the app out:
+
+```
+https://buy.stripe.com/7sYaEYgqd3H13fn7i17EQ0x
+```
+
+Verified live that day: it names Party Line, carries the description written
+for it, and lets the payer choose the amount. **Nothing points at it**, because
+there is no Party Line app in the fleet. It is recorded here so it is not lost
+and not rediscovered as a mystery.
+
+If Party Line is ever built, this is its `TIP_URL`. If it never is, the link
+can be archived in Stripe; leaving it live costs nothing and charges nobody.
