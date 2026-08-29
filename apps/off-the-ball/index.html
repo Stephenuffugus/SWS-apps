@@ -103,6 +103,40 @@ canvas{display:block;width:100%;touch-action:none}
   .welcome ol{gap:5px}
 }
 
+/* ── the development curtain ───────────────────────────────────────────────
+   Off the Ball is deployed beside the finished apps while its blocking list
+   is worked through, so this keeps a stranger who wanders in off a board that
+   still freezes after a run.
+
+   Be clear about what this is and is not. It is NOT security: the passphrase
+   sits in the source of a file anyone can read, and a gate written into the
+   page it guards can always be walked around. It does not need to be. Every
+   play lives in this browser and has never been anywhere else, so there is
+   nothing here for a stranger to reach even if they step past it. What it
+   buys is that an unfinished app does not look shipped.
+
+   Delete this block and the script that matches it on the day it opens. It is
+   the only thing in the file that assumes a build stage. */
+.devgate{position:fixed;inset:0;z-index:60;background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;overflow-y:auto}
+.devgate .gbox{width:100%;max-width:330px;display:flex;flex-direction:column;
+  gap:11px;text-align:center}
+.devgate .gmark{font-size:26px;color:var(--attack);line-height:1}
+.devgate h2{margin:0;font-size:19px;font-weight:600;color:var(--chalk);
+  letter-spacing:-.01em}
+.devgate .gsub{margin:0;font-family:var(--mono);font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.devgate .gshared{margin:0;font-size:12.5px;line-height:1.45;color:var(--attack)}
+.devgate label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);text-align:left}
+.devgate input{width:100%;padding:11px 12px;border-radius:8px;
+  border:1px solid var(--hair);background:var(--panel);color:var(--chalk);
+  font-family:var(--mono);font-size:15px}
+.devgate input:focus{outline:2px solid var(--attack);outline-offset:1px}
+.devgate .gerr{margin:0;min-height:15px;font-size:12px;color:var(--alarm)}
+.devgate .gnote{margin:0;font-size:11.5px;line-height:1.5;color:var(--muted)}
+
 .row{display:flex;gap:6px;margin-top:10px}
 .seg{display:flex;flex:1;background:var(--panel);border-radius:8px;padding:3px;border:1px solid var(--hair)}
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font-family:var(--display);
@@ -2219,7 +2253,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v8';
+var BUILD = 'otb-v9';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
@@ -2263,6 +2297,70 @@ var TIP_URL = '';
   }
 })();
 
+/* ============================================================== dev gate */
+/* The curtain described beside .devgate in the stylesheet. Built with
+   createElement and textContent rather than innerHTML: nothing here is user
+   supplied today, but this file has a stored-XSS suite precisely because a
+   share link is the way in, and a gate is a poor place to start making
+   exceptions. */
+const DEV_PASS='wolfden';
+const DEV_KEY='otb.dev.unlocked';
+const devUnlocked=()=>STORE.get(DEV_KEY)===DEV_PASS;
+
+function showDevGate(hasLink,opened){
+  const mk=(t,cls,txt)=>{const n=document.createElement(t);
+    if(cls)n.className=cls; if(txt!=null)n.textContent=txt; return n;};
+  const g=mk('div','devgate'), box=mk('div','gbox');
+
+  box.appendChild(mk('div','gmark','\u25C8'));
+  box.appendChild(mk('h2',null,'Off the Ball'));
+  box.appendChild(mk('p','gsub','Soccer play board \u00B7 in development'));
+
+  /* A shared link is the whole point of this app, so somebody arriving on one
+     is told what they have and who to ask, rather than just being stopped. */
+  /* Keyed on the link being PRESENT, not on it having decoded. A corrupt or
+     truncated share link is exactly when somebody needs telling what they are
+     holding, and the welcome below still keys on the play that actually
+     loaded, so a broken link cannot talk the board into greeting a play that
+     is not there. */
+  if(hasLink)box.appendChild(mk('p','gshared',
+    'Somebody sent you a play. Ask them for the passphrase and it will open.'));
+
+  const lab=mk('label',null,'Passphrase');
+  lab.setAttribute('for','devpass');
+  const inp=mk('input');
+  inp.type='password'; inp.id='devpass'; inp.placeholder='passphrase';
+  inp.autocomplete='off'; inp.setAttribute('autocapitalize','none');
+  inp.setAttribute('autocorrect','off'); inp.spellcheck=false;
+  inp.setAttribute('aria-describedby','devhint');
+  const err=mk('p','gerr'); err.setAttribute('role','alert');
+  const go=mk("button","btn primary","Enter"); go.type='button';
+  go.id='devgo';
+  const note=mk('p','gnote',
+    'Sky Wolf Studio \u00B7 this one is not finished yet. Your plays stay in '
+    +'this browser on this device either way. The gate is here so an '
+    +'unfinished app does not look shipped, not to protect anything.');
+  note.id='devhint';
+
+  const submit=()=>{
+    if(inp.value.trim().toLowerCase()!==DEV_PASS){
+      err.textContent='Not that one.'; inp.value=''; inp.focus(); return;
+    }
+    STORE.set(DEV_KEY,DEV_PASS);
+    g.remove();
+    /* The welcome was suppressed while the curtain was up, because two panels
+       stacked on a cold open is the un-dismissable overlay all over again. */
+    showWelcome(opened);
+  };
+  go.addEventListener('click',submit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+
+  for(const n of [lab,inp,err,go,note])box.appendChild(n);
+  g.appendChild(box);
+  document.body.appendChild(g);
+  inp.focus();
+}
+
 /* ================================================================== boot */
 (function boot(){
   const m=location.hash.match(/#p=(.+)$/);
@@ -2273,7 +2371,10 @@ var TIP_URL = '';
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
   resize();renderAll();
-  showWelcome(!!opened);
+  /* Gate first. The board is built underneath either way so unlocking is
+     instant, and the welcome waits its turn rather than stacking. */
+  if(devUnlocked())showWelcome(!!opened);
+  else showDevGate(!!m,!!opened);
 })();
 </script>
 </body>

@@ -24,7 +24,19 @@ const check = (name, ok, detail = '') => {
 };
 const FILE = join(tmpdir(), 'otb-playbook-test.json');
 
+/* The development curtain stands in front of everything, so every page in a
+   run has to step past it first. Storage is per origin and shared across the
+   pages in one context, so unlocking once covers the tabs opened later. The
+   gate's own behaviour is tested on its own fresh context at the bottom. */
+const DEV_PASS = 'wolfden';
+const ungate = async (p) => {
+  await p.evaluate((v) => localStorage.setItem('otb.dev.unlocked', v), DEV_PASS);
+  await p.reload({ waitUntil: 'load' });
+  await p.waitForTimeout(400);
+};
+
 await withApp('off-the-ball', async ({ page, errors, overflow }) => {
+  await ungate(page);
   await page.waitForTimeout(900);
 
   /* ---- the board is actually there ---- */
@@ -331,6 +343,7 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
    now and the buttons are sticky, so this pins both. */
 console.log('\nthe welcome on the smallest phone');
 await withApp('off-the-ball', async ({ page }) => {
+  await ungate(page);
   await page.waitForTimeout(700);
   const m = await page.evaluate(() => {
     const w = document.querySelector('.welcome');
@@ -351,6 +364,77 @@ await withApp('off-the-ball', async ({ page }) => {
   check('and it can actually be dismissed by tapping',
     await page.evaluate(() => !document.querySelector('.welcome')));
 }, { width: 320, height: 568 });
+
+/* ------------------------------------------------- the development curtain
+   A fresh context, deliberately NOT ungated, because the point of this block
+   is the state every stranger actually arrives in. The gate is not security
+   and the notes say so; what it has to do is stand in front of the board, let
+   the passphrase through, and stay open afterwards. */
+console.log('\nthe development curtain');
+await withApp('off-the-ball', async ({ page, errors }) => {
+  await page.waitForTimeout(700);
+
+  check('a stranger meets the curtain, not the board',
+    await page.evaluate(() => !!document.querySelector('.devgate')));
+  check('and it says the app is unfinished rather than just refusing',
+    /in development/i.test(await page.textContent('.devgate')));
+  check('the welcome does not stack underneath it',
+    await page.evaluate(() => !document.querySelector('.welcome')),
+    'two panels on a cold open is the un-dismissable overlay again');
+
+  /* the board is built underneath, but the curtain has to cover it */
+  check('the curtain covers the whole viewport',
+    await page.evaluate(() => {
+      const r = document.querySelector('.devgate').getBoundingClientRect();
+      return r.top <= 0 && r.left <= 0
+          && r.bottom >= window.innerHeight && r.right >= window.innerWidth;
+    }));
+
+  await page.fill('#devpass', 'not-it');
+  await page.click('#devgo');
+  check('a wrong passphrase is refused and says so',
+    await page.evaluate(() => !!document.querySelector('.devgate')
+      && /not that one/i.test(document.querySelector('.gerr').textContent)));
+
+  await page.fill('#devpass', 'wolfden');
+  await page.click('#devgo');
+  await page.waitForTimeout(400);
+  check('the passphrase opens it',
+    await page.evaluate(() => !document.querySelector('.devgate')));
+  check('and the welcome takes its turn afterwards',
+    await page.evaluate(() => !!document.querySelector('.welcome')));
+
+  await page.click('#wskip');
+  await page.click('#play');
+  await page.waitForTimeout(4200);
+  check('the board behind it actually works once opened',
+    (await page.textContent('#verdict')).trim().length > 8);
+
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(600);
+  check('it stays open on the next visit',
+    await page.evaluate(() => !document.querySelector('.devgate')));
+
+  check('the curtain raised no page errors', errors.length === 0, errors.join(' | '));
+});
+
+/* A shared link is the way into this app, so somebody holding one is told what
+   they have and who to ask rather than just being stopped at a password. */
+await withApp('off-the-ball', async ({ page }) => {
+  const url = page.url();
+  /* A hash-only goto is a same-document navigation, so boot never re-runs and
+     the curtain keeps the copy it was built with. A real visitor clicking a
+     shared link gets a fresh load, so the test has to ask for one. */
+  await page.goto(url + '#p=zzz-not-a-real-play', { waitUntil: 'load' });
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(600);
+  const txt = await page.evaluate(() => {
+    const g = document.querySelector('.devgate');
+    return g ? g.textContent : '';
+  });
+  check('a shared link still meets the curtain', txt.length > 0);
+  check('but it says somebody sent you a play', /somebody sent you a play/i.test(txt), txt.slice(0, 120));
+});
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nOFF THE BALL BROWSER PASSED');
 process.exit(failures ? 1 : 0);

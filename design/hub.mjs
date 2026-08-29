@@ -217,9 +217,21 @@ const CATALOGUE = [
     ['diamond-rules', 'Diamond Rules', 'The rules little leagues skip, on a diamond kids can tap', 'baseball softball little league kids learn the rules force out force play tag up tag ups infield fly pop fly pop up count balls strikes outs tee ball coach pitch 8u youth game quiz diamond field positions who covers'],
     /* Arrived 2026-08-28 as a v0.3 prototype with its own engine harness and
        a handoff that says plainly it is not shippable yet, so it wears the
-       In testing badge until the blocking list in apps/off-the-ball/HANDOFF.md
-       is worked through. Not gated: there is nothing to hide, it just is not
-       finished. */
+       In testing badge.
+
+       GATED behind a passphrase since 2026-08-29, which reverses what this
+       comment used to say. The old note read "not gated: there is nothing to
+       hide, it just is not finished", and the badge was due to come off the
+       day the handoff's blocking list closed. That list closed, so six agents
+       were sent to drive the thing a coach would actually drive, and the
+       answer was that finishing the feature list had not made it usable: the
+       board stops taking any tap the moment a play has been run, the only
+       labelled way out throws the play away, tapping a format button kills
+       input outright, and nothing a coach saves or shares remembers which
+       pitch it was drawn on, so every small sided play reopens wrong. A badge
+       is the wrong instrument for that. The curtain lives at the bottom of
+       apps/off-the-ball/index.html; take it out, and put this comment back the
+       way it was, when those are fixed. */
     ['off-the-ball', 'Off the Ball', 'Plan a play against a defence that reacts', 'soccer football play designer tactics board planning runs off the ball movement overlap third man run give and go one two wall pass decoy feint sunday league rec coach team playbook positioning defence reacts simulation', 'beta'],
   ]],
 ];

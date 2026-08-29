@@ -172,7 +172,86 @@ between opposition levels. The numbers inside those verdicts do move now
 the sweep is no longer blind there, only coarse. Still a tuning question rather
 than something to paper over.
 
+## The curtain, and why the blocking list closing did not mean it was ready
+
+All six handoff blockers closed in v8, and the comment in `design/hub.mjs` said
+the In testing badge should come off the day that happened. So before taking it
+off, six agents were sent to drive the thing a coach would actually drive: a
+cold phone, the soccer itself, the copy, the failure modes, the reason to come
+back, and how it sits beside the other 32 apps.
+
+Two of the six said it was usable. Four said it was not, and the reasons were
+not cosmetic. Finishing the feature list had not made the app usable, because
+every item on that list was about what the board can model and none of it was
+about what happens after a coach presses Run.
+
+**Off the Ball is now behind a passphrase**, the same curtain Rock Stops wears,
+in the same words: it is not security, the passphrase is in the source of a
+file anyone can read, and there is nothing behind it to protect because every
+play lives in the browser it was drawn in. What it buys is that an unfinished
+app does not look shipped. Somebody arriving on a shared link is told that a
+play is waiting for them and to ask whoever sent it for the passphrase, because
+being stopped by a bare password box when a friend has just sent you something
+is the wrong way to meet this app.
+
+### What has to be fixed before the curtain comes down
+
+1. **The board freezes after a run.** `pointerdown` returns early while a sim
+   exists and nothing clears it when the play ends, so every tap and drag is
+   ignored. Meanwhile the hint under the board still says "Tap gold to add a
+   move". The only labelled way out is Reset, which reloads the preset and
+   throws away the coach's work. This is the core loop and it does not survive
+   the first press of Run.
+2. **Tapping a format button kills input.** The tool variable ends up
+   undefined, and after that nothing taps, drags, draws or passes.
+3. **A play does not remember its pitch.** The format is stored in neither the
+   share link nor the playbook, so every 5v5, 7v7 and 9v9 play reopens as
+   11v11, with the same metre coordinates now sitting in the corner of a full
+   pitch. Small sided was the biggest selling point and it does not survive
+   being saved.
+4. **The move library is 11v11 only.** Two constants were never made format
+   aware: side detection compares against 34, which is half of 68, and the
+   goalmouth is hardcoded. On a 5v5 pitch a near post run aims 33m past the
+   goal line and an overlap crosses to the far touchline. All 24 moves are
+   offered on every format with nothing gating them.
+
+Numbers 3 and 4 are the same root cause as the `inBox` literals that v8 fixed:
+the pitch stopped being one size in v5 and not everything was told.
+
+### The regression v8 shipped, and what the test suite missed
+
+For part of 2026-08-29 the live board told a striker standing next to the
+goalkeeper that he had the whole goal to aim at. `goalSightSpan` asked whether
+the keeper was behind the shooter before asking whether he was on top of him,
+and `keeperTarget` clamps the keeper so he is never goalside of the ball, which
+from inside `keeperMax` makes his y exactly the shooter's. The `<=` read that
+equality as "not between you and the goal" and returned all 7.32m. Walking in
+down the middle the number fell 2.0, 1.7, 0.8, 0.0 and then jumped to 7.32.
+
+The suite passed it the whole way. It had a keeper in front of the ball and a
+keeper behind the ball and never one at the same y, which is the only place the
+bug lives. The fix asks smothered first; the new check walks a shooter from 12m
+to 2m and asserts both that the goal is never open while the keeper stands on
+him and that it never widens as he gets closer. Reverting the engine makes it
+fail with the exact symptom, so it is a real test.
+
+The lesson is the one already written in this repo: a green suite is a claim
+about the cases somebody thought of. Six agents driving the real app found
+seven blocking problems that 60 passing checks did not.
+
+### A tuning question, left for Stephen
+
+`trap` at competitive still reads CLEAR CHANCE with 7.3m of open goal while the
+keeper is 1.96m away, because he is genuinely a couple of metres behind the
+shooter by then and the model calls a beaten keeper fully beaten. A keeper that
+close can still dive back. How much recovery he gets is a judgement about
+football rather than a bug, and the rule in this app is that those belong to
+Stephen, so it is written down here rather than quietly tuned.
+
 ## Still needed from Stephen
 
 - Art. The icon and `marketing/thumb-256.png` are placeholders I made.
 - A Stripe link for `TIP_URL`, same pattern as the rest of the fleet.
+- A ruling on the beaten keeper above.
+- The passphrase is `wolfden`, the same one Rock Stops uses. One line at the
+  bottom of `index.html` changes it.

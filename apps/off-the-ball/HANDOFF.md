@@ -222,7 +222,12 @@ The fix, roughly: give each run one or two decision points where the attacker ev
 ## 9. Blocking work before app store
 
 In order. All six shipped between 2026-08-28 and 2026-08-29; see
-`docs/OFF-THE-BALL-NOTES-2026-08-29.md`. The blocking list is closed.
+`docs/OFF-THE-BALL-NOTES-2026-08-29.md`. This list is closed, and closing it
+did NOT make the app usable: six agents driving it found four blocking
+problems in what happens after a coach presses Run, none of which were on
+this list. The app is behind a passphrase until those are fixed. The real
+remaining work is in the notes under "What has to be fixed before the
+curtain comes down".
 
 1. DONE. **PWA shell.** Manifest, icons, service worker, offline. It is a single file; this is quick and it is the difference between a link and an app.
 2. DONE. **Small-sided formats.** Configurable pitch size and player counts. 5v5 / 7v7 / 9v9 / 11v11. Biggest addressable gap versus every competitor.
