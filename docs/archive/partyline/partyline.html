@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#16191A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Party Line">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Party Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --coat:#16191A; --coat2:#1F2426; --plate:#2B3134; --edge:#0B0D0E;
+  --hivis:#FF5A1F; --amber:#FFC247; --label:#C9D1CE; --dim:#6B7671;
+  --ok:#4FD08A; --bad:#E4484D;
+  --disp:"Saira Condensed",Impact,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --sp:15px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--coat);color:var(--label);font-family:var(--body);font-size:15px;
+  line-height:1.45;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;
+  max-width:540px;margin:0 auto;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+
+.eyebrow{font-family:var(--disp);font-weight:700;text-transform:uppercase;
+  letter-spacing:.16em;font-size:11px;color:var(--dim)}
+h1{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  margin:0;font-size:29px}
+.mono{font-family:var(--mono)}
+.tiny{font-size:10px;letter-spacing:.08em}
+.grow{flex:1 1 auto;min-width:0}
+.spacer{flex:1 1 auto}
+.hidden{display:none!important}
+
+/* faceplate */
+.plate{background:linear-gradient(180deg,var(--plate),var(--coat2));border-bottom:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);padding:11px var(--sp) 10px;flex:0 0 auto}
+.plate-top{display:flex;align-items:center;gap:9px}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:.22em;
+  text-transform:uppercase;flex:1 1 auto}
+.wordmark span{color:var(--hivis)}
+.chan{background:none;border:1px solid #3A4245;color:var(--amber);border-radius:6px;
+  font-family:var(--mono);font-size:11px;padding:5px 9px;cursor:pointer;letter-spacing:.05em}
+.chan:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.plate-bot{display:flex;align-items:center;gap:14px;margin-top:6px;
+  font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em}
+.stat{display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:0 0 auto}
+.dot.on{background:var(--ok);box-shadow:0 0 7px rgba(79,208,138,.6)}
+.dot.tx{background:var(--hivis);box-shadow:0 0 9px rgba(255,90,31,.8)}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:.35}}
+.dot.live{animation:breathe 2.4s ease-in-out infinite}
+
+/* on-air banner */
+.onair{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:9px var(--sp);
+  background:linear-gradient(90deg,#2A1710,#1C1512);border-bottom:1px solid #3A2418}
+.onair-dot{width:9px;height:9px;border-radius:50%;background:var(--hivis);
+  box-shadow:0 0 10px var(--hivis);animation:breathe 1.1s ease-in-out infinite;flex:0 0 auto}
+.onair-who{font-family:var(--mono);font-size:12px;color:var(--amber);letter-spacing:.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onair-bars{display:flex;align-items:center;gap:2px;height:16px;margin-left:auto;flex:0 0 auto}
+@keyframes eq{0%,100%{height:3px}50%{height:15px}}
+.onair-bars i{width:2px;background:var(--hivis);border-radius:1px;animation:eq .7s ease-in-out infinite}
+.onair-bars i:nth-child(2n){animation-duration:.5s}
+.onair-bars i:nth-child(3n){animation-duration:.9s}
+.onair-bars i:nth-child(4n){animation-duration:.62s}
+
+/* traffic */
+#traffic{flex:1 1 auto;overflow-y:auto;padding:12px var(--sp) 8px;display:flex;
+  flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.empty{margin:auto;text-align:center;color:var(--dim);max-width:290px}
+.empty .eyebrow{display:block;margin-bottom:8px}
+.tx{display:flex;gap:10px;align-items:center;padding:9px 11px;border-radius:8px;
+  background:var(--coat2);border-left:2px solid #39413F}
+.tx.me{border-left-color:var(--dim);background:#1B1F20}
+.tx.now{border-left-color:var(--hivis);background:#251E1A}
+.tx.playing{border-left-color:var(--amber)}
+.tx .who{font-family:var(--mono);font-size:12px;color:var(--label);letter-spacing:.04em;
+  display:flex;align-items:baseline}
+.tx .rcpt{font-size:10px;color:var(--dim)}
+.tx .meta{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.tx .body{font-size:14px;color:var(--label);margin-top:3px;
+  -webkit-user-select:text;user-select:text;word-break:break-word}
+.wave{display:flex;align-items:center;gap:1px;height:20px;margin-top:4px}
+.wave i{width:2px;min-height:2px;background:#4A5351;border-radius:1px;display:block;
+  transition:height .12s linear}
+.tx.now .wave i{background:var(--hivis)}
+.tx.playing .wave i{background:var(--amber)}
+.acts{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.sp,.replay{background:none;border:1px solid #363E40;color:var(--dim);border-radius:6px;
+  font-family:var(--mono);font-size:11px;cursor:pointer;padding:4px 7px;min-width:32px}
+.sp:hover,.replay:hover{color:var(--amber);border-color:#55605F}
+.sp:focus-visible,.replay:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.tx.alertrow{border-left-color:var(--bad);background:#26191A}
+.tx.alertrow .who{color:#FF9B9E}
+
+/* knocks */
+#knocks{flex:0 0 auto;padding:0 var(--sp)}
+.knock{display:flex;align-items:center;gap:9px;background:#20261F;border:1px solid #35402F;
+  border-radius:9px;padding:9px 11px;margin-bottom:7px}
+.verdict{font-family:var(--mono);font-size:10px;letter-spacing:.04em;margin-top:2px}
+.verdict.good{color:var(--ok)} .verdict.bad{color:var(--bad)}
+
+/* roster */
+#roster{flex:0 0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px var(--sp);
+  border-top:1px solid var(--edge);background:#121516;scrollbar-width:none}
+#roster::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;
+  background:var(--coat2);font-family:var(--mono);font-size:11px;white-space:nowrap}
+
+/* deck */
+#deck{flex:0 0 auto;padding:10px var(--sp) calc(11px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--edge);background:#121516}
+.composer{display:flex;gap:7px;margin-bottom:9px}
+.composer input{flex:1 1 auto;background:#0E1112;border:1px solid #333B3D;border-radius:8px;
+  color:var(--label);font-family:var(--body);font-size:15px;padding:11px 12px;
+  -webkit-user-select:text;user-select:text}
+.composer input:focus{outline:none;border-color:var(--amber)}
+.send{background:var(--hivis);border:none;color:#160B04;border-radius:8px;padding:0 15px;
+  font-family:var(--disp);font-weight:700;letter-spacing:.1em;font-size:13px;cursor:pointer}
+
+/* the signature: the transmit key IS the level meter */
+#ptt{position:relative;width:100%;height:82px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(180deg,#3A4245,#252B2D);
+  box-shadow:0 5px 0 var(--edge),0 9px 18px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);
+  overflow:hidden;touch-action:none;transition:transform .06s,box-shadow .06s;
+  font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.2em;
+  font-size:19px;color:var(--label);display:block}
+#ptt::before{content:"";position:absolute;inset:0;transform-origin:left center;
+  transform:scaleX(var(--level,0));
+  background:linear-gradient(90deg,#B8380E,var(--hivis) 70%,var(--amber));
+  opacity:0;transition:opacity .12s}
+#ptt.hot{transform:translateY(4px);box-shadow:0 1px 0 var(--edge),inset 0 2px 6px rgba(0,0,0,.55);
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+#ptt.hot::before{opacity:.85}
+#ptt.disabled{opacity:.45;pointer-events:none}
+#ptt:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+#ptt .lbl,#ptt .sub,#ptt .timer{position:relative;z-index:2;display:block}
+#ptt .sub{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.1em;
+  color:var(--dim);text-transform:none;margin-top:3px}
+#ptt.hot .sub{color:rgba(255,255,255,.85)}
+#ptt .timer{position:absolute;top:9px;right:13px;font-size:11px;letter-spacing:.06em;
+  color:rgba(255,255,255,.9)}
+
+.deck-row{display:flex;align-items:center;gap:7px;margin-top:9px}
+.seg{display:flex;border:1px solid #333B3D;border-radius:7px;overflow:hidden}
+.seg-b{background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:10px;
+  letter-spacing:.08em;padding:6px 9px;cursor:pointer}
+.seg-b.on{background:#2E2119;color:var(--amber)}
+.seg-b:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+.chip{background:none;border:1px solid #333B3D;color:var(--dim);border-radius:7px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:6px 9px;cursor:pointer}
+.chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.chip.warnchip{border-color:var(--hivis);color:var(--hivis)}
+.chip.alert{border-color:#4A2226;color:#E88A8D}
+.vol{-webkit-appearance:none;appearance:none;height:3px;background:#333B3D;border-radius:2px;
+  flex:0 1 110px;outline:none}
+.vol::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--amber);cursor:pointer}
+.vol::-moz-range-thumb{width:15px;height:15px;border:none;border-radius:50%;
+  background:var(--amber);cursor:pointer}
+
+/* screens + overlays */
+.screen{flex:1 1 auto;overflow-y:auto;padding:24px var(--sp) 28px;display:flex;
+  flex-direction:column;gap:17px}
+.hero{text-align:center;padding-top:5vh}
+.hero .mark{font-family:var(--disp);font-weight:700;font-size:43px;letter-spacing:.24em;
+  text-transform:uppercase;line-height:1}
+.hero .mark span{color:var(--hivis)}
+.hero p{color:var(--dim);max-width:330px;margin:12px auto 0;font-size:14px}
+label.f{display:block}
+label.f .eyebrow{display:block;margin-bottom:6px}
+input[type=text],textarea{width:100%;background:#0E1112;border:1px solid #333B3D;border-radius:8px;
+  color:var(--label);font-family:var(--mono);font-size:15px;padding:12px 13px;letter-spacing:.05em;
+  -webkit-user-select:text;user-select:text}
+textarea{min-height:110px;font-size:12px;resize:vertical}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--amber)}
+.btn{width:100%;padding:14px;border:none;border-radius:9px;cursor:pointer;
+  font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  font-size:15px;background:var(--hivis);color:#160B04;box-shadow:0 3px 0 #93300E}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #93300E}
+.btn.ghost{background:transparent;color:var(--label);border:1px solid #3A4245;box-shadow:none}
+.btn.danger{color:#E88A8D;border-color:#4A2226}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.rule{height:1px;background:#272E2F}
+.note{font-size:13px;color:var(--dim);line-height:1.5}
+.note b{color:var(--label);font-weight:600}
+.keybox{background:#0E1112;border:1px dashed #3A4245;border-radius:9px;padding:14px;text-align:center}
+.keybox .code{font-family:var(--mono);font-size:16px;color:var(--amber);letter-spacing:.09em;
+  word-break:break-all;-webkit-user-select:text;user-select:text;line-height:1.7}
+.warn{background:#241A16;border-left:2px solid var(--hivis);padding:11px 13px;
+  border-radius:0 7px 7px 0;font-size:13px;color:#D6C4BA}
+.sw{display:flex;align-items:center;gap:11px;cursor:pointer}
+.sw.row{padding:4px 0}
+.sw input{appearance:none;-webkit-appearance:none;width:34px;height:19px;border-radius:10px;
+  background:#333B3D;position:relative;cursor:pointer;margin:0;transition:background .15s;flex:0 0 auto}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;
+  border-radius:50%;background:var(--dim);transition:.15s}
+.sw input:checked{background:#4A2A18}
+.sw input:checked::after{left:17px;background:var(--hivis)}
+.sw input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(11,13,14,.95);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);overflow-y:auto;display:flex}
+.sheet{margin:auto;width:100%;max-width:540px;padding:24px var(--sp) 28px;display:flex;
+  flex-direction:column;gap:16px}
+#toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:70;
+  background:#0B0D0E;border:1px solid #3A4245;color:var(--label);font-family:var(--mono);
+  font-size:12px;padding:9px 14px;border-radius:20px;opacity:0;transition:opacity .2s;
+  pointer-events:none;max-width:88vw;text-align:center}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  .dot.live,.onair-dot,.onair-bars i{animation:none}
+  .wave i{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, set, get, remove, update, push, onValue,
+         onChildAdded, query, limitToLast, onDisconnect, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+/* ===================================================================
+   PARTY LINE — encrypted live push-to-talk.
+
+   Voice goes out as G.711 µ-law in ~320ms chunks while you are still
+   holding the button, so people hear you as you speak instead of after
+   you let go. We decode it ourselves into a raw AudioBuffer, which means
+   there is no container and no codec negotiation — every browser behaves
+   identically. That removes the whole class of "works on Android, silent
+   on iPhone" bugs that come with MediaRecorder.
+   =================================================================== */
+const BAKED_CONFIG = null;
+
+const CFG = {
+  SR:        8000,    // wire rate. telephone quality, 8 KB/s
+  SR_HD:    16000,    // "clear" mode, 16 KB/s
+  CHUNK_MS:   320,    // how often a packet leaves the device
+  JITTER_MS:  260,    // playback cushion against network wobble
+  MAX_TX_MS:120000,   // 2 minutes on one press
+  TTL_MS:  900000,    // traffic self-destructs after 15 minutes
+  HISTORY:     20,    // transmissions available to catch up on
+  MIN_HOLD:   280,    // below this it was a fumble, not a transmission
+  VOX_OPEN:  0.055,   // RMS that opens the mic in hands-free
+  VOX_HANG:   850,    // silence before hands-free closes it
+  SPLIT:     8000,    // max µ-law bytes per packet
+  MAX_CHUNK: 32000    // base64 ceiling, must match database.rules.json
+};
+const APP_VERSION = 2;
+
+/* ================= encoding ================= */
+const A32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';   // Crockford: no I L O U
+function b32enc(bytes){
+  let bits=0,val=0,out='';
+  for (const b of bytes){ val=(val<<8)|b; bits+=8;
+    while (bits>=5){ out+=A32[(val>>>(bits-5))&31]; bits-=5; } }
+  if (bits>0) out += A32[(val<<(5-bits))&31];
+  return out;
+}
+function b32dec(s){
+  const c = s.toUpperCase().replace(/[^0-9A-Z]/g,'')
+    .replace(/O/g,'0').replace(/[IL]/g,'1').replace(/U/g,'V');
+  let bits=0,val=0; const o=[];
+  for (const ch of c){
+    const i = A32.indexOf(ch);
+    if (i<0) throw new Error('bad character: '+ch);
+    val=(val<<5)|i; bits+=5;
+    if (bits>=8){ o.push((val>>>(bits-8))&255); bits-=8; }
+  }
+  return new Uint8Array(o);
+}
+const rand = n => crypto.getRandomValues(new Uint8Array(n));
+const b64 = u8 => { let s=''; const CH=0x8000;
+  for (let i=0;i<u8.length;i+=CH) s += String.fromCharCode.apply(null, u8.subarray(i,i+CH));
+  return btoa(s); };
+const unb64 = s => { const bin=atob(s); const u=new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; };
+
+/* ================= channel identity ================= */
+const newChannel = () => ({ id: b32enc(rand(5)), key: b32enc(rand(10)) });
+const prettyKey  = k => (k.match(/.{1,4}/g)||[]).join('-');
+const normKey    = k => k.toUpperCase().replace(/[^0-9A-Z]/g,'');
+
+async function deriveKeys(id, key){
+  const ikm = await crypto.subtle.importKey('raw', b32dec(key), 'HKDF', false, ['deriveBits']);
+  const salt = new TextEncoder().encode('partyline|' + id);
+  const bits = async info => crypto.subtle.deriveBits(
+    { name:'HKDF', hash:'SHA-256', salt, info:new TextEncoder().encode(info) }, ikm, 256);
+  return {
+    aes:   await crypto.subtle.importKey('raw', await bits('partyline/v1/traffic'),
+             'AES-GCM', false, ['encrypt','decrypt']),
+    proof: await crypto.subtle.importKey('raw', await bits('partyline/v1/knock'),
+             { name:'HMAC', hash:'SHA-256' }, false, ['sign'])
+  };
+}
+async function seal(aes, bytes){
+  const iv = rand(12);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, aes, bytes));
+  const j = new Uint8Array(12 + ct.length); j.set(iv); j.set(ct, 12);
+  return b64(j);
+}
+async function unseal(aes, packed){
+  const raw = unb64(packed);
+  return new Uint8Array(await crypto.subtle.decrypt(
+    { name:'AES-GCM', iv: raw.subarray(0,12) }, aes, raw.subarray(12)));
+}
+const sealText   = (aes,s) => seal(aes, new TextEncoder().encode(s));
+const unsealText = async (aes,p) => new TextDecoder().decode(await unseal(aes,p));
+async function makeProof(pk, uid){
+  const s = new Uint8Array(await crypto.subtle.sign('HMAC', pk,
+    new TextEncoder().encode('knock|' + uid)));
+  return b64(s.subarray(0,16));
+}
+
+/* ================= G.711 µ-law ================= */
+const BIAS=0x84, CLIP=8159, SEG=[0x3F,0x7F,0xFF,0x1FF,0x3FF,0x7FF,0xFFF,0x1FFF];
+function muEncode(f32){
+  const out = new Uint8Array(f32.length);
+  for (let i=0;i<f32.length;i++){
+    let s = Math.max(-1, Math.min(1, f32[i]));
+    let v = (s < 0 ? s*0x8000 : s*0x7FFF) >> 2;
+    let mask;
+    if (v < 0){ v = -v; mask = 0x7F; } else mask = 0xFF;
+    if (v > CLIP) v = CLIP;
+    v += (BIAS >> 2);
+    let g = 8;
+    for (let k=0;k<8;k++) if (v <= SEG[k]){ g = k; break; }
+    out[i] = g >= 8 ? (0x7F ^ mask) : (((g<<4) | ((v >> (g+1)) & 0x0F)) ^ mask);
+  }
+  return out;
+}
+function muDecode(u8){
+  const out = new Float32Array(u8.length);
+  for (let i=0;i<u8.length;i++){
+    const u = ~u8[i] & 0xFF;
+    let t = ((u & 0x0F) << 3) + BIAS;
+    t <<= (u & 0x70) >> 4;
+    out[i] = ((u & 0x80) ? (BIAS - t) : (t - BIAS)) / 32768;
+  }
+  return out;
+}
+class Resampler {
+  constructor(inRate, outRate){ this.ratio = inRate/outRate; this.pos = 0; this.tail = new Float32Array(1); }
+  push(f32){
+    const buf = new Float32Array(this.tail.length + f32.length);
+    buf.set(this.tail); buf.set(f32, this.tail.length);
+    const out = new Float32Array(Math.ceil((buf.length - this.pos)/this.ratio) + 2);
+    let n = 0, p = this.pos;
+    while (Math.floor(p) + 1 < buf.length){
+      const i = Math.floor(p), fr = p - i;
+      out[n++] = buf[i]*(1-fr) + buf[i+1]*fr;
+      p += this.ratio;
+    }
+    const used = Math.floor(p);
+    this.tail = buf.slice(used); this.pos = p - used;
+    return out.subarray(0, n);
+  }
+}
+/* 40-bucket amplitude envelope, so a log entry looks like what it sounds like */
+function envelope(mu, buckets = 40){
+  const f = muDecode(mu), step = Math.max(1, Math.floor(f.length/buckets)), out = [];
+  for (let i=0;i<buckets;i++){
+    let s = 0, n = 0;
+    for (let k=i*step;k<(i+1)*step && k<f.length;k++){ s += f[k]*f[k]; n++; }
+    out.push(n ? Math.min(1, Math.sqrt(s/n)*3.2) : 0);
+  }
+  return out;
+}
+
+/* ================= DOM ================= */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+function h(tag, attrs = {}, kids = []){
+  const el = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)){
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== false && v !== undefined) el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of [].concat(kids)) if (k) el.appendChild(k);
+  return el;
+}
+let toastT;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
+}
+const buzz = ms => { try { navigator.vibrate?.(ms); } catch {} };
+const clock = ts => new Date(ts).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+const dur = ms => ms >= 60000
+  ? `${Math.floor(ms/60000)}:${String(Math.floor(ms%60000/1000)).padStart(2,'0')}`
+  : `${(ms/1000).toFixed(1)}s`;
+
+/* ================= persisted ================= */
+const store = {
+  get cfg(){ try { return BAKED_CONFIG || JSON.parse(localStorage.sq_cfg); } catch { return null; } },
+  set cfg(v){ localStorage.sq_cfg = JSON.stringify(v); },
+  get chan(){ try { return JSON.parse(localStorage.sq_chan); } catch { return null; } },
+  set chan(v){ v ? localStorage.sq_chan = JSON.stringify(v) : localStorage.removeItem('sq_chan'); },
+  get name(){ return localStorage.sq_name || ''; },
+  set name(v){ localStorage.sq_name = v; },
+  get prefs(){ try { return { beep:true, hd:false, vol:1, ...JSON.parse(localStorage.sq_prefs||'{}') }; }
+               catch { return { beep:true, hd:false, vol:1 }; } },
+  set prefs(v){ localStorage.sq_prefs = JSON.stringify(v); }
+};
+
+const S = {
+  db:null, auth:null, uid:null, chan:null, keys:null, owner:null,
+  members:{}, live:{}, names:{},
+  mode:'ptt', muted:false, speed:1,
+  txOpen:false, myTxId:null,
+  detach:[], txDetach:new Map(), txSeen:new Set(), clips:new Map(),
+  sessionStart:Date.now(), missed:0
+};
+
+/* ===================================================================
+   Audio engine
+   =================================================================== */
+const WORKLET = `
+class Tap extends AudioWorkletProcessor {
+  constructor(){ super(); this.buf = new Float32Array(2048); this.n = 0; }
+  process(inputs){
+    const ch = inputs[0] && inputs[0][0];
+    if (!ch) return true;
+    for (let i=0;i<ch.length;i++){
+      this.buf[this.n++] = ch[i];
+      if (this.n === this.buf.length){ this.port.postMessage(this.buf.slice(0)); this.n = 0; }
+    }
+    return true;
+  }
+}
+registerProcessor('sq-tap', Tap);`;
+
+const Audio_ = {
+  ctx:null, out:null, stream:null, node:null, sink:null, analyser:null, source:null, filter:null,
+  ready:false,
+
+  unlock(){
+    if (!this.ctx){
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.out = this.ctx.createGain();
+      this.out.gain.value = store.prefs.vol;
+      this.out.connect(this.ctx.destination);
+    }
+    if (this.ctx.state !== 'running') this.ctx.resume();
+    // A one-sample blip inside a real gesture is what lifts iOS autoplay.
+    const b = this.ctx.createBuffer(1,1,22050);
+    const s = this.ctx.createBufferSource(); s.buffer = b;
+    s.connect(this.ctx.destination); s.start(0);
+  },
+
+  setVolume(v){ if (this.out) this.out.gain.value = v; },
+
+  async openMic(){
+    if (this.ready) return true;
+    this.unlock();
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio:{
+      echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
+    const ctx = this.ctx;
+    this.source = ctx.createMediaStreamSource(this.stream);
+
+    // Anti-alias before decimating. Voice lives under 3.4 kHz on the
+    // narrow path; without this, decimation folds hiss back in.
+    this.filter = ctx.createBiquadFilter();
+    this.filter.type = 'lowpass';
+    this.filter.frequency.value = (store.prefs.hd ? CFG.SR_HD : CFG.SR) * 0.42;
+    this.filter.Q.value = 0.7;
+    this.source.connect(this.filter);
+
+    this.analyser = ctx.createAnalyser();
+    this.analyser.fftSize = 512;
+    this.source.connect(this.analyser);
+
+    this.sink = ctx.createGain(); this.sink.gain.value = 0;   // pump, not audible
+    this.sink.connect(ctx.destination);
+
+    try {
+      await ctx.audioWorklet.addModule(
+        URL.createObjectURL(new Blob([WORKLET], { type:'text/javascript' })));
+      this.node = new AudioWorkletNode(ctx, 'sq-tap');
+      this.node.port.onmessage = e => this.onFrames?.(e.data);
+    } catch {
+      // Older Safari: deprecated but universally present.
+      this.node = ctx.createScriptProcessor(4096, 1, 1);
+      this.node.onaudioprocess = e => this.onFrames?.(new Float32Array(e.inputBuffer.getChannelData(0)));
+    }
+    this.filter.connect(this.node); this.node.connect(this.sink);
+    this.ready = true;
+    return true;
+  },
+
+  closeMic(){
+    try { this.node?.disconnect(); this.filter?.disconnect(); this.source?.disconnect(); } catch {}
+    this.stream?.getTracks().forEach(t => t.stop());
+    this.stream = null; this.node = null; this.ready = false; this.onFrames = null;
+  },
+
+  level(){
+    if (!this.analyser) return 0;
+    const b = new Uint8Array(this.analyser.fftSize);
+    this.analyser.getByteTimeDomainData(b);
+    let s = 0;
+    for (const v of b){ const d = (v-128)/128; s += d*d; }
+    return Math.sqrt(s/b.length);
+  },
+
+  /* Two-tone chirp: the classic "I'm done, go ahead" confirmation */
+  roger(kind = 'end'){
+    if (!store.prefs.beep || !this.ctx) return;
+    const t = this.ctx.currentTime, g = this.ctx.createGain();
+    g.connect(this.out); g.gain.setValueAtTime(0.0001, t);
+    const tones = kind === 'end' ? [1180, 900] : [820, 1180];
+    tones.forEach((f, i) => {
+      const o = this.ctx.createOscillator();
+      o.type = 'sine'; o.frequency.value = f; o.connect(g);
+      o.start(t + i*0.06); o.stop(t + i*0.06 + 0.058);
+    });
+    g.gain.exponentialRampToValueAtTime(0.22, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+  },
+
+  alertTone(){
+    if (!this.ctx) return;
+    this.unlock();
+    const t0 = this.ctx.currentTime;
+    for (let i=0;i<3;i++){
+      const g = this.ctx.createGain(), o = this.ctx.createOscillator();
+      o.type='square'; o.frequency.value = 1400; o.connect(g); g.connect(this.ctx.destination);
+      const t = t0 + i*0.22;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.16, t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.16);
+      o.start(t); o.stop(t+0.17);
+    }
+  }
+};
+
+/* Schedules incoming chunks back to back so a stream plays gapless. */
+class Playhead {
+  constructor(rate){ this.rate = rate; this.at = 0; this.live = 0; }
+  feed(mu){
+    const ctx = Audio_.ctx; if (!ctx) return 0;
+    const f = muDecode(mu);
+    const buf = ctx.createBuffer(1, f.length, this.rate);
+    buf.copyToChannel ? buf.copyToChannel(f, 0) : buf.getChannelData(0).set(f);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(Audio_.out);
+    const now = ctx.currentTime;
+    if (this.at < now + 0.02) this.at = now + CFG.JITTER_MS/1000;   // (re)prime the cushion
+    src.start(this.at);
+    this.at += buf.duration;
+    this.live++;
+    src.onended = () => this.live--;
+    return this.at - now;
+  }
+}
+function playClip(mu, rate, speed = 1){
+  const ctx = Audio_.ctx; if (!ctx) return null;
+  Audio_.unlock();
+  const f = muDecode(mu);
+  const buf = ctx.createBuffer(1, f.length, rate);
+  buf.copyToChannel ? buf.copyToChannel(f, 0) : buf.getChannelData(0).set(f);
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.playbackRate.value = speed;
+  src.connect(Audio_.out); src.start();
+  return src;
+}
+
+/* ===================================================================
+   Screens
+   =================================================================== */
+function screenConfig(){
+  const ta = h('textarea',{ placeholder:'{ "apiKey": "…", "authDomain": "…", "databaseURL": "…", "projectId": "…" }' });
+  app.replaceChildren(h('div',{class:'screen'},[
+    h('div',{class:'hero'},[
+      h('div',{class:'mark',html:'PARTY<span>\u00b7</span>LINE'}),
+      h('p',{text:'Point this at a Firebase project you control. It needs Realtime Database and anonymous sign-in, nothing else.'})
+    ]),
+    h('label',{class:'f'},[ h('span',{class:'eyebrow',text:'Firebase web config'}), ta ]),
+    h('button',{class:'btn',onclick(){
+      try {
+        const cfg = JSON.parse(ta.value);
+        if (!cfg.databaseURL) return toast('Config needs a databaseURL');
+        store.cfg = cfg; try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch(e) {}
+boot();
+      } catch { toast("That isn't valid JSON"); }
+    }},[ h('span',{text:'Connect'}) ]),
+    h('p',{class:'note',html:'Firebase console \u2192 Project settings \u2192 Your apps. Copy the object inside <b>firebaseConfig = { \u2026 }</b>.'})
+  ]));
+}
+
+function screenGate(){
+  const nameIn = h('input',{ type:'text', placeholder:'RAVEN', maxlength:'14', value:store.name });
+  const keyIn  = h('input',{ type:'text', placeholder:'P3XD9VG9 \u00b7 RENM-ESJE-V2PP-YXZB' });
+
+  const go = async (creating) => {
+    const nm = nameIn.value.trim();
+    if (!nm) return toast('Pick a call sign first');
+    store.name = nm;
+    if (creating) return enterChannel(newChannel(), nm, true);
+    const parts = keyIn.value.split(/[\u00b7|]/);
+    const id  = normKey(parts[0] || '');
+    const key = normKey(parts.slice(1).join('') || '');
+    if (id.length !== 8 || key.length !== 16) return toast("That code doesn't look complete");
+    await enterChannel({ id, key }, nm, false);
+  };
+
+  app.replaceChildren(h('div',{class:'screen'},[
+    h('div',{class:'hero'},[
+      h('div',{class:'mark',html:'PARTY<span>\u00b7</span>LINE'}),
+      h('p',{text:'Hold the bar and talk. Everyone on the channel hears you as you speak, not after you finish.'})
+    ]),
+    h('label',{class:'f'},[ h('span',{class:'eyebrow',text:'What should they call you?'}), nameIn ]),
+    h('button',{class:'btn',onclick:()=>go(true)},[ h('span',{text:'Open a line'}) ]),
+    h('div',{class:'rule'}),
+    h('label',{class:'f'},[ h('span',{class:'eyebrow',text:'Or join one'}), keyIn ]),
+    h('button',{class:'btn ghost',onclick:()=>go(false)},[ h('span',{text:'Ask to pick up'}) ]),
+    h('p',{class:'note',text:'Joining sends a knock to whoever opened the channel. They let you in by hand \u2014 having the code is not enough to get on the air.'})
+  ]));
+}
+
+async function enterChannel(chan, nick, creating){
+  let keys;
+  try { keys = await deriveKeys(chan.id, chan.key); }
+  catch(e){ return toast('Bad channel key: ' + e.message); }
+  S.chan = chan; S.keys = keys;
+
+  const base = `ch/${chan.id}`;
+  let metaSnap;
+  try { metaSnap = await get(ref(S.db, base + '/meta')); }
+  catch { return toast('Could not reach the database'); }
+
+  if (creating){
+    if (metaSnap.exists()) return toast('That channel id is taken \u2014 try again');
+    await update(ref(S.db), {
+      [`${base}/meta`]: { owner:S.uid, created:serverTimestamp(), v:APP_VERSION },
+      [`${base}/members/${S.uid}`]: { n: await sealText(keys.aes,nick), joined:serverTimestamp(), role:'owner' }
+    });
+    S.owner = S.uid; store.chan = chan;
+    return screenRadio();
+  }
+
+  if (!metaSnap.exists()) return toast('No such channel \u2014 check the code');
+  S.owner = metaSnap.val().owner;
+
+  if ((await get(ref(S.db, `${base}/members/${S.uid}`))).exists()){
+    store.chan = chan; return screenRadio();
+  }
+  await set(ref(S.db, `${base}/knocks/${S.uid}`), {
+    proof: await makeProof(keys.proof, S.uid),
+    n: await sealText(keys.aes, nick),
+    ts: serverTimestamp()
+  });
+  store.chan = chan;
+  screenWaiting();
+}
+
+function screenWaiting(){
+  const base = `ch/${S.chan.id}`;
+  app.replaceChildren(h('div',{class:'screen'},[
+    h('div',{class:'hero'},[
+      h('div',{class:'eyebrow',text:'Knock sent'}),
+      h('h1',{text:'Waiting to be let on'})
+    ]),
+    h('p',{class:'note',text:'Whoever opened this channel has to admit you. Leave this open \u2014 you will drop in automatically.'}),
+    h('button',{class:'btn ghost',onclick(){
+      remove(ref(S.db, `${base}/knocks/${S.uid}`)); store.chan = null; screenGate();
+    }},[ h('span',{text:'Cancel'}) ])
+  ]));
+  const un = onValue(ref(S.db, `${base}/members/${S.uid}`), s => { if (s.exists()){ un(); screenRadio(); } });
+  S.detach.push(un);
+}
+
+/* ===================================================================
+   The radio
+   =================================================================== */
+function screenRadio(){
+  const base = `ch/${S.chan.id}`;
+  const isOwner = () => S.owner === S.uid;
+  const P = store.prefs;
+
+  const chanBtn = h('button',{class:'chan',onclick:sheetChannel},[h('span',{text:'CH '+S.chan.id})]);
+  const stDot = h('span',{class:'dot on live'});
+  const stTxt = h('span',{text:'listening'});
+  const netTxt = h('span',{class:'net',text:'\u2014'});
+
+  const onAir = h('div',{class:'onair hidden'},[
+    h('span',{class:'onair-dot'}),
+    h('span',{class:'onair-who',text:''}),
+    h('div',{class:'onair-bars'}, Array.from({length:14},()=>h('i')))
+  ]);
+
+  const log = h('div',{id:'traffic'},[
+    h('div',{class:'empty'},[
+      h('span',{class:'eyebrow',text:'Channel quiet'}),
+      h('div',{text:'Hold the bar to talk. The last 15 minutes of traffic stays here so you can catch up.'})
+    ])
+  ]);
+  const roster = h('div',{id:'roster'});
+  const tray = h('div',{id:'knocks'});
+
+  const ptt = h('button',{id:'ptt'},[
+    h('span',{class:'lbl',text:'Hold to talk'}),
+    h('span',{class:'sub',text:'press and hold'}),
+    h('span',{class:'timer mono',text:''})
+  ]);
+
+  const modeSw = h('div',{class:'seg'}, ['PTT','VOX','LATCH'].map((m,i)=>
+    h('button',{class:'seg-b'+(i===0?' on':''),onclick(e){
+      [...modeSw.children].forEach(c=>c.classList.remove('on'));
+      e.currentTarget.classList.add('on');
+      S.mode = m.toLowerCase();
+      if (S.mode === 'vox') startVox(); else stopVox();
+      ptt.querySelector('.lbl').textContent =
+        S.mode==='vox' ? 'Hands-free' : S.mode==='latch' ? 'Tap to talk' : 'Hold to talk';
+      ptt.classList.toggle('disabled', S.mode === 'vox');
+    }},[h('span',{text:m})])));
+
+  const muteBtn = h('button',{class:'chip',onclick(){
+    S.muted = !S.muted;
+    muteBtn.classList.toggle('warnchip', S.muted);
+    muteBtn.querySelector('span').textContent = S.muted ? 'MUTED' : 'SOUND';
+    Audio_.setVolume(S.muted ? 0 : store.prefs.vol);
+    if (!S.muted && S.missed){ toast(`${S.missed} missed \u2014 tap \u21bb on any row`); S.missed = 0; }
+  }},[h('span',{text:'SOUND'})]);
+
+  const vol = h('input',{type:'range',min:'0',max:'1',step:'0.05',value:String(P.vol),class:'vol',
+    oninput(e){ const v = +e.target.value; store.prefs = { ...store.prefs, vol:v };
+      if (!S.muted) Audio_.setVolume(v); }});
+
+  const alertBtn = h('button',{class:'chip alert',onclick:sendAlert},[h('span',{text:'ALERT'})]);
+  const textBtn  = h('button',{class:'chip',onclick:toggleComposer},[h('span',{text:'TEXT'})]);
+
+  const msgIn = h('input',{type:'text',placeholder:'Type instead of talking',maxlength:'280',
+    onkeydown(e){ if (e.key === 'Enter') sendText(); }});
+  const composer = h('div',{class:'composer hidden'},[
+    msgIn, h('button',{class:'send',onclick:sendText},[h('span',{text:'SEND'})])
+  ]);
+
+  app.replaceChildren(
+    h('div',{class:'plate'},[
+      h('div',{class:'plate-top'},[
+        h('div',{class:'wordmark',html:'PARTY<span>\u00b7</span>LINE'}),
+        chanBtn,
+        h('button',{class:'chan',onclick:sheetSettings},[h('span',{text:'\u2699'})])
+      ]),
+      h('div',{class:'plate-bot'},[
+        h('span',{class:'stat'},[stDot, stTxt]),
+        h('span',{class:'stat'},[netTxt])
+      ])
+    ]),
+    onAir, log, tray, roster,
+    h('div',{id:'deck'},[
+      composer,
+      ptt,
+      h('div',{class:'deck-row'},[
+        modeSw,
+        h('div',{class:'spacer'}),
+        textBtn, alertBtn, muteBtn
+      ]),
+      h('div',{class:'deck-row'},[
+        h('span',{class:'mono tiny',text:'VOL'}), vol,
+        h('div',{class:'spacer'}),
+        h('span',{class:'mono tiny',text:'AES-256 \u00b7 end to end'})
+      ])
+    ])
+  );
+
+  wireTransmit(ptt, stDot, stTxt, onAir);
+  watchMembers(base, roster, netTxt);
+  watchKnocks(base, tray, isOwner);
+  watchStream(base, log, onAir);
+  watchMessages(base, log);
+  watchPresence(base);
+
+  function toggleComposer(){
+    composer.classList.toggle('hidden');
+    if (!composer.classList.contains('hidden')) msgIn.focus();
+  }
+  async function sendText(){
+    const body = msgIn.value.trim(); if (!body) return;
+    msgIn.value = '';
+    await set(push(ref(S.db, base + '/msg')),
+      { u:S.uid, t:Date.now(), b: await sealText(S.keys.aes, body) }).catch(()=>toast('Send failed'));
+  }
+  async function sendAlert(){
+    await set(push(ref(S.db, base + '/msg')),
+      { u:S.uid, t:Date.now(), k:'alert', b: await sealText(S.keys.aes, 'needs attention') })
+      .catch(()=>toast('Alert failed'));
+    buzz([60,60,60]); toast('Alert sent to the channel');
+  }
+
+  function sheetChannel(){
+    const full = `${S.chan.id} \u00b7 ${prettyKey(S.chan.key)}`;
+    const link = location.origin + location.pathname + '#c=' + S.chan.id + '&k=' + S.chan.key;
+    const sheet = h('div',{class:'overlay'},[h('div',{class:'sheet'},[
+      h('div',[h('span',{class:'eyebrow',text:'Line code'}), h('h1',{text:'Give this to your people'})]),
+      h('div',{class:'keybox'},[h('div',{class:'code',text:full})]),
+      h('div',{class:'warn',text:'The second half is the encryption key. Anyone who reads it can decrypt this channel \u2014 send it the way you would send a house key, not in a public thread.'}),
+      h('button',{class:'btn',onclick(){
+        if (navigator.share) navigator.share({ title:'Party Line', text:"Pick up \u2014 I'm on the line", url:link }).catch(()=>{});
+        else { navigator.clipboard.writeText(link); toast('Invite link copied'); }
+      }},[h('span',{text:'Send invite'})]),
+      h('button',{class:'btn ghost',onclick(){ navigator.clipboard.writeText(full); toast('Code copied'); }},
+        [h('span',{text:'Copy code only'})]),
+      h('button',{class:'btn ghost',onclick(){ sheet.remove(); }},[h('span',{text:'Back to the line'})])
+    ])]);
+    document.body.appendChild(sheet);
+  }
+
+  function sheetSettings(){
+    const beep = h('input',{type:'checkbox',...(store.prefs.beep?{checked:true}:{}),
+      onchange(e){ store.prefs = { ...store.prefs, beep:e.target.checked }; }});
+    const hd = h('input',{type:'checkbox',...(store.prefs.hd?{checked:true}:{}),
+      onchange(e){ store.prefs = { ...store.prefs, hd:e.target.checked };
+        toast(e.target.checked ? 'Clear voice \u2014 16 KB/s' : 'Standard \u2014 8 KB/s'); }});
+    const sheet = h('div',{class:'overlay'},[h('div',{class:'sheet'},[
+      h('div',[h('span',{class:'eyebrow',text:'Settings'}), h('h1',{text:'Radio setup'})]),
+      h('label',{class:'sw row'},[beep, h('div',{class:'grow'},[
+        h('div',{text:'Roger beep'}),
+        h('div',{class:'note',text:'Two-tone chirp when a transmission ends'})])]),
+      h('label',{class:'sw row'},[hd, h('div',{class:'grow'},[
+        h('div',{text:'Clear voice'}),
+        h('div',{class:'note',text:'16 kHz instead of 8 kHz. Twice the data, noticeably crisper. Takes effect on your next transmission.'})])]),
+      h('div',{class:'rule'}),
+      h('p',{class:'note',html:'Signed in anonymously as <b>'+S.uid.slice(0,8)+'\u2026</b>'}),
+      h('button',{class:'btn ghost',onclick(){ sheet.remove(); }},[h('span',{text:'Done'})]),
+      h('button',{class:'btn ghost danger',onclick:leave},[h('span',{text:'Leave this channel'})])
+    ])]);
+    document.body.appendChild(sheet);
+  }
+
+  async function leave(){
+    teardown();
+    await remove(ref(S.db, `${base}/members/${S.uid}`)).catch(()=>{});
+    await remove(ref(S.db, `${base}/live/${S.uid}`)).catch(()=>{});
+    store.chan = null; S.chan = null; S.keys = null;
+    history.replaceState(null,'',location.pathname);
+    document.querySelectorAll('.overlay').forEach(o=>o.remove());
+    screenGate();
+  }
+
+  /* ---- hands-free ---- */
+  let voxTimer = null, voxOpenSince = 0;
+  async function startVox(){
+    try { await Audio_.openMic(); } catch { return toast('Microphone blocked'); }
+    toast('Hands-free on \u2014 it opens when you speak');
+    voxTimer = setInterval(() => {
+      const lvl = Audio_.level();
+      if (!S.txOpen && lvl > CFG.VOX_OPEN){ voxOpenSince = Date.now(); ptt.dispatchEvent(new Event('sq-open')); }
+      else if (S.txOpen && lvl > CFG.VOX_OPEN * 0.6) voxOpenSince = Date.now();
+      else if (S.txOpen && Date.now() - voxOpenSince > CFG.VOX_HANG) ptt.dispatchEvent(new Event('sq-close'));
+    }, 90);
+  }
+  function stopVox(){ clearInterval(voxTimer); voxTimer = null; if (S.txOpen) ptt.dispatchEvent(new Event('sq-close')); }
+  S.detach.push(stopVox);
+}
+
+/* ===================================================================
+   Transmit
+   =================================================================== */
+function wireTransmit(ptt, stDot, stTxt, onAir){
+  let rs = null, pending = [], seq = 0, startedAt = 0, flushT = null, rafT = 0, wake = null, rate = CFG.SR;
+  const sub = t => ptt.querySelector('.sub').textContent = t;
+  const timerEl = ptt.querySelector('.timer');
+
+  async function open(){
+    if (S.txOpen) return;
+    Audio_.unlock();
+    try { await Audio_.openMic(); }
+    catch { sub('microphone blocked \u2014 check site permissions'); return; }
+
+    rate = store.prefs.hd ? CFG.SR_HD : CFG.SR;
+    S.txOpen = true; seq = 0; pending = []; startedAt = Date.now();
+    rs = new Resampler(Audio_.ctx.sampleRate, rate);
+
+    const txId = push(ref(S.db, `ch/${S.chan.id}/stream`)).key;
+    S.myTxId = txId;
+
+    // Capture starts NOW and buffers locally; the network catches up.
+    Audio_.onFrames = frames => {
+      if (!S.txOpen) return;
+      const down = rs.push(frames);
+      if (down.length) pending.push(muEncode(down));
+    };
+    ptt.classList.add('hot');
+    sub('you are on the air');
+    stDot.className = 'dot tx'; stTxt.textContent = 'transmitting';
+    buzz(18); meter();
+    try { wake = await navigator.wakeLock?.request('screen'); } catch {}
+
+    // Metadata must land before any chunk, or the rules reject the
+    // chunk as an orphan node with no owner. RTDB preserves the order
+    // a single client issues writes in, so this is enough.
+    await set(ref(S.db, `ch/${S.chan.id}/stream/${txId}`), {
+      u:S.uid, t:Date.now(), sr:rate, n: await sealText(S.keys.aes, store.name)
+    }).catch(()=>{});
+    if (S.txOpen && S.myTxId === txId) flushT = setInterval(() => flush(txId), CFG.CHUNK_MS);
+  }
+
+  async function flush(txId){
+    if (!pending.length || !txId) return;
+    const total = pending.reduce((a,c)=>a+c.length,0);
+    const mu = new Uint8Array(total); let o = 0;
+    for (const c of pending){ mu.set(c,o); o += c.length; }
+    pending = [];
+    // A throttled tab can hand us a backlog. Split it rather than
+    // silently dropping a packet that busts the size cap.
+    for (let i=0;i<mu.length;i+=CFG.SPLIT){
+      const packed = await seal(S.keys.aes, mu.subarray(i, i+CFG.SPLIT));
+      set(ref(S.db, `ch/${S.chan.id}/stream/${txId}/c/${seq++}`), packed)
+        .catch(()=>{ sub('packet dropped \u2014 check your connection'); });
+    }
+  }
+
+  async function close(){
+    if (!S.txOpen) return;
+    const held = Date.now() - startedAt;
+    S.txOpen = false;
+    clearInterval(flushT); cancelAnimationFrame(rafT);
+    Audio_.onFrames = null;
+    ptt.classList.remove('hot');
+    ptt.style.setProperty('--level', 0);
+    timerEl.textContent = '';
+    stDot.className = 'dot on live'; stTxt.textContent = 'listening';
+    wake?.release?.().catch(()=>{}); wake = null;
+
+    const id = S.myTxId; S.myTxId = null;
+    if (held < CFG.MIN_HOLD){
+      sub('too quick \u2014 hold it a beat longer');
+      pending = []; buzz(8);
+      remove(ref(S.db, `ch/${S.chan.id}/stream/${id}`)).catch(()=>{});
+      return;
+    }
+    await flush(id);
+    // `n` lets receivers know the transmission is whole before they
+    // build the replay buffer — `done` alone can outrun the last packet.
+    await update(ref(S.db, `ch/${S.chan.id}/stream/${id}`), { done:true, dur:held, nc:seq }).catch(()=>{});
+    sub('sent \u00b7 ' + dur(held));
+    Audio_.roger('end'); buzz(12);
+    setTimeout(() => remove(ref(S.db, `ch/${S.chan.id}/stream/${id}`)).catch(()=>{}), CFG.TTL_MS);
+
+    if (S.mode !== 'vox') Audio_.closeMic();
+  }
+
+  function meter(){
+    const tick = () => {
+      if (!S.txOpen) return;
+      ptt.style.setProperty('--level', Math.min(1, Audio_.level()*4.5).toFixed(3));
+      const el = Date.now() - startedAt;
+      timerEl.textContent = dur(el);
+      if (el > CFG.MAX_TX_MS){ toast('Two minute limit'); close(); return; }
+      rafT = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  ptt.addEventListener('sq-open', open);
+  ptt.addEventListener('sq-close', close);
+
+  const down = e => {
+    if (S.mode === 'vox') return;
+    e.preventDefault();
+    if (S.mode === 'latch'){ S.txOpen ? close() : open(); } else open();
+  };
+  const up = e => { if (S.mode === 'ptt'){ e.preventDefault(); close(); } };
+
+  ptt.addEventListener('pointerdown', down);
+  ptt.addEventListener('pointerup', up);
+  ptt.addEventListener('pointercancel', up);
+  ptt.addEventListener('pointerleave', e => { if (S.mode === 'ptt' && S.txOpen) up(e); });
+  ptt.addEventListener('contextmenu', e => e.preventDefault());
+
+  const kd = e => { if (e.code==='Space' && !e.repeat && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName)){
+    e.preventDefault(); if (S.mode==='latch') { S.txOpen?close():open(); } else if (S.mode==='ptt') open(); } };
+  const ku = e => { if (e.code==='Space' && S.mode==='ptt'){ e.preventDefault(); close(); } };
+  document.addEventListener('keydown', kd);
+  document.addEventListener('keyup', ku);
+
+  // Wired and Bluetooth headset buttons arrive as media-session actions.
+  // Zello users ask for this constantly — reaching for the screen with
+  // gloves on, or driving, is the whole problem.
+  try {
+    navigator.mediaSession?.setActionHandler?.('play',  () => { open(); });
+    navigator.mediaSession?.setActionHandler?.('pause', () => { close(); });
+  } catch {}
+
+  S.detach.push(() => {
+    close();
+    document.removeEventListener('keydown', kd);
+    document.removeEventListener('keyup', ku);
+    Audio_.closeMic();
+  });
+}
+
+/* ===================================================================
+   Receive
+   =================================================================== */
+function watchStream(base, log, onAir){
+  const q = query(ref(S.db, base + '/stream'), limitToLast(CFG.HISTORY));
+  S.detach.push(onChildAdded(q, async snap => {
+    const txId = snap.key, v = snap.val() || {};
+    if (S.txSeen.has(txId)) return;
+    S.txSeen.add(txId);
+
+    const mine = v.u === S.uid;
+    const rate = v.sr || CFG.SR;
+    let who = 'unknown';
+    try { if (v.n) who = await unsealText(S.keys.aes, v.n); } catch {}
+    if (!v.n) who = S.names[v.u] || 'unknown';
+
+    const fresh = !v.done && (Date.now() - (v.t||0)) < 30000;
+    const row = addRow(log, { who, when:v.t||Date.now(), mine, live:fresh });
+    S.clips.set(txId, { mu:null, rate, who });
+
+    const head = fresh && !mine && !S.muted ? new Playhead(rate) : null;
+    if (head){ showOnAir(onAir, who, true); }
+    if (fresh && !mine && S.muted) S.missed++;
+
+    const offs = [];
+    let expected = -1, finished = false, nextPlay = 0;
+    const parts = new Map();          // seq -> µ-law bytes, NOT arrival order
+
+    // Play in sequence, holding anything that arrives early until the
+    // gap ahead of it fills. Arrival order is not delivery order.
+    const drain = () => {
+      if (!head) return;
+      while (parts.has(nextPlay)) head.feed(parts.get(nextPlay++));
+    };
+
+    const maybeFinish = () => {
+      if (finished || expected < 0 || parts.size < expected) return;
+      finished = true;
+      let total = 0;
+      for (let i=0;i<expected;i++) total += (parts.get(i)?.length || 0);
+      const mu = new Uint8Array(total); let o = 0;
+      for (let i=0;i<expected;i++){ const p = parts.get(i); if (p){ mu.set(p,o); o += p.length; } }
+      S.clips.set(txId, { mu, rate, who });
+      row.finish({ mu, rate, seconds: total/rate });
+      if (head && Audio_.ctx){
+        const left = Math.max(0, (head.at - Audio_.ctx.currentTime) * 1000);
+        setTimeout(() => {
+          showOnAir(onAir, who, false);
+          Audio_.roger('end');
+          set(ref(S.db, `${base}/stream/${txId}/heard/${S.uid}`), true).catch(()=>{});
+        }, left);
+      }
+    };
+
+    offs.push(onChildAdded(ref(S.db, `${base}/stream/${txId}/c`), async cs => {
+      let mu;
+      try { mu = await unseal(S.keys.aes, cs.val()); } catch { return; }
+      parts.set(parseInt(cs.key, 10), mu);
+      drain(); row.pulse(); maybeFinish();
+    }));
+
+    offs.push(onValue(ref(S.db, `${base}/stream/${txId}/nc`), ns => {
+      if (!ns.exists()) return;
+      expected = ns.val();
+      maybeFinish();
+      // A sender who dropped mid-sentence never writes `nc`. Give the
+      // stragglers a moment, then salvage whatever did arrive.
+      setTimeout(() => {
+        if (finished) return;
+        drain();
+        expected = Math.max(...[...parts.keys(), -1]) + 1;
+        for (let i=0;i<expected;i++) if (!parts.has(i)) parts.set(i, new Uint8Array(0));
+        maybeFinish();
+      }, 4000);
+    }));
+
+    if (mine){
+      offs.push(onValue(ref(S.db, `${base}/stream/${txId}/heard`), hs => {
+        row.receipts(Object.keys(hs.val() || {}).length);
+      }));
+    }
+    S.txDetach.set(txId, offs);
+
+    // Old transmissions we can no longer catch up on stop costing listeners.
+    if (S.txDetach.size > CFG.HISTORY + 4){
+      const oldest = S.txDetach.keys().next().value;
+      S.txDetach.get(oldest).forEach(fn => { try { fn(); } catch {} });
+      S.txDetach.delete(oldest);
+    }
+  }));
+}
+
+function showOnAir(onAir, who, on){
+  onAir.classList.toggle('hidden', !on);
+  if (on) onAir.querySelector('.onair-who').textContent = who + ' is on the air';
+}
+
+function watchMessages(base, log){
+  const q = query(ref(S.db, base + '/msg'), limitToLast(30));
+  S.detach.push(onChildAdded(q, async snap => {
+    const v = snap.val() || {};
+    let body = '';
+    try { body = await unsealText(S.keys.aes, v.b); } catch { return; }
+    const who = S.names[v.u] || 'unknown';
+    const fresh = v.t > S.sessionStart - 3000;
+    if (v.k === 'alert'){
+      addAlert(log, who, v.t);
+      if (fresh && v.u !== S.uid){ Audio_.alertTone(); buzz([80,60,80]); }
+    } else {
+      addText(log, who, body, v.t, v.u === S.uid);
+    }
+    if (v.u === S.uid) setTimeout(() => remove(snap.ref).catch(()=>{}), CFG.TTL_MS);
+  }));
+}
+
+/* ---- log rows ---- */
+function clearEmpty(log){ log.querySelector('.empty')?.remove(); }
+
+function addRow(log, { who, when, mine, live }){
+  clearEmpty(log);
+  const bars = h('div',{class:'wave'}, Array.from({length:40},()=>h('i',{style:'height:2px'})));
+  const meta = h('div',{class:'meta',text: live ? 'on the air\u2026' : clock(when)});
+  const rec  = h('span',{class:'rcpt'});
+  const speed= h('button',{class:'sp',text:'1\u00d7'});
+  const play = h('button',{class:'replay',text:'\u21bb'});
+  const row = h('div',{class:'tx'+(mine?' me':'')+(live?' now':'')},[
+    h('div',{class:'grow'},[
+      h('div',{class:'who'},[h('span',{text:who}), rec]),
+      bars, meta
+    ]),
+    h('div',{class:'acts'},[speed, play])
+  ]);
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+
+  let clip = null, src = null, sp = 1;
+  speed.onclick = () => { sp = sp === 1 ? 1.5 : sp === 1.5 ? 2 : 1; speed.textContent = sp + '\u00d7'; };
+  play.onclick = () => {
+    if (!clip) return toast('Still coming in');
+    if (src){ try { src.stop(); } catch {} src = null; row.classList.remove('playing'); return; }
+    src = playClip(clip.mu, clip.rate, sp);
+    row.classList.add('playing');
+    if (src) src.onended = () => { row.classList.remove('playing'); src = null; };
+  };
+
+  return {
+    pulse(){ // cheap liveness: nudge the bars while chunks land
+      const b = bars.children;
+      for (let i=0;i<b.length;i++) b[i].style.height = (2 + Math.random()*14|0) + 'px';
+    },
+    finish({ mu, rate, seconds }){
+      clip = { mu, rate };
+      row.classList.remove('now');
+      const env = envelope(mu, 40), b = bars.children;
+      for (let i=0;i<b.length;i++) b[i].style.height = Math.max(2, env[i]*18|0) + 'px';
+      meta.textContent = `${clock(when)} \u00b7 ${dur(seconds*1000)}`;
+    },
+    receipts(n){ rec.textContent = n ? ` \u00b7 heard by ${n}` : ' \u00b7 sent'; }
+  };
+}
+
+function addText(log, who, body, when, mine){
+  clearEmpty(log);
+  log.appendChild(h('div',{class:'tx txt'+(mine?' me':'')},[
+    h('div',{class:'grow'},[
+      h('div',{class:'who'},[h('span',{text:who})]),
+      h('div',{class:'body',text:body}),
+      h('div',{class:'meta',text:clock(when)})
+    ])
+  ]));
+  log.scrollTop = log.scrollHeight;
+}
+function addAlert(log, who, when){
+  clearEmpty(log);
+  log.appendChild(h('div',{class:'tx alertrow'},[
+    h('div',{class:'grow'},[
+      h('div',{class:'who'},[h('span',{text:who + ' needs attention'})]),
+      h('div',{class:'meta',text:clock(when)})
+    ])
+  ]));
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---- roster, knocks, presence ---- */
+function watchMembers(base, rosterEl, netTxt){
+  const render = () => {
+    const ids = Object.keys(S.members);
+    const up = ids.filter(u => S.live[u]).length;
+    netTxt.textContent = `${up} on the line \u00b7 ${ids.length} on channel`;
+    rosterEl.replaceChildren(...ids.map(u => h('div',{class:'card',id:'card-'+u},[
+      h('span',{class:'dot '+(S.live[u]?'on live':'')}),
+      h('span',{text:(S.names[u]||'\u2026') + (u===S.uid?' (you)':'')})
+    ])));
+  };
+  S.detach.push(onValue(ref(S.db, base+'/members'), async snap => {
+    const val = snap.val() || {};
+    S.members = val;
+    for (const [u,m] of Object.entries(val)){
+      if (S.names[u]) continue;
+      try { S.names[u] = await unsealText(S.keys.aes, m.n); } catch { S.names[u] = 'unknown'; }
+    }
+    if (!val[S.uid]) return toast('You were removed from this channel');
+    render();
+  }));
+  S.detach.push(onValue(ref(S.db, base+'/live'), snap => {
+    const v = snap.val() || {};
+    S.live = Object.fromEntries(Object.entries(v).map(([u,d]) => [u, !!(d&&d.on)]));
+    render();
+  }));
+}
+
+function watchKnocks(base, tray, isOwner){
+  if (!isOwner()) return;
+  S.detach.push(onValue(ref(S.db, base+'/knocks'), async snap => {
+    const val = snap.val() || {}, rows = [];
+    for (const [uid,k] of Object.entries(val)){
+      if (S.members[uid]){ remove(ref(S.db, `${base}/knocks/${uid}`)); continue; }
+      let nick='unknown', ok=false;
+      try { nick = await unsealText(S.keys.aes, k.n); } catch {}
+      try { ok = (await makeProof(S.keys.proof, uid)) === k.proof; } catch {}
+      rows.push(h('div',{class:'knock'},[
+        h('div',{class:'grow'},[
+          h('div',{class:'mono',text:nick}),
+          h('div',{class:'verdict '+(ok?'good':'bad'),
+            text: ok ? 'holds the channel key' : 'cannot prove they have the key'})
+        ]),
+        h('button',{class:'chip',onclick:async()=>{
+          await update(ref(S.db), {
+            [`${base}/members/${uid}`]: { n:k.n, joined:serverTimestamp(), role:'member' },
+            [`${base}/knocks/${uid}`]: null });
+          toast(nick + ' is on the net');
+        }},[h('span',{text:'ADMIT'})]),
+        h('button',{class:'chip',onclick:()=>remove(ref(S.db,`${base}/knocks/${uid}`))},
+          [h('span',{text:'DENY'})])
+      ]));
+    }
+    tray.replaceChildren(...rows);
+  }));
+}
+
+function watchPresence(base){
+  const me = ref(S.db, `${base}/live/${S.uid}`);
+  onDisconnect(me).remove();
+  set(me, { on:true, ts:serverTimestamp() });
+  const beat = setInterval(() => set(me,{on:true,ts:serverTimestamp()}).catch(()=>{}), 45000);
+  const vis = () => { if (!document.hidden && S.chan){
+    Audio_.ctx?.resume?.(); set(me,{on:true,ts:serverTimestamp()}).catch(()=>{}); } };
+  document.addEventListener('visibilitychange', vis);
+  S.detach.push(() => { clearInterval(beat); document.removeEventListener('visibilitychange', vis);
+    remove(me).catch(()=>{}); });
+}
+
+/* ===================================================================
+   Boot
+   =================================================================== */
+function teardown(){
+  for (const fn of S.detach){ try { fn(); } catch {} }
+  for (const offs of S.txDetach.values()) offs.forEach(fn => { try { fn(); } catch {} });
+  S.detach = []; S.txDetach.clear(); S.txSeen.clear(); S.clips.clear();
+  S.members = {}; S.live = {}; S.names = {}; S.missed = 0;
+}
+
+async function boot(){
+  const cfg = store.cfg;
+  if (!cfg) return screenConfig();
+  try {
+    const fb = initializeApp(cfg);
+    S.auth = getAuth(fb); S.db = getDatabase(fb);
+  } catch { localStorage.removeItem('sq_cfg'); return screenConfig(); }
+
+  onAuthStateChanged(S.auth, async user => {
+    if (!user){
+      try { await signInAnonymously(S.auth); } catch(e){ toast('Sign-in failed: '+e.code); }
+      return;
+    }
+    S.uid = user.uid;
+    teardown();
+
+    const hash = new URLSearchParams(location.hash.slice(1));
+    if (hash.get('c') && hash.get('k')){
+      const chan = { id:normKey(hash.get('c')), key:normKey(hash.get('k')) };
+      history.replaceState(null,'',location.pathname);
+      if (!store.name){ store.chan = chan; return screenGate(); }
+      return enterChannel(chan, store.name, false);
+    }
+    const saved = store.chan;
+    if (!saved) return screenGate();
+    try { await enterChannel(saved, store.name || 'unnamed', false); }
+    catch { store.chan = null; screenGate(); }
+  });
+}
+
+['pointerdown','keydown'].forEach(ev =>
+  document.addEventListener(ev, function once(){
+    Audio_.unlock(); document.removeEventListener(ev, once);
+  }, { capture:true }));
+
+const manifest = {
+  name:'Party Line', short_name:'Party Line', display:'standalone',
+  background_color:'#16191A', theme_color:'#16191A', start_url:'.',
+  icons:[{ src:'data:image/svg+xml,'+encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+     <rect width="512" height="512" rx="96" fill="#16191A"/>
+     <rect x="150" y="96" width="212" height="290" rx="26" fill="#2B3134"/>
+     <rect x="178" y="132" width="156" height="74" rx="10" fill="#FFC247"/>
+     <rect x="178" y="240" width="156" height="86" rx="14" fill="#FF5A1F"/>
+     <rect x="238" y="34" width="36" height="70" rx="18" fill="#6B7671"/></svg>`),
+    sizes:'512x512', type:'image/svg+xml', purpose:'any' }]
+};
+document.head.appendChild(Object.assign(document.createElement('link'), {
+  rel:'manifest',
+  href: URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}))
+}));
+
+boot();
+
+</script>
+</body>
+</html>
