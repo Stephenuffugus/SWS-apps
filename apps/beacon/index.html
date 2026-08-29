@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Beacon">
+<meta name="theme-color" content="#FFF4E6">
+<meta name="description" content="One big button on an old tablet that reaches a grown-up. No account, no phone number, nothing to install. It runs on hardware nothing else will.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Beacon</title>
+<style>
+/* ===========================================================================
+   Deliberately old-school CSS. No custom properties, no grid, no flex gap, no
+   nested calc, every transform prefixed. This has to render on an iPad 2
+   running iOS 9.3.5, a browser that stopped updating in 2016, because that is
+   precisely the hardware this app exists to serve: the tablet in the drawer
+   that no app store will install anything onto any more.
+
+   Warm on purpose. This is a page somebody opens when they need a person, and
+   it should not look like an alarm panel.
+   =========================================================================== */
+* { -webkit-box-sizing: border-box; box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100%; }
+body {
+  background: #FFF4E6;
+  color: #2E2A26;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+#wrap { max-width: 620px; margin: 0 auto; padding: 14px 18px 40px; }
+
+/* a warm rule, two dots and a line, borders only so iOS 9 can draw it */
+.rule { height: 1px; background: #F0E2D0; margin: 22px 0 18px; position: relative; }
+.rule:before, .rule:after {
+  content: ''; position: absolute; top: -3px; width: 7px; height: 7px;
+  border-radius: 7px; background: #F0E2D0;
+}
+.rule:before { left: 50%; margin-left: -22px; }
+.rule:after  { left: 50%; margin-left: 15px; }
+
+h1 { font-size: 34px; margin: 6px 0 2px; letter-spacing: -0.5px; }
+.sub { color: #8A7F72; font-size: 16px; margin: 0 0 18px; }
+
+#beacon {
+  display: block; width: 100%; border: none; border-radius: 26px;
+  background: #FF7A3D; color: #fff;
+  font-size: 27px; font-weight: bold; font-family: inherit;
+  padding: 32px 18px; margin: 0 0 8px;
+  -webkit-box-shadow: 0 6px 0 #D2551D; box-shadow: 0 6px 0 #D2551D;
+  cursor: pointer;
+}
+#beacon:active { -webkit-transform: translateY(4px); transform: translateY(4px);
+  -webkit-box-shadow: 0 2px 0 #D2551D; box-shadow: 0 2px 0 #D2551D; }
+#beacon[disabled] { background: #C9BFB4; -webkit-box-shadow: 0 6px 0 #ABA093;
+  box-shadow: 0 6px 0 #ABA093; }
+
+.quick { margin: 18px 0 6px; }
+.quick button {
+  display: block; width: 100%; text-align: left;
+  background: #fff; border: 2px solid #F0E2D0; border-radius: 18px;
+  font-family: inherit; font-size: 20px; color: #2E2A26;
+  padding: 16px 18px; margin-bottom: 10px; cursor: pointer;
+}
+.quick button:active { background: #FFEFD9; border-color: #FF7A3D; }
+.quick .emo { font-size: 24px; margin-right: 10px; }
+
+textarea {
+  width: 100%; min-height: 92px; font-family: inherit; font-size: 20px;
+  padding: 14px; border: 2px solid #F0E2D0; border-radius: 18px;
+  background: #fff; color: #2E2A26; -webkit-appearance: none;
+}
+textarea:focus { outline: none; border-color: #FF7A3D; }
+
+.label { font-size: 14px; text-transform: uppercase; letter-spacing: 1.2px;
+  color: #8A7F72; margin: 22px 0 8px; font-weight: bold; }
+
+.btn {
+  display: block; width: 100%; font-family: inherit; font-size: 19px;
+  padding: 15px 18px; border-radius: 18px; border: 2px solid #F0E2D0;
+  background: #fff; color: #2E2A26; margin-bottom: 10px; cursor: pointer;
+  text-align: center; text-decoration: none;
+}
+.btn.go { background: #FF7A3D; border-color: #FF7A3D; color: #fff; font-weight: bold; }
+
+/* she needs to KNOW whether it went, so this is never decorative */
+#status, #s-status { border-radius: 18px; padding: 16px 18px; margin: 14px 0 0;
+  font-size: 19px; display: none; }
+#status.show, #s-status.show { display: block; }
+#status.ok,   #s-status.ok   { background: #E4F5E4; color: #256B2B; border: 2px solid #B6E3B8; }
+#status.busy, #s-status.busy { background: #FFF2D9; color: #8A6410; border: 2px solid #F2DCA8; }
+#status.err,  #s-status.err  { background: #FDE4E1; color: #9B2C1E; border: 2px solid #F5BFB7; }
+
+#sent .msg { background: #fff; border: 2px solid #F0E2D0; border-radius: 18px;
+  padding: 12px 16px; margin-bottom: 8px; }
+#sent .msg .time { color: #A99C8D; font-size: 14px; margin-top: 4px; }
+#sent .msg.waiting { border-style: dashed; background: #FFF9F0; }
+
+.warn { background: #FDE4E1; color: #9B2C1E; border: 2px solid #F5BFB7;
+  border-radius: 18px; padding: 14px 16px; margin-bottom: 14px; font-size: 17px;
+  line-height: 1.45; }
+
+#setup input { width: 100%; font-family: inherit; font-size: 18px; padding: 12px;
+  border: 2px solid #F0E2D0; border-radius: 14px; margin-bottom: 4px; background: #fff;
+  color: #2E2A26; -webkit-appearance: none; }
+#setup .help { color: #8A7F72; font-size: 14px; margin: 0 0 14px; line-height: 1.45; }
+#setup .help b { color: #6E6459; }
+
+footer { color: #8A7F72; font-size: 15px; line-height: 1.5; margin-top: 26px;
+  text-align: center; }
+footer a { color: #C25415; }
+.colophon { font-size: 14px; }
+.buildtag { color: #C9BFB4; font-size: 12px; margin-top: 14px; }
+.hide { display: none; }
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <!-- grown-ups only -->
+  <div id="setup" class="hide">
+    <h1>Set up Beacon</h1>
+    <p class="sub">Grown-ups only. About two minutes.</p>
+
+    <div id="hijack" class="warn hide"></div>
+
+    <div class="label">1 &middot; Where the messages go</div>
+    <input id="s-hook" type="text" placeholder="https://discord.com/api/webhooks/..."
+           autocapitalize="off" autocorrect="off" spellcheck="false">
+    <p class="help">In Discord: <b>Server Settings &rarr; Integrations &rarr; Webhooks
+      &rarr; New Webhook</b>, choose the channel you want, then <b>Copy Webhook URL</b>.
+      A webhook can only post into that one channel. It can never read anything, and
+      you can delete it in ten seconds.</p>
+
+    <div class="label">2 &middot; Whose tablet is this</div>
+    <input id="s-name" type="text" placeholder="Her name" maxlength="24">
+    <p class="help">Shown on her page, and put at the front of every message so you
+      know at a glance who it came from.</p>
+
+    <div class="label">3 &middot; Who to wake up</div>
+    <input id="s-ping" type="text" placeholder="Your Discord user ID (optional)"
+           autocapitalize="off" autocorrect="off" spellcheck="false">
+    <p class="help">Without this your phone may stay silent, because most Discord
+      servers only notify on a mention. Turn on <b>Settings &rarr; Advanced &rarr;
+      Developer Mode</b>, then right-click your own name and <b>Copy User ID</b>.
+      Nothing she types can ever mention anyone else.</p>
+
+    <button id="s-test" class="btn">Send a test message</button>
+    <button id="s-save" class="btn go">Save and finish</button>
+    <div id="s-status"></div>
+  </div>
+
+  <!-- the page she actually uses -->
+  <div id="main" class="hide">
+    <h1 id="hello">Hi!</h1>
+    <p class="sub" id="subline">Tap a button and a grown-up gets it.</p>
+
+    <button id="beacon">I need you</button>
+
+    <div class="quick" id="quick"></div>
+
+    <div class="label">Or say something else</div>
+    <textarea id="free" placeholder="Type here..." maxlength="350"></textarea>
+    <button id="send-free" class="btn">Send this message</button>
+
+    <div id="status"></div>
+
+    <div id="sentwrap" class="hide">
+      <div class="rule"></div>
+      <div class="label">What you sent</div>
+      <div id="sent"></div>
+    </div>
+
+    <footer>
+      One button on an old tablet that reaches a grown-up. It posts into your own
+      family chat, so there is no account here, no phone number, and nothing for
+      her to install.
+      <p class="colophon">A free tool from <a href="../">Sky Wolf Studio</a> &middot;
+        <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Beacon">Feedback</a></p>
+      <a class="btn" id="tipBtn" target="_blank" rel="noopener" style="display:none">&hearts; Tip jar</a>
+      <button class="btn" id="swsInstall" type="button" style="display:none">&#10515; Add to home screen</button>
+      <p class="buildtag" id="buildTag"></p>
+    </footer>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   BEACON
+
+   ES5 ONLY. No fetch, no Promise, no arrow functions, no template literals, no
+   const or let, no Object.assign, no Array.prototype.find. test/es5.mjs parses
+   this script at ecmaVersion 5 and fails if anything newer appears. Keep it
+   passing or the app stops booting on the hardware it exists for.
+
+   WHY THERE IS NO SERVER
+   The first version relayed through a Cloudflare Worker so it could carry
+   replies back. That worked, but it meant every family needed their own
+   Worker, KV namespace, environment variables and hand-issued tokens, which
+   is not something you can hand to a stranger; and one hosted relay would
+   have made a single person the unpaid operator of a messaging service for
+   other people's children.
+
+   So it posts straight to a Discord webhook. A webhook URL is WRITE ONLY by
+   construction: somebody who reads it out of this page can post junk into
+   your channel, which you stop by deleting the webhook, but they can never
+   read a word she sent. That is the whole reason it is a webhook and not an
+   ntfy topic, where the topic name IS the password and anyone holding it can
+   subscribe and read her messages.
+
+   What that costs is replies. One way was the right half to keep: "I need
+   you" arriving on a grown-up's phone is the entire product.
+   =========================================================================== */
+var BUILD = 'beacon-v1';
+/* config seam, fleet pattern: an empty string hides the tip jar entirely. */
+var TIP_URL = '';
+
+(function () {
+  'use strict';
+
+  var LS = window.localStorage;
+  var CFG_KEY = 'beacon.cfg';
+  var Q_KEY = 'beacon.queue';
+  var LOG_KEY = 'beacon.sent';
+
+  /* The only hosts this app will ever talk to. Pinning them is half the fix
+     for a tapped link re-pointing her lifeline somewhere else; the other half
+     is the confirmation in start() below. */
+  var HOSTS = ['https://discord.com/api/webhooks/',
+               'https://discordapp.com/api/webhooks/',
+               'https://ptb.discord.com/api/webhooks/',
+               'https://canary.discord.com/api/webhooks/'];
+
+  function isWebhook(u) {
+    if (!u) return false;
+    for (var i = 0; i < HOSTS.length; i++) {
+      if (String(u).slice(0, HOSTS[i].length) === HOSTS[i]) return true;
+    }
+    return false;
+  }
+
+  function readJSON(key, dflt) {
+    try { var v = JSON.parse(LS.getItem(key)); return v === null ? dflt : v; }
+    catch (e) { return dflt; }
+  }
+  function writeJSON(key, val) {
+    try { LS.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
+  }
+
+  var cfg = readJSON(CFG_KEY, null);
+
+  /* ---- credentials in the hash ------------------------------------------
+     WebKit deletes script-writable storage after 7 days without interaction,
+     so on a tablet used now and then localStorage would silently forget the
+     setup. A home-screen bookmark is not script-writable storage and cannot
+     be evicted, so the config rides in the URL hash and localStorage is only
+     a cache of it.
+
+     The first version adopted whatever the hash said, unconditionally. That
+     meant any link she tapped carrying a different hash silently re-pointed
+     her messages at somebody else's server, while the page went on telling
+     her they had been delivered. A hash is now adopted silently ONLY when
+     there is nothing stored to contradict it, which is the recovery case the
+     hash exists for. If it disagrees with what is saved, nothing changes and
+     the grown-ups' screen opens saying so.
+     ---------------------------------------------------------------------- */
+  function fromHash() {
+    var hash = String(location.hash).replace(/^#/, '');
+    if (!hash || hash === 'setup') return null;
+    var out = {}, parts = hash.split('&'), i, kv;
+    for (i = 0; i < parts.length; i++) {
+      kv = parts[i].split('=');
+      if (kv.length === 2) {
+        try { out[kv[0]] = decodeURIComponent(kv[1]); } catch (e) { return null; }
+      }
+    }
+    if (!isWebhook(out.h)) return null;
+    return { hook: out.h, name: out.n || '', ping: out.p || '' };
+  }
+
+  var pending = null;                 /* a hash that disagrees with what is stored */
+  var hashCfg = fromHash();
+  if (hashCfg) {
+    if (!cfg || !cfg.hook) { cfg = hashCfg; writeJSON(CFG_KEY, cfg); }
+    else if (cfg.hook !== hashCfg.hook) { pending = hashCfg; }
+    else { cfg = hashCfg; writeJSON(CFG_KEY, cfg); }
+  }
+
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }
+  catch (e) {}
+
+  var QUICK = [
+    { emo: '📞', text: 'Can you call me?' },
+    { emo: '😊', text: 'I love you!' },
+    { emo: '🚕', text: 'Can you come get me?' },
+    { emo: '🍽', text: 'I am hungry' },
+    { emo: '✅', text: 'I am all done' },
+    { emo: '😢', text: 'I am sad, can we talk?' }
+  ];
+
+  function el(id) { return document.getElementById(id); }
+  function show(id) { el(id).className = ''; }
+  function hide(id) { el(id).className = 'hide'; }
+  function text(node, s) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+    node.appendChild(document.createTextNode(s));
+  }
+
+  /* ---- what actually goes to Discord ------------------------------------
+     Control characters are stripped and the length capped. allowed_mentions
+     is the load-bearing part: parse is empty, and the only id that can ever
+     be pinged is the one the grown-up typed at setup, so nothing she writes
+     in the free text box can mention everyone or anybody else.
+     ---------------------------------------------------------------------- */
+  function clean(s) {
+    /* Control characters out, length capped. Written as explicit escapes
+       because a literal control character in a source file is invisible in
+       every diff and review that will ever look at this line. */
+    return String(s).replace(/[\x00-\x1F\x7F]/g, ' ').slice(0, 300);
+  }
+  function digits(s) { return String(s || '').replace(/[^0-9]/g, ''); }
+  function payload(msg) {
+    var who = cfg.name ? cfg.name : 'Beacon';
+    var id = digits(cfg.ping);
+    var body = { content: (id ? '<@' + id + '> ' : '')
+                        + '**' + clean(who) + '**: ' + clean(msg) };
+    body.allowed_mentions = { parse: [] };
+    if (id) body.allowed_mentions.users = [id];
+    return body;
+  }
+
+  /* ---- transport ---------------------------------------------------------
+     The callback gets (err, kind). `kind` is what the outbox needs and what
+     the first version did not have: 'retry' for anything that might work
+     later, 'stop' for a rejection that never will. Collapsing those two into
+     one error string is what let a mistyped webhook queue forever while the
+     app reassured a child that her message was saved and being retried.
+     ---------------------------------------------------------------------- */
+  function post(hook, body, cb) {
+    var x = new XMLHttpRequest(), fired = false;
+    /* A dropped request fires BOTH onreadystatechange with status 0 AND
+       onerror, so an unguarded callback runs twice and the message is queued
+       twice: one press of the button, two copies waiting to send. Caught by
+       the browser test with the network stubbed out. */
+    function once(err, kind) { if (fired) return; fired = true; cb(err, kind); }
+    try { x.open('POST', hook, true); }
+    catch (e) { once('that address looks wrong', 'stop'); return; }
+    try { x.setRequestHeader('Content-Type', 'application/json'); } catch (e) {}
+    x.timeout = 15000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4) return;
+      if (x.status >= 200 && x.status < 300) { once(null, null); return; }
+      if (x.status === 0) { once('no connection', 'retry'); return; }
+      if (x.status === 429) { once('too many at once', 'retry'); return; }
+      if (x.status >= 500) { once('the chat is having a problem', 'retry'); return; }
+      /* 401, 403, 404 and friends: the webhook is wrong or has been deleted.
+         Retrying that forever is how the outbox used to wedge. */
+      once('the setup is wrong (' + x.status + ')', 'stop');
+    };
+    x.ontimeout = function () { once('took too long', 'retry'); };
+    x.onerror = function () { once('no connection', 'retry'); };
+    try { x.send(JSON.stringify(body)); } catch (e) { once('could not send', 'stop'); }
+  }
+
+  var statusTimer = null;
+  function setStatus(kind, msg) {
+    var s = el('status');
+    if (!s) return;
+    s.className = 'show ' + kind;
+    text(s, msg);
+    if (statusTimer) clearTimeout(statusTimer);
+    if (kind === 'ok') statusTimer = setTimeout(function () { s.className = ''; }, 8000);
+  }
+
+  /* ---- the local record of what she sent ---- */
+  function logSend(msg) {
+    var log = readJSON(LOG_KEY, []);
+    log.push({ t: msg, at: (new Date()).getTime(), s: 'waiting' });
+    if (log.length > 30) log = log.slice(-30);
+    writeJSON(LOG_KEY, log);
+    renderSent();
+  }
+  function markLast(state) {
+    var log = readJSON(LOG_KEY, []);
+    if (!log.length) return;
+    log[log.length - 1].s = state;
+    writeJSON(LOG_KEY, log);
+    renderSent();
+  }
+  function when(ts) {
+    var d = new Date(ts), h = d.getHours(), m = d.getMinutes();
+    var ap = h >= 12 ? 'pm' : 'am';
+    h = h % 12; if (h === 0) h = 12;
+    if (m < 10) m = '0' + m;
+    return h + ':' + m + ap;
+  }
+  function renderSent() {
+    var log = readJSON(LOG_KEY, []), box = el('sent'), i, m, d, b, t, note;
+    if (!box) return;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    if (!log.length) { hide('sentwrap'); return; }
+    show('sentwrap');
+    for (i = log.length - 1; i >= 0 && i > log.length - 11; i--) {
+      m = log[i];
+      d = document.createElement('div');
+      d.className = 'msg' + (m.s === 'waiting' ? ' waiting' : '');
+      b = document.createElement('div');
+      b.appendChild(document.createTextNode(m.t));
+      note = m.s === 'waiting' ? ' · still trying'
+           : (m.s === 'failed' ? ' · did not go' : '');
+      t = document.createElement('div'); t.className = 'time';
+      t.appendChild(document.createTextNode(when(m.at) + note));
+      d.appendChild(b); d.appendChild(t);
+      box.appendChild(d);
+    }
+  }
+
+  /* ---- outbox ------------------------------------------------------------
+     Only retryable failures are queued, every item counts its own attempts,
+     and an item that has failed 15 times is dropped rather than blocking
+     everything behind it forever.
+     ---------------------------------------------------------------------- */
+  function queue(msg) {
+    var q = readJSON(Q_KEY, []);
+    q.push({ t: msg, at: (new Date()).getTime(), n: 0 });
+    if (q.length > 20) q = q.slice(-20);
+    writeJSON(Q_KEY, q);
+  }
+  var flushing = false;
+  function flush() {
+    if (flushing || !cfg || !cfg.hook) return;
+    var q = readJSON(Q_KEY, []);
+    if (!q.length) return;
+    flushing = true;
+    post(cfg.hook, payload(q[0].t), function (err, kind) {
+      flushing = false;
+      var qq = readJSON(Q_KEY, []);
+      if (!qq.length) return;
+      if (!err) {
+        qq.shift(); writeJSON(Q_KEY, qq);
+        markLast('sent');
+        setStatus('ok', 'A message that was waiting has gone through now. ✓');
+        if (qq.length) setTimeout(flush, 1200);
+        return;
+      }
+      if (kind === 'stop') {
+        qq.shift(); writeJSON(Q_KEY, qq);
+        markLast('failed');
+        setStatus('err', 'That message could not be sent. Please tell a grown-up.');
+        return;
+      }
+      qq[0].n = (qq[0].n || 0) + 1;
+      if (qq[0].n >= 15) {
+        qq.shift();
+        markLast('failed');
+        setStatus('err', 'I tried a lot of times and it would not go. Tell a grown-up.');
+      }
+      writeJSON(Q_KEY, qq);
+    });
+  }
+
+  /* ---- sending ---- */
+  var sending = false, lastSend = 0;
+  function send(msg) {
+    if (sending || !cfg || !cfg.hook) return;
+    if (!msg || !msg.replace(/\s/g, '')) return;
+    var now = (new Date()).getTime();
+    if (now - lastSend < 1500) return;      /* a tablet left face-down cannot machine-gun */
+    lastSend = now;
+    sending = true;
+    el('beacon').disabled = true;
+    setStatus('busy', 'Sending…');
+    logSend(msg);
+    post(cfg.hook, payload(msg), function (err, kind) {
+      sending = false;
+      el('beacon').disabled = false;
+      if (!err) {
+        markLast('sent');
+        setStatus('ok', 'Sent! It is on their phone now. ✓');
+        el('free').value = '';
+        return;
+      }
+      if (kind === 'stop') {
+        markLast('failed');
+        setStatus('err', 'It did not go. Something is wrong with the setup, '
+          + 'so please tell a grown-up.');
+        return;
+      }
+      queue(msg);
+      setStatus('err', 'No internet right now. I saved it and I will keep trying.');
+    });
+  }
+
+  /* ---- setup ---- */
+  function openSetup(warning) {
+    show('setup'); hide('main');
+    var w = el('hijack');
+    if (warning) { text(w, warning); w.className = 'warn'; }
+    else { w.className = 'warn hide'; }
+    if (cfg) {
+      el('s-hook').value = cfg.hook || '';
+      el('s-name').value = cfg.name === 'me' ? '' : (cfg.name || '');
+      el('s-ping').value = cfg.ping || '';
+    }
+    if (pending) el('s-hook').value = pending.hook;
+  }
+  function readSetup() {
+    var h = el('s-hook').value.replace(/\s/g, '');
+    var n = el('s-name').value.replace(/^\s+|\s+$/g, '');
+    var p = digits(el('s-ping').value);
+    if (!isWebhook(h)) {
+      alert('That is not a Discord webhook address.\n\n'
+        + 'It starts with https://discord.com/api/webhooks/ and you copy it from '
+        + 'Server Settings, then Integrations, then Webhooks.');
+      return null;
+    }
+    return { hook: h, name: n || 'me', ping: p };
+  }
+  function setSetupStatus(kind, msg) {
+    var s = el('s-status');
+    s.className = 'show ' + kind;
+    text(s, msg);
+  }
+  el('s-test').onclick = function () {
+    var c = readSetup(); if (!c) return;
+    var keep = cfg; cfg = c;
+    setSetupStatus('busy', 'Sending a test…');
+    post(c.hook, payload('This is a test from Beacon. The setup works.'), function (err) {
+      cfg = keep;
+      if (err) { setSetupStatus('err', 'It did not go: ' + err); return; }
+      setSetupStatus('ok', 'It worked. Check the chat, and check that your phone '
+        + 'actually buzzed rather than only showing a dot.');
+    });
+  };
+  el('s-save').onclick = function () {
+    var c = readSetup(); if (!c) return;
+    cfg = c; pending = null;
+    writeJSON(CFG_KEY, cfg);
+    /* The copy that survives an iOS storage sweep, because a home-screen
+       bookmark is not script-writable storage. Rewritten on every save so the
+       bookmark and the cache can never drift apart. */
+    location.hash = 'h=' + encodeURIComponent(cfg.hook)
+                  + '&n=' + encodeURIComponent(cfg.name)
+                  + '&p=' + encodeURIComponent(cfg.ping);
+    alert('Saved.\n\nNow tap the Share button and "Add to Home Screen". That '
+        + 'bookmark keeps this tablet set up even if iOS clears its storage.');
+    start();
+  };
+
+  /* ---- go ---- */
+  var taps = 0, tapTimer = null;
+  function start() {
+    if (pending) {
+      openSetup('This link points somewhere different from the setup already on '
+        + 'this tablet, so nothing has been changed. If you did not just make a '
+        + 'new webhook yourself, close this and tell somebody.');
+      return;
+    }
+    if (!cfg || !cfg.hook) { openSetup(null); return; }
+    hide('setup'); show('main');
+    text(el('hello'), (cfg.name && cfg.name !== 'me') ? 'Hi ' + cfg.name + '!' : 'Hi!');
+
+    var box = el('quick'), i;
+    while (box.firstChild) box.removeChild(box.firstChild);
+    for (i = 0; i < QUICK.length; i++) {
+      (function (q) {
+        var b = document.createElement('button');
+        var e = document.createElement('span');
+        e.className = 'emo';
+        e.appendChild(document.createTextNode(q.emo));
+        b.appendChild(e);
+        b.appendChild(document.createTextNode(q.text));
+        b.onclick = function () { send(q.text); };
+        box.appendChild(b);
+      })(QUICK[i]);
+    }
+    el('beacon').onclick = function () { send('I need you'); };
+    el('send-free').onclick = function () { send(el('free').value); };
+
+    /* five taps on the build tag opens setup, so she cannot wander into it */
+    el('buildTag').onclick = function () {
+      taps++;
+      if (taps >= 5) { taps = 0; openSetup(null); return; }
+      if (tapTimer) clearTimeout(tapTimer);
+      tapTimer = setTimeout(function () { taps = 0; }, 3000);
+    };
+
+    renderSent();
+    flush();
+    setInterval(flush, 30000);
+  }
+
+  /* ---- the studio seam, same shape as the rest of the fleet ---- */
+  var tag = el('buildTag');
+  if (tag) text(tag, BUILD);
+  if (TIP_URL) {
+    var tip = el('tipBtn');
+    if (tip) { tip.href = TIP_URL; tip.style.display = 'block'; }
+  }
+  var ib = el('swsInstall');
+  if (ib && !navigator.standalone) {
+    ib.style.display = 'block';
+    ib.onclick = function () {
+      alert('On an iPad: tap the Share button, then "Add to Home Screen".\n\n'
+          + 'That is also what keeps this tablet set up if iOS clears its storage.');
+    };
+  }
+
+  if (String(location.hash) === '#setup') openSetup(null);
+  else start();
+
+  /* offline once installed, on anything new enough to have a worker at all */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      try { navigator.serviceWorker.register('sw.js'); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>

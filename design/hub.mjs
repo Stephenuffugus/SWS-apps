@@ -105,6 +105,10 @@ const SELF_STYLED = {
   /* Hush came home from the arcade on 2026-08-20 and is a local app now.
      Its colours are its own (--glow and --deep), not a studio skin. */
   'hush': { darkAccent: '#F2B872', accent: '#C87F3C' },
+  /* Beacon is warm on purpose: a page somebody opens when they need a person
+     should not look like an alarm panel. Its own signal orange on cream, read
+     from its own CSS (#FF7A3D on #FFF4E6, with #D2551D as the deeper stroke). */
+  'beacon': { darkAccent: '#FF7A3D', accent: '#C25415' },
   /* Coverage was hand-added to the page and never to this catalogue, so
      every regeneration since would have deleted it. Its own investor blue. */
   'coverage': { darkAccent: '#4c8dff', accent: '#2b62c4' },
@@ -137,12 +141,24 @@ const SELF_STYLED = {
 const CATALOGUE = [
   ['Family &amp; Home',
     { id: 'family-home', kick: 'The household', q: 'Keeping the house running?',
-      sub: 'The sitter, the baby, the meds, the groceries, the sound that finally gets everyone to sleep. The everyday logistics of the people you love.' }, [
+      sub: 'The sitter, the baby, the meds, the groceries, the sound that finally gets everyone to sleep, and one big button on an old tablet for whoever cannot carry a phone. The everyday logistics of the people you love.' }, [
     ['sitter-sheet', 'Sitter Sheet', 'Everything the babysitter needs, on one page', 'babysitter nanny childcare emergency contacts allergies'],
     ['baby-log', 'Baby Log', 'Feeds, sleep and nappies with one thumb at 3am', 'newborn infant feeding nursing diaper tracker night'],
     ['hush', 'Hush', 'Pick your sound. Go to sleep', 'white noise sleep sound machine baby nursery newborn night bedtime settle offline honest science'],
     ['pill-schedule', 'Pill Schedule', 'A large-print medication card for the fridge', 'medication meds prescription elderly dosage reminder'],
     ['caregiver-log', 'Caregiver Log', 'A shared notebook for the family caring at home', 'elderly parent hospice shift notes dementia care', 'shared'],
+    /* Beacon is the odd one in this fleet and the reason is worth writing down.
+       It is deliberate ES5 with no CSS variables, no grid and no flex, because
+       it exists for the iPad 2 in a drawer that is stuck on iOS 9.3.5 and that
+       no app store will install anything onto any more. apps/beacon/test/es5.mjs
+       parses it at ecmaVersion 5 and fails the build if anything newer appears.
+       Do NOT apply the studio base CSS to it; that would break the one device
+       it was written for.
+
+       In testing because the ES5 contract is proved by a parser and the app is
+       proved in Chromium, but nobody has yet opened it on an actual 2012 iPad,
+       which is the only claim that really matters. */
+    ['beacon', 'Beacon', 'One button on an old tablet that reaches a grown-up', 'kid child tablet ipad old device message parents mum dad emergency help button elderly senior one button simple accessible discord webhook family chat no account', 'beta'],
     ['grocery-list', 'Grocery List', 'One list the whole household can add to', 'shopping supermarket household share', 'shared'],
   ]],
   ['School',
