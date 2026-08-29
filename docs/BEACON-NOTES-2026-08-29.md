@@ -152,9 +152,71 @@ only claim that really matters. That is why it wears the In testing badge. One
 earlier claim, that a 2016 TLS stack would not reach the host at all, was
 checked and overturned by running the handshake.
 
+## Two way, added the same day, without taking on anybody else's children
+
+Stephen wanted replies. The constraint is worth stating plainly because it
+decides the design: **one way is free and stateless precisely because a Discord
+webhook is write only.** Nothing can read it back, which is what makes it safe.
+Two way needs somewhere both sides can read, and whoever runs that place holds
+children's messages. There is no design that avoids that.
+
+So the relay is **optional and self hosted**, and it is one codebase either way.
+Leave the two new setup fields blank and Beacon is exactly what it was. Fill
+them in and replies appear. `apps/beacon/relay/` holds the Worker and its
+README; most people should never deploy it.
+
+What was explicitly refused: putting Beacon on the studio's own Firebase beside
+Grocery List and Caregiver Log. That would have given everyone two way with no
+setup, and it would have made a man with no money the operator of a messaging
+service for other people's children.
+
+### The relay does not send the notification, and that is the whole point
+
+It holds no webhook. The tablet posts to Discord **directly**, and separately
+posts a copy to the relay for the thread. They fail independently:
+
+- a relay that is down, misconfigured or never deployed still leaves
+  "I need you" reaching a grown-up's phone
+- a wrong relay token means replies do not show, and nothing else
+
+The first version relayed everything, so one typo in a token turned the app
+into a button that did nothing while reassuring a child it had worked. Four
+browser tests now hold that line, the important one being that with the relay
+aborted the Discord call still happens, she is still told it arrived, and her
+message is **not** queued as if it had failed.
+
+### Other decisions in the relay
+
+- **Tokens travel in the body, never the query string.** Polling
+  `/inbox?token=...` every 20 seconds writes the token into the relay host's
+  request logs and any analytics dataset recording the URI, forever.
+- **https only.** A relay address over plain http would put the device token on
+  the wire in clear text from a tablet on somebody else's wifi. The setup
+  screen refuses it and there is a test.
+- **Rate limiting is derived from the thread's own timestamps**, with no
+  separate counter key. A counter written on every poll is roughly 4,300 writes
+  a day against Cloudflare's 1,000 write free allowance, so the limiter would
+  fail open by lunchtime and take the thread with it.
+- **Tokens are looked up by secret, not by name**, so a leaked device token is
+  rotated in ten seconds without disturbing the thread or the other devices.
+- **The hijack rule now covers the relay too.** A hash carrying a different
+  relay is treated exactly like a hash carrying a different webhook: nothing
+  changes and the grown ups' screen opens saying so.
+
+### One test caught itself again
+
+The ES5 contract test tried to prove the relay is only contacted after the chat
+has taken the message by comparing where `mirrorToRelay` is **defined** against
+the first `setStatus`. That is function declaration order and says nothing
+about when anything is called; it would have passed a build where the relay
+gated the send. It reads the body of `send()` now, and also asserts
+`mirrorToRelay` appears there exactly once so no failure path can reach it.
+
 ## Still needed from Stephen
 
 - Open it on the real iPad. That is the one test nobody here can run.
+- Deploy the relay if you want replies at home: `apps/beacon/relay/README.md`.
+  Ten minutes, free, no card. Nothing breaks if you never do.
 - `marketing/stripe-thumbnail.png` at 1254x1254. Until then the hub falls back
   to `icon.svg`, and the icons in this folder are placeholders I drew.
 - A Stripe link for `TIP_URL`.

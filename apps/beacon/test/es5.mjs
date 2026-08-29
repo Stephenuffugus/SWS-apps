@@ -111,5 +111,27 @@ check('the outbox separates retryable failures from permanent ones',
 check('a queued message cannot be retried forever',
   /n\s*>=\s*15/.test(code), 'no attempt ceiling, so one bad item blocks every later one');
 
+/* ── the optional relay, and the line it must never cross ────────────────── */
+check('a relay address is only ever accepted over https',
+  /httpsOnly/.test(code) && /'https:\/\/'/.test(code),
+  'plain http would put the device token on the wire from somebody else\'s wifi');
+check('the relay token travels in the body, never the query string',
+  !/\/inbox\?/.test(code) && !/token=' *\+/.test(code),
+  'a token in a URL lands in the relay host\'s request logs forever');
+/* Scoped to the send path. The first version of this compared the position of
+   the DEFINITION of mirrorToRelay against the first setStatus, which is
+   function-declaration order and says nothing about when it is called. */
+const sendFn = (code.match(/function send\(msg\)[\s\S]*?\n  \}/) || [''])[0];
+check('the send path mirrors to the relay only after the chat has taken it',
+  sendFn.indexOf('mirrorToRelay') > sendFn.indexOf("setStatus('ok'")
+    && sendFn.indexOf("setStatus('ok'") !== -1,
+  'the ping is the product; the thread is a nicety and must not gate it');
+check('and a relay is never contacted on a failed send',
+  sendFn.split('mirrorToRelay').length === 2,
+  'mirrorToRelay appears more than once in send(), so a failure path may hit it');
+check('a relay failure cannot reach the child',
+  /function mirrorToRelay[\s\S]{0,400}?relayPost\('\/send'[^;]*function \(\) \{ pollInbox\(\); \}/.test(code),
+  'mirrorToRelay must ignore its own error, or a broken relay starts lying to her');
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nBEACON ES5 CONTRACT HELD');
 process.exit(failures ? 1 : 0);

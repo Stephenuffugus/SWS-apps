@@ -213,5 +213,121 @@ await withApp('beacon', async ({ page, errors }) => {
   check('no page errors', errors.length === 0, errors.join(' | '));
 });
 
+/* ------------------------------------------------------ replies, optional
+   The relay is the only part of Beacon that is allowed to fail quietly, so
+   most of this block is about proving that a broken one changes nothing about
+   the message reaching a grown-up. */
+console.log('\nreplies, when a relay is configured');
+
+const RELAY = 'https://relay.example.com';
+
+const setupWithRelay = async (page) => {
+  await page.fill('#s-hook', HOOK);
+  await page.fill('#s-name', 'Penny');
+  await page.fill('#s-ping', '4242424242');
+  await page.fill('#s-relay', RELAY);
+  await page.fill('#s-rtok', 'device-token-abc');
+  page.once('dialog', (d) => d.accept());
+  await page.click('#s-save');
+  await page.waitForTimeout(500);
+};
+
+await withApp('beacon', async ({ page, errors }) => {
+  await page.waitForTimeout(400);
+  const state = { mode: 'ok', calls: [] };
+  await stub(page, state);
+
+  const relay = { mode: 'ok', calls: [], thread: [] };
+  await page.route('**/relay.example.com/**', async (route) => {
+    const url = route.request().url();
+    const body = JSON.parse(route.request().postData() || '{}');
+    relay.calls.push({ url, body });
+    if (relay.mode === 'dead') return route.abort('failed');
+    if (relay.mode === 'gone') return route.fulfill({ status: 403, body: '{}' });
+    if (/\/send$/.test(url)) {
+      relay.thread.push({ from: 'child', who: 'Penny', text: body.text, at: Date.now() });
+      return route.fulfill({ status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true }) });
+    }
+    if (/\/inbox$/.test(url)) {
+      return route.fulfill({ status: 200, contentType: 'application/json',
+        body: JSON.stringify({ ok: true, messages: relay.thread }) });
+    }
+    return route.fulfill({ status: 404, body: '{}' });
+  });
+
+  await setupWithRelay(page);
+  await page.click('#beacon');
+  await page.waitForTimeout(1200);
+
+  check('the chat still gets the message first',
+    state.calls.length === 1, `${state.calls.length} Discord call(s)`);
+  check('and a copy is mirrored to the relay',
+    relay.calls.some((c) => /\/send$/.test(c.url)));
+  check('the relay token rides in the body, not the URL',
+    relay.calls.every((c) => c.url.indexOf('token') === -1)
+      && relay.calls.some((c) => c.body.token === 'device-token-abc'),
+    'a token in a URL lands in the relay host request logs forever');
+
+  /* the half this whole exercise was for */
+  relay.thread.push({ from: 'home', who: 'Dad', text: 'On my way', at: Date.now() });
+  /* The real 20 second poll, waited out rather than routed around. A reply
+     that only lands because the test poked the app would prove nothing about
+     the tablet on the kitchen counter. */
+  await page.waitForTimeout(22000);
+  const shown = await page.evaluate(() => document.getElementById('sent').textContent);
+  check('a reply from home appears on her tablet', /On my way/.test(shown), shown.slice(0, 90));
+  check('and it is marked as coming from home',
+    await page.evaluate(() => !!document.querySelector('#sent .msg.home')));
+  check('the panel calls itself a conversation now',
+    /you and home/i.test(await page.textContent('#sentlabel')),
+    await page.textContent('#sentlabel'));
+
+  check('no page errors', errors.length === 0, errors.join(' | '));
+});
+
+/* A broken relay must be invisible to her. This is the failure the whole
+   split-path design exists to prevent. */
+await withApp('beacon', async ({ page, errors }) => {
+  const realErrors = () => errors.filter((e) => e.indexOf('pageerror:') === 0);
+  await page.waitForTimeout(400);
+  const state = { mode: 'ok', calls: [] };
+  await stub(page, state);
+  await page.route('**/relay.example.com/**', (route) => route.abort('failed'));
+
+  await setupWithRelay(page);
+  await page.click('#beacon');
+  await page.waitForTimeout(1500);
+
+  check('with the relay dead the chat still gets it', state.calls.length === 1);
+  check('and she is still told it arrived',
+    /on their phone/i.test(await page.textContent('#status')),
+    await page.textContent('#status'));
+  check('a dead relay does not queue her message',
+    await page.evaluate(() => JSON.parse(localStorage.getItem('beacon.queue') || '[]').length) === 0,
+    'the relay is a nicety and must never make her message look unsent');
+  check('and it falls back to showing what she sent',
+    /what you sent/i.test(await page.textContent('#sentlabel')),
+    await page.textContent('#sentlabel'));
+
+  check('no page errors', realErrors().length === 0, realErrors().join(' | '));
+});
+
+/* http is refused: a token on somebody else's wifi in clear text */
+await withApp('beacon', async ({ page }) => {
+  await page.waitForTimeout(400);
+  let alerted = '';
+  page.once('dialog', (d) => { alerted = d.message(); d.accept(); });
+  await page.fill('#s-hook', HOOK);
+  await page.fill('#s-name', 'Penny');
+  await page.fill('#s-relay', 'http://relay.example.com');
+  await page.fill('#s-rtok', 'abc');
+  await page.click('#s-save');
+  await page.waitForTimeout(300);
+  check('a plain http relay is refused', /https/i.test(alerted), alerted);
+  check('and nothing was saved',
+    await page.evaluate(() => !localStorage.getItem('beacon.cfg')));
+});
+
 console.log(failures ? `\n${failures} check(s) failed` : '\nBEACON BROWSER PASSED');
 process.exit(failures ? 1 : 0);

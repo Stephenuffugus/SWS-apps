@@ -100,6 +100,8 @@ textarea:focus { outline: none; border-color: #FF7A3D; }
   padding: 12px 16px; margin-bottom: 8px; }
 #sent .msg .time { color: #A99C8D; font-size: 14px; margin-top: 4px; }
 #sent .msg.waiting { border-style: dashed; background: #FFF9F0; }
+#sent .msg.home { background: #FFEFD9; border-color: #FF7A3D; }
+#sent .msg.home .from { font-weight: bold; color: #C25415; font-size: 15px; }
 
 .warn { background: #FDE4E1; color: #9B2C1E; border: 2px solid #F5BFB7;
   border-radius: 18px; padding: 14px 16px; margin-bottom: 14px; font-size: 17px;
@@ -150,6 +152,18 @@ footer a { color: #C25415; }
       Developer Mode</b>, then right-click your own name and <b>Copy User ID</b>.
       Nothing she types can ever mention anyone else.</p>
 
+    <div class="label">4 &middot; Replies</div>
+    <input id="s-relay" type="text" placeholder="Relay URL (optional)"
+           autocapitalize="off" autocorrect="off" spellcheck="false">
+    <input id="s-rtok" type="text" placeholder="Device token (optional)"
+           autocapitalize="off" autocorrect="off" spellcheck="false">
+    <p class="help">Leave both blank and Beacon works exactly as before: she
+      sends, you get it in the chat, and nothing of hers is stored anywhere.
+      Fill them in and she can see your answers on the tablet. It needs a small
+      free relay you run yourself; see <b>relay/worker.js</b> and its README.
+      Messages still go to the chat directly either way, so if the relay is
+      down or wrong she can still reach you.</p>
+
     <button id="s-test" class="btn">Send a test message</button>
     <button id="s-save" class="btn go">Save and finish</button>
     <div id="s-status"></div>
@@ -172,7 +186,7 @@ footer a { color: #C25415; }
 
     <div id="sentwrap" class="hide">
       <div class="rule"></div>
-      <div class="label">What you sent</div>
+      <div class="label" id="sentlabel">What you sent</div>
       <div id="sent"></div>
     </div>
 
@@ -217,7 +231,7 @@ footer a { color: #C25415; }
    What that costs is replies. One way was the right half to keep: "I need
    you" arriving on a grown-up's phone is the entire product.
    =========================================================================== */
-var BUILD = 'beacon-v2';
+var BUILD = 'beacon-v3';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely. */
 var TIP_URL = '';
 
@@ -281,14 +295,27 @@ var TIP_URL = '';
       }
     }
     if (!isWebhook(out.h)) return null;
-    return { hook: out.h, name: out.n || '', ping: out.p || '' };
+    /* The relay is optional and user supplied, so it cannot be pinned to a
+       known host the way the webhook is. It gets the same protection instead:
+       a hash that disagrees with what is stored changes nothing on its own. */
+    return { hook: out.h, name: out.n || '', ping: out.p || '',
+             relay: httpsOnly(out.r), rtok: out.k || '' };
+  }
+
+  /* A relay address is only ever accepted over https. Plain http would put the
+     device token on the wire in clear text from a tablet on somebody else's
+     wifi, and the first version accepted whatever scheme it was handed. */
+  function httpsOnly(u) {
+    u = String(u || '').replace(/\/+$/, '');
+    return u.slice(0, 8) === 'https://' ? u : '';
   }
 
   var pending = null;                 /* a hash that disagrees with what is stored */
   var hashCfg = fromHash();
   if (hashCfg) {
     if (!cfg || !cfg.hook) { cfg = hashCfg; writeJSON(CFG_KEY, cfg); }
-    else if (cfg.hook !== hashCfg.hook) { pending = hashCfg; }
+    else if (cfg.hook !== hashCfg.hook
+             || (cfg.relay || '') !== (hashCfg.relay || '')) { pending = hashCfg; }
     else { cfg = hashCfg; writeJSON(CFG_KEY, cfg); }
   }
 
@@ -348,14 +375,19 @@ var TIP_URL = '';
        onerror, so an unguarded callback runs twice and the message is queued
        twice: one press of the button, two copies waiting to send. Caught by
        the browser test with the network stubbed out. */
-    function once(err, kind) { if (fired) return; fired = true; cb(err, kind); }
+    function once(err, kind, res) { if (fired) return; fired = true; cb(err, kind, res); }
     try { x.open('POST', hook, true); }
     catch (e) { once('that address looks wrong', 'stop'); return; }
     try { x.setRequestHeader('Content-Type', 'application/json'); } catch (e) {}
     x.timeout = 15000;
     x.onreadystatechange = function () {
       if (x.readyState !== 4) return;
-      if (x.status >= 200 && x.status < 300) { once(null, null); return; }
+      if (x.status >= 200 && x.status < 300) {
+        var j = null;
+        try { j = JSON.parse(x.responseText); } catch (e) {}
+        once(null, null, j);
+        return;
+      }
       if (x.status === 0) { once('no connection', 'retry'); return; }
       if (x.status === 429) { once('too many at once', 'retry'); return; }
       if (x.status >= 500) { once('the chat is having a problem', 'retry'); return; }
@@ -366,6 +398,42 @@ var TIP_URL = '';
     x.ontimeout = function () { once('took too long', 'retry'); };
     x.onerror = function () { once('no connection', 'retry'); };
     try { x.send(JSON.stringify(body)); } catch (e) { once('could not send', 'stop'); }
+  }
+
+  /* ---- the optional relay ------------------------------------------------
+     Everything below is a nicety and none of it is on the critical path. The
+     message reaches a grown-up through Discord whether the relay answers, errs
+     or does not exist, which is the whole reason the relay does not hold the
+     webhook and does not send the notification. If this half is broken the app
+     degrades to exactly what it was: send only, and honest about it.
+     ---------------------------------------------------------------------- */
+  var thread = [], lastAt = 0, polling = false;
+  var hasRelay = function () { return !!(cfg && cfg.relay && cfg.rtok); };
+
+  function relayPost(route, data, cb) {
+    if (!hasRelay()) { cb('no relay', 'stop'); return; }
+    data.token = cfg.rtok;
+    post(cfg.relay + route, data, cb);
+  }
+
+  /* Fire and forget. A relay failure must never reach the child: she has
+     already been told the truth about the thing that matters, which is whether
+     the message got to a grown-up. */
+  function mirrorToRelay(msg) {
+    if (!hasRelay()) return;
+    relayPost('/send', { text: msg }, function () { pollInbox(); });
+  }
+
+  function pollInbox() {
+    if (!hasRelay() || polling) return;
+    polling = true;
+    relayPost('/inbox', { since: 0 }, function (err, kind, res) {
+      polling = false;
+      if (err || !res || !res.messages) return;
+      thread = res.messages;
+      if (thread.length) lastAt = thread[thread.length - 1].at;
+      renderSent();
+    });
   }
 
   var statusTimer = null;
@@ -401,9 +469,38 @@ var TIP_URL = '';
     return h + ':' + m + ap;
   }
   function renderSent() {
-    var log = readJSON(LOG_KEY, []), box = el('sent'), i, m, d, b, t, note;
+    var box = el('sent'), i, m, d, b, t, note, list, lab;
     if (!box) return;
     while (box.firstChild) box.removeChild(box.firstChild);
+    lab = el('sentlabel');
+
+    /* With a relay the panel is a conversation and the relay is the record.
+       Without one it is the local list of what she sent, which is all the
+       device can honestly know. */
+    if (hasRelay() && thread.length) {
+      if (lab) text(lab, 'You and home');
+      show('sentwrap');
+      for (i = thread.length - 1; i >= 0 && i > thread.length - 13; i--) {
+        m = thread[i];
+        d = document.createElement('div');
+        d.className = 'msg' + (m.from === 'home' ? ' home' : '');
+        if (m.from === 'home') {
+          b = document.createElement('div'); b.className = 'from';
+          b.appendChild(document.createTextNode(m.who || 'Home'));
+          d.appendChild(b);
+        }
+        b = document.createElement('div');
+        b.appendChild(document.createTextNode(m.text));
+        t = document.createElement('div'); t.className = 'time';
+        t.appendChild(document.createTextNode(when(m.at)));
+        d.appendChild(b); d.appendChild(t);
+        box.appendChild(d);
+      }
+      return;
+    }
+
+    var log = readJSON(LOG_KEY, []);
+    if (lab) text(lab, 'What you sent');
     if (!log.length) { hide('sentwrap'); return; }
     show('sentwrap');
     for (i = log.length - 1; i >= 0 && i > log.length - 11; i--) {
@@ -484,6 +581,7 @@ var TIP_URL = '';
         markLast('sent');
         setStatus('ok', 'Sent! It is on their phone now. ✓');
         el('free').value = '';
+        mirrorToRelay(msg);
         return;
       }
       if (kind === 'stop') {
@@ -507,6 +605,8 @@ var TIP_URL = '';
       el('s-hook').value = cfg.hook || '';
       el('s-name').value = cfg.name === 'me' ? '' : (cfg.name || '');
       el('s-ping').value = cfg.ping || '';
+      el('s-relay').value = cfg.relay || '';
+      el('s-rtok').value = cfg.rtok || '';
     }
     if (pending) el('s-hook').value = pending.hook;
   }
@@ -514,13 +614,19 @@ var TIP_URL = '';
     var h = el('s-hook').value.replace(/\s/g, '');
     var n = el('s-name').value.replace(/^\s+|\s+$/g, '');
     var p = digits(el('s-ping').value);
+    var relay = httpsOnly(el('s-relay').value.replace(/\s/g, ''));
+    var rtok = el('s-rtok').value.replace(/\s/g, '');
+    if (el('s-relay').value.replace(/\s/g, '') && !relay) {
+      alert('The relay address has to start with https://');
+      return null;
+    }
     if (!isWebhook(h)) {
       alert('That is not a Discord webhook address.\n\n'
         + 'It starts with https://discord.com/api/webhooks/ and you copy it from '
         + 'Server Settings, then Integrations, then Webhooks.');
       return null;
     }
-    return { hook: h, name: n || 'me', ping: p };
+    return { hook: h, name: n || 'me', ping: p, relay: relay, rtok: rtok };
   }
   function setSetupStatus(kind, msg) {
     var s = el('s-status');
@@ -547,7 +653,9 @@ var TIP_URL = '';
        bookmark and the cache can never drift apart. */
     location.hash = 'h=' + encodeURIComponent(cfg.hook)
                   + '&n=' + encodeURIComponent(cfg.name)
-                  + '&p=' + encodeURIComponent(cfg.ping);
+                  + '&p=' + encodeURIComponent(cfg.ping)
+                  + (cfg.relay ? '&r=' + encodeURIComponent(cfg.relay)
+                               + '&k=' + encodeURIComponent(cfg.rtok) : '');
     alert('Saved.\n\nNow tap the Share button and "Add to Home Screen". That '
         + 'bookmark keeps this tablet set up even if iOS clears its storage.');
     start();
@@ -594,6 +702,13 @@ var TIP_URL = '';
     renderSent();
     flush();
     setInterval(flush, 30000);
+    if (hasRelay()) {
+      pollInbox();
+      /* 20 seconds on an always-plugged-in tablet. Web push to HER only works
+         on iOS 16.4 and up and only for an installed page, which is precisely
+         the hardware this app does not target, so it polls. */
+      setInterval(pollInbox, 20000);
+    }
   }
 
   /* ---- the studio seam, same shape as the rest of the fleet ---- */
