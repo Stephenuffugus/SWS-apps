@@ -74,6 +74,23 @@ await withApp('beacon', async ({ page, errors, overflow }) => {
     (await page.evaluate(() => location.hash)).indexOf('h=') !== -1,
     'this is the copy that survives an iOS storage sweep');
 
+  /* The tip jar is the only revenue in this app, and a blanked TIP_URL has no
+     other symptom: the button simply is not there and nobody notices for
+     weeks. Pinned to the real link so an edit has to be deliberate. */
+  const tip = await page.evaluate(() => {
+    const t = document.getElementById('tipBtn');
+    if (!t) return null;
+    return { href: t.getAttribute('href'), shown: getComputedStyle(t).display !== 'none' };
+  });
+  check('the tip jar is wired and visible', !!tip && tip.shown, JSON.stringify(tip));
+  check('and it points at Stripe',
+    !!tip && /^https:\/\/buy\.stripe\.com\//.test(tip.href || ''), tip && tip.href);
+  check('and it opens away from her page',
+    await page.evaluate(() => {
+      const t = document.getElementById('tipBtn');
+      return t.target === '_blank' && /noopener/.test(t.rel);
+    }));
+
   check('no page errors', errors.length === 0, errors.join(' | '));
 });
 

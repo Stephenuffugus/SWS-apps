@@ -7,7 +7,7 @@
    to send anyway, and the outbox is what carries a message across a gap. This
    is here for the modern half of the audience, where an installed page that
    opens instantly is worth having. */
-var CACHE = 'beacon-v3';
+var CACHE = 'beacon-v4';
 var ASSETS = [
   './',
   'index.html',
