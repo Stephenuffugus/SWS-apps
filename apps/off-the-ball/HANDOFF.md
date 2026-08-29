@@ -221,15 +221,15 @@ The fix, roughly: give each run one or two decision points where the attacker ev
 
 ## 9. Blocking work before app store
 
-In order. Items 1 to 4 shipped between 2026-08-28 and 2026-08-29; see
-`docs/OFF-THE-BALL-NOTES-2026-08-29.md`. Items 5 and 6 are still open.
+In order. Items 1 to 4 and item 6 shipped between 2026-08-28 and 2026-08-29;
+see `docs/OFF-THE-BALL-NOTES-2026-08-29.md`. Item 5 is still open.
 
 1. DONE. **PWA shell.** Manifest, icons, service worker, offline. It is a single file; this is quick and it is the difference between a link and an app.
 2. DONE. **Small-sided formats.** Configurable pitch size and player counts. 5v5 / 7v7 / 9v9 / 11v11. Biggest addressable gap versus every competitor.
 3. DONE. **Playbook durability.** Right now it is `localStorage` plus share links. Needs export/import of the whole playbook as a file at minimum, so a team does not lose everything on a browser clear.
 4. DONE. **Attacker reactivity** (issue 1). This is the thing that makes the tool trustworthy rather than illustrative.
 5. **Goalkeeper + shot model.**
-6. **Onboarding.** Right now the app assumes you already know what a third-man run is. The `teach` copy exists but nothing surfaces it on first open.
+6. DONE. **Onboarding.** Right now the app assumes you already know what a third-man run is. The `teach` copy exists but nothing surfaces it on first open.
 
 ---
 

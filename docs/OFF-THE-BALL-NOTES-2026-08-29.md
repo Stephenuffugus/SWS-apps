@@ -12,7 +12,7 @@ integrated as app 33 the same evening.
 | 3 | Playbook durability | Done. Export and import the whole book as a file. |
 | 4 | Attacker reactivity | Done, otb-v6. |
 | 5 | Goalkeeper and shot model | Not started. |
-| 6 | Onboarding | Not started. The `teach` copy exists, nothing surfaces it. |
+| 6 | Onboarding | Done, otb-v7. |
 
 ## Attacker reactivity, what it actually does
 
@@ -70,6 +70,32 @@ The verdict banner used to drop straight on top of the play's call sign, and
 the offside line label collided with it in the corner. The call sign steps
 down out of the way and the offside label moved to the other end of its line.
 Both are covered in the browser suite so they cannot come back.
+
+## Onboarding, and why there are two of them
+
+The board opened on eleven coloured dots and said nothing. Now a panel sits
+over it once, and it comes in two versions, because the two ways in are not
+the same arrival.
+
+Somebody who typed the address gets **A chalkboard that runs**: gold is your
+team, blue is theirs, press Run and the board tells you whether the space
+opened rather than whether you drew it neatly. Somebody who was **sent a
+link** already has a reason to be here, so that one names the play in the
+heading, says a person shared it, and asks only for a press of Run. A shared
+link is the point of the whole app and it deserved its own greeting.
+
+Neither blocks. The board is live underneath, dismissal is one tap, and it
+never returns.
+
+Two things it caught on the way in. On a 320 by 568 handset the first build
+put both buttons below the fold, which is precisely the un-dismissable overlay
+Stephen had just complained about on Diamond Rules; the panel scrolls now and
+the buttons are sticky, pinned by a test that runs at that viewport. And the
+overlay silently turned the stored-XSS test vacuous, because the tap it makes
+on a defender landed on the welcome instead of the canvas, and a click that
+never arrives also fails to pwn anything. That test now dismisses the panel
+first and asserts the scouting sheet actually opened, so it cannot go hollow
+again.
 
 ## Still needed from Stephen
 

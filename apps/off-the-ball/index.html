@@ -59,6 +59,46 @@ canvas{display:block;width:100%;touch-action:none}
 .verdict.show{transform:translateY(0)}
 .verdict.good{color:var(--open)} .verdict.bad{color:var(--alarm)}
 
+/* ------------------------------------------------------------- welcome
+   The handoff's issue 6: the app assumed you already knew what a third man
+   run was, and a shared link opened on a board of coloured dots with nothing
+   saying what to do. This sits over the board, once, and gets out of the way.
+   It never blocks: the board is live underneath it and dismissing is one tap. */
+/* Scrolls, and the buttons never leave. On a 320px phone the panel is taller
+   than the board, and the first build put Show me and the dismiss below the
+   fold, which is an un-dismissable overlay on the oldest handset somebody is
+   likely to be holding on a touchline. margin:auto on the inner block centres
+   it when it fits and keeps the top reachable when it does not. */
+.welcome{position:absolute;inset:0;z-index:6;display:flex;overflow:auto;
+  padding:16px;background:rgba(7,22,20,.93);
+  backdrop-filter:blur(2px);animation:wfade .3s ease}
+.welcome .winner{margin:auto;width:100%;display:flex;flex-direction:column;gap:9px}
+@keyframes wfade{from{opacity:0}to{opacity:1}}
+.welcome h2{margin:0;font-size:17px;font-weight:600;color:var(--chalk);letter-spacing:-.01em}
+.welcome .from{font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--attack);margin:0}
+.welcome ol{margin:2px 0 0;padding:0;list-style:none;display:flex;
+  flex-direction:column;gap:7px}
+.welcome li{font-size:12.5px;line-height:1.45;color:var(--text);
+  padding-left:20px;position:relative}
+.welcome li b{color:var(--attack);font-weight:600}
+.welcome li.d b{color:var(--defend)}
+.welcome li:before{content:'';position:absolute;left:4px;top:6px;width:6px;height:6px;
+  border-radius:50%;background:var(--attack)}
+.welcome li.d:before{background:var(--defend)}
+.welcome li.v:before{background:var(--open)}
+.welcome .wrow{display:flex;gap:8px;margin-top:4px;position:sticky;bottom:0;
+  padding-top:6px;background:rgba(7,22,20,.93)}
+.welcome .wrow button{flex:1}
+/* Small phones: the copy is the thing that has to give, not the buttons. */
+@media (max-width:360px),(max-height:640px){
+  .welcome{padding:12px}
+  .welcome h2{font-size:15px}
+  .welcome li{font-size:11.5px;line-height:1.38}
+  .welcome .winner{gap:7px}
+  .welcome ol{gap:5px}
+}
+
 .row{display:flex;gap:6px;margin-top:10px}
 .seg{display:flex;flex:1;background:var(--panel);border-radius:8px;padding:3px;border:1px solid var(--hair)}
 .seg button{flex:1;border:0;background:transparent;color:var(--muted);font-family:var(--display);
@@ -1671,6 +1711,61 @@ function showVerdict(v){
   elVerdict.className='verdict show '+(v.ok?'good':'bad');
   board.classList.add('judged');
 }
+/* --------------------------------------------------------------- welcome
+   Shown once, then never again unless localStorage is cleared. Two versions,
+   because the two ways in are not the same arrival: somebody who typed the
+   address is looking at a board of coloured dots and needs to know they are
+   his team; somebody who was sent a link already has a reason to be here and
+   only needs to know to press play. A shared link is the whole point of the
+   app, so it gets its own greeting rather than the generic one. */
+const SEEN_KEY='otb-seen';
+function seen(){ try{return localStorage.getItem(SEEN_KEY)==='1';}catch(e){return false;} }
+function markSeen(){ try{localStorage.setItem(SEEN_KEY,'1');}catch(e){} }
+
+function dismissWelcome(){
+  const w=document.querySelector('.welcome');
+  if(w)w.remove();
+  markSeen();
+}
+
+function showWelcome(shared){
+  if(seen())return;
+  const board=cv.parentElement;
+  const el=document.createElement('div');
+  el.className='welcome';
+  const name=(play&&play.callName)||'';
+  el.innerHTML='<div class="winner">'+(shared
+    ? `<p class="from">A play was shared with you</p>
+       <h2>${name?esc(name):'Someone drew this up'}</h2>
+       <ol>
+         <li class="v">Press <b>Run the play</b> and watch it happen. Nothing is
+           scripted to work: the defenders react, and it either comes off or it does not.</li>
+         <li>Then change it. Tap any <b>gold</b> player to give him a different run.</li>
+         <li class="d">Tap any <b>blue</b> player to say how good he is, and run it again.</li>
+       </ol>
+       <div class="wrow">
+         <button class="btn primary" id="wgo">Run it</button>
+         <button class="btn" id="wskip">Just look</button>
+       </div>`
+    : `<p class="from">Off the ball</p>
+       <h2>A chalkboard that runs.</h2>
+       <ol>
+         <li>The <b>gold</b> players are yours. Tap one and pick a run, and every
+           run has its real name so a teammate can call it.</li>
+         <li class="d">The <b>blue</b> players are theirs. Tap one to scout him:
+           how fast he is, how late he reacts, how much he ball watches.</li>
+         <li class="v">Then press <b>Run the play</b>. The board tells you whether
+           the space actually opened, not whether you drew it neatly.</li>
+       </ol>
+       <div class="wrow">
+         <button class="btn primary" id="wgo">Show me</button>
+         <button class="btn" id="wskip">I will poke around</button>
+       </div>`)+'</div>';
+  board.appendChild(el);
+  el.querySelector('#wskip').addEventListener('click',dismissWelcome);
+  el.querySelector('#wgo').addEventListener('click',()=>{dismissWelcome();runPlay();});
+}
+
 function renderAll(){draw();renderPcard();renderCallSheet();updateSkillStats();updateHint();renderSquadNote();}
 
 let raf=null,lastN=0;
@@ -1945,7 +2040,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v6';
+var BUILD = 'otb-v7';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
@@ -1992,12 +2087,14 @@ var TIP_URL = '';
 /* ================================================================== boot */
 (function boot(){
   const m=location.hash.match(/#p=(.+)$/);
-  play=(m&&decodePlay(m[1]))||clonePlay('giveandgo');
+  const opened=m?decodePlay(m[1]):null;
+  play=opened||clonePlay('giveandgo');
   elLedger.innerHTML=LEDGER_EMPTY;
   updateSkillStats();syncInputs();renderBook();renderFmtNote();
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
   resize();renderAll();
+  showWelcome(!!opened);
 })();
 </script>
 </body>

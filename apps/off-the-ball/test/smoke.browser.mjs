@@ -175,6 +175,16 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
   await eve.goto((await page.evaluate(() => location.origin + location.pathname)) + '#p=' + hostile,
     { waitUntil: 'load' });
   await eve.waitForTimeout(1100);
+  /* The welcome overlay covers the board on a first open, and a shared link is
+     exactly a first open. Dismiss it, or the tap below lands on the overlay and
+     this whole section passes for the wrong reason: a click that never reached
+     the canvas also fails to pwn anything. */
+  await eve.evaluate(() => {
+    const w = document.querySelector('.welcome');
+    if (w) w.querySelector('#wskip').click();
+  });
+  check('the welcome greets a shared link and then gets out of the way',
+    await eve.evaluate(() => !document.querySelector('.welcome')));
   /* tap the defender, which is the sink that fired */
   const pt = await eve.evaluate(() => {
     const cv = document.getElementById('pitch'), r = cv.getBoundingClientRect();
@@ -182,6 +192,13 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
   });
   await eve.mouse.click(pt.x, pt.y);
   await eve.waitForTimeout(600);
+  /* and prove the tap actually landed, so this section can never go vacuous
+     again the way it just did */
+  check('the defender tap reaches the canvas',
+    await eve.evaluate(() => {
+      const sh = document.getElementById('sheet');
+      return !!sh && !sh.hasAttribute('hidden');
+    }), 'the scouting sheet never opened, so the sink was never reached');
   await eve.click('#play');
   await eve.waitForTimeout(4200);
   const evil = await eve.evaluate(() => ({
@@ -233,9 +250,74 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
   check('resetting puts the call sign back',
     !(await page.evaluate(() => document.querySelector('.board').classList.contains('judged'))));
 
+  /* ------------------------------------------------------ the welcome
+     HANDOFF issue 6. Storage is shared across pages in this context and the
+     hostile-link page above already dismissed it, so this opens a page with
+     the flag cleared rather than trusting the order tests happen to run in. */
+  const base = await page.evaluate(() => location.origin + location.pathname);
+  const w1 = await page.context().newPage();
+  await w1.goto(base, { waitUntil: 'load' });
+  await w1.evaluate(() => localStorage.removeItem('otb-seen'));
+  await w1.reload({ waitUntil: 'load' });
+  await w1.waitForTimeout(700);
+  const wel = await w1.evaluate(() => {
+    const w = document.querySelector('.welcome');
+    if (!w) return null;
+    const box = w.getBoundingClientRect();
+    const go = w.querySelector('#wgo').getBoundingClientRect();
+    const skip = w.querySelector('#wskip').getBoundingClientRect();
+    return { head: w.querySelector('h2').textContent,
+             inside: go.bottom <= box.bottom + 1 && skip.bottom <= box.bottom + 1,
+             tall: go.height >= 30 && skip.height >= 30 };
+  });
+  check('a first time visitor is told what the board is', !!wel);
+  check('and it is the general greeting, not the shared one',
+    wel && wel.head === 'A chalkboard that runs.', wel && wel.head);
+  check('both welcome buttons are inside the panel and tappable',
+    wel && wel.inside && wel.tall,
+    'a button below the fold is an overlay a phone user cannot dismiss');
+  await w1.click('#wgo');
+  await w1.waitForTimeout(4200);
+  check('Show me dismisses the welcome and runs the play',
+    await w1.evaluate(() => !document.querySelector('.welcome')
+      && /:/.test(document.getElementById('verdict').textContent)));
+  await w1.reload({ waitUntil: 'load' });
+  await w1.waitForTimeout(600);
+  check('and it stays gone on the next visit',
+    await w1.evaluate(() => !document.querySelector('.welcome')));
+  await w1.close();
+
   const real = errors.filter((e) => !/favicon/i.test(e));
   check('no page errors', real.length === 0, real.slice(0, 2).join(' | '));
 });
+
+/* ------------------------------------------------ the welcome, small phone
+   A separate run because the viewport is the thing under test. On a 320 by
+   568 handset the first build put both buttons below the fold, which is an
+   overlay a first time visitor on an old iPhone cannot dismiss. It scrolls
+   now and the buttons are sticky, so this pins both. */
+console.log('\nthe welcome on the smallest phone');
+await withApp('off-the-ball', async ({ page }) => {
+  await page.waitForTimeout(700);
+  const m = await page.evaluate(() => {
+    const w = document.querySelector('.welcome');
+    if (!w) return null;
+    const box = w.getBoundingClientRect();
+    const go = w.querySelector('#wgo').getBoundingClientRect();
+    const skip = w.querySelector('#wskip').getBoundingClientRect();
+    return { reachable: go.bottom <= box.bottom + 1 && skip.bottom <= box.bottom + 1
+                        && go.top >= box.top && skip.top >= box.top,
+             tall: Math.min(go.height, skip.height) >= 30,
+             scrolls: w.scrollHeight > w.clientHeight };
+  });
+  check('the welcome still appears at 320px', !!m);
+  check('and both buttons stay on screen', m && m.reachable && m.tall,
+    'a phone user could not dismiss it');
+  if (m && m.scrolls) console.log('        (the copy scrolls here, which is expected)');
+  await page.click('#wskip');
+  check('and it can actually be dismissed by tapping',
+    await page.evaluate(() => !document.querySelector('.welcome')));
+}, { width: 320, height: 568 });
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nOFF THE BALL BROWSER PASSED');
 process.exit(failures ? 1 : 0);
