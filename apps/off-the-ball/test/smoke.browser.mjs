@@ -365,6 +365,131 @@ await withApp('off-the-ball', async ({ page }) => {
     await page.evaluate(() => !document.querySelector('.welcome')));
 }, { width: 320, height: 568 });
 
+/* --------------------------------------------- editing after a run, and the
+   pitch a play was drawn on. The two things a coach does that the board used
+   to lose. */
+console.log('\nthe board after a run, and the pitch a play remembers');
+await withApp('off-the-ball', async ({ page, errors }) => {
+  await ungate(page);
+  await page.evaluate(() => { localStorage.removeItem('otb.playbook'); });
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(700);
+  await page.evaluate(() => {
+    const w = document.querySelector('.welcome');
+    if (w) w.querySelector('#wskip').click();
+  });
+
+  /* the app's own metre-to-screen mapping, so the tap lands where the board
+     actually drew the player rather than where the test guessed */
+  /* Scroll the pitch into view BEFORE measuring. Filling the call name or
+     pressing a format button scrolls the page down to that control, and a
+     rect measured afterwards puts the board off the top of the viewport: the
+     first version of this helper produced a tap at y = -57 and reported the
+     app as broken when it was the test that had missed. */
+  const ptOf = async (i, p = page) => {
+    await p.evaluate(() => document.getElementById('pitch')
+      .scrollIntoView({ block: 'center' }));
+    await p.waitForTimeout(150);
+    return p.evaluate((idx) => {
+      const a = play.attackers[idx];
+      const cv = document.getElementById('pitch'), r = cv.getBoundingClientRect();
+      return { x: r.left + sx(a.x) / cv.width * r.width,
+               y: r.top + sy(a.y) / cv.height * r.height };
+    }, i);
+  };
+
+  /* ---- a play the coach has actually changed ---- */
+  await page.fill('#callname', 'Tuesday');
+  const before = await page.evaluate(() => ({
+    n: play.attackers.length, call: play.callName }));
+
+  await page.click('#play');
+  await page.waitForTimeout(4200);
+  check('the run finishes and says something', (await page.textContent('#verdict')).trim().length > 8);
+  check('and the hint stops telling you to tap for a move',
+    /back to editing/i.test(await page.textContent('#hint')),
+    await page.textContent('#hint'));
+
+  const p1 = await ptOf(0);
+  await page.mouse.click(p1.x, p1.y);
+  await page.waitForTimeout(400);
+  check('one tap after a run puts the board back to editing',
+    await page.evaluate(() => sim === null), 'the sim was never cleared, so the board is still deaf');
+  const after = await page.evaluate(() => ({
+    n: play.attackers.length, call: play.callName }));
+  check('and the play the coach built survives that tap',
+    after.n === before.n && after.call === before.call,
+    `was ${before.n}/${before.call}, now ${after.n}/${after.call}`);
+
+  /* the board is genuinely live again, not merely un-frozen in a variable */
+  const p2 = await ptOf(1);
+  await page.mouse.click(p2.x, p2.y);
+  await page.waitForTimeout(400);
+  check('and a player can be selected again straight afterwards',
+    await page.evaluate(() => selected !== null), 'the tap reached nothing');
+
+  /* ---- the format buttons used to take the tools down with them ---- */
+  await page.click('#fmtseg button[data-fmt="9v9"]');
+  await page.waitForTimeout(500);
+  check('choosing a format leaves the tool alone',
+    await page.evaluate(() => typeof tool === 'string' && tool.length > 0),
+    await page.evaluate(() => String(tool)));
+  check('and a tool stays visibly pressed',
+    await page.evaluate(() =>
+      !!document.querySelector('#toolseg button[aria-pressed="true"]')));
+  const p3 = await ptOf(1);
+  await page.mouse.click(p3.x, p3.y);
+  await page.waitForTimeout(400);
+  check('and the board still takes a tap after a format change',
+    await page.evaluate(() => selected !== null),
+    'this is the bug that killed every touch on the small sided pitches');
+
+  /* ---- a play remembers the pitch it was drawn on ---- */
+  await page.click('#fmtseg button[data-fmt="7v7"]');
+  await page.waitForTimeout(500);
+  await page.fill('#callname', 'Seven');
+  await page.click('#saveplay');
+  await page.waitForTimeout(300);
+  const link = await page.evaluate(() => location.origin + location.pathname + '#p=' + encodePlay());
+
+  await page.evaluate(() => applyFormat('11v11'));
+  await page.waitForTimeout(400);
+  check('the board is back on a full pitch before the play is reopened',
+    await page.evaluate(() => FIELD.key) === '11v11');
+
+  await page.selectOption('#playbook', { label: 'Seven' }).catch(async () => {
+    const v = await page.evaluate(() => {
+      const o = [...document.getElementById('playbook').options].find((x) => /Seven/.test(x.textContent));
+      return o ? o.value : '';
+    });
+    await page.selectOption('#playbook', v);
+  });
+  await page.waitForTimeout(600);
+  check('a saved play reopens on the pitch it was drawn on',
+    await page.evaluate(() => FIELD.key) === '7v7',
+    'it came back as ' + await page.evaluate(() => FIELD.key));
+  check('and the format buttons agree with the board',
+    await page.evaluate(() =>
+      document.querySelector('#fmtseg button[aria-pressed="true"]').dataset.fmt) === '7v7');
+
+  /* the same fix has to carry the share link, which is the way in */
+  const shared = await page.context().newPage();
+  await shared.goto(link, { waitUntil: 'load' });
+  await shared.waitForTimeout(900);
+  check('a shared link opens on the pitch it was drawn on',
+    await shared.evaluate(() => FIELD.key) === '7v7',
+    'it opened as ' + await shared.evaluate(() => FIELD.key));
+  check('and the shared play still runs there',
+    await shared.evaluate(async () => {
+      document.getElementById('play').click();
+      await new Promise((r) => setTimeout(r, 4200));
+      return document.getElementById('verdict').textContent.trim().length > 8;
+    }));
+  await shared.close();
+
+  check('no page errors through any of it', errors.length === 0, errors.join(' | '));
+});
+
 /* ------------------------------------------------- the development curtain
    A fresh context, deliberately NOT ungated, because the point of this block
    is the state every stranger actually arrives in. The gate is not security

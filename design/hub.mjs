@@ -225,13 +225,19 @@ const CATALOGUE = [
        day the handoff's blocking list closed. That list closed, so six agents
        were sent to drive the thing a coach would actually drive, and the
        answer was that finishing the feature list had not made it usable: the
-       board stops taking any tap the moment a play has been run, the only
-       labelled way out throws the play away, tapping a format button kills
-       input outright, and nothing a coach saves or shares remembers which
-       pitch it was drawn on, so every small sided play reopens wrong. A badge
-       is the wrong instrument for that. The curtain lives at the bottom of
+       board stopped taking any tap the moment a play had been run, the only
+       labelled way out threw the play away, tapping a format button killed
+       input outright, and nothing a coach saved or shared remembered which
+       pitch it was drawn on, so every small sided play reopened wrong. A badge
+       is the wrong instrument for that.
+
+       All four were fixed in otb-v10, each with a test that was run against
+       the reverted code and had to fail with the reported symptom first. The
+       curtain STAYS until Stephen says otherwise: the audit verified 8 of 22
+       non-polish findings, so that list was a floor rather than a ceiling, and
+       he has no one to test with yet. It lives at the bottom of
        apps/off-the-ball/index.html; take it out, and put this comment back the
-       way it was, when those are fixed. */
+       way it was, when he calls it. */
     ['off-the-ball', 'Off the Ball', 'Plan a play against a defence that reacts', 'soccer football play designer tactics board planning runs off the ball movement overlap third man run give and go one two wall pass decoy feint sunday league rec coach team playbook positioning defence reacts simulation', 'beta'],
   ]],
 ];

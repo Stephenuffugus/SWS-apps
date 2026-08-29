@@ -225,9 +225,10 @@ In order. All six shipped between 2026-08-28 and 2026-08-29; see
 `docs/OFF-THE-BALL-NOTES-2026-08-29.md`. This list is closed, and closing it
 did NOT make the app usable: six agents driving it found four blocking
 problems in what happens after a coach presses Run, none of which were on
-this list. The app is behind a passphrase until those are fixed. The real
-remaining work is in the notes under "What has to be fixed before the
-curtain comes down".
+this list. All four were fixed in otb-v10 and each has a test that was run
+against the reverted code first. The passphrase stays on until Stephen calls
+it: the audit verified 8 of 22 non-polish findings, so that list is a floor,
+not a ceiling. See the notes doc.
 
 1. DONE. **PWA shell.** Manifest, icons, service worker, offline. It is a single file; this is quick and it is the difference between a link and an app.
 2. DONE. **Small-sided formats.** Configurable pitch size and player counts. 5v5 / 7v7 / 9v9 / 11v11. Biggest addressable gap versus every competitor.

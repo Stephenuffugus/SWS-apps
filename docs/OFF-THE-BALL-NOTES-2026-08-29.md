@@ -248,6 +248,80 @@ close can still dive back. How much recovery he gets is a judgement about
 football rather than a bug, and the rule in this app is that those belong to
 Stephen, so it is written down here rather than quietly tuned.
 
+## v10: the board comes back, and a play remembers its pitch
+
+Stephen asked for the board freeze and format persistence. Both are done, along
+with a third that could not sensibly be left alone.
+
+**The board comes back after a run.** `pointerdown` returned early whenever a
+sim existed, and nothing cleared the sim when the play ended, so every tap and
+drag was ignored from the moment a play finished. The only labelled way out was
+Reset, which reloads the preset and throws the coach's work away. Now the first
+touch after a finished run steps the board back to editing and deliberately
+does nothing else, because what you are looking at is where the players ENDED
+while every hit test is against where they START: acting on that tap would grab
+whoever happens to lie under a disc that has since run twenty metres. The play
+itself is untouched, and a toast says so.
+
+The hint was lying too. It kept whatever it said before the run, which was "Tap
+gold to add a move" while the board was refusing every tap. A finished run is
+its own state and now says "Tap the board to go back to editing. Your play is
+kept."
+
+**The format buttons stopped killing the board.** The tool handler selected
+`.seg button`, which is BOTH segments, so pressing a format button also ran the
+tool handler, set `tool` to `undefined` and cleared the pressed state off every
+tool. After that nothing tapped, dragged, drew or passed. The tool segment has
+its own id now.
+
+**A play remembers the pitch it was drawn on.** The format was stored in
+neither the share link nor the playbook, so every 5v5, 7v7 and 9v9 play reopened
+as 11v11, with the same raw metres now sitting in the corner of a full pitch.
+`encodePlay` carries the format, and `decodePlay` RECORDS it rather than
+applying it, because adopting a format inside the decoder resizes the canvas
+and redraws while `play` is still the old play. The caller adopts it after the
+assignment, through a lighter `adoptFormat` that takes the geometry without
+laying the roster out again: `applyFormat` relays the roster, which is right
+when a coach changes pitch and wrong when a play arrives already measured in
+that pitch's metres. Links saved before this carry no format and leave the
+pitch alone, which is the least surprising thing available.
+
+**And the move library follows the pitch.** This was not on Stephen's list, but
+persistence without it just means a play reliably reopens on a pitch where
+every move is drawn wrong. Two constants were still 11v11: side detection
+compared x against 34, half of 68, so on a 27.4m five a side pitch nobody was
+ever right sided and Overlap ran inside and across to the far touchline against
+its own teaching line. And the goalmouth a post run aims at was typed as 30.6,
+37.4 and 51.4, which on a five a side pitch is 33 metres past the goal line and
+11 metres wide of the far post, with the drawn arrow leaving the top of the
+board.
+
+Both are now expressed in the pitch's own geometry rather than as new numbers.
+`POST_IN` is 3.4/3.66, the fraction of a half goal width the old literals sat
+inside the post, and `POST_OUT` is the 1.1m they sat in front of the line. On
+11v11 that reproduces 30.6, 37.4 and 51.4 exactly, so the tuned full pitch
+behaviour is byte identical and **the golden sweep does not move**.
+
+### Every one of these tests was checked against the bug it describes
+
+The keeper regression got through a green suite, so each new check here was run
+against the reverted engine and had to fail with the reported symptom before it
+was kept. They all did: `tool` came back `undefined`, the saved play "came back
+as 11v11", and the five a side near post run "ended (26.4, 17.7) with posts
+11.9..15.5 on the line 18.3", which is the agent's number to the decimal.
+
+The old move library check ran on 11v11 only and against 11v11 literals, which
+is precisely how those two constants survived v5. It now walks all four pitches
+with a player either side of the real centre line, and checks every waypoint
+rather than only the endpoint, because only the endpoint went through
+`clampField` and the bug lived in the middle of the path.
+
+One test failure in this batch was the test's own fault and worth recording:
+filling the call name scrolls the page down to that input, so a canvas rect
+measured afterwards put the board off the top of the viewport and the tap
+landed at y = -57. It reported the app as broken when the app was fine. The
+helper scrolls the pitch into view before measuring now.
+
 ## Still needed from Stephen
 
 - Art. The icon and `marketing/thumb-256.png` are placeholders I made.

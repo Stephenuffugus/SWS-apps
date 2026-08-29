@@ -281,7 +281,7 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
   </div>
 
   <div class="row">
-    <div class="seg" role="group" aria-label="Tool">
+    <div class="seg" role="group" aria-label="Tool" id="toolseg">
       <button data-tool="select" aria-pressed="true">Select</button>
       <button data-tool="run" aria-pressed="false">Freehand</button>
       <button data-tool="pass" aria-pressed="false">Pass</button>
@@ -551,11 +551,30 @@ function makeProfile(tier,arch){
 function ctxFor(p,ballPos){
   const g=V.norm(V.sub({x:FIELD.cx,y:FIELD.goalY},p));
   const b=V.dist(p,ballPos)<0.4?{x:0,y:-1}:V.norm(V.sub(ballPos,p));
-  const side=p.x<34?-1:1;
+  /* Which side of the pitch he is on, against the REAL centre line. This was
+     `p.x<34`, half of 68, so on a 27.4m five a side pitch nobody was ever
+     right sided and every lateral move ran the wrong way: Overlap, whose own
+     teaching line says "run outside the man and up the line", went inside and
+     across to the far touchline. */
+  const side=p.x<FIELD.cx?-1:1;
   return {p,g,b,lat:{x:side,y:0},inw:{x:-side,y:0},side};
 }
 const at=(c,...terms)=>clampField(terms.reduce((a,[v,m])=>V.add(a,V.mul(v,m)),{x:c.p.x,y:c.p.y}));
-const post=(c,near)=>({x: near?(c.side<0?30.6:37.4):(c.side<0?37.4:30.6), y:51.4});
+/* The goalmouth a near-post or far-post run aims at. These were three 11v11
+   literals (30.6, 37.4, 51.4), so on a five a side pitch, whose goal line is
+   y=18.29, a near post run aimed 33 metres PAST the goal and 11 metres wide of
+   the far post, and the drawn arrow left the top of the board and came back.
+
+   Written as the same point expressed in the pitch's own geometry rather than
+   as new numbers: POST_IN is 3.4/3.66, the fraction of a half goal width the
+   old literals sat inside the post, and POST_OUT is the 1.1m they sat in front
+   of the line. On 11v11 that reproduces 30.6, 37.4 and 51.4 exactly, so the
+   tuned full-pitch behaviour and the golden sweep are untouched. */
+const POST_IN=0.928962, POST_OUT=1.1;
+const post=(c,near)=>{
+  const dx=FIELD.goalW2*POST_IN, L=FIELD.cx-dx, R=FIELD.cx+dx;
+  return {x: near?(c.side<0?L:R):(c.side<0?R:L), y:FIELD.goalY-POST_OUT};
+};
 
 const MOVES={
 /* ---- off the ball ---- */
@@ -1536,7 +1555,16 @@ function hitAny(pt){
 }
 const isDef=id=>!!play.defenders.find(d=>d.id===id);
 cv.addEventListener('pointerdown',e=>{
-  if(sim)return;
+  /* Mid flight, let it finish. Once it HAS finished the first touch steps the
+     board back to editing and deliberately does nothing else, because what you
+     are looking at is where the players ENDED and every hit test below is
+     against where they START: acting on that tap would grab whoever happens to
+     lie under a disc that has since run twenty metres. resetPlay clears the
+     run, never the play, so the work survives. Before this the board simply
+     ignored every touch after a run and the only labelled way out was the
+     Reset button, which reloads the preset and throws the play away. */
+  if(sim&&!sim.done)return;
+  if(sim){resetPlay();toast('Back to editing. Your play is kept.');return;}
   cv.setPointerCapture(e.pointerId);
   const pt=evPos(e),hit=hitAttacker(pt);
   if(tool==='select'){
@@ -1598,7 +1626,11 @@ function updateHint(){
   const n={select:'Tap gold to add a move, blue to scout a defender. Drag to reposition.',
     run:'Press on a gold player and drag to draw a run by hand.',
     pass:passFrom?`Passing from ${labelOf(passFrom)}, tap the receiver.`:'Tap the passer, then tap the receiver.'};
-  elHint.textContent=sim?(play.note||''):n[tool];
+  /* A finished run is its own state and the hint has to say so. It used to
+     keep whatever it said before the run, which was "Tap gold to add a move"
+     while the board was refusing every tap. */
+  elHint.textContent=sim?(sim.done?'Tap the board to go back to editing. Your play is kept.'
+    :(play.note||'')):n[tool];
   $('callchip').textContent=play.callName||'';
 }
 const SLIDERS=[
@@ -1802,6 +1834,18 @@ function layoutForFormat(){
   play.passes=play.passes.filter(p=>
     A.some(a=>a.id===p.from)&&A.some(a=>a.id===p.to));
 }
+/* applyFormat lays the roster out again, which is right when a coach CHANGES
+   pitch and wrong when a play arrives already measured in that pitch's metres.
+   This is the arriving case: take the geometry, sync the buttons, touch
+   nothing on the board. */
+function adoptFormat(key){
+  if(!key||!FORMATS[key]||FIELD.key===key)return false;
+  setFormat(key);
+  $('fmtseg').querySelectorAll('button').forEach(b=>
+    b.setAttribute('aria-pressed',String(b.dataset.fmt===key)));
+  renderFmtNote();resize();
+  return true;
+}
 function renderFmtNote(){
   $('fmtnote').textContent=FIELD.cite+
     ' These are The FA\u2019s recommended sizes. Your league sets its own, so check your handbook. The pitch changes what the board tells you; the moves do not.';
@@ -1990,7 +2034,7 @@ function runPlay(){
     draw();
     if(sim.events.length!==lastN){lastN=sim.events.length;renderLedger();}
     if(!sim.done)raf=requestAnimationFrame(loop);
-    else{renderLedger();showVerdict(sim.verdict);
+    else{renderLedger();showVerdict(sim.verdict);updateHint();
       elPlay.textContent='Run it again';elPlay.disabled=false;}
   };
   raf=requestAnimationFrame(loop);
@@ -2001,8 +2045,13 @@ function resetPlay(){
   showVerdict(null);renderLedger();renderAll();
   elPlay.textContent='Run the play';elPlay.disabled=false;
 }
-document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed','false'));
+/* Scoped to #toolseg. This used to select '.seg button', which is BOTH
+   segments: pressing a format button therefore ran the tool handler too, set
+   tool to b.dataset.tool (undefined on a format button) and cleared
+   aria-pressed off every tool. After that nothing on the board tapped,
+   dragged, drew or passed, because every branch below tests tool by name. */
+document.querySelectorAll('#toolseg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#toolseg button').forEach(x=>x.setAttribute('aria-pressed','false'));
   b.setAttribute('aria-pressed','true');tool=b.dataset.tool;passFrom=null;renderAll();
 }));
 elPlay.addEventListener('click',()=>{if(sim&&sim.done)resetPlay();runPlay();});
@@ -2029,7 +2078,12 @@ $('callname').addEventListener('input',e=>{play.callName=e.target.value;updateHi
 
 /* ---- share: URL hash. No account, no paywall. ---- */
 function encodePlay(){
-  const d={k:play.key,n:play.callName,s:skill.key,
+  /* The pitch travels with the play. Without it every 5v5, 7v7 and 9v9 play
+     came back as 11v11: the metres are stored raw, so a five a side shape
+     reopened in the corner of a full pitch and ran nonsense. This is the same
+     root cause as the inBox literals, the pitch stopped being one size in v5
+     and not everything was told. */
+  const d={k:play.key,n:play.callName,s:skill.key,f:FIELD.key,
     a:play.attackers.map(a=>[a.id,a.label,+a.x.toFixed(1),+a.y.toFixed(1),a.moves,a.custom||'',
       a.hasBall?1:0,a.path.map(p=>[+p.x.toFixed(1),+p.y.toFixed(1)])]),
     d:play.defenders.map(x=>[x.id,x.label,+x.x.toFixed(1),+x.y.toFixed(1),x.mode,x.mark||'',
@@ -2067,6 +2121,12 @@ function decodePlay(s,quiet){
     });
     p.passes=(j.p||[]).map(x=>({from:x[0],to:x[1],t:x[2]}));
     if(!quiet&&j.s&&SKILLS[j.s])skill=SKILLS[j.s];
+    /* Recorded, not applied. Adopting a format here would resize the canvas
+       and redraw while `play` is still the OLD play, so the caller does it
+       after the assignment. Links saved before this shipped carry no f and
+       leave the pitch alone, which is the least surprising thing available:
+       nothing in them says what they were drawn on. */
+    p.fmt=(j.f&&FORMATS[j.f])?j.f:null;
     return p;
   }catch(e){return null;}
 }
@@ -2162,7 +2222,8 @@ $('playbook').addEventListener('change',e=>{
   if(i===''||!b[i])return;
   const loaded=decodePlay(b[i].d);
   if(!loaded){toast('That play could not be read');return;}
-  play=loaded;selected=null;updateSkillStats();syncInputs();resetPlay();
+  play=loaded;selected=null;adoptFormat(loaded.fmt);
+  updateSkillStats();syncInputs();resetPlay();
   $('playbook').value=i;
 });
 $('delplay').addEventListener('click',()=>{
@@ -2253,7 +2314,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v9';
+var BUILD = 'otb-v10';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';
@@ -2366,6 +2427,7 @@ function showDevGate(hasLink,opened){
   const m=location.hash.match(/#p=(.+)$/);
   const opened=m?decodePlay(m[1]):null;
   play=opened||clonePlay('giveandgo');
+  if(opened)adoptFormat(opened.fmt);
   elLedger.innerHTML=LEDGER_EMPTY;
   updateSkillStats();syncInputs();renderBook();renderFmtNote();
   window.addEventListener('resize',resize);

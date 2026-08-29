@@ -357,6 +357,55 @@ console.log('\nmove library');
         bad.length === 0, bad.join('; '));
 }
 
+/* The check above ran on 11v11 only, and against 11v11 literals, which is
+   exactly how two hardcoded constants survived the move to configurable
+   pitches. Side detection compared x against 34, half of 68, so on a 27.4m
+   pitch nobody was ever right sided; and the goalmouth a near or far post run
+   aims at was typed as 30.6 / 37.4 / 51.4, which on a five a side pitch is 33
+   metres PAST the goal line. The drawn arrow left the top of the board.
+
+   Every waypoint is checked, not just the endpoint, because only the endpoint
+   went through clampField and the bug lived in the middle of the path. */
+console.log('\nthe move library on every pitch');
+{
+  const bad = [];
+  for (const key of ['5v5', '7v7', '9v9', '11v11']) {
+    API.setFormat(key);
+    const F = API.getField();
+    for (const id of Object.keys(API.MOVES)) {
+      /* one player left of centre and one right of centre, because the bug
+         only showed on the side the hardcoded midpoint got wrong */
+      for (const frac of [0.25, 0.75]) {
+        const p = API.clonePlay('blank');
+        const a = p.attackers[1];
+        a.x = F.w * frac; a.y = F.goalY * 0.55; a.moves = [id]; a.path = [];
+        API.setPlay(p); API.setSkill(API.SKILLS.rec);
+        const path = API.compile().paths[a.id] || [];
+        for (const q of path) {
+          if (q.x < -0.6 || q.x > F.w + 0.6 || q.y > F.yMax + 0.6 || q.y < F.yMin - 0.6) {
+            bad.push(`${key} ${id} @${frac}: waypoint (${q.x.toFixed(1)}, ${q.y.toFixed(1)})`
+              + ` off a ${F.w.toFixed(1)}x${F.goalY.toFixed(1)} pitch`);
+            break;
+          }
+        }
+      }
+    }
+    /* and the post runs must actually aim at THIS goal */
+    const pp = API.clonePlay('blank');
+    const a = pp.attackers[1];
+    a.x = F.w * 0.75; a.y = F.goalY * 0.55; a.moves = ['nearpost']; a.path = [];
+    API.setPlay(pp); API.setSkill(API.SKILLS.rec);
+    const end = (API.compile().paths[a.id] || []).slice(-1)[0];
+    check(`${key}: a near post run finishes near this goal`,
+      !!end && end.y > F.goalY - F.goalY * 0.25 && end.x > F.postL - 2 && end.x < F.postR + 2,
+      end ? `ended (${end.x.toFixed(1)}, ${end.y.toFixed(1)}) with posts `
+            + `${F.postL.toFixed(1)}..${F.postR.toFixed(1)} on the line ${F.goalY.toFixed(1)}`
+          : 'no path');
+  }
+  API.setFormat('11v11');
+  check('every move stays on every pitch', bad.length === 0, bad.slice(0, 4).join(' | '));
+}
+
 console.log('\nprofiles');
 {
   // Every archetype must stay inside the documented limits.
