@@ -5,11 +5,10 @@
    The whole app is one 228KB file with no assets and no network calls of its
    own, so once this is installed the studio works with the wifi off entirely,
    which is the point: a sequencer you can open on a bus. */
-var CACHE = 'studio-v1';
+var CACHE = 'studio-v2';
 var ASSETS = [
   './',
   'index.html',
-  'icon.svg',
   'apple-touch-icon.png',
   'icon-192.png',
   'icon-512.png',

@@ -136,7 +136,10 @@ await withApp('music-studio', async ({ page, errors, overflow }) => {
     await page.evaluate(() => {
       const s = [...document.querySelectorAll('script:not([src])')];
       const app = s.findIndex((x) => /GS\.init\(\)/.test(x.textContent));
-      const seam = s.findIndex((x) => /studio-v1/.test(x.textContent));
+      /* matched on the seam's shape, not its version string: pinning the
+         literal meant the next build bump silently stopped finding the seam
+         and reported the order as broken. */
+      const seam = s.findIndex((x) => /var BUILD\s*=/.test(x.textContent));
       return app !== -1 && seam !== -1 && seam > app;
     }), 'a seam that runs first can stop GS.init() from ever running');
 
