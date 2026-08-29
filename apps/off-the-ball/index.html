@@ -47,7 +47,12 @@ canvas{display:block;width:100%;touch-action:none}
   line-height:1.5;color:rgba(232,228,217,.55);pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.8)}
 .callchip{position:absolute;left:8px;top:8px;font-family:var(--mono);font-size:10px;font-weight:600;
   letter-spacing:.1em;text-transform:uppercase;color:var(--attack);background:rgba(7,22,20,.75);
-  padding:4px 8px;border-radius:4px;pointer-events:none}
+  padding:4px 8px;border-radius:4px;pointer-events:none;
+  transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+/* The verdict drops in across the top of the board and used to land on top of
+   the call sign. The call is the name a teammate shouts, so it steps down out
+   of the way instead of being buried. */
+.board.judged .callchip{transform:translateY(32px)}
 .verdict{position:absolute;left:0;right:0;top:0;padding:9px 12px;font-family:var(--mono);font-size:11px;
   font-weight:600;letter-spacing:.04em;background:rgba(7,22,20,.9);border-bottom:1px solid var(--hair);
   transform:translateY(-110%);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
@@ -289,7 +294,9 @@ footer{margin-top:22px;font-family:var(--mono);font-size:10px;color:var(--muted)
     name is what lets a teammate read the play before it happens. Defenders act
     on a delayed view of the pitch and carry momentum through turns, so scouting
     one predictable opponent and setting how he plays changes what the board
-    tells you.
+    tells you. Your own runners look up too: a player heading into a space that
+    has filled will check back or stop rather than run into traffic, and the
+    ledger says so when he does.
     <p class="colophon">A free tool from <a href="../">Sky Wolf Studio</a> &middot;
       <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Off%20the%20Ball">Feedback</a></p>
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
@@ -747,8 +754,12 @@ function buildSim(){
   S.attackers=play.attackers.map(a=>{
     const path=(comp.paths[a.id]&&comp.paths[a.id].length>1)?comp.paths[a.id]:[{x:a.x,y:a.y}];
     const delay=comp.delays[a.id]||0;
+    const len=pathLength(path);
     return{id:a.id,label:a.label,pos:{x:a.x,y:a.y},vel:{x:0,y:0},path,delay,
-      len:pathLength(path),s:0,cuts:cutTimes(path).map(c=>({...c,t:c.t+delay,logged:false}))};
+      len,s:0,cuts:cutTimes(path).map(c=>({...c,t:c.t+delay,logged:false})),
+      /* a hand drawn run is a statement of intent and is never rerouted */
+      freehand:!!(a.path&&a.path.length>1),
+      dp:decisionPoint(len),bails:0};
   });
   S.defenders=play.defenders.map(d=>({id:d.id,label:d.label,pos:{x:d.x,y:d.y},vel:{x:0,y:0},
     mode:d.mode,mark:d.mark,anchor:{x:d.anchor.x,y:d.anchor.y},
@@ -764,7 +775,10 @@ function activeFake(S){
 }
 function snapshot(S){
   return {t:S.t,ball:{x:S.ball.x,y:S.ball.y},fake:activeFake(S),inFlight:!!S.flight,
-    att:S.attackers.map(a=>({id:a.id,x:a.pos.x,y:a.pos.y}))};
+    att:S.attackers.map(a=>({id:a.id,x:a.pos.x,y:a.pos.y})),
+    /* defenders, with velocity, so a runner can read where a man is GOING
+       rather than only where he is. He reads this late, like everyone. */
+    def:S.defenders.map(d=>({id:d.id,x:d.pos.x,y:d.pos.y,vx:d.vel.x,vy:d.vel.y}))};
 }
 /* what one particular defender believes he is looking at */
 function ballAsSeenBy(seen,P){
@@ -777,6 +791,125 @@ function perceive(S,tau){
   for(let i=S.history.length-1;i>=0;i--) if(S.history[i].t<=want) return S.history[i];
   return S.history[0];
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   READING THE RUN
+
+   HANDOFF issue 1, the author's own "big one": runs are fixed polylines, so
+   a runner sprints into a space that has been filled and keeps going, which
+   is a run no human makes. Conditional passing hid the worst of it by
+   withholding the ball; this fixes the run itself.
+
+   Deliberately small, per the author's steer: ONE decision point per run,
+   derived from arc length rather than authored per move, so none of the 24
+   moves needed rewriting. Two fallbacks only.
+
+   The boundary that matters most: an attacker gets NO privileged
+   information. He reads a delayed snapshot like everybody else, he
+   extrapolates PERCEIVED velocity, and he never touches d.prof. He also
+   reads seen.ball raw rather than through ballAsSeenBy, because a player is
+   not fooled by his own team's feint.
+   ══════════════════════════════════════════════════════════════════════════ */
+const ATT_TAU=0.35,        /* he is late too, and sometimes gets it wrong   */
+      READ_AHEAD_MAX=2.0,  /* the furthest ahead he will project anybody    */
+      DECIDE_AT=6.0,       /* metres from the end of the run he decides at  */
+      DECIDE_MIN=1.5,      /* below this the run is too short to bail from  */
+      BAIL_MARGIN=1.2,     /* the hysteresis that keeps a clear run clear   */
+      SHORT_D=5.0,         /* how far coming short takes him                */
+      COVERED=3.0,         /* a defender this close to your target is on it */
+      BAIL_MAX=2;
+/* Runs shorter than about 7.5 metres get no decision point by arithmetic,
+   which is why check, pin and drop need no special case: coming short IS
+   what they already do, and there is nothing to fall back to. */
+function decisionPoint(len){
+  const at=len-DECIDE_AT*FIELD.k;
+  return at>=DECIDE_MIN*FIELD.k?at:null;
+}
+function pathUpTo(path,s){
+  const out=[{x:path[0].x,y:path[0].y}];
+  let acc=0;
+  for(let i=1;i<path.length;i++){
+    const seg=V.dist(path[i-1],path[i]);
+    if(acc+seg>=s){const p=pointAt(path,s);
+      if(V.dist(out[out.length-1],p)>0.05)out.push({x:p.x,y:p.y});
+      return out;}
+    acc+=seg;out.push({x:path[i].x,y:path[i].y});
+  }
+  return out;
+}
+/* The nearest defender to a point, as this runner believes they will be
+   WHEN HE GETS THERE.
+
+   The lead time has to come from the distance, not a constant. The first
+   build extrapolated every option 0.9s ahead, which compares the space at
+   the far end of a four second run against the space two steps away using
+   the same clock, and that asymmetry quietly biases every runner toward
+   bailing out. It moved a pinned cell the wrong way, overlap at u10 going
+   from HALF A YARD to SMOTHERED, which is how it was caught. */
+function gapAt(seen,from,pt){
+  const lead=Math.min(READ_AHEAD_MAX,V.dist(from,pt)/ATTACKER_SPEED);
+  let g=99;
+  for(const d of (seen.def||[])){
+    const p={x:d.x+d.vx*lead,y:d.y+d.vy*lead};
+    g=Math.min(g,V.dist(p,pt));
+  }
+  return g;
+}
+function readTheRun(S,a){
+  if(a.freehand||a.bails>=BAIL_MAX)return;      /* a dragged line is a statement */
+  if(a.dp==null||a.s<a.dp)return;
+  a.dp=null;                                    /* he only gets one look here */
+  if(S.carrier===a.id||S.flight&&S.flight.receiver===a.id)return;
+  if(activeFake(S))return;                      /* never reroute mid lie */
+
+  const seen=perceive(S,ATT_TAU);
+  const here={x:a.pos.x,y:a.pos.y};
+  const target=pointAt(a.path,a.len);
+  const stay=gapAt(seen,here,target);
+  /* Only a COVERED space is worth bailing from. Without this the margin is
+     meaningless at range: with the nearest defender forty metres away, any
+     step sideways "gains" more than 1.2 metres of nothing, and a runner in
+     acres would divert for no reason. A defender inside COVERED metres of
+     where you are going is the whole trigger. */
+  if(stay>=COVERED*FIELD.k)return;
+  const toBall=V.norm(V.sub(seen.ball,here));
+  const opts=[
+    {kind:'short',pt:clampField({x:here.x+toBall.x*SHORT_D*FIELD.k,
+                                 y:here.y+toBall.y*SHORT_D*FIELD.k})},
+    {kind:'hold',pt:here}
+  ];
+  let best=null;
+  for(const o of opts){
+    const g=gapAt(seen,here,o.pt);
+    if(g>stay+BAIL_MARGIN&&(!best||g>best.g)){best={...o,g};}
+  }
+  if(!best){
+    /* Nowhere to go is worth saying out loud: it means the play has no plan
+       B, which is exactly the kind of thing this board exists to show. */
+    if(stay<CROWD_TIGHT)
+      log(S,'read',`${a.label} has nowhere to check back to, and runs into it anyway`);
+    return;
+  }
+  /* Compare against the END OF THE RUN, never against the head. Holding
+     truncates the path where he stands, so the head's last point IS his
+     current position, and a guard that compared the two made `hold`
+     impossible to ever fire. */
+  if(V.dist(target,best.pt)<0.4)return;
+  const head=pathUpTo(a.path,a.s);
+  a.path=best.kind==='hold'
+    ?head                                   /* stop here, the space has gone */
+    :head.concat([{x:best.pt.x,y:best.pt.y}]);
+  if(a.path.length<2)a.path=[head[0],{x:here.x,y:here.y}];
+  a.len=pathLength(a.path);
+  a.s=Math.min(a.s,a.len);
+  a.cuts=cutTimes(a.path).map(c=>({...c,t:c.t+a.delay,
+    logged:c.t+a.delay<=S.t}));           /* nothing already past gets backfilled */
+  a.bails++;
+  log(S,'read',best.kind==='short'
+    ?`${a.label} sees it filling up and checks back`
+    :`${a.label} stops his run, the space has gone`);
+}
+const CROWD_TIGHT=2.5;
+
 function offsideLine(S){
   /* Infinity, never null: the caller does `to.pos.y > line+0.4`, and
      null+0.4 is 0.4, which would flag almost every runner offside in a
@@ -797,6 +930,7 @@ function step(S){
       a.s=Math.min(a.len,a.s+ATTACKER_SPEED*DT);
       const p=pointAt(a.path,a.s);
       a.vel=V.mul(V.sub(p,prev),1/DT); a.pos=p;
+      readTheRun(S,a);
     } else a.vel={x:0,y:0};
   }
 
@@ -1076,7 +1210,10 @@ function draw(){
     const L=offsideLine(S);
     ctx.beginPath();ctx.moveTo(0,sy(L));ctx.lineTo(VW,sy(L));ctx.stroke();
     ctx.setLineDash([]);ctx.fillStyle='rgba(111,216,180,.65)';
-    ctx.font='9px "IBM Plex Mono",monospace';ctx.fillText('offside line',5,sy(L)-4);
+    /* Labelled at the right end: the call chip owns the top left corner, and
+       on a play this high up the pitch the two collided. */
+    ctx.font='9px "IBM Plex Mono",monospace';ctx.textAlign='right';
+    ctx.fillText('offside line',VW-5,sy(L)-4);ctx.textAlign='left';
     ctx.restore();
   }
   const comp=S?null:compile();
@@ -1528,9 +1665,11 @@ function renderLedger(){
   elLedger.scrollTop=elLedger.scrollHeight;
 }
 function showVerdict(v){
-  if(!v){elVerdict.className='verdict';return;}
+  const board=elVerdict.parentElement;
+  if(!v){elVerdict.className='verdict';board.classList.remove('judged');return;}
   elVerdict.textContent=v.text;
   elVerdict.className='verdict show '+(v.ok?'good':'bad');
+  board.classList.add('judged');
 }
 function renderAll(){draw();renderPcard();renderCallSheet();updateSkillStats();updateHint();renderSquadNote();}
 
@@ -1806,7 +1945,7 @@ function syncInputs(){
    banner on purpose: engine-test.mjs slices the script at that banner and
    would die on any document access above it. See HANDOFF.md section 2.
    ══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'otb-v5';
+var BUILD = 'otb-v6';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Stephen fills this with the Stripe link when there is one. */
 var TIP_URL = '';

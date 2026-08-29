@@ -127,7 +127,14 @@ for (const key of KEYS) for (const t of TIERS) {
 const GOLDEN = {
   giveandgo: ['CLEAR CHANCE', 'CLEAR CHANCE', 'CLEAR CHANCE'],
   decoy:     ['SMOTHERED', 'SMOTHERED', 'HALF A YARD'],
-  overlap:   ['HALF A YARD', 'NO PASS ON', 'HALF A YARD'],
+  /* Moved 2026-08-29 by attacker reactivity, and this is the row that
+     increment was for. HANDOFF issue 1 was that the overlapping fullback
+     sprinted past his own passing lane and killed the move; at rec that read
+     NO PASS ON. He now reads the cover at 1.87s, checks his run, and the ball
+     reaches him with 1.6m of lane and 8.4m of space. Watched in the browser
+     before blessing. All three tiers improve, which is the right direction
+     and the whole point of the change. */
+  overlap:   ['SPACE CREATED', 'SPACE CREATED', 'SPACE CREATED'],
   trap:      ['NO PASS ON', 'NO PASS ON', 'CLEAR CHANCE'],
   isolate:   ['CLEAR CHANCE', 'CLEAR CHANCE', 'CLEAR CHANCE'],
   blank:     ['NOTHING HAPPENS', 'NOTHING HAPPENS', 'NOTHING HAPPENS'],
@@ -278,6 +285,85 @@ console.log('\nperception and feints');
   check('a reader buys a feint less than a plain defender',
         bought('reader') < bought('balanced'),
         `reader ${bought('reader')}m vs balanced ${bought('balanced')}m`);
+}
+
+console.log('\nreading the run');
+{
+  /* A controlled fixture rather than a preset, so the claim is about the
+     mechanism and not about tuned geometry. One runner, one long straight
+     run, and a cone: a defender with ballPull 0 so he stays where he is put.
+     The fixture self checks, because a cone that drifts proves nothing. */
+  /* The runner uses a MOVE, never a drawn path. A drawn path is exempt from
+     diverting by design, so building the fixture out of one would make this
+     whole block test nothing, which is what the first version of it did. */
+  const cone = (at) => {
+    const p = API.clonePlay('blank');
+    p.attackers = [
+      { id: 'a1', label: '1', x: 34, y: 12, hasBall: true, moves: [], custom: '', path: [] },
+      { id: 'a2', label: '2', x: 20, y: 16, hasBall: false, moves: ['blindside'], custom: '', path: [] },
+    ];
+    /* A genuinely static cone. ballPull 0 alone was not enough: a zone
+       defender still drifts, and a fixture whose cone wanders is a fixture
+       that stops proving anything. */
+    const prof = API.makeProfile('rec', 'balanced');
+    prof.ballPull = 0; prof.zoneR = 0.1; prof.stepUp = 0;
+    prof.topSpeed = 0.01; prof.accel = 0.01;
+    p.defenders = [{ id: 'd1', label: 'D', x: at.x, y: at.y, mode: 'zone', mark: null,
+      anchor: { x: at.x, y: at.y }, prof }];
+    p.passes = [];
+    return p;
+  };
+  const run = (p) => { API.setPlay(p); API.setSkill(API.SKILLS.rec);
+    const S = API.buildSim(); let n = 0;
+    while (!S.done && n < MAX_FRAMES) { API.step(S); n++; }
+    return S; };
+
+  /* Where does that run actually END? Solve it rather than assume it: run
+     once with the cone parked in the far corner, and read the finish. Then
+     put the cone exactly there. A fixture that guesses the target space is a
+     fixture that can silently stop proving anything. */
+  const clear = run(cone({ x: 64, y: 18 }));
+  const r = clear.attackers[1];
+  const spot = { x: r.pos.x, y: r.pos.y };
+  check('an uncontested run is never touched', r.bails === 0,
+    `bailed ${r.bails} times with nobody near him`);
+  check('the fixture finds a real run to test',
+    Math.hypot(spot.x - 20, spot.y - 16) > 8,
+    `the run only covered ${Math.hypot(spot.x - 20, spot.y - 16).toFixed(1)}m`);
+
+  const covered = run(cone(spot));
+  const coneEnd = covered.defenders[0].pos;
+  check('the fixture cone stays on the target space',
+    Math.hypot(coneEnd.x - spot.x, coneEnd.y - spot.y) < 3.5,
+    `cone drifted to ${coneEnd.x.toFixed(1)},${coneEnd.y.toFixed(1)}`);
+  check('a run into a covered space diverts',
+    covered.attackers[1].bails > 0,
+    'the runner carried on into a space with a defender standing in it');
+  check('a diverted runner ends up somewhere else',
+    Math.hypot(covered.attackers[1].pos.x - spot.x,
+               covered.attackers[1].pos.y - spot.y) > 1.5);
+
+  /* a dragged line is a statement of intent, not a suggestion */
+  const drawn = cone(spot);
+  drawn.attackers[1].path = [{ x: 20, y: 16 }, { x: 20, y: 26 }, { x: spot.x, y: spot.y }];
+  const hand = run(drawn);
+  check('a hand drawn run is never diverted', hand.attackers[1].bails === 0);
+
+  /* and the read is late, like everything else in this engine */
+  const firstRead = covered.events.find((e) => e.cls === 'read');
+  check('a divert is reported in the ledger', !!firstRead);
+  if (firstRead) check('no read fires before a runner could have seen anything',
+    firstRead.t >= 0.35, `fired at ${firstRead.t}s`);
+
+  /* nobody dithers: the cap holds across every preset and tier */
+  let worst = 0;
+  for (const key of KEYS) for (const t of TIERS) {
+    const { S } = simulate(preset(key, t), t);
+    for (const a of S.attackers) worst = Math.max(worst, a.bails || 0);
+  }
+  check('nobody reroutes more than twice', worst <= 2, `somebody bailed ${worst} times`);
+  check('bails is always a real number',
+    KEYS.every((k) => simulate(preset(k, 'rec'), 'rec').S.attackers.every((a) => typeof a.bails === 'number')));
 }
 
 console.log('\npassing');

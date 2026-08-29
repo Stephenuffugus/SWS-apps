@@ -3,20 +3,47 @@
    Runs the real app inside jsdom and asserts core behavior.
    Claude Code: run this after ANY change. All green before you commit. */
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 
-const file = process.argv[2] || './index.html';
+/* Resolved against this file, never against the working directory. The old
+   './index.html' only worked when you happened to run it from inside the app
+   folder, so the moment design/test-all.mjs ran it from the repo root the app
+   read as broken when nothing was wrong with it. */
+const HERE = dirname(fileURLToPath(import.meta.url));
+const file = process.argv[2] || join(HERE, '..', 'index.html');
 const html = readFileSync(file, 'utf8');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let pass = 0, fail = 0;
 const ok = (cond, name) => { if (cond) { pass++; console.log('  ✓', name); } else { fail++; console.log('  ✗', name); } };
 
+/* The app opens on the week that contains today, so a suite that does not say
+   what today is only passes during the school year it was written in. On
+   2026-08-29, a Saturday, it rolled forward to the week of 08-31 and every
+   assertion about the 08-24 week read as a broken app. The clock is pinned to
+   a Tuesday inside baseConfig's first week so the grid below is the same grid
+   forever. Parsing a given string is untouched. */
+const NOW = new Date('2026-08-25T12:00:00Z');
+function pinClock(win) {
+  const Real = win.Date;
+  function Pinned(...a) {
+    if (!(this instanceof Pinned)) return new Real(NOW.getTime()).toString();
+    return a.length ? new Real(...a) : new Real(NOW.getTime());
+  }
+  Pinned.prototype = Real.prototype;
+  Pinned.now = () => NOW.getTime();
+  Pinned.parse = Real.parse; Pinned.UTC = Real.UTC;
+  win.Date = Pinned;
+}
+
 function boot(preState) {
   const dom = new JSDOM(html, {
     runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
     beforeParse(win) {
       win.alert = () => {}; win.confirm = () => true;
+      pinClock(win);
       if (preState !== undefined) win.localStorage.setItem('palette2', JSON.stringify(preState));
     }
   });

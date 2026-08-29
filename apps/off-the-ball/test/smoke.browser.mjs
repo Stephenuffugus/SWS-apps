@@ -208,6 +208,31 @@ await withApp('off-the-ball', async ({ page, errors, overflow }) => {
     (await plain.evaluate(() => document.getElementById('callname').value)) === 'Plain Link');
   await plain.close();
 
+  /* ------------------------------------------------- reading the run
+     The engine test proves the mechanism in isolation. This proves a real
+     user sees it: run the preset the reactivity increment was built for and
+     look for the divert in the ledger a coach actually reads. */
+  await page.selectOption('#preset', 'overlap');
+  await page.selectOption('#skill', 'rec');
+  await page.click('#play');
+  await page.waitForTimeout(4200);
+  const read = await page.evaluate(() => ({
+    ledger: [...document.querySelectorAll('#ledger .ev')].map((n) => n.textContent),
+    verdict: document.getElementById('verdict').textContent,
+    judged: document.querySelector('.board').classList.contains('judged'),
+  }));
+  check('a runner reading the space is reported to the coach',
+    read.ledger.some((l) => /checks back|stops his run|runs into it anyway/.test(l)),
+    'no divert reached the ledger');
+  check('the overlap now finds the pass', /SPACE CREATED/.test(read.verdict),
+    `verdict was ${read.verdict}`);
+  check('the call sign steps clear of the verdict', read.judged,
+    'the board never got the judged class, so the two would overlap');
+  await page.click('#reset');
+  await page.waitForTimeout(300);
+  check('resetting puts the call sign back',
+    !(await page.evaluate(() => document.querySelector('.board').classList.contains('judged'))));
+
   const real = errors.filter((e) => !/favicon/i.test(e));
   check('no page errors', real.length === 0, real.slice(0, 2).join(' | '));
 });
