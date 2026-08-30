@@ -425,6 +425,14 @@ the number one complaint. Research contradicts that on its own evidence.
 
 ## 8. Open, in the order it matters
 
+0. **It is live** at `https://skywolfstudio.com/comic-crew/`, deployed
+   2026-08-30 by `scripts/deploy-2026-08-30.sh`, hosting only. All 16 live checks
+   passed, including three that open untouched sibling apps to prove the deploy
+   did not disturb them. Then the live origin itself was driven in a browser: a
+   character drawn, dressed, posed and still there after a reload, with the
+   service worker controlling and no console errors. It is on the front door
+   marked beta.
+
 1. **Penny drives it cold**, with nobody coaching her and nobody leaning over her
    shoulder. Watch three things the audits could not settle: whether she finds the
    costumes at all, whether she can draw a face, and whether she ever finds Move
