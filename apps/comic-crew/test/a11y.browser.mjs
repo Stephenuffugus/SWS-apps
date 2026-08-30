@@ -18,6 +18,7 @@ const AXE = readFileSync(new URL('../../../node_modules/axe-core/axe.min.js', im
 const fails = [];
 let n = 0;
 const ok = (c, m) => { n++; if (!c) fails.push(m); };
+const eq = (a, b, m) => { n++; if (a !== b) fails.push(`${m}: got ${JSON.stringify(a)}, wanted ${JSON.stringify(b)}`); };
 
 /* every state a child can actually be looking at, not just the empty page */
 async function drawSomething(page) {
@@ -48,6 +49,13 @@ async function drawSomething(page) {
 
 for (const scheme of ['light', 'dark']) {
   await withApp('comic-crew', async ({ page, errors }) => {
+    /* in through the real gate, then audit the app behind it. The gate itself
+       is audited as its own state below. */
+    await page.addInitScript(() => {
+      try { localStorage.setItem('sws.gate.comic-crew', 'wolfden'); } catch (e) {}
+    });
+    await page.reload({ waitUntil: 'load' });
+    await page.evaluate(() => document.fonts.ready);
     await page.addScriptTag({ content: AXE });
     await drawSomething(page);
 
@@ -99,6 +107,48 @@ for (const scheme of ['light', 'dark']) {
     ok(named, 'the drawing canvas has an accessible name');
 
     ok(errors.length === 0, `${scheme}: no console errors (${JSON.stringify(errors).slice(0, 300)})`);
+  }, { width: 414, height: 900, scheme });
+}
+
+/* ── the gate is the first thing anybody meets, so it gets audited too ──── */
+for (const scheme of ['light', 'dark']) {
+  await withApp('comic-crew', async ({ page, errors }) => {
+    await page.addScriptTag({ content: AXE });
+    await page.waitForTimeout(250);
+    const up = await page.evaluate(() => !!document.querySelector('.gate'));
+    ok(up, `${scheme}: the gate is up to be audited`);
+    const res = await page.evaluate(async () => {
+      const r = await window.axe.run(document, {
+        resultTypes: ['violations'],
+        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      });
+      return r.violations
+        .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+        .map((v) => ({ id: v.id, impact: v.impact, n: v.nodes.length,
+                       where: v.nodes.slice(0, 2).map((x) => x.target.join(' ')) }));
+    });
+    ok(res.length === 0, `${scheme} / the gate: ${JSON.stringify(res)}`);
+
+    /* the passphrase box has a real label, and the error is announced */
+    const shape = await page.evaluate(() => {
+      const i = document.getElementById('gatepass');
+      const l = document.querySelector('.gate label');
+      const e = document.querySelector('.gate .gerr');
+      const b = document.getElementById('gatego');
+      const rb = b.getBoundingClientRect(), ri = i.getBoundingClientRect();
+      return { labelFor: l && l.getAttribute('for'), id: i.id,
+               described: i.getAttribute('aria-describedby'),
+               errRole: e && e.getAttribute('role'),
+               btn: [Math.round(rb.width), Math.round(rb.height)],
+               box: [Math.round(ri.width), Math.round(ri.height)] };
+    });
+    eq(shape.labelFor, shape.id, `${scheme}: the passphrase box has a real label`);
+    ok(shape.described, `${scheme}: and an explanation tied to it`);
+    eq(shape.errRole, 'alert', `${scheme}: a wrong passphrase is announced, not just coloured`);
+    ok(shape.btn[1] >= 44 && shape.box[1] >= 44,
+      `${scheme}: both are 44px targets (${JSON.stringify(shape)})`);
+
+    ok(errors.length === 0, `${scheme}: no console errors at the gate (${JSON.stringify(errors).slice(0, 200)})`);
   }, { width: 414, height: 900, scheme });
 }
 

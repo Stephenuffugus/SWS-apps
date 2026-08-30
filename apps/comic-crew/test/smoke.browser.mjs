@@ -106,6 +106,19 @@ const pinchBy = (page, k) => page.evaluate((k) => {
   ev('pointerup', 2, cx + d1 / 2, cy);
 }, k);
 
+/* The app is behind a studio passphrase while it is unfinished. Tests come in
+   the way Stephen does, through the real gate, rather than round the back of it:
+   seeded before load so it survives the reloads these checks rely on. The gate
+   itself is proved in its own block at the end. */
+const unlock = async (page) => {
+  await page.addInitScript(() => {
+    try { localStorage.setItem('sws.gate.comic-crew', 'wolfden'); } catch (e) {}
+  });
+  await page.reload({ waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(120);
+};
+
 const bodyCount = (page) => page.evaluate(() =>
   window.__comiccrew.S.strokes.filter((s) => s.layer === 'body').length);
 
@@ -120,6 +133,7 @@ async function drawBody(page) {
 }
 
 await withApp('comic-crew', async ({ page, errors, overflow, offenders }) => {
+  await unlock(page);
   /* ── the shipped build and the worker must name the same cache, or a fix
      never reaches a phone that already installed the app ─────────────────── */
   const build = await page.evaluate(() => window.BUILD);
@@ -521,6 +535,7 @@ await withApp('comic-crew', async ({ page, errors, overflow, offenders }) => {
 
 /* ── the smallest phone anyone still uses ────────────────────────────────── */
 await withApp('comic-crew', async ({ page, errors, overflow }) => {
+  await unlock(page);
   await drawBody(page);
   await page.click('#mDress');
   await page.waitForTimeout(250);
@@ -569,6 +584,7 @@ await withApp('comic-crew', async ({ page, errors, overflow }) => {
 
 /* ── offline is the product, so prove it rather than assume it ───────────── */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   const ready = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return 'unsupported';
     const reg = await navigator.serviceWorker.ready;
@@ -608,6 +624,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
 
 /* 1. an idle tab must not lay its stale copy over another tab's hour of work */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   await drawBody(page);
   await page.waitForTimeout(800);
   const mine = await page.evaluate(() => localStorage.getItem('comic-crew.character'));
@@ -631,6 +648,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
 
 /* 2. a browser that refuses to store must say so, not fail silently */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   await page.addInitScript(() => {
     const real = Storage.prototype.setItem;
     Storage.prototype.setItem = function (k, v) {
@@ -661,6 +679,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
 
 /* 3. a record this build cannot read is not the same thing as no record */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   await page.addInitScript(() => {
     localStorage.setItem('comic-crew.character', '{"format":"comic-crew/9","this":"is from a newer build"');
   });
@@ -683,6 +702,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
    pagehide has no next time, so a guard that refuses to write mid stroke there
    throws away everything drawn since the last tick. */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   await drawBody(page);
   await page.waitForTimeout(800);
   const before = await page.evaluate(() =>
@@ -711,6 +731,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
    A child stops believing in a button that sometimes does nothing, and by then
    she has tapped it twice and lost real work. */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   const undoDepth = () => page.evaluate(() =>
     document.getElementById('btnUndo').disabled);
   await drawBody(page);
@@ -792,6 +813,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
    Undo covers a mistake made a second ago. It does not survive the tab, and
    "New character" is one tap from the button beside Undo. */
 await withApp('comic-crew', async ({ page, errors }) => {
+  await unlock(page);
   await drawBody(page);
   await page.waitForTimeout(800);
   const had = await bodyCount(page);
@@ -824,6 +846,7 @@ await withApp('comic-crew', async ({ page, errors }) => {
 
 /* ── a phone turned sideways, where the paper used to be zero pixels tall ─ */
 await withApp('comic-crew', async ({ page, errors, overflow }) => {
+  await unlock(page);
   await drawBody(page);
   await page.click('#mDraw');
   await page.waitForTimeout(250);
@@ -854,6 +877,97 @@ await withApp('comic-crew', async ({ page, errors, overflow }) => {
   ok(ov <= 2, `no sideways scroll in landscape (${ov}px)`);
   eq(errors.length, 0, `no errors in landscape (${JSON.stringify(errors).slice(0, 300)})`);
 }, { width: 844, height: 390 });
+
+/* ── the studio curtain actually holds ───────────────────────────────────
+   It is not security and never claimed to be: the passphrase is in the source
+   of a file anyone can read. What it has to do is stop a stranger who wanders
+   in from meeting a half finished app, and keep letting Stephen in without
+   typing it again. Both of those are worth a check, because a gate that
+   silently stops working looks exactly like a gate that works. */
+await withApp('comic-crew', async ({ page, errors }) => {
+  const gateUp = () => page.evaluate(() => {
+    const g = document.querySelector('.gate');
+    if (!g) return { up: false };
+    const r = g.getBoundingClientRect();
+    return { up: true, covers: r.width >= window.innerWidth - 1 && r.height >= window.innerHeight - 1,
+             hasInput: !!document.getElementById('gatepass') };
+  });
+
+  const cold = await gateUp();
+  ok(cold.up, 'a stranger arriving cold meets the gate');
+  ok(cold.covers, 'and it covers the whole screen, not a corner of it');
+  ok(cold.hasInput, 'with somewhere to type the passphrase');
+
+  /* the drawing surface must not be reachable behind it */
+  const reachable = await page.evaluate(() => {
+    const c = document.getElementById('stage');
+    const r = c.getBoundingClientRect();
+    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return !!(top && top.closest('.gate'));
+  });
+  ok(reachable, 'and the paper cannot be touched through it');
+
+  /* Everything below needs the gate to actually be there. Without this guard a
+     missing gate reports as a click timing out on an element that is not there,
+     which is detection but not a readable one, and the assertions that matter
+     never run at all. */
+  if (!cold.up) {
+    ok(false, 'a wrong passphrase does not open it (no gate to test)');
+    ok(false, 'and says so (no gate to test)');
+    ok(false, 'and clears the box to try again (no gate to test)');
+    ok(false, 'the right passphrase opens it (no gate to test)');
+    ok(false, 'and it stays open on the next visit (no gate to test)');
+    eq(errors.length, 0, `no errors around the gate (${JSON.stringify(errors).slice(0, 250)})`);
+    return;
+  }
+
+  /* a wrong phrase says so and does not open */
+  await page.fill('#gatepass', 'please');
+  await page.click('#gatego');
+  await page.waitForTimeout(200);
+  const wrong = await page.evaluate(() => ({
+    still: !!document.querySelector('.gate'),
+    said: (document.querySelector('.gate .gerr') || {}).textContent || '',
+    cleared: (document.getElementById('gatepass') || {}).value,
+  }));
+  ok(wrong.still, 'a wrong passphrase does not open it');
+  ok(/not that one/i.test(wrong.said), `and says so ("${wrong.said}")`);
+  eq(wrong.cleared, '', 'and clears the box to try again');
+
+  /* If the wrong phrase let us in, the gate is gone and everything below would
+     report as a fill timing out on an element that no longer exists. Say what
+     actually happened instead. */
+  if (!wrong.still) {
+    ok(false, 'the right passphrase opens it (the wrong one already did)');
+    ok(false, 'and the app is really there behind it (never gated)');
+    ok(false, 'and it stays open on the next visit (never gated)');
+    eq(errors.length, 0, `no errors around the gate (${JSON.stringify(errors).slice(0, 250)})`);
+    return;
+  }
+
+  /* the right one opens it, and the app is really there behind it */
+  await page.fill('#gatepass', 'wolfden');
+  await page.click('#gatego');
+  await page.waitForTimeout(350);
+  const open = await page.evaluate(() => ({
+    gone: !document.querySelector('.gate'),
+    modes: document.querySelectorAll('.modes button').length,
+    stage: (() => { const c = document.getElementById('stage');
+      const r = c.getBoundingClientRect(); return Math.round(r.height); })(),
+  }));
+  ok(open.gone, 'the right passphrase opens it');
+  eq(open.modes, 3, 'and the app is really there behind it');
+  ok(open.stage >= 180, `with a stage sized properly on the way in (${open.stage}px)`);
+
+  /* and it stays open, because typing it every time is its own kind of broken */
+  await page.reload({ waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(250);
+  eq(await page.evaluate(() => !!document.querySelector('.gate')), false,
+    'and it stays open on the next visit');
+
+  eq(errors.length, 0, `no errors around the gate (${JSON.stringify(errors).slice(0, 250)})`);
+}, { width: 414, height: 900 });
 
 if (fails.length) {
   console.error(`smoke.browser: ${fails.length} of ${n} checks failed`);

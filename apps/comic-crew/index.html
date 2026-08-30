@@ -257,10 +257,41 @@
     .foot{padding:0 10px 8px}
   }
 
+  /* ── the studio curtain ──────────────────────────────────────────────────
+     Comic Crew sits beside the finished apps while a seven year old has still
+     never opened it, and while it is waiting on Stephen's art. This keeps a
+     stranger who wanders in off a half finished thing.
+
+     Be clear about what this is and is not. It is NOT security. The passphrase
+     is in the source of a file anyone can read, and a gate written into the
+     page it guards can always be walked around. It does not need to be: every
+     drawing lives in this browser and has never been anywhere else, so there is
+     nothing here for a stranger to reach even if they step past it. What it
+     buys is that an unfinished app does not look shipped.
+
+     Delete this block and the script that matches it on the day it opens. It is
+     the only thing in the file that assumes a build stage. ─────────────────── */
+  .gate{position:fixed;inset:0;z-index:80;background:var(--shell);
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .gate .gbox{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+  .gate .gmark{font-family:"Bangers",Impact,sans-serif;font-size:30px;
+    letter-spacing:1.4px;color:var(--board);line-height:1}
+  .gate .gmark em{font-style:normal;color:var(--magenta)}
+  .gate .gsub{margin:0;font-size:13px;color:var(--dim)}
+  .gate label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dimmer)}
+  .gate input{width:100%;min-height:48px;font-family:inherit;font-size:17px;
+    background:var(--board);color:var(--ink);border:2px solid var(--board);
+    border-radius:8px;padding:10px 12px}
+  .gate .gerr{margin:0;min-height:20px;font-size:14px;color:#FF9BC6}
+  .gate .gnote{margin:0;font-size:12.5px;line-height:1.5;color:var(--dimmer)}
+  .gate button{min-height:48px;border:1px solid var(--line);background:transparent;
+    color:var(--board);font:inherit;border-radius:8px;cursor:pointer}
+  .gate button:active{background:var(--shellup)}
+
   /* ── print. This is what actually puts the comic on the fridge. ───────── */
   @media print{
     body{background:#fff;display:block;overflow:visible;padding:0}
-    .topbar,.savewarn,.modes,.stagewrap,.hintwrap,.ctrls,.ctrlscroll,.rail,.cards,.strip,.stripnote,.foot,.sheet{display:none!important}
+    .topbar,.savewarn,.modes,.stagewrap,.hintwrap,.ctrls,.ctrlscroll,.gate,.rail,.cards,.strip,.stripnote,.foot,.sheet{display:none!important}
     #printSheet{display:block!important;position:static;background:#fff;padding:0}
     #printSheet .sheetbox{background:#fff;border:0;max-height:none;padding:0;border-radius:0}
     #printSheet h2,#printSheet p,#printSheet .row,#printSheet .closerow{display:none}
@@ -2245,13 +2276,74 @@ if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)
 
 boot();
 
+/* ================= the studio curtain =================
+   The gate described beside .gate in the stylesheet. Built with createElement
+   and textContent rather than innerHTML: nothing here is user supplied, but a
+   gate is a poor place to start making exceptions in a file that reads a
+   character out of a file a stranger could have written.
+
+   Deliberately NOT keyed under the app's own storage prefix, so the check that
+   proves a full disk is reported to the child, which makes every comic-crew key
+   throw, cannot also lock the door on the way past. */
+const GATE_PASS='wolfden';
+const GATE_KEY='sws.gate.comic-crew';
+function gateOpen(){
+  try{return localStorage.getItem(GATE_KEY)===GATE_PASS;}catch(e){return false;}
+}
+function showGate(){
+  const mk=(t,cls,txt)=>{const n=document.createElement(t);
+    if(cls)n.className=cls; if(txt!=null)n.textContent=txt; return n;};
+  const g=mk('div','gate'), box=mk('div','gbox');
+  g.setAttribute('role','dialog');
+  g.setAttribute('aria-modal','true');
+  g.setAttribute('aria-label','Comic Crew, not open yet');
+
+  const mark=mk('div','gmark','COMIC');
+  const em=mk('em',null,'CREW'); mark.appendChild(em);
+  box.appendChild(mark);
+  box.appendChild(mk('p','gsub','A comic maker for children. Not finished yet.'));
+
+  const lab=mk('label',null,'Passphrase');
+  lab.setAttribute('for','gatepass');
+  const inp=mk('input');
+  inp.type='password'; inp.id='gatepass'; inp.placeholder='passphrase';
+  inp.autocomplete='off'; inp.setAttribute('autocapitalize','none');
+  inp.setAttribute('autocorrect','off'); inp.spellcheck=false;
+  inp.setAttribute('aria-describedby','gatehint');
+  const err=mk('p','gerr'); err.setAttribute('role','alert');
+  const go=mk('button',null,'Come in'); go.type='button'; go.id='gatego';
+  const note=mk('p','gnote',
+    'Sky Wolf Studios. This one is still being made. Whatever you draw stays in '
+    +'this browser on this device either way. The gate is here so an unfinished '
+    +'app does not look finished, not to protect anything.');
+  note.id='gatehint';
+
+  const submit=()=>{
+    if(inp.value.trim().toLowerCase()!==GATE_PASS){
+      err.textContent='Not that one.'; inp.value=''; inp.focus(); return;
+    }
+    try{localStorage.setItem(GATE_KEY,GATE_PASS);}catch(e){}
+    g.remove();
+    scheduleFit();
+    say(defaultHint(),true);
+  };
+  go.addEventListener('click',submit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+
+  [lab,inp,err,go,note].forEach(n=>box.appendChild(n));
+  g.appendChild(box);
+  document.body.appendChild(g);
+  setTimeout(()=>{try{inp.focus();}catch(e){}},60);
+}
+if(!gateOpen())showGate();
+
 /* exposed for the headless tests, harmless in a browser */
 window.__comiccrew={S,POSES,KITS,BONES,JOINTS,PARENT,CHAIN,REST0,
   cloneJ,rotAbout,rotRad,relOf,poseOf,posePreset,bindAll,bindStroke,weightsFor,
   rebuildKits,measureGirth,outlineOf,activeStrokes,xforms,deform,
   doc,load,BLANK,drawPage,balloonBox,wrapWords,measureHead,isHead,bestBone,boneU,
   alignBones,DRIFT,saveNow,restore,KEY,KEEP,PREV,eraseAt,inkGap,fingerWorld,ERASE_SLOP,
-  bodyDrawn,UNDO,pageLayout,
+  bodyDrawn,UNDO,pageLayout,GATE_KEY,GATE_PASS,gateOpen,
   isPending:()=>pending,isSaveOK:()=>saveOK,
   HEAD_BONE,getHeadR:()=>HEADR};
 })();

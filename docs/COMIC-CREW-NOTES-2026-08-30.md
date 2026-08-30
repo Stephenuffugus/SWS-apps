@@ -425,7 +425,19 @@ the number one complaint. Research contradicts that on its own evidence.
 
 ## 8. Open, in the order it matters
 
-0. **It is live** at `https://skywolfstudio.com/comic-crew/`, deployed
+0. **It is live but gated.** `https://skywolfstudio.com/comic-crew/` asks for a
+   passphrase: **`wolfden`**, the same one Off the Ball uses, so there is one to
+   remember rather than two. It is remembered per browser, so it is typed once.
+
+   Be honest about what that gate is. It is NOT security: the passphrase is in
+   the source of a file anyone can read, and a gate written into the page it
+   guards can always be walked around. It does not need to be, because every
+   drawing lives in that browser and has never been anywhere else, so there is
+   nothing behind it for a stranger to reach. What it buys is that an unfinished
+   app does not look shipped. Delete `showGate` and the `.gate` rules on the day
+   it opens; they are the only things in the file that assume a build stage.
+
+   Deployed
    2026-08-30 by `scripts/deploy-2026-08-30.sh`, hosting only. All 16 live checks
    passed, including three that open untouched sibling apps to prove the deploy
    did not disturb them. Then the live origin itself was driven in a browser: a
