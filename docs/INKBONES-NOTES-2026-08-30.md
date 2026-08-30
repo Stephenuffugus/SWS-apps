@@ -429,11 +429,22 @@ the number one complaint. Research contradicts that on its own evidence.
    shoulder. Watch three things the audits could not settle: whether she finds the
    costumes at all, whether she can draw a face, and whether she ever finds Move
    without being told. Whatever fails there outranks everything below.
-2. **The name.** Inkbones collides with Inkbones Media, a live graphic design
-   studio, which is adjacent enough to matter, and with an abandoned but indexed
-   Inkscape bone rigging extension of the same name. Settle it before the Stripe
-   product, the domain and any store listing exist. A rename today costs a folder
-   move and about six references.
+2. **The name.**
+   <!-- KEEP-OLD-NAME -->
+   It was built under the working title Inkbones. That collides with Inkbones
+   Media, a live graphic design studio, which is adjacent enough to matter, and
+   with an abandoned but indexed Inkscape bone rigging extension of the same
+   name.
+   <!-- /KEEP-OLD-NAME -->
+   Settle it before the Stripe product, the domain and any store listing exist.
+   <!-- KEEP-OLD-NAME -->
+   `node scripts/rename-inkbones.mjs "New Name"` does the whole rename in one go:
+   the folder, the slug, the storage keys, the build tag, the worker cache, the
+   logo, the hub registration and this document. It leaves `docs/archive/` alone
+   on purpose, keeps this paragraph saying the old name, and prints what to
+   regenerate afterwards. Delete the script once it has been used. It only ever
+   had one job.
+   <!-- /KEEP-OLD-NAME -->
 3. **Stephen's art** for `marketing/thumb-512.png` and `thumb-256.png`. Generated
    placeholders are in place and are marked as such.
 4. **The tip jar** is wired and empty: `var TIP_URL = ''` in `index.html`. One
