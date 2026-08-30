@@ -77,6 +77,8 @@ check "the worker sweeps only its own caches, not all 36" \
   "https://skywolfstudio.com/comic-crew/sw.js" "comic-crew-"
 check "the privacy page is there, linked from the first screen" \
   "https://skywolfstudio.com/comic-crew/privacy.html" "kept in this browser"
+check "the studio curtain is up, so a stranger does not meet a half finished app" \
+  "https://skywolfstudio.com/comic-crew/" "if(!gateOpen())showGate();"
 code  "the display face is served" \
   "https://skywolfstudio.com/comic-crew/fonts/bangers-latin.woff2" "200"
 code  "the lettering face is served" \
@@ -112,6 +114,7 @@ fi
 echo "All $ok checks live."
 echo
 echo "ON YOUR PHONE:  https://skywolfstudio.com/comic-crew/"
+echo "PASSPHRASE:     wolfden        (same as Off the Ball, typed once per browser)"
 echo
 echo "It has never been opened by a child, so the useful thing is not to check"
 echo "that it works. It is to hand it to Penny with no explanation at all and"
