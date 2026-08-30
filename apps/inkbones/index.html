@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#191713">
+<meta name="description" content="Draw your own comic character, dress it, pose it, give it something to say, and print the page. Everything stays on this device.">
+<title>Inkbones</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     THIRD PARTY NOTICES
+
+     Fonts in ./fonts/ are used under the SIL Open Font License 1.1. The full
+     licence text travels with them in ./fonts/OFL.txt, which OFL clause 2
+     requires.
+
+     The ink outline builder in this file ports ideas from perfect-freehand by
+     Steve Ruiz (MIT): a streamlined centreline, pressure driven thinning, and
+     an outline offset both ways from the centreline. No code is copied and
+     nothing is loaded at runtime. MIT clause 2 asks that the notice travel
+     with substantial portions of the software, and this notice is that.
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  /* ── the faces, carried with the app so it makes no network calls at all.
+     Both are SIL Open Font License 1.1 and neither declares a Reserved Font
+     Name, so the real family names are used here and the licence travels with
+     the files in ./fonts/OFL.txt. Google serves these already subset to latin,
+     so nothing has been modified. ─────────────────────────────────────────── */
+  @font-face{
+    font-family:"Bangers";
+    src:url("./fonts/bangers-latin.woff2") format("woff2");
+    font-weight:400;font-style:normal;font-display:swap;
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
+      U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,
+      U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face{
+    font-family:"Shantell Sans";
+    src:url("./fonts/shantellsans-latin.woff2") format("woff2");
+    font-weight:400;font-style:normal;font-display:swap;
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,
+      U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,
+      U+2215,U+FEFF,U+FFFD;
+  }
+
+  /* ── the palette. Real comic artists pencil in non photo blue and ink over
+     the top of it, which is where the guide colour comes from. ───────────── */
+  :root{
+    --board:#F2F1EC;      /* bristol board */
+    --ink:#14120F;
+    --blueline:#6FB7DC;   /* the ghost armature */
+    --bluedeep:#1F5F80;   /* the same hue, dark enough to read as text */
+    --magenta:#E0218A;    /* registration marks and focus rings */
+    --shell:#191713;
+    --shellup:#262320;
+    --dim:rgba(242,241,236,.72);
+    --dimmer:rgba(242,241,236,.55);
+    --line:rgba(242,241,236,.28);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--shell);color:var(--board);
+    font-family:"Shantell Sans","Comic Neue",ui-rounded,"Segoe UI",system-ui,sans-serif;
+    font-size:16px;line-height:1.35;
+    display:flex;flex-direction:column;overflow:hidden;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  button{font-family:inherit;font-size:inherit}
+  :focus-visible{outline:3px solid var(--magenta);outline-offset:2px}
+
+  /* ── top bar ──────────────────────────────────────────────────────────── */
+  .topbar{display:flex;align-items:center;gap:8px;padding:8px 12px 6px;min-height:44px}
+  .mark{font-family:"Bangers",Impact,"Haettenschweiler",sans-serif;
+    font-size:24px;letter-spacing:1.4px;color:var(--board);line-height:1;flex:0 0 auto}
+  .mark em{font-style:normal;color:var(--magenta)}
+  .who{flex:1 1 auto;min-width:0;font-size:14px;color:var(--dim);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  .iconbtn{flex:0 0 auto;min-width:44px;min-height:44px;border:1px solid var(--line);
+    background:transparent;color:var(--board);border-radius:8px;cursor:pointer;
+    display:grid;place-items:center;padding:0 10px;font-size:13px}
+  .iconbtn:active{background:var(--shellup)}
+
+  /* ── mode row. Three words a seven year old already owns. ─────────────── */
+  .savewarn{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
+    padding:10px 12px;margin:0 0 8px;background:#7A1533;color:#fff;font-weight:600;line-height:1.35}
+  .savewarn[hidden]{display:none}
+  .savewarn button{min-height:44px;min-width:44px;padding:0 16px;border-radius:10px;
+    border:2px solid #fff;background:#fff;color:#7A1533;font:inherit;font-weight:700;cursor:pointer}
+
+  .modes{display:flex;gap:6px;padding:0 12px 8px}
+  .modes button{flex:1;min-height:48px;border:1px solid var(--line);background:transparent;
+    color:var(--board);font-size:15px;border-radius:8px;cursor:pointer;letter-spacing:.02em}
+  .modes button[aria-pressed="true"]{background:var(--board);border-color:var(--board);
+    color:var(--ink);font-weight:700}
+
+  /* ── the stage ────────────────────────────────────────────────────────── */
+  .stagewrap{flex:1 1 auto;min-height:0;position:relative;margin:0 12px;
+    background:var(--board);border-radius:3px;overflow:hidden}
+  #stage{width:100%;height:100%;display:block;touch-action:none}
+  /* registration marks sit on the page rectangle, not the wrapper, so they
+     tell the truth about where the paper ends. Drawn on the canvas. */
+  /* Below the paper, never over it. A pill floating on the drawing covered the
+     feet of the very figure it was talking about. */
+  .hintwrap{flex:0 0 auto;text-align:center;pointer-events:none;padding:6px 12px 0;min-height:30px}
+  .hint{display:inline-block;max-width:100%;font-size:14px;color:var(--board);
+    background:var(--shellup);border:1px solid var(--line);border-radius:8px;padding:5px 12px}
+  .hint:empty{display:none}
+  .zoomtag{position:absolute;top:8px;right:8px;font-size:12px;color:#4A453D;
+    background:rgba(242,241,236,.86);border-radius:6px;padding:3px 7px;pointer-events:none}
+  .zoomtag:empty{display:none}
+
+  /* ── control rails ────────────────────────────────────────────────────── */
+  .rail{display:flex;gap:6px;align-items:center;padding:8px 12px 0;flex-wrap:wrap}
+  .rail:empty{display:none}
+  .lbl{flex:0 0 auto;font-size:12px;color:var(--dimmer);padding-right:2px;letter-spacing:.06em;
+    text-transform:uppercase}
+  .chip{appearance:none;flex:0 0 auto;min-height:44px;border:1px solid var(--line);
+    background:transparent;color:var(--board);font-size:15px;padding:8px 14px;
+    border-radius:8px;cursor:pointer;white-space:nowrap}
+  a.chip{display:inline-flex;align-items:center;justify-content:center;
+    text-decoration:none;text-align:center}
+  .chip[aria-pressed="true"]{background:var(--board);border-color:var(--board);
+    color:var(--ink);font-weight:700}
+  .chip.warn{border-color:rgba(224,33,138,.6)}
+  .chip:active{background:var(--shellup)}
+  .chip[aria-pressed="true"]:active{background:#DAD8D1}
+
+  /* nibs: four sizes, each a real 44px target with the dot drawn inside it */
+  .nib{display:flex;gap:4px;flex:0 0 auto;align-items:center}
+  .nib button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);
+    background:transparent;cursor:pointer;display:grid;place-items:center;padding:0}
+  .nib button span{display:block;background:var(--board);border-radius:50%}
+  .nib button[aria-pressed="true"]{border-color:var(--board);background:rgba(242,241,236,.14)}
+
+  /* costume cards: a picture button that cannot produce a broken result beats
+     a control that can, which is the whole argument for this screen. */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+    gap:8px;padding:8px 12px 0;overflow-y:auto;max-height:34vh}
+  .card{border:1px solid var(--line);background:transparent;border-radius:10px;
+    padding:6px 4px 4px;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;gap:4px;color:var(--board);font-size:13px}
+  .card canvas{width:100%;height:74px;display:block;background:var(--board);border-radius:6px}
+  .card[aria-pressed="true"]{background:var(--board);color:var(--ink);border-color:var(--board);font-weight:700}
+
+  /* ── the filmstrip ────────────────────────────────────────────────────── */
+  .strip{display:flex;gap:5px;padding:9px 12px 3px}
+  .panel{flex:1;aspect-ratio:3/4;background:var(--board);border-radius:3px;position:relative;
+    border:2px solid rgba(242,241,236,.16);overflow:hidden;cursor:pointer;padding:0}
+  .panel[aria-pressed="true"]{border-color:var(--magenta)}
+  .panel canvas{width:100%;height:100%;display:block}
+  .panel .num{position:absolute;top:2px;left:4px;font-size:11px;color:#6B665D}
+  .panel.empty::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;
+    font-size:26px;color:#8C8479}
+  .stripnote{padding:2px 12px 8px;font-size:13px;color:var(--dim);min-height:20px}
+
+  /* ── foot ─────────────────────────────────────────────────────────────── */
+  .foot{display:flex;gap:5px;padding:0 12px 10px}
+  .foot .chip{flex:1;text-align:center;justify-content:center;padding:10px 4px}
+  input[type=file]{display:none}
+
+  /* ── sheets. One pattern for every modal in the app. ──────────────────── */
+  .sheet{position:fixed;inset:0;z-index:40;display:none;
+    background:rgba(10,9,8,.72);padding:0;
+    align-items:flex-end;justify-content:center}
+  .sheet[open]{display:flex}
+  .sheetbox{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;
+    background:var(--shellup);border-radius:14px 14px 0 0;padding:14px 14px 20px;
+    padding-bottom:calc(20px + env(safe-area-inset-bottom));
+    border-top:2px solid var(--line)}
+  .sheetbox h2{font-family:"Bangers",Impact,sans-serif;font-size:22px;
+    letter-spacing:1px;margin:2px 0 10px;font-weight:400}
+  .sheetbox h3{font-size:15px;margin:16px 0 6px;color:var(--board)}
+  .sheetbox p{font-size:14px;color:var(--dim);margin:6px 0}
+  .sheetbox a{color:var(--blueline)}
+  .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  .row .chip{flex:1 1 auto;justify-content:center;text-align:center}
+  .field{width:100%;min-height:48px;font-family:inherit;font-size:17px;
+    background:var(--board);color:var(--ink);border:2px solid var(--board);
+    border-radius:8px;padding:10px 12px}
+  textarea.field{min-height:96px;resize:vertical;line-height:1.3}
+  .closerow{display:flex;justify-content:flex-end;margin-top:14px}
+  .previewwrap{background:var(--board);border-radius:6px;padding:6px;margin:8px 0}
+  .keepnote{font-size:13px;color:var(--dim);border-left:3px solid var(--blueline);padding-left:10px}
+  .previewwrap canvas{width:100%;height:auto;display:block}
+
+  /* the studio seam. Hidden until there is something to put in it. */
+  .seam{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:14px;
+    padding-top:12px;border-top:1px solid var(--line)}
+  .seam .chip{display:none}
+  #buildTag{font-size:12px;color:var(--dimmer);margin-left:auto}
+
+  @media (min-width:720px){
+    body{font-size:17px}
+    .cards{max-height:40vh}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ── the stage is the product, so it gets a floor and the controls get the
+     scroll. Without this the drawing area is eleven pixels tall on an iPhone SE
+     and zero with the phone turned sideways: the rails, the costume grid and
+     the filmstrip are all content sized and they ate the paper. ──────────── */
+  .stagewrap{flex:1 1 auto;min-height:min(46vh,420px);min-height:min(46dvh,420px)}
+  /* The controls scroll. The filmstrip does not: it is how a child moves between
+     panels, and on a phone held sideways it used to fall off the bottom in the
+     two modes where she needs it most. */
+  .ctrls{flex:0 1 auto;min-height:0;display:flex;flex-direction:column}
+  .ctrlscroll{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  /* thumbnails sized from a capped height, not from the width of the screen,
+     or a wide screen hands the filmstrip a third of the page */
+  .strip{justify-content:center;flex:0 0 auto}
+  .panel{flex:0 1 auto;height:clamp(64px,12vh,116px);width:auto}
+  .stripnote{flex:0 0 auto}
+  .cards{max-height:none}                /* the parent scrolls now */
+
+  /* a phone held sideways: paper down the left, everything else beside it */
+  @media (orientation:landscape) and (max-height:560px){
+    body{display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(260px,42%);
+      grid-template-rows:auto auto auto minmax(0,1fr) auto;
+      grid-template-areas:
+        "top   top"
+        "stage modes"
+        "stage hint"
+        "stage ctrls"
+        "stage foot";}
+    .topbar{grid-area:top}
+    .modes{grid-area:modes;padding:0 12px 6px 6px}
+    .stagewrap{grid-area:stage;min-height:0;margin:0 6px 10px 12px}
+    .hintwrap{grid-area:hint;padding:4px 12px 2px 6px;min-height:0;text-align:left}
+    .ctrls{grid-area:ctrls;padding-right:0}
+    .ctrls .rail{padding:6px 12px 0 6px}
+    .cards{padding:6px 12px 0 6px}
+    .strip{padding:8px 12px 2px 6px}
+    .stripnote{padding:0 12px 4px 6px;min-height:0}
+    .foot{grid-area:foot;padding:0 12px 8px 6px}
+    .panel{height:clamp(48px,14vh,88px)}
+  }
+
+  /* dressing up: the costumes are the thing being looked at, so the paper
+     gives some of its floor back while that screen is open */
+  body[data-mode="dress"] .stagewrap{min-height:min(30vh,260px)}
+
+  /* a short screen: tighten the padding, never the 44px targets */
+  @media (max-height:700px){
+    .rail{padding:6px 10px 0;gap:5px}
+    .chip{padding:8px 10px;font-size:14px}
+    .modes{padding:0 10px 6px}
+    .modes button{min-height:44px;font-size:14px}
+    .strip{padding:6px 10px 2px}
+    .foot{padding:0 10px 8px}
+  }
+
+  /* ── print. This is what actually puts the comic on the fridge. ───────── */
+  @media print{
+    body{background:#fff;display:block;overflow:visible;padding:0}
+    .topbar,.savewarn,.modes,.stagewrap,.hintwrap,.ctrls,.ctrlscroll,.rail,.cards,.strip,.stripnote,.foot,.sheet{display:none!important}
+    #printSheet{display:block!important;position:static;background:#fff;padding:0}
+    #printSheet .sheetbox{background:#fff;border:0;max-height:none;padding:0;border-radius:0}
+    #printSheet h2,#printSheet p,#printSheet .row,#printSheet .closerow{display:none}
+    #printSheet .previewwrap{padding:0;margin:0}
+    #printSheet .previewwrap canvas{width:100%}
+    @page{margin:10mm}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="mark">INK<em>BONES</em></div>
+  <div class="who" id="who">a new character</div>
+  <button class="iconbtn" id="btnUndo" aria-label="Undo the last thing" title="Undo">Undo</button>
+  <button class="iconbtn" id="btnGrown" aria-label="Grown ups" title="Grown ups">&#9881;</button>
+</div>
+
+<div class="savewarn" id="saveWarn" role="alert" hidden>
+  <span>This browser will not keep your drawing. Ask a grown up to save it to a file.</span>
+  <button type="button" id="saveWarnGo">Save to a file</button>
+</div>
+
+<div class="modes" role="group" aria-label="What are you doing">
+  <button id="mDraw" aria-pressed="true">Draw</button>
+  <button id="mDress" aria-pressed="false">Dress up</button>
+  <button id="mPose" aria-pressed="false">Move</button>
+</div>
+
+<div class="stagewrap">
+  <canvas id="stage" role="img" aria-label="Your character"></canvas>
+  <div class="zoomtag" id="zoomtag"></div>
+</div>
+<div class="hintwrap"><span class="hint" id="hint" role="status" aria-live="polite"></span></div>
+
+<div class="ctrls">
+<div class="ctrlscroll">
+  <div class="rail" id="rail1"></div>
+  <div class="rail" id="rail2"></div>
+  <div class="cards" id="cards" hidden></div>
+</div>
+<div class="strip" id="strip" role="group" aria-label="Comic panels"></div>
+<div class="stripnote" id="stripnote" role="status" aria-live="polite"></div>
+</div>
+
+<div class="foot">
+  <button class="chip" id="btnWords">Add words</button>
+  <button class="chip" id="btnPage">Make the page</button>
+</div>
+<input type="file" id="file" accept="application/json,.json">
+
+<!-- ── balloon editor ──────────────────────────────────────────────────── -->
+<div class="sheet" id="wordSheet" role="dialog" aria-modal="true" aria-labelledby="wordTitle">
+  <div class="sheetbox">
+    <h2 id="wordTitle">What do they say?</h2>
+    <textarea class="field" id="wordText" placeholder="Type it here" maxlength="220"
+      aria-label="What the character says"></textarea>
+    <h3>How do they say it?</h3>
+    <div class="row" id="wordKinds"></div>
+    <h3>Who is talking?</h3>
+    <div class="row" id="wordTails"></div>
+    <div class="row">
+      <button class="chip warn" id="wordDelete">Take it off</button>
+      <button class="chip" id="wordDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── the finished page ───────────────────────────────────────────────── -->
+<div class="sheet" id="printSheet" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+  <div class="sheetbox">
+    <h2 id="printTitle">Your comic page</h2>
+    <div class="previewwrap"><canvas id="pagePreview"></canvas></div>
+    <div class="row">
+      <button class="chip" id="pagePrint">Print it</button>
+      <button class="chip" id="pageShare">Send it</button>
+      <button class="chip" id="pageSave">Save picture</button>
+    </div>
+    <p id="pageNote">Printing is the one that ends up on the fridge.</p>
+    <p class="keepnote">Browsers clear their own storage. If this comic matters,
+      print it, or open Grown ups and save the character to a file.</p>
+    <div class="closerow"><button class="chip" id="pageClose">Back to drawing</button></div>
+  </div>
+</div>
+
+<!-- ── grown ups ───────────────────────────────────────────────────────── -->
+<div class="sheet" id="grownSheet" role="dialog" aria-modal="true" aria-labelledby="grownTitle">
+  <div class="sheetbox">
+    <h2 id="grownTitle">Grown ups</h2>
+
+    <h3>Name this character</h3>
+    <input class="field" id="nameField" maxlength="40" placeholder="Give them a name"
+      aria-label="Character name">
+
+    <h3>The character file</h3>
+    <p>A character is a small file you can keep, copy to another device, or email
+      to a grandparent. Everything else lives only in this browser.</p>
+    <div class="row">
+      <button class="chip" id="btnSave">Save to a file</button>
+      <button class="chip" id="btnOpen">Open a file</button>
+    </div>
+
+    <h3>Start again</h3>
+    <div class="row">
+      <button class="chip warn" id="btnNew">New character</button>
+      <button class="chip" id="btnPrev" hidden>Bring back the last one</button>
+    </div>
+    <p>Undo brings it back straight away. After the tab has been closed, use
+      Bring back the last one, which keeps one character behind this one.</p>
+
+    <h3>Where the bones go</h3>
+    <p>Only needed if a drawing sits a long way off the blue figure. Drag a dot
+      onto the matching part of the drawing, then come back.</p>
+    <div class="row">
+      <button class="chip" id="btnFit">Move the bones</button>
+    </div>
+
+    <h3>About</h3>
+    <p>Inkbones keeps drawings, characters and pages in this browser on this
+      device. Nothing is uploaded, there is no account and there are no adverts.</p>
+    <div class="row">
+      <a class="chip" href="privacy.html">What we do and do not keep</a>
+    </div>
+    <p><strong>Worth knowing:</strong> browsers clear their own storage. Safari
+      wipes it after seven days without a visit, and a shared or guest login wipes
+      it at logout. If a comic matters, print it or save the character to a file.</p>
+
+    <h3>The rest of the studio</h3>
+    <p>Thirty six of these, all free and all ad free. Something wrong here, or
+      an idea for it?</p>
+    <div class="row">
+      <a class="chip" href="../">Sky Wolf Studios</a>
+      <a class="chip" href="mailto:stephenfurpahs@gmail.com?subject=Inkbones">Send a note</a>
+    </div>
+
+    <div class="seam">
+      <a class="chip" id="tipBtn" href="#" target="_blank" rel="noopener">Leave a tip</a>
+      <button class="chip" id="swsInstall">Add to home screen</button>
+      <span id="buildTag"></span>
+    </div>
+    <div class="closerow"><button class="chip" id="grownClose">Done</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INKBONES
+
+   One idea holds the whole app up: a faint non photo blue armature sits under
+   the drawing, and the child draws over it. Because of that the skeleton is
+   known before the first stroke lands. Rigging is free, library clothing fits
+   any drawing because every character normalises to the same fifteen joints,
+   and a character is a few kilobytes of JSON that is identical in panel one and
+   panel forty. No model, no server, no guessing where the elbows are.
+
+   Do not replace this with pose detection. The guide is not a limit on what a
+   child can draw, it is the thing that buys the dressing up.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ================= skeleton ================= */
+const W=1000,H=1400;
+const REST0={head:[500,215],neck:[500,365],
+  lsho:[402,395],lelb:[344,548],lwri:[326,700],
+  rsho:[598,395],relb:[656,548],rwri:[674,700],
+  hip:[500,725],
+  lhip:[452,748],lkne:[438,938],lank:[428,1128],
+  rhip:[548,748],rkne:[562,938],rank:[572,1128]};
+const PARENT={head:'neck',neck:'hip',lsho:'neck',lelb:'lsho',lwri:'lelb',
+  rsho:'neck',relb:'rsho',rwri:'relb',hip:null,
+  lhip:'hip',lkne:'lhip',lank:'lkne',rhip:'hip',rkne:'rhip',rank:'rkne'};
+const JOINTS=Object.keys(PARENT);
+const BONES=JOINTS.filter(j=>PARENT[j]).map(j=>[PARENT[j],j]);
+const BONE_OF={}; BONES.forEach((b,i)=>BONE_OF[b[1]]=i);
+const HEAD_BONE=BONE_OF['head'];
+const KIDS={}; JOINTS.forEach(j=>KIDS[j]=[]);
+JOINTS.forEach(j=>{if(PARENT[j])KIDS[PARENT[j]].push(j);});
+/* parents before children, so a chain of rotations composes the way it was
+   authored no matter what order the table lists joints in */
+const CHAIN=(function(){const o=[],s=KIDS['hip'].slice();
+  while(s.length){const j=s.shift();o.push(j);KIDS[j].forEach(k=>s.push(k));}return o;})();
+/* a leaf bone ends in a hand, a foot or the top of the head: the drawing keeps
+   going past that last joint, and that overhang is what a boot or a hat wraps */
+const LEAF=BONES.map(b=>KIDS[b[1]].length===0);
+function kidsOf(j){const o=[],s=KIDS[j].slice();while(s.length){const k=s.pop();o.push(k);KIDS[k].forEach(x=>s.push(x));}return o;}
+function cloneJ(J){
+  const o={};
+  for(let i=0;i<JOINTS.length;i++){
+    const k=JOINTS[i];
+    if(!J||!J[k])return null;
+    /* checked, not assumed: a file with "ab" where a joint should be used to
+       load without a murmur and turn every later solve into NaN */
+    const x=+J[k][0],y=+J[k][1];
+    if(!isFinite(x)||!isFinite(y))return null;
+    o[k]=[x,y];
+  }
+  return o;
+}
+
+/* ================= state ================= */
+const OUTFITS=2,FACES=3,PANELS=4;
+const S={
+  mode:'draw',
+  name:'',
+  rest:cloneJ(REST0),
+  strokes:[],
+  target:{layer:'body',slot:0},
+  nib:14,
+  tool:'ink',                    /* ink | erase */
+  guide:true,
+  panels:null,                   /* PANELS entries, each {pose, wear, words} */
+  current:0,
+  drag:null,
+  dirty:true
+};
+S.panels=[];
+for(let i=0;i<PANELS;i++)S.panels.push(null);
+
+/* the stage always shows one panel, so there is never a hidden "unsaved" state
+   for a child to lose. Working on panel two is a thing she can point at. */
+function BLANK(){
+  /* A new panel carries on wearing whatever the character was last wearing. A
+     child who picks a costume once should not find them undressed in panel two
+     and have to dress them again four times. */
+  let w={outfit:0,face:0,kit:-1};
+  if(S.panels){
+    for(let i=S.current;i>=0;i--) if(S.panels[i]){w=S.panels[i].wear;break;}
+    if(w.kit===-1&&w.outfit===0)
+      for(let i=0;i<S.panels.length;i++) if(S.panels[i]){w=S.panels[i].wear;break;}
+  }
+  return {pose:relOf(cloneJ(S.rest)),
+          wear:{outfit:w.outfit,face:w.face,kit:w.kit},words:[]};
+}
+function panel(){ if(!S.panels[S.current])S.panels[S.current]=BLANK(); return S.panels[S.current]; }
+function wear(){ return panel().wear; }
+
+/* ================= pose storage =================
+   A panel stores one rotation per joint measured against the rest skeleton,
+   plus where the hip sits. Storing absolute joint positions looks simpler and
+   is a trap: any later edit to the rest skeleton silently rewrites every panel
+   already drawn, and a thirty pixel nudge visibly shrinks a saved head. Angles
+   survive it, which is what makes "redraw the costume in chapter three and
+   every earlier panel updates" mechanically true. */
+/* Store what the pose DID, not where it landed: a root offset, plus per bone
+   the similarity that carries the rest bone onto the posed bone, kept as
+   (cos*s, sin*s). No trig anywhere, so the round trip is exact to the last bit,
+   and a bone that was scaled as well as turned survives too. */
+function relOf(J){
+  const R=S.rest,b={};
+  BONES.forEach(bn=>{
+    const j=bn[1],p=bn[0];
+    const ax=R[j][0]-R[p][0],ay=R[j][1]-R[p][1];
+    const qx=J[j][0]-J[p][0],qy=J[j][1]-J[p][1];
+    const den=ax*ax+ay*ay||1;
+    b[j]=[(qx*ax+qy*ay)/den,(ax*qy-ay*qx)/den];
+  });
+  return {t:[J.hip[0]-R.hip[0],J.hip[1]-R.hip[1]],b:b};
+}
+function poseOf(rel){
+  const R=S.rest;
+  if(!rel||!rel.b) return cloneJ(R);
+  const t=rel.t||[0,0];
+  const J={hip:[R.hip[0]+t[0],R.hip[1]+t[1]]};
+  for(let i=0;i<CHAIN.length;i++){
+    const j=CHAIN[i],p=PARENT[j],d=rel.b[j]||[1,0];
+    const ax=R[j][0]-R[p][0],ay=R[j][1]-R[p][1];
+    J[j]=[J[p][0]+d[0]*ax-d[1]*ay, J[p][1]+d[1]*ax+d[0]*ay];
+  }
+  return J;
+}
+function rotRad(J,j,a){
+  const p=PARENT[j];if(!p)return;
+  const o=J[p],c=Math.cos(a),s=Math.sin(a);
+  const list=[j].concat(kidsOf(j));
+  for(let i=0;i<list.length;i++){const k=list[i];
+    const dx=J[k][0]-o[0],dy=J[k][1]-o[1];
+    J[k]=[o[0]+c*dx-s*dy,o[1]+s*dx+c*dy];}
+}
+function rotAbout(J,j,deg){rotRad(J,j,deg*Math.PI/180);}
+
+/* ================= wardrobe =================
+   A garment is never stored as artwork. Every point is (bone, t, s): which
+   bone, how far along it, and how far out sideways measured in the wearer's
+   own half width at that spot. Instantiating reads the girth profile off
+   whatever body was actually drawn, so one definition fits a stick figure and
+   a potato without per body authoring. */
+const KITS=[
+  {name:'Hero',strokes:[
+    [['neck',.21,-1.16,2.2],['neck',.21,1.16,2.2]],
+    [['neck',.70,0],['neck',.62,.34],['neck',.54,0],['neck',.62,-.34],['neck',.70,0]],
+    {back:1,p:[['neck',.95,-1.05],['neck',.80,-1.50],['neck',.50,-1.70],['neck',.15,-1.75],['neck',-.08,-1.52]]},
+    {back:1,p:[['neck',.95,1.05],['neck',.80,1.50],['neck',.50,1.70],['neck',.15,1.75],['neck',-.08,1.52]]},
+    {back:1,p:[['neck',-.08,-1.52],['neck',-.20,-.75],['neck',-.07,0],['neck',-.20,.75],['neck',-.08,1.52]]},
+    [['lank',.45,-1.30,1.8],['lank',.45,1.30,1.8]],
+    [['rank',.45,-1.30,1.8],['rank',.45,1.30,1.8]],
+    [['lwri',.55,-1.35,1.6],['lwri',.55,1.35,1.6]],
+    [['rwri',.55,-1.35,1.6],['rwri',.55,1.35,1.6]],
+    {p:[['lank',-0.5,-1.14,1,'e'],['lank',0.0,-1.20,1,'e'],['lank',0.72,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.72,0.88,1,'e'],['lank',0.0,1.20,1,'e'],['lank',-0.5,1.14,1,'e']]},
+    {p:[['rank',-0.5,-1.14,1,'e'],['rank',0.0,-1.20,1,'e'],['rank',0.72,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.72,0.88,1,'e'],['rank',0.0,1.20,1,'e'],['rank',-0.5,1.14,1,'e']]},
+    {p:[['lwri',-0.28,-1.10,1,'e'],['lwri',0.22,-1.16,1,'e'],['lwri',0.88,-0.55,1,'e'],['lwri',0.88,0.55,1,'e'],['lwri',0.22,1.16,1,'e'],['lwri',-0.28,1.10,1,'e']]},
+    {p:[['rwri',-0.28,-1.10,1,'e'],['rwri',0.22,-1.16,1,'e'],['rwri',0.88,-0.55,1,'e'],['rwri',0.88,0.55,1,'e'],['rwri',0.22,1.16,1,'e'],['rwri',-0.28,1.10,1,'e']]}
+  ]},
+  {name:'Cloak',strokes:[
+    [['head',.30,-1.30,1.8,'e'],['head',.30,1.30,1.8,'e']],
+    {back:1,p:[['head',.16,-1.26,1,'e'],['head',1.05,-.62,1,'e'],['head',2.05,.02,1,'e'],['head',1.05,.62,1,'e'],['head',.16,1.26,1,'e']]},
+    {back:1,p:[['neck',.92,-1.10],['neck',.50,-1.36],['neck',.05,-1.70],['neck',-.35,-1.92]]},
+    {back:1,p:[['neck',.92,1.10],['neck',.50,1.36],['neck',.05,1.70],['neck',-.35,1.92]]},
+    {back:1,p:[['neck',-.35,-1.92],['neck',-.46,-.9],['neck',-.40,0],['neck',-.46,.9],['neck',-.35,1.92]]},
+    [['neck',.25,-1.12,2.0],['neck',.25,1.12,2.0]],
+    {p:[['lank',-0.02,-1.14,1,'e'],['lank',0.48,-1.20,1,'e'],['lank',0.62,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.62,0.88,1,'e'],['lank',0.48,1.20,1,'e'],['lank',-0.02,1.14,1,'e']]},
+    {p:[['rank',-0.02,-1.14,1,'e'],['rank',0.48,-1.20,1,'e'],['rank',0.62,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.62,0.88,1,'e'],['rank',0.48,1.20,1,'e'],['rank',-0.02,1.14,1,'e']]}
+  ]},
+  {name:'Scout',strokes:[
+    {back:1,p:[['head',-.12,-1.44,1,'e'],['head',.62,-1.22,1,'e'],['head',1.34,0,1,'e'],['head',.62,1.22,1,'e'],['head',-.12,1.44,1,'e']]},
+    [['neck',.90,-.55],['neck',.80,0],['neck',.90,.55]],
+    [['neck',.28,-1.16,1.7],['neck',.28,1.16,1.7]],
+    [['neck',.44,-.72],['neck',.30,-.78],['neck',.30,.78],['neck',.44,.72]],
+    [['lkne',.38,-1.26,1.7],['lkne',.38,1.26,1.7]],
+    {p:[['lank',-0.08,-1.14,1,'e'],['lank',0.42,-1.20,1,'e'],['lank',0.86,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.86,0.88,1,'e'],['lank',0.42,1.20,1,'e'],['lank',-0.08,1.14,1,'e']]},
+    {p:[['rank',-0.08,-1.14,1,'e'],['rank',0.42,-1.20,1,'e'],['rank',0.86,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.86,0.88,1,'e'],['rank',0.42,1.20,1,'e'],['rank',-0.08,1.14,1,'e']]}
+  ]}
+];
+
+/* ================= ink ================= */
+const STREAMLINE=.45,THINNING=.62;
+const radius=(base,p)=>(base/2)*(1-THINNING*(1-p));
+const prFromSpeed=d=>Math.max(.18,Math.min(1,1-d/26));
+
+function outlineOf(pts){
+  const L=[],R=[];
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i],a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];
+    let dx=b[0]-a[0],dy=b[1]-a[1];const len=Math.hypot(dx,dy);
+    if(len<1e-6){dx=1;dy=0;}else{dx/=len;dy/=len;}
+    L.push([p[0]-dy*p[2],p[1]+dx*p[2]]);
+    R.push([p[0]+dy*p[2],p[1]-dx*p[2]]);
+  }
+  return L.concat(R.reverse());
+}
+function inkPath(pts){
+  const path=new Path2D();
+  if(pts.length===1){path.arc(pts[0][0],pts[0][1],pts[0][2],0,7);return path;}
+  const o=outlineOf(pts);
+  path.moveTo(o[0][0],o[0][1]);
+  for(let i=1;i<o.length;i++)path.lineTo(o[i][0],o[i][1]);
+  path.closePath();
+  const a=pts[0],b=pts[pts.length-1];
+  path.moveTo(a[0]+a[2],a[1]);path.arc(a[0],a[1],a[2],0,7);
+  path.moveTo(b[0]+b[2],b[1]);path.arc(b[0],b[1],b[2],0,7);
+  return path;
+}
+
+/* ================= linear blend skinning =================
+   Measured and settled: plain skinning beats the shape matching relaxer on
+   outline art, on every metric, for free. Line art has no interior, so a volume
+   preserving solver has nothing to win back. That answer changes the day shapes
+   carry fills, and not before. The relaxer is gone from the shipping file; the
+   bench that decided it lives in test/rig.mjs. */
+/* ---- bone ownership ----
+   Distance alone cannot decide this. The 102px collarbone stub lies INSIDE a
+   wide torso, so by raw distance it out scores the 360px spine for the chest
+   contour, and the chest then leaves with the arm. Score in bone space and
+   divide by bone length, so a long bone claims a proportionally wide slab and
+   a stub claims only a stub. Charge extra for the part of the distance running
+   past a bone's ends, where the next bone along is the real owner: that is what
+   stops the leg chain owning the bottom corner of the torso. A leaf tip is
+   exempt, because the ink past a wrist, an ankle or the crown of the head has
+   no next bone to belong to.
+
+   The falloff is 1/(u*u+EPS)^4. Measured, not guessed: against the same figure
+   the softer square leaves the arm 28% of the chest contour and creases the
+   torso under Waving, the fourth power leaves it 13%, lifts worst limb area
+   from 79% to 91% and drops the worst contour crease from 151 to 80 degrees.
+   EPS keeps it soft where it must be: two bones meeting at a joint both sit at
+   u=0 and still split evenly, so elbows bend instead of pinching. */
+const CAP=3, EPS=.014, NEAR=3;
+let RG=null;
+function restGeo(){
+  const R=S.rest;
+  RG=BONES.map((b,i)=>{
+    const A=R[b[0]],B=R[b[1]];
+    let dx=B[0]-A[0],dy=B[1]-A[1];
+    const L=Math.hypot(dx,dy)||1; dx/=L; dy/=L;
+    return {A,L,dx,dy,nx:-dy,ny:dx,hi:LEAF[i]?1:CAP};
+  });
+}
+function boneU(p,g){                     // distance in this bone's own lengths
+  const ox=p[0]-g.A[0],oy=p[1]-g.A[1];
+  const t=ox*g.dx+oy*g.dy, off=ox*g.nx+oy*g.ny;
+  const over=t<0?-t*CAP:t>g.L?(t-g.L)*g.hi:0;
+  return Math.sqrt(off*off+over*over)/g.L;
+}
+function boneD(p,g){                     // plain pixels, which is what girth asks
+  const ox=p[0]-g.A[0],oy=p[1]-g.A[1];
+  const t=ox*g.dx+oy*g.dy, off=ox*g.nx+oy*g.ny;
+  const over=t<0?-t:t>g.L?t-g.L:0;
+  return Math.sqrt(off*off+over*over);
+}
+function weightsFor(p,onlyBone){
+  if(onlyBone>=0) return [[onlyBone,1]];
+  if(!RG) restGeo();
+  const sc=RG.map((g,i)=>{const u=boneU(p,g),e=u*u+EPS,q=e*e;return [i,1/(q*q)];});
+  sc.sort((a,b)=>b[1]-a[1]);
+  const top=sc.slice(0,NEAR);
+  let sum=0;for(let i=0;i<top.length;i++)sum+=top[i][1];
+  if(!(sum>0)) return [[top[0][0],1]];
+  return top.map(x=>[x[0],x[1]/sum]);
+}
+function bestBone(p){
+  if(!RG) restGeo();
+  let bi=0,bu=Infinity;
+  for(let i=0;i<RG.length;i++){const u=boneU(p,RG[i]);if(u<bu){bu=u;bi=i;}}
+  return bi;
+}
+
+/* ---- the drawn head ----
+   A child's head circle is body ink, so left to the blend it smears across the
+   neck and squashes flat the moment the shoulders move. Its reach is MEASURED
+   off the ink the head bone already owns, never a fixed radius, so a pea head
+   and a pumpkin head both work. A stroke sitting entirely inside that reach is
+   a head, and rides the head bone rigidly. */
+let HEADR=0;
+function measureHead(){
+  if(!RG) restGeo();
+  const R=S.rest, hl=Math.hypot(R.head[0]-R.neck[0],R.head[1]-R.neck[1])||1;
+  let r=hl*.62;                          // floor: the traced guide circle
+  S.strokes.forEach(st=>{
+    if(st.layer!=='body') return;
+    st.pts.forEach(p=>{
+      if(bestBone(p)!==HEAD_BONE) return;
+      const d=Math.hypot(p[0]-R.head[0],p[1]-R.head[1])+p[2];
+      if(d>r) r=d;
+    });
+  });
+  HEADR=Math.min(r,hl*1.9);              // a head, not a whole body
+}
+function isHead(st){
+  if(st.layer==='face') return true;     // an expression never leaves the head
+  if(st.layer!=='body') return false;
+  const R=S.rest;
+  for(let i=0;i<st.pts.length;i++){
+    const p=st.pts[i];
+    if(Math.hypot(p[0]-R.head[0],p[1]-R.head[1])-p[2] > HEADR) return false;
+    /* The reach alone is not enough. It grows to fit whatever the head bone
+       owns, so one tall pigtail can push it out past the shoulders, and then a
+       short shoulder stroke sits inside it and gets welded to the head. Ask
+       ownership as well: every point has to actually belong to the head bone. */
+    if(bestBone(p)!==HEAD_BONE) return false;
+  }
+  return true;                           // all of it, or it is not a head
+}
+function bindStroke(st){
+  /* A garment is authored in bone space: every point already names the bone it
+     belongs to. Rediscovering that from position throws the answer away and
+     gets it wrong, because a cape hanging behind an arm really is nearest the
+     arm, so the cape flew up whenever the arm did. Bind what was authored. */
+  if(st.kb){st.bind=st.kb.map(b=>[[b,1]]);return;}
+  const only=isHead(st)?HEAD_BONE:-1;
+  st.bind=st.pts.map(p=>weightsFor(p,only));
+}
+function bindAll(){restGeo();measureHead();S.strokes.forEach(bindStroke);S.dirty=true;}
+
+const POSES={
+  Standing:[],
+  Walking:[['lkne',10],['lank',6],['rkne',-14],['rank',-6],['lelb',14],['relb',-12]],
+  Running:[['lkne',26],['lank',-22],['rkne',-20],['rank',12],['lelb',34],['lwri',-96],['relb',-34],['rwri',96]],
+  Jumping:[['lelb',132],['lwri',16],['relb',-132],['rwri',-16],['lkne',26],['lank',-14],['rkne',-26],['rank',14]],
+  Waving:[['relb',-128],['rwri',34],['lelb',12]],
+  Pointing:[['relb',-78],['rwri',-14],['lelb',18]],
+  Thinking:[['relb',-104],['rwri',52],['lelb',16],['head',-7]],
+  Scared:[['lelb',-145],['lwri',26],['relb',145],['rwri',-26],['lkne',14],['rkne',-14]],
+  'Big cheer':[['lelb',150],['lwri',10],['relb',-150],['rwri',-10],['lkne',9],['rkne',-9]]
+};
+/* ▲▲▲ RIG BLOCK ▲▲▲ */
+
+/* ---- girth: how wide the drawing is, per bone, along its length, each side
+   measured separately because hand drawn bodies are never symmetric ---- */
+const GK=8, OK=4, MINHALF=11;
+let PROFILE=null;
+function measureGirth(){
+  restGeo();
+  const geo=RG;
+  const P=BONES.map(()=>({l:new Array(GK+1).fill(0),r:new Array(GK+1).fill(0)}));
+  const OVraw=BONES.map(()=>[]);
+  /* Ownership is soft on purpose. A wide torso's outline sits closer to the
+     shoulder than to the spine, and strict nearest bone assignment then measures
+     the torso as skinny, which is a bug the render caught once already. But soft
+     ownership cuts both ways: a raised arm passing near the head used to inflate
+     the head's girth so the hood came out lopsided. So a point may be shared,
+     and may not be claimed from further sideways than the bone is long. */
+  /* Two tests, because they answer two different questions. In PIXELS, so a
+     hand never widens the chest it hangs beside: that is the old test and it is
+     the one that keeps a wide torso wide, so it stays at 1.7 exactly as the
+     prototype's handoff warns. In BONE SPACE, the units the skinning works in,
+     so a raised arm passing the head never widens the head and the hood comes
+     out symmetric. */
+  const SHARE=1.7, USHARE=1.6, SLACK=.10;
+  S.strokes.forEach(st=>{
+    if(st.layer!=='body') return;
+    st.pts.forEach(p=>{
+      const d=geo.map(g=>boneD(p,g)), u=geo.map(g=>boneU(p,g));
+      let bd=Infinity,bu=Infinity;
+      d.forEach(v=>{if(v<bd)bd=v;}); u.forEach(v=>{if(v<bu)bu=v;});
+      const dlim=bd*SHARE, ulim=bu*USHARE+SLACK;
+      for(let bi=0;bi<BONES.length;bi++){
+        if(d[bi]>dlim||u[bi]>ulim) continue;
+        const g=geo[bi], ox=p[0]-g.A[0], oy=p[1]-g.A[1];
+        const tRaw=(ox*g.dx+oy*g.dy)/g.L;
+        const off=ox*g.nx+oy*g.ny;
+        if(tRaw>1){
+          if(LEAF[bi]) OVraw[bi].push([(tRaw-1)*g.L+p[2], Math.abs(off)+p[2]]);
+          continue;
+        }
+        if(tRaw<-.12) continue;
+        const t=tRaw<0?0:tRaw>1?1:tRaw, k=Math.round(t*GK);
+        const a=Math.abs(off), v=a+p[2];
+        /* ink straddling the axis is neither left nor right, it is both. One
+           sided bookkeeping left the far flank unmeasured, and the gap filler
+           then invented a different width for each side of a symmetric head. */
+        if(off>=0||a<=p[2]){ if(v>P[bi].r[k]) P[bi].r[k]=v; }
+        if(off<=0||a<=p[2]){ if(v>P[bi].l[k]) P[bi].l[k]=v; }
+      }
+    });
+  });
+  P.forEach((pr,bi)=>{
+    ['l','r'].forEach(sd=>{
+      const a=pr[sd];
+      for(let pass=0;pass<3;pass++)
+        for(let k=0;k<=GK;k++){
+          if(a[k]>0) continue;
+          const lo=k>0?a[k-1]:0, hi=k<GK?a[k+1]:0;
+          a[k]=Math.max(lo,hi);
+        }
+      const sm=a.slice();
+      /* A single line drawing has almost no girth anywhere, and a garment built
+         on it collapses into scratch marks. Floor every bone at a readable
+         fraction of its own length so clothes stay clothes on a stick figure. */
+      const floor=Math.max(MINHALF,geo[bi].L*.085);
+      for(let k=0;k<=GK;k++){
+        const lo=a[Math.max(0,k-1)], hi=a[Math.min(GK,k+1)];
+        sm[k]=Math.max(floor,(lo+2*a[k]+hi)/4);
+      }
+      pr[sd]=sm;
+    });
+  });
+  const OV=BONES.map((b,bi)=>{
+    const g=geo[bi];
+    const floorHalf=Math.max(MINHALF,g.L*.085,(P[bi].l[GK]+P[bi].r[GK])/2*.9);
+    if(!LEAF[bi]||!OVraw[bi].length) return {len:g.L*.16,half:new Array(OK+1).fill(floorHalf)};
+    let len=0; OVraw[bi].forEach(o=>{if(o[0]>len)len=o[0];});
+    len=Math.max(len,g.L*.12);
+    const half=new Array(OK+1).fill(0);
+    OVraw[bi].forEach(o=>{
+      const k=Math.max(0,Math.min(OK,Math.round(o[0]/len*OK)));
+      if(o[1]>half[k]) half[k]=o[1];
+    });
+    for(let pass=0;pass<3;pass++)
+      for(let k=0;k<=OK;k++)
+        if(!half[k]) half[k]=Math.max(k>0?half[k-1]:0, k<OK?half[k+1]:0);
+    for(let k=0;k<=OK;k++) half[k]=Math.max(floorHalf,half[k]||floorHalf);
+    return {len,half};
+  });
+  PROFILE={geo,P,OV};
+}
+function overHalfAt(bi,u){
+  const a=PROFILE.OV[bi].half;
+  if(u<=0) return a[0];
+  const x=Math.min(1,u)*OK, k=Math.floor(x), f=x-k;
+  return k>=OK?a[OK]:a[k]*(1-f)+a[k+1]*f;
+}
+function halfAt(bi,t,side){
+  const a=PROFILE.P[bi][side];
+  const x=Math.max(0,Math.min(1,t))*GK, k=Math.floor(x), f=x-k;
+  return k>=GK ? a[GK] : a[k]*(1-f)+a[k+1]*f;
+}
+function kitPoint(pt){
+  const bi=BONE_OF[pt[0]]; if(bi===undefined||!PROFILE) return null;
+  const g=PROFILE.geo[bi], sgn=pt[2];
+  let along, half;
+  if(pt[4]==='e'){
+    const ov=PROFILE.OV[bi];
+    along=g.L+ov.len*pt[1];
+    half=pt[1]<=0 ? halfAt(bi,1,sgn>=0?'r':'l') : overHalfAt(bi,pt[1]);
+  }else{
+    along=g.L*pt[1];
+    half=halfAt(bi,pt[1],sgn>=0?'r':'l');
+  }
+  return [g.A[0]+g.dx*along+g.nx*sgn*half,
+          g.A[1]+g.dy*along+g.ny*sgn*half, 5.5*(pt[3]||1)];
+}
+/* Kits are regenerated, never saved, so a garment always fits the drawing as it
+   is right now rather than as it was when the child first tried it on. */
+function rebuildKits(){
+  /* rail and mode buttons live outside the canvas, so they never reach the
+     pointer handlers and can fire with a finger still down. Whatever was being
+     drawn is abandoned rather than left pointing into a rewritten array. */
+  if(S.drag){S.drag=null;strokeStarted=false;}
+  S.strokes=S.strokes.filter(st=>st.layer!=='kit');
+  if(!S.strokes.some(st=>st.layer==='body')) return;
+  measureGirth();
+  KITS.forEach((kit,slot)=>{
+    kit.strokes.forEach(raw=>{
+      const def=Array.isArray(raw)?raw:raw.p, back=Array.isArray(raw)?0:!!raw.back;
+      const pts=[],kb=[];
+      for(let i=0;i<def.length-1;i++){
+        const a=def[i],b=def[i+1];
+        const n=(a[0]===b[0]&&a[4]===b[4])?6:1;
+        for(let k=0;k<n;k++){
+          const u=k/n;
+          const q=kitPoint([a[0], a[1]+(b[1]-a[1])*u, a[2]+(b[2]-a[2])*u,
+                            (a[3]||1)+((b[3]||1)-(a[3]||1))*u, a[4]]);
+          if(q){pts.push(q);kb.push(BONE_OF[a[0]]);}
+        }
+      }
+      const lastDef=def[def.length-1];
+      const last=kitPoint(lastDef);
+      if(last){pts.push(last);kb.push(BONE_OF[lastDef[0]]);}
+      if(pts.length>1){
+        const st={layer:'kit',slot,z:back?0:2,pts,kb,bind:null,cell:null};
+        bindStroke(st); S.strokes.push(st);
+      }
+    });
+  });
+  S.dirty=true;
+}
+
+function xforms(pose){
+  const R=S.rest;
+  return BONES.map(b=>{
+    const a0=R[b[0]],b0=R[b[1]],a1=pose[b[0]],b1=pose[b[1]];
+    const d0x=b0[0]-a0[0],d0y=b0[1]-a0[1],d1x=b1[0]-a1[0],d1y=b1[1]-a1[1];
+    const l0=Math.hypot(d0x,d0y)||1,l1=Math.hypot(d1x,d1y)||1;
+    const ang=Math.atan2(d1y,d1x)-Math.atan2(d0y,d0x),s=l1/l0;
+    return {a0,a1,c:Math.cos(ang)*s,si:Math.sin(ang)*s,s};
+  });
+}
+function skinPoint(p,bind,X){
+  let x=0,y=0,s=0;
+  for(let k=0;k<bind.length;k++){
+    const t=X[bind[k][0]],w=bind[k][1];
+    const rx=p[0]-t.a0[0],ry=p[1]-t.a0[1];
+    x+=w*(t.a1[0]+t.c*rx-t.si*ry);
+    y+=w*(t.a1[1]+t.si*rx+t.c*ry);
+    s+=w*t.s;
+  }
+  return [x,y,s];
+}
+function deform(list,pose){
+  const X=xforms(pose);
+  return list.map(st=>({
+    layer:st.layer,slot:st.slot,src:st,
+    pts:st.pts.map((p,i)=>{
+      const b=st.bind&&st.bind[i];
+      if(!b) return [p[0],p[1],p[2]];
+      const q=skinPoint(p,b,X);
+      return [q[0],q[1],p[2]*Math.max(.6,Math.min(1.6,q[2]))];
+    })
+  }));
+}
+
+/* ---- did the drawing land on the bones? ----------------------------------
+   The armature only buys anything while the ink and the bones are the same
+   figure. A drawing made a long way off the guide still looks right at rest,
+   because rest is where it was drawn, and it only falls apart later when a
+   pose turns a bone the ink does not really belong to. Thirty units of drift,
+   about nine millimetres on a phone, is already enough to pull an arm off the
+   body.
+
+   So ask on the way out of drawing, and move the bones onto the child rather
+   than asking the child to move onto the bones. Measured by closest point, not
+   by a centroid: a centroid is dragged around by a head circle and a pair of
+   feet and reads seventy units out on a correctly traced potato, which would
+   move the bones off a drawing that was never wrong. Closest point reads four
+   to twenty one on every correct fixture and recovers a real shift to within
+   four units. */
+function nearestOnBones(p,J){
+  let qx=0,qy=0,bd=Infinity;
+  for(let i=0;i<BONES.length;i++){
+    const b=BONES[i],a=J[b[0]],c=J[b[1]];
+    const vx=c[0]-a[0],vy=c[1]-a[1],L2=vx*vx+vy*vy||1;
+    let t=((p[0]-a[0])*vx+(p[1]-a[1])*vy)/L2; t=t<0?0:t>1?1:t;
+    const x=a[0]+t*vx, y=a[1]+t*vy;
+    const d=(p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y);
+    if(d<bd){bd=d;qx=x;qy=y;}
+  }
+  return [qx,qy];
+}
+const DRIFT=32;                        /* below this it is a wobble, not a miss */
+function alignBones(){
+  const pts=[];
+  S.strokes.forEach(st=>{if(st.layer==='body')st.pts.forEach(p=>pts.push(p));});
+  if(pts.length<8) return false;
+  const step=Math.max(1,Math.floor(pts.length/500)),sample=[];
+  for(let i=0;i<pts.length;i+=step) sample.push(pts[i]);
+  let tx=0,ty=0;
+  for(let it=0;it<8;it++){
+    const J={};JOINTS.forEach(j=>{J[j]=[S.rest[j][0]+tx,S.rest[j][1]+ty];});
+    let sx=0,sy=0;
+    for(let i=0;i<sample.length;i++){
+      const q=nearestOnBones(sample[i],J);
+      sx+=sample[i][0]-q[0]; sy+=sample[i][1]-q[1];
+    }
+    tx+=sx/sample.length; ty+=sy/sample.length;
+  }
+  if(!isFinite(tx)||!isFinite(ty)||Math.hypot(tx,ty)<DRIFT) return false;
+  mark();
+  JOINTS.forEach(j=>{S.rest[j]=[S.rest[j][0]+tx,S.rest[j][1]+ty];});
+  bindAll();
+  return true;
+}
+
+/* ================= visibility ================= */
+function visible(st,wr){
+  if(st.layer==='body')return true;
+  if(st.layer==='kit')return st.slot===wr.kit;
+  if(st.layer==='outfit')return st.slot===wr.outfit;
+  return st.slot===wr.face;
+}
+const ORDER={body:1,kit:2,outfit:3,face:4};
+const zOf=st=>st.z!==undefined?st.z:ORDER[st.layer];
+const activeStrokes=wr=>S.strokes.filter(st=>st.bind&&visible(st,wr))
+  .sort((a,b)=>zOf(a)-zOf(b));
+
+/* ================= balloons =================
+   A balloon's tail anchors to a joint, not to a point on the page, so it keeps
+   pointing at the mouth when the pose changes. Nothing else in this category
+   can do that, because nothing else knows where the mouth is. */
+const KINDS=[{id:'speech',label:'Talking'},{id:'think',label:'Thinking'},{id:'shout',label:'Shouting'}];
+const TAILS=[{id:'head',label:'This character'},{id:'',label:'Nobody, it is just words'}];
+function wordFont(size){return '700 '+size+'px "Shantell Sans","Comic Neue",sans-serif';}
+function measure(c,t,size){
+  if(!c.measureText)return t.length*size*.52;
+  const m=c.measureText(t);
+  return (m&&typeof m.width==='number')?m.width:t.length*size*.52;
+}
+function wrapWords(c,text,size,maxw){
+  const out=[];
+  String(text||'').split('\n').forEach(para=>{
+    const words=para.split(/\s+/).filter(Boolean);
+    if(!words.length){out.push('');return;}
+    /* a single word longer than the bubble has to be broken, or it sets the
+       bubble's width to itself and the lettering runs off the paper */
+    const parts=[];
+    words.forEach(w=>{
+      while(measure(c,w,size)>maxw&&w.length>1){
+        let n=w.length;
+        while(n>1&&measure(c,w.slice(0,n),size)>maxw)n--;
+        parts.push(w.slice(0,n));w=w.slice(n);
+      }
+      parts.push(w);
+    });
+    let line=parts[0];
+    for(let i=1;i<parts.length;i++){
+      const t=line+' '+parts[i];
+      if(measure(c,t,size)>maxw){out.push(line);line=parts[i];}
+      else line=t;
+    }
+    out.push(line);
+  });
+  return out;
+}
+function balloonBox(c,b){
+  const size=44, pad=26, maxw=520;
+  /* measure in the font the words will actually be drawn in. Measuring first
+     and setting the font afterwards sizes every bubble for the browser default
+     of ten pixels, and the lettering then spills straight out of it. */
+  const prev=c.font;
+  c.font=wordFont(size);
+  const lines=wrapWords(c,b.text,size,maxw);
+  let w=0;lines.forEach(l=>{const m=measure(c,l,size);if(m>w)w=m;});
+  c.font=prev;
+  w=Math.max(140,Math.min(maxw,w))+pad*2;
+  const h=Math.max(90,lines.length*size*1.18)+pad*1.5;
+  return {lines,size,w,h};
+}
+/* Keep the whole bubble on the paper, measured after the words are in it. The
+   drag handler clamps the centre, which is not the same thing: type a long
+   sentence and the box grows around a centre that was legal, and the top line
+   ends up cropped off the printed page. */
+function fitBalloon(b,box){
+  const hw=Math.min(box.w,W)/2, hh=Math.min(box.h,H)/2;
+  b.x=Math.max(hw,Math.min(W-hw,b.x));
+  b.y=Math.max(hh,Math.min(H-hh,b.y));
+}
+function drawBalloon(c,b,J){
+  const box=balloonBox(c,b);
+  fitBalloon(b,box);
+  const x=b.x-box.w/2, y=b.y-box.h/2;
+  c.save();
+  c.fillStyle='#F2F1EC';c.strokeStyle='#14120F';c.lineWidth=6;c.lineJoin='round';
+  const tail=b.tail&&J&&J[b.tail]?J[b.tail]:null;
+  if(b.kind==='think'){
+    /* a cloud, drawn as overlapping circles round the box */
+    const n=14,rx=box.w/2,ry=box.h/2;
+    c.beginPath();
+    for(let i=0;i<n;i++){
+      const a=i/n*Math.PI*2;
+      const px=b.x+Math.cos(a)*rx, py=b.y+Math.sin(a)*ry;
+      const r=Math.min(rx,ry)*.42;
+      c.moveTo(px+r,py);c.arc(px,py,r,0,7);
+    }
+    c.ellipse?c.ellipse(b.x,b.y,rx*.96,ry*.96,0,0,7):c.rect(x,y,box.w,box.h);
+    c.fill();c.stroke();
+    if(tail){
+      for(let i=1;i<=3;i++){
+        const t=i/3.6, r=16-i*3.2;
+        const px=b.x+(tail[0]-b.x)*t, py=b.y+(tail[1]-b.y)*t+box.h*.34*(1-t);
+        c.beginPath();c.arc(px,py,r,0,7);c.fill();c.stroke();
+      }
+    }
+  }else if(b.kind==='shout'){
+    const n=18,rx=box.w/2*1.1,ry=box.h/2*1.15;
+    c.beginPath();
+    for(let i=0;i<=n;i++){
+      const a=i/n*Math.PI*2, sp=(i%2)?.74:1.06;
+      const px=b.x+Math.cos(a)*rx*sp, py=b.y+Math.sin(a)*ry*sp;
+      i?c.lineTo(px,py):c.moveTo(px,py);
+    }
+    c.closePath();c.fill();c.stroke();
+    if(tail)spike(c,b,tail,box);
+  }else{
+    roundRect(c,x,y,box.w,box.h,26);
+    c.fill();c.stroke();
+    if(tail)spike(c,b,tail,box);
+  }
+  c.fillStyle='#14120F';c.textAlign='center';c.textBaseline='middle';
+  c.font=wordFont(box.size);
+  const top=b.y-(box.lines.length-1)*box.size*1.18/2;
+  box.lines.forEach((l,i)=>{c.fillText(l,b.x,top+i*box.size*1.18);});
+  c.restore();
+}
+function roundRect(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
+}
+function spike(c,b,tail,box){
+  const dx=tail[0]-b.x,dy=tail[1]-b.y,L=Math.hypot(dx,dy)||1;
+  const ux=dx/L,uy=dy/L,px=-uy,py=ux;
+  const baseX=b.x+ux*box.w*.22, baseY=b.y+uy*box.h*.36;
+  const tipX=b.x+ux*(L*.82), tipY=b.y+uy*(L*.82);
+  c.beginPath();
+  c.moveTo(baseX+px*26,baseY+py*26);
+  c.lineTo(tipX,tipY);
+  c.lineTo(baseX-px*26,baseY-py*26);
+  c.closePath();c.fill();
+  c.beginPath();
+  c.moveTo(baseX+px*26,baseY+py*26);c.lineTo(tipX,tipY);c.lineTo(baseX-px*26,baseY-py*26);
+  c.stroke();
+}
+function balloonHit(c,pt,words,J){
+  for(let i=words.length-1;i>=0;i--){
+    const b=words[i],box=balloonBox(c,b);
+    if(Math.abs(pt[0]-b.x)<=box.w/2&&Math.abs(pt[1]-b.y)<=box.h/2)return i;
+  }
+  return -1;
+}
+
+/* ================= undo =================
+   One mechanism for everything. A snapshot of the document goes on the stack
+   before any change that a child could regret, and Undo restores it. Offering a
+   confirm dialog instead teaches a child to tap through dialogs; letting the
+   thing happen and making it reversible does not. */
+/* Bounded by bytes, not by count. Forty whole copies of a full page drawing is
+   twenty six megabytes of strings held live, on the device least able to spare
+   it. Depth still reaches forty on a small drawing, which is where a child
+   actually wants it. */
+const UNDO=[];const UNDO_MAX=40, UNDO_BYTES=3e6;
+function trimUndo(){
+  while(UNDO.length>UNDO_MAX)UNDO.shift();
+  let n=0;
+  for(let i=UNDO.length-1;i>=0;i--){
+    n+=UNDO[i].length;
+    if(n>UNDO_BYTES&&i>0){UNDO.splice(0,i);break;}
+  }
+}
+function snapshot(){try{return JSON.stringify(doc());}catch(e){return null;}}
+function mark(){
+  const s=snapshot();
+  /* Nothing changed since the last snapshot, so this one would only make Undo
+     look broken: the child taps it, the picture does not move, and she stops
+     believing in the button. */
+  if(s&&s!==UNDO[UNDO.length-1]){UNDO.push(s);trimUndo();}
+  syncUndo();
+}
+/* A gesture snapshots BEFORE it starts and keeps the snapshot only if it turned
+   out to change something. Marking on pointerdown was optimistic: a tap on a
+   joint that never moved, and a palm that was rejected on purpose, both left a
+   dead entry, so the first Undo did nothing and the second took away real work. */
+function markIfChanged(pre){
+  if(pre&&pre!==snapshot()){UNDO.push(pre);trimUndo();}
+  syncUndo();
+}
+function undo(){
+  const s=UNDO.pop();
+  if(!s){say('Nothing left to undo');syncUndo();return;}
+  try{load(JSON.parse(s),true);}catch(e){say('Could not undo that');}
+  syncUndo();buildRails();buildStrip();render();save();
+}
+function syncUndo(){
+  const b=document.getElementById('btnUndo');
+  if(b){b.disabled=!UNDO.length;b.style.opacity=UNDO.length?'1':'.4';}
+}
+
+/* ================= the document ================= */
+function doc(){
+  return {
+    format:'inkbones/4',
+    name:S.name,
+    rest:S.rest,
+    current:S.current,
+    /* kit strokes are regenerated from the girth profile on every load, so
+       saving them would only be a way for a stale garment to come back */
+    /* A tenth of a world unit is a quarter of a screen pixel at the deepest
+       zoom this app allows, so nothing any eye can see is lost, and a stored
+       point goes from about fifty seven characters to sixteen. That is three
+       times less to write on every save and three times less of the quota. */
+    strokes:S.strokes.filter(s=>s.layer!=='kit')
+      .map(s=>({layer:s.layer,slot:s.slot,
+        pts:s.pts.map(q=>[Math.round(q[0]*10)/10,Math.round(q[1]*10)/10,Math.round(q[2]*10)/10])})),
+    panels:S.panels
+  };
+}
+const FORMATS={'inkbones/3':1,'inkbones/4':1};
+function load(d,keepUndo){
+  if(!d||typeof d!=='object')throw new Error('not a character');
+  /* The version was written on every save and never once read, so a file from
+     a later build would have been loaded as best it could and then written back
+     in this build's shape, quietly throwing away whatever was new in it. */
+  if(d.format&&!FORMATS[d.format])throw new Error('newer character file');
+  const rest=cloneJ(d.rest);
+  if(!rest)throw new Error('no skeleton');
+  if(!Array.isArray(d.strokes))throw new Error('no drawing');
+  const strokes=[];
+  d.strokes.forEach(s=>{
+    if(!s||!Array.isArray(s.pts)||s.pts.length<1)return;
+    const pts=[];
+    s.pts.forEach(p=>{
+      if(!Array.isArray(p)||p.length<3)return;
+      const x=+p[0],y=+p[1],r=+p[2];
+      if(!isFinite(x)||!isFinite(y)||!isFinite(r))return;
+      pts.push([x,y,Math.max(.5,Math.min(60,r))]);
+    });
+    if(!pts.length)return;
+    const layer=(s.layer==='outfit'||s.layer==='face')?s.layer:'body';
+    const slot=Math.max(0,Math.min(9,s.slot|0));
+    strokes.push({layer,slot,pts,bind:null,cell:null});
+  });
+  /* nothing above this line has touched S, so a wrong file cannot leave the app
+     in a half loaded state with a zero joint skeleton and every control dead */
+  if(S.drag){S.drag=null;strokeStarted=false;}
+  if(!keepUndo)UNDO.length=0;
+  S.rest=rest;
+  S.strokes=strokes;
+  S.name=typeof d.name==='string'?d.name.slice(0,40):'';
+  S.panels=[];
+  for(let i=0;i<PANELS;i++){
+    const p=d.panels&&d.panels[i];
+    if(p&&typeof p==='object'){
+      S.panels.push({
+        pose:validPose(p.pose)||relOf(cloneJ(rest)),
+        wear:{outfit:num(p.wear&&p.wear.outfit,0,-1,OUTFITS-1),
+              face:num(p.wear&&p.wear.face,0,-1,FACES-1),
+              kit:num(p.wear&&p.wear.kit,-1,-1,KITS.length-1)},
+        words:Array.isArray(p.words)?p.words.slice(0,12).map(cleanWord).filter(Boolean):[]
+      });
+    }else S.panels.push(null);
+  }
+  S.current=num(d.current,0,0,PANELS-1);
+  S.target={layer:'body',slot:0};
+  S.tool='ink';
+  bindAll();rebuildKits();
+}
+function validPose(q){
+  /* every number checked, because a pose with one NaN in it turns the whole
+     figure into nothing and the panel would render blank forever */
+  if(!q||typeof q!=='object'||!q.b||typeof q.b!=='object') return null;
+  const t=Array.isArray(q.t)?[+q.t[0],+q.t[1]]:[0,0];
+  if(!isFinite(t[0])||!isFinite(t[1])) return null;
+  const b={};
+  for(let i=0;i<BONES.length;i++){
+    const j=BONES[i][1],v=q.b[j];
+    if(!Array.isArray(v)||v.length<2) return null;
+    const c=+v[0],sn=+v[1];
+    if(!isFinite(c)||!isFinite(sn)) return null;
+    if(Math.hypot(c,sn)>8) return null;          /* no bone grows eightfold */
+    b[j]=[c,sn];
+  }
+  return {t,b};
+}
+function num(v,dflt,lo,hi){const n=+v;if(!isFinite(n))return dflt;return Math.max(lo,Math.min(hi,Math.round(n)));}
+function cleanWord(w){
+  if(!w||typeof w!=='object')return null;
+  const x=+w.x,y=+w.y;
+  if(!isFinite(x)||!isFinite(y))return null;
+  return {text:String(w.text||'').slice(0,220),
+    kind:KINDS.some(k=>k.id===w.kind)?w.kind:'speech',
+    x:Math.max(0,Math.min(W,x)),y:Math.max(0,Math.min(H,y)),
+    tail:w.tail==='head'?'head':''};
+}
+
+/* ================= saving to this browser ================= */
+const KEY='inkbones.character', KEEP=KEY+'.unreadable', PREV=KEY+'.prev',
+      PREFS='inkbones.prefs';
+/* Which pen and whether the blue is showing are facts about the person, not
+   about the character. Keeping them in the document meant every Undo quietly
+   changed the pen in her hand. */
+function savePrefs(){
+  try{localStorage.setItem(PREFS,JSON.stringify({nib:S.nib,guide:S.guide}));}catch(e){}
+}
+function loadPrefs(){
+  try{
+    const d=JSON.parse(localStorage.getItem(PREFS)||'null');
+    if(!d)return;
+    if([7,14,24,38].indexOf(d.nib)>=0)S.nib=d.nib;
+    S.guide=d.guide!==false;
+  }catch(e){}
+}
+/* One generation back, so a tap that starts again is survivable even after the
+   tab has gone and taken the undo stack with it. */
+function keepPrev(){
+  try{const r=localStorage.getItem(KEY);if(r)localStorage.setItem(PREV,r);}catch(e){}
+}
+let saveTimer=null, pending=false, saveOK=true, seenAt=0;
+
+function save(){
+  /* something really changed, so this tab now owns a newer version than
+     whatever is on disk */
+  pending=true;
+  if(saveTimer)clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){saveNow(false);},600);
+}
+function saveNow(force){
+  /* A tab that has changed nothing must never write. Two tabs open, one idle
+     since this morning, an hour of work in the other: closing the idle one used
+     to fire pagehide and lay its stale copy over the hour of work. */
+  if(!pending)return;
+  if(!force&&S.drag){save();return;}     /* mid stroke: come back when the hand lifts */
+  let rec;
+  try{rec=JSON.stringify(doc());}catch(e){return;}
+  try{
+    localStorage.setItem(KEY,rec);
+    pending=false;seenAt=Date.now();
+    if(!saveOK){saveOK=true;showSaveWarn(false);}
+  }catch(e){
+    /* Private windows refuse to write at all and a full origin stops part way
+       through. Either way the child is drawing into something that will be gone
+       when the tab closes, and silence is the one response that guarantees the
+       work is lost. */
+    if(saveOK){saveOK=false;showSaveWarn(true);}
+  }
+}
+function showSaveWarn(on){
+  const el=document.getElementById('saveWarn');
+  if(el)el.hidden=!on;
+}
+function restore(){
+  let raw=null;
+  try{raw=localStorage.getItem(KEY);}catch(e){return false;}
+  if(!raw)return false;
+  try{load(JSON.parse(raw));seenAt=Date.now();return true;}
+  catch(e){
+    /* A record this build cannot read is not the same thing as no record. It
+       may be one a newer build wrote. Move the bytes aside so the child's first
+       stroke cannot save over the only copy, and if the move itself fails,
+       leave them exactly where they are rather than deleting them. */
+    try{localStorage.setItem(KEEP,raw);localStorage.removeItem(KEY);}catch(e2){}
+    return false;
+  }
+}
+/* Another tab saved. If this one has no unsaved changes it should simply catch
+   up rather than sit on a stale picture and fight over the record later. */
+addEventListener('storage',function(e){
+  if(e.key!==KEY||!e.newValue||pending)return;
+  try{
+    load(JSON.parse(e.newValue));
+    seenAt=Date.now();
+    document.getElementById('who').textContent=S.name||'a new character';
+    buildRails();buildStrip();render();
+    say('Picked up a change from another tab',true);
+  }catch(err){}
+});
+addEventListener('pagehide',function(){saveNow(true);});
+addEventListener('visibilitychange',function(){if(document.hidden)saveNow(true);});
+if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist();}catch(e){}}
+
+/* ================= canvas ================= */
+const stage=document.getElementById('stage'),ctx=stage.getContext('2d');
+let fit={s:1,ox:0,oy:0};                 /* the page inside the box */
+let usr={k:1,tx:0,ty:0};                 /* what the child pinched to */
+function sc(){return fit.s*usr.k;}
+function offx(){return fit.ox*usr.k+usr.tx;}
+function offy(){return fit.oy*usr.k+usr.ty;}
+function fitCanvas(){
+  const r=stage.parentElement.getBoundingClientRect();
+  if(!r.width||!r.height)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  stage.width=Math.max(1,Math.round(r.width*dpr));
+  stage.height=Math.max(1,Math.round(r.height*dpr));
+  const s=Math.min(r.width/W,r.height/H);
+  fit={s:s*dpr,ox:(r.width-W*s)/2*dpr,oy:(r.height-H*s)/2*dpr};
+  /* The box can change under a zoomed in page: every mode change resizes the
+     stage, and the pan the child made for the old box strands the page off the
+     new one. A big enough zoom stranded it completely, so the drawing area went
+     black while every thumbnail on the page still showed the character. */
+  clampZoom();
+  render();
+}
+function toWorld(cx,cy){
+  const r=stage.getBoundingClientRect();
+  const dpr=r.width?stage.width/r.width:1;
+  return [((cx-r.left)*dpr-offx())/sc(),((cy-r.top)*dpr-offy())/sc()];
+}
+const ZMIN=1,ZMAX=6;
+function clampZoom(){
+  usr.k=Math.max(ZMIN,Math.min(ZMAX,usr.k));
+  const pw=W*fit.s*usr.k, ph=H*fit.s*usr.k;
+  /* Smaller than the box, the page sits centred in it. Larger, it may pan only
+     as far as its own edges. Setting the offset to zero centres it ONLY at
+     zoom one, because fit.ox is the leftover margin measured at zoom one and
+     gets multiplied by k as well, so at any other zoom a zero shoves the page
+     off to one side. That was visible at a gentle 1.25 pinch. */
+  if(pw<=stage.width)usr.tx=(stage.width-pw)/2-fit.ox*usr.k;
+  else usr.tx=Math.max(stage.width-pw-fit.ox*usr.k,Math.min(-fit.ox*usr.k,usr.tx));
+  if(ph<=stage.height)usr.ty=(stage.height-ph)/2-fit.oy*usr.k;
+  else usr.ty=Math.max(stage.height-ph-fit.oy*usr.k,Math.min(-fit.oy*usr.k,usr.ty));
+  const z=document.getElementById('zoomtag');
+  if(z)z.textContent=usr.k>1.02?('Zoomed in. Two fingers to move, pinch to go back'):'';
+}
+
+function paint(c,list,J,o){
+  c.save();c.translate(o.ox||0,o.oy||0);c.scale(o.s||1,o.s||1);
+  if(o.page){
+    c.fillStyle='#F2F1EC';c.fillRect(0,0,W,H);
+  }
+  if(o.armature){
+    c.lineCap='round';
+    c.strokeStyle=o.armatureStrong?'#6FB7DC':'rgba(111,183,220,.34)';
+    c.lineWidth=10;
+    /* the head is a circle, and the bone that ends in it stops at the rim: a
+       stick drawn through the face is the one part of the guide a child cannot
+       ink over and cannot get rid of */
+    const HR=78;
+    BONES.forEach(b=>{
+      const A=J[b[0]],B=J[b[1]];
+      let ax=A[0],ay=A[1],bx=B[0],by=B[1];
+      if(b[1]==='head'){
+        const dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1;
+        bx=ax+dx/L*Math.max(0,L-HR);by=ay+dy/L*Math.max(0,L-HR);
+      }
+      c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.stroke();
+    });
+    c.beginPath();c.arc(J.head[0],J.head[1],HR,0,7);c.stroke();
+  }
+  list.forEach(st=>{
+    const ghost=o.focus&&!(st.layer===o.focus.layer&&st.slot===o.focus.slot);
+    /* the layers she is not on stay visible, just quieter. At a fifth they
+       read as gone, and a child drawing a face thinks her body has vanished. */
+    c.fillStyle=ghost?'rgba(20,18,15,.45)':'#14120F';
+    c.fill(inkPath(st.pts));
+  });
+  if(o.words)o.words.forEach(b=>drawBalloon(c,b,J));
+  if(o.handles){
+    JOINTS.forEach(j=>{
+      const big=j==='hip';
+      c.beginPath();c.arc(J[j][0],J[j][1],big?34:26,0,7);
+      c.fillStyle='#F2F1EC';c.fill();
+      c.lineWidth=6;c.strokeStyle=big?'#E0218A':'#1F5F80';c.stroke();
+    });
+  }
+  if(o.marks){
+    /* registration marks on the page rectangle, so a child can see where the
+       paper ends and stops drawing into the part that gets cropped away */
+    c.strokeStyle='rgba(224,33,138,.55)';c.lineWidth=4;
+    const m=26,g=48;
+    [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(k=>{
+      c.beginPath();
+      c.moveTo(k[0]+k[2]*m,k[1]+k[3]*(m+g));c.lineTo(k[0]+k[2]*m,k[1]+k[3]*m);
+      c.lineTo(k[0]+k[2]*(m+g),k[1]+k[3]*m);c.stroke();
+    });
+  }
+  c.restore();
+}
+function stageList(){
+  const p=panel();
+  /* Draw and Fit both work on the character itself, which lives at rest.
+     Only the panel modes show it bent. */
+  if(S.mode==='draw'||S.mode==='fit')
+    return {list:activeStrokes(p.wear),J:S.rest,
+            words:S.mode==='draw'?p.words:[]};
+  const J=poseOf(p.pose);
+  return {list:deform(activeStrokes(p.wear),J),J:J,words:p.words};
+}
+function render(){
+  if(!stage.width)return;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#191713';ctx.fillRect(0,0,stage.width,stage.height);
+  const v=stageList();
+  paint(ctx,v.list,v.J,{
+    ox:offx(),oy:offy(),s:sc(),page:true,marks:true,
+    armature:(S.mode==='draw'&&S.guide)||S.mode==='fit',
+    armatureStrong:S.mode==='fit',
+    handles:S.mode==='pose'||S.mode==='fit',
+    focus:S.mode==='draw'?S.target:null,
+    words:v.words
+  });
+  stage.setAttribute('aria-label',describe());
+}
+
+/* ================= input ================= */
+const PTR=new Map();
+let pinch=null,lastPr=.6,strokeStarted=false;
+/* A hand, a foot and the head are what a child aims at, and they are the ends
+   of the chain, so a miss there costs one limb. A miss near the chest used to
+   catch the neck or a shoulder and swing the whole upper body. So: a fingertip
+   of reach, ends of the chain preferred over the joints above them, and the
+   pink move everything dot kept on a short leash of its own so it cannot steal
+   a hip. */
+const GRAB=180, GRAB_HIP=110;
+const TIPS={lwri:1,rwri:1,lank:1,rank:1,head:1};
+function nearestJoint(p,J){
+  let best=null,bs=1e9;
+  JOINTS.forEach(j=>{
+    if(j==='hip')return;
+    const d=Math.hypot(J[j][0]-p[0],J[j][1]-p[1]);
+    if(d>GRAB)return;
+    const s=TIPS[j]?d*.55:d;
+    if(s<bs){bs=s;best=j;}
+  });
+  const dh=Math.hypot(J.hip[0]-p[0],J.hip[1]-p[1]);
+  if(dh<GRAB_HIP&&(!best||dh*.55<bs))best='hip';
+  return best;
+}
+function dropStroke(){
+  /* by object, never by position: rebuildKits and load both rewrite S.strokes,
+     and either can run from a button while a finger is still down */
+  if(S.drag&&S.drag.type==='ink'&&strokeStarted&&S.drag.st){
+    const i=S.strokes.indexOf(S.drag.st);
+    if(i>=0)S.strokes.splice(i,1);
+    strokeStarted=false;
+  }
+}
+stage.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  PTR.set(e.pointerId,[e.clientX,e.clientY]);
+  if(PTR.size===2){
+    /* a second finger means pinch, and it means the first finger was a palm.
+       Take the stray mark away rather than leaving it on the drawing. */
+    dropStroke();S.drag=null;
+    const v=[...PTR.values()];
+    pinch={d:Math.hypot(v[0][0]-v[1][0],v[0][1]-v[1][1])||1,
+           m:[(v[0][0]+v[1][0])/2,(v[0][1]+v[1][1])/2],k:usr.k,tx:usr.tx,ty:usr.ty};
+    render();return;
+  }
+  if(PTR.size>2)return;
+  try{stage.setPointerCapture(e.pointerId);}catch(err){}
+  const p=toWorld(e.clientX,e.clientY);
+  if(S.mode==='draw'){
+    if(S.tool==='erase'){eraseAt(p);return;}
+    /* Two fifths of the canvas is not the paper, and black ink on the dark
+       shell out there measures 1.06 to 1 against its background: a child can
+       neither see it nor keep it, because it is cropped out of the page. */
+    if(p[0]<0||p[0]>W||p[1]<0||p[1]>H){say('Draw on the paper');return;}
+    const pre=snapshot();
+    const pen=e.pointerType==='pen'&&e.pressure>0;
+    lastPr=pen?e.pressure:.55;
+    const st={layer:S.target.layer,slot:S.target.slot,
+      pts:[[p[0],p[1],radius(S.nib,lastPr)]],bind:null,cell:null};
+    S.strokes.push(st);
+    strokeStarted=true;
+    /* the drawing has changed as of now, not when the finger comes off. If the
+       tab goes away mid stroke, pagehide has no next time to catch it. */
+    pending=true;
+    S.drag={type:'ink',pen,id:e.pointerId,st,pre};
+  }else if(S.mode==='fit'){
+    const j=nearestJoint(p,S.rest);
+    if(j)S.drag={type:'fit',j,id:e.pointerId,pre:snapshot()};
+  }else{
+    const pn=panel();
+    const J=poseOf(pn.pose);
+    const wi=balloonHit(ctx,p,pn.words,J);
+    if(wi>=0)S.drag={type:'word',i:wi,id:e.pointerId,pre:snapshot(),
+      off:[pn.words[wi].x-p[0],pn.words[wi].y-p[1]]};
+    else{
+      const j=nearestJoint(p,J);
+      if(j)S.drag={type:'pose',j,id:e.pointerId,J,last:p,pre:snapshot(),start:p,moved:false};
+      else say('Touch a hand, a foot, the head, or the pink dot');
+    }
+  }
+  render();
+});
+stage.addEventListener('pointermove',e=>{
+  if(PTR.has(e.pointerId))PTR.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinch&&PTR.size>=2){
+    e.preventDefault();
+    const v=[...PTR.values()];
+    const d=Math.hypot(v[0][0]-v[1][0],v[0][1]-v[1][1])||1;
+    const m=[(v[0][0]+v[1][0])/2,(v[0][1]+v[1][1])/2];
+    const r=stage.getBoundingClientRect();
+    const dpr=r.width?stage.width/r.width:1;
+    const ratio=d/pinch.d;
+    /* Clamp the zoom BEFORE panning, and pan by the factor that actually
+       applied. Panning by the raw ratio once the zoom has hit its cap slides
+       the view off the drawing and into the blank margin, so one big spread
+       emptied the page and left a child looking at nothing. */
+    usr.k=Math.max(ZMIN,Math.min(ZMAX,pinch.k*ratio));
+    const eff=usr.k/pinch.k;
+    const mx=(m[0]-r.left)*dpr, my=(m[1]-r.top)*dpr;
+    const pmx=(pinch.m[0]-r.left)*dpr, pmy=(pinch.m[1]-r.top)*dpr;
+    usr.tx=mx-(pmx-pinch.tx)*eff;
+    usr.ty=my-(pmy-pinch.ty)*eff;
+    clampZoom();render();return;
+  }
+  if(!S.drag||S.drag.id!==e.pointerId)return;
+  e.preventDefault();
+  const raw=toWorld(e.clientX,e.clientY);
+  if(S.drag.type==='ink'){
+    const st=S.drag.st;
+    if(!st)return;
+    const prev=st.pts[st.pts.length-1];
+    const p=[prev[0]+(raw[0]-prev[0])*(1-STREAMLINE),prev[1]+(raw[1]-prev[1])*(1-STREAMLINE)];
+    const d=Math.hypot(p[0]-prev[0],p[1]-prev[1]);
+    if(d<2.2)return;
+    p[0]=Math.max(0,Math.min(W,p[0]));p[1]=Math.max(0,Math.min(H,p[1]));
+    const tgt=S.drag.pen&&e.pressure>0?e.pressure:prFromSpeed(d);
+    lastPr=lastPr*.72+tgt*.28;
+    st.pts.push([p[0],p[1],radius(S.nib,lastPr)]);
+  }else if(S.drag.type==='fit'){
+    S.rest[S.drag.j]=[raw[0],raw[1]];
+  }else if(S.drag.type==='word'){
+    const b=panel().words[S.drag.i];
+    if(b){b.x=raw[0]+S.drag.off[0];b.y=raw[1]+S.drag.off[1];fitBalloon(b,balloonBox(ctx,b));}
+  }else{
+    const j=S.drag.j,J=S.drag.J;
+    /* a few pixels of travel before anything turns, so brushing a joint on the
+       way past leaves the pose exactly as it was */
+    if(!S.drag.moved){
+      if(Math.hypot(raw[0]-S.drag.start[0],raw[1]-S.drag.start[1])<26)return;
+      S.drag.moved=true;S.drag.last=raw;
+    }
+    if(j==='hip'){
+      const dx=raw[0]-S.drag.last[0],dy=raw[1]-S.drag.last[1];
+      JOINTS.forEach(k=>{J[k]=[J[k][0]+dx,J[k][1]+dy];});
+      S.drag.last=raw;
+    }else{
+      const o=J[PARENT[j]];
+      const a0=Math.atan2(J[j][1]-o[1],J[j][0]-o[0]);
+      const a1=Math.atan2(raw[1]-o[1],raw[0]-o[0]);
+      rotRad(J,j,a1-a0);
+    }
+    panel().pose=relOf(J);
+  }
+  render();
+});
+function endPointer(e){
+  PTR.delete(e.pointerId);
+  if(PTR.size<2)pinch=null;
+  if(!S.drag||S.drag.id!==e.pointerId)return;
+  const t=S.drag.type,pre=S.drag.pre,liveSt=S.drag.st;
+  S.drag=null;strokeStarted=false;
+  if(t==='ink'){
+    const st=liveSt;
+    if(st&&S.strokes.indexOf(st)>=0){
+      /* A new stroke can BE the head, or can push the head's reach outward, and
+         either way what counts as head ink has just changed. So re-measure the
+         reach on every pen lift, but only re-bind the whole drawing when the
+         reach actually moved: that happens a handful of times in a drawing,
+         while re-binding two hundred strokes costs tens of milliseconds on a
+         tablet and would be paid on every single line. */
+      const was=HEADR;
+      measureHead();
+      if(HEADR!==was) S.strokes.forEach(bindStroke);
+      else bindStroke(st);
+      S.dirty=true;
+    }
+    hintAfterDraw();
+  }
+  if(t==='fit'){bindAll();rebuildKits();}
+  markIfChanged(pre);
+  render();buildStrip();save();
+}
+stage.addEventListener('pointerup',endPointer);
+stage.addEventListener('pointercancel',e=>{dropStroke();endPointer(e);});
+stage.addEventListener('lostpointercapture',e=>{if(S.drag&&S.drag.id===e.pointerId)endPointer(e);});
+
+/* How far off the ink a finger may land, in WORLD units, converted from a real
+   fingertip measured on the glass. It cannot be a world constant: the page is
+   about 254 css px across on a phone, so the same number would be a different
+   sized fingertip on every screen, and it would grow rather than shrink when a
+   child pinches in to pick one eyelash out of a face. */
+function fingerWorld(css){
+  const r=stage.getBoundingClientRect();
+  const dpr=r.width?stage.width/r.width:1;
+  return css*dpr/sc();
+}
+const ERASE_SLOP=16;                     /* css px of miss we forgive */
+
+/* distance from p to this stroke's ink, measured to the centre line less the
+   half width it was drawn at, so a fat line is measured from its edge */
+function inkGap(pts,p){
+  let best=Infinity;
+  if(pts.length===1)
+    return Math.max(0,Math.hypot(pts[0][0]-p[0],pts[0][1]-p[1])-pts[0][2]);
+  for(let i=1;i<pts.length;i++){
+    const a=pts[i-1],b=pts[i];
+    const vx=b[0]-a[0],vy=b[1]-a[1],L=vx*vx+vy*vy;
+    let t=L?((p[0]-a[0])*vx+(p[1]-a[1])*vy)/L:0;
+    t=t<0?0:t>1?1:t;
+    const d=Math.hypot(a[0]+vx*t-p[0],a[1]+vy*t-p[1])-(a[2]+(b[2]-a[2])*t);
+    if(d<best)best=d;
+  }
+  return Math.max(0,best);
+}
+function eraseAt(p){
+  /* Tap the line you do not want. Hit testing the filled outline demanded a tap
+     inside the ink itself, which on a phone is about three pixels wide: a child
+     had to be accurate to two pixels and mostly got told to try again. Forgive a
+     fingertip, and when more than one line is in reach take the nearest, so two
+     eyes ten pixels apart can still be picked out one at a time. */
+  const slop=fingerWorld(ERASE_SLOP);
+  let hit=-1,bd=Infinity;
+  for(let i=S.strokes.length-1;i>=0;i--){
+    const st=S.strokes[i];
+    if(st.layer==='kit')continue;
+    if(!visible(st,wear()))continue;
+    const d=inkGap(st.pts,p);
+    if(d<=slop&&d<bd){bd=d;hit=i;}
+  }
+  if(hit<0){say('Touch a line to rub it out');return;}
+  mark();S.strokes.splice(hit,1);S.dirty=true;
+  bindAll();rebuildKits();render();buildStrip();save();
+  say('Rubbed out. Undo puts it back');
+}
+
+/* A canvas is a blank rectangle to anything that is not a pair of eyes, so it
+   says out loud what is currently drawn on it. Rebuilt whenever the picture
+   changes rather than written once, or it would be a lie within one tap. */
+function describe(){
+  const body=S.strokes.filter(st=>st.layer==='body').length;
+  if(!body)return 'The drawing area. A faint blue figure to trace over.';
+  const pn=S.panels[S.current];
+  const wr=pn?pn.wear:{outfit:0,face:0,kit:-1};
+  const bits=['Your character, '+body+' line'+(body===1?'':'s')+' drawn'];
+  if(wr.kit>=0)bits.push('wearing the '+KITS[wr.kit].name+' costume');
+  else if(wr.outfit>=0&&S.strokes.some(st=>st.layer==='outfit'&&st.slot===wr.outfit))
+    bits.push('wearing your own clothes');
+  if(S.mode==='draw')bits.push('drawing the '+
+    (S.target.layer==='body'?'body':S.target.layer==='outfit'?'clothes':'face'));
+  else if(S.mode==='fit')bits.push('moving the bones');
+  else bits.push('in panel '+(S.current+1)+' of '+PANELS);
+  if(pn&&pn.words.length)bits.push(pn.words.length+' speech bubble'+(pn.words.length===1?'':'s'));
+  return bits.join(', ')+'.';
+}
+
+/* ================= what the app is telling you ================= */
+let hintTimer=null;
+function say(t,sticky){
+  const h=document.getElementById('hint');
+  if(!h)return;
+  h.textContent=t||'';
+  if(hintTimer)clearTimeout(hintTimer);
+  if(t&&!sticky)hintTimer=setTimeout(()=>{h.textContent=defaultHint();},4200);
+}
+function defaultHint(){
+  if(S.mode==='draw'){
+    if(S.tool==='erase')return 'Touch a line to rub it out';
+    if(!S.strokes.some(s=>s.layer==='body'))return 'Draw on top of the blue figure';
+    if(S.target.layer==='body')return 'Drawing the body';
+    return S.target.layer==='outfit'?'Drawing clothes':'Drawing a face';
+  }
+  if(S.mode==='dress')return 'Pick some clothes, or turn them off';
+  if(S.mode==='fit')return 'Drag a blue dot onto that part of the drawing';
+  return 'Drag a hand, a foot or the head. The pink dot moves everything';
+}
+function hintAfterDraw(){
+  const body=S.strokes.filter(s=>s.layer==='body').length;
+  if(body===3)say('Keep going, or press Dress up when the body is done');
+  else say(defaultHint(),true);
+}
+
+/* ================= rails ================= */
+function chip(t,fn,pressed,cls){
+  const b=document.createElement('button');
+  b.className='chip'+(cls?' '+cls:'');b.textContent=t;b.onclick=fn;
+  if(pressed!==undefined)b.setAttribute('aria-pressed',String(!!pressed));
+  return b;
+}
+function lbl(t){const d=document.createElement('span');d.className='lbl';d.textContent=t;return d;}
+
+function buildRails(){
+  const r1=document.getElementById('rail1'),r2=document.getElementById('rail2'),
+        cd=document.getElementById('cards');
+  r1.innerHTML='';r2.innerHTML='';cd.innerHTML='';cd.hidden=true;
+
+  if(S.mode==='draw'){
+    r1.appendChild(lbl('drawing'));
+    r1.appendChild(chip('Body',()=>setTarget('body',0),S.target.layer==='body'));
+    for(let i=0;i<OUTFITS;i++)
+      r1.appendChild(chip('Clothes '+(i+1),()=>setTarget('outfit',i),
+        S.target.layer==='outfit'&&S.target.slot===i));
+    for(let i=0;i<FACES;i++)
+      r1.appendChild(chip('Face '+(i+1),()=>setTarget('face',i),
+        S.target.layer==='face'&&S.target.slot===i));
+
+    r2.appendChild(lbl('pen'));
+    const nib=document.createElement('div');nib.className='nib';
+    [7,14,24,38].forEach(w=>{
+      const b=document.createElement('button');
+      b.setAttribute('aria-pressed',String(w===S.nib&&S.tool==='ink'));
+      b.setAttribute('aria-label','Pen size '+w);
+      const sp=document.createElement('span');
+      const d=Math.max(6,Math.round(w*.62));
+      sp.style.width=d+'px';sp.style.height=d+'px';
+      b.appendChild(sp);
+      b.onclick=()=>{S.nib=w;S.tool='ink';savePrefs();buildRails();say(defaultHint(),true);};
+      nib.appendChild(b);
+    });
+    r2.appendChild(nib);
+    r2.appendChild(chip('Rub out',()=>{S.tool=S.tool==='erase'?'ink':'erase';buildRails();say(defaultHint(),true);},S.tool==='erase'));
+    r2.appendChild(chip(S.guide?'Hide blue':'Show blue',
+      ()=>{S.guide=!S.guide;savePrefs();buildRails();render();}));
+
+  }else if(S.mode==='dress'){
+    cd.hidden=false;
+    const wr=wear();
+    cd.appendChild(costumeCard('Nothing on',null,wr.kit===-1&&wr.outfit===-1,()=>{
+      mark();wr.kit=-1;wr.outfit=-1;commitWear();}));
+    KITS.forEach((k,i)=>cd.appendChild(costumeCard(k.name,{kit:i,outfit:-1},wr.kit===i,()=>{
+      mark();wr.kit=i;wr.outfit=-1;commitWear();})));
+    for(let i=0;i<OUTFITS;i++){
+      const has=S.strokes.some(s=>s.layer==='outfit'&&s.slot===i);
+      cd.appendChild(costumeCard(has?('Yours '+(i+1)):('Draw clothes '+(i+1)),
+        has?{kit:-1,outfit:i}:null,wr.outfit===i&&wr.kit===-1,()=>{
+        if(!has){setMode('draw');setTarget('outfit',i);say('Draw the clothes onto the figure');return;}
+        mark();wr.outfit=i;wr.kit=-1;commitWear();}));
+    }
+    r1.appendChild(lbl('face'));
+    for(let i=0;i<FACES;i++){
+      const has=S.strokes.some(s=>s.layer==='face'&&s.slot===i);
+      r1.appendChild(chip(has?('Face '+(i+1)):('Draw face '+(i+1)),()=>{
+        if(!has){setMode('draw');setTarget('face',i);say('Draw a face inside the head');return;}
+        mark();wear().face=i;commitWear();},wear().face===i));
+    }
+
+  }else if(S.mode==='fit'){
+    r1.appendChild(lbl('bones'));
+    r1.appendChild(chip('Put them back',()=>{
+      mark();S.rest=cloneJ(REST0);bindAll();rebuildKits();render();buildStrip();save();
+      say('Bones back where they started');}));
+    r1.appendChild(chip('Done',()=>setMode('draw')));
+
+  }else{
+    Object.keys(POSES).forEach(n=>r1.appendChild(chip(n,()=>applyPose(n))));
+    r2.appendChild(lbl('this panel'));
+    r2.appendChild(chip('Add words',openWordsNew));
+    r2.appendChild(chip('Straighten up',()=>{
+      mark();panel().pose=relOf(cloneJ(S.rest));render();buildStrip();save();}));
+  }
+  say(defaultHint(),true);
+  syncUndo();
+}
+function costumeCard(label,preview,pressed,fn){
+  const b=document.createElement('button');
+  b.className='card';b.setAttribute('aria-pressed',String(!!pressed));
+  const c=document.createElement('canvas');
+  const t=document.createElement('span');t.textContent=label;
+  b.appendChild(c);b.appendChild(t);b.onclick=fn;
+  requestAnimationFrame(()=>drawCostume(c,preview));
+  return b;
+}
+function drawCostume(c,pv){
+  const r=c.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  c.width=Math.max(1,Math.round((r.width||90)*dpr));
+  c.height=Math.max(1,Math.round((r.height||74)*dpr));
+  const g=c.getContext('2d');
+  g.fillStyle='#F2F1EC';g.fillRect(0,0,c.width,c.height);
+  const wr=pv?{outfit:pv.outfit,face:-1,kit:pv.kit}:{outfit:-1,face:-1,kit:-1};
+  const list=activeStrokes(wr);
+  const s=Math.min(c.width/W,c.height/H)*.92;
+  paint(g,list,S.rest,{ox:(c.width-W*s)/2,oy:(c.height-H*s)/2,s});
+}
+function commitWear(){buildRails();render();buildStrip();save();}
+function setTarget(layer,slot){
+  /* Tapping Clothes first, out of curiosity, then drawing the whole character
+     there, used to lock Dress up and Move for good with a hint that never said
+     why. Clothes and faces need somebody to put them on. */
+  if(layer!=='body'&&!bodyDrawn()){
+    say('Draw the person first, then the clothes go on top',true);return;
+  }
+  const wr=wear();
+  /* choosing a layer to draw on also changes what the character is wearing, so
+     it belongs on the undo stack like every other costume change */
+  if((layer==='outfit'&&(wr.outfit!==slot||wr.kit!==-1))||(layer==='face'&&wr.face!==slot))mark();
+  S.target={layer,slot};S.tool='ink';
+  if(layer==='outfit'){wr.outfit=slot;wr.kit=-1;}
+  if(layer==='face')wr.face=slot;
+  buildRails();render();save();
+}
+/* Ops run parent before child, so each rotation rides the one before it. There
+   was a version of this that also shrugged the collarbone by a fifth of any arm
+   swing, on the theory that a shoulder moving with the arm would stop the ink
+   they share being pulled two ways. It did lift the worst upper arm, but only
+   because the ownership underneath it was still wrong. Once a bone's reach was
+   measured in its own lengths the shrug stopped paying: it cost five points of
+   torso accuracy and drew a cone shaped chest under any arms up pose. Removed.
+   If it comes back, render Big cheer and look at the shoulders before keeping
+   it. */
+function posePreset(n){
+  const J=cloneJ(S.rest);
+  (POSES[n]||[]).forEach(op=>rotAbout(J,op[0],op[1]));
+  return J;
+}
+function applyPose(n){
+  mark();
+  const J=posePreset(n);
+  panel().pose=relOf(J);
+  render();buildStrip();save();
+  say(n);
+}
+function bodyDrawn(){
+  /* Six taps on blank paper used to count, and the costumes then rendered on
+     nothing at all. Ask for something the size of a person, not for a number
+     of strokes. */
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,n=0;
+  S.strokes.forEach(st=>{
+    if(st.layer!=='body')return;
+    st.pts.forEach(p=>{n++;
+      if(p[0]<x0)x0=p[0];if(p[1]<y0)y0=p[1];
+      if(p[0]>x1)x1=p[0];if(p[1]>y1)y1=p[1];});
+  });
+  return n>=6&&Math.hypot(x1-x0,y1-y0)>=260;
+}
+function setMode(m){
+  if(m!=='draw'&&!bodyDrawn()){
+    setModeButtons('draw');S.mode='draw';document.body.dataset.mode='draw';
+    buildRails();render();
+    say('Draw the body first, right on top of the blue figure',true);return;
+  }
+  const leavingDraw=S.mode==='draw'&&m!=='draw';
+  S.mode=m;
+  document.body.dataset.mode=m;
+  if(S.strokes.some(s=>!s.bind))bindAll();
+  const moved=leavingDraw&&m!=='fit'?alignBones():false;
+  if(m!=='draw'&&m!=='fit')rebuildKits();
+  setModeButtons(m);
+  buildRails();render();buildStrip();
+  if(moved){save();say('Moved the bones onto your drawing',true);}
+}
+function setModeButtons(m){
+  const map={draw:'mDraw',dress:'mDress',pose:'mPose'};
+  Object.keys(map).forEach(k=>{
+    const el=document.getElementById(map[k]);
+    if(el)el.setAttribute('aria-pressed',String(m===k));
+  });
+}
+document.getElementById('mDraw').onclick=()=>setMode('draw');
+document.getElementById('mDress').onclick=()=>setMode('dress');
+document.getElementById('mPose').onclick=()=>setMode('pose');
+document.getElementById('btnUndo').onclick=undo;
+
+/* ================= the filmstrip ================= */
+const stripEl=document.getElementById('strip');
+function buildStrip(){
+  stripEl.innerHTML='';
+  for(let i=0;i<PANELS;i++){
+    const snap=S.panels[i];
+    const d=document.createElement('button');
+    d.className='panel'+(snap?'':' empty');
+    d.setAttribute('aria-label','Panel '+(i+1)+(snap?'':', empty'));
+    d.setAttribute('aria-pressed',String(i===S.current));
+    const n=document.createElement('span');n.className='num';n.textContent=String(i+1);
+    d.appendChild(n);
+    const c=document.createElement('canvas');
+    d.appendChild(c);stripEl.appendChild(d);
+    d.onclick=()=>{
+      S.current=i;panel();
+      buildStrip();buildRails();render();save();
+      say('Working on panel '+(i+1));
+    };
+    if(snap)requestAnimationFrame(()=>drawPanel(c,snap));
+  }
+  const filled=S.panels.filter(Boolean).length;
+  document.getElementById('stripnote').textContent =
+    'Panel '+(S.current+1)+' of '+PANELS+(filled>1?'. One drawing, every panel.':'');
+}
+function drawPanel(c,snap){
+  const r=c.parentElement.getBoundingClientRect();
+  if(!r.width)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');
+  g.fillStyle='#F2F1EC';g.fillRect(0,0,c.width,c.height);
+  const J=poseOf(snap.pose);
+  const list=deform(activeStrokes(snap.wear),J);
+  const s=Math.min(c.width/W,c.height/H)*.94;
+  paint(g,list,J,{ox:(c.width-W*s)/2,oy:(c.height-H*s)/2,s,words:snap.words});
+}
+
+/* ================= words ================= */
+let editing=-1;
+function openWordsNew(){
+  const pn=panel();
+  if(pn.words.length>=12){say('That panel has plenty to say already');return;}
+  mark();
+  /* Along the top, alternating sides, so a second bubble does not land on the
+     first and neither lands on the face she just drew. */
+  const n=pn.words.length;
+  /* as high as the paper allows, so it clears the head rather than sitting on
+     the face. fitBalloon clamps it down to the top edge once its size is known. */
+  pn.words.push({text:'',kind:'speech',
+    x:n%2?W*.66:W*.34, y:H*(.01+Math.floor(n/2)*.13), tail:'head'});
+  editing=pn.words.length-1;
+  openWordSheet();
+}
+function openWordSheet(){
+  const b=panel().words[editing];
+  if(!b)return;
+  document.getElementById('wordText').value=b.text;
+  const kr=document.getElementById('wordKinds');kr.innerHTML='';
+  KINDS.forEach(k=>kr.appendChild(chip(k.label,()=>{b.kind=k.id;openWordSheet();render();},b.kind===k.id)));
+  const tr=document.getElementById('wordTails');tr.innerHTML='';
+  TAILS.forEach(t=>tr.appendChild(chip(t.label,()=>{b.tail=t.id;openWordSheet();render();},b.tail===t.id)));
+  openSheet('wordSheet');
+  const ta=document.getElementById('wordText');
+  setTimeout(()=>{try{ta.focus();}catch(e){}},60);
+}
+document.getElementById('wordText').addEventListener('input',function(){
+  const b=panel().words[editing];
+  if(b){b.text=this.value;render();}
+});
+document.getElementById('wordDelete').onclick=()=>{
+  mark();
+  const pn=panel();
+  if(pn.words[editing])pn.words.splice(editing,1);
+  editing=-1;closeSheet('wordSheet');render();buildStrip();save();
+};
+document.getElementById('wordDone').onclick=()=>{
+  const pn=panel();
+  if(pn.words[editing]&&!pn.words[editing].text.trim())pn.words.splice(editing,1);
+  editing=-1;closeSheet('wordSheet');render();buildStrip();save();
+  say('Drag the bubble to move it');
+};
+document.getElementById('btnWords').onclick=()=>{
+  /* Stay where she is. Jumping her into another screen, with the drawing
+     suddenly covered in fifteen joint dots she did not ask for, is a bigger
+     surprise than the bubble is worth. Words belong to the panel either way. */
+  if(S.mode==='fit'){say('Finish with the bones first',true);return;}
+  openWordsNew();
+};
+stage.addEventListener('dblclick',e=>{
+  if(S.mode==='draw')return;
+  const p=toWorld(e.clientX,e.clientY);
+  const pn=panel();
+  const i=balloonHit(ctx,p,pn.words,poseOf(pn.pose));
+  /* one snapshot per editing session covers the text, the shape and the tail */
+  if(i>=0){mark();editing=i;openWordSheet();}
+});
+
+/* ================= sheets ================= */
+let lastFocus=null;
+function openSheet(id){
+  lastFocus=document.activeElement;
+  const el=document.getElementById(id);
+  el.setAttribute('open','');
+  el.onclick=e=>{if(e.target===el)closeSheet(id);};
+}
+function closeSheet(id){
+  const el=document.getElementById(id);
+  el.removeAttribute('open');
+  if(lastFocus&&lastFocus.focus){try{lastFocus.focus();}catch(e){}}
+}
+addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  ['wordSheet','printSheet','grownSheet'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&el.hasAttribute('open')){
+      if(id==='wordSheet')document.getElementById('wordDone').click();
+      else closeSheet(id);
+    }
+  });
+});
+
+/* ================= grown ups ================= */
+document.getElementById('btnGrown').onclick=()=>{
+  document.getElementById('nameField').value=S.name;
+  syncPrev();
+  openSheet('grownSheet');
+};
+document.getElementById('grownClose').onclick=()=>closeSheet('grownSheet');
+document.getElementById('nameField').addEventListener('input',function(){
+  S.name=this.value.slice(0,40);
+  document.getElementById('who').textContent=S.name||'a new character';
+  save();
+});
+document.getElementById('btnFit').onclick=()=>{
+  closeSheet('grownSheet');
+  if(!bodyDrawn()){say('Draw a body first',true);return;}
+  S.mode='fit';setModeButtons('');buildRails();render();
+};
+function syncPrev(){
+  const b=document.getElementById('btnPrev');
+  if(!b)return;
+  let has=false;
+  try{has=!!localStorage.getItem(PREV);}catch(e){}
+  b.hidden=!has;
+}
+document.getElementById('btnPrev').onclick=()=>{
+  let raw=null;
+  try{raw=localStorage.getItem(PREV);}catch(e){}
+  if(!raw){say('There is nothing to bring back',true);return;}
+  const before=snapshot();
+  try{
+    keepPrev();                          /* so this is itself undoable */
+    load(JSON.parse(raw));
+    if(before)UNDO.push(before);
+    closeSheet('grownSheet');
+    document.getElementById('who').textContent=S.name||'a new character';
+    setMode('pose');buildStrip();save();syncPrev();
+    say('Brought back '+(S.name||'the last character'),true);
+  }catch(e){say('That one could not be brought back',true);}
+};
+document.getElementById('btnNew').onclick=()=>{
+  keepPrev();
+  mark();
+  S.name='';S.rest=cloneJ(REST0);S.strokes=[];S.current=0;
+  S.panels=[];for(let i=0;i<PANELS;i++)S.panels.push(null);
+  S.target={layer:'body',slot:0};S.tool='ink';
+  bindAll();closeSheet('grownSheet');
+  document.getElementById('who').textContent='a new character';
+  setMode('draw');buildStrip();save();
+  say('Fresh page. Undo brings the old one back',true);
+};
+
+/* ================= files ================= */
+function download(name,blob){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+}
+function fileName(ext){
+  const n=(S.name||'character').replace(/[^a-z0-9 ]/gi,'').trim().replace(/\s+/g,'-').toLowerCase();
+  return (n||'character')+'.'+ext;
+}
+document.getElementById('btnSave').onclick=()=>{
+  download(fileName('inkbones.json'),
+    new Blob([JSON.stringify(doc())],{type:'application/json'}));
+  say('Saved to your files');
+};
+document.getElementById('saveWarnGo').onclick=()=>document.getElementById('btnSave').click();
+document.getElementById('btnOpen').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';
+  if(!f)return;
+  const rd=new FileReader();
+  rd.onerror=()=>say('Could not read that file',true);
+  rd.onload=()=>{
+    const before=snapshot();
+    try{
+      keepPrev();                        /* opening a file replaces what is here */
+      load(JSON.parse(rd.result));
+      if(before)UNDO.push(before);
+      closeSheet('grownSheet');
+      document.getElementById('who').textContent=S.name||'a new character';
+      setMode('pose');buildStrip();save();syncPrev();
+      say('Opened '+(S.name||'that character'),true);
+    }catch(err){
+      say('That is not an Inkbones character. Nothing was changed.',true);
+    }
+  };
+  rd.readAsText(f);
+};
+
+/* ================= the page ================= */
+/* The page is laid out for the panels that exist. Four empty framed boxes
+   around one drawing is not a comic page, it is a form with one field filled
+   in, and it is what a child would have been handed to print. */
+function pageLayout(n){
+  if(n<=1)return [[0,0,1,1]];
+  if(n===2)return [[0,0,1,.5],[0,.5,1,.5]];
+  if(n===3)return [[0,0,1,.5],[0,.5,.5,.5],[.5,.5,.5,.5]];
+  return [[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]];
+}
+const PW=1600,PH=2200;
+function drawPage(c){
+  const M=80,G=36,TOP=S.name?150:M;
+  const bw=PW-M*2, bh=PH-TOP-M;
+  const g=c.getContext('2d');
+  c.width=PW;c.height=PH;
+  g.fillStyle='#F2F1EC';g.fillRect(0,0,PW,PH);
+  if(S.name){
+    g.fillStyle='#14120F';g.textAlign='center';g.textBaseline='middle';
+    g.font='700 84px "Bangers",Impact,sans-serif';
+    g.fillText(S.name.toUpperCase(),PW/2,TOP/2+8);
+  }
+  const filled=S.panels.filter(Boolean);
+  const cells=pageLayout(filled.length);
+  filled.forEach((snap,i)=>{
+    const q=cells[i];if(!q)return;
+    const x=M+q[0]*bw+(q[0]>0?G/2:0);
+    const y=TOP+q[1]*bh+(q[1]>0?G/2:0);
+    const w=q[2]*bw-(q[2]<1?G/2:0);
+    const h=q[3]*bh-(q[3]<1?G/2:0);
+    g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+    g.fillStyle='#F2F1EC';g.fillRect(x,y,w,h);
+    const J=poseOf(snap.pose);
+    const list=deform(activeStrokes(snap.wear),J);
+    const sc=Math.min(w/W,h/H)*.96;
+    paint(g,list,J,{ox:x+(w-W*sc)/2,oy:y+(h-H*sc)/2,s:sc,words:snap.words});
+    g.restore();
+    g.strokeStyle='#14120F';g.lineWidth=8;g.strokeRect(x,y,w,h);
+  });
+}
+document.getElementById('btnPage').onclick=()=>{
+  if(!S.panels.some(Boolean)){say('Put something in a panel first',true);return;}
+  drawPage(document.getElementById('pagePreview'));
+  const share=document.getElementById('pageShare');
+  share.style.display=(navigator.share&&navigator.canShare)?'':'none';
+  openSheet('printSheet');
+};
+document.getElementById('pageClose').onclick=()=>closeSheet('printSheet');
+document.getElementById('pagePrint').onclick=()=>{try{window.print();}catch(e){}};
+document.getElementById('pageSave').onclick=()=>{
+  const c=document.getElementById('pagePreview');
+  if(!c.toBlob){say('This browser cannot save the picture. Try Print.',true);return;}
+  c.toBlob(b=>{if(b)download(fileName('comic.png'),b);});
+  note('Saved to your pictures');
+};
+document.getElementById('pageShare').onclick=()=>{
+  const c=document.getElementById('pagePreview');
+  if(!c.toBlob||!navigator.share){note('Sharing is not available here. Try Save picture.');return;}
+  c.toBlob(b=>{
+    if(!b){note('Could not make the picture');return;}
+    const f=new File([b],fileName('comic.png'),{type:'image/png'});
+    if(navigator.canShare&&!navigator.canShare({files:[f]})){note('This browser will not send pictures. Try Save picture.');return;}
+    navigator.share({files:[f],title:S.name||'My comic'}).catch(()=>{});
+  });
+};
+function note(t){const p=document.getElementById('pageNote');if(p)p.textContent=t;}
+
+/* ================= boot ================= */
+function boot(){
+  loadPrefs();
+  const had=restore();
+  document.getElementById('who').textContent=S.name||'a new character';
+  if(!had){
+    S.panels[0]=BLANK();
+    say('Draw on top of the blue figure',true);
+  }
+  buildRails();buildStrip();fitCanvas();syncUndo();
+  if(had)say('Picked up where you left off',true);
+}
+let refit=null,lastBox='';
+function scheduleFit(){if(refit)clearTimeout(refit);refit=setTimeout(()=>{fitCanvas();buildStrip();},80);}
+addEventListener('resize',scheduleFit);
+addEventListener('orientationchange',scheduleFit);
+if(window.visualViewport)visualViewport.addEventListener('resize',scheduleFit);
+/* Every mode change resizes the stage, because the costume grid appears and
+   the rails change height. Watching the window alone leaves the canvas bitmap
+   at its old size, which shows up as a squashed drawing and, worse, as a touch
+   map that lands a finger somewhere the child did not touch. */
+if(window.ResizeObserver){
+  const box=stage.parentElement;
+  new ResizeObserver(function(en){
+    const r=en[0].contentRect, k=Math.round(r.width)+'x'+Math.round(r.height);
+    if(k===lastBox)return;
+    lastBox=k;fitCanvas();
+  }).observe(box);
+}
+/* the canvas is laid out before the display face arrives, and the box moves
+   when it does. Refit rather than living with a permanently skewed touch map. */
+if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)
+  document.fonts.ready.then(scheduleFit).catch(()=>{});
+
+boot();
+
+/* exposed for the headless tests, harmless in a browser */
+window.__inkbones={S,POSES,KITS,BONES,JOINTS,PARENT,CHAIN,REST0,
+  cloneJ,rotAbout,rotRad,relOf,poseOf,posePreset,bindAll,bindStroke,weightsFor,
+  rebuildKits,measureGirth,outlineOf,activeStrokes,xforms,deform,
+  doc,load,BLANK,drawPage,balloonBox,wrapWords,measureHead,isHead,bestBone,boneU,
+  alignBones,DRIFT,saveNow,restore,KEY,KEEP,PREV,eraseAt,inkGap,fingerWorld,ERASE_SLOP,
+  bodyDrawn,UNDO,pageLayout,
+  isPending:()=>pending,isSaveOK:()=>saveOK,
+  HEAD_BONE,getHeadR:()=>HEADR};
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   The studio seam. Same shape as every other app in this fleet: a build tag so
+   a support message can name a version, a tip jar that stays invisible until
+   there is a link to put in it, and an install affordance.
+
+   Kept in its own script BELOW the app so nothing here can stop the app from
+   booting. A studio seam that breaks the app it is decorating is worse than no
+   seam at all.
+   ═══════════════════════════════════════════════════════════════════════════ */
+var BUILD = 'inkbones-v1';
+/* config seam, fleet pattern: an empty string hides the tip jar entirely.
+   Paste the Stripe payment link here once it exists. */
+var TIP_URL = '';
+
+(function studio(){
+  var tag = document.getElementById('buildTag');
+  if (tag) tag.textContent = BUILD;
+  if (TIP_URL){
+    var tip = document.getElementById('tipBtn');
+    if (tip){ tip.href = TIP_URL; tip.style.display = 'inline-flex'; }
+  }
+
+  var installed = (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
+                  || navigator.standalone;
+  var evt = null, b = document.getElementById('swsInstall');
+  if (b){
+    b.style.display = 'inline-flex';
+    if (installed) b.textContent = '⤓ Give the studio its own icon';
+    addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); evt = e; });
+    b.addEventListener('click', function(){
+      if (evt){ evt.prompt(); return; }
+      alert(installed
+        ? 'Phones add icons from the browser. Open skywolfstudio.com/inkbones in Safari or Chrome and add it there.'
+        : 'On iPhone or iPad: tap the Share button, then "Add to Home Screen".');
+    });
+  }
+
+  if ('serviceWorker' in navigator){
+    addEventListener('load', function(){
+      try { navigator.serviceWorker.register('sw.js'); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>

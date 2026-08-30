@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F1EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191713" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Privacy for Inkbones, a comic book maker for children. Drawings stay in this browser on this device, nothing is uploaded, there is no account and no third party code.">
+<title>Privacy and accessibility, Inkbones</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     HAND WRITTEN. DO NOT REGENERATE THIS FILE.
+
+     design/privacy.mjs writes the privacy page for every other app in the
+     fleet, and it cannot write this one. Two reasons, both structural:
+
+       1. It builds its slug list with Object.keys(SKINS) from design/skins.mjs
+          and then dereferences SKINS[slug].chroma and SKINS[slug].hue inside
+          solveInk() to solve the text colours. Inkbones has no skin entry, so
+          "node design/privacy.mjs inkbones" visits nothing and writes nothing.
+          A stub entry with no chroma would solve to a NaN colour rather than
+          fail loudly, and a real entry would repaint this page in a palette
+          that is not the app's.
+
+       2. The generated template says "This app is made for adults. It is not
+          directed at children." Inkbones is the one app in the fleet aimed
+          squarely at children, so that sentence is false here, and the whole
+          page is written around the fact instead: no collection at all, a
+          parent facing warning about browsers clearing their own storage, and
+          the hosting log stated plainly rather than buried.
+
+     If the fleet page ever changes in a way that matters, port the change into
+     this file by hand. design/privacy-facts.json does carry an inkbones entry,
+     and on its own it is inert: privacy.mjs walks SKINS, never the fact sheet,
+     so nothing can be generated from facts alone. Do not close that gap by
+     adding a skin. The first run of privacy.mjs after a skin exists would
+     silently overwrite this page with the adults only text.
+
+     The paragraph under "The one record a visit does create" is the notice for
+     16 CFR 312.4(d)(3), the operator disclosure about information collected
+     from a child. Serving the page writes an IP address into an ordinary host
+     log, and that is the entire collection, which is exactly why this page has
+     to exist even though the app itself collects nothing. Do not delete that
+     section, and do not soften it into "we may collect".
+
+     Colour pairs on this page were measured with design/color.mjs, not judged
+     by eye. Light: ink on board 16.53:1, quiet 6.77:1, links 6.18:1, card
+     variants 17.90, 7.33 and 6.69. Dark: 15.83:1, 8.12:1, 8.08:1, card
+     variants 14.84, 7.61 and 7.58. Skip link 6.38:1 in both. The magenta
+     focus ring is non text and lands at 3.91:1 on board and 4.05:1 on shell.
+     Keep every pair above 4.5:1 if you touch the palette.
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  /* Typefaces ship with the app, under the SIL Open Font License. See
+     fonts/OFL.txt. Nothing is fetched from anybody: this page, like the app,
+     makes no network request of its own. */
+  @font-face{
+    font-family:"Bangers";
+    src:url("./fonts/bangers-latin.woff2") format("woff2");
+    font-weight:400;font-style:normal;font-display:swap;
+  }
+  @font-face{
+    font-family:"Shantell Sans";
+    src:url("./fonts/shantellsans-latin.woff2") format("woff2");
+    font-weight:400;font-style:normal;font-display:swap;
+  }
+
+  /* The app's palette, unchanged. Bristol board, ink, non photo blue for the
+     guide, process magenta for registration marks, dark shell after dark.
+     The blue used for text is the deep end of the same hue: real non photo
+     blue is meant to be almost invisible, which is wrong for a link. */
+  :root{
+    --board:#F2F1EC;
+    --paper:#FBFAF6;
+    --wash:#E8F2F8;
+    --ink:#14120F;
+    --quiet:#57534B;
+    --blue:#1F5F80;
+    --blueghost:#6FB7DC;
+    --magenta:#E0218A;
+    --magentaink:#A8115F;
+    --rule:#D8D5CC;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --board:#191713;
+      --paper:#201D19;
+      --wash:#201D19;
+      --ink:#F2F1EC;
+      --quiet:#B4AEA3;
+      --blue:#6FB7DC;
+      --magentaink:#F06BAE;
+      --rule:#3A3630;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--board);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:0 18px calc(56px + env(safe-area-inset-bottom));
+    padding-left:calc(18px + env(safe-area-inset-left));
+    padding-right:calc(18px + env(safe-area-inset-right));
+    overflow-wrap:break-word;
+  }
+  main{max-width:38rem;margin:0 auto;position:relative}
+
+  a{color:var(--blue)}
+  a:focus-visible,.skip:focus{outline:3px solid var(--magenta);outline-offset:2px}
+
+  /* A skip link, because the page opens with a header and a back link and a
+     keyboard reader should not have to walk them. */
+  .skip{position:absolute;left:-9999px;top:0}
+  .skip:focus{position:static;display:inline-block;margin-top:14px;
+    background:#A8115F;color:#F2F1EC;padding:10px 14px;border-radius:8px;
+    text-decoration:none;font-weight:700}
+
+  .back{display:inline-block;margin-top:calc(18px + env(safe-area-inset-top));
+    min-height:44px;line-height:44px;font-weight:600}
+
+  /* The head of the page: the blue armature the whole app is built on, drawn
+     faint the way it sits under the paper, and a magenta registration target
+     of the kind that lines up a printing plate. Decoration only. */
+  .plate{display:flex;align-items:center;gap:12px;margin:10px 0 0}
+  .plate svg{flex:0 0 auto;display:block}
+  h1{
+    font-family:"Bangers",Impact,"Haettenschweiler",sans-serif;font-weight:400;
+    font-size:clamp(30px,9vw,40px);letter-spacing:1.2px;line-height:1.05;
+    margin:0;
+  }
+  h2{
+    font-family:"Bangers",Impact,"Haettenschweiler",sans-serif;font-weight:400;
+    font-size:22px;letter-spacing:.9px;margin:34px 0 6px;
+  }
+  h3{font-size:16px;margin:14px 0 4px}
+  p{margin:10px 0}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  strong{font-weight:700}
+
+  .lede{font-family:"Shantell Sans","Comic Neue",ui-rounded,system-ui,sans-serif;
+    font-size:17px;line-height:1.55;margin-top:12px}
+
+  .card{background:var(--paper);border:1px solid var(--rule);border-radius:12px;
+    padding:14px 16px;margin:18px 0}
+  .card.pull{border-left:4px solid var(--magenta)}
+  .card > :first-child{margin-top:0}
+  .card > h2:first-child,.check > h2:first-child{margin-top:2px}
+  .card > :last-child{margin-bottom:0}
+  .card h3{font-family:"Shantell Sans","Comic Neue",ui-rounded,system-ui,sans-serif;
+    font-size:17px;color:var(--magentaink)}
+  .check{background:var(--wash);border:1px solid var(--rule);border-radius:12px;
+    padding:14px 16px;margin:18px 0}
+  .check > :first-child{margin-top:0}
+  .check > :last-child{margin-bottom:0}
+
+  .quiet{color:var(--quiet)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+    background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:1px 5px}
+  hr{border:none;border-top:1px solid var(--rule);margin:32px 0}
+  footer{margin-top:30px;font-size:14px;color:var(--quiet)}
+  footer a{color:var(--blue)}
+  footer .again{display:inline-block;min-height:44px;line-height:44px;font-weight:600}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* Printed, it should look like the app's own output: ink on white paper. */
+  @media print{
+    body{background:#fff;color:#000;padding:0}
+    .skip,.back,.plate svg{display:none}
+    .card,.check{border:1px solid #999;background:#fff}
+    a{color:#000;text-decoration:underline}
+  }
+</style>
+</head>
+<body>
+<main>
+  <a class="skip" href="#start">Skip to the policy</a>
+  <a class="back" href="./">&larr; Back to Inkbones</a>
+
+  <div class="plate">
+    <!-- The armature in non photo blue, and a registration target in process
+         magenta. Decorative, so it is hidden from screen readers. -->
+    <svg width="46" height="72" viewBox="0 0 46 72" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="#6FB7DC" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="23" cy="9" r="6.5"/>
+        <path d="M23 16 L23 38"/>
+        <path d="M11 23 L35 23"/>
+        <path d="M11 23 L7 34 L10 45"/>
+        <path d="M35 23 L39 34 L36 45"/>
+        <path d="M14 38 L32 38"/>
+        <path d="M14 38 L12 54 L14 68"/>
+        <path d="M32 38 L34 54 L32 68"/>
+      </g>
+      <g fill="#6FB7DC">
+        <circle cx="23" cy="16" r="2.2"/><circle cx="23" cy="38" r="2.2"/>
+        <circle cx="11" cy="23" r="2.2"/><circle cx="35" cy="23" r="2.2"/>
+        <circle cx="7" cy="34" r="2.2"/><circle cx="39" cy="34" r="2.2"/>
+        <circle cx="10" cy="45" r="2.2"/><circle cx="36" cy="45" r="2.2"/>
+        <circle cx="14" cy="38" r="2.2"/><circle cx="32" cy="38" r="2.2"/>
+        <circle cx="12" cy="54" r="2.2"/><circle cx="34" cy="54" r="2.2"/>
+        <circle cx="14" cy="68" r="2.2"/><circle cx="32" cy="68" r="2.2"/>
+      </g>
+      <g stroke="#E0218A" stroke-width="1.5" fill="none">
+        <circle cx="5" cy="6" r="3"/>
+        <path d="M5 1 L5 11 M0 6 L10 6"/>
+        <circle cx="41" cy="66" r="3"/>
+        <path d="M41 61 L41 71 M36 66 L46 66"/>
+      </g>
+    </svg>
+    <h1>Privacy and accessibility</h1>
+  </div>
+
+  <p class="lede" id="start">Inkbones is a comic book maker for children, made by Sky Wolf Studio.
+  A faint blue figure waits under the paper, a child traces it, inks it, dresses it, poses it and
+  prints a page. Here is the short version, which is also the whole version: the drawings stay in
+  this browser, on this device, and nothing is uploaded.</p>
+
+  <div class="card">
+    <h2>The whole thing, in six lines</h2>
+    <ul>
+      <li>Drawings, characters and comic pages are kept in this browser's storage on this device.
+      Nothing is uploaded.</li>
+      <li>There is no account and no sign in. Nothing is asked for: not a name, not an email
+      address, not an age.</li>
+      <li>No analytics, no ad network, no trackers, no third party code of any kind.</li>
+      <li>The only way anything leaves this device is a person choosing Save, Send or Print.</li>
+      <li>The web server that hands you the page records an IP address, so the page can be
+      delivered and the server defended. It is not used to build a profile of anyone.</li>
+      <li>Browsers clear their own storage without asking. If a comic matters, print it or save it
+      as a file the same day.</li>
+    </ul>
+  </div>
+
+  <h2>Where the drawings go</h2>
+  <p>Nowhere. Every line, every character, every speech balloon and every comic panel is written to
+  this browser's own storage on this device, under a single name, <code>inkbones.character</code>,
+  which holds the character's name, the lines that were drawn, the pose and the panels. That is the
+  entire list.</p>
+  <p>There is no account, no sign in, no server to sync to, and no copy held anywhere we can reach.
+  We could not hand a child's drawings to anyone if we were asked for them, because we do not have
+  them.</p>
+
+  <div class="card pull">
+    <h3>The one warning a parent actually needs</h3>
+    <p><strong>Browsers clear their own storage, and they do not ask first.</strong> Safari deletes
+    storage that a page created after seven days without a visit. Clearing history or site data
+    clears it. A school or guest Chromebook session usually wipes everything at logout. Inkbones
+    asks the browser to keep its storage anyway, but that is a request, not a promise, and no app
+    can make it one.</p>
+    <p>So if a comic matters, get it off the browser the day it is made. Any of these does it, and
+    they take about a minute:</p>
+    <ul>
+      <li><strong>Print it</strong> from the finished page. Paper is the only copy that no browser
+      can delete.</li>
+      <li><strong>Save picture</strong> writes the page as a <code>.png</code> to this device.</li>
+      <li><strong>Save to a file</strong> in the Grown ups panel writes the character as a small
+      <code>.json</code> file you can keep, back up, or open again on another device.</li>
+    </ul>
+    <p>A seven year old will not understand why a drawing vanished. Saving it now is the whole fix.</p>
+  </div>
+
+  <h2>The only ways anything leaves this device</h2>
+  <p>Four, and every one of them starts with a person deliberately tapping a button. Nothing happens
+  on its own, and none of them uploads anything to us.</p>
+  <ul>
+    <li><strong>Print it</strong> hands the finished page to your own device's print dialog, and
+    from there to your own printer.</li>
+    <li><strong>Save picture</strong> writes a <code>.png</code> of the page to your own downloads
+    or photos.</li>
+    <li><strong>Save to a file</strong> writes a <code>.json</code> character file to your own
+    downloads. It is the only backup that exists, so it is worth making.</li>
+    <li><strong>Send it</strong> passes the picture to your device's own share sheet, and you pick
+    who receives it. We never see the picture and we keep no record of who it went to.</li>
+  </ul>
+  <p>Opening a saved character file works the same way in reverse: your browser's file picker hands
+  the app that one file, and the app can see nothing else on the device.</p>
+
+  <h2>What Inkbones does not do</h2>
+  <ul>
+    <li>No account, no sign in, no name, no email address, no age and no birthday. Nothing is asked
+    for, so nothing can be given.</li>
+    <li>No analytics, no ad network, no advertising trackers, no cookies, no fingerprinting.</li>
+    <li>No third party code of any kind. No script, font or image is fetched from anybody: both
+    typefaces ship inside the app.</li>
+    <li>The one exception, and it is a link rather than code: if a tip button is showing in the
+    Grown ups sheet, tapping it opens a Stripe checkout page in a new tab, and from that point
+    Stripe's own privacy policy applies. Nothing about the child or the drawing goes with it, and
+    we never see or store card details. Nothing is sent to Stripe unless a grown up taps that
+    button.</li>
+    <li>No chat, no comments, no gallery, no upload, no public profile. There is no way for a child
+    to be contacted by anyone through this app, because there is no channel to contact them on.</li>
+    <li>No purchases inside the app, no paywall, no trial, no watermark and no export limit.</li>
+    <li>Nothing is sold, shared or brokered. There is no data here to sell.</li>
+  </ul>
+
+  <h2>The one record a visit does create</h2>
+  <p>Serving a web page needs a server. The one that hands you Inkbones is Google's Firebase
+  Hosting, and like every web host it writes an ordinary, short lived log line when a browser asks
+  for a file. That line includes the IP address the request came from. It exists so the page can be
+  delivered and so the host can deal with attacks and abuse.</p>
+  <p><strong>It is not used to build a profile of anyone.</strong> It is not combined with anything
+  else, it is not sold, and it cannot contain a single drawing, because drawings are never sent to
+  it. We say it plainly because it is the only piece of information a visit creates at all, and a
+  page about an app for children should not leave anything out.</p>
+
+  <h2>Deleting everything</h2>
+  <p>There is nothing on our side to delete, because nothing is kept on our side. On the device:</p>
+  <ul>
+    <li><strong>New character</strong> in the Grown ups panel clears the character and starts over.
+    Undo brings it back if that was a mistake.</li>
+    <li><strong>Clearing this site's data</strong> in your browser settings removes everything
+    Inkbones has stored, including its offline copy of the app itself.</li>
+    <li><strong>Removing the app</strong> from the home screen does the same on most devices.</li>
+  </ul>
+  <p>Files that were already saved or printed are yours, in your own downloads or on your own
+  paper, and nothing here can reach them.</p>
+
+  <h2>Permissions</h2>
+  <p>None. Inkbones asks for no camera, no microphone, no location, no contacts, no notifications
+  and no access to the photo library. Save picture and Send it go through your device's own
+  download and share sheet, which you drive, and the file picker only ever hands over the one file
+  you choose.</p>
+
+  <h2>Children</h2>
+  <p>This app is made for children, which is exactly why it collects nothing. No name, no age, no
+  email address, no login, no way to reach anybody. There is nowhere in Inkbones for a child to type
+  something that leaves the device: the words in a speech balloon stay on the paper and in this
+  browser, with the rest of the drawing.</p>
+  <p>Because no personal information is collected from anyone, of any age, there is nothing for a
+  parent to ask us to hand over, correct or delete, and no consent for us to ask for. The section
+  above about the hosting log is the one thing a visit does produce, and you now know as much about
+  it as we do. If you would like to check the rest for yourself, here is how.</p>
+
+  <div class="check">
+    <h2>How to check any of this yourself</h2>
+    <p>Turn off Wi-Fi and mobile data, then use the whole app: draw, dress up, pose, add balloons,
+    make the page, print it. All of it works, because the entire app is stored on the device. An app
+    that runs with the network off is not sending drawings anywhere.</p>
+    <p>If you would rather look directly, open your browser's developer tools, go to the Network tab
+    and use Inkbones. Loading the page fetches the app's own files from the host, and that is the
+    whole list: after that you will see no requests at all, however long a child draws for. Under
+    Application, then Local Storage, you can read the one thing it stores,
+    <code>inkbones.character</code>, and delete it there.</p>
+  </div>
+
+  <h2>Tips</h2>
+  <p>Inkbones is free and stays free. If a Leave a tip link is present in the Grown ups panel,
+  tapping it opens the payment provider's own page in a new tab, on their site. We never see or
+  store card details, tipping unlocks nothing because nothing is locked, and it sits behind the
+  Grown ups panel rather than anywhere a child drawing a comic will meet it.</p>
+
+  <h2>Accessibility</h2>
+  <p>The colours on this page were measured, not judged by eye. Body text sits at 16.5:1 against the
+  paper, quieter text at 6.8:1 and links at 6.2:1. After dark those become 15.8:1, 8.1:1 and 8.1:1.
+  <strong>WCAG 2.1 AA</strong> asks for 4.5:1. The page is one column with real headings in order, a
+  skip link, and no sideways scrolling at 320 pixels wide.</p>
+  <p>In the app itself every control is at least 44 pixels, the focus ring is process magenta and
+  always visible, reduced motion is respected, and the drawing surface works with a finger, a stylus
+  or a mouse.</p>
+  <p>If anything here gets in your way, email and it will be fixed:
+  <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Inkbones">stephenfurpahs@gmail.com</a>.</p>
+
+  <h2>If this ever changes</h2>
+  <p>If anything above changes in a way that affects what happens to a drawing, it will say so on
+  this page and the date below will move. The promise is structural rather than a policy we have
+  decided to keep: apart from fetching its own files from the host, the app holds no code that
+  sends anything anywhere, so there is nothing here to switch on.</p>
+
+  <h2>Questions</h2>
+  <p>Email <a href="mailto:stephenfurpahs@gmail.com?subject=Inkbones">stephenfurpahs@gmail.com</a>
+  and a person will answer. Putting Inkbones in the subject line helps it get to the right place.</p>
+
+  <hr>
+  <footer>
+    <p>Sky Wolf Studio &middot; SWS Strategic Media LLC &middot;
+    <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
+    <p>Last updated 30 August 2026.</p>
+    <p><a class="again" href="./">Back to Inkbones</a></p>
+  </footer>
+</main>
+</body>
+</html>

@@ -380,5 +380,21 @@
     ],
     "verifyTip": "Turn off Wi-Fi, reload the page and keep marking, entry, averages, printing and export all still work, because the whole app is cached on your device by its service worker. An app that runs with the network off is an app that cannot be sending your students' grades anywhere. To look directly, open DevTools → Application → IndexedDB → sws-gradesheet and read every record the app holds; or press Ctrl+U and search the source for the word fetch. There is not one.",
     "leaves": false
+  },
+  "inkbones": {
+    "slug": "inkbones",
+    "oneLine": "a comic maker where a child draws their own character once, then dresses it, poses it and prints the page.",
+    "storesWhat": "The character's name if you give it one, every line of the drawing, which costume and face are on, the pose in each panel, and any words typed into a speech bubble",
+    "storageMechanism": "in this browser's localStorage under the single key `inkbones.character`. The whole character is a few kilobytes of coordinates and angles: the drawing is stored as the lines themselves, and a panel stores a pose and a costume rather than a picture, which is why redrawing the costume updates every panel already made. Library clothes are rebuilt from the drawing on every load rather than saved, so nothing stale can come back",
+    "leavesDevice": "Nothing is uploaded, the app has no server and no account. There is no gallery and no way to publish. Work leaves this device only when a person chooses it: Save writes a character file to your own files, Send hands a picture of the page to your device's share sheet, and Print sends it to your printer.",
+    "thirdParties": [
+      "Stripe, and only as a link: if a tip button is showing in the Grown ups sheet, tapping it opens buy.stripe.com in a new tab. Nothing is sent unless a grown up taps it, and we never see or store card details.",
+      "Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses."
+    ],
+    "permissions": [
+      "your device's share sheet, only when you tap Send, and only with the comic page you can already see",
+      "your printer, only when you tap Print"
+    ],
+    "verifyTip": "Turn off Wi-Fi and mobile data, reload, and draw a whole comic. It works, because every part of the app including its two fonts is cached on your device and there is nowhere for it to phone home to. Then open your browser's developer tools, look at Application and then Local Storage, and read the one key it writes: that is the entire record this app keeps of your child."
   }
 }

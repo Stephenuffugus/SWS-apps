@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#191713">
+<title>Inkbones v3 — elbows that bend instead of pinch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--board:#F2F1EC;--ink:#14120F;--blueline:#6FB7DC;--magenta:#E0218A;--shell:#191713;--dim:rgba(242,241,236,.45)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0}
+  body{background:var(--shell);color:var(--ink);font-family:"Space Mono",ui-monospace,Menlo,monospace;
+    display:flex;flex-direction:column;overflow:hidden;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .topbar{display:flex;align-items:baseline;gap:10px;padding:9px 14px 6px}
+  .mark{font-family:"Bangers",Impact,sans-serif;font-size:24px;letter-spacing:1.5px;color:var(--board);line-height:1}
+  .mark em{font-style:normal;color:var(--magenta)}
+  .tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .perf{margin-left:auto;font-size:10px;color:var(--dim);letter-spacing:.06em}
+
+  .modes{display:flex;gap:6px;padding:0 14px 8px}
+  .modes button{flex:1;appearance:none;border:1px solid rgba(242,241,236,.22);background:transparent;
+    color:rgba(242,241,236,.6);font-family:inherit;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;padding:9px 0;border-radius:2px;cursor:pointer}
+  .modes button[aria-pressed="true"]{background:var(--board);border-color:var(--board);color:var(--ink);font-weight:700}
+  .modes button:focus-visible{outline:2px solid var(--magenta);outline-offset:2px}
+
+  .stagewrap{flex:1;min-height:0;position:relative;margin:0 14px;background:var(--board);border-radius:2px}
+  .stagewrap::before,.stagewrap::after{content:"";position:absolute;width:13px;height:13px;pointer-events:none;border:1px solid var(--magenta);opacity:.5}
+  .stagewrap::before{top:7px;left:7px;border-right:0;border-bottom:0}
+  .stagewrap::after{bottom:7px;right:7px;border-left:0;border-top:0}
+  #stage{width:100%;height:100%;display:block;touch-action:none}
+  .hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;pointer-events:none;
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(20,18,15,.42)}
+
+  .rail{display:flex;gap:6px;align-items:center;padding:8px 14px 0;overflow-x:auto;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .rail + .rail{padding-top:6px}
+  .lbl{flex:0 0 auto;font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;padding-right:2px}
+  .chip{appearance:none;flex:0 0 auto;border:1px solid rgba(242,241,236,.22);background:transparent;
+    color:rgba(242,241,236,.72);font-family:inherit;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;padding:8px 11px;border-radius:2px;cursor:pointer;white-space:nowrap}
+  .chip[aria-pressed="true"]{background:var(--board);border-color:var(--board);color:var(--ink);font-weight:700}
+  .chip:focus-visible{outline:2px solid var(--magenta);outline-offset:2px}
+  .nib{display:flex;gap:4px;flex:0 0 auto;align-items:center}
+  .nib button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(242,241,236,.22);background:transparent;cursor:pointer;display:grid;place-items:center;padding:0}
+  .nib button span{display:block;background:var(--board);border-radius:50%}
+  .nib button[aria-pressed="true"]{border-color:var(--magenta)}
+
+  .strip{display:flex;gap:5px;padding:9px 14px 3px}
+  .panel{flex:1;aspect-ratio:3/4;background:var(--board);border-radius:2px;position:relative;
+    border:1px solid rgba(242,241,236,.12);overflow:hidden;cursor:pointer;padding:0}
+  .panel canvas{width:100%;height:100%;display:block}
+  .panel .num{position:absolute;top:3px;left:4px;font-size:9px;color:rgba(20,18,15,.32)}
+  .panel.empty::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;font-size:18px;color:rgba(20,18,15,.25)}
+  .stripnote{padding:3px 14px 9px;font-size:10px;letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+  .foot{display:flex;gap:5px;padding:0 14px 12px}
+  .foot .chip{flex:1;text-align:center;padding:9px 4px}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="mark">INK<em>BONES</em></div>
+  <div class="tag">v3</div>
+  <div class="perf" id="perf"></div>
+</div>
+
+<div class="modes" role="group" aria-label="Mode">
+  <button id="mDraw" aria-pressed="true">Draw</button>
+  <button id="mFit" aria-pressed="false">Fit</button>
+  <button id="mPose" aria-pressed="false">Pose</button>
+</div>
+
+<div class="stagewrap">
+  <canvas id="stage"></canvas>
+  <div class="hint" id="hint">Trace over the blue figure</div>
+</div>
+
+<div class="rail" id="rail1"></div>
+<div class="rail" id="rail2"></div>
+
+<div class="strip" id="strip"></div>
+<div class="stripnote" id="stripnote">One drawing · four panels · nothing redrawn</div>
+
+<div class="foot">
+  <button class="chip" id="btnSave">Save</button>
+  <button class="chip" id="btnOpen">Open</button>
+  <button class="chip" id="btnPage">Export page</button>
+</div>
+<input type="file" id="file" accept="application/json,.json">
+
+<script>
+(function(){
+"use strict";
+
+/* ================= skeleton ================= */
+const W=1000,H=1400;
+const REST0={head:[500,215],neck:[500,365],
+  lsho:[402,395],lelb:[344,548],lwri:[326,700],
+  rsho:[598,395],relb:[656,548],rwri:[674,700],
+  hip:[500,725],
+  lhip:[452,748],lkne:[438,938],lank:[428,1128],
+  rhip:[548,748],rkne:[562,938],rank:[572,1128]};
+const PARENT={head:'neck',neck:'hip',lsho:'neck',lelb:'lsho',lwri:'lelb',
+  rsho:'neck',relb:'rsho',rwri:'relb',hip:null,
+  lhip:'hip',lkne:'lhip',lank:'lkne',rhip:'hip',rkne:'rhip',rank:'rkne'};
+const JOINTS=Object.keys(PARENT);
+const BONES=JOINTS.filter(j=>PARENT[j]).map(j=>[PARENT[j],j]);
+const BONE_OF={}; BONES.forEach((b,i)=>BONE_OF[b[1]]=i);
+const HEAD_BONE=BONE_OF['head'];
+const KIDS={}; JOINTS.forEach(j=>KIDS[j]=[]);
+JOINTS.forEach(j=>{if(PARENT[j])KIDS[PARENT[j]].push(j);});
+function kidsOf(j){const o=[],s=[...KIDS[j]];while(s.length){const k=s.pop();o.push(k);s.push(...KIDS[k]);}return o;}
+function cloneJ(J){const o={};for(const k in J)o[k]=[J[k][0],J[k][1]];return o;}
+
+/* ================= state ================= */
+const S={mode:'draw',rest:cloneJ(REST0),pose:cloneJ(REST0),
+  strokes:[],target:{layer:'body',slot:0},wear:{outfit:0,face:0,kit:-1},
+  nib:14,drag:null,panels:[null,null,null,null],
+  smooth:false,showMesh:false,dirty:true};
+const OUTFITS=2,FACES=3;
+
+/* ================= wardrobe =================
+   A garment is never stored in pixels. Every point is (bone, t, s):
+   which bone, how far along it, and how far out sideways measured in
+   the wearer's own half-width at that spot. Instantiating a garment
+   reads the girth profile off whatever body was actually drawn, so the
+   same definition fits a stick figure and a potato. */
+const KITS=[
+  {name:'Hero',strokes:[
+    [['neck',.21,-1.16,2.2],['neck',.21,1.16,2.2]],
+    [['neck',.70,0],['neck',.62,.34],['neck',.54,0],['neck',.62,-.34],['neck',.70,0]],
+    {back:1,p:[['neck',.95,-1.05],['neck',.80,-1.50],['neck',.50,-1.70],['neck',.15,-1.75],['neck',-.08,-1.52]]},
+    {back:1,p:[['neck',.95,1.05],['neck',.80,1.50],['neck',.50,1.70],['neck',.15,1.75],['neck',-.08,1.52]]},
+    {back:1,p:[['neck',-.08,-1.52],['neck',-.20,-.75],['neck',-.07,0],['neck',-.20,.75],['neck',-.08,1.52]]},
+    [['lank',.45,-1.30,1.8],['lank',.45,1.30,1.8]],
+    [['rank',.45,-1.30,1.8],['rank',.45,1.30,1.8]],
+    [['lwri',.55,-1.35,1.6],['lwri',.55,1.35,1.6]],
+    [['rwri',.55,-1.35,1.6],['rwri',.55,1.35,1.6]],
+    {p:[['lank',-0.5,-1.14,1,'e'],['lank',0.0,-1.20,1,'e'],['lank',0.72,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.72,0.88,1,'e'],['lank',0.0,1.20,1,'e'],['lank',-0.5,1.14,1,'e']]},
+    {p:[['rank',-0.5,-1.14,1,'e'],['rank',0.0,-1.20,1,'e'],['rank',0.72,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.72,0.88,1,'e'],['rank',0.0,1.20,1,'e'],['rank',-0.5,1.14,1,'e']]},
+    {p:[['lwri',-0.28,-1.10,1,'e'],['lwri',0.22,-1.16,1,'e'],['lwri',0.88,-0.55,1,'e'],['lwri',0.88,0.55,1,'e'],['lwri',0.22,1.16,1,'e'],['lwri',-0.28,1.10,1,'e']]},
+    {p:[['rwri',-0.28,-1.10,1,'e'],['rwri',0.22,-1.16,1,'e'],['rwri',0.88,-0.55,1,'e'],['rwri',0.88,0.55,1,'e'],['rwri',0.22,1.16,1,'e'],['rwri',-0.28,1.10,1,'e']]}
+  ]},
+  {name:'Cloak',strokes:[
+    [['head',.30,-1.30,1.8,'e'],['head',.30,1.30,1.8,'e']],
+    {back:1,p:[['head',.16,-1.26,1,'e'],['head',1.05,-.62,1,'e'],['head',2.05,.02,1,'e'],['head',1.05,.62,1,'e'],['head',.16,1.26,1,'e']]},
+    {back:1,p:[['neck',.92,-1.10],['neck',.50,-1.36],['neck',.05,-1.70],['neck',-.35,-1.92]]},
+    {back:1,p:[['neck',.92,1.10],['neck',.50,1.36],['neck',.05,1.70],['neck',-.35,1.92]]},
+    {back:1,p:[['neck',-.35,-1.92],['neck',-.46,-.9],['neck',-.40,0],['neck',-.46,.9],['neck',-.35,1.92]]},
+    [['neck',.25,-1.12,2.0],['neck',.25,1.12,2.0]],
+    {p:[['lank',-0.02,-1.14,1,'e'],['lank',0.48,-1.20,1,'e'],['lank',0.62,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.62,0.88,1,'e'],['lank',0.48,1.20,1,'e'],['lank',-0.02,1.14,1,'e']]},
+    {p:[['rank',-0.02,-1.14,1,'e'],['rank',0.48,-1.20,1,'e'],['rank',0.62,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.62,0.88,1,'e'],['rank',0.48,1.20,1,'e'],['rank',-0.02,1.14,1,'e']]}
+  ]},
+  {name:'Scout',strokes:[
+    {back:1,p:[['head',-.12,-1.44,1,'e'],['head',.62,-1.22,1,'e'],['head',1.34,0,1,'e'],['head',.62,1.22,1,'e'],['head',-.12,1.44,1,'e']]},
+    [['neck',.90,-.55],['neck',.80,0],['neck',.90,.55]],
+    [['neck',.28,-1.16,1.7],['neck',.28,1.16,1.7]],
+    [['neck',.44,-.72],['neck',.30,-.78],['neck',.30,.78],['neck',.44,.72]],
+    [['lkne',.38,-1.26,1.7],['lkne',.38,1.26,1.7]],
+    {p:[['lank',-0.08,-1.14,1,'e'],['lank',0.42,-1.20,1,'e'],['lank',0.86,-1.02,1,'e'],['lank',1.02,-0.22,1,'e'],['lank',0.86,0.88,1,'e'],['lank',0.42,1.20,1,'e'],['lank',-0.08,1.14,1,'e']]},
+    {p:[['rank',-0.08,-1.14,1,'e'],['rank',0.42,-1.20,1,'e'],['rank',0.86,-1.02,1,'e'],['rank',1.02,-0.22,1,'e'],['rank',0.86,0.88,1,'e'],['rank',0.42,1.20,1,'e'],['rank',-0.08,1.14,1,'e']]}
+  ]}
+];
+
+/* ================= ink ================= */
+const STREAMLINE=.45,THINNING=.62;
+const radius=(base,p)=>(base/2)*(1-THINNING*(1-p));
+const prFromSpeed=d=>Math.max(.18,Math.min(1,1-d/26));
+
+function outlineOf(pts){
+  const L=[],R=[];
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i],a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];
+    let dx=b[0]-a[0],dy=b[1]-a[1];const len=Math.hypot(dx,dy);
+    if(len<1e-6){dx=1;dy=0;}else{dx/=len;dy/=len;}
+    L.push([p[0]-dy*p[2],p[1]+dx*p[2]]);
+    R.push([p[0]+dy*p[2],p[1]-dx*p[2]]);
+  }
+  return L.concat(R.reverse());
+}
+function inkPath(pts){
+  const path=new Path2D();
+  if(pts.length===1){path.arc(pts[0][0],pts[0][1],pts[0][2],0,7);return path;}
+  const o=outlineOf(pts);
+  path.moveTo(o[0][0],o[0][1]);
+  for(let i=1;i<o.length;i++)path.lineTo(o[i][0],o[i][1]);
+  path.closePath();
+  const a=pts[0],b=pts[pts.length-1];
+  path.moveTo(a[0]+a[2],a[1]);path.arc(a[0],a[1],a[2],0,7);
+  path.moveTo(b[0]+b[2],b[1]);path.arc(b[0],b[1],b[2],0,7);
+  return path;
+}
+
+/* ================= linear blend skinning =================
+   Fast, no solver, and a good warm start for the relaxer below. */
+function segDist(p,a,b){
+  const vx=b[0]-a[0],vy=b[1]-a[1],L2=vx*vx+vy*vy||1;
+  let t=((p[0]-a[0])*vx+(p[1]-a[1])*vy)/L2;t=t<0?0:t>1?1:t;
+  return Math.hypot(p[0]-(a[0]+t*vx),p[1]-(a[1]+t*vy));
+}
+function weightsFor(p,onlyBone){
+  if(onlyBone>=0) return [[onlyBone,1]];
+  const R=S.rest;
+  const sc=BONES.map((b,i)=>{const d=segDist(p,R[b[0]],R[b[1]]);const e=d*d+400;return [i,1/(e*e)];});
+  sc.sort((a,b)=>b[1]-a[1]);
+  const top=sc.slice(0,3),sum=top.reduce((s,x)=>s+x[1],0)||1;
+  return top.map(x=>[x[0],x[1]/sum]);
+}
+function bindStroke(st){
+  const only=st.layer==='face'?HEAD_BONE:-1;
+  st.bind=st.pts.map(p=>weightsFor(p,only));
+}
+function bindAll(){S.strokes.forEach(bindStroke);S.dirty=true;}
+
+/* ---- girth: how wide is the drawing, per bone, along its length, each
+   side measured separately because hand-drawn bodies are never symmetric ---- */
+const GK=8, OK=4, MINHALF=11;
+// a leaf bone ends in a hand, a foot or the top of the head: the drawing keeps
+// going past the last joint, and that overhang is what a boot or a hat wraps.
+const LEAF=BONES.map(b=>KIDS[b[1]].length===0);
+let PROFILE=null;
+function measureGirth(){
+  const R=S.rest;
+  const geo=BONES.map(b=>{
+    const A=R[b[0]],B=R[b[1]];
+    let dx=B[0]-A[0],dy=B[1]-A[1];
+    const L=Math.hypot(dx,dy)||1; dx/=L; dy/=L;
+    return {A,L,dx,dy,nx:-dy,ny:dx};
+  });
+  const P=BONES.map(()=>({l:new Array(GK+1).fill(0),r:new Array(GK+1).fill(0)}));
+  const OVraw=BONES.map(()=>[]);
+  // Ownership is deliberately soft. A wide torso's outline sits closer to the
+  // shoulder bone than to the spine, and strict nearest-bone assignment then
+  // measures the torso as skinny — which is exactly the bug the render caught.
+  // A point counts for any bone within SHARE times its nearest distance, and
+  // is ignored past a bone's own reach so a hand never widens the chest.
+  const SHARE=1.7;
+  S.strokes.forEach(st=>{
+    if(st.layer!=='body') return;
+    st.pts.forEach(p=>{
+      const d=BONES.map(b=>segDist(p,R[b[0]],R[b[1]]));
+      let bd=Infinity; d.forEach(v=>{if(v<bd)bd=v;});
+      for(let bi=0;bi<BONES.length;bi++){
+        if(d[bi]>bd*SHARE) continue;
+        const g=geo[bi], ox=p[0]-g.A[0], oy=p[1]-g.A[1];
+        const tRaw=(ox*g.dx+oy*g.dy)/g.L;
+        const off=ox*g.nx+oy*g.ny;
+        if(Math.abs(off)>g.L*1.15) continue;
+        if(tRaw>1){
+          if(LEAF[bi]) OVraw[bi].push([(tRaw-1)*g.L+p[2], Math.abs(off)+p[2]]);
+          continue;
+        }
+        if(tRaw<-.12) continue;
+        const t=tRaw<0?0:tRaw>1?1:tRaw, k=Math.round(t*GK);
+        const side=off>=0?'r':'l', v=Math.abs(off)+p[2];
+        if(v>P[bi][side][k]) P[bi][side][k]=v;
+      }
+    });
+  });
+  // fill gaps from neighbours, then smooth, then floor
+  P.forEach((pr,bi)=>{
+    ['l','r'].forEach(sd=>{
+      const a=pr[sd];
+      for(let pass=0;pass<3;pass++)
+        for(let k=0;k<=GK;k++){
+          if(a[k]>0) continue;
+          const lo=k>0?a[k-1]:0, hi=k<GK?a[k+1]:0;
+          a[k]=Math.max(lo,hi);
+        }
+      const sm=a.slice();
+      for(let k=0;k<=GK;k++){
+        const lo=a[Math.max(0,k-1)], hi=a[Math.min(GK,k+1)];
+        sm[k]=Math.max(MINHALF,(lo+2*a[k]+hi)/4);
+      }
+      pr[sd]=sm;
+    });
+  });
+  // overhang: how far the ink runs past the tip, and how wide it is out there
+  const OV=BONES.map((b,bi)=>{
+    const g=geo[bi];
+    const floorHalf=Math.max(MINHALF,(P[bi].l[GK]+P[bi].r[GK])/2*.9);
+    if(!LEAF[bi]||!OVraw[bi].length) return {len:g.L*.16,half:new Array(OK+1).fill(floorHalf)};
+    let len=0; OVraw[bi].forEach(o=>{if(o[0]>len)len=o[0];});
+    len=Math.max(len,g.L*.12);
+    const half=new Array(OK+1).fill(0);
+    OVraw[bi].forEach(o=>{
+      const k=Math.max(0,Math.min(OK,Math.round(o[0]/len*OK)));
+      if(o[1]>half[k]) half[k]=o[1];
+    });
+    for(let pass=0;pass<3;pass++)
+      for(let k=0;k<=OK;k++)
+        if(!half[k]) half[k]=Math.max(k>0?half[k-1]:0, k<OK?half[k+1]:0);
+    for(let k=0;k<=OK;k++) half[k]=Math.max(MINHALF,half[k]||floorHalf);
+    return {len,half};
+  });
+  PROFILE={geo,P,OV};
+}
+function overHalfAt(bi,u){
+  const a=PROFILE.OV[bi].half;
+  if(u<=0) return a[0];
+  const x=Math.min(1,u)*OK, k=Math.floor(x), f=x-k;
+  return k>=OK?a[OK]:a[k]*(1-f)+a[k+1]*f;
+}
+function halfAt(bi,t,side){
+  const a=PROFILE.P[bi][side];
+  const x=Math.max(0,Math.min(1,t))*GK, k=Math.floor(x), f=x-k;
+  return k>=GK ? a[GK] : a[k]*(1-f)+a[k+1]*f;
+}
+function kitPoint(pt){
+  const bi=BONE_OF[pt[0]]; if(bi===undefined) return null;
+  const g=PROFILE.geo[bi], sgn=pt[2];
+  let along, half;
+  if(pt[4]==='e'){                       // measured from the tip outwards
+    const ov=PROFILE.OV[bi];
+    along=g.L+ov.len*pt[1];
+    half=pt[1]<=0 ? halfAt(bi,1,sgn>=0?'r':'l') : overHalfAt(bi,pt[1]);
+  }else{
+    along=g.L*pt[1];
+    half=halfAt(bi,pt[1],sgn>=0?'r':'l');
+  }
+  return [g.A[0]+g.dx*along+g.nx*sgn*half,
+          g.A[1]+g.dy*along+g.ny*sgn*half, 5.5*(pt[3]||1)];
+}
+function rebuildKits(){
+  S.strokes=S.strokes.filter(st=>st.layer!=='kit');
+  if(!S.strokes.some(st=>st.layer==='body')) return;
+  measureGirth();
+  KITS.forEach((kit,slot)=>{
+    kit.strokes.forEach(raw=>{
+      const def=Array.isArray(raw)?raw:raw.p, back=Array.isArray(raw)?0:!!raw.back;
+      const pts=[];
+      for(let i=0;i<def.length-1;i++){
+        const a=def[i],b=def[i+1];
+        const n=(a[0]===b[0]&&a[4]===b[4])?6:1;
+        for(let k=0;k<n;k++){
+          const u=k/n;
+          const q=kitPoint([a[0], a[1]+(b[1]-a[1])*u, a[2]+(b[2]-a[2])*u,
+                            (a[3]||1)+((b[3]||1)-(a[3]||1))*u, a[4]]);
+          if(q) pts.push(q);
+        }
+      }
+      const last=kitPoint(def[def.length-1]);
+      if(last) pts.push(last);
+      if(pts.length>1){
+        const st={layer:'kit',slot,z:back?0:2,pts,bind:null,cell:null};
+        bindStroke(st); S.strokes.push(st);
+      }
+    });
+  });
+  S.dirty=true;
+}
+
+function xforms(pose){
+  const R=S.rest;
+  return BONES.map(b=>{
+    const a0=R[b[0]],b0=R[b[1]],a1=pose[b[0]],b1=pose[b[1]];
+    const d0x=b0[0]-a0[0],d0y=b0[1]-a0[1],d1x=b1[0]-a1[0],d1y=b1[1]-a1[1];
+    const l0=Math.hypot(d0x,d0y)||1,l1=Math.hypot(d1x,d1y)||1;
+    const ang=Math.atan2(d1y,d1x)-Math.atan2(d0y,d0x),s=l1/l0;
+    return {a0,a1,c:Math.cos(ang)*s,si:Math.sin(ang)*s,s,cr:Math.cos(ang),sr:Math.sin(ang)};
+  });
+}
+function skinPoint(p,bind,X){
+  let x=0,y=0,s=0;
+  for(let k=0;k<bind.length;k++){
+    const t=X[bind[k][0]],w=bind[k][1];
+    const rx=p[0]-t.a0[0],ry=p[1]-t.a0[1];
+    x+=w*(t.a1[0]+t.c*rx-t.si*ry);
+    y+=w*(t.a1[1]+t.si*rx+t.c*ry);
+    s+=w*t.s;
+  }
+  return [x,y,s];
+}
+
+/* ================= lattice + shape matching =================
+   Müller et al. 2005: replace elastic energies with geometric goal
+   positions found by matching each cluster's rest shape to its current
+   shape. Overlapping clusters over a grid is their cluster-based
+   extension. No linear solver, no matrix library.
+
+   MEASURED AND BENCHED — see test-solver.js. On outline art this loses to
+   plain skinning on every metric: skinning keeps 97% of joint width and 87%
+   of limb area at the worst pose, the relaxer 79-90% and 72-81%, and it costs
+   40-65 ms a frame instead of nothing. Line art has no interior, so there is
+   no visible volume to preserve and nothing for the relaxer to win back.
+   Kept behind the Relax toggle, off by default: re-run the bench before
+   trusting it, and expect the answer to change once shapes carry fills. */
+const CELL=30, ITERS_DRAG=5, ITERS_REST=12, ANCHOR_LO=.55, ANCHOR_HI=.92;
+let L=null;
+
+function buildLattice(){
+  L=null;
+  const ink=[];
+  S.strokes.forEach(st=>{ if(st.layer!=='face') st.pts.forEach(p=>ink.push(p)); });
+  if(ink.length<8) return;
+
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  const push=(x,y)=>{if(x<x0)x0=x;if(y<y0)y0=y;if(x>x1)x1=x;if(y>y1)y1=y;};
+  ink.forEach(p=>push(p[0],p[1]));
+  JOINTS.forEach(j=>push(S.rest[j][0],S.rest[j][1]));
+  x0-=CELL*1.5;y0-=CELL*1.5;x1+=CELL*1.5;y1+=CELL*1.5;
+
+  const cols=Math.ceil((x1-x0)/CELL), rows=Math.ceil((y1-y0)/CELL);
+  if(cols*rows>16000) return;
+  const key=(ix,iy)=>iy*cols+ix;
+  const live=new Uint8Array(cols*rows);
+
+  const mark=(x,y)=>{
+    const ix=Math.floor((x-x0)/CELL), iy=Math.floor((y-y0)/CELL);
+    if(ix>=0&&iy>=0&&ix<cols&&iy<rows) live[key(ix,iy)]=1;
+  };
+  ink.forEach(p=>mark(p[0],p[1]));
+  BONES.forEach(b=>{
+    const a=S.rest[b[0]],c=S.rest[b[1]];
+    const n=Math.max(2,Math.ceil(Math.hypot(c[0]-a[0],c[1]-a[1])/12));
+    for(let i=0;i<=n;i++) mark(a[0]+(c[0]-a[0])*i/n, a[1]+(c[1]-a[1])*i/n);
+  });
+  // dilate once so the mesh has a margin around the ink
+  const grown=live.slice();
+  for(let iy=0;iy<rows;iy++)for(let ix=0;ix<cols;ix++){
+    if(!live[key(ix,iy)])continue;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const jx=ix+dx,jy=iy+dy;
+      if(jx>=0&&jy>=0&&jx<cols&&jy<rows) grown[key(jx,jy)]=1;
+    }
+  }
+
+  const vid=new Map(), rest=[];
+  const vAt=(ix,iy)=>{
+    const k=iy*(cols+1)+ix;
+    if(vid.has(k)) return vid.get(k);
+    const i=rest.length; vid.set(k,i);
+    rest.push([x0+ix*CELL, y0+iy*CELL]);
+    return i;
+  };
+  const cells=new Map();
+  for(let iy=0;iy<rows;iy++)for(let ix=0;ix<cols;ix++){
+    if(!grown[key(ix,iy)])continue;
+    cells.set(key(ix,iy),[vAt(ix,iy),vAt(ix+1,iy),vAt(ix,iy+1),vAt(ix+1,iy+1)]);
+  }
+  if(!rest.length) return;
+
+  const clusters=[];
+  cells.forEach(v=>clusters.push(v));
+  for(let iy=0;iy<rows-1;iy++)for(let ix=0;ix<cols-1;ix++){
+    if(cells.has(key(ix,iy))&&cells.has(key(ix+1,iy))&&
+       cells.has(key(ix,iy+1))&&cells.has(key(ix+1,iy+1))){
+      const s=new Set();
+      [[ix,iy],[ix+1,iy],[ix,iy+1],[ix+1,iy+1]].forEach(c=>cells.get(key(c[0],c[1])).forEach(v=>s.add(v)));
+      clusters.push([...s]);
+    }
+  }
+
+  // Anchor field. Where one bone clearly owns a vertex (mid-limb) skinning is
+  // already correct, so hold it there. Where two bones share it (a joint) the
+  // skin is the part that pinches, so let the clusters decide instead.
+  const vbind=rest.map(v=>weightsFor(v,-1));
+  const anchor=new Float64Array(rest.length);
+  for(let i=0;i<rest.length;i++){
+    const mx=vbind[i][0][1];
+    anchor[i]=Math.max(0,Math.min(1,(mx-ANCHOR_LO)/(ANCHOR_HI-ANCHOR_LO)));
+  }
+
+  L={x0,y0,cols,rows,cells,rest,clusters,vbind,anchor,
+     cur:rest.map(p=>[p[0],p[1]])};
+
+  // bind stroke points into cells with bilinear coordinates
+  S.strokes.forEach(st=>{
+    st.cell = st.layer==='face' ? st.pts.map(()=>null) : st.pts.map(p=>{
+      const ix=Math.floor((p[0]-x0)/CELL), iy=Math.floor((p[1]-y0)/CELL);
+      const k=key(ix,iy);
+      if(!cells.has(k)) return null;
+      return {k,u:(p[0]-(x0+ix*CELL))/CELL, v:(p[1]-(y0+iy*CELL))/CELL};
+    });
+  });
+  S.dirty=false;
+}
+
+function solveLattice(pose,iters){
+  const X=xforms(pose), n=L.rest.length;
+  const T=new Float64Array(n*2);          // skinned target
+  const P=new Float64Array(n*2);          // working positions
+  for(let i=0;i<n;i++){
+    const q=skinPoint(L.rest[i],L.vbind[i],X);
+    T[i*2]=q[0];T[i*2+1]=q[1];
+    P[i*2]=q[0];P[i*2+1]=q[1];
+  }
+  const acc=new Float64Array(n*2), cnt=new Float64Array(n);
+  for(let it=0;it<iters;it++){
+    acc.fill(0);cnt.fill(0);
+    for(let ci=0;ci<L.clusters.length;ci++){
+      const cl=L.clusters[ci], m=cl.length;
+      let rx=0,ry=0,cx=0,cy=0;
+      for(let k=0;k<m;k++){
+        const i=cl[k];
+        rx+=L.rest[i][0];ry+=L.rest[i][1];
+        cx+=P[i*2];cy+=P[i*2+1];
+      }
+      rx/=m;ry/=m;cx/=m;cy/=m;
+      let num=0,den=0,qq=0,pp=0;
+      for(let k=0;k<m;k++){
+        const i=cl[k];
+        const qx=L.rest[i][0]-rx, qy=L.rest[i][1]-ry;
+        const px=P[i*2]-cx,       py=P[i*2+1]-cy;
+        num+=qx*py-qy*px; den+=qx*px+qy*py;
+        qq+=qx*qx+qy*qy;  pp+=px*px+py*py;
+      }
+      const ang=Math.atan2(num,den);
+      let s=Math.sqrt((pp||1)/(qq||1));
+      s=s<.9?.9:s>1.12?1.12:s;
+      const c=Math.cos(ang)*s, si=Math.sin(ang)*s;
+      for(let k=0;k<m;k++){
+        const i=cl[k];
+        const qx=L.rest[i][0]-rx, qy=L.rest[i][1]-ry;
+        acc[i*2]  +=cx+c*qx-si*qy;
+        acc[i*2+1]+=cy+si*qx+c*qy;
+        cnt[i]++;
+      }
+    }
+    for(let i=0;i<n;i++){
+      if(!cnt[i])continue;
+      const a=L.anchor[i], b=1-a;
+      P[i*2]  =a*T[i*2]  +b*(acc[i*2]  /cnt[i]);
+      P[i*2+1]=a*T[i*2+1]+b*(acc[i*2+1]/cnt[i]);
+    }
+  }
+  for(let i=0;i<n;i++) L.cur[i]=[P[i*2],P[i*2+1]];
+  return L.cur;
+}
+
+/* ================= deform ================= */
+let lastSolveMs=0;
+function deform(list,pose,opts){
+  const o=opts||{};
+  const X=xforms(pose);
+  const skinned=list.map(st=>({
+    layer:st.layer,slot:st.slot,src:st,
+    pts:st.pts.map((p,i)=>{
+      const q=skinPoint(p,st.bind[i],X);
+      return [q[0],q[1],p[2]*Math.max(.6,Math.min(1.6,q[2]))];
+    })
+  }));
+  if(!o.smooth) return skinned;
+  if(S.dirty) buildLattice();
+  if(!L) return skinned;
+
+  const t0=performance.now();
+  const V=solveLattice(pose,o.iters||ITERS_REST);
+  lastSolveMs=performance.now()-t0;
+
+  skinned.forEach(st=>{
+    const cellsOf=st.src.cell;
+    if(!cellsOf) return;
+    st.pts=st.pts.map((p,i)=>{
+      const b=cellsOf[i]; if(!b) return p;
+      const q=L.cells.get(b.k); if(!q) return p;
+      const a=V[q[0]],bb=V[q[1]],c=V[q[2]],d=V[q[3]];
+      const u=b.u,v=b.v;
+      return [
+        (1-u)*(1-v)*a[0]+u*(1-v)*bb[0]+(1-u)*v*c[0]+u*v*d[0],
+        (1-u)*(1-v)*a[1]+u*(1-v)*bb[1]+(1-u)*v*c[1]+u*v*d[1],
+        p[2]
+      ];
+    });
+    return st;
+  });
+  return skinned;
+}
+
+/* ================= poses ================= */
+function rotAbout(J,j,deg){
+  const p=PARENT[j];if(!p)return;
+  const o=J[p],a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+  [j,...kidsOf(j)].forEach(k=>{
+    const dx=J[k][0]-o[0],dy=J[k][1]-o[1];
+    J[k]=[o[0]+c*dx-s*dy,o[1]+s*dx+c*dy];
+  });
+}
+const POSES={
+  Stand:[],
+  Walk:[['lsho',-46],['lelb',-28],['rsho',40],['relb',22],['lhip',34],['lkne',-52],['rhip',-38],['rkne',56]],
+  Run:[['lsho',-72],['lelb',-58],['rsho',66],['relb',48],['lhip',52],['lkne',-84],['rhip',-52],['rkne',30]],
+  Jump:[['lsho',136],['lelb',18],['rsho',-136],['relb',-18],['lhip',26],['lkne',-72],['rhip',-26],['rkne',72]],
+  Wave:[['rsho',-128],['relb',34],['lsho',12]],
+  Point:[['rsho',-78],['relb',-14],['lsho',20]],
+  Curl:[['lelb',-124],['relb',124],['lkne',-128],['rkne',128],['lsho',-30],['rsho',30]]
+};
+function applyPose(n){
+  const J=cloneJ(S.rest);
+  (POSES[n]||[]).forEach(op=>rotAbout(J,op[0],op[1]));
+  S.pose=J;render();
+}
+
+/* ================= visibility ================= */
+function visible(st,wear){
+  if(st.layer==='body')return true;
+  if(st.layer==='kit')return st.slot===wear.kit;
+  if(st.layer==='outfit')return st.slot===wear.outfit;
+  return st.slot===wear.face;
+}
+const ORDER={body:1,kit:2,outfit:3,face:4};
+const zOf=st=>st.z!==undefined?st.z:ORDER[st.layer];
+const activeStrokes=wear=>S.strokes.filter(st=>visible(st,wear))
+  .sort((a,b)=>zOf(a)-zOf(b));
+
+/* ================= canvas ================= */
+const stage=document.getElementById('stage'),ctx=stage.getContext('2d');
+let view={s:1,ox:0,oy:0};
+function fitCanvas(){
+  const r=stage.parentElement.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  stage.width=Math.round(r.width*dpr);stage.height=Math.round(r.height*dpr);
+  const s=Math.min(r.width/W,r.height/H);
+  view={s:s*dpr,ox:(r.width-W*s)/2*dpr,oy:(r.height-H*s)/2*dpr};
+  render();
+}
+function toWorld(cx,cy){
+  const r=stage.getBoundingClientRect(),dpr=stage.width/r.width;
+  return [((cx-r.left)*dpr-view.ox)/view.s,((cy-r.top)*dpr-view.oy)/view.s];
+}
+function paint(c,list,J,o){
+  c.save();c.translate(o.ox||0,o.oy||0);c.scale(o.s||1,o.s||1);
+  if(o.mesh&&L){
+    c.strokeStyle='rgba(111,183,220,.55)';c.lineWidth=1.4;
+    L.cells.forEach(q=>{
+      const a=L.cur[q[0]],b=L.cur[q[1]],d=L.cur[q[3]],e=L.cur[q[2]];
+      c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);
+      c.lineTo(d[0],d[1]);c.lineTo(e[0],e[1]);c.closePath();c.stroke();
+    });
+  }
+  if(o.armature){
+    c.lineCap='round';
+    c.strokeStyle=o.armatureStrong?'#6FB7DC':'rgba(111,183,220,.32)';
+    c.lineWidth=10;
+    BONES.forEach(b=>{c.beginPath();c.moveTo(J[b[0]][0],J[b[0]][1]);c.lineTo(J[b[1]][0],J[b[1]][1]);c.stroke();});
+    c.beginPath();c.arc(J.head[0],J.head[1],78,0,7);c.stroke();
+  }
+  list.forEach(st=>{
+    const ghost=o.focus&&!(st.layer===o.focus.layer&&st.slot===o.focus.slot);
+    c.fillStyle=ghost?'rgba(20,18,15,.22)':'#14120F';
+    c.fill(inkPath(st.pts));
+  });
+  if(o.handles){
+    JOINTS.forEach(j=>{
+      c.beginPath();c.arc(J[j][0],J[j][1],16,0,7);
+      c.fillStyle='#F2F1EC';c.fill();
+      c.lineWidth=4;c.strokeStyle=j==='hip'?'#E0218A':'#6FB7DC';c.stroke();
+    });
+  }
+  c.restore();
+}
+function render(){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#F2F1EC';ctx.fillRect(0,0,stage.width,stage.height);
+  const posing=S.mode==='pose';
+  const base=activeStrokes(S.wear);
+  const list=posing?deform(base,S.pose,{smooth:S.smooth,iters:S.drag?ITERS_DRAG:ITERS_REST}):base;
+  paint(ctx,list,posing?S.pose:S.rest,{
+    ox:view.ox,oy:view.oy,s:view.s,
+    armature:S.mode!=='pose',armatureStrong:S.mode==='fit',
+    handles:S.mode!=='draw',focus:S.mode==='draw'?S.target:null,
+    mesh:posing&&S.showMesh&&S.smooth
+  });
+  document.getElementById('perf').textContent =
+    posing&&S.smooth&&L ? L.rest.length+' verts · '+lastSolveMs.toFixed(1)+' ms' : '';
+}
+
+/* ================= input ================= */
+function nearestJoint(p,J){
+  let best=null,bd=1e9;
+  JOINTS.forEach(j=>{const d=Math.hypot(J[j][0]-p[0],J[j][1]-p[1]);if(d<bd){bd=d;best=j;}});
+  return bd<72?best:null;
+}
+let lastPr=.6;
+stage.addEventListener('pointerdown',e=>{
+  e.preventDefault();stage.setPointerCapture(e.pointerId);
+  const p=toWorld(e.clientX,e.clientY);
+  if(S.mode==='draw'){
+    const pen=e.pointerType==='pen'&&e.pressure>0;
+    lastPr=pen?e.pressure:.55;
+    S.strokes.push({layer:S.target.layer,slot:S.target.slot,
+      pts:[[p[0],p[1],radius(S.nib,lastPr)]],bind:null,cell:null});
+    S.drag={type:'ink',pen};
+  }else if(S.mode==='fit'){
+    const j=nearestJoint(p,S.rest);if(j)S.drag={type:'fit',j};
+  }else{
+    const j=nearestJoint(p,S.pose);if(j)S.drag={type:'pose',j,last:p};
+  }
+  render();
+});
+stage.addEventListener('pointermove',e=>{
+  if(!S.drag)return;e.preventDefault();
+  const raw=toWorld(e.clientX,e.clientY);
+  if(S.drag.type==='ink'){
+    const st=S.strokes[S.strokes.length-1],prev=st.pts[st.pts.length-1];
+    const p=[prev[0]+(raw[0]-prev[0])*(1-STREAMLINE),prev[1]+(raw[1]-prev[1])*(1-STREAMLINE)];
+    const d=Math.hypot(p[0]-prev[0],p[1]-prev[1]);
+    if(d<2.2)return;
+    const tgt=S.drag.pen&&e.pressure>0?e.pressure:prFromSpeed(d);
+    lastPr=lastPr*.72+tgt*.28;
+    st.pts.push([p[0],p[1],radius(S.nib,lastPr)]);
+  }else if(S.drag.type==='fit'){
+    S.rest[S.drag.j]=raw;
+  }else{
+    const j=S.drag.j;
+    if(j==='hip'){
+      const dx=raw[0]-S.drag.last[0],dy=raw[1]-S.drag.last[1];
+      JOINTS.forEach(k=>{S.pose[k]=[S.pose[k][0]+dx,S.pose[k][1]+dy];});
+      S.drag.last=raw;
+    }else{
+      const o=S.pose[PARENT[j]];
+      const a0=Math.atan2(S.pose[j][1]-o[1],S.pose[j][0]-o[0]);
+      const a1=Math.atan2(raw[1]-o[1],raw[0]-o[0]);
+      const c=Math.cos(a1-a0),s=Math.sin(a1-a0);
+      [j,...kidsOf(j)].forEach(k=>{
+        const dx=S.pose[k][0]-o[0],dy=S.pose[k][1]-o[1];
+        S.pose[k]=[o[0]+c*dx-s*dy,o[1]+s*dx+c*dy];
+      });
+    }
+  }
+  render();
+});
+function endDrag(){
+  if(!S.drag)return;
+  if(S.drag.type==='ink'){bindStroke(S.strokes[S.strokes.length-1]);S.dirty=true;}
+  if(S.drag.type==='fit'){bindAll();S.pose=cloneJ(S.rest);}
+  S.drag=null;render();
+}
+stage.addEventListener('pointerup',endDrag);
+stage.addEventListener('pointercancel',endDrag);
+
+/* ================= rails ================= */
+const HINTS={draw:'Drawing on: ',fit:'Drag the dots onto your drawing',
+  pose:'Drag a hand, foot or head · pink dot moves everything'};
+const LAYERNAME={body:'Body',outfit:'Outfit',face:'Face'};
+function chip(t,fn,pressed){
+  const b=document.createElement('button');
+  b.className='chip';b.textContent=t;b.onclick=fn;
+  if(pressed!==undefined)b.setAttribute('aria-pressed',String(!!pressed));
+  return b;
+}
+function lbl(t){const d=document.createElement('span');d.className='lbl';d.textContent=t;return d;}
+
+function buildRails(){
+  const r1=document.getElementById('rail1'),r2=document.getElementById('rail2');
+  r1.innerHTML='';r2.innerHTML='';
+  if(S.mode==='draw'){
+    r1.appendChild(lbl('layer'));
+    r1.appendChild(chip('Body',()=>setTarget('body',0),S.target.layer==='body'));
+    for(let i=0;i<OUTFITS;i++)
+      r1.appendChild(chip('Outfit '+String.fromCharCode(65+i),()=>setTarget('outfit',i),
+        S.target.layer==='outfit'&&S.target.slot===i));
+    for(let i=0;i<FACES;i++)
+      r1.appendChild(chip('Face '+(i+1),()=>setTarget('face',i),
+        S.target.layer==='face'&&S.target.slot===i));
+    r2.appendChild(lbl('nib'));
+    const nib=document.createElement('div');nib.className='nib';
+    [7,14,24,38].forEach(w=>{
+      const b=document.createElement('button');
+      b.setAttribute('aria-pressed',String(w===S.nib));
+      b.setAttribute('aria-label','Nib '+w);
+      const sp=document.createElement('span');
+      sp.style.width=Math.max(4,w/3)+'px';sp.style.height=Math.max(4,w/3)+'px';
+      b.appendChild(sp);b.onclick=()=>{S.nib=w;buildRails();};
+      nib.appendChild(b);
+    });
+    r2.appendChild(nib);
+    r2.appendChild(chip('Undo',undoTarget));
+    r2.appendChild(chip('Clear layer',clearTarget));
+  }else if(S.mode==='fit'){
+    r1.appendChild(lbl('skeleton'));
+    r1.appendChild(chip('Reset',()=>{S.rest=cloneJ(REST0);S.pose=cloneJ(REST0);bindAll();render();}));
+    r1.appendChild(chip('Re-bind ink',()=>{bindAll();render();}));
+    const n=document.createElement('span');n.className='lbl';
+    n.style.textTransform='none';n.style.letterSpacing='.02em';
+    n.textContent='Moving a dot re-teaches the rig where that joint is.';
+    r2.appendChild(n);
+  }else{
+    r1.appendChild(lbl('pose'));
+    Object.keys(POSES).forEach(n=>r1.appendChild(chip(n,()=>applyPose(n))));
+    r2.appendChild(lbl('bend'));
+    r2.appendChild(chip('Skin',()=>{S.smooth=false;buildRails();render();},!S.smooth));
+    r2.appendChild(chip('Relax',()=>{S.smooth=true;buildRails();render();},S.smooth));
+    r2.appendChild(chip('Mesh',()=>{S.showMesh=!S.showMesh;buildRails();render();},S.showMesh));
+    r2.appendChild(lbl('kit'));
+    r2.appendChild(chip('None',()=>{S.wear.kit=-1;buildRails();render();},S.wear.kit===-1));
+    KITS.forEach((k,i)=>r2.appendChild(
+      chip(k.name,()=>{S.wear.kit=i;buildRails();render();},S.wear.kit===i)));
+    r2.appendChild(lbl('drawn'));
+    r2.appendChild(chip('Off',()=>{S.wear.outfit=-1;buildRails();render();},S.wear.outfit===-1));
+    for(let i=0;i<OUTFITS;i++)
+      r2.appendChild(chip(String.fromCharCode(65+i),()=>{S.wear.outfit=i;buildRails();render();},S.wear.outfit===i));
+    r2.appendChild(lbl('face'));
+    for(let i=0;i<FACES;i++)
+      r2.appendChild(chip(String(i+1),()=>{S.wear.face=i;buildRails();render();},S.wear.face===i));
+  }
+  document.getElementById('hint').textContent =
+    S.mode==='draw'
+      ? HINTS.draw+LAYERNAME[S.target.layer]+
+        (S.target.layer==='body'?'':' '+(S.target.layer==='outfit'?String.fromCharCode(65+S.target.slot):S.target.slot+1))
+      : HINTS[S.mode];
+}
+function setTarget(layer,slot){
+  S.target={layer,slot};
+  if(layer==='outfit')S.wear.outfit=slot;
+  if(layer==='face')S.wear.face=slot;
+  buildRails();render();
+}
+function undoTarget(){
+  for(let i=S.strokes.length-1;i>=0;i--)
+    if(S.strokes[i].layer===S.target.layer&&S.strokes[i].slot===S.target.slot){
+      S.strokes.splice(i,1);break;
+    }
+  S.dirty=true;render();
+}
+function clearTarget(){
+  S.strokes=S.strokes.filter(s=>!(s.layer===S.target.layer&&s.slot===S.target.slot));
+  S.dirty=true;render();
+}
+function setMode(m){
+  S.mode=m;
+  if(S.strokes.some(s=>!s.bind))bindAll();
+  if(m!=='draw')rebuildKits();
+  if(m==='fit')S.pose=cloneJ(S.rest);
+  ['Draw','Fit','Pose'].forEach(k=>
+    document.getElementById('m'+k).setAttribute('aria-pressed',String(m===k.toLowerCase())));
+  buildRails();render();
+}
+document.getElementById('mDraw').onclick=()=>setMode('draw');
+document.getElementById('mFit').onclick=()=>setMode('fit');
+document.getElementById('mPose').onclick=()=>setMode('pose');
+
+/* ================= panels ================= */
+const stripEl=document.getElementById('strip');
+function buildStrip(){
+  stripEl.innerHTML='';
+  S.panels.forEach((snap,i)=>{
+    const d=document.createElement('button');
+    d.className='panel'+(snap?'':' empty');
+    d.setAttribute('aria-label','Panel '+(i+1));
+    d.innerHTML='<span class="num">'+(i+1)+'</span>';
+    const c=document.createElement('canvas');
+    d.appendChild(c);stripEl.appendChild(d);
+    d.onclick=()=>{
+      if(!S.strokes.length){
+        document.getElementById('stripnote').textContent='Draw a character first';return;
+      }
+      S.panels[i]={pose:cloneJ(S.pose),wear:{outfit:S.wear.outfit,face:S.wear.face,kit:S.wear.kit}};
+      document.getElementById('stripnote').textContent='One drawing · four panels · nothing redrawn';
+      buildStrip();
+    };
+    if(snap)drawPanel(c,snap);
+  });
+}
+function drawPanel(c,snap){
+  const r=c.parentElement.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  const g=c.getContext('2d');
+  g.fillStyle='#F2F1EC';g.fillRect(0,0,c.width,c.height);
+  const list=deform(activeStrokes(snap.wear),snap.pose,{smooth:S.smooth,iters:ITERS_REST});
+  const s=Math.min(c.width/W,c.height/H)*.94;
+  paint(g,list,snap.pose,{ox:(c.width-W*s)/2,oy:(c.height-H*s)/2,s});
+}
+
+/* ================= files ================= */
+function download(name,blob){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+document.getElementById('btnSave').onclick=()=>{
+  const d={format:'inkbones/3',rest:S.rest,
+    strokes:S.strokes.filter(s=>s.layer!=='kit').map(s=>({layer:s.layer,slot:s.slot,pts:s.pts}))};
+  download('character.inkbones.json',new Blob([JSON.stringify(d)],{type:'application/json'}));
+};
+document.getElementById('btnOpen').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      S.rest=cloneJ(d.rest);S.pose=cloneJ(d.rest);
+      S.strokes=d.strokes.map(s=>({layer:s.layer||'body',slot:s.slot||0,pts:s.pts,bind:null,cell:null}));
+      bindAll();S.panels=[null,null,null,null];S.wear={outfit:0,face:0,kit:-1};
+      buildStrip();setMode('pose');
+    }catch(err){
+      document.getElementById('hint').textContent='That file is not an Inkbones character';
+    }
+  };
+  rd.readAsText(f);e.target.value='';
+};
+document.getElementById('btnPage').onclick=()=>{
+  if(!S.panels.some(Boolean)){
+    document.getElementById('stripnote').textContent='Fill a panel first';return;
+  }
+  const PW=1600,PH=2200,M=70,G=34;
+  const cw=(PW-M*2-G)/2,ch=(PH-M*2-G)/2;
+  const c=document.createElement('canvas');c.width=PW;c.height=PH;
+  const g=c.getContext('2d');
+  g.fillStyle='#F2F1EC';g.fillRect(0,0,PW,PH);
+  S.panels.forEach((snap,i)=>{
+    const x=M+(i%2)*(cw+G),y=M+Math.floor(i/2)*(ch+G);
+    g.save();g.beginPath();g.rect(x,y,cw,ch);g.clip();
+    if(snap){
+      const list=deform(activeStrokes(snap.wear),snap.pose,{smooth:S.smooth,iters:ITERS_REST});
+      const s=Math.min(cw/W,ch/H)*1.02;
+      paint(g,list,snap.pose,{ox:x+(cw-W*s)/2,oy:y+(ch-H*s)/2,s});
+    }
+    g.restore();
+    g.strokeStyle='#14120F';g.lineWidth=7;g.strokeRect(x,y,cw,ch);
+  });
+  c.toBlob(b=>download('page.png',b));
+};
+
+window.addEventListener('resize',()=>{fitCanvas();buildStrip();});
+buildRails();buildStrip();fitCanvas();
+
+// exposed for headless tests; harmless in the browser
+window.__inkbones={S,POSES,KITS,BONES,JOINTS,PARENT,cloneJ,rotAbout,bindAll,
+  rebuildKits,measureGirth,outlineOf,activeStrokes,xforms,
+  buildLattice,deform,getLattice:()=>L};
+})();
+</script>
+</body>
+</html>
