@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 /* ═══════════════════════════════════════════════════════════════════════════
-   Rename the app currently called Inkbones.
+   Rename an app in this fleet.
 
-   The working title collides with Inkbones Media, a live graphic design studio,
-   and with an abandoned Inkscape bone rigging extension of the same name. This
-   does the whole rename in one go so the decision costs a command rather than
-   an afternoon.
+   Written to retire the working title Inkbones, which collided with a live
+   graphic design studio of the same name, and kept general because this fleet
+   renames things: Rock Stops was built as Float and Music Studio arrived from
+   the arcade under another name. A rename touches the folder, the slug, the
+   storage keys, the build tag, the worker cache, the logo, the hub registration,
+   the privacy facts and the notes doc, and missing one of those is the kind of
+   thing nobody notices until a child's saved work does not load.
 
-     node scripts/rename-inkbones.mjs "Doodlebones"
-     node scripts/rename-inkbones.mjs "Doodlebones" --mark "DOODLE|BONES"
-     node scripts/rename-inkbones.mjs "Paper Puppet" --dry
+     node scripts/rename-app.mjs comic-crew "Panel Book"
+     node scripts/rename-app.mjs comic-crew "Panel Book" --mark "PANEL|BOOK"
+     node scripts/rename-app.mjs comic-crew "Panel Book" --dry
 
    The slug is derived from the name: lower case, spaces to hyphens. The mark is
    the logo in the top bar, which is two coloured halves, so give it as
@@ -17,9 +20,8 @@
    the middle and a two word name at the space.
 
    WHAT IT DELIBERATELY DOES NOT TOUCH:
-   - docs/archive/inkbones/, which is the prototype exactly as it arrived. It is
-     a record of a thing that really was called Inkbones, and renaming it would
-     make the record false.
+   - anything under docs/archive/, which records things as they actually were.
+     Renaming an archive makes the record false.
    - apps/index.html, apps/catalogue.json, apps/sitemap.xml and
      apps/manifest.webmanifest, which are generated. Run the hub afterwards, as
      this script reminds you.
@@ -30,18 +32,20 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const OLD_SLUG = 'inkbones';
-const OLD_NAME = 'Inkbones';
-
 const argv = process.argv.slice(2);
 const dry = argv.includes('--dry');
 const markArg = (() => { const i = argv.indexOf('--mark'); return i >= 0 ? argv[i + 1] : null; })();
-const NEW_NAME = argv.filter((a) => !a.startsWith('--') && a !== markArg)[0];
+const positional = argv.filter((a) => !a.startsWith('--') && a !== markArg);
+const OLD_SLUG = positional[0];
+const NEW_NAME = positional[1];
 
-if (!NEW_NAME) {
-  console.error('usage: node scripts/rename-inkbones.mjs "New Name" [--mark "FIRST|SECOND"] [--dry]');
+if (!OLD_SLUG || !NEW_NAME) {
+  console.error('usage: node scripts/rename-app.mjs <old-slug> "New Name" [--mark "FIRST|SECOND"] [--dry]');
   process.exit(1);
 }
+/* the display name as it appears in prose, derived from the slug: comic-crew
+   becomes Comic Crew, which is how every app in this fleet is written */
+const OLD_NAME = OLD_SLUG.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 const NEW_SLUG = NEW_NAME.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 if (!/^[a-z][a-z0-9-]*$/.test(NEW_SLUG)) {
   console.error(`the name "${NEW_NAME}" does not make a usable slug (got "${NEW_SLUG}")`);
@@ -64,6 +68,14 @@ const mark = (() => {
   return [up.slice(0, i), up.slice(i)];
 })();
 
+/* find the existing logo split so it can be replaced whatever it currently is */
+function oldMarkHtml() {
+  const f = join(ROOT, 'apps', OLD_SLUG, 'index.html');
+  if (!existsSync(f)) return '\u0000none\u0000';
+  const m = /class="mark">([A-Z ]*)<em>([A-Z ]*)<\/em>/.exec(readFileSync(f, 'utf8'));
+  return m ? `${m[1]}<em>${m[2]}</em>` : '\u0000none\u0000';
+}
+
 const APP_OLD = join(ROOT, 'apps', OLD_SLUG);
 if (!existsSync(APP_OLD)) { console.error(`apps/${OLD_SLUG} is not here; has it already been renamed?`); process.exit(1); }
 
@@ -84,15 +96,28 @@ const targets = [
   ...walk(APP_OLD),
   join(ROOT, 'design', 'hub.mjs'),
   join(ROOT, 'design', 'privacy-facts.json'),
-  join(ROOT, 'docs', `${OLD_NAME.toUpperCase()}-NOTES-2026-08-30.md`),
+  ...readdirSync(join(ROOT, 'docs'))
+    .filter((f) => f.startsWith(`${OLD_SLUG.toUpperCase()}-NOTES`) ||
+                   f.startsWith(`${OLD_NAME.toUpperCase().replace(/ /g, '-')}-NOTES`))
+    .map((f) => join(ROOT, 'docs', f)),
 ].filter((p) => existsSync(p) && TEXT.test(p))
  .filter((p) => !p.includes(join('docs', 'archive')))
  .filter((p) => !GENERATED.has(p.slice(ROOT.length + 1).split('\\').join('/')));
 
+/* The test hook is a JavaScript identifier, so it cannot carry the hyphen a two
+   word slug has: window.__comic-crew is a syntax error, not a name. This is the
+   one place the slug is code rather than a string, and it has to be substituted
+   BEFORE the general slug rule gets to it. */
+const JS_ID = NEW_SLUG.replace(/-/g, '');
+const OLD_JS_ID = OLD_SLUG.replace(/-/g, '');
+
 /* ── the substitutions, most specific first ───────────────────────────────── */
 const rules = [
-  /* the split logo, which no plain replace would catch */
-  [`INK<em>BONES</em>`, `${mark[0]}<em>${mark[1]}</em>`],
+  [`__${OLD_JS_ID}`, `__${JS_ID}`],
+  [`__${OLD_SLUG}`, `__${JS_ID}`],
+  /* the split logo, which no plain replace would catch: it is two coloured
+     halves with a tag between them */
+  [oldMarkHtml(), `${mark[0]}<em>${mark[1]}</em>`],
   /* the notes doc points at the archive, which keeps its old name on purpose */
   [`docs/archive/${OLD_SLUG}/`, `docs/archive/${OLD_SLUG}/`],
   [OLD_NAME.toUpperCase(), NEW_NAME.toUpperCase()],
@@ -134,10 +159,13 @@ for (const file of targets) {
 }
 
 /* ── the folder and the notes file ────────────────────────────────────────── */
+const oldDocPrefix = OLD_NAME.toUpperCase().replace(/ /g, '-');
+const newDocPrefix = NEW_NAME.toUpperCase().replace(/[^A-Z0-9]+/g, '-');
 const moves = [
   [join('apps', OLD_SLUG), join('apps', NEW_SLUG)],
-  [join('docs', `${OLD_NAME.toUpperCase()}-NOTES-2026-08-30.md`),
-   join('docs', `${NEW_NAME.toUpperCase().replace(/[^A-Z0-9]+/g, '-')}-NOTES-2026-08-30.md`)],
+  ...readdirSync(join(ROOT, 'docs'))
+    .filter((f) => f.startsWith(`${oldDocPrefix}-NOTES`))
+    .map((f) => [join('docs', f), join('docs', f.replace(oldDocPrefix, newDocPrefix))]),
 ];
 for (const [from, to] of moves) {
   if (!existsSync(join(ROOT, from))) continue;
@@ -148,15 +176,19 @@ for (const [from, to] of moves) {
 
 console.log(`${dry ? 'DRY RUN. ' : ''}${OLD_NAME} -> ${NEW_NAME}  (slug ${OLD_SLUG} -> ${NEW_SLUG})`);
 console.log(`  logo split: ${mark[0]} + ${mark[1]}`);
+console.log(`  test hook:  window.__${JS_ID}`);
 console.log(`  ${changed} files rewritten, about ${edits} occurrences`);
 console.log(`  ${protectedBlocks} block(s) left saying the old name on purpose, because they are about it`);
-console.log(`  docs/archive/${OLD_SLUG}/ left alone on purpose: it is the prototype as it arrived`);
+console.log('  docs/archive/ left alone on purpose: it records things as they were');
 if (!dry) {
   console.log('\nNow, in this order:');
   console.log('  npm run design:build && node design/hub.mjs      regenerate the front door');
   console.log(`  node design/test-all.mjs ${NEW_SLUG}`);
   console.log('  node design/guards.mjs');
-  console.log('\nThen delete this script. It only ever had one job.');
+  console.log('\nThen read the user facing copy once with your own eyes. A rename');
+  console.log('cannot hear grammar: "an Inkbones character" became "an Comic Crew');
+  console.log('character" the first time this ran, and only a person caught it.');
+
   console.log('\nThe paragraph in the notes explaining why the old name went still says');
   console.log('the old name, which is correct, because it is a sentence about that name.');
 }

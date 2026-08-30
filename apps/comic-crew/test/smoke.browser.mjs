@@ -1,4 +1,4 @@
-/* Inkbones in a real browser.
+/* Comic Crew in a real browser.
 
    Every check here exists because the same class of bug shipped in this fleet
    before. A green node suite proves the code was written. It proves nothing
@@ -107,7 +107,7 @@ const pinchBy = (page, k) => page.evaluate((k) => {
 }, k);
 
 const bodyCount = (page) => page.evaluate(() =>
-  window.__inkbones.S.strokes.filter((s) => s.layer === 'body').length);
+  window.__comiccrew.S.strokes.filter((s) => s.layer === 'body').length);
 
 async function drawBody(page) {
   await stroke(page, ring(500, 220, 90));
@@ -119,7 +119,7 @@ async function drawBody(page) {
   await stroke(page, seg([540, 740], [570, 1130]));
 }
 
-await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
+await withApp('comic-crew', async ({ page, errors, overflow, offenders }) => {
   /* ── the shipped build and the worker must name the same cache, or a fix
      never reaches a phone that already installed the app ─────────────────── */
   const build = await page.evaluate(() => window.BUILD);
@@ -180,7 +180,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
 
   /* and every point is still bound, which is what used to throw on export */
   const unbound = await page.evaluate(() =>
-    window.__inkbones.S.strokes.filter((s) => !s.bind || s.bind.some((b) => !b || !b.length)).length);
+    window.__comiccrew.S.strokes.filter((s) => !s.bind || s.bind.some((b) => !b || !b.length)).length);
   eq(unbound, 0, 'no stroke is left unbound after a palm');
 
   /* ── the head must be rigid on the path the app actually takes ───────────
@@ -193,7 +193,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   await stroke(page, seg([420, 390], [580, 390]));       // a shoulder line
   await stroke(page, ring(500, 220, 90));                // the head, drawn last
   const headState = await page.evaluate(() => {
-    const A = window.__inkbones, S = A.S;
+    const A = window.__comiccrew, S = A.S;
     const head = S.strokes[S.strokes.length - 1];
     return { rigid: A.isHead(head), bones: head.bind[0].length,
              onHeadBone: head.bind[0][0][0] === A.HEAD_BONE };
@@ -207,7 +207,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   await stroke(page, seg([470, 130], [440, -40]));
   await stroke(page, seg([530, 130], [560, -40]));
   const afterHair = await page.evaluate(() => {
-    const A = window.__inkbones, S = A.S, R = A.S.rest;
+    const A = window.__comiccrew, S = A.S, R = A.S.rest;
     /* both ends, because the left arm also starts at (420, 395) and matching
        on the start alone quietly measured the arm instead */
     const shoulder = S.strokes.find((st) => st.pts.length > 3 &&
@@ -260,7 +260,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
     ok(/paper/i.test(await page.textContent('#hint') || ''), 'and the child is told why');
 
     /* every point of every stroke is inside the page, so nothing is cropped */
-    const outside = await page.evaluate(() => window.__inkbones.S.strokes
+    const outside = await page.evaluate(() => window.__comiccrew.S.strokes
       .filter((st) => st.layer !== 'kit')
       .reduce((n, st) => n + st.pts.filter((p) =>
         p[0] < -0.5 || p[0] > 1000.5 || p[1] < -0.5 || p[1] > 1400.5).length, 0));
@@ -271,11 +271,11 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
        lock Dress up and Move for good with a hint that never said why */
     await page.click('#mDraw');
     await page.waitForTimeout(150);
-    const before = await page.evaluate(() => window.__inkbones.S.target.layer);
+    const before = await page.evaluate(() => window.__comiccrew.S.target.layer);
     await page.evaluate(() => [...document.querySelectorAll('.chip')]
       .find((b) => b.textContent === 'Clothes 1').click());
     await page.waitForTimeout(150);
-    const after = await page.evaluate(() => window.__inkbones.S.target.layer);
+    const after = await page.evaluate(() => window.__comiccrew.S.target.layer);
     ok(after === 'outfit' || before === 'outfit',
       'with a body drawn, the clothes layer is available as normal');
   }
@@ -287,7 +287,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
     await page.evaluate(() => [...document.querySelectorAll('.chip')]
       .find((b) => b.textContent === 'Straighten up').click());
     await page.waitForTimeout(200);
-    const before = await page.evaluate(() => JSON.stringify(window.__inkbones.S.panels[window.__inkbones.S.current].pose));
+    const before = await page.evaluate(() => JSON.stringify(window.__comiccrew.S.panels[window.__comiccrew.S.current].pose));
 
     /* a stray brush past a joint must move nothing at all */
     const wrist = await mapPts(page, [[326, 700]]);
@@ -298,7 +298,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
       ev('pointerdown', w[0], w[1]); ev('pointermove', w[0] + 2, w[1] + 1); ev('pointerup', w[0] + 2, w[1] + 1);
     }, wrist[0]);
     await page.waitForTimeout(200);
-    eq(await page.evaluate(() => JSON.stringify(window.__inkbones.S.panels[window.__inkbones.S.current].pose)),
+    eq(await page.evaluate(() => JSON.stringify(window.__comiccrew.S.panels[window.__comiccrew.S.current].pose)),
       before, 'brushing past a joint does not move the figure');
 
     /* and a real drag that starts 25 screen pixels off the wrist still grabs it */
@@ -311,7 +311,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
       ev('pointerup', w[0] - 29, w[1] - 66);
     }, wrist[0]);
     await page.waitForTimeout(220);
-    ok(await page.evaluate(() => JSON.stringify(window.__inkbones.S.panels[window.__inkbones.S.current].pose)) !== before,
+    ok(await page.evaluate(() => JSON.stringify(window.__comiccrew.S.panels[window.__comiccrew.S.current].pose)) !== before,
       'a drag starting a fingertip away from the wrist still moves the arm');
   }
 
@@ -359,14 +359,14 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   await page.evaluate(() => document.querySelectorAll('.panel')[1].click());
   await page.waitForTimeout(120);
   const wornInTwo = await page.evaluate(() => {
-    const p = window.__inkbones.S.panels[1];
+    const p = window.__comiccrew.S.panels[1];
     return p ? p.wear.kit : -99;
   });
   eq(wornInTwo, 0, 'panel two is still wearing the costume panel one had on');
   await page.evaluate(() => document.querySelectorAll('.panel')[3].click());
   await page.waitForTimeout(120);
   const wornInFour = await page.evaluate(() => {
-    const p = window.__inkbones.S.panels[3];
+    const p = window.__comiccrew.S.panels[3];
     return p ? p.wear.kit : -99;
   });
   eq(wornInFour, 0, 'so is panel four, two panels further on');
@@ -381,13 +381,13 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   await page.fill('#wordText', 'Look what I can do!');
   await page.click('#wordDone');
   await page.waitForTimeout(150);
-  eq(await page.evaluate(() => window.__inkbones.S.panels[1].words.length), 1, 'the balloon is stored on the panel');
+  eq(await page.evaluate(() => window.__comiccrew.S.panels[1].words.length), 1, 'the balloon is stored on the panel');
 
   /* the bubble must be sized for the font it is drawn in, not the default */
   const bw = await page.evaluate(() => {
-    const b = window.__inkbones.S.panels[1].words[0];
+    const b = window.__comiccrew.S.panels[1].words[0];
     const c = document.getElementById('stage').getContext('2d');
-    return window.__inkbones.balloonBox(c, b).w;
+    return window.__comiccrew.balloonBox(c, b).w;
   });
   ok(bw > 200, `the bubble is sized for its own lettering (got ${Math.round(bw)})`);
 
@@ -407,10 +407,10 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
 
   /* ── closing the tab must not destroy forty minutes of work ──────────────── */
   const wanted = await page.evaluate(() => ({
-    body: window.__inkbones.S.strokes.filter((s) => s.layer === 'body').length,
-    panels: window.__inkbones.S.panels.filter(Boolean).length,
-    words: window.__inkbones.S.panels[1].words.length,
-    kit: window.__inkbones.S.panels[1].wear.kit,
+    body: window.__comiccrew.S.strokes.filter((s) => s.layer === 'body').length,
+    panels: window.__comiccrew.S.panels.filter(Boolean).length,
+    words: window.__comiccrew.S.panels[1].words.length,
+    kit: window.__comiccrew.S.panels[1].wear.kit,
   }));
   await page.reload({ waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
@@ -418,7 +418,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   /* read defensively: if persistence is broken the panel is simply gone, and a
      thrown TypeError here would abort the run instead of reporting the defect */
   const got = await page.evaluate(() => {
-    const S = window.__inkbones.S, p = S.panels[1];
+    const S = window.__comiccrew.S, p = S.panels[1];
     return {
       body: S.strokes.filter((s) => s.layer === 'body').length,
       panels: S.panels.filter(Boolean).length,
@@ -429,7 +429,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   eq(JSON.stringify(got), JSON.stringify(wanted), 'everything survives a reload');
 
   /* ── a wrong file must change nothing ────────────────────────────────────── */
-  const dir = mkdtempSync(join(tmpdir(), 'inkbones-'));
+  const dir = mkdtempSync(join(tmpdir(), 'comic-crew-'));
   const junk = join(dir, 'holiday.json');
   writeFileSync(junk, JSON.stringify({ hello: 'this is not a character' }));
   await page.click('#btnGrown');
@@ -437,7 +437,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   await page.setInputFiles('#file', junk);
   await page.waitForTimeout(300);
   const afterJunk = await page.evaluate(() => {
-    const S = window.__inkbones.S;
+    const S = window.__comiccrew.S;
     return {
       joints: S.rest ? Object.keys(S.rest).length : -1,
       body: S.strokes.filter((s) => s.layer === 'body').length,
@@ -446,7 +446,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
   });
   eq(afterJunk.joints, 15, 'a wrong file leaves the skeleton whole');
   eq(afterJunk.body, wanted.body, 'a wrong file leaves the drawing alone');
-  ok(/not an inkbones/i.test(afterJunk.hint), `the child is told what happened (got "${afterJunk.hint}")`);
+  ok(/not a character/i.test(afterJunk.hint), `the child is told what happened (got "${afterJunk.hint}")`);
 
   /* the app must still work afterwards, not sit there dead */
   await page.evaluate(() => document.getElementById('grownClose').click());
@@ -457,7 +457,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
     .find((b) => b.textContent === 'Waving').click());
   await page.waitForTimeout(150);
   ok(await page.evaluate(() => {
-    const p = window.__inkbones.S.panels[window.__inkbones.S.current];
+    const p = window.__comiccrew.S.panels[window.__comiccrew.S.current];
     /* a bone whose similarity is no longer the identity has actually moved */
     return !!p && !!p.pose && !!p.pose.b &&
       Object.values(p.pose.b).some((d) => Math.abs(d[1]) > 0.01 || Math.abs(d[0] - 1) > 0.01);
@@ -520,7 +520,7 @@ await withApp('inkbones', async ({ page, errors, overflow, offenders }) => {
 }, { width: 414, height: 900 });
 
 /* ── the smallest phone anyone still uses ────────────────────────────────── */
-await withApp('inkbones', async ({ page, errors, overflow }) => {
+await withApp('comic-crew', async ({ page, errors, overflow }) => {
   await drawBody(page);
   await page.click('#mDress');
   await page.waitForTimeout(250);
@@ -568,7 +568,7 @@ await withApp('inkbones', async ({ page, errors, overflow }) => {
 }, { width: 320, height: 568 });
 
 /* ── offline is the product, so prove it rather than assume it ───────────── */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   const ready = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return 'unsupported';
     const reg = await navigator.serviceWorker.ready;
@@ -581,7 +581,7 @@ await withApp('inkbones', async ({ page, errors }) => {
   await page.context().setOffline(true);
   await page.reload({ waitUntil: 'load', timeout: 20000 });
   const offline = await page.evaluate(() => ({
-    booted: !!window.__inkbones,
+    booted: !!window.__comiccrew,
     modes: document.querySelectorAll('.modes button').length,
     display: !!document.getElementById('stage'),
     font: document.fonts ? document.fonts.check('16px "Shantell Sans"') : null,
@@ -607,22 +607,22 @@ await withApp('inkbones', async ({ page, errors }) => {
    app could have caused it as well. */
 
 /* 1. an idle tab must not lay its stale copy over another tab's hour of work */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   await drawBody(page);
   await page.waitForTimeout(800);
-  const mine = await page.evaluate(() => localStorage.getItem('inkbones.character'));
+  const mine = await page.evaluate(() => localStorage.getItem('comic-crew.character'));
   ok(mine && mine.length > 100, 'this tab saved its own drawing');
 
   /* another tab saves something newer, then this one is closed */
   await page.evaluate(() => {
-    const d = JSON.parse(localStorage.getItem('inkbones.character'));
+    const d = JSON.parse(localStorage.getItem('comic-crew.character'));
     d.name = 'From the other tab';
-    localStorage.setItem('inkbones.character', JSON.stringify(d));
+    localStorage.setItem('comic-crew.character', JSON.stringify(d));
   });
   await page.evaluate(() => { window.dispatchEvent(new Event('pagehide')); });
   await page.waitForTimeout(150);
   const after = await page.evaluate(() => {
-    const d = JSON.parse(localStorage.getItem('inkbones.character'));
+    const d = JSON.parse(localStorage.getItem('comic-crew.character'));
     return d.name;
   });
   eq(after, 'From the other tab', 'closing a tab that changed nothing does not overwrite newer work');
@@ -630,11 +630,11 @@ await withApp('inkbones', async ({ page, errors }) => {
 }, { width: 414, height: 900 });
 
 /* 2. a browser that refuses to store must say so, not fail silently */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   await page.addInitScript(() => {
     const real = Storage.prototype.setItem;
     Storage.prototype.setItem = function (k, v) {
-      if (String(k).indexOf('inkbones') === 0) throw new Error('QuotaExceededError');
+      if (String(k).indexOf('comic-crew') === 0) throw new Error('QuotaExceededError');
       return real.call(this, k, v);
     };
   });
@@ -660,21 +660,21 @@ await withApp('inkbones', async ({ page, errors }) => {
 }, { width: 414, height: 900 });
 
 /* 3. a record this build cannot read is not the same thing as no record */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('inkbones.character', '{"format":"inkbones/9","this":"is from a newer build"');
+    localStorage.setItem('comic-crew.character', '{"format":"comic-crew/9","this":"is from a newer build"');
   });
   await page.reload({ waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
   await drawBody(page);                     // the first stroke used to destroy it
   await page.waitForTimeout(900);
   const kept = await page.evaluate(() => ({
-    aside: localStorage.getItem('inkbones.character.unreadable'),
-    live: localStorage.getItem('inkbones.character'),
+    aside: localStorage.getItem('comic-crew.character.unreadable'),
+    live: localStorage.getItem('comic-crew.character'),
   }));
   ok(kept.aside && kept.aside.indexOf('newer build') >= 0,
     'a record that cannot be read is moved aside, not thrown away');
-  ok(kept.live && kept.live.indexOf('inkbones/4') >= 0, 'and the child can still work');
+  ok(kept.live && kept.live.indexOf('comic-crew/4') >= 0, 'and the child can still work');
   eq(errors.length, 0, `no errors (${JSON.stringify(errors).slice(0, 200)})`);
 }, { width: 414, height: 900 });
 
@@ -682,11 +682,11 @@ await withApp('inkbones', async ({ page, errors }) => {
    A skipped debounce is only delayed, because the next pen lift reschedules it.
    pagehide has no next time, so a guard that refuses to write mid stroke there
    throws away everything drawn since the last tick. */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   await drawBody(page);
   await page.waitForTimeout(800);
   const before = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem('inkbones.character')).strokes.length);
+    JSON.parse(localStorage.getItem('comic-crew.character')).strokes.length);
 
   /* on the paper, because ink outside it is rejected on purpose */
   const live = await mapPts(page, seg([250, 500], [700, 900], 9));
@@ -701,7 +701,7 @@ await withApp('inkbones', async ({ page, errors }) => {
   }, live);
   await page.waitForTimeout(250);
   const after = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem('inkbones.character')).strokes.length);
+    JSON.parse(localStorage.getItem('comic-crew.character')).strokes.length);
   ok(after > before,
     `a stroke in progress survives the tab closing (${before} strokes -> ${after})`);
   eq(errors.length, 0, `no errors (${JSON.stringify(errors).slice(0, 200)})`);
@@ -710,7 +710,7 @@ await withApp('inkbones', async ({ page, errors }) => {
 /* ── Undo has to mean something every single time it is tapped ───────────
    A child stops believing in a button that sometimes does nothing, and by then
    she has tapped it twice and lost real work. */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   const undoDepth = () => page.evaluate(() =>
     document.getElementById('btnUndo').disabled);
   await drawBody(page);
@@ -718,7 +718,7 @@ await withApp('inkbones', async ({ page, errors }) => {
 
   /* a palm the app rejected on purpose must leave nothing behind */
   const beforePalm = await page.evaluate(() =>
-    JSON.stringify(window.__inkbones.doc()));
+    JSON.stringify(window.__comiccrew.doc()));
   const pts = await mapPts(page, seg([200, 900], [300, 950]));
   const palm = await mapPts(page, [[350, 1200]]);
   await page.evaluate(({ pts, palm }) => {
@@ -735,14 +735,14 @@ await withApp('inkbones', async ({ page, errors }) => {
   await page.waitForTimeout(200);
   await page.click('#btnUndo');
   await page.waitForTimeout(250);
-  const afterPalmUndo = await page.evaluate(() => JSON.stringify(window.__inkbones.doc()));
+  const afterPalmUndo = await page.evaluate(() => JSON.stringify(window.__comiccrew.doc()));
   ok(afterPalmUndo !== beforePalm,
     'one Undo after a rejected palm changes something, rather than spending itself on nothing');
 
   /* a tap on a joint that never moved must not fill the stack either */
   await page.click('#mPose');
   await page.waitForTimeout(200);
-  const beforeTap = await page.evaluate(() => JSON.stringify(window.__inkbones.doc()));
+  const beforeTap = await page.evaluate(() => JSON.stringify(window.__comiccrew.doc()));
   const hip = await mapPts(page, [[500, 725]]);
   await page.evaluate((h) => {
     const c = document.getElementById('stage');
@@ -753,7 +753,7 @@ await withApp('inkbones', async ({ page, errors }) => {
   await page.waitForTimeout(200);
   await page.click('#btnUndo');
   await page.waitForTimeout(250);
-  const afterTapUndo = await page.evaluate(() => JSON.stringify(window.__inkbones.doc()));
+  const afterTapUndo = await page.evaluate(() => JSON.stringify(window.__comiccrew.doc()));
   ok(afterTapUndo !== beforeTap,
     'and after touching a joint without moving it');
 
@@ -763,10 +763,10 @@ await withApp('inkbones', async ({ page, errors }) => {
   await page.fill('#wordText', 'Say something');
   await page.click('#wordDone');
   await page.waitForTimeout(200);
-  eq(await page.evaluate(() => window.__inkbones.S.panels[window.__inkbones.S.current].words.length), 1,
+  eq(await page.evaluate(() => window.__comiccrew.S.panels[window.__comiccrew.S.current].words.length), 1,
     'the balloon is there to delete');
   await page.evaluate(() => {
-    const A = window.__inkbones;
+    const A = window.__comiccrew;
     const p = A.S.panels[A.S.current];
     const c = document.getElementById('stage'), r = c.getBoundingClientRect();
     const s = Math.min(r.width / 1000, r.height / 1400);
@@ -778,11 +778,11 @@ await withApp('inkbones', async ({ page, errors }) => {
   await page.waitForTimeout(250);
   await page.click('#wordDelete');
   await page.waitForTimeout(250);
-  eq(await page.evaluate(() => window.__inkbones.S.panels[window.__inkbones.S.current].words.length), 0,
+  eq(await page.evaluate(() => window.__comiccrew.S.panels[window.__comiccrew.S.current].words.length), 0,
     'and it goes');
   await page.click('#btnUndo');
   await page.waitForTimeout(300);
-  eq(await page.evaluate(() => window.__inkbones.S.panels[window.__inkbones.S.current].words.length), 1,
+  eq(await page.evaluate(() => window.__comiccrew.S.panels[window.__comiccrew.S.current].words.length), 1,
     'and Undo brings the balloon back');
 
   eq(errors.length, 0, `no errors (${JSON.stringify(errors).slice(0, 250)})`);
@@ -791,7 +791,7 @@ await withApp('inkbones', async ({ page, errors }) => {
 /* ── starting again survives the tab closing ─────────────────────────────
    Undo covers a mistake made a second ago. It does not survive the tab, and
    "New character" is one tap from the button beside Undo. */
-await withApp('inkbones', async ({ page, errors }) => {
+await withApp('comic-crew', async ({ page, errors }) => {
   await drawBody(page);
   await page.waitForTimeout(800);
   const had = await bodyCount(page);
@@ -823,7 +823,7 @@ await withApp('inkbones', async ({ page, errors }) => {
 }, { width: 414, height: 900 });
 
 /* ── a phone turned sideways, where the paper used to be zero pixels tall ─ */
-await withApp('inkbones', async ({ page, errors, overflow }) => {
+await withApp('comic-crew', async ({ page, errors, overflow }) => {
   await drawBody(page);
   await page.click('#mDraw');
   await page.waitForTimeout(250);

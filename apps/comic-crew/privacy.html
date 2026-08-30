@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F2F1EC" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#191713" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Privacy for Inkbones, a comic book maker for children. Drawings stay in this browser on this device, nothing is uploaded, there is no account and no third party code.">
-<title>Privacy and accessibility, Inkbones</title>
+<meta name="description" content="Privacy for Comic Crew, a comic book maker for children. Drawings stay in this browser on this device, nothing is uploaded, there is no account and no third party code.">
+<title>Privacy and accessibility, Comic Crew</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 
 <!-- ═══════════════════════════════════════════════════════════════════════
@@ -17,21 +17,21 @@
 
        1. It builds its slug list with Object.keys(SKINS) from design/skins.mjs
           and then dereferences SKINS[slug].chroma and SKINS[slug].hue inside
-          solveInk() to solve the text colours. Inkbones has no skin entry, so
-          "node design/privacy.mjs inkbones" visits nothing and writes nothing.
+          solveInk() to solve the text colours. Comic Crew has no skin entry, so
+          "node design/privacy.mjs comic-crew" visits nothing and writes nothing.
           A stub entry with no chroma would solve to a NaN colour rather than
           fail loudly, and a real entry would repaint this page in a palette
           that is not the app's.
 
        2. The generated template says "This app is made for adults. It is not
-          directed at children." Inkbones is the one app in the fleet aimed
+          directed at children." Comic Crew is the one app in the fleet aimed
           squarely at children, so that sentence is false here, and the whole
           page is written around the fact instead: no collection at all, a
           parent facing warning about browsers clearing their own storage, and
           the hosting log stated plainly rather than buried.
 
      If the fleet page ever changes in a way that matters, port the change into
-     this file by hand. design/privacy-facts.json does carry an inkbones entry,
+     this file by hand. design/privacy-facts.json does carry an comic-crew entry,
      and on its own it is inert: privacy.mjs walks SKINS, never the fact sheet,
      so nothing can be generated from facts alone. Do not close that gap by
      adding a skin. The first run of privacy.mjs after a skin exists would
@@ -179,7 +179,7 @@
 <body>
 <main>
   <a class="skip" href="#start">Skip to the policy</a>
-  <a class="back" href="./">&larr; Back to Inkbones</a>
+  <a class="back" href="./">&larr; Back to Comic Crew</a>
 
   <div class="plate">
     <!-- The armature in non photo blue, and a registration target in process
@@ -214,7 +214,7 @@
     <h1>Privacy and accessibility</h1>
   </div>
 
-  <p class="lede" id="start">Inkbones is a comic book maker for children, made by Sky Wolf Studio.
+  <p class="lede" id="start">Comic Crew is a comic book maker for children, made by Sky Wolf Studio.
   A faint blue figure waits under the paper, a child traces it, inks it, dresses it, poses it and
   prints a page. Here is the short version, which is also the whole version: the drawings stay in
   this browser, on this device, and nothing is uploaded.</p>
@@ -237,7 +237,7 @@
 
   <h2>Where the drawings go</h2>
   <p>Nowhere. Every line, every character, every speech balloon and every comic panel is written to
-  this browser's own storage on this device, under a single name, <code>inkbones.character</code>,
+  this browser's own storage on this device, under a single name, <code>comic-crew.character</code>,
   which holds the character's name, the lines that were drawn, the pose and the panels. That is the
   entire list.</p>
   <p>There is no account, no sign in, no server to sync to, and no copy held anywhere we can reach.
@@ -248,7 +248,7 @@
     <h3>The one warning a parent actually needs</h3>
     <p><strong>Browsers clear their own storage, and they do not ask first.</strong> Safari deletes
     storage that a page created after seven days without a visit. Clearing history or site data
-    clears it. A school or guest Chromebook session usually wipes everything at logout. Inkbones
+    clears it. A school or guest Chromebook session usually wipes everything at logout. Comic Crew
     asks the browser to keep its storage anyway, but that is a request, not a promise, and no app
     can make it one.</p>
     <p>So if a comic matters, get it off the browser the day it is made. Any of these does it, and
@@ -279,7 +279,7 @@
   <p>Opening a saved character file works the same way in reverse: your browser's file picker hands
   the app that one file, and the app can see nothing else on the device.</p>
 
-  <h2>What Inkbones does not do</h2>
+  <h2>What Comic Crew does not do</h2>
   <ul>
     <li>No account, no sign in, no name, no email address, no age and no birthday. Nothing is asked
     for, so nothing can be given.</li>
@@ -298,7 +298,7 @@
   </ul>
 
   <h2>The one record a visit does create</h2>
-  <p>Serving a web page needs a server. The one that hands you Inkbones is Google's Firebase
+  <p>Serving a web page needs a server. The one that hands you Comic Crew is Google's Firebase
   Hosting, and like every web host it writes an ordinary, short lived log line when a browser asks
   for a file. That line includes the IP address the request came from. It exists so the page can be
   delivered and so the host can deal with attacks and abuse.</p>
@@ -313,21 +313,21 @@
     <li><strong>New character</strong> in the Grown ups panel clears the character and starts over.
     Undo brings it back if that was a mistake.</li>
     <li><strong>Clearing this site's data</strong> in your browser settings removes everything
-    Inkbones has stored, including its offline copy of the app itself.</li>
+    Comic Crew has stored, including its offline copy of the app itself.</li>
     <li><strong>Removing the app</strong> from the home screen does the same on most devices.</li>
   </ul>
   <p>Files that were already saved or printed are yours, in your own downloads or on your own
   paper, and nothing here can reach them.</p>
 
   <h2>Permissions</h2>
-  <p>None. Inkbones asks for no camera, no microphone, no location, no contacts, no notifications
+  <p>None. Comic Crew asks for no camera, no microphone, no location, no contacts, no notifications
   and no access to the photo library. Save picture and Send it go through your device's own
   download and share sheet, which you drive, and the file picker only ever hands over the one file
   you choose.</p>
 
   <h2>Children</h2>
   <p>This app is made for children, which is exactly why it collects nothing. No name, no age, no
-  email address, no login, no way to reach anybody. There is nowhere in Inkbones for a child to type
+  email address, no login, no way to reach anybody. There is nowhere in Comic Crew for a child to type
   something that leaves the device: the words in a speech balloon stay on the paper and in this
   browser, with the rest of the drawing.</p>
   <p>Because no personal information is collected from anyone, of any age, there is nothing for a
@@ -341,14 +341,14 @@
     make the page, print it. All of it works, because the entire app is stored on the device. An app
     that runs with the network off is not sending drawings anywhere.</p>
     <p>If you would rather look directly, open your browser's developer tools, go to the Network tab
-    and use Inkbones. Loading the page fetches the app's own files from the host, and that is the
+    and use Comic Crew. Loading the page fetches the app's own files from the host, and that is the
     whole list: after that you will see no requests at all, however long a child draws for. Under
     Application, then Local Storage, you can read the one thing it stores,
-    <code>inkbones.character</code>, and delete it there.</p>
+    <code>comic-crew.character</code>, and delete it there.</p>
   </div>
 
   <h2>Tips</h2>
-  <p>Inkbones is free and stays free. If a Leave a tip link is present in the Grown ups panel,
+  <p>Comic Crew is free and stays free. If a Leave a tip link is present in the Grown ups panel,
   tapping it opens the payment provider's own page in a new tab, on their site. We never see or
   store card details, tipping unlocks nothing because nothing is locked, and it sits behind the
   Grown ups panel rather than anywhere a child drawing a comic will meet it.</p>
@@ -362,7 +362,7 @@
   always visible, reduced motion is respected, and the drawing surface works with a finger, a stylus
   or a mouse.</p>
   <p>If anything here gets in your way, email and it will be fixed:
-  <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Inkbones">stephenfurpahs@gmail.com</a>.</p>
+  <a href="mailto:stephenfurpahs@gmail.com?subject=Accessibility%3A%20Comic Crew">stephenfurpahs@gmail.com</a>.</p>
 
   <h2>If this ever changes</h2>
   <p>If anything above changes in a way that affects what happens to a drawing, it will say so on
@@ -371,15 +371,15 @@
   sends anything anywhere, so there is nothing here to switch on.</p>
 
   <h2>Questions</h2>
-  <p>Email <a href="mailto:stephenfurpahs@gmail.com?subject=Inkbones">stephenfurpahs@gmail.com</a>
-  and a person will answer. Putting Inkbones in the subject line helps it get to the right place.</p>
+  <p>Email <a href="mailto:stephenfurpahs@gmail.com?subject=Comic Crew">stephenfurpahs@gmail.com</a>
+  and a person will answer. Putting Comic Crew in the subject line helps it get to the right place.</p>
 
   <hr>
   <footer>
     <p>Sky Wolf Studio &middot; SWS Strategic Media LLC &middot;
     <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
     <p>Last updated 30 August 2026.</p>
-    <p><a class="again" href="./">Back to Inkbones</a></p>
+    <p><a class="again" href="./">Back to Comic Crew</a></p>
   </footer>
 </main>
 </body>

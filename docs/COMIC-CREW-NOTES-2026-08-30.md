@@ -1,4 +1,4 @@
-# Inkbones, notes, 2026-08-30
+# Comic Crew, notes, 2026-08-30
 
 App 36. A comic maker where a child draws their own character once and then
 keeps it: dresses it, moves it, gives it something to say, and prints the page.
@@ -7,7 +7,7 @@ Arrived as a prototype in a handoff zip. This is what was true about it, what
 was wrong with it, and what shipped.
 
 Source as received, plus the renders that condemned it, is archived in
-`docs/archive/inkbones/`. The zips are gitignored, so anything only in one dies
+`docs/archive/comic-crew/`. The zips are gitignored, so anything only in one dies
 with the codespace.
 
 ---
@@ -174,7 +174,7 @@ arm, and the shoulder shrug above.
 
 ## 5. Tests, and how to trust them
 
-    node design/test-all.mjs inkbones
+    node design/test-all.mjs comic-crew
 
 - `test/rig.mjs`, 180 checks. The bench, per limb, with a floor **and a ceiling**:
   a torso that balloons 25% is as wrong as one that collapses, and only checking
@@ -190,7 +190,7 @@ arm, and the shoulder shrug above.
   still cached.
 - `test/a11y.browser.mjs`, 18 checks. axe in six states in both colour schemes.
   This exists as its own file because `design/a11y.mjs` builds its slug list from
-  `design/skins.mjs`, and Inkbones is deliberately not in skins.mjs, so the fleet
+  `design/skins.mjs`, and Comic Crew is deliberately not in skins.mjs, so the fleet
   run will never open this app.
 - `test/lib/stub.mjs` runs the **real shipping index.html** in node. It is in
   `lib/` because `test-all.mjs` runs every `.mjs` directly inside `test/`.
@@ -277,7 +277,7 @@ centroid fails six checks by false firing.
 was silent, so a private window or a full origin lost everything with no word to
 anybody: there is now a warning bar with a Save to a file button. A record this
 build could not read was destroyed by the first stroke: it is moved aside to
-`inkbones.character.unreadable` instead. Closing the tab mid stroke threw the
+`comic-crew.character.unreadable` instead. Closing the tab mid stroke threw the
 stroke away, because the guard against writing mid stroke had no next time on
 `pagehide`. And an idle second tab laid its stale copy over another tab's hour of
 work on close: a tab that has changed nothing now never writes, and one with no
@@ -331,7 +331,7 @@ were worked afterwards. The ones worth naming:
 - **The format field was written on every save and never read**, so a file from a
   later build would have been loaded as best it could and written back in this
   build's shape, quietly dropping whatever was new. It is checked, and
-  `inkbones/3` still opens.
+  `comic-crew/3` still opens.
 - **Rubbing out demanded two pixels of accuracy** and the storage layer had four
   separate ways to lose work. Both covered above.
 - Coordinates were stored at full double precision, three characters for every
@@ -366,7 +366,7 @@ reachable and there is nothing to assert. The code says so.
 
 ## 6. Fleet notes
 
-- **Do not add `inkbones` to `design/skins.mjs`**, and do not put the SWS STUDIO
+- **Do not add `comic-crew` to `design/skins.mjs`**, and do not put the SWS STUDIO
   BASE sentinels in its `index.html`. `design/apply.mjs` iterates
   `Object.keys(SKINS)` and would strip the app's own `--ink` token and prune its
   rules on the next build, taking the bristol board and the dark shell with it.
@@ -375,15 +375,15 @@ reachable and there is nothing to assert. The code says so.
   `{ darkAccent: '#6FB7DC', accent: '#1F5F80' }`. Measured 8.08:1 on the dark card
   and 6.18:1 on the light one. The magenta pair was the alternative and fails at
   4.05:1 on dark.
-- `const CACHE = 'inkbones-v1'` is a `const` on purpose: `design/bump-sw.mjs`
+- `const CACHE = 'comic-crew-v1'` is a `const` on purpose: `design/bump-sw.mjs`
   requires it and silently skips six sibling workers that use `var`. Confirmed
   this one is seen.
 - **`node design/bump-sw.mjs` with no arguments bumps every app in the fleet.**
   Use `--check`. That was done here by accident and reverted.
-- Both fonts are carried in `apps/inkbones/fonts/` with `OFL.txt` beside them.
+- Both fonts are carried in `apps/comic-crew/fonts/` with `OFL.txt` beside them.
   Neither Bangers nor Shantell Sans declares a Reserved Font Name, so no rename
   was needed. Google serves them already subset to latin, so nothing was modified.
-- `apps/inkbones/marketing/thumb-512.png` and `thumb-256.png` are **generated
+- `apps/comic-crew/marketing/thumb-512.png` and `thumb-256.png` are **generated
   placeholders derived from the icon, waiting for Stephen's art.** Whoever
   replaces them must not regenerate over the top.
 - Regenerate the hub with `npm run design:build` **before** `node design/hub.mjs`:
@@ -403,7 +403,7 @@ the number one complaint. Research contradicts that on its own evidence.
   star one.
 - **"AI cannot keep a character consistent" is stale.** It was true in 2024.
   Reference conditioning has largely closed it. The honest sentence is that a
-  practitioner still burns eight to twelve renders per page. Inkbones does not
+  practitioner still burns eight to twelve renders per page. Comic Crew does not
   beat that on whether it is possible, it beats it on cost, speed and
   determinism: no re-rolls, no credits, no account, and it works on a plane.
 - **Nearly every source claiming consistency is the top complaint is content
@@ -429,22 +429,36 @@ the number one complaint. Research contradicts that on its own evidence.
    shoulder. Watch three things the audits could not settle: whether she finds the
    costumes at all, whether she can draw a face, and whether she ever finds Move
    without being told. Whatever fails there outranks everything below.
-2. **The name.**
-   <!-- KEEP-OLD-NAME -->
-   It was built under the working title Inkbones. That collides with Inkbones
-   Media, a live graphic design studio, which is adjacent enough to matter, and
-   with an abandoned but indexed Inkscape bone rigging extension of the same
-   name.
-   <!-- /KEEP-OLD-NAME -->
-   Settle it before the Stripe product, the domain and any store listing exist.
-   <!-- KEEP-OLD-NAME -->
-   `node scripts/rename-inkbones.mjs "New Name"` does the whole rename in one go:
-   the folder, the slug, the storage keys, the build tag, the worker cache, the
-   logo, the hub registration and this document. It leaves `docs/archive/` alone
-   on purpose, keeps this paragraph saying the old name, and prints what to
-   regenerate afterwards. Delete the script once it has been used. It only ever
-   had one job.
-   <!-- /KEEP-OLD-NAME -->
+2. **The name is settled**, and this entry stays because the reasoning is worth
+   keeping. It was built under the working title Inkbones, which collides with
+   Inkbones Media, a live graphic design studio, and with an abandoned but
+   indexed Inkscape bone rigging extension of the same name. Stephen called it,
+   and it is now **Comic Crew**.
+
+   Eight candidates were checked for collisions first and **every one of them
+   failed**, which is worth remembering before anybody proposes a ninth off the
+   top of their head. Doodlebones is a character in Poppy Playtime with how to
+   draw videos already attached to the name, which is fatal for a children's
+   drawing app. Comic Bones runs into Jeff Smith's Bone, which is in school
+   libraries. Bendy Doodle has a trademark filing pointed at a kids drawing
+   product. Draw Once and Paper Puppet are both live businesses. Scribblebones
+   and Sketch Puppet survived and were still bad: they name the machinery rather
+   than the comic, and a seven year old cannot spell either of them.
+
+   Comic Crew names the cast, which is the actual promise: the same character in
+   every panel. The cost is known and was accepted. `comiccrew.com` is registered
+   and parked, verified by RDAP, and Comic Crew Inc is a live YouTube channel
+   with paid memberships. Wrong category and not fatal, but it is somebody
+   else's name in a way that Comic Sheet, the recommendation, was not. Comic
+   Sheet's `.com` and `.app` are both genuinely unregistered, verified with
+   working controls, if this ever needs revisiting.
+
+   **Nobody has searched a trademark register.** Not for Comic Crew, not for any
+   of the others. Every collision pass was blocked by USPTO and Justia and said
+   so. A real search in the software and children's classes is a human step
+   before anything ships commercially under this name, and none of the work above
+   is a clearance opinion.
+
 3. **Stephen's art** for `marketing/thumb-512.png` and `thumb-256.png`. Generated
    placeholders are in place and are marked as such.
 4. **The tip jar** is wired and empty: `var TIP_URL = ''` in `index.html`. One

@@ -5,7 +5,7 @@
    headline number of 87%. Every assertion here is PER LIMB. If a limb collapses,
    this file names that limb.
 
-   node test/rig.mjs        (design/test-all.mjs runs it with cwd apps/inkbones)
+   node test/rig.mjs        (design/test-all.mjs runs it with cwd apps/comic-crew)
 */
 import { loadApp, fixtures, runner } from './lib/stub.mjs';
 
@@ -139,7 +139,7 @@ for (const bad of [null, {}, { t: [0, 0] }, { b: {} },
                    { t: [0, 0], b: { ...beforeRel.b, lelb: [NaN, 0] } },
                    { t: [1e9, 0], b: beforeRel.b },
                    { t: [0, 0], b: { ...beforeRel.b, lelb: [900, 900] } }]) {
-  const doc0 = { format: 'inkbones/4', rest: API.REST0,
+  const doc0 = { format: 'comic-crew/4', rest: API.REST0,
                  strokes: [{ layer: 'body', slot: 0, pts: [[10, 10, 5], [20, 20, 5]] }],
                  panels: [{ pose: bad, wear: { outfit: -1, face: 0, kit: -1 }, words: [] }] };
   load(doc0);
@@ -262,7 +262,7 @@ t.ok(poseErr < 1e-6, `panel pose round trips through the file (error ${poseErr})
 const good = JSON.stringify(doc());
 for (const junk of ['{}', '{"rest":null}', '{"rest":{"head":[1,2]}}',
                     '{"rest":' + JSON.stringify(API.REST0) + '}',
-                    '{"format":"inkbones/4","rest":' + JSON.stringify(API.REST0) + ',"strokes":"nope"}']) {
+                    '{"format":"comic-crew/4","rest":' + JSON.stringify(API.REST0) + ',"strokes":"nope"}']) {
   let threw = false;
   try { load(JSON.parse(junk)); } catch (e) { threw = true; }
   t.ok(threw, `junk file rejected: ${junk.slice(0, 32)}`);
@@ -272,7 +272,7 @@ load(JSON.parse(good));
 t.eq(Object.keys(S.rest).length, 15, 'a good file still loads afterwards');
 
 /* points that are not numbers must be dropped, not stored */
-load({ format: 'inkbones/4', rest: API.REST0, strokes: [
+load({ format: 'comic-crew/4', rest: API.REST0, strokes: [
   { layer: 'body', slot: 0, pts: [[10, 10, 5], ['x', 2, 3], [20, 20, 5]] },
   { layer: 'body', slot: 0, pts: [] },
   { layer: 'nonsense', slot: 99, pts: [[30, 30, 5], [40, 40, 5]] },
@@ -354,13 +354,13 @@ t.ok(S.strokes.every((s) => s.pts.every((p) => p.every(isFinite))), 'no non fini
   bindAll();
   const good = JSON.parse(JSON.stringify(doc()));
   let threw = false;
-  try { load({ ...good, format: 'inkbones/9' }); } catch (e) { threw = true; }
+  try { load({ ...good, format: 'comic-crew/9' }); } catch (e) { threw = true; }
   t.ok(threw, 'a file from a later build is refused');
   t.eq(Object.keys(S.rest).length, 15, 'and nothing was touched on the way');
   load(good);
   t.ok(S.strokes.length > 0, 'this build still loads its own files');
   /* the older format is still readable, because children keep files */
-  const old3 = { format: 'inkbones/3', rest: API.REST0,
+  const old3 = { format: 'comic-crew/3', rest: API.REST0,
     strokes: [{ layer: 'body', slot: 0, pts: [[100, 100, 5], [200, 200, 5]] }] };
   let ok3 = true;
   try { load(old3); } catch (e) { ok3 = false; }

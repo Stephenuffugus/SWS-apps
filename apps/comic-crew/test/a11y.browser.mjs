@@ -1,7 +1,7 @@
 /* Accessibility, in a real browser, in both colour schemes.
 
    This lives here rather than being picked up by design/a11y.mjs because that
-   script builds its slug list from design/skins.mjs, and Inkbones is
+   script builds its slug list from design/skins.mjs, and Comic Crew is
    deliberately not in skins.mjs: adding it would let design/apply.mjs delete
    the app's own bristol board CSS on the next build. So the fleet's a11y run
    will never open this app, and without this file nothing ever would.
@@ -47,7 +47,7 @@ async function drawSomething(page) {
 }
 
 for (const scheme of ['light', 'dark']) {
-  await withApp('inkbones', async ({ page, errors }) => {
+  await withApp('comic-crew', async ({ page, errors }) => {
     await page.addScriptTag({ content: AXE });
     await drawSomething(page);
 

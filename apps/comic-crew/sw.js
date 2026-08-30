@@ -1,4 +1,4 @@
-/* Inkbones service worker.
+/* Comic Crew service worker.
 
    Offline once installed, because a kid drawing a comic in a car has no bars
    and should never see a blank page. The document itself is network first, so
@@ -19,7 +19,7 @@
    the offline copy of all thirty five siblings the first time a visitor opens
    this one. That has actually shipped here before, more than once, and
    design/guards.mjs now runs this file against a fake fleet to prove it. */
-const CACHE = 'inkbones-v1';
+const CACHE = 'comic-crew-v1';
 
 /* The whole app: one page, its privacy page, the manifest, the two fonts and
    the icons. Nothing else exists to fetch, ever. No CDN, no analytics, no
@@ -57,7 +57,7 @@ self.addEventListener('activate', (e) => {
     caches.keys()
       .then((keys) => Promise.all(
         keys
-          .filter((k) => k.indexOf('inkbones-') === 0 && k !== CACHE)
+          .filter((k) => k.indexOf('comic-crew-') === 0 && k !== CACHE)
           .map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())

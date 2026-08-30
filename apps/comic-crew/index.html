@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#191713">
 <meta name="description" content="Draw your own comic character, dress it, pose it, give it something to say, and print the page. Everything stays on this device.">
-<title>Inkbones</title>
+<title>Comic Crew</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -273,7 +273,7 @@
 <body>
 
 <div class="topbar">
-  <div class="mark">INK<em>BONES</em></div>
+  <div class="mark">COMIC<em>CREW</em></div>
   <div class="who" id="who">a new character</div>
   <button class="iconbtn" id="btnUndo" aria-label="Undo the last thing" title="Undo">Undo</button>
   <button class="iconbtn" id="btnGrown" aria-label="Grown ups" title="Grown ups">&#9881;</button>
@@ -379,7 +379,7 @@
     </div>
 
     <h3>About</h3>
-    <p>Inkbones keeps drawings, characters and pages in this browser on this
+    <p>Comic Crew keeps drawings, characters and pages in this browser on this
       device. Nothing is uploaded, there is no account and there are no adverts.</p>
     <div class="row">
       <a class="chip" href="privacy.html">What we do and do not keep</a>
@@ -393,7 +393,7 @@
       an idea for it?</p>
     <div class="row">
       <a class="chip" href="../">Sky Wolf Studios</a>
-      <a class="chip" href="mailto:stephenfurpahs@gmail.com?subject=Inkbones">Send a note</a>
+      <a class="chip" href="mailto:stephenfurpahs@gmail.com?subject=Comic Crew">Send a note</a>
     </div>
 
     <div class="seam">
@@ -410,7 +410,7 @@
 "use strict";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   INKBONES
+   COMIC CREW
 
    One idea holds the whole app up: a faint non photo blue armature sits under
    the drawing, and the child draws over it. Because of that the skeleton is
@@ -1173,7 +1173,7 @@ function syncUndo(){
 /* ================= the document ================= */
 function doc(){
   return {
-    format:'inkbones/4',
+    format:'comic-crew/4',
     name:S.name,
     rest:S.rest,
     current:S.current,
@@ -1189,7 +1189,7 @@ function doc(){
     panels:S.panels
   };
 }
-const FORMATS={'inkbones/3':1,'inkbones/4':1};
+const FORMATS={'comic-crew/3':1,'comic-crew/4':1};
 function load(d,keepUndo){
   if(!d||typeof d!=='object')throw new Error('not a character');
   /* The version was written on every save and never once read, so a file from
@@ -1268,8 +1268,8 @@ function cleanWord(w){
 }
 
 /* ================= saving to this browser ================= */
-const KEY='inkbones.character', KEEP=KEY+'.unreadable', PREV=KEY+'.prev',
-      PREFS='inkbones.prefs';
+const KEY='comic-crew.character', KEEP=KEY+'.unreadable', PREV=KEY+'.prev',
+      PREFS='comic-crew.prefs';
 /* Which pen and whether the blue is showing are facts about the person, not
    about the character. Keeping them in the document meant every Undo quietly
    changed the pen in her hand. */
@@ -2112,7 +2112,7 @@ function fileName(ext){
   return (n||'character')+'.'+ext;
 }
 document.getElementById('btnSave').onclick=()=>{
-  download(fileName('inkbones.json'),
+  download(fileName('comic-crew.json'),
     new Blob([JSON.stringify(doc())],{type:'application/json'}));
   say('Saved to your files');
 };
@@ -2134,7 +2134,9 @@ document.getElementById('file').onchange=e=>{
       setMode('pose');buildStrip();save();syncPrev();
       say('Opened '+(S.name||'that character'),true);
     }catch(err){
-      say('That is not an Inkbones character. Nothing was changed.',true);
+      /* no article in front of the app's name, so a later rename cannot leave
+         an "an" sitting in front of a name that wants an "a" */
+      say('That file is not a character. Nothing was changed.',true);
     }
   };
   rd.readAsText(f);
@@ -2244,7 +2246,7 @@ if(document.fonts&&document.fonts.ready&&document.fonts.ready.then)
 boot();
 
 /* exposed for the headless tests, harmless in a browser */
-window.__inkbones={S,POSES,KITS,BONES,JOINTS,PARENT,CHAIN,REST0,
+window.__comiccrew={S,POSES,KITS,BONES,JOINTS,PARENT,CHAIN,REST0,
   cloneJ,rotAbout,rotRad,relOf,poseOf,posePreset,bindAll,bindStroke,weightsFor,
   rebuildKits,measureGirth,outlineOf,activeStrokes,xforms,deform,
   doc,load,BLANK,drawPage,balloonBox,wrapWords,measureHead,isHead,bestBone,boneU,
@@ -2265,7 +2267,7 @@ window.__inkbones={S,POSES,KITS,BONES,JOINTS,PARENT,CHAIN,REST0,
    booting. A studio seam that breaks the app it is decorating is worse than no
    seam at all.
    ═══════════════════════════════════════════════════════════════════════════ */
-var BUILD = 'inkbones-v1';
+var BUILD = 'comic-crew-v1';
 /* config seam, fleet pattern: an empty string hides the tip jar entirely.
    Paste the Stripe payment link here once it exists. */
 var TIP_URL = '';
@@ -2288,7 +2290,7 @@ var TIP_URL = '';
     b.addEventListener('click', function(){
       if (evt){ evt.prompt(); return; }
       alert(installed
-        ? 'Phones add icons from the browser. Open skywolfstudio.com/inkbones in Safari or Chrome and add it there.'
+        ? 'Phones add icons from the browser. Open skywolfstudio.com/comic-crew in Safari or Chrome and add it there.'
         : 'On iPhone or iPad: tap the Share button, then "Add to Home Screen".');
     });
   }

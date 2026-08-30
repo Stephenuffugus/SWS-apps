@@ -102,7 +102,7 @@ const SELF_STYLED = {
      a hub regeneration can never drop them. */
   'fretwork': { darkAccent: '#c9974c', accent: '#8a5f22' },
   'diamond-rules': { darkAccent: '#3FA35C', accent: '#1C3529' },
-  /* Inkbones wears the non photo blue that real comic artists pencil with, on
+  /* Comic Crew wears the non photo blue that real comic artists pencil with, on
      bristol board. It is deliberately NOT in skins.mjs: design/apply.mjs
      iterates Object.keys(SKINS) and would strip the app's own --ink token and
      prune its rules on the next build, taking the bristol board look and the
@@ -110,7 +110,7 @@ const SELF_STYLED = {
      bristol board. Process magenta was the alternative and misses both ways at
      once, 4.02:1 on the card and 3.91:1 on the board, and lightening it enough
      to pass turns it pink, which stops it being a registration mark. */
-  'inkbones': { darkAccent: '#6FB7DC', accent: '#1F5F80' },
+  'comic-crew': { darkAccent: '#6FB7DC', accent: '#1F5F80' },
   /* Hush came home from the arcade on 2026-08-20 and is a local app now.
      Its colours are its own (--glow and --deep), not a studio skin. */
   'hush': { darkAccent: '#F2B872', accent: '#C87F3C' },
@@ -241,7 +241,7 @@ const CATALOGUE = [
        thing as a seven year old finishing a comic without being told what to
        press. That test has not happened yet, which is the only one that counts.
        Take the 'beta' off after it does. */
-    ['inkbones', 'Inkbones', 'Draw a character once, then pose it through a whole comic', 'comic comics maker kids children draw drawing character cartoon strip panels speech bubbles balloons story art print superhero make your own creative offline no account no ads stays the same every panel', 'beta'],
+    ['comic-crew', 'Comic Crew', 'Draw a character once, then pose it through a whole comic', 'comic comics maker kids children draw drawing character cartoon strip panels speech bubbles balloons story art print superhero make your own creative offline no account no ads stays the same every panel', 'beta'],
   ]],
   ['Night Sky',
     { id: 'night-sky', kick: 'The night sky', q: 'Looking up tonight?',

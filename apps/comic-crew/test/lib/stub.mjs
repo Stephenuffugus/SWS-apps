@@ -55,7 +55,7 @@ function makeEl(id) {
   return el;
 }
 
-/* Loads the real app and returns whatever it hangs on window.__inkbones. */
+/* Loads the real app and returns whatever it hangs on window.__comiccrew. */
 export function loadApp(htmlUrl) {
   const path = typeof htmlUrl === 'string' ? htmlUrl : fileURLToPath(htmlUrl);
   const src = readFileSync(path, 'utf8');
@@ -114,8 +114,8 @@ export function loadApp(htmlUrl) {
      because the fleet's whole reason for putting it in a second script is that
      it must never be able to stop the app */
   new Function(scripts[0])();
-  const api = global.window.__inkbones;
-  if (!api) throw new Error('app did not expose window.__inkbones');
+  const api = global.window.__comiccrew;
+  if (!api) throw new Error('app did not expose window.__comiccrew');
   api.__els = els;
   api.__storage = store;
   return api;
