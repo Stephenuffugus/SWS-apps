@@ -4,6 +4,7 @@ import {
   nextPow2, seedOrder, parseEntrants, roundCount, round0Slot,
   contender, winnerOf, setPick, champion, encodeBracket, decodeBracket,
   entrantInfo, mapEntrants, resultPairs, carryPicks, sameBracket,
+  setScore, scoreFor, sanitizeScores, swapSeeds, shuffleSeeds,
 } from '../helpers.js';
 
 let passed = 0;
@@ -200,6 +201,92 @@ ok('carryPicks never crowns someone who never won a game', () => {
     }
     assert.ok(Object.keys(out.picks).length <= Object.keys(s.picks).length,
       't=' + t + ' more results after the edit than before');
+  }
+});
+
+/* ── Scores ──────────────────────────────────────────────────────────────── */
+ok('a score records, shows, and clears', () => {
+  let s = { names: ['A', 'B', 'C', 'D'], picks: {}, title: '', scores: {} };
+  s = setScore(s, 0, 0, ' 21 ', '15');
+  assert.deepEqual(scoreFor(s, 0, 0), { sa: '21', sb: '15' });
+  s = setScore(s, 0, 0, '', '');
+  assert.equal(scoreFor(s, 0, 0), null);
+  assert.equal(s.scores['0-0'], undefined);
+});
+ok('a score cannot land on a bye or an undecided pairing', () => {
+  let s = { names: ['A', 'B', 'C'], picks: {}, title: '', scores: {} };
+  s = setScore(s, 0, 0, '1', '0');          // match 0 is A vs bye
+  assert.deepEqual(s.scores, {});
+  s = setScore(s, 1, 0, '1', '0');          // final: A vs winner of B and C, undecided
+  assert.deepEqual(s.scores, {});
+});
+ok('a score hides when the pairing changes and returns when it does', () => {
+  let s = { names: ['A', 'B', 'C', 'D'], picks: {}, title: '', scores: {} };
+  s = setPick(s, 0, 0, 0);                  // A beats D
+  s = setPick(s, 0, 1, 1);                  // B beats C
+  s = setPick(s, 1, 0, 0);                  // final: A beats B
+  s = setScore(s, 1, 0, '21', '15');
+  assert.deepEqual(scoreFor(s, 1, 0), { sa: '21', sb: '15' });
+  s = setPick(s, 0, 1, 2);                  // rewrite: C beat B, the final is now A vs C
+  assert.equal(scoreFor(s, 1, 0), null, 'score for A vs B must not show for A vs C');
+  s = setPick(s, 0, 1, 1);                  // B advances again
+  s = setPick(s, 1, 0, 0);
+  assert.deepEqual(scoreFor(s, 1, 0), { sa: '21', sb: '15' }, 'the original pairing gets its score back');
+});
+ok('scores survive the codec, hostile ones are dropped', () => {
+  let s = { names: ['Ann', 'Ben'], picks: {}, title: '', scores: {} };
+  s = setPick(s, 0, 0, 1);
+  s = setScore(s, 0, 0, '19', '21');
+  const d = decodeBracket('#' + encodeBracket(s));
+  assert.deepEqual(d.scores['0-0'], [0, 1, '19', '21']);
+  const evil = sanitizeScores({
+    '0-0': [0, 1, 'x'.repeat(80), 'ok'],    // oversized score trimmed
+    '1-0': [0, 9, 'a', 'b'],                // entrant out of range
+    'zz': [0, 1, 'a', 'b'],                 // bad key
+    '2-0': [0, 1, 7, 'b'],                  // non-string score
+    '3-0': [1, 1, 'a', 'b'],                // playing yourself
+  }, 2);
+  assert.deepEqual(Object.keys(evil), ['0-0']);
+  assert.equal(evil['0-0'][2].length, 8);
+});
+ok('scores follow their people across an edit, side order fixed up', () => {
+  let s = { names: ['A', 'B', 'C', 'D'], picks: {}, title: '', scores: {} };
+  s = setPick(s, 0, 0, 0);                  // A beats D
+  s = setScore(s, 0, 0, '11', '7');         // A 11, D 7
+  const res = carryPicks(s, ['D', 'B', 'C', 'A']);  // A and D trade places
+  const out = res.state;
+  // A and D still meet in round 0 match 0, sides swapped
+  assert.equal(out.names[0], 'D');
+  assert.deepEqual(scoreFor(out, 0, 0), { sa: '7', sb: '11' }, 'D shows 7, A shows 11');
+});
+
+/* ── Arranging the draw ──────────────────────────────────────────────────── */
+ok('swapSeeds trades two places and keeps results between people who still meet', () => {
+  const before = played8();
+  const res = swapSeeds(before, 0, 7);      // A and H trade
+  assert.equal(res.state.names[0], 'H');
+  assert.equal(res.state.names[7], 'A');
+  assert.equal(res.kept + res.lost, 7, 'every old result accounted for');
+  const had = resultPairs(before).map(([w, l]) => before.names[w] + '>' + before.names[l]);
+  for (const [w, l] of resultPairs(res.state)) {
+    assert.ok(had.includes(res.state.names[w] + '>' + res.state.names[l]), 'invented result');
+  }
+});
+ok('swapSeeds rejects nonsense indexes untouched', () => {
+  const s = { names: ['A', 'B'], picks: {}, title: '', scores: {} };
+  assert.equal(swapSeeds(s, 0, 0).state, s);
+  assert.equal(swapSeeds(s, -1, 1).state, s);
+  assert.equal(swapSeeds(s, 0, 5).state, s);
+});
+ok('shuffleSeeds is a permutation and never invents results', () => {
+  let seed = 3;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const before = played8();
+  const res = shuffleSeeds(before, rnd);
+  assert.deepEqual(res.state.names.slice().sort(), before.names.slice().sort());
+  const had = resultPairs(before).map(([w, l]) => before.names[w] + '>' + before.names[l]);
+  for (const [w, l] of resultPairs(res.state)) {
+    assert.ok(had.includes(res.state.names[w] + '>' + res.state.names[l]), 'invented result');
   }
 });
 

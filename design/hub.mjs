@@ -191,7 +191,7 @@ const CATALOGUE = [
     ['secret-santa', 'Secret Santa', 'Draw names without the group-chat chaos', 'gift exchange christmas holiday office party'],
     ['wedding-timeline', 'Wedding Day Timeline', 'So nobody asks &ldquo;when is hair again?&rdquo;', 'wedding schedule vendors bridal party run of show'],
     ['seating-chart', 'Seating Chart', 'Tables, seats and who must not sit together', 'wedding reception banquet place cards floor plan'],
-    ['bracket-maker', 'Bracket Maker', 'Game night, settled properly', 'tournament elimination playoff league office pool'],
+    ['bracket-maker', 'Bracket Maker', 'Any matchup, settled properly, live', 'tournament elimination playoff league office pool sports team live scores basketball soccer cornhole pickleball'],
     ['wheel-picker', 'Wheel Picker', 'Spin to choose. No ads spinning back', 'random name picker classroom raffle prize chore'],
   ]],
   ['Paper &amp; Files',

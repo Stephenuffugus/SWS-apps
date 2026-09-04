@@ -33,12 +33,21 @@
   <p class="lede">Bracket Maker is a single-elimination bracket for game nights, office pools and cook-offs. It is free, carries no ads, and is made by Sky Wolf Studio.</p>
 
   <h2>Where your data goes</h2>
-  <p>Nowhere. The bracket title, every competitor name you type and every winner you tap is kept in this browser's localStorage under the key `bracket-maker`, and simultaneously inside this page's own URL # fragment, a bracket you opened from someone else's link is kept separately under `bracket-maker.visiting` so that tapping around in it can never overwrite your own tournament. This app also writes one shared key, <code>sws.prefs</code>, which holds your display settings (text size, contrast, theme) so they follow you across Sky Wolf Studio apps. It holds nothing personal and never leaves the device.</p>
-  <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach. We could not hand your data to anyone if we were asked for it, because we do not have it.</p>
+  <p>By default, nowhere. The bracket title, every competitor name you type, every winner you tap and every score you record is kept in this browser's localStorage under the key `bracket-maker`, and simultaneously inside this page's own URL # fragment, a bracket you opened from someone else's link is kept separately under `bracket-maker.visiting` so that tapping around in it can never overwrite your own tournament. This app also writes one shared key, <code>sws.prefs</code>, which holds your display settings (text size, contrast, theme) so they follow you across Sky Wolf Studio apps. It holds nothing personal and never leaves the device.</p>
+  <p>There is no upload, no server-side processing, no account, and no copy held anywhere we can reach, unless you use the one feature that says so on its face: <b>Go live</b>.</p>
+
+  <h2>Go live, the one exception</h2>
+  <p>Tapping Go live copies this one bracket, the event name, the entrant names, the results and the scores, into a single record in our database (Google Firebase, in a project run by Sky Wolf Studio), so that the live link can show new results to everyone holding it. While you are live, every change you record is sent there. Nothing else on this device is sent, ever.</p>
+  <ul>
+    <li>Anyone holding the live link can read that bracket. Nobody but this device can change it.</li>
+    <li><b>Stop sharing</b> deletes the record from the server. It is gone at that moment, not archived.</li>
+    <li>Going live uses a Firebase anonymous ID that this browser holds. No email, no name, no account, and we cannot connect it to you.</li>
+    <li>If you never tap Go live, this section never applies to you, and the app never talks to the database at all.</li>
+  </ul>
 
   <h2>How to check that for yourself</h2>
-  <p>Turn off Wi-Fi and mobile data, reload and run a whole tournament, it works, because the app is cached on your device by its service worker and has nowhere to phone home to. Look at your address bar as you tap winners: the bracket is visibly in the URL, which is the whole sharing mechanism, and there is nothing else.</p>
-  <p>If you would rather look directly: open your browser's developer tools, go to the Network tab, and use the app. You will see no requests while you work.</p>
+  <p>Turn off Wi-Fi and mobile data, reload and run a whole tournament, it works, because the app is cached on your device by its service worker and has nowhere to phone home to. Look at your address bar as you tap winners: the bracket is visibly in the URL, which is the whole snapshot-sharing mechanism.</p>
+  <p>If you would rather look directly: open your browser's developer tools, go to the Network tab, and use the app. You will see no requests while you work, until the moment you tap Go live or open somebody's live link, and then only to Google's Firebase endpoints, carrying the bracket you can already see.</p>
 
   <h2>What we do not do</h2>
   <ul>
@@ -52,7 +61,7 @@
   <p>The app asks for write-only clipboard access when you tap Copy link, most browsers show no prompt, and the app cannot read your clipboard, your device's share sheet, only when you tap Share, and only with the link you can already see, and only at the moment you use the feature that needs it. Your browser asks you, not us, and you can refuse, the rest of the app keeps working.</p>
 
   <h2>Who else is involved</h2>
-  <ul><li>Stripe, only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.</li></ul>
+  <ul><li>Stripe, only if you tap the tip jar, which opens buy.stripe.com in a new tab. We never see or store card details.</li><li>Firebase Hosting (Google) serves the app's static files and keeps ordinary short-lived web-server logs such as IP addresses.</li><li>Firebase Firestore (Google) stores live brackets, only while their owner is sharing them, as described above.</li></ul>
 
   <h2>Tips</h2>
   <p>The tip jar links out to a checkout page hosted by the payment provider on their own site. We never see or store card details. Tipping changes nothing in the app, every feature is free either way.</p>
@@ -73,7 +82,7 @@
   <hr>
   <footer>
     <p>Sky Wolf Studio · SWS Strategic Media LLC · <a href="mailto:stephenfurpahs@gmail.com">stephenfurpahs@gmail.com</a></p>
-    <p>Last updated 2026-08-21.</p>
+    <p>Last updated 2026-09-04.</p>
   </footer>
 </main>
 </body>

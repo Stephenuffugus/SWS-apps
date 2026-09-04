@@ -2,6 +2,7 @@
 import {
   entrantInfo, roundCount, nextPow2, contender, winnerOf, setPick,
   champion, encodeBracket, decodeBracket, carryPicks, sameBracket,
+  setScore, scoreFor, sanitizeScores, swapSeeds, shuffleSeeds,
   MAX_ENTRANTS,
 } from './helpers.js';
 
@@ -44,21 +45,48 @@ function savedFlag(text) {
 
 const KEY = 'bracket-maker';
 const KEY_VISIT = 'bracket-maker.visiting';
-const clone = (s) => ({ names: s.names.slice(), picks: { ...s.picks }, title: s.title || '' });
+const KEY_LIVE = 'bracket-maker.live';
+const LIVE_RE = /^#live=([A-Za-z0-9_-]{8,64})$/;
+const blank = () => ({ names: [], picks: {}, title: '', scores: {} });
+const clone = (s) => ({
+  names: s.names.slice(), picks: { ...s.picks },
+  title: s.title || '', scores: { ...(s.scores || {}) },
+});
 
-let state = { names: [], picks: {}, title: '' };
+let state = blank();
 let mine = null;        // the visitor's own saved bracket, while viewing someone else's
-let mode = 'mine';      // 'mine' | 'visiting'
+let mode = 'mine';      // 'mine' | 'visiting' | 'liveview'
 let lastHash = '';
-let shared = false;     // the link has been handed out at least once
+let shared = false;     // a snapshot link has been handed out at least once
 let linkStale = false;
+
+/* Live sharing, owner side. `live.id` is the Firestore doc this device
+   controls; the module that talks to the server loads lazily so the app
+   stays fully on-device until the feature is actually used. */
+let live = { id: null };
+let liveStatus = 'off'; // off | starting | on | sending | offline | lost
+let pushTimer = null;
+let pushBusy = false;
+let pushAgain = false;
+
+/* Live sharing, viewer side. */
+let view = null;        // { id, unsub, status, updatedAt }
+
+/* Arrange mode: tap two names in the first round and they trade places. */
+let arrange = false;
+let arrSel = null;
+
+let scoreAt = null;     // { r, m } while the score dialog is open
 
 /* ── Storage ─────────────────────────────────────────────────────────────
    There used to be exactly one slot, and load() preferred the hash, so
    opening a friend's link and tapping once wrote their bracket over yours.
    A visited bracket now lives in its own key and in the URL; the key holding
-   YOUR tournament is never written until you say so. */
+   YOUR tournament is never written until you say so. A live bracket being
+   watched writes nothing at all: the server copy is the truth and this
+   device holds no claim on it. */
 function save() {
+  if (mode === 'liveview') return;
   try {
     localStorage.setItem(mode === 'visiting' ? KEY_VISIT : KEY, JSON.stringify(state));
   } catch (e) {}
@@ -67,23 +95,55 @@ function save() {
   } catch (e) {}
   lastHash = location.hash;
   savedFlag(mode === 'visiting' ? 'Kept in the link' : 'Saved on this device');
+  if (mode === 'mine' && live.id) schedulePush();
 }
 
 function readStored(key) {
   try {
     const d = JSON.parse(localStorage.getItem(key));
     if (d && Array.isArray(d.names)) {
+      const names = d.names.filter((x) => typeof x === 'string').slice(0, MAX_ENTRANTS);
       return {
-        names: d.names.filter((x) => typeof x === 'string').slice(0, MAX_ENTRANTS),
+        names,
         picks: d.picks && typeof d.picks === 'object' ? d.picks : {},
         title: typeof d.title === 'string' ? d.title : '',
+        scores: sanitizeScores(d.scores, names.length),
       };
     }
   } catch (e) {}
   return null;
 }
 
+function readLive() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY_LIVE));
+    if (d && typeof d.id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(d.id)) return { id: d.id };
+  } catch (e) {}
+  return { id: null };
+}
+
 function load() {
+  live = readLive();
+  const lm = location.hash.match(LIVE_RE);
+  if (lm) {
+    lastHash = location.hash;
+    if (live.id === lm[1]) {
+      /* The owner opened their own live link on the device that runs it:
+         they are not a spectator of themselves, stay the organiser. */
+      const stored = readStored(KEY);
+      if (stored) state = stored;
+      mode = 'mine';
+      mine = null;
+      try { history.replaceState(null, '', state.names.length ? '#' + encodeBracket(state) : location.pathname); } catch (e) {}
+      lastHash = location.hash;
+      return;
+    }
+    mode = 'liveview';
+    mine = readStored(KEY);
+    state = blank();
+    return;
+  }
+
   const stored = readStored(KEY);
   const raw = location.hash.replace(/^#/, '');
   const fromHash = raw ? decodeBracket(location.hash) : null;
@@ -126,9 +186,12 @@ function renderBracket() {
   box.replaceChildren();
   $('champ').textContent = '';
 
+  const ro = mode === 'liveview';
+  box.classList.toggle('arrmode', arrange && !ro);
+
   const n = state.names.length;
   $('emptyState').hidden = n >= 2;
-  $('playHint').hidden = n < 2;
+  $('playHint').hidden = n < 2 || ro || arrange;
   if (n < 2) { $('scrollCue').hidden = true; return; }
 
   const rounds = roundCount(n);
@@ -153,7 +216,7 @@ function renderBracket() {
       const b = contender(state, r, m, 1);
       if (r === 0 && a === null && b === null) continue;
       const w = winnerOf(state, r, m);
-      const live = a !== null && b !== null;
+      const liveMatch = a !== null && b !== null;
 
       const slot = (idx, sideIdx) => {
         if (idx === null) {
@@ -166,11 +229,24 @@ function renderBracket() {
         }
         const isWin = w === idx;
         const label2 = state.names[idx];
-        if (!live) {
+        if (arrange && !ro && r === 0) {
+          const selected = arrSel === idx;
+          return el('button', {
+            type: 'button',
+            class: 'slot arr' + (selected ? ' sel' : '') + (isWin ? ' winner' : ''),
+            'aria-pressed': String(selected),
+            'data-fk': 'a-' + idx,
+            onclick: () => arrPick(idx),
+          },
+            el('span', { class: 'seed', 'aria-hidden': 'true', text: String(idx + 1) }),
+            el('span', { class: 'nm', text: label2 }),
+            el('span', { class: 'sr-only', text: ' (seed ' + (idx + 1) + ')' + (selected ? ', selected, now tap the name to trade places with' : ', tap two names and they trade places') }));
+        }
+        if (!liveMatch || ro) {
           return el('span', { class: 'slot' + (isWin ? ' winner' : '') },
             el('span', { class: 'seed', 'aria-hidden': 'true', text: String(idx + 1) }),
             el('span', { class: 'nm', text: label2 }),
-            el('span', { class: 'sr-only', text: ' (seed ' + (idx + 1) + ')' + (isWin ? ', advanced on a bye' : ', waiting for an opponent') }));
+            el('span', { class: 'sr-only', text: ' (seed ' + (idx + 1) + ')' + (isWin ? (liveMatch ? ', advanced' : ', advanced on a bye') : (liveMatch ? '' : ', waiting for an opponent')) }));
         }
         return el('button', {
           type: 'button',
@@ -186,10 +262,38 @@ function renderBracket() {
 
       const nameOf = (idx) => idx === null ? (r === 0 ? 'a bye' : 'the winner of an earlier game') : state.names[idx];
       const groupLabel = label + ', match ' + (m + 1) + ': ' + nameOf(a) + ' versus ' + nameOf(b);
-      list.append(el('div', {
+      const matchEl = el('div', {
         class: 'match', role: 'group', 'aria-label': groupLabel,
         'data-r': String(r), 'data-m': String(m),
-      }, slot(a, 0), slot(b, 1)));
+      }, slot(a, 0), slot(b, 1));
+
+      /* The score strip. A finished game can carry a score, any sport's,
+         since it is just two short strings, "21" and "15", "3" and "2". */
+      if (!arrange && liveMatch && w !== null) {
+        const sc = scoreFor(state, r, m);
+        if (ro) {
+          if (sc) {
+            matchEl.classList.add('scored');
+            matchEl.append(el('div', { class: 'mfoot' },
+              el('span', { class: 'scoretext tnum', text: 'Score ' + sc.sa + '-' + sc.sb },
+                el('span', { class: 'sr-only', text: ', ' + nameOf(a) + ' ' + sc.sa + ', ' + nameOf(b) + ' ' + sc.sb }))));
+          }
+        } else {
+          matchEl.classList.add('scored');
+          matchEl.append(el('div', { class: 'mfoot' },
+            el('button', {
+              type: 'button',
+              class: 'scorebtn' + (sc ? '' : ' addscore'),
+              'data-fk': 's-' + r + '-' + m,
+              'aria-label': (sc
+                ? 'Edit the score, ' + nameOf(a) + ' ' + sc.sa + ', ' + nameOf(b) + ' ' + sc.sb
+                : 'Add a score') + '. ' + groupLabel,
+              onclick: () => openScore(r, m, a, b),
+            }, sc ? 'Score ' + sc.sa + '-' + sc.sb : '+ Score')));
+        }
+      }
+
+      list.append(matchEl);
     }
     inner.append(col);
   }
@@ -316,9 +420,62 @@ function renderVisitNotice() {
   if (showing) $('mineName').textContent = (mine.title || '').trim() || mine.names.length + ' entrants, starting with ' + mine.names[0];
 }
 
+function renderLiveNotice() {
+  const box = $('liveNotice');
+  if (mode !== 'liveview') { box.hidden = true; return; }
+  box.hidden = false;
+  const t = $('liveNoticeText');
+  const st = view ? view.status : 'connecting';
+  $('viewDot').hidden = st !== 'on';
+  if (st === 'connecting') t.textContent = 'Connecting to the live bracket…';
+  else if (st === 'on') t.textContent = 'This bracket is live. When the organiser records a result, it shows up here by itself' + agoText();
+  else if (st === 'gone') t.textContent = 'The organiser stopped sharing this bracket, so the live copy is gone.';
+  else if (st === 'offline') t.textContent = 'Cannot reach the live bracket. Check the connection, then reload this page.';
+  else t.textContent = 'Something went wrong following the live bracket. Reload this page to try again.';
+  $('liveMine').hidden = !(mine && mine.names.length);
+  $('liveKeep').hidden = !state.names.length;
+}
+
+function agoText() {
+  if (!view || !view.updatedAt) return '.';
+  const s = Math.max(0, Math.round((Date.now() - view.updatedAt) / 1000));
+  if (s < 8) return '. Updated just now.';
+  if (s < 90) return '. Updated ' + s + ' seconds ago.';
+  const mnt = Math.round(s / 60);
+  return '. Updated ' + mnt + (mnt === 1 ? ' minute ago.' : ' minutes ago.');
+}
+
+function renderShare() {
+  const on = !!live.id;
+  $('liveBtn').textContent = on ? 'Copy live link' : 'Go live';
+  $('liveRow').hidden = !on && liveStatus !== 'lost';
+  $('liveStop').hidden = !on;
+  $('liveDot').hidden = !(on && (liveStatus === 'on' || liveStatus === 'sending' || liveStatus === 'starting'));
+  const s = $('liveStatus');
+  if (!on) {
+    s.textContent = liveStatus === 'lost' ? 'The old live link is dead. Go live again for a fresh one.' : '';
+  } else if (liveStatus === 'starting' || liveStatus === 'sending') {
+    s.textContent = 'Live, sending the latest change…';
+  } else if (liveStatus === 'offline') {
+    s.textContent = 'Live, but offline right now. The latest results send themselves when the connection returns.';
+  } else {
+    s.textContent = 'Live. Everyone holding the link sees results as you record them.';
+  }
+}
+
+function renderControls() {
+  const owner = mode !== 'liveview';
+  const enough = state.names.length >= 2;
+  $('arrangeRow').hidden = !owner || !enough;
+  $('arrangeHint').hidden = !arrange || !owner || !enough;
+}
+
 function update() {
   renderTitle();
   renderVisitNotice();
+  renderLiveNotice();
+  renderShare();
+  renderControls();
   renderBracket();
 }
 
@@ -328,19 +485,19 @@ function pick(r, m, idx, a, b) {
   state = setPick(state, r, m, idx);
   save();
   renderBracket();
-  if (shared && !linkStale) {
+  if (!live.id && shared && !linkStale) {
     linkStale = true;
-    toast('Result recorded. The link you sent is a snapshot, so it does not show this yet.', {
-      ms: 7000,
-      action: { label: 'Copy a fresh link', onAction: doShare },
+    toast('Result recorded. Links you copied earlier are snapshots and will not show it, but a live link updates itself.', {
+      ms: 8000,
+      action: { label: 'Go live', onAction: goLive },
     });
   }
 }
 
-async function copyLink(url, okMsg) {
+async function copyLink(url, okMsg, opts) {
   try {
     await navigator.clipboard.writeText(url);
-    shared = true; linkStale = false;
+    if (!opts || !opts.live) { shared = true; linkStale = false; }
     toast(okMsg);
     return true;
   } catch (e) {
@@ -366,6 +523,248 @@ async function doShare() {
   copyLink(url, 'Snapshot link copied, it carries every entrant and every result so far');
 }
 
+/* ── Live sharing, owner side ────────────────────────────────────────────── */
+function liveUrl() { return location.origin + location.pathname + '#live=' + live.id; }
+
+async function loadLive() {
+  const mod = await import('./live.js');
+  return mod.init();
+}
+
+function setLiveStatus(s) {
+  liveStatus = s;
+  renderShare();
+}
+
+async function goLive() {
+  if (state.names.length < 2) { toast('Add the entrants first'); return; }
+  if (live.id) { shareLiveLink(); return; }
+  const btn = $('liveBtn');
+  btn.disabled = true;
+  setLiveStatus('starting');
+  try {
+    const api = await loadLive();
+    await api.ensureSignedIn();
+    live.id = await api.createLive(encodeBracket(state));
+    try { localStorage.setItem(KEY_LIVE, JSON.stringify({ id: live.id })); } catch (e) {}
+    setLiveStatus('on');
+    shareLiveLink();
+  } catch (e) {
+    live.id = null;
+    setLiveStatus('off');
+    toast('Could not reach the server. Check the connection and try again, or copy a snapshot link instead.', { assertive: true });
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function shareLiveLink() {
+  const url = liveUrl();
+  const name = (state.title || '').trim() || 'Bracket';
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: name, text: name + ', follow the bracket live', url });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  copyLink(url, 'Live link copied. Everyone holding it sees results as you record them.', { live: true });
+}
+
+function schedulePush() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(doPush, 600);
+}
+
+async function doPush() {
+  if (!live.id || mode !== 'mine') return;
+  if (pushBusy) { pushAgain = true; return; }
+  pushBusy = true;
+  setLiveStatus('sending');
+  let api = null;
+  try {
+    api = await loadLive();
+    await api.ensureSignedIn();
+    await api.pushLive(live.id, encodeBracket(state));
+    setLiveStatus('on');
+  } catch (e) {
+    if (api && (api.isPermissionDenied(e) || api.isNotFound(e))) {
+      /* The doc is gone, or this device no longer owns it: clearing browser
+         data mints a new anonymous id and the old one cannot be recovered.
+         The link the crowd holds cannot be revived, so say so plainly. */
+      live.id = null;
+      try { localStorage.removeItem(KEY_LIVE); } catch (e2) {}
+      setLiveStatus('lost');
+      toast('The live link stopped working, this device no longer controls it. Go live again for a fresh link.', { assertive: true, ms: 9000 });
+    } else {
+      setLiveStatus('offline');
+    }
+  } finally {
+    pushBusy = false;
+    if (pushAgain) { pushAgain = false; doPush(); }
+  }
+}
+
+/* Stopping deletes the server copy, which kills every handed-out live link
+   with no undo possible, so the button arms on the first tap instead of
+   trusting a toast to carry an irreversible action. */
+let stopArmedAt = 0;
+async function stopLive() {
+  if (!live.id) return;
+  const btn = $('liveStop');
+  if (Date.now() - stopArmedAt > 6000) {
+    stopArmedAt = Date.now();
+    btn.textContent = 'Tap again to stop';
+    toast('Stopping deletes the bracket from the server. Live links you handed out stop working, and that cannot be undone.', { ms: 6000 });
+    setTimeout(() => {
+      if (Date.now() - stopArmedAt >= 5900) btn.textContent = 'Stop sharing';
+    }, 6100);
+    return;
+  }
+  stopArmedAt = 0;
+  btn.disabled = true;
+  try {
+    const api = await loadLive();
+    await api.ensureSignedIn();
+    await api.deleteLive(live.id);
+    live.id = null;
+    try { localStorage.removeItem(KEY_LIVE); } catch (e) {}
+    setLiveStatus('off');
+    toast('Live sharing stopped, the copy on the server is deleted. Your bracket is still right here.');
+  } catch (e) {
+    toast('Could not reach the server to stop sharing. Try again when the connection is back.', { assertive: true });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Stop sharing';
+    renderShare();
+  }
+}
+
+/* ── Live sharing, viewer side ───────────────────────────────────────────── */
+async function connectLiveView(id) {
+  document.body.classList.add('liveview');
+  renderLiveNotice();
+  try {
+    const api = await loadLive();
+    await api.ensureSignedIn();
+    if (view && view.unsub) { try { view.unsub(); } catch (e) {} }
+    view = { id, unsub: null, status: 'connecting', updatedAt: 0 };
+    renderLiveNotice();
+    view.unsub = api.watchLive(id, (d) => {
+      if (mode !== 'liveview' || !view || view.id !== id) return;
+      if (!d) { view.status = 'gone'; renderLiveNotice(); return; }
+      const incoming = decodeBracket(d.data);
+      if (!incoming || !incoming.names.length) return;
+      state = incoming;
+      view.status = 'on';
+      view.updatedAt = d.updatedAt && d.updatedAt.toMillis ? d.updatedAt.toMillis() : Date.now();
+      update();
+    }, () => {
+      if (view && view.id === id) { view.status = 'error'; renderLiveNotice(); }
+    });
+  } catch (e) {
+    view = { id, unsub: null, status: 'offline', updatedAt: 0 };
+    renderLiveNotice();
+  }
+}
+
+function leaveLiveView() {
+  if (view && view.unsub) { try { view.unsub(); } catch (e) {} }
+  view = null;
+  document.body.classList.remove('liveview');
+  mode = 'mine';
+  mine = null;
+  state = readStored(KEY) || blank();
+  try {
+    history.replaceState(null, '', state.names.length ? '#' + encodeBracket(state) : location.pathname);
+  } catch (e) {}
+  lastHash = location.hash;
+  update();
+  syncFields();
+}
+
+function enterLiveView(id) {
+  if (view && view.unsub) { try { view.unsub(); } catch (e) {} }
+  view = null;
+  arrange = false;
+  arrSel = null;
+  mode = 'liveview';
+  mine = readStored(KEY);
+  state = blank();
+  update();
+  syncFields();
+  connectLiveView(id);
+}
+
+/* ── Arranging ───────────────────────────────────────────────────────────── */
+function lostBit(lost) {
+  if (!lost) return '';
+  return ', ' + lost + (lost === 1 ? ' result no longer fits' : ' results no longer fit');
+}
+
+function arrPick(idx) {
+  if (arrSel === null) { arrSel = idx; renderBracket(); return; }
+  if (arrSel === idx) { arrSel = null; renderBracket(); return; }
+  const i = arrSel;
+  arrSel = null;
+  const before = clone(state);
+  const nameA = state.names[i];
+  const nameB = state.names[idx];
+  const res = swapSeeds(state, i, idx);
+  state = res.state;
+  save();
+  syncFields();
+  update();
+  undoToast(nameA + ' and ' + nameB + ' traded places' + lostBit(res.lost), () => {
+    state = before;
+    save();
+    syncFields();
+    update();
+  });
+}
+
+function toggleArrange(force) {
+  arrange = force === undefined ? !arrange : !!force;
+  arrSel = null;
+  const btn = $('arrangeBtn');
+  btn.setAttribute('aria-pressed', String(arrange));
+  btn.textContent = arrange ? 'Done arranging' : 'Arrange matchups';
+  btn.classList.toggle('primary', arrange);
+  renderControls();
+  renderBracket();
+}
+
+/* ── Scores ──────────────────────────────────────────────────────────────── */
+function openScore(r, m, a, b) {
+  scoreAt = { r, m };
+  $('scoreLabelA').textContent = state.names[a];
+  $('scoreLabelB').textContent = state.names[b];
+  const sc = scoreFor(state, r, m);
+  $('scoreA').value = sc ? sc.sa : '';
+  $('scoreB').value = sc ? sc.sb : '';
+  const matches = nextPow2(state.names.length) / Math.pow(2, r + 1);
+  $('scoreMatch').textContent = roundLabel(matches, r) + ': ' + state.names[a] + ' versus ' + state.names[b];
+  const d = $('scoreDlg');
+  try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+  try { $('scoreA').focus(); } catch (e) {}
+}
+
+function closeScore() {
+  scoreAt = null;
+  const d = $('scoreDlg');
+  try { d.close(); } catch (e) { d.removeAttribute('open'); }
+}
+
+function commitScore(clear) {
+  if (!scoreAt) { closeScore(); return; }
+  const { r, m } = scoreAt;
+  state = clear ? setScore(state, r, m, '', '') : setScore(state, r, m, $('scoreA').value, $('scoreB').value);
+  closeScore();
+  save();
+  renderBracket();
+}
+
 /* Undo baseline for entrant-list edits. One keystroke is one edit, so a burst
    of typing collapses onto the state the user started from. */
 let editBaseline = null;
@@ -382,6 +781,7 @@ function onEntrantsInput(value) {
   state = res.state;
   save();
   renderTitle();
+  renderControls();
   renderBracket();
 
   if (res.lost > 0) {
@@ -412,6 +812,54 @@ function wire() {
   $('entrants').addEventListener('input', (ev) => onEntrantsInput(ev.target.value));
 
   $('shareBtn').addEventListener('click', doShare);
+  $('liveBtn').addEventListener('click', goLive);
+  $('liveStop').addEventListener('click', stopLive);
+
+  $('arrangeBtn').addEventListener('click', () => toggleArrange());
+  $('shuffleBtn').addEventListener('click', () => {
+    if (state.names.length < 2) { toast('Add the entrants first'); return; }
+    const before = clone(state);
+    const res = shuffleSeeds(state);
+    state = res.state;
+    save();
+    syncFields();
+    update();
+    undoToast('Draw shuffled' + lostBit(res.lost), () => {
+      state = before;
+      save();
+      syncFields();
+      update();
+    });
+  });
+
+  $('scoreSave').addEventListener('click', () => commitScore(false));
+  $('scoreClear').addEventListener('click', () => commitScore(true));
+  $('scoreCancel').addEventListener('click', closeScore);
+  for (const id of ['scoreA', 'scoreB']) {
+    $(id).addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); commitScore(false); }
+    });
+  }
+
+  $('liveMine').addEventListener('click', () => {
+    leaveLiveView();
+    toast('Back to your own bracket');
+  });
+  $('liveKeep').addEventListener('click', () => {
+    if (!view || !state.names.length) return;
+    const id = view.id;
+    const snap = clone(state);
+    const previous = readStored(KEY);
+    try { localStorage.setItem(KEY, JSON.stringify(snap)); } catch (e) {}
+    leaveLiveView();
+    undoToast('Saved as your bracket. This copy stops following the live one.', () => {
+      try {
+        if (previous) localStorage.setItem(KEY, JSON.stringify(previous));
+        else localStorage.removeItem(KEY);
+      } catch (e) {}
+      location.hash = 'live=' + id;
+    });
+  });
 
   $('printBtn').addEventListener('click', () => {
     if (state.names.length < 2) { toast('Add the entrants first'); return; }
@@ -423,7 +871,7 @@ function wire() {
     const had = Object.keys(state.picks).length;
     if (!had) { toast('No results to clear'); return; }
     const snap = clone(state);
-    state = { ...state, picks: {} };
+    state = { ...state, picks: {}, scores: {} };
     save();
     renderBracket();
     undoToast(had === 1 ? '1 result cleared' : had + ' results cleared', () => {
@@ -467,20 +915,50 @@ function wire() {
       save();
       update();
     });
+    syncFields();
   });
 
   $('bracket').addEventListener('scroll', updateScrollCues, { passive: true });
   window.addEventListener('resize', () => { drawLinks(); updateScrollCues(); });
   window.addEventListener('beforeprint', preparePrint);
+  window.addEventListener('online', () => {
+    if (live.id && mode === 'mine' && liveStatus === 'offline') doPush();
+  });
 
   /* An installed PWA opens a link in the tab it already has. app.js used to
      read location.hash once, so the URL changed and the old bracket stayed. */
   window.addEventListener('hashchange', () => {
     if (location.hash === lastHash) return;
+
+    const lm = location.hash.match(LIVE_RE);
+    if (lm) {
+      lastHash = location.hash;
+      if (live.id === lm[1]) {
+        toast('That is your own live link, and this device is already running it.');
+        try { history.replaceState(null, '', state.names.length ? '#' + encodeBracket(state) : location.pathname); } catch (e) {}
+        lastHash = location.hash;
+        return;
+      }
+      enterLiveView(lm[1]);
+      return;
+    }
+
+    if (mode === 'liveview') {
+      /* The live hash went away: back button, or a snapshot link opened over
+         the watching tab. Land on your own bracket, then let a snapshot link
+         take its normal course below. */
+      if (view && view.unsub) { try { view.unsub(); } catch (e) {} }
+      view = null;
+      document.body.classList.remove('liveview');
+      mode = 'mine';
+      mine = null;
+      state = readStored(KEY) || blank();
+    }
+
     const incoming = decodeBracket(location.hash);
     lastHash = location.hash;
-    if (!incoming || !incoming.names.length) return;
-    if (sameBracket(incoming, state)) return;
+    if (!incoming || !incoming.names.length) { update(); syncFields(); return; }
+    if (sameBracket(incoming, state)) { update(); syncFields(); return; }
     const previous = { state: clone(state), mode, mine: mine ? clone(mine) : null };
     if (mode === 'mine' && state.names.length) mine = clone(state);
     state = incoming;
@@ -590,8 +1068,17 @@ function init() {
     t.classList.remove('hidden');
   }
   load();
+  if (live.id) liveStatus = 'on';
   syncFields();
   update();
+  if (mode === 'liveview') {
+    const lm = lastHash.match(LIVE_RE);
+    if (lm) connectLiveView(lm[1]);
+  }
+  /* The "updated N minutes ago" line drifts if nobody touches anything. */
+  setInterval(() => {
+    if (mode === 'liveview' && view && view.status === 'on') renderLiveNotice();
+  }, 30000);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
@@ -602,9 +1089,18 @@ $('qrClose').addEventListener('click', () => {
   const d = $('qrDlg');
   try { d.close(); } catch (e) { d.removeAttribute('open'); }
 });
-$('qrCopy').addEventListener('click', () => copyLink($('qrUrl').value, 'Link copied, paste it into the group chat'));
+$('qrCopy').addEventListener('click', () => {
+  const url = $('qrUrl').value;
+  copyLink(url, 'Link copied, paste it into the group chat', { live: url.indexOf('#live=') !== -1 });
+});
 $('qrBtn').addEventListener('click', () => {
   if (state.names.length < 2) { toast('Add the entrants first'); return; }
-  save();
-  showQr(location.href);
+  if (live.id && mode === 'mine') {
+    $('qrTitle').textContent = 'Scan to follow this bracket live';
+    showQr(liveUrl());
+  } else {
+    $('qrTitle').textContent = 'Scan to open this bracket';
+    save();
+    showQr(location.href);
+  }
 });

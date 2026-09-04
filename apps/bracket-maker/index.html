@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="canonical" href="https://skywolfstudio.com/bracket-maker/">
-<title>Free Bracket Maker: Tournament Brackets, No Sign-Up</title>
-<meta name="description" content="Single-elimination brackets for game nights, office pools, and cook-offs. Tap winners, share the link, print it. No accounts, no ads.">
-<meta property="og:title" content="Free Bracket Maker: Tournament Brackets, No Sign-Up">
-<meta property="og:description" content="Single-elimination brackets for game nights, office pools, and cook-offs. Tap winners, share the link, print it. No accounts, no ads.">
+<title>Free Bracket Maker: Live Tournament Brackets, Any Sport, No Sign-Up</title>
+<meta name="description" content="Run a bracket for any sport or showdown: basketball, cornhole, pickleball, game night. Tap winners, add scores, arrange the matchups, and share one live link that updates for everyone. No accounts, no ads.">
+<meta property="og:title" content="Free Bracket Maker: Live Tournament Brackets, Any Sport, No Sign-Up">
+<meta property="og:description" content="Run a bracket for any sport or showdown: basketball, cornhole, pickleball, game night. Tap winners, add scores, arrange the matchups, and share one live link that updates for everyone. No accounts, no ads.">
 <meta property="og:image" content="https://skywolfstudio.com/bracket-maker/marketing/stripe-thumbnail.png">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#fdf7ea" media="(prefers-color-scheme: light)">
@@ -1491,6 +1491,58 @@ button.slot{cursor:pointer}
 .match span.slot{color:var(--ink-2); cursor:default}
 .match span.slot.tbd{font-style:italic}
 
+/* ── Scores ────────────────────────────────────────────────────────────── */
+/* A finished game grows a third row: the score, or the offer of one. */
+.match .mfoot{border-top:1px solid var(--line-2)}
+.match.scored .slot + .slot{border-radius:0}
+.scorebtn{
+  display:flex; align-items:center; justify-content:center; gap:var(--s1);
+  width:100%; min-height:32px;
+  padding:var(--s1) var(--s3);
+  border:0; background:none; cursor:pointer;
+  color:var(--ink-2); font:inherit; font-size:var(--t-xs); font-weight:600;
+  border-radius:0 0 calc(var(--r-sm) - 1px) calc(var(--r-sm) - 1px);
+}
+.scorebtn:hover{color:var(--ink); background:var(--surface)}
+.scorebtn.addscore{color:var(--ink-3); font-weight:500}
+.scorebtn:focus-visible{position:relative; z-index:2}
+.scoretext{
+  display:block; width:100%; text-align:center;
+  padding:var(--s1) var(--s3);
+  color:var(--ink-2); font-size:var(--t-xs); font-weight:600;
+}
+
+/* ── Arrange mode ──────────────────────────────────────────────────────── */
+/* First-round names become movable pieces; later rounds step back so the eye
+   goes where the hands can. */
+.arrmode .round:not(:first-child){opacity:.4}
+.match .slot.arr{outline:1.5px dashed var(--accent); outline-offset:-4px}
+.match .slot.arr.sel{background:var(--accent-soft); outline-style:solid}
+.match .slot.arr.sel .nm::after{content:' ⇄'; color:var(--accent-deep)}
+
+/* ── Live sharing ──────────────────────────────────────────────────────── */
+.livedot{
+  display:inline-block; width:9px; height:9px; flex:none;
+  border-radius:50%; background:var(--pos);
+  margin-right:var(--s1);
+  animation:livepulse 1.8s var(--ease) infinite;
+}
+@keyframes livepulse{50%{opacity:.35}}
+.liverow{
+  display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap;
+  margin-top:var(--s3);
+}
+/* display:flex and display:inline-block beat the browser's [hidden] rule, so
+   without this the dot and the row show before anyone ever goes live. */
+.liverow[hidden],.livedot[hidden]{display:none !important}
+.livestatus{font-size:var(--t-sm); color:var(--ink-2); flex:1 1 14rem; min-width:0}
+#liveNotice p{display:flex; align-items:baseline; gap:var(--s1)}
+#liveNotice .row{gap:var(--s2)}
+#liveNotice .row > *{flex:0 0 auto}
+/* Watching someone's live bracket: the organiser tools mean nothing here. */
+body.liveview .owneronly{display:none}
+body.liveview .empty{display:none}
+
 /* The base only makes .printonly visible inside @media print; it never hides
    it on screen. */
 .printhead{display:none}
@@ -1593,6 +1645,10 @@ button.slot{cursor:pointer}
   .match .slot.winner .nm::after{content:' \2713'}
   .match .slot.winner .seed{color:#000}
   .match span.slot{color:#333}
+  /* Scores print; the offer of one does not. */
+  .match .mfoot{border-top:1px solid #bbb}
+  .scorebtn.addscore{display:none !important}
+  .scorebtn,.scoretext{color:#000 !important; background:transparent !important}
 }
 </style>
 <style id="bmPageStyle"></style>
@@ -1611,11 +1667,11 @@ button.slot{cursor:pointer}
 
   <main id="main">
 
-  <section class="card noprint">
+  <section class="card noprint owneronly">
     <h2>Set up the bracket</h2>
     <p class="trust">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>
-      <span><b>No server, no account, no ads.</b> Entrant names, results and the event name are kept in this browser and packed into the link you copy, nothing is uploaded. Whoever you send that link to can read the whole bracket, so send it the way you would hand over the sheet of paper.</span>
+      <span><b>No account, no ads.</b> Entrant names, results and the event name are kept in this browser and packed into any snapshot link you copy, nothing is uploaded. <b>Go live</b> is the one exception, and it is a choice: it puts this one bracket on our server so the link can update for everyone, and Stop sharing deletes it again. Anyone holding either kind of link can read the whole bracket, so send it the way you would hand over the sheet of paper.</span>
     </p>
 
     <label class="f"><span>Event name</span>
@@ -1627,13 +1683,21 @@ button.slot{cursor:pointer}
 Dad's 'Famous' Five-Alarm
 Office Microwave Special
 The Vegan Dark Horse"></textarea></label>
-    <p class="hint" id="entrantsHint">2 to 32 entrants, up to 40 characters each. Odd numbers get byes, seeded properly, the top two can only meet in the final. Fix a typo any time: results stay put.</p>
+    <p class="hint" id="entrantsHint">2 to 32 entrants, up to 40 characters each, teams or people, any sport. Odd numbers get byes, seeded properly, the top two can only meet in the final. Fix a typo any time: results stay put. Not happy with who plays whom? Arrange matchups under the bracket moves anyone anywhere.</p>
     <p id="entrantCount">No entrants yet</p>
     <p class="warn" id="capWarn" hidden></p>
     <p class="savedrow"><span data-saved-flag></span></p>
   </section>
 
   <section class="card" id="outCard">
+    <div class="warn noprint" id="liveNotice" hidden>
+      <p><span class="livedot" id="viewDot" aria-hidden="true" hidden></span><span id="liveNoticeText">Connecting to the live bracket…</span></p>
+      <div class="row">
+        <button class="btn small" id="liveMine" type="button" hidden>Open my own bracket</button>
+        <button class="btn small ghost" id="liveKeep" type="button" hidden>Keep a copy of this one</button>
+      </div>
+    </div>
+
     <div class="warn noprint" id="visitNotice" hidden>
       <p>You are looking at a bracket someone sent you. Your own, <b id="mineName"></b>, is still saved on this device and has not been touched.</p>
       <div class="row">
@@ -1660,22 +1724,33 @@ The Vegan Dark Horse"></textarea></label>
       <div class="bracket" id="bracket" role="group" aria-label="Bracket"></div>
     </div>
     <p class="hint scrollcue noprint" id="scrollCue" hidden>Later rounds are off to the right, swipe or scroll sideways.</p>
-    <p class="hint noprint" id="playHint" hidden>Tap a name to advance them. Tap the other name to change your mind, later rounds adjust honestly.</p>
+    <p class="hint noprint" id="playHint" hidden>Tap a name to advance them. Tap the other name to change your mind, later rounds adjust honestly. Tap Score on a finished game to record the score, any sport's.</p>
+    <div class="row noprint" id="arrangeRow" hidden>
+      <button class="btn small" id="arrangeBtn" type="button" aria-pressed="false">Arrange matchups</button>
+      <button class="btn small ghost" id="shuffleBtn" type="button">Shuffle the draw</button>
+    </div>
+    <p class="hint noprint" id="arrangeHint" hidden>Tap one name in the first round, then another: they trade places in the draw. Results between people who still meet each other stay put. Tap Done arranging when the matchups look right.</p>
   </section>
 
-  <section class="card noprint">
+  <section class="card noprint owneronly">
     <h2>Share and print</h2>
     <div class="row">
-      <button class="btn primary" id="shareBtn" type="button">Copy snapshot link</button>
+      <button class="btn primary" id="liveBtn" type="button">Go live</button>
+      <button class="btn" id="shareBtn" type="button">Copy snapshot link</button>
       <button class="btn" id="qrBtn" type="button">Show QR</button>
       <button class="btn" id="printBtn" type="button">Print</button>
       <button class="btn danger" id="resetBtn" type="button">Clear results</button>
     </div>
-    <p class="hint">The whole bracket travels inside the link, which is why it needs no account, but that also makes it a <b>snapshot</b>. Results you record after copying will not appear for anyone holding the old link, so send a fresh one when the games are done.</p>
+    <div class="liverow" id="liveRow" hidden>
+      <span class="livedot" id="liveDot" aria-hidden="true" hidden></span>
+      <span class="livestatus" id="liveStatus" role="status"></span>
+      <button class="btn small danger" id="liveStop" type="button" hidden>Stop sharing</button>
+    </div>
+    <p class="hint">A <b>live link</b> updates for everyone holding it as you record results, it needs the internet and keeps this one bracket on our server until you stop sharing. A <b>snapshot link</b> packs the whole bracket into the link itself, no server anywhere, but what you copied is what they get, it never updates.</p>
   </section>
   
 
-<section class="card noprint" id="backupCard">
+<section class="card noprint owneronly" id="backupCard">
   <h2>Keep a copy</h2>
   <p class="hint">Everything here is saved on this device only, no account, nothing uploaded.
   That also means a cleared browser or a lost phone takes it with them. Save a backup file
@@ -1687,7 +1762,22 @@ The Vegan Dark Horse"></textarea></label>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<footer class="colophon">On your device, in the link, nowhere else, no accounts, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studio</a> &middot; <a href="privacy.html" style="color:inherit">Privacy</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Bracket%20Maker" style="color:inherit">Feedback</a></footer>
+<footer class="colophon">On your device and in the link, on our server only while you share live, no accounts, no ads.<br>A free tool by <a href="../" style="color:inherit">Sky Wolf Studio</a> &middot; <a href="privacy.html" style="color:inherit">Privacy</a> &middot; <a href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Bracket%20Maker" style="color:inherit">Feedback</a></footer>
+
+<dialog id="scoreDlg" class="qrdlg" aria-labelledby="scoreTitle">
+  <h2 id="scoreTitle">Score</h2>
+  <p class="sub" id="scoreMatch"></p>
+  <label class="f"><span id="scoreLabelA"></span>
+    <input type="text" id="scoreA" maxlength="8" autocomplete="off" spellcheck="false"></label>
+  <label class="f"><span id="scoreLabelB"></span>
+    <input type="text" id="scoreB" maxlength="8" autocomplete="off" spellcheck="false"></label>
+  <p class="hint">Points, sets, rounds, whatever the game counts. Up to 8 characters a side.</p>
+  <div class="row">
+    <button class="btn primary" id="scoreSave" type="button">Save score</button>
+    <button class="btn" id="scoreClear" type="button">Remove</button>
+    <button class="btn ghost" id="scoreCancel" type="button">Cancel</button>
+  </div>
+</dialog>
 
 <dialog id="qrDlg" class="qrdlg" aria-labelledby="qrTitle">
   <h2 id="qrTitle">Scan to open this bracket</h2>

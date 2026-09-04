@@ -369,6 +369,45 @@ service cloud.firestore {
       }
     }
 
+    // ---------- brackets (Bracket Maker live links) ----------
+    // The bracket app is on-device first; "Go live" mirrors the WHOLE bracket
+    // into one small doc so a shared link can update for everyone watching.
+    // The payload is the same encoded string the app packs into a snapshot
+    // URL, so the client's hardened decoder is the schema and these rules only
+    // have to bound it. Owners MAY be anonymous, unlike Engine-1 boards: a
+    // bracket is a party fixture, not an account, and demanding a Google
+    // sign-in to run a cornhole night would kill the feature. The accepted
+    // cost: cleared browser data orphans the doc, and the app answers the
+    // resulting permission-denied with "go live again for a fresh link".
+    match /brackets/{bracketId} {
+      // Possession of the id (it only travels inside a live link) is the read
+      // credential; requiring auth keeps abuse tooling possible.
+      allow get: if authed();
+      allow list: if false; // never enumerable
+
+      allow create: if authed()
+                    && request.resource.data.keys().hasOnly(['ownerUid', 'data', 'createdAt', 'updatedAt'])
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.data is string
+                    && request.resource.data.data.size() >= 1
+                    && request.resource.data.data.size() <= 8000
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.updatedAt == request.time;
+
+      // Only the owner writes, and only the payload and its clock move.
+      allow update: if authed()
+                    && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['data', 'updatedAt'])
+                    && request.resource.data.data is string
+                    && request.resource.data.data.size() >= 1
+                    && request.resource.data.data.size() <= 8000
+                    && request.resource.data.updatedAt == request.time;
+
+      // Stop sharing = delete. Viewers see the doc vanish and are told.
+      allow delete: if authed() && resource.data.ownerUid == request.auth.uid;
+    }
+
     // default deny for anything not matched above
     match /{document=**} {
       allow read, write: if false;

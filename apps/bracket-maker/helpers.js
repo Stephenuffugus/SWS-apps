@@ -1,7 +1,11 @@
 // Bracket maker, pure single-elimination logic. Tested in test/helpers.test.mjs.
-// State: { names: string[], picks: { "r-m": entrantIndex } }
+// State: { names: string[], picks: { "r-m": entrantIndex },
+//          scores: { "r-m": [sideAIndex, sideBIndex, scoreA, scoreB] } }
 // Round 0 pairs follow standard seeding (1v8, 4v5, 2v7, 3v6 …) so the top two
 // seeds can only meet in the final; byes auto-advance.
+// A score names the PEOPLE who played, not just the coordinates: if an edit
+// upstream sends someone else into that match, the stored score stops matching
+// and stops showing, and comes back if the original pairing returns.
 
 export function nextPow2(n) {
   let p = 1;
@@ -23,6 +27,56 @@ export function seedOrder(size) {
 
 export const MAX_ENTRANTS = 32;
 export const MAX_NAME = 40;
+export const MAX_SCORE = 8;
+
+function cleanScore(s) {
+  return typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, MAX_SCORE) : '';
+}
+
+/* Scores arrive from storage, from links and from live docs, all of which a
+   stranger can hand you, so they get the same distrust as picks. */
+export function sanitizeScores(raw, n) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const k of Object.keys(raw).slice(0, 200)) {
+    const v = raw[k];
+    if (!/^\d+-\d+$/.test(k) || !Array.isArray(v) || v.length !== 4) continue;
+    if (!Number.isInteger(v[0]) || v[0] < 0 || v[0] >= n) continue;
+    if (!Number.isInteger(v[1]) || v[1] < 0 || v[1] >= n || v[1] === v[0]) continue;
+    if (typeof v[2] !== 'string' || typeof v[3] !== 'string') continue;
+    const a = cleanScore(v[2]);
+    const b = cleanScore(v[3]);
+    if (!a && !b) continue;
+    out[k] = [v[0], v[1], a, b];
+  }
+  return out;
+}
+
+/* Record the score of match r-m; two empty strings clear it. */
+export function setScore(state, r, m, sa, sb) {
+  const a = contender(state, r, m, 0);
+  const b = contender(state, r, m, 1);
+  if (a === null || b === null) return state;
+  const scores = { ...(state.scores || {}) };
+  const ca = cleanScore(sa);
+  const cb = cleanScore(sb);
+  if (!ca && !cb) delete scores[r + '-' + m];
+  else scores[r + '-' + m] = [a, b, ca, cb];
+  return { ...state, scores };
+}
+
+/* The stored score for match r-m, but only while it still names the two
+   entrants standing there (in either side order). Returns { sa, sb } or null. */
+export function scoreFor(state, r, m) {
+  const rec = state.scores && state.scores[r + '-' + m];
+  if (!Array.isArray(rec) || rec.length !== 4) return null;
+  const a = contender(state, r, m, 0);
+  const b = contender(state, r, m, 1);
+  if (a === null || b === null) return null;
+  if (rec[0] === a && rec[1] === b) return { sa: rec[2], sb: rec[3] };
+  if (rec[0] === b && rec[1] === a) return { sa: rec[3], sb: rec[2] };
+  return null;
+}
 
 /* Parse, but also report what the caps threw away. The app has to be able to
    SAY "you pasted 40, I kept 32", a cap discovered after the work is done is
@@ -169,7 +223,7 @@ export function carryPicks(oldState, newNames) {
   for (const [w, l] of had) {
     if (map[w] >= 0 && map[l] >= 0) pairs.push([map[w], map[l]]);
   }
-  let next = { names: newNames, picks: {}, title: oldState.title || '' };
+  let next = { names: newNames, picks: {}, title: oldState.title || '', scores: {} };
   if (newNames.length >= 2 && pairs.length) {
     const rounds = roundCount(newNames.length);
     const size = nextPow2(Math.max(newNames.length, 2));
@@ -193,8 +247,68 @@ export function carryPicks(oldState, newNames) {
       if (!changed) break;
     }
   }
+
+  /* Scores follow their people the same way. A recorded score whose two
+     entrants both survive the edit reattaches wherever those two now meet,
+     with the side order fixed up; the rest quietly drop. */
+  const oldScores = oldState.scores || {};
+  const carried = [];
+  for (const k of Object.keys(oldScores)) {
+    const rec = oldScores[k];
+    if (!Array.isArray(rec) || rec.length !== 4) continue;
+    const a2 = map[rec[0]];
+    const b2 = map[rec[1]];
+    if (!(a2 >= 0) || !(b2 >= 0)) continue;
+    carried.push([a2, b2, rec[2], rec[3]]);
+  }
+  if (carried.length && newNames.length >= 2) {
+    const scores = {};
+    const rounds = roundCount(newNames.length);
+    const size = nextPow2(Math.max(newNames.length, 2));
+    for (let r = 0; r < rounds; r++) {
+      for (let m = 0; m < size / Math.pow(2, r + 1); m++) {
+        const a = contender(next, r, m, 0);
+        const b = contender(next, r, m, 1);
+        if (a === null || b === null) continue;
+        for (const rec of carried) {
+          if (rec[0] === a && rec[1] === b) { scores[r + '-' + m] = [a, b, rec[2], rec[3]]; break; }
+          if (rec[0] === b && rec[1] === a) { scores[r + '-' + m] = [a, b, rec[3], rec[2]]; break; }
+        }
+      }
+    }
+    next = { ...next, scores };
+  }
+
   const kept = Object.keys(next.picks).length;
   return { state: next, kept, lost: Math.max(0, had.length - kept) };
+}
+
+/* ── Arranging the draw ───────────────────────────────────────────────────
+   The seeding IS the array order, so trading two entrants' array slots trades
+   their places in the bracket. Results and scores between people who still
+   meet are carried; the caller reports and offers undo for what is lost. */
+export function swapSeeds(state, i, j) {
+  const n = state.names.length;
+  if (i === j || !Number.isInteger(i) || !Number.isInteger(j)
+    || i < 0 || j < 0 || i >= n || j >= n) return { state, kept: 0, lost: 0 };
+  const names = state.names.slice();
+  const t = names[i];
+  names[i] = names[j];
+  names[j] = t;
+  return carryPicks(state, names);
+}
+
+/** Random draw (Fisher-Yates); rand is injectable for tests. */
+export function shuffleSeeds(state, rand) {
+  const rnd = rand || Math.random;
+  const names = state.names.slice();
+  for (let i = names.length - 1; i > 0; i--) {
+    const k = Math.floor(rnd() * (i + 1));
+    const t = names[i];
+    names[i] = names[k];
+    names[k] = t;
+  }
+  return carryPicks(state, names);
 }
 
 /** Two brackets are "the same tournament" when the line-up and the name match;
@@ -206,9 +320,12 @@ export function sameBracket(a, b) {
     && a.names.every((x, i) => x === b.names[i]);
 }
 
-/* URL-hash codec. */
+/* URL-hash codec. The same string is the payload of a live doc, so this is
+   the one wire format the app has. */
 export function encodeBracket(state) {
-  const json = JSON.stringify({ n: state.names, p: state.picks, t: state.title || '' });
+  const payload = { n: state.names, p: state.picks, t: state.title || '' };
+  if (state.scores && Object.keys(state.scores).length) payload.s = state.scores;
+  const json = JSON.stringify(payload);
   return btoa(unescape(encodeURIComponent(json)))
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
@@ -226,6 +343,10 @@ export function decodeBracket(hash) {
           picks[k] = obj.p[k];
       }
     }
-    return { names, picks, title: typeof obj.t === 'string' ? obj.t.slice(0, 60) : '' };
+    return {
+      names, picks,
+      title: typeof obj.t === 'string' ? obj.t.slice(0, 60) : '',
+      scores: sanitizeScores(obj.s, names.length),
+    };
   } catch (e) { return null; }
 }
