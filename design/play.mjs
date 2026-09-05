@@ -439,6 +439,7 @@ function twaManifest(slug) {
     splashScreenFadeOutDuration: 300,
     signingKey: { path: './android.keystore', alias: 'android' },
     appVersionName: '1.0.0',
+    appVersion: '1.0.0',   /* Bubblewrap 1.24 reads this one for android:versionName; without it the APK ships versionName='' */
     appVersionCode: 1,
     shortcuts: [],
     generatorApp: 'sws-play.mjs',
