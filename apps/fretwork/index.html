@@ -294,7 +294,7 @@
     <p id="a2hsIos" hidden style="font-size:13px; color:var(--muted); margin:0 0 8px">On iPhone: tap the share button in Safari, then <b>Add to Home Screen</b>. Fretwork works offline once it is on there.</p>
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
-    <p class="foot">A free tool by <a href="../">Sky Wolf Studio</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
+    <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
     <p class="buildtag">fretwork-v6</p>
   </div>
 </section>
@@ -739,12 +739,21 @@
    One file, no build, no server, no account. Tap first: no microphone.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ⛔ INSIDE THE PLAY APP THERE IS NO TIP JAR AND NO WEBHOOK. Google Play forbids a
+   payment rail that is not Play Billing, and a message that leaves the device is a
+   Data Safety declaration. The Android app opens this same page inside a Trusted Web
+   Activity, which announces itself through the referrer on first launch or, once
+   installed, as a standalone display on Android. Both seams below go dark there.
+   This is a policy boundary, so it disables the features, it does not hide a link. */
+var IN_TWA = false;
+try { IN_TWA = document.referrer.indexOf('android-app://') === 0
+  || (window.matchMedia && matchMedia('(display-mode: standalone)').matches && /Android/i.test(navigator.userAgent)); } catch (e) {}
 /* config seam, fleet pattern: an empty string hides the tip jar link */
-var TIP_URL = 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
+var TIP_URL = IN_TWA ? '' : 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
 /* a Discord webhook URL turns the footer Feedback link into an in app report
    that lands in Stephen's server the moment somebody hits send. An empty
    string keeps the plain email link. */
-var FEEDBACK_WEBHOOK = 'https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha';
+var FEEDBACK_WEBHOOK = IN_TWA ? '' : 'https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha';
 
 /* ── theory ────────────────────────────────────────────────────────────── */
 var LETTERS = ['C','D','E','F','G','A','B'];
@@ -1388,6 +1397,7 @@ var setNumbers = $('setNumbers');
 setNumbers.setAttribute('aria-pressed', String(S.numbers));
 setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
 if (TIP_URL){ var tipBtn = $('tipBtn'); tipBtn.href = TIP_URL; tipBtn.hidden = false; }
+if (IN_TWA){ var sl = $('studioLink'); if (sl){ sl.removeAttribute('href'); } }
 
 /* feedback: with a webhook wired, the footer link opens a box that lands the
    message straight in Stephen's Discord. Without one, plain email stands. */

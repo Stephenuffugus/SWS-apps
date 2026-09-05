@@ -56,6 +56,15 @@ const APPS = join(ROOT, 'apps');
 const OUT = join(HERE, 'out', 'play');
 
 const palette = JSON.parse(readFileSync(join(HERE, 'out', 'palette.json'), 'utf8'));
+/* Apps that ship on Play but live OUTSIDE the design system (no skin, no solved
+   palette). They get icons, a manifest upgrade, a twa-manifest and an assetlinks
+   statement like everyone else, and no feature graphic, which needs a skin's
+   type and texture. Colours come from the app's own manifest. Fretwork first. */
+const EXTRA = {
+  fretwork: { accentDeep: '#14100f', canvas: '#1c1614', darkCanvas: '#14100f' },
+};
+for (const [slug, pal] of Object.entries(EXTRA)) palette[slug] ??= pal;
+const ALL_SLUGS = Object.keys(SKINS).concat(Object.keys(EXTRA));
 
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((a) => a.startsWith('--')));
@@ -63,7 +72,7 @@ const only = argv.filter((a) => !a.startsWith('--'));
 const check = flags.has('--check');
 const iconsOnly = flags.has('--icons');
 
-const slugs = Object.keys(SKINS).filter((s) => !only.length || only.includes(s));
+const slugs = ALL_SLUGS.filter((s) => !only.length || only.includes(s));
 
 /* The origin every app is served from, and the Android package prefix. Both
    are single points of truth, changing the domain must not mean editing 23
@@ -460,7 +469,7 @@ function assetlinks() {
     ? JSON.parse(readFileSync(FINGERPRINT_FILE, 'utf8'))
     : {};
 
-  const statements = Object.keys(SKINS).map((slug) => {
+  const statements = ALL_SLUGS.map((slug) => {
     const pkg = `${PKG_PREFIX}.${slug.replace(/-/g, '')}`;
     return {
       relation: ['delegate_permission/common.handle_all_urls'],
@@ -476,7 +485,7 @@ function assetlinks() {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, 'assetlinks.json'), JSON.stringify(statements, null, 2) + '\n');
 
-  const missing = Object.keys(SKINS).filter((s) => !prints[s]);
+  const missing = ALL_SLUGS.filter((s) => !prints[s]);
   return { count: statements.length, missing };
 }
 
@@ -499,6 +508,7 @@ async function renderGraphics() {
   let n = 0;
   for (const slug of slugs) {
     if (!existsSync(join(APPS, slug, 'icon.svg'))) { fail(slug, 'no icon.svg'); continue; }
+    if (!SKINS[slug]) continue;   /* EXTRA apps have no skin, so no generated feature graphic; theirs is hand made */
     mkdirSync(join(OUT, slug), { recursive: true });
     const page = await browser.newPage({ viewport: { width: 1024, height: 500 }, deviceScaleFactor: 1 });
     await page.setContent(featureGraphicHtml(slug), { waitUntil: 'load' });
