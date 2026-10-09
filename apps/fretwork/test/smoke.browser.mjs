@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v6') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v7') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -355,6 +355,42 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.waitForTimeout(200);
   const rowTxt = (await page.textContent('#chartList')).trim();
   if (!rowTxt.includes('Smoke Test Jam') || !rowTxt.includes('2 chords')) throw new Error('chart did not survive the reload: ' + rowTxt);
+
+  // ── 9 Oct: the open string letters above the nut, the Setup strip, a custom tuning that survives a reload ──
+  await page.click('#tabPlay');
+  await page.waitForTimeout(300);
+  const lbl0 = await page.evaluate(() => [...document.querySelectorAll('#playBoard svg.board .openlbl')].map((t) => t.textContent).join(''));
+  if (lbl0 !== 'EADGBE') throw new Error('the play board should carry EADGBE above the nut: ' + lbl0);
+  const lblBand = await page.evaluate(() => { const r = document.querySelector('#playBoard svg.board rect[aria-label^="open string"]'); return r ? r.getBoundingClientRect().height : 0; });
+  if (lblBand < 40) throw new Error('the letter band should be a thumb target, got ' + lblBand + ' px');
+  await page.click('#tabDrills');
+  await page.waitForTimeout(200);
+  const strip0 = await page.evaluate(() => [...document.querySelectorAll('#tuneStrip .chip.tune b')].map((b) => b.textContent).join(''));
+  if (strip0 !== 'EADGBE') throw new Error('the Setup strip should read EADGBE on a fresh save: ' + strip0);
+  await page.click('#tuneStrip .chip.tune');
+  await page.waitForTimeout(120);
+  await page.click('#tunePop .chips .chip:nth-child(3)');
+  await page.waitForTimeout(150);
+  const strip1 = await page.evaluate(() => [...document.querySelectorAll('#tuneStrip .chip.tune b')].map((b) => b.textContent).join(''));
+  if (strip1 !== 'DADGBE') throw new Error('retuning string 6 to D should read DADGBE: ' + strip1);
+  const lowMidi = await page.evaluate(() => window.__fw.midiAt(0, 0));
+  if (lowMidi !== 38) throw new Error('string 6 should be D2, midi 38, nearest to E2, got ' + lowMidi);
+  const selTxt = await page.evaluate(() => document.querySelector('#setTuning option:checked').textContent);
+  if (!/^Custom DADGBE/.test(selTxt)) throw new Error('the select should show the custom tuning: ' + selTxt);
+  await page.click('#tabPlay');
+  await page.waitForTimeout(300);
+  const lbl1 = await page.evaluate(() => [...document.querySelectorAll('#playBoard svg.board .openlbl')].map((t) => t.textContent).join(''));
+  if (lbl1 !== 'DADGBE') throw new Error('the play board letters should follow the custom tuning: ' + lbl1);
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForTimeout(400);
+  const keptTune = await page.evaluate(() => ({ t: window.__fw.state.tuning, c: (window.__fw.state.custom || []).join(","), m: window.__fw.midiAt(0, 0) }));
+  if (keptTune.t !== "custom" || keptTune.m !== 38) throw new Error("the custom tuning did not survive the reload: " + JSON.stringify(keptTune));
+  await page.click('#tabDrills');
+  await page.waitForTimeout(200);
+  await page.selectOption('#setTuning', 'standard');
+  await page.waitForTimeout(150);
+  const strip2 = await page.evaluate(() => [...document.querySelectorAll('#tuneStrip .chip.tune b')].map((b) => b.textContent).join(''));
+  if (strip2 !== 'EADGBE') throw new Error('back to standard should read EADGBE: ' + strip2);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
   console.log('smoke pass: oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);

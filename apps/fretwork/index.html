@@ -124,6 +124,12 @@
   .prompt .prog b{color:var(--ink); font-size:16px}
 
   .boardwrap{display:flex; justify-content:center}
+  .tunestrip{display:flex; gap:6px; margin:0 0 8px}
+  .tunestrip .chip.tune{flex:1; min-width:0; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:4px 0}
+  .tunestrip .chip.tune b{font-size:18px; line-height:1}
+  .tunestrip .chip.tune small{font-size:10px; color:var(--muted); line-height:1.4}
+  .tunepop{margin:0 0 8px; padding:10px; border:1px solid var(--line, rgba(128,128,128,.35)); border-radius:12px}
+  .tunepop .chips .chip{min-width:44px}
   svg.board{width:100%; max-width:432px; height:auto; display:block; touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
   .cell{cursor:pointer}
   .cell:focus{outline:none}
@@ -295,7 +301,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v6</p>
+    <p class="buildtag">fretwork-v7</p>
   </div>
 </section>
 
@@ -463,12 +469,7 @@
   <div class="card dcard">
     <h3 class="sect" style="margin-bottom:10px">Setup</h3>
     <div class="row">
-      <div><label for="setTuning">Tuning</label><select id="setTuning">
-        <option value="standard">Standard EADGBE</option>
-        <option value="dropd">Drop D</option>
-        <option value="dadgad">DADGAD</option>
-        <option value="openg">Open G</option>
-      </select></div>
+      <div><label for="setTuning">Tuning</label><select id="setTuning"></select></div>
       <div><label for="setFrets">Neck</label><select id="setFrets">
         <option value="15">15 frets</option>
         <option value="22">22 frets</option>
@@ -479,6 +480,9 @@
       <button class="chip" id="setLefty" aria-pressed="false" title="Mirror the strings: for left handed players, or for a phone lying flat in front of you">reverse the strings</button>
       <button class="chip" id="setNumbers" aria-pressed="true" title="Label chord tones R 3 5 7 instead of note names">chord tone numbers</button>
     </div>
+    <p class="why" style="font-size:12px;color:var(--muted);margin:10px 0 4px">Your strings, low to high. Tap a letter to retune that string by ear or by name; the letters above every neck follow it.</p>
+    <div class="tunestrip" id="tuneStrip" role="group" aria-label="Open strings, low to high"></div>
+    <div class="tunepop" id="tunePop" hidden role="dialog" aria-label="Retune a string"></div>
     <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart. Reverse the strings if you play left handed, or when the phone lies flat in front of you like a real neck: no perspective is assumed here.</p>
   </div>
 
@@ -894,20 +898,29 @@ function midiName(m){ return PADS[((m%12)+12)%12][0] + (Math.floor(m/12)-1); }
 
 /* ── tunings and board data ────────────────────────────────────────────── */
 var TUNINGS = {
-  standard:{ label:'Standard', midi:[40,45,50,55,59,64] },
-  dropd:  { label:'Drop D',   midi:[38,45,50,55,59,64] },
-  dadgad: { label:'DADGAD',   midi:[38,45,50,55,57,62] },
-  openg:  { label:'Open G',   midi:[38,43,50,55,59,62] },
+  standard:{ label:'Standard',       midi:[40,45,50,55,59,64] },
+  dropd:  { label:'Drop D',          midi:[38,45,50,55,59,64] },
+  halfdown:{ label:'Half step down', midi:[39,44,49,54,58,63] },
+  dropc:  { label:'Drop C',          midi:[36,43,48,53,57,62] },
+  dadgad: { label:'DADGAD',          midi:[38,45,50,55,57,62] },
+  openg:  { label:'Open G',          midi:[38,43,50,55,59,62] },
+  opend:  { label:'Open D',          midi:[38,45,50,54,57,62] },
+  opene:  { label:'Open E',          midi:[40,47,52,56,59,64] },
 };
 var MAXF = 15;   /* re-set from S.frets once state loads; the neck is a setting */
-function tun(){ return TUNINGS[S.tuning].midi; }
+/* 9 Oct 2026, Stephen: "maybe they can change the string letters if they want". A custom
+   tuning is six midi numbers in the save; the Setup strip edits one string at a time. */
+function tun(){ return (S.tuning==='custom' && S.custom && S.custom.length===6) ? S.custom : TUNINGS[S.tuning].midi; }
+/* the open string letters of a tuning, low to high, sharps first like the pads */
+function tunLetters(midi){ return midi.map(function(m){ return PADS[((m%12)+12)%12][0]; }); }
+function tunLabel(){ return S.tuning==='custom' ? 'Custom '+tunLetters(tun()).join('') : TUNINGS[S.tuning].label; }
 function midiAt(s,f){ return tun()[s]+f; }
 /* gauge name: string index 0 is the low E, players call it string 6 */
 function gauge(s){ return 6-s; }
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
-var S = { v:1, sound:true, lefty:false, tuning:'standard', frets:15, numbers:true,
+var S = { v:1, sound:true, lefty:false, tuning:'standard', custom:null, frets:15, numbers:true,
           charts:[], chordLib:[],
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
@@ -1111,8 +1124,13 @@ function renderBoard(host, opts){
   if (opts.strings) for (var a=0;a<opts.strings.length;a++) active[opts.strings[a]] = true;
   var isActive = function(s){ return !active || !!active[s]; };
 
-  var CW = 64, ROWH = 52, LEFT = 34, TOP = 8;
+  var CW = 64, ROWH = 52, LEFT = 34;
   var hasOpen = lo===0;
+  /* 9 Oct 2026, Stephen: "the open strings should be labeled at the top above them". A
+     band above the open row carries each string's letter; it follows the tuning. */
+  /* 64 units: the neck scales with the page, and 64 is what lands at 48 px on a 375 wide phone */
+  var LABELH = hasOpen ? 64 : 0;
+  var TOP = 8 + LABELH;
   var startFret = Math.max(lo,1);
   var woodTop = hasOpen ? TOP+ROWH : TOP;
   var woodRows = hi-startFret+1;
@@ -1167,6 +1185,22 @@ function renderBoard(host, opts){
     if (hasOpen) el('line', { x1:x, y1:TOP+6, x2:x, y2:woodTop-3, stroke:'#8b7f6d', 'stroke-width':SW[s]*0.75, opacity:0.5 }, svg);
     el('line', { x1:x, y1:woodTop, x2:x, y2:woodTop+woodRows*ROWH, stroke:(s<3?'#b7a98e':'#cfd2d6'),
                  'stroke-width':SW[s], opacity:isActive(s)?0.95:0.32 }, svg);
+  }
+  /* the open string letters, above the strings they name; a tap plays the open note */
+  if (hasOpen){
+    var letters = tunLetters(tun());
+    for (var ls=0; ls<6; ls++){
+      var lx = sx(ls);
+      el('text', { x:lx, y:8+LABELH/2+7, 'text-anchor':'middle', 'font-size':20, 'font-weight':800,
+                   fill:'currentColor', opacity:isActive(ls)?0.92:0.4, class:'openlbl', 'data-s':ls }, svg).textContent = letters[ls];
+      (function(ps){
+        var lr = el('rect', { x:lx-CW/2, y:4, width:CW, height:LABELH, fill:'#000', 'fill-opacity':0, role:'button', tabindex:0,
+                              'aria-label':'open string '+gauge(ps)+', '+letters[ps]+', tap to hear it' }, svg);
+        var hear = function(ev){ ev.preventDefault(); if (S.sound) pluck(tun()[ps]); };
+        lr.addEventListener('pointerdown', hear);
+        lr.addEventListener('keydown', function(ev){ if (ev.key==='Enter'||ev.key===' ') hear(ev); });
+      })(ls);
+    }
   }
   /* gutter numbers */
   var nums = [3,5,7,9,12,15,17,19,21,24].filter(function(f2){ return f2>=startFret && f2<=hi; });
@@ -1366,8 +1400,79 @@ function paintSound(){
 }
 btnSound.onclick = function(){ S.sound=!S.sound; save(); paintSound(); if (S.sound) pluck(57); };
 paintSound();
-$('setTuning').value = S.tuning;
-$('setTuning').onchange = function(){ S.tuning=this.value; save(); };
+/* the tuning select is built from the table, plus a Custom row once one exists */
+function fillTuningSel(){
+  var sel = $('setTuning'); sel.innerHTML = '';
+  for (var k in TUNINGS){
+    var o = document.createElement('option'); o.value = k;
+    o.textContent = TUNINGS[k].label;   /* the letters live on the strip below; a 360 wide select clips them */
+    sel.appendChild(o);
+  }
+  if (S.custom && S.custom.length===6){
+    var oc = document.createElement('option'); oc.value = 'custom';
+    oc.textContent = 'Custom '+tunLetters(S.custom).join('');
+    sel.appendChild(oc);
+  }
+  sel.value = S.tuning;
+}
+/* the strip: one chip per string, low to high, the letter it is tuned to */
+function paintStrip(){
+  var strip = $('tuneStrip'); strip.innerHTML = '';
+  var T = tun(), letters = tunLetters(T);
+  for (var i=0;i<6;i++){
+    var b = document.createElement('button');
+    b.className = 'chip tune'; b.type = 'button';
+    b.setAttribute('aria-label', 'string '+gauge(i)+' is '+letters[i]+', '+midiName(T[i])+', tap to retune');
+    b.innerHTML = '<b>'+letters[i]+'</b><small>'+gauge(i)+'</small>';
+    (function(si){ b.onclick = function(){ openTuner(si, b); }; })(i);
+    strip.appendChild(b);
+  }
+}
+/* the popover: twelve names and an octave either way, for one string */
+function openTuner(si, anchor){
+  var pop = $('tunePop'); pop.innerHTML = ''; pop.hidden = false;
+  var T = tun().slice(), cur = T[si];
+  var head = document.createElement('p'); head.className = 'why';
+  head.textContent = 'String '+gauge(si)+' is '+midiName(cur)+'. Pick its new note.';
+  pop.appendChild(head);
+  var grid = document.createElement('div'); grid.className = 'chips';
+  for (var p=0;p<12;p++){
+    var c = document.createElement('button'); c.className = 'chip'; c.type = 'button';
+    c.textContent = PADS[p][0];
+    if (((cur%12)+12)%12===p) c.setAttribute('aria-pressed','true');
+    (function(pc2){ c.onclick = function(){
+      /* the nearest pitch with that name, so a string never jumps an octave by accident */
+      var base = cur - (((cur%12)+12)%12) + pc2, up = base + 12, down = base - 12;
+      var pick = [base, up, down].sort(function(a,b){ return Math.abs(a-cur)-Math.abs(b-cur); })[0];
+      setCustom(si, pick);
+    }; })(p);
+    grid.appendChild(c);
+  }
+  pop.appendChild(grid);
+  var oct = document.createElement('div'); oct.className = 'chips';
+  var dn = document.createElement('button'); dn.className='chip'; dn.type='button'; dn.textContent='octave down';
+  dn.onclick = function(){ setCustom(si, cur-12); };
+  var upb = document.createElement('button'); upb.className='chip'; upb.type='button'; upb.textContent='octave up';
+  upb.onclick = function(){ setCustom(si, cur+12); };
+  var hear = document.createElement('button'); hear.className='chip'; hear.type='button'; hear.textContent='hear it';
+  hear.onclick = function(){ if (S.sound) pluck(tun()[si]); };
+  var close = document.createElement('button'); close.className='chip'; close.type='button'; close.textContent='done';
+  close.onclick = function(){ pop.hidden = true; };
+  oct.appendChild(dn); oct.appendChild(upb); oct.appendChild(hear); oct.appendChild(close);
+  pop.appendChild(oct);
+  pop.scrollIntoView({ block:'nearest' });
+}
+function setCustom(si, midi){
+  midi = Math.max(24, Math.min(84, midi));
+  var T = tun().slice(); T[si] = midi;
+  S.custom = T; S.tuning = 'custom'; save();
+  fillTuningSel(); paintStrip(); rerenderVisible();
+  if (S.sound) pluck(midi);
+  openTuner(si, null);
+}
+fillTuningSel();
+$('setTuning').onchange = function(){ S.tuning=this.value; save(); paintStrip(); $('tunePop').hidden = true; rerenderVisible(); };
+paintStrip();
 /* one mirror, two doors: the Setup chip and the Play chip flip the same
    state, because a lefty and a phone lying flat both deserve a neck that
    reads their way, and no view should assume a right handed player */
@@ -2923,7 +3028,7 @@ function renderChordPick(){
   });
   var note = 'Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.';
   if (S.tuning!=='standard')
-    note = 'You are tuned to '+TUNINGS[S.tuning].label+'. The bank speaks standard tuning, so these shapes will sound different here. '+note;
+    note = 'You are tuned to '+tunLabel()+'. The bank speaks standard tuning, so these shapes will sound different here. '+note;
   $('bankNote').textContent = note;
   $('pickVerdict').textContent = '';
 }
