@@ -451,7 +451,7 @@ function twaManifest(slug) {
     isChromeOSOnly: false,
     isMetaQuest: false,
     fullScopeUrl: `${ORIGIN}/${slug}/`,
-    minSdkVersion: 21,
+    minSdkVersion: 24,
     orientation: 'portrait',
     playCategory: CATEGORY[slug] ?? 'TOOLS',
   };
