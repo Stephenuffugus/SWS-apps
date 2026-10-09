@@ -301,7 +301,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v7</p>
+    <p class="buildtag">fretwork-v8</p>
   </div>
 </section>
 
@@ -357,12 +357,7 @@
         <option value="min">Minor only</option>
         <option value="maj,min,dim,aug">Add dim and aug</option>
       </select></div>
-      <div><label for="triSet">Strings</label><select id="triSet">
-        <option value="3,4,5">3 2 1</option>
-        <option value="2,3,4">4 3 2</option>
-        <option value="1,2,3">5 4 3</option>
-        <option value="0,1,2">6 5 4</option>
-      </select></div>
+      <div><label for="triSet">Strings</label><select id="triSet"></select></div>
       <div><label for="triInv">Inversion</label><select id="triInv">
         <option value="mix">Mix them</option>
         <option value="0">Root position</option>
@@ -422,12 +417,7 @@
         <option value="m7b5">m7&#9837;5</option>
         <option value="dim7">dim7</option>
       </select></div>
-      <div><label for="clSet">Strings</label><select id="clSet">
-        <option value="0,2,3,4">6 4 3 2, the big shape</option>
-        <option value="1,2,3,4">5 4 3 2</option>
-        <option value="0,1,2,3">6 5 4 3</option>
-        <option value="2,3,4,5">4 3 2 1</option>
-      </select></div>
+      <div><label for="clSet">Strings</label><select id="clSet"></select></div>
       <div><label for="clHelp">Help</label><select id="clHelp" class="helpSel"></select></div>
     </div>
 
@@ -440,12 +430,7 @@
     <p class="why">Start on maj7. Flat the 7th and it is a 7. Flat the 3rd for m7. Flat the 5th for m7&#9837;5. Flat the 7th again for dim7. Five chords, one note at a time, same spot on the neck.</p>
     <details class="opts"><summary>Options</summary>
     <div class="row">
-      <div><label for="moSet">Strings</label><select id="moSet">
-        <option value="0,2,3,4">6 4 3 2, the big shape</option>
-        <option value="1,2,3,4">5 4 3 2</option>
-        <option value="0,1,2,3">6 5 4 3</option>
-        <option value="2,3,4,5">4 3 2 1</option>
-      </select></div>
+      <div><label for="moSet">Strings</label><select id="moSet"></select></div>
       <div><label for="moInv">Bass note</label><select id="moInv">
         <option value="0">Root in the bass</option>
         <option value="1">3rd in the bass</option>
@@ -469,6 +454,7 @@
   <div class="card dcard">
     <h3 class="sect" style="margin-bottom:10px">Setup</h3>
     <div class="row">
+      <div><label for="setInst">Instrument</label><select id="setInst"></select></div>
       <div><label for="setTuning">Tuning</label><select id="setTuning"></select></div>
       <div><label for="setFrets">Neck</label><select id="setFrets">
         <option value="15">15 frets</option>
@@ -481,6 +467,7 @@
       <button class="chip" id="setNumbers" aria-pressed="true" title="Label chord tones R 3 5 7 instead of note names">chord tone numbers</button>
     </div>
     <p class="why" style="font-size:12px;color:var(--muted);margin:10px 0 4px">Your strings, low to high. Tap a letter to retune that string by ear or by name; the letters above every neck follow it.</p>
+    <p class="why" id="instNote" style="font-size:12px;color:var(--muted);margin:0 0 4px"></p>
     <div class="tunestrip" id="tuneStrip" role="group" aria-label="Open strings, low to high"></div>
     <div class="tunepop" id="tunePop" hidden role="dialog" aria-label="Retune a string"></div>
     <p class="why" style="font-size:12px;color:var(--muted);margin:8px 0 0">Numbers first, on purpose: a note without a job is trivia. R, 3, 5 and 7 are what the note is doing, and that is what transfers to every key and every chart. Reverse the strings if you play left handed, or when the phone lies flat in front of you like a real neck: no perspective is assumed here.</p>
@@ -910,22 +897,66 @@ var TUNINGS = {
 var MAXF = 15;   /* re-set from S.frets once state loads; the neck is a setting */
 /* 9 Oct 2026, Stephen: "maybe they can change the string letters if they want". A custom
    tuning is six midi numbers in the save; the Setup strip edits one string at a time. */
-function tun(){ return (S.tuning==='custom' && S.custom && S.custom.length===6) ? S.custom : TUNINGS[S.tuning].midi; }
+/* 9 Oct 2026, Stephen: "a bass guitar version in there and even other string instruments like a
+   ukelele, banjo, and mandolin". An instrument is its tunings, its string gauges (drawn thick to
+   thin), which strings are wound, and for the banjo where its short fifth string begins (index 0,
+   fret 5). The string COUNT is whatever the tuning holds, so a five string bass is just a tuning. */
+var INSTRUMENTS = {
+  guitar:   { label:'Guitar',   def:'standard', gauges:[4,3.3,2.7,2.1,1.7,1.3], wound:[0,1,2], tunings:TUNINGS },
+  bass:     { label:'Bass',     def:'standard', gauges:[5.2,4.5,3.9,3.3], wound:[0,1,2,3], tunings:{
+    standard:{ label:'Standard',          midi:[28,33,38,43] },
+    dropd:   { label:'Drop D',            midi:[26,33,38,43] },
+    five:    { label:'Five string, low B', midi:[23,28,33,38,43] } } },
+  ukulele:  { label:'Ukulele',  def:'standard', gauges:[1.9,1.9,1.9,1.9], wound:[], tunings:{
+    standard:{ label:'Standard, high G',  midi:[67,60,64,69] },
+    lowg:    { label:'Low G',             midi:[55,60,64,69] },
+    baritone:{ label:'Baritone',          midi:[50,55,59,64] } } },
+  banjo:    { label:'Banjo',    def:'openg', gauges:[1.5,2.7,2.2,1.9,1.6], wound:[1], short:[5,0,0,0,0], tunings:{
+    openg:   { label:'Open G',            midi:[67,50,55,59,62] },
+    doublec: { label:'Double C',          midi:[67,48,55,60,62] },
+    sawmill: { label:'Sawmill',           midi:[67,50,55,60,62] } } },
+  mandolin: { label:'Mandolin', def:'standard', gauges:[2.4,2.0,1.6,1.3], wound:[0,1], courses:true, tunings:{
+    standard:{ label:'Standard',          midi:[55,62,69,76] } } },
+};
+function INST(){ return INSTRUMENTS[S.inst] || INSTRUMENTS.guitar; }
+function TUNS(){ return INST().tunings; }
+function tun(){
+  var c = S.customBy && S.customBy[S.inst];
+  if (S.tuning==='custom' && c && c.length) return c;
+  var t = TUNS()[S.tuning] || TUNS()[INST().def];
+  return t.midi;
+}
+function NS(){ return tun().length; }
+/* the first fret a string exists at: 0 for all but the banjo's fifth */
+function shortAt(st){ var sh = INST().short; return sh && sh[st] ? sh[st] : 0; }
+function cellOk(st, f){ return f >= shortAt(st); }
+/* the drawn gauge: an instrument lists its usual strings high to low; an extra low string is thicker still */
+function gaugeW(st){ var g = INST().gauges, k = st-(NS()-g.length); return k<0 ? g[0]+0.6 : g[k]; }
+function isWound(st){ var k = st-(NS()-INST().gauges.length); return k<0 || INST().wound.indexOf(k)>=0; }
 /* the open string letters of a tuning, low to high, sharps first like the pads */
 function tunLetters(midi){ return midi.map(function(m){ return PADS[((m%12)+12)%12][0]; }); }
-function tunLabel(){ return S.tuning==='custom' ? 'Custom '+tunLetters(tun()).join('') : TUNINGS[S.tuning].label; }
-function midiAt(s,f){ return tun()[s]+f; }
-/* gauge name: string index 0 is the low E, players call it string 6 */
-function gauge(s){ return 6-s; }
+function tunLabel(){ return S.tuning==='custom' ? 'Custom '+tunLetters(tun()).join('') : (TUNS()[S.tuning]||TUNS()[INST().def]).label; }
+/* an unplayed chord on this instrument */
+function emptyChord(){ var out=[]; for (var i=0;i<NS();i++) out.push(-1); return out; }
+/* the pitch a string WOULD have at fret 0: a short string is tuned at its own first fret, so its virtual open is lower */
+function T0(){ return tun().map(function(m,i){ return m-shortAt(i); }); }
+function midiAt(s,f){ return cellOk(s,f) ? T0()[s]+f : NaN; }   /* a cell below a short string's start is not a note */
+/* gauge name: string index 0 is the lowest drawn string, players count from the other side */
+function gauge(s){ return NS()-s; }
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
-var S = { v:1, sound:true, lefty:false, tuning:'standard', custom:null, frets:15, numbers:true,
+var S = { v:1, sound:true, lefty:false, inst:'guitar', tuning:'standard', custom:null, tuneBy:{}, customBy:{}, frets:15, numbers:true,
           charts:[], chordLib:[],
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
   var raw = localStorage.getItem(KEY);
   if (raw){ var got = JSON.parse(raw); if (got && got.v===1) S = Object.assign(S, got); }
+  if (!S.tuneBy || typeof S.tuneBy!=='object') S.tuneBy = {};
+  if (!S.customBy || typeof S.customBy!=='object') S.customBy = {};
+  if (S.custom && S.custom.length===6 && !S.customBy.guitar) S.customBy.guitar = S.custom;   /* v7 saves kept one custom tuning, the guitar's */
+  if (!INSTRUMENTS[S.inst]) S.inst = 'guitar';
+  if (S.tuning!=='custom' && !INSTRUMENTS[S.inst].tunings[S.tuning]) S.tuning = INSTRUMENTS[S.inst].def;
 } catch(e){}
 MAXF = S.frets || 15;
 var saveT = null;
@@ -1134,9 +1165,9 @@ function renderBoard(host, opts){
   var startFret = Math.max(lo,1);
   var woodTop = hasOpen ? TOP+ROWH : TOP;
   var woodRows = hi-startFret+1;
-  var W = LEFT + 6*CW + 14;
+  var W = LEFT + NS()*CW + 14;
   var H = woodTop + woodRows*ROWH + 10;
-  var col = function(s){ return S.lefty ? 5-s : s; };
+  var col = function(s){ return S.lefty ? NS()-1-s : s; };
   var sx = function(s){ return LEFT + col(s)*CW + CW/2; };
   var rowCY = function(f){ return f===0 ? TOP+ROWH/2 : woodTop + (f-startFret)*ROWH + ROWH/2; };
 
@@ -1158,39 +1189,50 @@ function renderBoard(host, opts){
       '<stop offset="0" stop-color="#f6dc9c"/><stop offset="0.6" stop-color="#dca753"/><stop offset="1" stop-color="#a8742a"/></radialGradient>';
 
   /* wood */
-  el('rect', { x:LEFT-4, y:woodTop, width:6*CW+8, height:woodRows*ROWH, rx:10, fill:'url(#gWood'+uid+')' }, svg);
+  el('rect', { x:LEFT-4, y:woodTop, width:NS()*CW+8, height:woodRows*ROWH, rx:10, fill:'url(#gWood'+uid+')' }, svg);
   /* inlays: singles at 3 5 7 9 15 17 19 21, doubles at the octaves */
   var MARKERS = [3,5,7,9,15,17,19,21];
   for (var mi=0; mi<MARKERS.length; mi++){
     var mf = MARKERS[mi];
     if (mf>=startFret && mf<=hi)
-      el('circle', { cx:LEFT+3*CW, cy:rowCY(mf), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
+      el('circle', { cx:LEFT+NS()/2*CW, cy:rowCY(mf), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
   }
   [12,24].forEach(function(oct){
     if (oct>=startFret && oct<=hi){
-      el('circle', { cx:LEFT+1.5*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
-      el('circle', { cx:LEFT+4.5*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
+      el('circle', { cx:LEFT+NS()*0.25*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
+      el('circle', { cx:LEFT+NS()*0.75*CW, cy:rowCY(oct), r:7.5, fill:'rgba(240,230,210,0.16)' }, svg);
     }
   });
   /* fret wires */
   for (var f=startFret; f<=hi; f++)
-    el('rect', { x:LEFT-4, y:woodTop+(f-startFret+1)*ROWH-1.5, width:6*CW+8, height:3, rx:1.5,
+    el('rect', { x:LEFT-4, y:woodTop+(f-startFret+1)*ROWH-1.5, width:NS()*CW+8, height:3, rx:1.5,
                  fill:'#b99f6f', opacity:0.85 }, svg);
   /* nut */
-  if (hasOpen) el('rect', { x:LEFT-4, y:woodTop-3, width:6*CW+8, height:6, rx:2.5, fill:'#e9e0c8' }, svg);
-  /* strings: low three wound bronze, top three plain steel */
-  var SW = [4,3.3,2.7,2.1,1.7,1.3];
-  for (var s=0; s<6; s++){
-    var x = sx(s);
-    if (hasOpen) el('line', { x1:x, y1:TOP+6, x2:x, y2:woodTop-3, stroke:'#8b7f6d', 'stroke-width':SW[s]*0.75, opacity:0.5 }, svg);
-    el('line', { x1:x, y1:woodTop, x2:x, y2:woodTop+woodRows*ROWH, stroke:(s<3?'#b7a98e':'#cfd2d6'),
-                 'stroke-width':SW[s], opacity:isActive(s)?0.95:0.32 }, svg);
+  if (hasOpen) el('rect', { x:LEFT-4, y:woodTop-3, width:NS()*CW+8, height:6, rx:2.5, fill:'#e9e0c8' }, svg);
+  /* strings: the instrument says which are wound bronze and which plain steel; a mandolin course is a pair;
+     the banjo's short fifth string begins at its own fret with a peg */
+  var courses = !!INST().courses;
+  for (var s=0; s<NS(); s++){
+    var x = sx(s), sw = gaugeW(s), st0 = shortAt(s);
+    var y0 = st0>startFret ? woodTop+(st0-startFret)*ROWH : woodTop;
+    var strokeC = isWound(s) ? '#b7a98e' : '#cfd2d6';
+    var offs = courses ? [-3.5, 3.5] : [0];
+    for (var oi=0; oi<offs.length; oi++){
+      var xo = x+offs[oi];
+      if (hasOpen && !st0) el('line', { x1:xo, y1:TOP+6, x2:xo, y2:woodTop-3, stroke:'#8b7f6d', 'stroke-width':sw*0.75, opacity:0.5 }, svg);
+      el('line', { x1:xo, y1:y0, x2:xo, y2:woodTop+woodRows*ROWH, stroke:strokeC,
+                   'stroke-width':courses ? sw*0.8 : sw, opacity:isActive(s)?0.95:0.32 }, svg);
+    }
+    if (st0 && st0>startFret) el('circle', { cx:x, cy:y0-7, r:5.5, fill:'url(#gPearl'+uid+')', opacity:isActive(s)?0.95:0.4 }, svg);
+    /* the short string's letter sits at its peg, on the wood, where its first note is */
+    if (st0 && st0>startFret) el('text', { x:x+12, y:y0-2, 'text-anchor':'start', 'font-size':15, 'font-weight':800, fill:'#efe9da', opacity:isActive(s)?0.95:0.4, class:'peglbl', 'data-s':s }, svg).textContent = tunLetters(tun())[s];
   }
   /* the open string letters, above the strings they name; a tap plays the open note */
   if (hasOpen){
     var letters = tunLetters(tun());
-    for (var ls=0; ls<6; ls++){
+    for (var ls=0; ls<NS(); ls++){
       var lx = sx(ls);
+      if (shortAt(ls)) continue;   /* the banjo's short string has no open note; its letter sits at its peg */
       el('text', { x:lx, y:8+LABELH/2+7, 'text-anchor':'middle', 'font-size':20, 'font-weight':800,
                    fill:'currentColor', opacity:isActive(ls)?0.92:0.4, class:'openlbl', 'data-s':ls }, svg).textContent = letters[ls];
       (function(ps){
@@ -1213,10 +1255,11 @@ function renderBoard(host, opts){
   var fxLayer = el('g', {}, svg);
 
   /* tap cells */
-  for (var cs=0; cs<6; cs++){
+  for (var cs=0; cs<NS(); cs++){
     if (!isActive(cs)) continue;
     for (var cf=lo; cf<=hi; cf++){
       if (cf===0 && !hasOpen) continue;
+      if (!cellOk(cs,cf)) continue;   /* no fret, no cell */
       var r = el('rect', { x:sx(cs)-CW/2, y:rowCY(cf)-ROWH/2, width:CW, height:ROWH,
                            fill:'#000', 'fill-opacity':0, class:'cell', tabindex:0, role:'button',
                            'data-s':cs, 'data-f':cf,
@@ -1339,12 +1382,12 @@ function shapeFor(root, qual, inv, stringSet, drop){
   }
   var bassIdx = tones.findIndex(function(t){ return pc(t)===pc(order[0]); });
   var inst = [];
-  var T = tun();
+  var T = T0();
   for (var bf=0; bf<=MAXF; bf++){
     var p0 = T[stringSet[0]]+bf;
     if (p0%12 !== pc(order[0])) continue;   /* the bass must BE the bass tone */
     var frets = stringSet.map(function(s,k){ return p0+offsets[k]-T[s]; });
-    if (frets.every(function(fr){ return fr>=0 && fr<=MAXF; })) inst.push(frets);
+    if (frets.every(function(fr,k){ return fr>=shortAt(stringSet[k]) && fr<=MAXF; })) inst.push(frets);
   }
   var nums = order.map(function(t){
     var ti = tones.findIndex(function(t2){ return pc(t2)===pc(t); });
@@ -1401,16 +1444,26 @@ function paintSound(){
 btnSound.onclick = function(){ S.sound=!S.sound; save(); paintSound(); if (S.sound) pluck(57); };
 paintSound();
 /* the tuning select is built from the table, plus a Custom row once one exists */
-function fillTuningSel(){
-  var sel = $('setTuning'); sel.innerHTML = '';
-  for (var k in TUNINGS){
-    var o = document.createElement('option'); o.value = k;
-    o.textContent = TUNINGS[k].label;   /* the letters live on the strip below; a 360 wide select clips them */
+function fillInstSel(){
+  var sel = $('setInst'); sel.innerHTML = '';
+  for (var k in INSTRUMENTS){
+    var o = document.createElement('option'); o.value = k; o.textContent = INSTRUMENTS[k].label;
     sel.appendChild(o);
   }
-  if (S.custom && S.custom.length===6){
+  sel.value = S.inst;
+}
+function fillTuningSel(){
+  var sel = $('setTuning'); sel.innerHTML = '';
+  var T = TUNS();
+  for (var k in T){
+    var o = document.createElement('option'); o.value = k;
+    o.textContent = T[k].label;   /* the letters live on the strip below; a 360 wide select clips them */
+    sel.appendChild(o);
+  }
+  var c = S.customBy[S.inst];
+  if (c && c.length){
     var oc = document.createElement('option'); oc.value = 'custom';
-    oc.textContent = 'Custom '+tunLetters(S.custom).join('');
+    oc.textContent = 'Custom '+tunLetters(c).join('');
     sel.appendChild(oc);
   }
   sel.value = S.tuning;
@@ -1418,8 +1471,8 @@ function fillTuningSel(){
 /* the strip: one chip per string, low to high, the letter it is tuned to */
 function paintStrip(){
   var strip = $('tuneStrip'); strip.innerHTML = '';
-  var T = tun(), letters = tunLetters(T);
-  for (var i=0;i<6;i++){
+  var T = tun(), letters = tunLetters(T);   /* the strip shows the real pitch, not the virtual open */
+  for (var i=0;i<NS();i++){
     var b = document.createElement('button');
     b.className = 'chip tune'; b.type = 'button';
     b.setAttribute('aria-label', 'string '+gauge(i)+' is '+letters[i]+', '+midiName(T[i])+', tap to retune');
@@ -1465,13 +1518,25 @@ function openTuner(si, anchor){
 function setCustom(si, midi){
   midi = Math.max(24, Math.min(84, midi));
   var T = tun().slice(); T[si] = midi;
-  S.custom = T; S.tuning = 'custom'; save();
+  S.customBy[S.inst] = T; S.tuning = 'custom'; S.tuneBy[S.inst] = 'custom'; save();
   fillTuningSel(); paintStrip(); rerenderVisible();
   if (S.sound) pluck(midi);
   openTuner(si, null);
 }
+fillInstSel();
 fillTuningSel();
-$('setTuning').onchange = function(){ S.tuning=this.value; save(); paintStrip(); $('tunePop').hidden = true; rerenderVisible(); };
+$('setTuning').onchange = function(){ S.tuning=this.value; S.tuneBy[S.inst]=this.value; save(); paintStrip(); $('tunePop').hidden = true; rerenderVisible(); };
+$('setInst').onchange = function(){
+  S.inst = this.value;
+  S.tuning = S.tuneBy[S.inst] || INST().def;
+  if (S.tuning==='custom' && !(S.customBy[S.inst]||[]).length) S.tuning = INST().def;
+  save();
+  fillTuningSel(); paintStrip(); fillAllSets(); $('tunePop').hidden = true;
+  $('instNote').textContent = S.inst==='banjo' ? 'The banjo\'s short fifth string starts at the fifth fret, so it has no open note; its letter sits at its peg.'
+    : S.inst==='mandolin' ? 'A mandolin string is a pair tuned together, drawn as a pair; one tap plays the course.'
+    : S.inst==='ukulele' ? 'Standard ukulele is re entrant: the fourth string is a high G, above the C beside it.' : '';
+  rerenderVisible(); if (!VIEWS.charts.hidden) renderCharts();
+};
 paintStrip();
 /* one mirror, two doors: the Setup chip and the Play chip flip the same
    state, because a lefty and a phone lying flat both deserve a neck that
@@ -1548,10 +1613,40 @@ document.querySelectorAll('.winSel').forEach(function(sel){
   WINDOWS.forEach(function(w){ var o=document.createElement('option'); o.value=w[0]; o.textContent=w[1]; sel.appendChild(o); });
   sel.value = '0-12';
 });
-var STRSETS = [ ['all','All six'], ['0,1','6 and 5'], ['2,3','4 and 3'], ['4,5','2 and 1'] ];
-document.querySelectorAll('.strSel').forEach(function(sel){
-  STRSETS.forEach(function(w){ var o=document.createElement('option'); o.value=w[0]; o.textContent=w[1]; sel.appendChild(o); });
-});
+/* the string pickers are built from the instrument: hunts take all strings or a pair, triads take
+   three neighbours, the climb and the ladder take four (and the guitar's big shape) */
+function strSets(){
+  var n = NS(), out = [['all', 'All '+n]];
+  for (var i=0;i+1<n;i+=2) out.push([i+','+(i+1), gauge(i)+' and '+gauge(i+1)]);
+  if (n%2) out.push([(n-1)+','+(n-2), gauge(n-1)+' and '+gauge(n-2)]);
+  return out;
+}
+function triSets(){
+  var n = NS(), out = [];
+  for (var i=n-3;i>=0;i--) out.push([i+','+(i+1)+','+(i+2), gauge(i)+' '+gauge(i+1)+' '+gauge(i+2)]);
+  return out;
+}
+function quadSets(){
+  var n = NS(), out = [];
+  if (n===6) out.push(['0,2,3,4', '6 4 3 2, the big shape']);
+  for (var i=n-4;i>=0;i--) out.push([i+','+(i+1)+','+(i+2)+','+(i+3), gauge(i)+' '+gauge(i+1)+' '+gauge(i+2)+' '+gauge(i+3)]);
+  return out;
+}
+function fillSets(sel, rows){
+  var had = sel.value; sel.innerHTML = '';
+  rows.forEach(function(w){ var o=document.createElement('option'); o.value=w[0]; o.textContent=w[1]; sel.appendChild(o); });
+  var keep = rows.some(function(w){ return w[0]===had; });
+  sel.value = keep ? had : rows[0][0];
+}
+function fillAllSets(){
+  document.querySelectorAll('.strSel').forEach(function(sel){ fillSets(sel, strSets()); });
+  fillSets($('triSet'), triSets());
+  fillSets($('clSet'), quadSets());
+  fillSets($('moSet'), quadSets());
+  var four = NS()>=4;
+  $('startClimb').disabled = !four; $('startMorph').disabled = !four;
+}
+fillAllSets();
 var huntNote = $('huntNote');
 SPELLINGS.forEach(function(n,i){ var o=document.createElement('option'); o.value=i; o.textContent=nn(n); huntNote.appendChild(o); });
 huntNote.value = '0';
@@ -1748,7 +1843,7 @@ function runHunt(note, win, strs){
   openRun();
   var targetPc = pc(note);
   var targets = [];
-  for (var s=0;s<6;s++){
+  for (var s=0;s<NS();s++){
     if (strs && strs.indexOf(s)<0) continue;
     for (var f=win.lo; f<=win.hi; f++)
       if (midiAt(s,f)%12===targetPc) targets.push([s,f]);
@@ -1855,7 +1950,7 @@ function nameNext(){
   }
   D.round++;
   var picks=[];
-  for (var s=0;s<6;s++){
+  for (var s=0;s<NS();s++){
     if (D.strs && D.strs.indexOf(s)<0) continue;
     for (var f=D.win.lo; f<=D.win.hi; f++) picks.push([s,f]);
   }
@@ -1921,14 +2016,15 @@ function ivNext(){
   }
   D.round++;
   for (var tries=0; tries<300; tries++){
-    var s = Math.floor(Math.random()*6), f = D.win.lo+Math.floor(Math.random()*(D.win.hi-D.win.lo+1));
+    var s = Math.floor(Math.random()*NS()), f = D.win.lo+Math.floor(Math.random()*(D.win.hi-D.win.lo+1));
+    if (!cellOk(s,f)) continue;   /* the banjo's short string has no low frets */
     var iv = rnd(D.pool);
     var rootMidi = midiAt(s,f);
     var rootN = rnd(SPELLINGS.filter(function(n){ return pc(n)===rootMidi%12; }));
     var target = up(rootN, iv);
     var wantMidi = rootMidi + IV[iv][1];
     var hits = [];
-    for (var s2=0;s2<6;s2++) for (var f2=D.win.lo; f2<=D.win.hi; f2++){
+    for (var s2=0;s2<NS();s2++) for (var f2=D.win.lo; f2<=D.win.hi; f2++){
       if (s2===s && f2===f) continue;
       var m2 = midiAt(s2,f2);
       if (D.anyOct ? (m2%12===wantMidi%12) : m2===wantMidi) hits.push([s2,f2]);
@@ -2310,11 +2406,11 @@ function currentMode(){ return MODES[+$('modeSel').value]; }
 function threeNPS(root, pcs, prefer){
   /* the standard three notes a string form, walked from the root: start on
      the string you choose, or let it pick the one with room to climb */
-  var T = tun(), out = [];
+  var T = T0(), out = [];
   var s0 = 0, fr = ((pc(root)-T[0])%12+12)%12;
   if (prefer===5 || (prefer!==6 && fr>7)){ s0 = 1; fr = ((pc(root)-T[1])%12+12)%12; }
   var pitch = T[s0]+fr;
-  for (var s=s0; s<6; s++){
+  for (var s=s0; s<NS(); s++){
     for (var k=0;k<3;k++){
       var fret = pitch - T[s];
       if (fret>=0 && fret<=MAXF) out.push([s,fret]);
@@ -2325,7 +2421,7 @@ function threeNPS(root, pcs, prefer){
 }
 /* where each position starts: the scale notes on the low string, root first */
 function posStarts(pcs, rootPc){
-  var T = tun(), starts = [], f = ((rootPc-T[0])%12+12)%12;
+  var T = T0(), starts = [], f = ((rootPc-T[0])%12+12)%12;
   for (var d=0; d<pcs.length; d++){
     while (pcs.indexOf(((T[0]+f)%12+12)%12)<0) f++;
     starts.push(f); f++;
@@ -2384,7 +2480,7 @@ function renderModes(){
     $('posLabel').textContent = 'Position '+(POSIDX+1)+' of '+starts.length+
       (POSIDX===0 ? ', from the root' : '')+', frets '+lo+' to '+hi;
     modeBoardApi = renderBoard($('modeBoard'), { lo:lo, hi:hi, strings:null, onTap:modeTap });
-    for (var s=0;s<6;s++) for (var f=lo;f<=hi;f++)
+    for (var s=0;s<NS();s++) for (var f=lo;f<=hi;f++)
       modeDegDot(s,f,pcs,altPcs,degs,names,pc(root),hideMap,null);
   } else if (form==='stack'){
     /* every position in its own color; a note wearing two colors is the
@@ -2397,7 +2493,7 @@ function renderModes(){
       });
     });
     modeBoardApi = renderBoard($('modeBoard'), { lo:0, hi:MAXF, strings:null, onTap:modeTap });
-    for (var s2=0;s2<6;s2++) for (var f2=0;f2<=MAXF;f2++){
+    for (var s2=0;s2<NS();s2++) for (var f2=0;f2<=MAXF;f2++){
       if (pcs.indexOf(midiAt(s2,f2)%12)<0) continue;
       var inb = bands.filter(function(b){ return f2>=b.start && f2<=b.start+4; })
                      .sort(function(a,b){ return b.start-a.start; });
@@ -2413,7 +2509,7 @@ function renderModes(){
     });
   } else {
     modeBoardApi = renderBoard($('modeBoard'), { lo:0, hi:MAXF, strings:null, onTap:modeTap });
-    for (var s3=0;s3<6;s3++) for (var f3=0;f3<=MAXF;f3++)
+    for (var s3=0;s3<NS();s3++) for (var f3=0;f3<=MAXF;f3++)
       modeDegDot(s3,f3,pcs,altPcs,degs,names,pc(root),hideMap,null);
   }
 }
@@ -2478,12 +2574,12 @@ function renderPlay(){
   var overlay = $('playOverlay').value;
   var root = SPELLINGS[+$('playRoot').value];
   if (overlay==='note'){
-    for (var s=0;s<6;s++) for (var f=win.lo;f<=win.hi;f++)
+    for (var s=0;s<NS();s++) for (var f=win.lo;f<=win.hi;f++)
       if (midiAt(s,f)%12===pc(root)) playBoardApi.setDot(s,f,'ring');
   } else if (overlay==='major' || overlay==='minpent'){
     var ivs = overlay==='major' ? ['P1','M2','M3','P4','P5','M6','M7'] : ['P1','m3','P4','P5','m7'];
     var pcs = ivs.map(function(iv){ return pc(up(root,iv)); });
-    for (var s2=0;s2<6;s2++) for (var f2=win.lo;f2<=win.hi;f2++){
+    for (var s2=0;s2<NS();s2++) for (var f2=win.lo;f2<=win.hi;f2++){
       var p = midiAt(s2,f2)%12;
       if (p===pc(root)) playBoardApi.setDot(s2,f2,'ring');
       else if (pcs.indexOf(p)>=0) playBoardApi.setDot(s2,f2,'ringfaint');
@@ -2648,7 +2744,7 @@ function midiNoteOn(note){
   rec.loopEv = loopCapture(note, vName);
   if (!VIEWS.play.hidden && playBoardApi){
     var win = syncPlayZoom();
-    for (var s=0; s<6 && !rec.cell; s++)
+    for (var s=0; s<NS() && !rec.cell; s++)
       for (var f=win.lo; f<=win.hi; f++)
         if (midiAt(s,f)===note){ playBoardApi.setDot(s,f,'pearl',PADS[note%12][0]); rec.cell=[s,f]; break; }
   }
@@ -2698,7 +2794,7 @@ function curChart(){
 }
 function chordMidis(frets){
   var out=[], T=tun();
-  for (var s=0;s<6;s++) if (frets[s]>=0) out.push(T[s]+frets[s]);
+  for (var s=0;s<NS();s++) if (frets[s]>=0) out.push(T[s]+frets[s]);
   return out;
 }
 function hearChord(frets, vName){
@@ -2802,6 +2898,7 @@ function renderCharts(){
   if (!S.charts.length)
     host.innerHTML = '<p class="verdictline" style="text-align:left; margin:0 0 10px">Nothing here yet. Your first chart is one tap away.</p>';
   S.charts.forEach(function(c){
+    if ((c.inst||'guitar')!==S.inst) return;   /* a chart is written for one instrument */
     var row = document.createElement('div'); row.className='chartrow';
     var b = document.createElement('b'); b.textContent = c.name || 'Untitled chart';
     var sm = document.createElement('small');
@@ -2823,7 +2920,7 @@ function renderCharts(){
 $('btnNewChart').onclick = function(){
   var c = { id: Date.now().toString(36)+Math.floor(Math.random()*999),
             name:'', beats:4, tempo:80, voice:'warm', click:'click', chords:[] };
-  S.charts.push(c); save();
+  c.inst = S.inst; S.charts.push(c); save();
   CH.chartId = c.id; CH.selIdx = null;
   renderCharts();
   setTimeout(function(){ $('chartName').focus(); }, 50);
@@ -3000,6 +3097,7 @@ function renderChordPick(){
     lib.appendChild(none);
   }
   S.chordLib.forEach(function(ch, i){
+    if ((ch.inst||'guitar')!==S.inst) return;
     var b = document.createElement('button');
     b.type='button'; b.className='chip';
     b.textContent = (CH.libEdit ? '✕ ' : '')+ch.n;
@@ -3019,7 +3117,7 @@ function renderChordPick(){
   }
   var bank = $('bankChips');
   bank.innerHTML = '';
-  BANK.forEach(function(ch){
+  if (S.inst==='guitar') BANK.forEach(function(ch){
     var b = document.createElement('button');
     b.type='button'; b.className='chip';
     b.textContent = ch.n;
@@ -3027,7 +3125,8 @@ function renderChordPick(){
     bank.appendChild(b);
   });
   var note = 'Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.';
-  if (S.tuning!=='standard')
+  if (S.inst!=='guitar') note = 'The bank is a guitar bank. Build '+INST().label.toLowerCase()+' chords on the blank neck below and keep them in My chords.';
+  else if (S.tuning!=='standard')
     note = 'You are tuned to '+tunLabel()+'. The bank speaks standard tuning, so these shapes will sound different here. '+note;
   $('bankNote').textContent = note;
   $('pickVerdict').textContent = '';
@@ -3045,7 +3144,7 @@ function renderChordEditor(){
     else {
       /* a fresh block inherits the meter of the block before it */
       var prev = c.chords[c.chords.length-1];
-      EDITC = { n:'', f:[-1,-1,-1,-1,-1,-1], b:prev&&prev.b, t:prev&&prev.t };
+      EDITC = { n:'', f:emptyChord(), b:prev&&prev.b, t:prev&&prev.t };
     }
   }
   $('chordEditTitle').textContent = CH.chordIdx>=0 ? 'Change this chord' : 'Build a chord';
@@ -3062,13 +3161,13 @@ function renderChordEditor(){
 }
 function paintChordEditor(){
   chordBoardApi.clearDots();
-  var T = tun();
-  for (var s=0;s<6;s++)
+  var T = T0();
+  for (var s=0;s<NS();s++)
     if (EDITC.f[s]>=0)
       chordBoardApi.setDot(s, EDITC.f[s], 'pearl', PADS[(T[s]+EDITC.f[s])%12][0]);
   var strip = $('strState');
   strip.innerHTML = '';
-  for (var col=0; col<6; col++){
+  for (var col=0; col<NS(); col++){
     var s2 = S.lefty ? 5-col : col;
     (function(s3){
       var b = document.createElement('button');
@@ -3128,7 +3227,7 @@ $('btnChordKeep').onclick = function(){
   var name = EDITC.n.trim() || (analyzeChord(EDITC.f)[0]||{}).name || 'My chord '+(S.chordLib.length+1);
   var key = EDITC.f.join(',');
   var dup = S.chordLib.some(function(ch){ return ch.n===name && ch.f.join(',')===key; });
-  if (!dup){ S.chordLib.push({ n:name, f:EDITC.f.slice() }); save(); }
+  if (!dup){ S.chordLib.push({ n:name, f:EDITC.f.slice(), inst:S.inst }); save(); }
   var btn = this;
   btn.innerHTML = '&#9733; kept';
   setTimeout(function(){ btn.innerHTML = '&#9734; keep'; }, 1300);

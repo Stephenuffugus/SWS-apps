@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v7') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v8') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -391,6 +391,51 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.waitForTimeout(150);
   const strip2 = await page.evaluate(() => [...document.querySelectorAll('#tuneStrip .chip.tune b')].map((b) => b.textContent).join(''));
   if (strip2 !== 'EADGBE') throw new Error('back to standard should read EADGBE: ' + strip2);
+
+  // ── 9 Oct: instruments. The string count is the tuning's; charts and sets follow the instrument ──
+  const strip = () => page.evaluate(() => [...document.querySelectorAll('#tuneStrip .chip.tune b')].map((b) => b.textContent).join(''));
+  const neck = () => page.evaluate(() => ({
+    lbl: [...document.querySelectorAll('#playBoard svg.board .openlbl')].map((t) => t.textContent).join(''),
+    strings: new Set([...document.querySelectorAll('#playBoard svg.board rect.cell')].map((r) => r.getAttribute('data-s'))).size,
+  }));
+  await page.selectOption('#setInst', 'ukulele');
+  await page.waitForTimeout(200);
+  if (await strip() !== 'GCEA') throw new Error('ukulele should read GCEA: ' + await strip());
+  await page.click('#tabPlay'); await page.waitForTimeout(300);
+  const uke = await neck();
+  if (uke.lbl !== 'GCEA' || uke.strings !== 4) throw new Error('the ukulele neck should carry four strings GCEA: ' + JSON.stringify(uke));
+  await page.click('#tabDrills'); await page.waitForTimeout(200);
+  await page.selectOption('#setInst', 'banjo'); await page.waitForTimeout(200);
+  if (await strip() !== 'GDGBD') throw new Error('banjo open G should read GDGBD: ' + await strip());
+  await page.click('#tabPlay'); await page.waitForTimeout(300);
+  const bj = await page.evaluate(() => ({
+    lbl: [...document.querySelectorAll('#playBoard svg.board .openlbl')].map((t) => t.textContent).join(''),
+    low: [...document.querySelectorAll('#playBoard svg.board rect.cell[data-s="0"]')].map((r) => +r.getAttribute('data-f')).filter((f) => f < 5).length,
+    m4: window.__fw.midiAt(0, 4), m5: window.__fw.midiAt(0, 5), m7: window.__fw.midiAt(0, 7), d0: window.__fw.midiAt(1, 0),
+  }));
+  if (bj.lbl !== 'DGBD' || bj.low !== 0 || !Number.isNaN(bj.m4) || bj.m5 !== 67 || bj.m7 !== 69 || bj.d0 !== 50)
+    throw new Error('the banjo fifth string should start at fret 5 as G4 (A at 7), no open letter, D3 beside it: ' + JSON.stringify(bj));
+  await page.click('#tabDrills'); await page.waitForTimeout(200);
+  await page.selectOption('#setInst', 'mandolin'); await page.waitForTimeout(200);
+  await page.click('#tabPlay'); await page.waitForTimeout(300);
+  const mando = await neck();
+  if (mando.lbl !== 'GDAE' || mando.strings !== 4) throw new Error('mandolin should read GDAE on four courses: ' + JSON.stringify(mando));
+  await page.click('#tabDrills'); await page.waitForTimeout(200);
+  await page.selectOption('#setInst', 'bass'); await page.waitForTimeout(200);
+  if (await strip() !== 'EADG') throw new Error('bass should read EADG: ' + await strip());
+  const triOpts = await page.evaluate(() => [...document.querySelectorAll('#triSet option')].map((o) => o.textContent).join('|'));
+  if (triOpts !== '3 2 1|4 3 2') throw new Error('bass triad sets should be 3 2 1 and 4 3 2: ' + triOpts);
+  await page.selectOption('#setTuning', 'five'); await page.waitForTimeout(200);
+  if (await strip() !== 'BEADG') throw new Error('a five string bass is just a tuning: ' + await strip());
+  await page.click('#tabCharts'); await page.waitForTimeout(200);
+  const bassCharts = (await page.textContent('#chartList')).trim();
+  if (bassCharts.includes('Smoke Test Jam')) throw new Error('a guitar chart must not list under the bass: ' + bassCharts);
+  await page.click('#tabDrills'); await page.waitForTimeout(200);
+  await page.selectOption('#setInst', 'guitar'); await page.waitForTimeout(200);
+  if (await strip() !== 'EADGBE') throw new Error('back to guitar should read EADGBE: ' + await strip());
+  await page.click('#tabCharts'); await page.waitForTimeout(200);
+  const gtrCharts = (await page.textContent('#chartList')).trim();
+  if (!gtrCharts.includes('Smoke Test Jam')) throw new Error('the guitar chart should be back: ' + gtrCharts);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
   console.log('smoke pass: oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
