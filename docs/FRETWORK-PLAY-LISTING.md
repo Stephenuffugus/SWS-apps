@@ -27,6 +27,8 @@ it needs no merchant profile and it teaches us the Console before Flock the Worl
 ```
 Fretwork is a fretboard practice tool built by a working guitar and theory teacher. Not a course, not a subscription. One tool that does what a lesson does when the teacher points at the neck and says "find every C."
 
+FIVE INSTRUMENTS. Guitar, bass, ukulele, banjo and mandolin, each with its own tunings, a custom tuning you set one string at a time, and the open string letters above every neck so a beginner always knows where they are.
+
 TAP DRILLS. Name the note, find every instance, name the interval from a root. Natural notes first, one string at a time, then the whole neck. What you miss comes back sooner.
 
 SCALES IN POSITIONS. Every position of the scales that matter, drawn on the neck the way you actually play them.
