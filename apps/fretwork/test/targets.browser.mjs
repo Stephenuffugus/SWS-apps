@@ -20,6 +20,12 @@ for (const [W, H] of [[360, 740], [412, 915]]) {
     await page.click('#tabDrills'); out.push(await audit('drills', null));
     await page.evaluate(() => document.querySelectorAll('details.opts').forEach(d => { d.open = true; }));
     await page.click('#startHunt'); await page.waitForTimeout(200); out.push(await audit('hunt', '#runBoard'));
+    await page.click('#btnQuit'); await page.click('#startName'); await page.waitForTimeout(200); out.push(await audit('name', '#runBoard'));
+    /* the gold note and the answer pads must both be on screen, the gold one above the pinned pads */
+    const vis = await page.evaluate(() => { const g = document.querySelector('#runBoard circle.dot-gold'), p = document.getElementById('padHost');
+      const gr = g.getBoundingClientRect(), pr = p.getBoundingClientRect();
+      return { goldOn: gr.top >= 0 && gr.bottom <= pr.top + 2, padsOn: pr.bottom <= window.innerHeight + 1 }; });
+    if (!vis.goldOn || !vis.padsOn) { bad++; console.log('TARGETS_FAIL', W, 'name drill: gold note or pads off screen', JSON.stringify(vis)); }
     await page.click('#btnQuit'); await page.click('#startTri'); await page.waitForTimeout(200); out.push(await audit('triads', '#runBoard'));
     await page.click('#btnQuit');
     await page.click('#tabModes'); await page.waitForTimeout(200); out.push(await audit('scales', '#modeBoard'));
@@ -33,4 +39,4 @@ for (const [W, H] of [[360, 740], [412, 915]]) {
   }, { width: W, height: H });
 }
 if (bad) process.exit(1);
-console.log('TARGETS_PASS every fret cell and control at least 48 px on 8 screens at 360 and 412');
+console.log('TARGETS_PASS every fret cell and control at least 48 px on 9 screens at 360 and 412');

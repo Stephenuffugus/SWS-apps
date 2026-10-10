@@ -157,7 +157,11 @@
   .runbar .btn{flex:1; padding:11px 6px; font-size:14px; min-height:48px}
   .timer{font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:44px; text-align:right}
 
-  .pads{display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-top:12px}
+  /* Name that fret's answers stay pinned above the run buttons, two rows of six, so the taller neck can
+     never push them off the screen (found 10 Oct after F2) */
+  .pads{display:grid; grid-template-columns:repeat(6,1fr); gap:5px; margin:8px -10px 0; padding:6px 0;
+        position:sticky; bottom:calc(74px + env(safe-area-inset-bottom, 0px)); z-index:4; background:var(--card)}
+  .pads button{min-height:48px; min-width:48px; padding:4px 0}
   .pads button{background:var(--field); border:1px solid var(--line); color:var(--ink); border-radius:10px;
     font:700 15px/1.15 inherit; font-size:15px; padding:11px 0; cursor:pointer; min-height:48px}
   .pads button small{display:block; font-weight:500; font-size:12px; color:var(--muted)}
@@ -359,7 +363,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v16</p>
+    <p class="buildtag">fretwork-v17</p>
   </div>
 </section>
 
@@ -2067,6 +2071,18 @@ function huntTap(s,f){
 $('startName').onclick = function(){
   runName(parseWin($('nameWin').value), parseStr($('nameStr').value));
 };
+/* bring a cell into the part of the screen the pinned answers and run buttons do not cover */
+function keepInView(s, f){
+  var cell = document.querySelector('#runBoard rect.cell[data-s="'+s+'"][data-f="'+f+'"]');
+  if (!cell) return;
+  var r = cell.getBoundingClientRect(), foot = 0;
+  var pads = $('padHost'), bar = document.querySelector('#view-run .runbar');
+  if (pads && !pads.hidden) foot += pads.getBoundingClientRect().height;
+  if (bar) foot += bar.getBoundingClientRect().height + 16;
+  var low = window.innerHeight - foot - 12, high = 70;
+  if (r.bottom > low) window.scrollBy(0, r.bottom - low);
+  else if (r.top < high) window.scrollBy(0, r.top - high);
+}
 function buildPads(onPick){
   padHost.innerHTML='';
   PADS.forEach(function(lbl,p){
@@ -2120,6 +2136,7 @@ function nameNext(){
   D.cur = { s:t[0], f:t[1], p:midiAt(t[0],t[1])%12, tries:0 };
   D.lastP = D.cur.p;
   board.setDot(t[0], t[1], 'gold');
+  keepInView(t[0], t[1]);
   pProg.innerHTML = 'round <b>'+D.round+'</b> of 12';
   pluck(midiAt(t[0],t[1]));
 }
