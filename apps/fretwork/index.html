@@ -362,8 +362,8 @@
     <p id="a2hsIos" hidden style="font-size:13px; color:var(--muted); margin:0 0 8px">On iPhone: tap the share button in Safari, then <b>Add to Home Screen</b>. Fretwork works offline once it is on there.</p>
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
-    <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v17</p>
+    <p class="foot"><span id="footLead">A free tool by </span><a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
+    <p class="buildtag">fretwork-v18</p>
   </div>
 </section>
 
@@ -1683,6 +1683,8 @@ var setNumbers = $('setNumbers');
 setNumbers.setAttribute('aria-pressed', String(S.numbers));
 setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
 if (TIP_URL){ var tipBtn = $('tipBtn'); tipBtn.href = TIP_URL; tipBtn.hidden = false; $('tipNote').hidden = false; }
+/* the Play copy is $0.99 (his call, 10 Oct): inside it the footer does not say free; the web copy stays free */
+if (IN_TWA){ var fl = $('footLead'); if (fl) fl.textContent = 'By '; }
 if (IN_TWA || ON_PI){ var sl = $('studioLink'); if (sl){ sl.removeAttribute('href'); } }
 /* the Pi copy signs in with Pi and checks its unlock with our server, so it must not promise "no account, nothing
    leaves your phone": the privacy page's Pi Network section says what it does */
