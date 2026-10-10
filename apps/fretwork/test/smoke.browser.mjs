@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v11') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v12') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -146,7 +146,7 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.evaluate(() => { const d = window.__fw.drill; d.round = d.learnN; d.skip(); });
   await page.waitForTimeout(200);
   const testBtn = await page.evaluate(() => { const b = document.querySelector('#sumExtra .btn.primary'); return b ? b.textContent : ''; });
-  if (!/^Test me on these \d$/.test(testBtn)) throw new Error('no test offered after the lesson: ' + testBtn);
+  if (!/^Test these \d$/.test(testBtn)) throw new Error('no test offered after the lesson: ' + testBtn);
   await page.click('#sumExtra .btn.primary');
   await page.waitForTimeout(250);
   const tcur = await page.evaluate(() => { const d = window.__fw.drill; return { mode: d.mode, n: d.list.length, set: d.cur.set, inst: d.cur.inst }; });
@@ -154,7 +154,7 @@ await withApp('fretwork', async ({ page, errors }) => {
   const offString = [0,1,2,3,4,5].find(x => !tcur.set.includes(x));
   await page.click(`#runBoard rect.cell[data-s="${offString}"][data-f="3"]`);
   await page.waitForTimeout(120);
-  if (!(await page.textContent('#vLine')).includes('Nothing on the')) throw new Error('a string the shape does not use should say so');
+  if (!(await page.textContent('#vLine')).includes('silent for this shape')) throw new Error('a string the shape does not use should say so');
   const wrongF = tcur.inst[0] >= 12 ? tcur.inst[0] - 1 : tcur.inst[0] + 1;
   await page.click(`#runBoard rect.cell[data-s="${tcur.set[0]}"][data-f="${wrongF}"]`);
   await page.waitForTimeout(120);
@@ -166,8 +166,15 @@ await withApp('fretwork', async ({ page, errors }) => {
   }
   const greens = await page.evaluate(() => [...document.querySelectorAll('#runBoard circle')].filter(c => c.getAttribute('fill') === 'var(--pass)').length);
   if (greens !== tcur.set.length) throw new Error('every right note should stay green: ' + greens + ' of ' + tcur.set.length);
+  // his call: a finished chord holds until Next; it must not move on by itself
+  await page.waitForTimeout(1800);
+  if (!/test <b>1<\/b>/.test(await page.innerHTML('#pProg'))) throw new Error('the finished chord moved on without Next');
+  const badge = await page.evaluate(() => [...document.querySelectorAll('#runBoard text')].some(t => t.textContent === '\u2713'));
+  if (!badge) throw new Error('right notes should carry a check mark, not colour alone');
+  await page.click('#tNext');
   await page.waitForFunction(() => /test <b>2<\/b>/.test(document.getElementById('pProg').innerHTML), { timeout: 4000 });
-  if (await page.evaluate(() => window.__fw.drill.first) !== 0) throw new Error('a chord with a miss must not count as first try');
+  const res = await page.evaluate(() => window.__fw.drill.results);
+  if (res.length !== 1 || res[0].r !== 'corrected') throw new Error('a chord with a miss should count as corrected: ' + JSON.stringify(res));
 
   // nothing twice running: name the note and intervals, many draws
   await page.click('#btnQuit');
@@ -489,6 +496,24 @@ await withApp('fretwork', async ({ page, errors }) => {
   }));
   if (bj.lbl !== 'DGBD' || bj.low !== 0 || !Number.isNaN(bj.m4) || bj.m5 !== 67 || bj.m7 !== 69 || bj.d0 !== 50)
     throw new Error('the banjo fifth string should start at fret 5 as G4 (A at 7), no open letter, D3 beside it: ' + JSON.stringify(bj));
+  // the banjo's short string sounds G4 at its start fret, not a fifth higher (Astra D23)
+  const banjoG = await page.evaluate(() => { const fw = window.__fw, S = fw.state, keep = [S.inst, S.tuning];
+    S.inst = 'banjo'; S.tuning = 'openg'; const m = fw.chordMidis([5, -1, -1, -1, -1]); S.inst = keep[0]; S.tuning = keep[1]; return m; });
+  if (banjoG[0] !== 67) throw new Error('the banjo short string at its start fret should sound G4 (67): ' + banjoG.join(','));
+  if (await page.evaluate(() => document.documentElement.innerHTML.includes('stephenfurpahs'))) throw new Error('the personal address is on the page');
+  // a chart remembers its tuning: in Drop D it says so and offers to switch back (Astra D20)
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.selectOption('#setInst', 'guitar'); await page.waitForTimeout(200);   /* the banjo step above left the app on banjo */
+  await page.evaluate(() => { const s = document.getElementById('setTuning'); s.value = 'dropd'; s.dispatchEvent(new Event('change')); });
+  await page.waitForTimeout(150);
+  await page.click('#tabCharts'); await page.waitForTimeout(150);
+  await page.evaluate(() => { const rows = [...document.querySelectorAll('#chartList > *')]; const r = rows.find(x => x.textContent.includes('Smoke Test Jam')); if (r) r.click(); });
+  await page.waitForTimeout(250);
+  const tuneNote = await page.evaluate(() => { const n = document.getElementById('chartTuneNote'); return n.hidden ? '' : n.textContent; });
+  if (!/Written in Standard/.test(tuneNote)) throw new Error('a standard chart opened in Drop D should say so: ' + tuneNote + ' ' + JSON.stringify(await page.evaluate(() => { const S = window.__fw.state; const c = S.charts.find(x => x.name === 'Smoke Test Jam'); return { tuning: S.tuning, inst: S.inst, ctun: c && c.tun, ctuning: c && c.tuning, rows: document.querySelectorAll('#chartList > *').length, view: [...document.querySelectorAll('section[id^=view-]')].filter(x => !x.hidden).map(x => x.id) }; })));
+  await page.click('#chartTuneNote button');
+  await page.waitForTimeout(200);
+  if (await page.evaluate(() => window.__fw.state.tuning) !== 'standard') throw new Error('Switch should put the board back in standard');
   await page.click('#tabDrills'); await page.waitForTimeout(200);
   await page.selectOption('#setInst', 'mandolin'); await page.waitForTimeout(200);
   await page.click('#tabPlay'); await page.waitForTimeout(300);
