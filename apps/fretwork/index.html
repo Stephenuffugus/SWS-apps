@@ -43,7 +43,7 @@
     background-repeat:no-repeat; background-attachment:fixed;
     font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-text-size-adjust:100%;
-    padding:max(12px,env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom));
+    padding:max(12px,env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom));
     max-width:520px; margin:0 auto;
   }
   h1{font-size:14px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:4px 2px 12px; font-weight:600;
@@ -85,10 +85,18 @@
   .card > *{position:relative}
   .sect{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:2px 2px 12px}
 
-  .tabs{display:flex; gap:6px; margin:0 2px 12px}
-  .tabs button{flex:1; background:var(--card); border:1px solid var(--line); color:var(--muted); border-radius:10px;
-    font:600 13px/1 inherit; font-size:13px; padding:10px 0; cursor:pointer; letter-spacing:.04em}
-  .tabs button[aria-selected="true"]{color:var(--accent-ink); background:var(--accent); border-color:var(--accent)}
+  /* F3 (Astra D04, his yes 10 Oct): the five rooms live in a bar at the bottom, under the thumb; it hides
+     while a drill runs (the drill's own buttons sit there) and in full screen play */
+  .tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; gap:2px; margin:0;
+    padding:4px max(6px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+    background:var(--card); border-top:1px solid var(--line); box-shadow:0 -6px 20px rgba(0,0,0,.22)}
+  .tabs button{flex:1; min-height:56px; flex-direction:column; gap:3px; background:transparent; border:0;
+    border-top:3px solid transparent; border-radius:0; color:var(--muted);
+    font:600 12px/1 inherit; font-size:12px; padding:4px 0 2px; cursor:pointer; letter-spacing:.02em}
+  .tabs button svg{width:22px; height:22px; display:block}
+  body.inrun .tabs{display:none}
+  body.inrun{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  .tabs button[aria-selected="true"]{color:var(--accent); border-top-color:var(--accent); font-weight:800}
 
   .dcard h3{margin:0 0 2px; font-size:16px}
   .dcard .why{font-size:12.5px; color:var(--muted); margin:0 0 10px}
@@ -167,7 +175,7 @@
   details.opts summary{display:flex; align-items:center}
   .summary{text-align:center}
   /* the chord picker's try-before-you-add bar: it rides the bottom of the screen while the chips scroll */
-  .pickbar{position:sticky; bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:5; display:flex; flex-wrap:wrap;
+  .pickbar{position:sticky; bottom:calc(74px + env(safe-area-inset-bottom, 0px)); z-index:5; display:flex; flex-wrap:wrap;
            align-items:center; gap:10px; margin:12px 0 4px; padding:10px 12px; background:var(--card);
            border:1px solid var(--accent); border-radius:var(--r); box-shadow:var(--shadow)}
   .pickbar .pickbox{flex:none; color:var(--ink); line-height:0}
@@ -306,11 +314,11 @@
 </header>
 
 <nav class="tabs" role="tablist" aria-label="Sections">
-  <button role="tab" id="tabHome" aria-selected="true">Home</button>
-  <button role="tab" id="tabDrills" aria-selected="false">Drills</button>
-  <button role="tab" id="tabModes" aria-selected="false">Scales</button>
-  <button role="tab" id="tabPlay" aria-selected="false">Play</button>
-  <button role="tab" id="tabCharts" aria-selected="false">Charts</button>
+  <button role="tab" id="tabHome" aria-selected="true"><svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 11 4l8 6.5V19h-5.2v-5.2H8.2V19H3z"/></svg><span>Home</span></button>
+  <button role="tab" id="tabDrills" aria-selected="false"><svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><circle cx="11" cy="11" r="3.5"/><circle cx="11" cy="11" r="0.6"/></svg><span>Drills</span></button>
+  <button role="tab" id="tabModes" aria-selected="false"><svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h4v-3.5h4V11h4V7.5h4"/></svg><span>Scales</span></button>
+  <button role="tab" id="tabPlay" aria-selected="false"><svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5 17 11l-9 5.5z"/></svg><span>Play</span></button>
+  <button role="tab" id="tabCharts" aria-selected="false"><svg viewBox="0 0 22 22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6.5h12M5 11h12M5 15.5h8"/></svg><span>Charts</span></button>
 </nav>
 
 <main>
@@ -340,7 +348,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v13</p>
+    <p class="buildtag">fretwork-v14</p>
   </div>
 </section>
 
@@ -1486,6 +1494,7 @@ function show(view){
   if (view!=='charts'){ stopChartPlay(); stopJamVoices(); }
   if (view!=='rhythm') stopPoly();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
+  document.body.classList.toggle('inrun', view==='run');
   var lit = TAB_OF[view] || view;
   for (var t in TABS) TABS[t].setAttribute('aria-selected', String(t===lit));
   if (view==='play') renderPlay();
@@ -1932,6 +1941,7 @@ function finish(big, sub, extras){
     xh.hidden = false;
   } else xh.hidden = true;
   runSummary.hidden = false;
+  document.body.classList.remove('inrun');   /* a finished drill can go anywhere: the room bar comes back */
   /* at phone height the card lands under the neck: bring it up so its buttons are seen */
   setTimeout(function(){ try { runSummary.scrollIntoView({ behavior:'smooth', block:'nearest' }); } catch(e){} }, 60);
 }
@@ -2315,7 +2325,7 @@ function shapesLearned(){
   if (D.miss===0 && D.right===n) cheer('Every voicing!');
   var extras = [{ label:'Test these '+n, primary:true, fn:function(){ runShapeTest(learned, cfg, label); } }];
   if (more>0) extras.push({ label:'Learn '+more+' more first', fn:function(){
-    D.learnN = n+more; runSummary.hidden = true; startTimer(); shapeNext();
+    D.learnN = n+more; runSummary.hidden = true; document.body.classList.add('inrun'); startTimer(); shapeNext();
   } });
   finish('You practiced '+n+' chord shapes', 'Now build them from memory, no marks this time. Correct notes stay, and help is here if you need it.', extras);
 }
