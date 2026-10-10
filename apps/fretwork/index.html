@@ -51,6 +51,9 @@
   h1 .mark{width:19px; height:19px; color:var(--accent); flex:none}
   .brand{color:var(--ink); font-weight:800}
   .hdr{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .soundbtn{white-space:nowrap}
+  /* at 360 the tagline wrapped and squeezed the sound button onto two lines (seen 10 Oct) */
+  @media (max-width:380px){ .hdr .tagline{display:none} }
   .soundbtn{background:var(--field); border:1px solid var(--line); color:var(--muted); border-radius:99px;
     font:600 12px/1 inherit; font-size:12px; padding:7px 12px; cursor:pointer}
   .soundbtn[aria-pressed="true"]{color:var(--accent); border-color:var(--frame)}
@@ -123,14 +126,15 @@
   .prompt .prog{font-size:13px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums}
   .prompt .prog b{color:var(--ink); font-size:16px}
 
-  .boardwrap{display:flex; justify-content:center}
-  .tunestrip{display:flex; gap:6px; margin:0 0 8px}
-  .tunestrip .chip.tune{flex:1; min-width:0; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:4px 0}
+  /* F2 (Astra D08): the neck uses the card's padding too, so six strings get 48 px columns at 360 wide */
+  .boardwrap{display:flex; justify-content:center; margin-left:-14px; margin-right:-14px}
+  .tunestrip{display:flex; gap:4px; margin:0 -10px 8px}
+  .tunestrip .chip.tune{flex:1; min-width:48px; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:4px 0}
   .tunestrip .chip.tune b{font-size:18px; line-height:1}
   .tunestrip .chip.tune small{font-size:12px; color:var(--muted); line-height:1.4}
   .tunepop{margin:0 0 8px; padding:10px; border:1px solid var(--line, rgba(128,128,128,.35)); border-radius:12px}
   .tunepop .chips .chip{min-width:44px}
-  svg.board{width:100%; max-width:432px; height:auto; display:block; touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
+  svg.board{width:auto; max-width:100%; height:auto; display:block; touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent}
   .cell{cursor:pointer}
   .cell:focus{outline:none}
   .cell:focus-visible{stroke:var(--accent); stroke-width:2; stroke-dasharray:4 3}
@@ -139,8 +143,10 @@
   .flashfade{animation:fwfade .55s ease-out forwards}
   @keyframes fwfade{from{opacity:.9}to{opacity:0}}
 
-  .runbar{display:flex; gap:8px; margin-top:12px; align-items:center}
-  .runbar .btn{flex:1; padding:11px 6px; font-size:13px}
+  /* the run buttons stay under the thumb however tall the neck is (Astra D09) */
+  .runbar{display:flex; gap:8px; margin-top:12px; align-items:center; position:sticky; bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+          z-index:4; background:var(--card); padding:6px 0; border-radius:10px}
+  .runbar .btn{flex:1; padding:11px 6px; font-size:14px; min-height:48px}
   .timer{font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; min-width:44px; text-align:right}
 
   .pads{display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-top:12px}
@@ -154,6 +160,11 @@
   .verdictline.good{color:var(--pass)}
   .verdictline.good b{color:var(--pass)}
 
+  /* 48 px for every tap target (Astra D32), measured as rendered */
+  .btn, .chip, select, .tabs button, .soundbtn, details.opts summary{min-height:48px}
+  .chip{min-width:48px; display:inline-flex; align-items:center; justify-content:center}
+  .tabs button{display:flex; align-items:center; justify-content:center}
+  details.opts summary{display:flex; align-items:center}
   .summary{text-align:center}
   /* the chord picker's try-before-you-add bar: it rides the bottom of the screen while the chips scroll */
   .pickbar{position:sticky; bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:5; display:flex; flex-wrap:wrap;
@@ -227,8 +238,8 @@
   .chordbox small{display:block; font-weight:500; font-size:12px; color:var(--muted)}
   .chordbox.playingnow small{color:var(--accent-ink)}
   .chordbox.addbox{color:var(--muted); font-weight:600; border-style:dashed}
-  .strstate{display:flex; gap:6px; justify-content:center; margin:8px 0 2px}
-  .strstate button{flex:1; max-width:64px; background:var(--field); border:1px solid var(--line); color:var(--muted);
+  .strstate{display:flex; gap:4px; justify-content:center; margin:8px -10px 2px}
+  .strstate button{flex:1; max-width:64px; min-width:48px; min-height:48px; background:var(--field); border:1px solid var(--line); color:var(--muted);
     border-radius:8px; font:700 13px/1.2 inherit; padding:7px 0; cursor:pointer}
   .strstate button small{display:block; font-weight:500; font-size:12px}
   .strstate button.on{color:var(--ink); border-color:var(--frame)}
@@ -242,7 +253,7 @@
   body.playfs .hdr, body.playfs .tabs{display:none}
   body.playfs #view-play .card{padding:8px; margin-bottom:0}
   body.playfs #view-play .card::before, body.playfs #view-play .card::after{display:none}
-  body.playfs svg.board{max-width:none}
+  body.playfs svg.board{max-width:none; width:100%}
   body.playfs #playSetup{display:none}
 
   .door{display:block; width:100%; text-align:left; background:var(--field); border:1px solid var(--line);
@@ -289,7 +300,7 @@
 <header class="hdr">
   <h1>
     <svg class="mark" viewBox="0 0 20 20" aria-hidden="true"><g stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M4 2v16M10 2v16M16 2v16"/><path d="M2 6.5h16M2 13.5h16" opacity=".65"/></g><circle cx="10" cy="10" r="2.6" fill="currentColor" stroke="none"/></svg>
-    <span class="brand">Fretwork</span>&nbsp;know the neck
+    <span class="brand">Fretwork</span><span class="tagline">&nbsp;know the neck</span>
   </h1>
   <button class="soundbtn" id="btnSound" aria-pressed="true">&#9834; sound on</button>
 </header>
@@ -329,7 +340,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v12</p>
+    <p class="buildtag">fretwork-v13</p>
   </div>
 </section>
 
@@ -510,9 +521,9 @@
       <span class="task" id="pTask" aria-live="polite"></span>
       <span class="prog" id="pProg"></span>
     </div>
+    <p class="verdictline" id="vLine"></p>
     <div class="boardwrap" id="runBoard"></div>
     <div class="pads" id="padHost" hidden></div>
-    <p class="verdictline" id="vLine"></p>
     <div class="runbar">
       <button class="btn ghost" id="btnShow">Show me</button>
       <button class="btn ghost" id="btnSkip">Skip</button>
@@ -1207,24 +1218,30 @@ function renderBoard(host, opts){
   if (opts.strings) for (var a=0;a<opts.strings.length;a++) active[opts.strings[a]] = true;
   var isActive = function(s){ return !active || !!active[s]; };
 
-  var CW = 64, ROWH = 52, LEFT = 34;
+  /* F2 (Astra D08, measured 10 Oct: cells were 44.7 x 36.4 px at 360 wide): the columns come from the
+     width the board really has, so a unit is a CSS pixel; 48 px is the floor, 64 the cap (four and five
+     strings sit centred), rows are 48 px */
+  var LEFT = 28, TRAIL = 6;
+  var avail = host.clientWidth || Math.max(300, Math.min(window.innerWidth || 375, 640) - 30);
+  var CW = Math.max(48, Math.min(64, Math.floor((avail - LEFT - TRAIL) / NS())));
+  var ROWH = 48;
   var hasOpen = lo===0;
   /* 9 Oct 2026, Stephen: "the open strings should be labeled at the top above them". A
      band above the open row carries each string's letter; it follows the tuning. */
   /* 64 units: the neck scales with the page, and 64 is what lands at 48 px on a 375 wide phone */
-  var LABELH = hasOpen ? 64 : 0;
+  var LABELH = hasOpen ? 48 : 0;
   var TOP = 8 + LABELH;
   var startFret = Math.max(lo,1);
   var woodTop = hasOpen ? TOP+ROWH : TOP;
   var woodRows = hi-startFret+1;
-  var W = LEFT + NS()*CW + 14;
+  var W = LEFT + NS()*CW + TRAIL;
   var H = woodTop + woodRows*ROWH + 10;
   var col = function(s){ return S.lefty ? NS()-1-s : s; };
   var sx = function(s){ return LEFT + col(s)*CW + CW/2; };
   var rowCY = function(f){ return f===0 ? TOP+ROWH/2 : woodTop + (f-startFret)*ROWH + ROWH/2; };
 
   host.innerHTML = '';
-  var svg = el('svg', { class:'board', viewBox:'0 0 '+W+' '+H, role:'group',
+  var svg = el('svg', { class:'board', viewBox:'0 0 '+W+' '+H, width:W, height:H, role:'group',
                         'aria-label':'Fretboard, frets '+lo+' to '+hi }, null);
   host.appendChild(svg);
 
