@@ -173,6 +173,8 @@
   .chip{min-width:48px; display:inline-flex; align-items:center; justify-content:center}
   .tabs button{display:flex; align-items:center; justify-content:center}
   details.opts summary{display:flex; align-items:center}
+  .grouphead{margin:18px 4px 8px}
+  .optsum{font-size:13px; color:var(--muted); margin:0 0 4px}
   .summary{text-align:center}
   /* the chord picker's try-before-you-add bar: it rides the bottom of the screen while the chips scroll */
   .pickbar{position:sticky; bottom:calc(74px + env(safe-area-inset-bottom, 0px)); z-index:5; display:flex; flex-wrap:wrap;
@@ -357,17 +359,19 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v15</p>
+    <p class="buildtag">fretwork-v16</p>
   </div>
 </section>
 
 <!-- ============ DRILLS ============ -->
 <section id="view-drills" hidden>
 
+  <!-- F3 (Astra D06 / D07): the drills in three groups, one recommended start, the chosen settings in words -->
+  <p class="sect grouphead">Notes</p>
   <div class="card dcard">
     <h3>Note hunt</h3>
     <p class="why">Where is every C? Tap all of them. The drill a teacher assigns first, because it works.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="huntNote">Note</label><select id="huntNote"></select></div>
       <div><label for="huntWin">Frets</label><select id="huntWin" class="winSel"></select></div>
@@ -380,32 +384,33 @@
   <div class="card dcard">
     <h3>Name that fret</h3>
     <p class="why">A note lights up, you name it. The reverse direction, so recall works both ways.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="nameWin">Frets</label><select id="nameWin" class="winSel"></select></div>
       <div><label for="nameStr">Strings</label><select id="nameStr" class="strSel"></select></div>
     </div>
     </details>
-    <button class="btn primary start" id="startName">Start naming</button>
+    <button class="btn start" id="startName">Start naming</button>
   </div>
 
   <div class="card dcard">
     <h3>Intervals</h3>
     <p class="why">From a gold root, tap the interval up. Chords and lines are built from these.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="chips" id="ivChips" style="margin-bottom:8px"></div>
     <div class="row">
       <div><label for="ivWin">Frets</label><select id="ivWin" class="winSel"></select></div>
       <div style="display:flex; align-items:flex-end"><button class="chip" id="ivAnyOct" aria-pressed="false" title="Accept the right note in any octave">any octave</button></div>
     </div>
     </details>
-    <button class="btn primary start" id="startIv">Start intervals</button>
+    <button class="btn start" id="startIv">Start intervals</button>
   </div>
 
+  <p class="sect grouphead">Chord shapes</p>
   <div class="card dcard" id="cardTri">
     <h3>Triads</h3>
     <p class="why">Build the shape on a string set: root position, 1st or 2nd inversion, spelled honestly. Five shapes that belong together, then you build them from memory.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="triQual">Qualities</label><select id="triQual">
         <option value="maj,min">Major and minor</option>
@@ -424,13 +429,13 @@
     </div>
 
     </details>
-    <button class="btn primary start" id="startTri">Start triads</button>
+    <button class="btn start" id="startTri">Start triads</button>
   </div>
 
   <div class="card dcard">
     <h3>Seventh chords</h3>
     <p class="why">Four notes, every inversion. Start with the big shape: root on the 6th string, skip the 5th, bar what is left. That is home base, and every other shape is that one with the voices climbing.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="sevQual">Qualities</label><select id="sevQual">
         <option value="maj7,dom7,m7">maj7, 7, m7</option>
@@ -458,13 +463,14 @@
     </div>
 
     </details>
-    <button class="btn primary start" id="startSev">Start sevenths</button>
+    <button class="btn start" id="startSev">Start sevenths</button>
   </div>
 
+  <p class="sect grouphead">Chord movement</p>
   <div class="card dcard">
     <h3>Inversion climb</h3>
     <p class="why">Build a seventh chord down low, then move every voice up to its next chord tone. The root climbs to the 3rd, the 7th to the root, the 3rd to the 5th, the 5th to the 7th. Four shapes, bottom to top.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="clQual">Chord</label><select id="clQual">
         <option value="maj7">maj7</option>
@@ -478,13 +484,13 @@
     </div>
 
     </details>
-    <button class="btn primary start" id="startClimb">Start climbing</button>
+    <button class="btn start" id="startClimb">Start climbing</button>
   </div>
 
   <div class="card dcard">
     <h3>The one note ladder</h3>
     <p class="why">Start on maj7. Flat the 7th and it is a 7. Flat the 3rd for m7. Flat the 5th for m7&#9837;5. Flat the 7th again for dim7. Five chords, one note at a time, same spot on the neck.</p>
-    <details class="opts"><summary>Options</summary>
+    <p class="optsum"></p><details class="opts"><summary>Practice settings</summary>
     <div class="row">
       <div><label for="moSet">Strings</label><select id="moSet"></select></div>
       <div><label for="moInv">Bass note</label><select id="moInv">
@@ -498,13 +504,14 @@
     </div>
 
     </details>
-    <button class="btn primary start" id="startMorph">Start the ladder</button>
+    <button class="btn start" id="startMorph">Start the ladder</button>
   </div>
 
+  <p class="sect grouphead">Rhythm</p>
   <div class="card dcard">
     <h3>The rhythm room</h3>
     <p class="why">Two hands, two speeds, one brain. Say it, hear it, tap it, then count one hand while both keep going. This works on every instrument you will ever touch.</p>
-    <button class="btn primary start" id="startRhythm">Open the rhythm room</button>
+    <button class="btn start" id="startRhythm">Open the rhythm room</button>
   </div>
 
   <div class="card dcard">
@@ -1507,6 +1514,7 @@ function show(view){
   var lit = TAB_OF[view] || view;
   for (var t in TABS) TABS[t].setAttribute('aria-selected', String(t===lit));
   if (view==='home') paintHomeSetup();
+  if (view==='drills') paintOptSums();
   if (view==='play') renderPlay();
   if (view==='modes') renderModes();
   if (view==='charts') renderCharts();
@@ -1747,6 +1755,23 @@ function fillSets(sel, rows){
   var keep = rows.some(function(w){ return w[0]===had; });
   sel.value = keep ? had : rows[0][0];
 }
+/* each drill card says what it will start with, in words, without opening its settings (Astra D07) */
+function paintOptSums(){
+  var cards = document.querySelectorAll('#view-drills .dcard');
+  for (var i=0;i<cards.length;i++){
+    var sum = cards[i].querySelector('.optsum');
+    if (!sum) continue;
+    var parts = [], sels = cards[i].querySelectorAll('details.opts select');
+    for (var j=0;j<sels.length;j++){ var o = sels[j].options[sels[j].selectedIndex]; if (o) parts.push(o.textContent); }
+    var ivs = cards[i].querySelectorAll('#ivChips .chip[aria-pressed="true"]');
+    if (ivs.length) parts.unshift(ivs.length+' interval'+(ivs.length>1?'s':''));
+    var any = cards[i].querySelector('#ivAnyOct[aria-pressed="true"]');
+    if (any) parts.push('any octave');
+    sum.textContent = parts.join(' \u00B7 ');
+  }
+}
+$('view-drills').addEventListener('change', paintOptSums);
+$('view-drills').addEventListener('click', function(){ setTimeout(paintOptSums, 0); });
 function fillAllSets(){
   document.querySelectorAll('.strSel').forEach(function(sel){ fillSets(sel, strSets()); });
   fillSets($('triSet'), triSets());
@@ -1754,6 +1779,7 @@ function fillAllSets(){
   fillSets($('moSet'), quadSets());
   var four = NS()>=4;
   $('startClimb').disabled = !four; $('startMorph').disabled = !four;
+  setTimeout(paintOptSums, 0);
 }
 fillAllSets();
 var huntNote = $('huntNote');
