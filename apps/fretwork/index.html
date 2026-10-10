@@ -155,6 +155,17 @@
   .verdictline.good b{color:var(--pass)}
 
   .summary{text-align:center}
+  /* the chord picker's try-before-you-add bar: it rides the bottom of the screen while the chips scroll */
+  .pickbar{position:sticky; bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:5; display:flex; flex-wrap:wrap;
+           align-items:center; gap:10px; margin:12px 0 4px; padding:10px 12px; background:var(--card);
+           border:1px solid var(--accent); border-radius:var(--r); box-shadow:var(--shadow)}
+  .pickbar .pickbox{flex:none; color:var(--ink); line-height:0}
+  .pickbar .pickinfo{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .pickbar .pickinfo b{font-size:20px; line-height:1.1}
+  .pickbar .pickinfo small{font-size:12.5px; color:var(--muted)}
+  .pickbar .pickbtns{flex-basis:100%; display:flex; gap:8px}
+  .pickbar .pickbtns .btn, .pickbar .pickbtns .chip{flex:1; min-height:48px}
+  .pickbar #pickHear{flex:none; min-width:48px; min-height:48px}
   .summary .big{font-size:34px; font-weight:800; margin:2px 0}
   .summary .subs{font-size:13.5px; color:var(--muted); margin-bottom:14px}
   .summary .row2{display:flex; gap:8px}
@@ -313,7 +324,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v10</p>
+    <p class="buildtag">fretwork-v11</p>
   </div>
 </section>
 
@@ -651,7 +662,16 @@
     <div class="chips" id="libChips" style="margin-bottom:8px"></div>
     <p class="rlabel">The bank: the shapes everyone meets first</p>
     <div class="chips" id="bankChips"></div>
-    <p class="why" id="bankNote" style="font-size:12px;color:var(--muted);margin:8px 0 0">Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.</p>
+    <div class="pickbar" id="pickBar" hidden>
+      <div class="pickbox" id="pickBox" aria-hidden="true"></div>
+      <div class="pickinfo"><b id="pickName"></b><small id="pickNotes"></small></div>
+      <button class="chip" id="pickHear" type="button" aria-label="Hear it again">&#9654;</button>
+      <div class="pickbtns">
+        <button class="chip" id="pickAfter" type="button" hidden></button>
+        <button class="btn primary" id="pickAdd" type="button">Add this one</button>
+      </div>
+    </div>
+    <p class="why" id="bankNote" style="font-size:12px;color:var(--muted);margin:8px 0 0">Tap a chord to hear it. Tap around and compare, then Add this one puts it on the chart. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.</p>
     <p class="verdictline" id="pickVerdict" style="min-height:18px"></p>
     <button class="btn ghost start" id="btnPickBack">Back to the chart</button>
   </div>
@@ -959,6 +979,12 @@ function T0(){ return tun().map(function(m,i){ return m-shortAt(i); }); }
 function midiAt(s,f){ return cellOk(s,f) ? T0()[s]+f : NaN; }   /* a cell below a short string's start is not a note */
 /* gauge name: string index 0 is the lowest drawn string, players count from the other side */
 function gauge(s){ return NS()-s; }
+/* a string the way a player says it: "the D string", and low E / high E when a letter comes twice */
+function strName(s){
+  var L = tunLetters(tun()), l = L[s];
+  if (L.filter(function(x){ return x===l; }).length<2) return l;
+  return (s===L.indexOf(l) ? 'low ' : 'high ')+l;
+}
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
@@ -1346,13 +1372,16 @@ function renderBoard(host, opts){
       if (kind==='root'){ c.setAttribute('r',15.5); c.setAttribute('stroke','#dca753'); c.setAttribute('stroke-width',3); }
       /* an ordinary scale note: a quiet slate coin that still reads its number */
       if (kind==='scale'){ c.setAttribute('fill','rgba(64,76,88,0.92)'); c.setAttribute('r',15); }
+      /* the chord test: a note that is right stays green, a wrong one shows red for a moment */
+      if (kind==='good'){ c.setAttribute('fill','var(--pass)'); c.setAttribute('stroke','#ffffff'); c.setAttribute('stroke-opacity',0.55); c.setAttribute('stroke-width',1.5); }
+      if (kind==='bad'){ c.setAttribute('fill','var(--fail)'); }
       if (kind==='pos' && extra){
         c.setAttribute('fill', extra.fill); c.setAttribute('r',15);
         if (extra.ring){ c.setAttribute('stroke', extra.ring); c.setAttribute('stroke-width',3.5); c.setAttribute('r',13.5); }
       }
       if (label){
         var lc = (kind==='reveal'||kind==='ring'||kind==='ringfaint') ? '#dca753'
-               : kind==='scale' ? '#f0e9dd' : '#241c14';
+               : kind==='scale' || kind==='bad' ? '#f0e9dd' : kind==='good' ? '#0d1f15' : '#241c14';
         el('text', { x:cx, y:cy+4.5, 'text-anchor':'middle', 'font-size':13, 'font-weight':700,
                      fill:lc }, g).textContent = label;
       }
@@ -1808,6 +1837,22 @@ function startTimer(){
 function fmtT(ms){ var s=Math.round(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 function endDrill(){ clearInterval(timerIv); D=null; }
 function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+/* his 10 Oct note: a drill asked F#maj7 twice running. Nothing may come up twice in a row. */
+function rndNot(arr, same){
+  for (var t=0;t<60;t++){ var x = rnd(arr); if (!same || !same(x)) return x; }
+  return rnd(arr);
+}
+function shuffle(a){ for (var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+/* a short bright ding when a test note lands */
+function ding(){
+  if (!S.sound) return;
+  try {
+    var a = ac(), o = a.createOscillator(), g = a.createGain(), t = a.currentTime;
+    o.type = 'sine'; o.frequency.value = 1568;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+0.35);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.4);
+  } catch(e){}
+}
 
 function openRun(){
   runSummary.hidden = true;
@@ -1852,13 +1897,15 @@ function finish(big, sub, extras){
   if (extras && extras.length){
     extras.forEach(function(x){
       var b = document.createElement('button');
-      b.className = 'btn'; b.type='button'; b.textContent = x.label;
+      b.className = x.primary ? 'btn primary' : 'btn'; b.type='button'; b.textContent = x.label;
       b.onclick = x.fn;
       xh.appendChild(b);
     });
     xh.hidden = false;
   } else xh.hidden = true;
   runSummary.hidden = false;
+  /* at phone height the card lands under the neck: bring it up so its buttons are seen */
+  setTimeout(function(){ try { runSummary.scrollIntoView({ behavior:'smooth', block:'nearest' }); } catch(e){} }, 60);
 }
 $('btnQuit').onclick = function(){ endDrill(); show('drills'); };
 $('btnBack').onclick = function(){ endDrill(); show('drills'); };
@@ -1988,8 +2035,10 @@ function nameNext(){
     if (D.strs && D.strs.indexOf(s)<0) continue;
     for (var f=D.win.lo; f<=D.win.hi; f++) picks.push([s,f]);
   }
-  var t = rnd(picks);
+  var lastP = D.lastP;
+  var t = rndNot(picks, function(x){ return lastP!==undefined && midiAt(x[0],x[1])%12===lastP; });
   D.cur = { s:t[0], f:t[1], p:midiAt(t[0],t[1])%12, tries:0 };
+  D.lastP = D.cur.p;
   board.setDot(t[0], t[1], 'gold');
   pProg.innerHTML = 'round <b>'+D.round+'</b> of 12';
   pluck(midiAt(t[0],t[1]));
@@ -2055,6 +2104,7 @@ function ivNext(){
     var iv = rnd(D.pool);
     var rootMidi = midiAt(s,f);
     var rootN = rnd(SPELLINGS.filter(function(n){ return pc(n)===rootMidi%12; }));
+    if (D.last && D.last.iv===iv && D.last.root===rootMidi%12) continue;   /* never the same question twice running */
     var target = up(rootN, iv);
     var wantMidi = rootMidi + IV[iv][1];
     var hits = [];
@@ -2065,6 +2115,7 @@ function ivNext(){
     }
     if (hits.length){
       D.cur = { s:s, f:f, iv:iv, rootN:rootN, target:target, wantMidi:wantMidi, hits:hits, tries:0 };
+      D.last = { iv:iv, root:rootMidi%12 };
       board.setDot(s,f,'gold',nn(rootN));
       pTask.innerHTML = 'Tap a <b>'+IV_LABEL[iv]+'</b> up<small>from the gold '+nn(rootN)+(D.anyOct?', any octave':'')+'</small>';
       pProg.innerHTML = 'round <b>'+D.round+'</b> of 10';
@@ -2144,10 +2195,45 @@ function paintHelp(cur, help){
   else
     vLine.innerHTML = 'The marked notes are given. Find the rest.';
 }
+/* his 10 Oct note: the chords in a round should belong together and never repeat. Mixed qualities
+   take the chords of one key (the home chord first); one quality alone walks round the circle of
+   fifths (C F B\u266D E\u266D...), the way ii V I songs move. Up to 8, every one playable, none twice. */
+function buildShapeSet(cfg){
+  var sev = cfg.quals.some(function(q){ return QUAL[q].ivs.length===4; });
+  var DEG = ['P1','M2','M3','P4','P5','M6','M7'];
+  var DQ = sev ? ['maj7','m7','m7','maj7','dom7','m7','m7b5'] : ['maj','min','min','maj','maj','min','dim'];
+  var out = [];
+  function tryAdd(root, qual){
+    for (var k=0;k<out.length;k++) if (pc(out[k].root)===pc(root) && out[k].qual===qual) return;
+    var inv = cfg.inv==='mix' ? Math.floor(Math.random()*QUAL[qual].ivs.length) : bassToInv(+cfg.inv, cfg.drop);
+    var shape = shapeFor(root, qual, inv, cfg.set, cfg.drop);
+    var playable = shape.inst.filter(function(fr){ return Math.max.apply(null,fr)<=12; });
+    if (!playable.length) return;
+    shape.inst = playable;
+    out.push({ root:root, qual:qual, inv:inv, shape:shape });
+  }
+  var label = '';
+  for (var t=0; t<24 && out.length<4; t++){
+    out = [];
+    var key = rnd(ROOTS);
+    [0].concat(shuffle([1,2,3,4,5,6])).forEach(function(d){
+      if (cfg.quals.indexOf(DQ[d])>=0) tryAdd(up(key, DEG[d]), DQ[d]);
+    });
+    label = 'in the key of '+nn(key);
+  }
+  if (out.length<4){
+    out = [];
+    var i0 = Math.floor(Math.random()*12);
+    for (var j=0; j<12 && out.length<8; j++) tryAdd(ROOTS[(i0-j+120)%12], cfg.quals[j%cfg.quals.length]);
+    label = 'round the circle of fifths';
+  }
+  return { list:out.slice(0,8), label:label };
+}
 function runShapes(cfg){
   openRun();
-  var ROUNDS = 8;
+  var built = buildShapeSet(cfg);
   D = { mode:'shape', cfg:cfg, round:0, right:0, miss:0, cur:null, taps:{},
+        list:built.list, label:built.label, learnN:Math.min(5, built.list.length),
         again:function(){ runShapes(cfg); },
         skip:function(){ shapeNext(); },
         reveal:function(){
@@ -2183,32 +2269,105 @@ function shapeNext(){
   board.clearDots();
   D.taps = {};
   vLine.textContent='';
-  if (D.round>=8){
-    if (D.miss===0) cheer('Every voicing!');
-    finish(D.right+' of 8', D.miss===0 ? 'Every voicing, first try.' : D.miss+' shown or missed. Same set again tomorrow.');
+  if (!D.list.length){ finish('No playable shape', 'That combination does not fit the neck. Try another string set.'); return; }
+  if (D.round>=D.learnN){ shapesLearned(); return; }
+  var cfg = D.cfg, it = D.list[D.round];
+  D.round++;
+  D.cur = { root:it.root, qual:it.qual, inv:it.inv, set:cfg.set, drop:cfg.drop, shape:it.shape, inst:it.shape.inst[0], wrong:0 };
+  var invWord = cfg.drop ? TONE_WORD[it.shape.bassIdx]+' in the bass' : INV_WORD[it.inv];
+  pTask.innerHTML = '<b>'+nn(it.root)+' '+QUAL[it.qual].name+'</b><small>'+
+    invWord+', strings '+cfg.set.map(gauge).join(' ')+' &middot; '+D.label+'</small>';
+  pProg.innerHTML = 'chord <b>'+D.round+'</b> of '+D.learnN;
+  paintHelp(D.cur, cfg.help);
+}
+/* after five (or eight) the lesson turns into a test of those same chords */
+function shapesLearned(){
+  var n = D.round, cap = Math.min(8, D.list.length), more = Math.min(3, cap-n);
+  var learned = D.list.slice(0, n), cfg = D.cfg, label = D.label;
+  if (D.miss===0 && D.right===n) cheer('Every voicing!');
+  var extras = [{ label:'Test me on these '+n, primary:true, fn:function(){ runShapeTest(learned, cfg, label); } }];
+  if (more>0) extras.push({ label:'Learn '+more+' more first', fn:function(){
+    D.learnN = n+more; runSummary.hidden = true; startTimer(); shapeNext();
+  } });
+  finish(n+' chords learned', 'Now play them back from memory, no marks this time. Every note you land dings and stays green.', extras);
+}
+function runShapeTest(learned, cfg, label){
+  openRun();
+  var list = shuffle(learned.slice());
+  /* do not open the test on the chord the lesson just ended with */
+  if (list.length>1 && list[0]===learned[learned.length-1]) list.push(list.shift());
+  D = { mode:'stest', cfg:cfg, label:label, list:list, i:0, first:0, miss:0, cur:null,
+        again:function(){ runShapeTest(learned, cfg, label); },
+        skip:function(){ if (D.cur) D.miss++; testNext(); },
+        reveal:function(){
+          if (!D.cur) return;
+          D.cur.shown = true; D.miss++;
+          D.cur.set.forEach(function(s,k){ if (D.cur.got[s]===undefined) board.setDot(s, D.cur.inst[k], 'reveal', shapeLabel(D.cur.shape, k)); });
+          vLine.innerHTML = spellLine(D.cur)+'. Tap them in.';
+        } };
+  /* every string takes a tap in the test, so a note on a string the shape does not use can say so */
+  board = renderBoard($('runBoard'), { lo:0, hi:12, strings:null, onTap:testTap });
+  testNext();
+  startTimer();
+}
+function testNext(){
+  if (!D || D.mode!=='stest') return;
+  board.clearDots();
+  vLine.textContent = ''; vLine.className = 'verdictline';
+  if (D.i>=D.list.length){ testDone(); return; }
+  var it = D.list[D.i++], cfg = D.cfg;
+  D.cur = { root:it.root, qual:it.qual, inv:it.inv, set:cfg.set, drop:cfg.drop, shape:it.shape, inst:it.shape.inst[0],
+            got:{}, wrong:{}, wrongN:0, shown:false };
+  var invWord = cfg.drop ? TONE_WORD[it.shape.bassIdx]+' in the bass' : INV_WORD[it.inv];
+  pTask.innerHTML = '<b>'+nn(it.root)+' '+QUAL[it.qual].name+'</b><small>'+
+    invWord+', strings '+cfg.set.map(gauge).join(' ')+' &middot; from memory</small>';
+  pProg.innerHTML = 'test <b>'+D.i+'</b> of '+D.list.length;
+}
+/* each note is judged the moment it lands: right stays green with a ding, wrong flashes red and
+   sounds wrong, a string the shape does not use says so, and two misses on a string ring the spot */
+function testTap(s,f){
+  if (!D || D.mode!=='stest' || !D.cur) return;
+  var cur = D.cur, k = cur.set.indexOf(s), m = midiAt(s,f);
+  if (k<0){
+    cur.wrongN++;
+    board.flash(s,f,false);
+    vLine.className = 'verdictline';
+    vLine.innerHTML = 'Nothing on the '+strName(s)+' string in this shape. It uses '+cur.set.map(strName).join(', ')+'.';
     return;
   }
-  D.round++;
-  var cfg = D.cfg;
-  for (var tries=0; tries<200; tries++){
-    var root = rnd(ROOTS);
-    var qual = rnd(cfg.quals);
-    var inv = cfg.inv==='mix' ? Math.floor(Math.random()*QUAL[qual].ivs.length)
-            : bassToInv(+cfg.inv, cfg.drop);
-    var shape = shapeFor(root, qual, inv, cfg.set, cfg.drop);
-    var playable = shape.inst.filter(function(fr){ return Math.max.apply(null,fr)<=12; });
-    if (playable.length){
-      shape.inst = playable;
-      D.cur = { root:root, qual:qual, inv:inv, set:cfg.set, drop:cfg.drop, shape:shape, inst:playable[0], wrong:0 };
-      var invWord = cfg.drop ? TONE_WORD[shape.bassIdx]+' in the bass' : INV_WORD[inv];
-      pTask.innerHTML = '<b>'+nn(root)+' '+QUAL[qual].name+'</b><small>'+
-        invWord+', strings '+cfg.set.map(gauge).join(' ')+'</small>';
-      pProg.innerHTML = 'shape <b>'+D.round+'</b> of 8';
-      paintHelp(D.cur, cfg.help);
-      return;
-    }
+  if (cur.got[s]!==undefined){ if (cur.got[s]===f) pluck(m); return; }
+  if (m%12===cur.shape.pcs[k]){
+    cur.got[s] = f;
+    record(s, f, true);
+    board.setDot(s, f, 'good', shapeLabel(cur.shape, k));
+    pluck(m); ding();
+    var left = cur.set.filter(function(s2){ return cur.got[s2]===undefined; }).length;
+    if (left){ vLine.className = 'verdictline'; vLine.innerHTML = 'Yes. '+left+' to go.'; return; }
+    strum(cur.set.map(function(s2){ return midiAt(s2, cur.got[s2]); }));
+    if (!cur.wrongN && !cur.shown) D.first++;
+    S.stats.shapes++; save();
+    vLine.className = 'verdictline good';
+    vLine.innerHTML = '&#10003; '+spellLine(cur);
+    D.cur = null;
+    setTimeout(testNext, 1500);
+  } else {
+    cur.wrongN++; cur.wrong[s] = (cur.wrong[s]||0)+1;
+    record(s, f, false);
+    pluck(m);
+    board.setDot(s, f, 'bad', pcName(m%12).split(' / ')[0]);
+    setTimeout(function(){ if (D && D.cur===cur && cur.got[s]!==f) board.removeDot(s, f); }, 800);
+    var hint = '';
+    if (cur.wrong[s]>=2){ board.setDot(s, cur.inst[k], 'reveal', shapeLabel(cur.shape, k)); hint = ' The ring shows where it goes.'; }
+    vLine.className = 'verdictline';
+    vLine.innerHTML = 'Not that one on the '+strName(s)+' string.'+hint;
   }
-  finish('No playable shape', 'That combination does not fit the neck. Try another string set.');
+}
+function testDone(){
+  var n = D.list.length, cfg = D.cfg;
+  if (D.first===n) cheer('All '+n+' from memory!');
+  finish(D.first+' of '+n, D.first===n ? 'Every chord from memory, first try.' :
+    (n-D.first)+' needed a second look. Test again, or learn a new set.',
+    [{ label:'New set of chords', fn:function(){ runShapes(cfg); } }]);
 }
 /* one tap handler for every build-a-voicing drill: shapes, the climb, the ladder */
 function voiceTap(s,f){
@@ -3137,7 +3296,7 @@ function renderChordPick(){
     b.textContent = (CH.libEdit ? '✕ ' : '')+ch.n;
     b.onclick = function(){
       if (CH.libEdit){ S.chordLib.splice(i,1); save(); renderChordPick(); }
-      else addPickedChord(ch);
+      else previewPick(ch, b);
     };
     lib.appendChild(b);
   });
@@ -3155,16 +3314,76 @@ function renderChordPick(){
     var b = document.createElement('button');
     b.type='button'; b.className='chip';
     b.textContent = ch.n;
-    b.onclick = function(){ addPickedChord(ch); };
+    b.onclick = function(){ previewPick(ch, b); };
     bank.appendChild(b);
   });
-  var note = 'Tap a chord to hear it and drop it in. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.';
+  var note = 'Tap a chord to hear it. Tap around and compare, then Add this one puts it on the chart. Once it lands you can edit it, rename it, or slide the whole shape up the neck: the barre chords are all in here already, one nudge at a time.';
   if (S.inst!=='guitar') note = 'The bank is a guitar bank. Build '+INST().label.toLowerCase()+' chords on the blank neck below and keep them in My chords.';
   else if (S.tuning!=='standard')
     note = 'You are tuned to '+tunLabel()+'. The bank speaks standard tuning, so these shapes will sound different here. '+note;
   $('bankNote').textContent = note;
   $('pickVerdict').textContent = '';
+  CH.pick = null;
+  paintPickBar();
 }
+/* his 10 Oct note: a tap used to drop the chord straight onto the chart, so there was no trying the
+   next chord out. Now a tap previews (hear it, see it), the bar offers it after the chart's last
+   chord, and only Add this one commits. */
+function previewPick(ch, btn){
+  CH.pick = ch;
+  var chips = document.querySelectorAll('#libChips .chip, #bankChips .chip');
+  for (var i=0;i<chips.length;i++) chips[i].setAttribute('aria-pressed','false');
+  if (btn) btn.setAttribute('aria-pressed','true');
+  hearChord(ch.f, chartVoice(curChart()));
+  $('pickVerdict').textContent = '';
+  paintPickBar();
+}
+function chordNoteNames(f){
+  var out = [];
+  for (var s=0;s<f.length;s++) if (f[s]>=0) out.push(pcName(midiAt(s,f[s])%12).split(' / ')[0]);
+  return out.join(' ');
+}
+/* a little chord box: strings low to high left to right, x and o over the nut, the window starts at
+   the lowest fretted note when the shape sits above the 4th fret */
+function chordBoxSVG(f){
+  var ns = f.length, fr = f.filter(function(x){ return x>0; });
+  var mx = fr.length ? Math.max.apply(null, fr) : 0, mn = fr.length ? Math.min.apply(null, fr) : 0;
+  var start = mx<=4 ? 1 : mn, rows = Math.min(5, Math.max(4, mx-start+1));
+  var W = 74, H = 82, L = 8, R = 18, T = 16, B = 4;
+  var gw = (W-L-R)/Math.max(1, ns-1), gh = (H-T-B)/rows, o = [];
+  o.push('<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">');
+  for (var s=0;s<ns;s++) o.push('<line x1="'+(L+s*gw)+'" y1="'+T+'" x2="'+(L+s*gw)+'" y2="'+(H-B)+'" stroke="currentColor" stroke-opacity=".55" stroke-width="1.2"/>');
+  for (var r=0;r<=rows;r++) o.push('<line x1="'+L+'" y1="'+(T+r*gh)+'" x2="'+(L+(ns-1)*gw)+'" y2="'+(T+r*gh)+'" stroke="currentColor" stroke-opacity="'+(r===0&&start===1?'.95':'.45')+'" stroke-width="'+(r===0&&start===1?3.5:1.2)+'"/>');
+  if (start>1) o.push('<text x="'+(W-1)+'" y="'+(T+gh*0.62)+'" text-anchor="end" font-size="10" fill="currentColor" opacity=".75">'+start+'fr</text>');
+  for (var k=0;k<ns;k++){
+    var x = L+k*gw;
+    if (f[k]<0) o.push('<text x="'+x+'" y="'+(T-4)+'" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">x</text>');
+    else if (f[k]===0) o.push('<circle cx="'+x+'" cy="'+(T-7)+'" r="3.2" fill="none" stroke="currentColor" stroke-width="1.3"/>');
+    else if (f[k]>=start && f[k]<start+rows) o.push('<circle cx="'+x+'" cy="'+(T+(f[k]-start+0.5)*gh)+'" r="'+(Math.min(gw,gh)*0.38)+'" fill="var(--accent)"/>');
+  }
+  o.push('</svg>');
+  return o.join('');
+}
+function paintPickBar(){
+  var bar = $('pickBar'), ch = CH.pick, c = curChart();
+  if (!ch || !c){ bar.hidden = true; return; }
+  bar.hidden = false;
+  $('pickBox').innerHTML = chordBoxSVG(ch.f);
+  $('pickName').textContent = ch.n;
+  $('pickNotes').textContent = chordNoteNames(ch.f);
+  var last = c.chords[c.chords.length-1];
+  $('pickAfter').hidden = !last;
+  if (last) $('pickAfter').textContent = '\u25B6 after '+last.n;
+}
+$('pickHear').onclick = function(){ if (CH.pick) hearChord(CH.pick.f, chartVoice(curChart())); };
+$('pickAfter').onclick = function(){
+  var c = curChart(), pick = CH.pick;
+  if (!c || !pick || !c.chords.length) return;
+  var v = chartVoice(c), last = c.chords[c.chords.length-1];
+  hearChord(last.f, v);
+  setTimeout(function(){ hearChord(pick.f, v); }, 1100);
+};
+$('pickAdd').onclick = function(){ if (CH.pick){ addPickedChord(CH.pick); paintPickBar(); } };
 $('btnBuildNew').onclick = function(){ CH.picking = false; CH.chordIdx = -1; renderCharts(); };
 $('btnPickBack').onclick = function(){ CH.picking = false; CH.libEdit = false; renderCharts(); };
 
@@ -3385,7 +3604,7 @@ window.__fw = {
   get state(){ return S; },
   get playVoices(){ return Object.keys(playPtr).length; },
   get loop(){ return LOOP; },
-  up: up, pc: pc, nn: nn, shapeFor: shapeFor, midiAt: midiAt, analyze: analyzeChord,
+  up: up, pc: pc, nn: nn, shapeFor: shapeFor, midiAt: midiAt, analyze: analyzeChord, buildShapeSet: buildShapeSet,
 };
 </script>
 </body>

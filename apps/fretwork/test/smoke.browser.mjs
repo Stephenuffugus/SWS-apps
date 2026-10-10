@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v10') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v11') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -123,6 +123,61 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (solved !== 1) throw new Error('correct triad voicing was not accepted');
   const triLabels = await page.evaluate(() => [...document.querySelectorAll('#runBoard text')].map(t => t.textContent));
   if (!triLabels.includes('R')) throw new Error('numbers-first labels missing on a solved triad: ' + triLabels.join(','));
+
+  // ── his 10 Oct notes: sets that belong together, nothing twice, then a test with green / red notes ──
+  const sets = await page.evaluate(() => {
+    const fw = window.__fw;
+    const key = (it) => fw.pc(it.root) + ':' + it.qual;
+    const one = (cfg) => { const b = fw.buildShapeSet(cfg); const ks = b.list.map(key);
+      return { n: ks.length, uniq: new Set(ks).size, label: b.label, roots: b.list.map(it => fw.pc(it.root)) }; };
+    return {
+      sev: one({ quals: ['maj7','dom7','m7'], set: [1,2,3,4], inv: '0', drop: 2 }),
+      maj7: one({ quals: ['maj7'], set: [1,2,3,4], inv: '0', drop: 2 }),
+      tri: one({ quals: ['maj','min'], set: [3,4,5], inv: 'mix', drop: 0 }),
+    };
+  });
+  for (const [k, v] of Object.entries(sets)) if (v.n < 4 || v.uniq !== v.n) throw new Error(k + ' set repeats or is too short: ' + JSON.stringify(v));
+  if (!sets.sev.label.startsWith('in the key of') || !sets.tri.label.startsWith('in the key of')) throw new Error('mixed qualities should come from one key: ' + JSON.stringify(sets));
+  if (sets.maj7.label !== 'round the circle of fifths' || sets.maj7.n !== 8) throw new Error('one quality should walk the circle, 8 long: ' + JSON.stringify(sets.maj7));
+  for (let i = 1; i < sets.maj7.roots.length; i++)
+    /* a fourth each step, or two or three when a shape will not fit under the 12th fret and is skipped */
+    if ([5, 10, 3].indexOf((sets.maj7.roots[i] - sets.maj7.roots[i-1] + 12) % 12) < 0) throw new Error('the circle walk should keep moving up by fourths: ' + sets.maj7.roots.join(','));
+  // the lesson ends after five; the summary offers the test
+  await page.evaluate(() => { const d = window.__fw.drill; d.round = d.learnN; d.skip(); });
+  await page.waitForTimeout(200);
+  const testBtn = await page.evaluate(() => { const b = document.querySelector('#sumExtra .btn.primary'); return b ? b.textContent : ''; });
+  if (!/^Test me on these \d$/.test(testBtn)) throw new Error('no test offered after the lesson: ' + testBtn);
+  await page.click('#sumExtra .btn.primary');
+  await page.waitForTimeout(250);
+  const tcur = await page.evaluate(() => { const d = window.__fw.drill; return { mode: d.mode, n: d.list.length, set: d.cur.set, inst: d.cur.inst }; });
+  if (tcur.mode !== 'stest') throw new Error('the test did not start: ' + tcur.mode);
+  const offString = [0,1,2,3,4,5].find(x => !tcur.set.includes(x));
+  await page.click(`#runBoard rect.cell[data-s="${offString}"][data-f="3"]`);
+  await page.waitForTimeout(120);
+  if (!(await page.textContent('#vLine')).includes('Nothing on the')) throw new Error('a string the shape does not use should say so');
+  const wrongF = tcur.inst[0] >= 12 ? tcur.inst[0] - 1 : tcur.inst[0] + 1;
+  await page.click(`#runBoard rect.cell[data-s="${tcur.set[0]}"][data-f="${wrongF}"]`);
+  await page.waitForTimeout(120);
+  const red = await page.evaluate(() => [...document.querySelectorAll('#runBoard circle')].some(c => c.getAttribute('fill') === 'var(--fail)'));
+  if (!red) throw new Error('a wrong note should show red');
+  for (let i = 0; i < tcur.set.length; i++) {
+    await page.click(`#runBoard rect.cell[data-s="${tcur.set[i]}"][data-f="${tcur.inst[i]}"]`);
+    await page.waitForTimeout(80);
+  }
+  const greens = await page.evaluate(() => [...document.querySelectorAll('#runBoard circle')].filter(c => c.getAttribute('fill') === 'var(--pass)').length);
+  if (greens !== tcur.set.length) throw new Error('every right note should stay green: ' + greens + ' of ' + tcur.set.length);
+  await page.waitForFunction(() => /test <b>2<\/b>/.test(document.getElementById('pProg').innerHTML), { timeout: 4000 });
+  if (await page.evaluate(() => window.__fw.drill.first) !== 0) throw new Error('a chord with a miss must not count as first try');
+
+  // nothing twice running: name the note and intervals, many draws
+  await page.click('#btnQuit');
+  for (let pass = 0; pass < 3; pass++) {
+    await page.click('#startName');
+    await page.waitForTimeout(150);
+    const ps = await page.evaluate(() => { const d = window.__fw.drill, out = [d.cur.p]; for (let i = 0; i < 10; i++){ d.skip(); out.push(d.cur.p); } return out; });
+    for (let i = 1; i < ps.length; i++) if (ps[i] === ps[i-1]) throw new Error('name the note asked the same note twice running: ' + ps.join(','));
+    if (pass < 2) await page.click('#btnQuit');   /* the next step quits the last one */
+  }
 
   // ── inversion climb on the big-shape string set: four shapes, rising bass ──
   await page.click('#btnQuit');
@@ -290,10 +345,29 @@ await withApp('fretwork', async ({ page, errors }) => {
   // the add flow opens the picker: the bank is stocked and one tap adds
   const bankN = await page.evaluate(() => document.querySelectorAll('#bankChips .chip').length);
   if (bankN < 25) throw new Error('the bank looks thin: ' + bankN);
-  await page.click('#bankChips .chip');
+  // his 10 Oct note: a tap PREVIEWS (hear it, see it), tapping around adds nothing, Add this one commits
+  const chordsNow = () => page.evaluate(() => window.__fw.state.charts[window.__fw.state.charts.length-1].chords.length);
+  await page.click('#bankChips .chip:nth-child(1)');
   await page.waitForTimeout(150);
-  const picked = await page.evaluate(() => window.__fw.state.charts[window.__fw.state.charts.length-1].chords.length);
-  if (picked !== 1) throw new Error('a bank tap did not add a chord: ' + picked);
+  await page.click('#bankChips .chip:nth-child(3)');
+  await page.waitForTimeout(150);
+  if (await chordsNow() !== 0) throw new Error('a bank tap added a chord instead of previewing it');
+  const bar = await page.evaluate(() => ({
+    hidden: document.getElementById('pickBar').hidden,
+    name: document.getElementById('pickName').textContent,
+    want: document.querySelector('#bankChips .chip:nth-child(3)').textContent,
+    pressed: [...document.querySelectorAll('#bankChips .chip[aria-pressed="true"]')].map(b => b.textContent),
+    box: !!document.querySelector('#pickBox svg circle'),
+  }));
+  if (bar.hidden || bar.name !== bar.want || bar.pressed.length !== 1 || bar.pressed[0] !== bar.want || !bar.box)
+    throw new Error('the pick bar did not follow the tapped chord: ' + JSON.stringify(bar));
+  await page.click('#pickAdd');
+  await page.waitForTimeout(150);
+  const picked = await chordsNow();
+  if (picked !== 1) throw new Error('Add this one did not add the previewed chord: ' + picked);
+  const pickedName = await page.evaluate(() => { const c = window.__fw.state.charts[window.__fw.state.charts.length-1]; return c.chords[0].n; });
+  if (pickedName !== bar.want) throw new Error('the chart got ' + pickedName + ' instead of the previewed ' + bar.want);
+  if (await page.evaluate(() => document.getElementById('pickAfter').hidden)) throw new Error('the after-the-last-chord button should show once the chart has a chord');
   // the chord brain: an open Am7 reads as Am7 before anything is typed
   const offers = await page.evaluate(() => window.__fw.analyze([-1,0,2,0,1,0]).map(o => o.name));
   if (offers[0] !== 'Am7') throw new Error('the chord brain misread x02010: ' + offers.join(','));
@@ -438,5 +512,5 @@ await withApp('fretwork', async ({ page, errors }) => {
   if (!gtrCharts.includes('Smoke Test Jam')) throw new Error('the guitar chart should be back: ' + gtrCharts);
 
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
+  console.log('smoke pass: try-before-you-add picker, key and circle chord sets with no repeats, the learned-chords test with green and red notes, no note twice running, oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
 });
