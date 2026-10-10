@@ -254,6 +254,18 @@
   .buildtag{font-size:11px; color:var(--muted); opacity:.7; text-align:center; margin:10px 0 0}
   [hidden]{display:none !important}
   @media (prefers-reduced-motion:reduce){ .dot-gold{animation:none} }
+  /* the Pi rail (pi.js): the unlock ask and its one line toast. Only ever shown on fretwork.lucidwinds.com. */
+  #piAsk{position:fixed; inset:0; background:rgba(10,8,6,.72); display:none; align-items:center; justify-content:center; z-index:60; padding:16px}
+  #piAsk.on{display:flex}
+  #piAsk .box{position:relative; width:100%; max-width:380px; max-height:100%; overflow-y:auto; padding:18px}
+  #piAsk h2{margin:0 0 10px; padding-right:52px; font-size:19px}
+  #piAsk p{margin:0 0 10px; line-height:1.45; font-size:15px}
+  #piAsk .row{display:flex; gap:8px; margin-top:8px}
+  #piAsk .row .btn{flex:1; min-height:48px; font-size:15px}
+  #piAsk .x{position:absolute; top:6px; right:6px; width:48px; height:48px; border:0; background:none; color:var(--muted); font-size:26px; cursor:pointer}
+  #piToast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--card); color:var(--ink);
+    border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:14px; box-shadow:var(--shadow); z-index:61; max-width:90vw; display:none}
+  #piToast.on{display:block}
 </style>
 </head>
 <body>
@@ -281,7 +293,7 @@
   <div class="card">
     <p class="sect">Welcome</p>
     <p style="font-size:14.5px; margin:0 0 6px"><b>A practice room, not a course.</b> Built by a working guitar and theory teacher.</p>
-    <p style="font-size:13px; color:var(--muted); margin:0">No microphone, no account, no ads, nothing leaves your phone.</p>
+    <p id="homePromise" style="font-size:13px; color:var(--muted); margin:0">No microphone, no account, no ads, nothing leaves your phone.</p>
   </div>
   <div class="card">
     <p class="sect">Where are you today?</p>
@@ -301,7 +313,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>&hearts; Tip jar</a>
     <p>On the bench: sheet music on the neck, backing tracks, and the CAGED chord map. Each stays off the menu until it earns its spot.</p>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephenfurpahs@gmail.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v9</p>
+    <p class="buildtag">fretwork-v10</p>
   </div>
 </section>
 
@@ -723,6 +735,7 @@
 
 </main>
 
+<script src="pi.js"></script>
 <script>
 'use strict';
 /* ══════════════════════════════════════════════════════════════════════════
@@ -740,11 +753,14 @@ var IN_TWA = false;
 try { IN_TWA = document.referrer.indexOf('android-app://') === 0
   || (window.matchMedia && matchMedia('(display-mode: standalone)').matches && /Android/i.test(navigator.userAgent)); } catch (e) {}
 /* config seam, fleet pattern: an empty string hides the tip jar link */
-var TIP_URL = IN_TWA ? '' : 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
+/* the Pi copy (fretwork.lucidwinds.com, pi.js) is the same kind of boundary: Pi Network lists an app only if it
+   takes Pi alone, sends nobody to an outside site and collects only what it needs */
+var ON_PI = !!(window.FW_PI && window.FW_PI.active);
+var TIP_URL = (IN_TWA || ON_PI) ? '' : 'https://buy.stripe.com/bJe7sMfm9b9t9DLaud7EQ0u';
 /* a Discord webhook URL turns the footer Feedback link into an in app report
    that lands in Stephen's server the moment somebody hits send. An empty
    string keeps the plain email link. */
-var FEEDBACK_WEBHOOK = IN_TWA ? '' : 'https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha';
+var FEEDBACK_WEBHOOK = (IN_TWA || ON_PI) ? '' : 'https://discord.com/api/webhooks/1542619447804567572/WWTb3lcZl_oNp0Ul8JFX2TJ9B1H5ZeR1yq3HHdtGqvZ-_GgCTWoIzk4x217OdDMzGgha';
 
 /* ── theory ────────────────────────────────────────────────────────────── */
 var LETTERS = ['C','D','E','F','G','A','B'];
@@ -958,6 +974,10 @@ try {
   if (!INSTRUMENTS[S.inst]) S.inst = 'guitar';
   if (S.tuning!=='custom' && !INSTRUMENTS[S.inst].tunings[S.tuning]) S.tuning = INSTRUMENTS[S.inst].def;
 } catch(e){}
+/* the Pi rail (pi.js): an unbought Fretwork on Pi opens on guitar in standard tuning, its free part. Each
+   instrument's own tuning (S.tuneBy) stays saved for the day it is unlocked. Everywhere else PI says "not locked". */
+var PI = window.FW_PI || { active:false, owned:false, locked:function(){ return false; }, ask:function(){}, boot:function(){}, str:{} };
+if (PI.locked(S.inst, S.tuning)){ S.inst = 'guitar'; S.tuning = 'standard'; }
 MAXF = S.frets || 15;
 var saveT = null;
 function save(){ clearTimeout(saveT); saveT = setTimeout(function(){
@@ -1447,7 +1467,7 @@ paintSound();
 function fillInstSel(){
   var sel = $('setInst'); sel.innerHTML = '';
   for (var k in INSTRUMENTS){
-    var o = document.createElement('option'); o.value = k; o.textContent = INSTRUMENTS[k].label;
+    var o = document.createElement('option'); o.value = k; o.textContent = INSTRUMENTS[k].label + (PI.locked(k, 'standard') ? ' (' + PI.str.badge + ')' : '');
     sel.appendChild(o);
   }
   sel.value = S.inst;
@@ -1457,13 +1477,13 @@ function fillTuningSel(){
   var T = TUNS();
   for (var k in T){
     var o = document.createElement('option'); o.value = k;
-    o.textContent = T[k].label;   /* the letters live on the strip below; a 360 wide select clips them */
+    o.textContent = T[k].label + (PI.locked(S.inst, k) ? ' (' + PI.str.badge + ')' : '');   /* the letters live on the strip below; a 360 wide select clips them */
     sel.appendChild(o);
   }
   var c = S.customBy[S.inst];
   if (c && c.length){
     var oc = document.createElement('option'); oc.value = 'custom';
-    oc.textContent = 'Custom '+tunLetters(c).join('');
+    oc.textContent = 'Custom '+tunLetters(c).join('') + (PI.locked(S.inst, 'custom') ? ' (' + PI.str.badge + ')' : '');
     sel.appendChild(oc);
   }
   sel.value = S.tuning;
@@ -1483,6 +1503,7 @@ function paintStrip(){
 }
 /* the popover: twelve names and an octave either way, for one string */
 function openTuner(si, anchor){
+  if (PI.locked(S.inst, 'custom')){ PI.ask(); return; }
   var pop = $('tunePop'); pop.innerHTML = ''; pop.hidden = false;
   var T = tun().slice(), cur = T[si];
   var head = document.createElement('p'); head.className = 'why';
@@ -1525,8 +1546,9 @@ function setCustom(si, midi){
 }
 fillInstSel();
 fillTuningSel();
-$('setTuning').onchange = function(){ S.tuning=this.value; S.tuneBy[S.inst]=this.value; save(); paintStrip(); $('tunePop').hidden = true; rerenderVisible(); };
+$('setTuning').onchange = function(){ if (PI.locked(S.inst, this.value)){ this.value = S.tuning; PI.ask(); return; } S.tuning=this.value; S.tuneBy[S.inst]=this.value; save(); paintStrip(); $('tunePop').hidden = true; rerenderVisible(); };
 $('setInst').onchange = function(){
+  if (PI.locked(this.value, 'standard')){ this.value = S.inst; PI.ask(); return; }
   S.inst = this.value;
   S.tuning = S.tuneBy[S.inst] || INST().def;
   if (S.tuning==='custom' && !(S.customBy[S.inst]||[]).length) S.tuning = INST().def;
@@ -1567,7 +1589,12 @@ var setNumbers = $('setNumbers');
 setNumbers.setAttribute('aria-pressed', String(S.numbers));
 setNumbers.onclick = function(){ S.numbers=!S.numbers; save(); this.setAttribute('aria-pressed', String(S.numbers)); };
 if (TIP_URL){ var tipBtn = $('tipBtn'); tipBtn.href = TIP_URL; tipBtn.hidden = false; }
-if (IN_TWA){ var sl = $('studioLink'); if (sl){ sl.removeAttribute('href'); } }
+if (IN_TWA || ON_PI){ var sl = $('studioLink'); if (sl){ sl.removeAttribute('href'); } }
+/* the Pi copy signs in with Pi and checks its unlock with our server, so it must not promise "no account, nothing
+   leaves your phone": the privacy page's Pi Network section says what it does */
+if (ON_PI){ var hp = $('homePromise'); if (hp) hp.textContent = 'No microphone, no ads. Pi sign in only remembers your unlock; your practice stays on your phone.'; }
+if (ON_PI){ var fb = $('feedbackLink'); if (fb && fb.previousSibling){ fb.previousSibling.nodeValue = ''; } if (fb) fb.remove();
+  var ft = document.querySelector('.about .foot'); if (ft && ft.firstChild && ft.firstChild.nodeType === 3) ft.firstChild.nodeValue = 'By '; }
 
 /* feedback: with a webhook wired, the footer link opens a box that lands the
    message straight in Stephen's Discord. Without one, plain email stands. */
@@ -1717,6 +1744,7 @@ fillFretSel($('playTo'), 3, MAXF, 12);
 var deferredInstall = null;
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault();
+  if (ON_PI) return;
   deferredInstall = e;
   $('btnA2HS').hidden = false;
 });
@@ -1729,10 +1757,16 @@ $('btnA2HS').onclick = function(){
 (function(){
   var standalone = window.matchMedia && matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (!standalone && ios) $('a2hsIos').hidden = false;
+  if (!standalone && ios && !ON_PI) $('a2hsIos').hidden = false;
 })();
 if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+if (PI.active){
+  PI.onChange = function(){ fillInstSel(); fillTuningSel(); paintStrip(); };
+  PI.say = function(t){ var el = $('piToast'); if (!el){ el = document.createElement('div'); el.id = 'piToast'; el.setAttribute('role','status'); document.body.appendChild(el); }
+    el.textContent = t; el.classList.add('on'); clearTimeout(PI._toastT); PI._toastT = setTimeout(function(){ el.classList.remove('on'); }, 2600); };
+  PI.boot();
 }
 
 /* interval chips */

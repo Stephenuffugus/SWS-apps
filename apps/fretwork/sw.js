@@ -1,7 +1,7 @@
 /* Fretwork service worker: offline once installed, and the page itself is
    network first so a fix never strands on a stale phone. Bump CACHE with
    every shipped change or nobody who already installed ever receives it. */
-var CACHE = 'fretwork-v7';
+var CACHE = 'fretwork-v8';
 var ASSETS = [
   './',
   'index.html',
@@ -10,6 +10,7 @@ var ASSETS = [
   'icon-192.png',
   'icon-512.png',
   'manifest.webmanifest',
+  'pi.js',
 ];
 
 self.addEventListener('install', function (e) {
