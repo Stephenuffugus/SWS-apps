@@ -1,7 +1,7 @@
 /* Fretwork service worker: offline once installed, and the page itself is
    network first so a fix never strands on a stale phone. Bump CACHE with
    every shipped change or nobody who already installed ever receives it. */
-var CACHE = 'fretwork-v18';
+var CACHE = 'fretwork-v19';
 var ASSETS = [
   './',
   'index.html',

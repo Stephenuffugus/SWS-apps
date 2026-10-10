@@ -135,7 +135,9 @@
   .prompt .prog b{color:var(--ink); font-size:16px}
 
   /* F2 (Astra D08): the neck uses the card's padding too, so six strings get 48 px columns at 360 wide */
-  .boardwrap{display:flex; justify-content:center; margin-left:-14px; margin-right:-14px}
+  .boardwrap{display:flex; flex-wrap:wrap; justify-content:center; margin-left:-14px; margin-right:-14px}
+  .mirrornote{flex-basis:100%; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    font-size:13px; color:var(--ink); margin:0 14px 8px; padding:6px 10px; border:1px solid var(--accent); border-radius:10px}
   .tunestrip{display:flex; gap:4px; margin:0 -10px 8px}
   .tunestrip .chip.tune{flex:1; min-width:48px; min-height:48px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; padding:4px 0}
   .tunestrip .chip.tune b{font-size:18px; line-height:1}
@@ -363,7 +365,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot"><span id="footLead">A free tool by </span><a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v18</p>
+    <p class="buildtag">fretwork-v19</p>
   </div>
 </section>
 
@@ -1039,6 +1041,10 @@ var S = { v:1, sound:true, lefty:false, inst:'guitar', tuning:'standard', custom
 try {
   var raw = localStorage.getItem(KEY);
   if (raw){ var got = JSON.parse(raw); if (got && got.v===1) S = Object.assign(S, got); }
+  /* 10 Oct 2026: phones were found with the reversed strings stuck on (E B G D A E on every neck) after the
+     day's layout changes. Turn it off once for everyone; a left handed player turns it back on with one tap,
+     and every neck now says when it is reversed. */
+  if (!S.mirrorReset1){ S.lefty = false; S.mirrorReset1 = true; S.mirrorResetSave = true; }
   if (!S.tuneBy || typeof S.tuneBy!=='object') S.tuneBy = {};
   if (!S.customBy || typeof S.customBy!=='object') S.customBy = {};
   if (S.custom && S.custom.length===6 && !S.customBy.guitar) S.customBy.guitar = S.custom;   /* v7 saves kept one custom tuning, the guitar's */
@@ -1269,6 +1275,17 @@ function renderBoard(host, opts){
   var rowCY = function(f){ return f===0 ? TOP+ROWH/2 : woodTop + (f-startFret)*ROWH + ROWH/2; };
 
   host.innerHTML = '';
+  /* a reversed neck always says so, with a one tap way back (10 Oct: it was on without anyone noticing) */
+  if (S.lefty){
+    var mn = document.createElement('div');
+    mn.className = 'mirrornote';
+    mn.appendChild(document.createTextNode('Strings reversed (left handed view). '));
+    var mb = document.createElement('button');
+    mb.type = 'button'; mb.className = 'chip'; mb.textContent = 'Turn off';
+    mb.onclick = function(){ flipMirror(); };
+    mn.appendChild(mb);
+    host.appendChild(mn);
+  }
   var svg = el('svg', { class:'board', viewBox:'0 0 '+W+' '+H, width:W, height:H, role:'group',
                         'aria-label':'Fretboard, frets '+lo+' to '+hi }, null);
   host.appendChild(svg);
@@ -1667,7 +1684,12 @@ function rerenderVisible(){
   if (!VIEWS.modes.hidden) renderModes();
   if (!VIEWS.charts.hidden) renderCharts();
 }
-function flipMirror(){ S.lefty=!S.lefty; save(); paintMirror(); rerenderVisible(); }
+function flipMirror(){
+  S.lefty=!S.lefty; save(); paintMirror(); rerenderVisible();
+  /* a drill draws its own neck: start it again on the flipped one */
+  if (!VIEWS.run.hidden && D && D.again) D.again();
+}
+if (S.mirrorResetSave){ delete S.mirrorResetSave; save(); }
 setLefty.onclick = flipMirror;
 $('playMirror').onclick = flipMirror;
 paintMirror();
