@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v20') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v21') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -601,6 +601,103 @@ await withApp('fretwork', async ({ page, errors }) => {
   await page.click('#tabDrills'); await page.waitForTimeout(150);
   await page.selectOption('#setInst', 'guitar'); await page.waitForTimeout(200);
 
+  // ── pro tips (his 18 Oct note): keep the common tones, worked out by the engine, heard both ways ──
+  const lead = await page.evaluate(() => {
+    const T = window.__fw.tips, fw = window.__fw, ex = T.list[0].examples, out = {};
+    const L = T.lines(ex[0]), W = L.walk;
+    out.walk = W.map(o => o.fr.join(','));
+    out.jump = L.jump.map(o => o.fr.join(','));
+    out.set = L.set.join(',');
+    out.pairs = [];
+    for (let i = 1; i < W.length; i++) {
+      const a = W[i - 1], b = W[i];
+      const share = a.sh.pcs.some(p => b.sh.pcs.indexOf(p) >= 0);
+      const d = b.midis.map((m, k) => m - a.midis[k]);
+      // the smallest total movement any voicing of this chord could make from the last one
+      const best = Math.min(...T.options(b.root, b.qual, L.set, 0).map(o => T.cost(a.midis, o).tot));
+      out.pairs.push({ share, held: d.filter(x => x === 0).length, maxMove: Math.max(...d.map(Math.abs)), tot: d.reduce((s, x) => s + Math.abs(x), 0), best });
+    }
+    const L2 = T.lines(ex[1]);
+    out.iiVI = L2 && L2.walk.map(o => o.fr.join(','));
+    out.iiVImax = L2 && Math.max(...L2.walk.slice(1).map((o, i) => T.cost(L2.walk[i].midis, o).mx));
+    return out;
+  });
+  if (lead.set !== '3,4,5') throw new Error('the triad example belongs on the top three strings: ' + JSON.stringify(lead));
+  lead.pairs.forEach((p, i) => {
+    if (p.share && p.held < 1) throw new Error('walking chord ' + (i + 2) + ' shares notes with the one before but holds none: ' + JSON.stringify(lead));
+    if (p.maxMove > 2) throw new Error('a walking voice moved more than a whole step: ' + JSON.stringify(lead));
+    if (p.tot !== p.best) throw new Error('walking chord ' + (i + 2) + ' is not the smallest move available: ' + JSON.stringify(lead));
+  });
+  if (lead.pairs[2].share || lead.pairs[2].held !== 0) throw new Error('F to G shares no note, so nothing can stay: ' + JSON.stringify(lead.pairs[2]));
+  if (lead.walk.join(' ') !== '0,1,0 2,1,0 2,1,1 4,3,3 5,5,3' || lead.jump.join(' ') !== '5,5,3 2,1,0 10,10,8 12,12,10 5,5,3')
+    throw new Error('C Am F G C should walk 010 210 211 433 553 and jump from root position: ' + JSON.stringify(lead));
+  if (!lead.iiVI || lead.iiVI.join(' ') !== '3,5,3,5 3,4,3,3 2,4,1,3' || lead.iiVImax > 2)
+    throw new Error('the ii V I should walk Dm7 3535, G7 3433, Cmaj7 2413: ' + JSON.stringify(lead));
+  // one tap from Home, both examples drawn, the words follow the tapped chord
+  await page.click('#tabHome'); await page.waitForTimeout(150);
+  await page.click('#goTips'); await page.waitForTimeout(350);
+  const tipView = await page.evaluate(() => ({ title: document.querySelector('#view-protips .pttitle').textContent,
+    tiles: document.querySelectorAll('#ptx-common-0 .ptile').length, tiles2: document.querySelectorAll('#ptx-common-1 .ptile').length,
+    tab: document.getElementById('tabHome').getAttribute('aria-selected'), dots: document.querySelectorAll('#ptx-common-0 [data-ptneck] svg.board text').length }));
+  if (tipView.title !== 'Keep the common tones' || tipView.tiles !== 5 || tipView.tiles2 !== 3 || tipView.tab !== 'true')
+    throw new Error('Pro tips should open from Home with both examples: ' + JSON.stringify(tipView));
+  await page.click('#ptx-common-0 .ptile[data-pti="1"]'); await page.waitForTimeout(200);
+  const words = await page.evaluate(() => [...document.querySelectorAll('#ptx-common-0 .ptmoves li')].map(l => l.textContent));
+  if (words[0] !== 'C/G to Am' || !words.includes('G moves up a whole step to A on the G string.') || !words.includes('C stays on the B string.') || !words.includes('E stays on the high E string.'))
+    throw new Error('C/G to Am should say G up a whole step to A and C, E stay: ' + JSON.stringify(words));
+  await page.click('#ptx-common-0 [data-ptmode="jump"]'); await page.waitForTimeout(200);
+  const jumpTiles = await page.evaluate(() => [...document.querySelectorAll('#ptx-common-0 .ptile')].map(t => t.dataset.frets));
+  if (jumpTiles[2] !== '-1,-1,-1,10,10,8') throw new Error('Jumping should show F in root position at 10 10 8: ' + jumpTiles.join(' '));
+  await page.click('#ptx-common-0 [data-ptmode="walk"]'); await page.waitForTimeout(200);
+  await page.click('#ptx-common-0 [data-ptplay]'); await page.waitForTimeout(1500);
+  const playing = await page.evaluate(() => ({ on: [...document.querySelectorAll('#ptx-common-0 .ptile.playingnow')].map(t => t.dataset.pti), timers: window.__fw.tips.state.timers.length }));
+  if (playing.on.join() !== '1' || playing.timers < 5) throw new Error('Play them in order should step through the line: ' + JSON.stringify(playing));
+  // the tip appears once, in the finder after Play them in order, and Got it is remembered across a reload
+  await page.evaluate(() => { delete window.__fw.state.tipsSeen.common; });
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.click('#startFinder'); await page.waitForTimeout(300);
+  if (await page.evaluate(() => !document.getElementById('ptOfferFinder').hidden)) throw new Error('the finder tip should wait for Play them in order');
+  if (await page.evaluate(() => document.getElementById('fdInv').hidden)) { await page.click('#fdInvBtn'); await page.waitForTimeout(250); }
+  await page.click('#fdInvPlay'); await page.waitForTimeout(5600);
+  const offer = await page.evaluate(() => { const h = document.getElementById('ptOfferFinder'); return { shown: !h.hidden, text: h.textContent }; });
+  if (!offer.shown || !/keep the common tones/.test(offer.text)) throw new Error('after Play them in order the finder should offer the tip: ' + JSON.stringify(offer));
+  await page.click('#ptOfferFinder [data-pt="show"]'); await page.waitForTimeout(350);
+  const shown = await page.evaluate(() => ({ view: !document.getElementById('view-protips').hidden, back: document.getElementById('btnTipsBack').textContent,
+    seen: window.__fw.state.tipsSeen.common, tab: document.getElementById('tabDrills').getAttribute('aria-selected') }));
+  if (!shown.view || shown.back !== 'Back to the finder' || !shown.seen || shown.tab !== 'true') throw new Error('Show me should open the tip and remember it: ' + JSON.stringify(shown));
+  await page.click('#btnTipsBack'); await page.waitForTimeout(250);
+  if (await page.evaluate(() => document.getElementById('view-finder').hidden)) throw new Error('Back to the finder should go back to the finder');
+  await page.waitForTimeout(400);
+  await page.reload({ waitUntil: 'load' }); await page.waitForTimeout(400);
+  // a chart with three chords would offer it, but it is seen now, so nothing shows; unseen, it shows
+  await page.evaluate(() => { const S = window.__fw.state, c = S.charts.find(x => x.name === 'Smoke Test Jam'); c.chords.push(JSON.parse(JSON.stringify(c.chords[0]))); });
+  const openJam = async () => { await page.click('#tabCharts'); await page.waitForTimeout(200);
+    await page.evaluate(() => { const r = [...document.querySelectorAll('#chartList > *')].find(x => x.textContent.includes('Smoke Test Jam')); if (r) r.click(); }); await page.waitForTimeout(250); };
+  await openJam();
+  if (await page.evaluate(() => !document.getElementById('ptOfferChart').hidden)) throw new Error('a seen tip must not show again after a reload');
+  await page.click('#btnChartBack'); await page.waitForTimeout(150);
+  await page.evaluate(() => { delete window.__fw.state.tipsSeen.common; });
+  await openJam();
+  if (await page.evaluate(() => document.getElementById('ptOfferChart').hidden)) throw new Error('a chart with three chords should offer the tip');
+  await page.click('#ptOfferChart [data-pt="got"]'); await page.waitForTimeout(150);
+  if (await page.evaluate(() => !document.getElementById('ptOfferChart').hidden || !window.__fw.state.tipsSeen.common)) throw new Error('Got it should hide the tip and remember it');
+  await page.evaluate(() => { const S = window.__fw.state, c = S.charts.find(x => x.name === 'Smoke Test Jam'); c.chords.pop(); });
+  await page.click('#btnChartBack'); await page.waitForTimeout(150);
+  // a neck that cannot hold the example says so and offers guitar
+  await page.click('#tabDrills'); await page.selectOption('#setInst', 'mandolin'); await page.waitForTimeout(200);
+  await page.click('#tabHome'); await page.click('#goTips'); await page.waitForTimeout(300);
+  const tipMando = await page.evaluate(() => [...document.querySelectorAll('#view-protips .ptex')].map(x => ({ tiles: x.querySelectorAll('.ptile').length, guitar: [...x.querySelectorAll('button')].some(b => b.textContent === 'Show it on guitar'), note: x.textContent })));
+  const tipMandoMissing = tipMando.filter(m => !m.tiles);
+  if (tipMandoMissing.some(m => !m.guitar || !/cannot be shown here/.test(m.note))) throw new Error('an example the mandolin cannot hold should say so and offer guitar: ' + JSON.stringify(tipMando));
+  if (tipMandoMissing.length) {
+    await page.click('#view-protips .ptex button.btn:not(.primary)'); await page.waitForTimeout(300);
+    const back = await page.evaluate(() => ({ inst: window.__fw.state.inst, tiles: document.querySelectorAll('#ptx-common-0 .ptile').length }));
+    if (back.inst !== 'guitar' || back.tiles !== 5) throw new Error('Show it on guitar should switch to guitar and draw the example: ' + JSON.stringify(back));
+  } else {
+    await page.click('#tabDrills'); await page.selectOption('#setInst', 'guitar'); await page.waitForTimeout(200);
+  }
+  console.log('tips: mandolin ' + JSON.stringify(tipMando.map(m => m.tiles)));
+
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: try-before-you-add picker, key and circle chord sets with no repeats, the learned-chords test with green and red notes, no note twice running, oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, the chord finder (8x998x, keep across a reload, four climbing inversions, practice and back, the bass note), ' + tag);
+  console.log('smoke pass: try-before-you-add picker, key and circle chord sets with no repeats, the learned-chords test with green and red notes, no note twice running, oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, the chord finder (8x998x, keep across a reload, four climbing inversions, practice and back, the bass note), pro tips (C Am F G C walks 010 210 211 433 553 holding common tones with no voice past a whole step, the ii V I 3535 3433 2413, the words, both ways, play in order, the offer once in the finder and a chart, Show me and back, Got it across a reload, a mandolin offers guitar), ' + tag);
 });

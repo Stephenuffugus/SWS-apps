@@ -221,6 +221,30 @@
   .fdspell{font-size:13.5px; color:var(--muted); margin:4px 0 8px}
   .fdspell b{color:var(--ink); font-size:16px; letter-spacing:.04em}
   .minirow .btn[aria-pressed="true"]{border-color:var(--gold); color:var(--gold)}
+  /* pro tips (his 18 Oct note): a tip reads like a teacher talking, then its example plays both ways */
+  .pttitle{font-size:20px; font-weight:800; line-height:1.2; margin:0 0 8px}
+  .ptbody p{font-size:15px; line-height:1.5; margin:0 0 10px}
+  .ptex{border-top:1px solid var(--line); margin-top:14px; padding-top:12px}
+  .ptex .famhead{margin-top:0}
+  .ptmodes{display:flex; gap:8px; margin:8px 0}
+  .ptmodes .chip{flex:1}
+  .ptline{display:grid; grid-template-columns:repeat(5, minmax(48px, 1fr)); gap:5px; margin:4px 0 10px}
+  .ptline.n3{grid-template-columns:repeat(3, minmax(48px, 1fr))}
+  .ptile{display:flex; flex-direction:column; align-items:center; min-height:48px; min-width:48px; padding:6px 2px 4px; background:var(--field);
+    border:1px solid var(--line); border-radius:10px; color:var(--ink); font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
+  .ptile b{font-size:14px; line-height:1.2; white-space:nowrap}
+  .ptile .vbox{line-height:0; width:100%; max-width:74px; margin-top:2px}
+  .ptile .vbox svg{width:100%; height:auto}
+  .ptile[aria-pressed="true"]{border-color:var(--gold); box-shadow:0 0 0 1.5px var(--gold)}
+  .ptile.playingnow{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .ptlegend{display:flex; gap:14px; font-size:13px; color:var(--muted); margin:8px 2px 4px}
+  .ptlegend i{display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:5px; vertical-align:-1px}
+  .ptmoves{list-style:none; margin:0 0 4px; padding:0; font-size:14px; line-height:1.45}
+  .ptmoves li{padding:3px 2px}
+  .ptoffer{margin:12px 0 2px; padding:12px; border:1px solid var(--accent); border-radius:12px; background:var(--field)}
+  .ptoffer p{margin:0; font-size:14px; line-height:1.45}
+  .ptoffer p b{font-size:15px}
+  .ptoffer .minirow .btn{flex:1}
   /* the support row on Home: quiet, never red (red means wrong in this app) */
   .btn.tip{background:var(--field); border-color:var(--line); color:var(--ink)}
   .summary .big{font-size:34px; font-weight:800; margin:2px 0}
@@ -380,6 +404,7 @@
     <div class="chips" style="margin-top:6px">
       <button class="chip" id="goPlay">Just play</button>
       <button class="chip" id="goRhythm">Rhythm room</button>
+      <button class="chip" id="goTips">Pro tips</button>
       <button class="chip" id="goDrills" hidden>all drills</button>
       <button class="chip" id="goCharts" hidden>my charts</button>
     </div>
@@ -390,7 +415,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot"><span id="footLead">A free tool by </span><a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v20</p>
+    <p class="buildtag">fretwork-v21</p>
   </div>
 </section>
 
@@ -544,6 +569,12 @@
     <button class="btn start" id="startMorph">Start the ladder</button>
   </div>
 
+  <div class="card dcard" id="cardTips">
+    <h3>Pro tips</h3>
+    <p class="why">How working players connect chords, with examples you can hear both ways.</p>
+    <button class="btn start" id="startTips">Read the tips</button>
+  </div>
+
   <p class="sect grouphead">Rhythm</p>
   <div class="card dcard">
     <h3>The rhythm room</h3>
@@ -576,6 +607,19 @@
 </section>
 
 <!-- ============ RUN ============ -->
+<!-- ============ PRO TIPS ============ -->
+<section id="view-protips" hidden>
+  <div class="card">
+    <div class="row" style="align-items:center; margin-bottom:4px">
+      <div style="flex:2"><p class="sect" style="margin:0">Pro tips</p></div>
+      <div style="flex:0"><button class="btn ghost" id="btnTipsBack" style="white-space:nowrap">Home</button></div>
+    </div>
+    <p class="famnote" style="margin-bottom:0">How working players think about the neck. Read a tip, then hear it.</p>
+  </div>
+  <div id="ptList"></div>
+  <p class="famnote" style="text-align:center; margin:4px 0 16px">More tips coming.</p>
+</section>
+
 <!-- ============ CHORD FINDER ============ -->
 <section id="view-finder" hidden>
   <div class="card" id="fdAskCard">
@@ -610,6 +654,7 @@
         <button class="btn" id="fdInvPlay" type="button">Play them in order</button>
         <button class="btn primary" id="fdInvPractice" type="button">Practice these</button>
       </div>
+      <div class="ptoffer" id="ptOfferFinder" hidden></div>
       <p class="famnote" id="fdOtherLbl" style="margin-top:12px">The same spread on other strings</p>
       <div class="chips" id="fdOther"></div>
     </div>
@@ -753,6 +798,7 @@
     </div>
     <p class="rlabel" style="margin-top:8px">The progression, in order</p>
     <div class="chordstrip" id="chordStrip"></div>
+    <div class="ptoffer" id="ptOfferChart" hidden></div>
     <div class="row">
       <div><label for="chartBeats">Beats a chord</label><select id="chartBeats"></select></div>
       <div><label for="chartTempo">Tempo</label><select id="chartTempo"></select></div>
@@ -1112,7 +1158,7 @@ function strName(s){
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
 var S = { v:1, sound:true, lefty:false, inst:'guitar', tuning:'standard', custom:null, tuneBy:{}, customBy:{}, frets:15, numbers:true,
-          charts:[], chordLib:[], myVoicing:{}, finder:null,
+          charts:[], chordLib:[], myVoicing:{}, finder:null, tipsSeen:{},
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
   var raw = localStorage.getItem(KEY);
@@ -1124,6 +1170,7 @@ try {
   if (!S.tuneBy || typeof S.tuneBy!=='object') S.tuneBy = {};
   if (!S.customBy || typeof S.customBy!=='object') S.customBy = {};
   if (!S.myVoicing || typeof S.myVoicing!=='object') S.myVoicing = {};
+  if (!S.tipsSeen || typeof S.tipsSeen!=='object') S.tipsSeen = {};
   if (S.custom && S.custom.length===6 && !S.customBy.guitar) S.customBy.guitar = S.custom;   /* v7 saves kept one custom tuning, the guitar's */
   if (!INSTRUMENTS[S.inst]) S.inst = 'guitar';
   if (S.tuning!=='custom' && !INSTRUMENTS[S.inst].tunings[S.tuning]) S.tuning = INSTRUMENTS[S.inst].def;
@@ -1599,7 +1646,8 @@ function shapeFor(root, qual, inv, stringSet, drop){
 /* ── views ─────────────────────────────────────────────────────────────── */
 var $ = function(id){ return document.getElementById(id); };
 var VIEWS = { home:$('view-home'), drills:$('view-drills'), run:$('view-run'), modes:$('view-modes'),
-              play:$('view-play'), charts:$('view-charts'), rhythm:$('view-rhythm'), finder:$('view-finder') };
+              play:$('view-play'), charts:$('view-charts'), rhythm:$('view-rhythm'), finder:$('view-finder'),
+              protips:$('view-protips') };
 var TABS = { home:$('tabHome'), drills:$('tabDrills'), modes:$('tabModes'), play:$('tabPlay'), charts:$('tabCharts') };
 var TAB_OF = { run:'drills', rhythm:'drills', finder:'drills' };
 function show(view){
@@ -1608,9 +1656,11 @@ function show(view){
   if (view!=='charts'){ stopChartPlay(); stopJamVoices(); }
   if (view!=='rhythm') stopPoly();
   if (view!=='finder') fdStop();
+  if (view!=='protips') ptStop();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
   document.body.classList.toggle('inrun', view==='run');
-  var lit = TAB_OF[view] || view;
+  /* the tips light the tab they were opened from */
+  var lit = view==='protips' && PT ? (TAB_OF[PT.from] || PT.from || 'home') : TAB_OF[view] || view;
   for (var t in TABS) TABS[t].setAttribute('aria-selected', String(t===lit));
   if (view==='home') paintHomeSetup();
   if (view==='drills') paintOptSums();
@@ -1619,6 +1669,7 @@ function show(view){
   if (view==='charts') renderCharts();
   if (view==='rhythm') renderPoly();
   if (view==='finder') renderFinder();
+  if (view==='protips') renderTips();
 }
 TABS.home.onclick = function(){ endDrill(); show('home'); };
 TABS.drills.onclick = function(){ endDrill(); show('drills'); };
@@ -1642,6 +1693,7 @@ paintHomeSetup();
 $('goPlay').onclick = function(){ show('play'); };
 $('goDrills').onclick = function(){ show('drills'); };
 $('goRhythm').onclick = function(){ show('rhythm'); };
+$('goTips').onclick = function(){ openTips('home'); };
 $('goCharts').onclick = function(){ show('charts'); };
 $('startRhythm').onclick = function(){ show('rhythm'); };
 
@@ -1763,6 +1815,7 @@ function rerenderVisible(){
   if (!VIEWS.modes.hidden) renderModes();
   if (!VIEWS.charts.hidden) renderCharts();
   if (!VIEWS.finder.hidden) renderFinder();
+  if (!VIEWS.protips.hidden) renderTips();
 }
 function flipMirror(){
   S.lefty=!S.lefty; save(); paintMirror(); rerenderVisible();
@@ -1818,7 +1871,7 @@ $('fbSend').onclick = function(){
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ content:'**Fretwork feedback**\n'+txt.slice(0,1500)+
-      '\n`fretwork-v20 · '+navigator.userAgent.slice(0,110)+'`' }),
+      '\n`fretwork-v21 · '+navigator.userAgent.slice(0,110)+'`' }),
   }).then(function(r){
     btn.disabled = false;
     if (!(r.ok || r.status===204)) throw new Error('bad status');
@@ -3422,6 +3475,7 @@ $('btnNewChart').onclick = function(){
 $('btnChartBack').onclick = function(){ CH.chartId = null; CH.selIdx = null; renderCharts(); };
 function renderChartEditor(){
   var c = curChart();
+  ptOffer('chart', c.chords.length>=3);
   $('chartName').value = c.name;
   $('chartBeats').value = String(c.beats);
   $('chartTempo').value = String(c.tempo);
@@ -4249,7 +4303,7 @@ $('fdInvPlay').onclick = function(){
       hearChord(fdFull(c.v, c.fr));
     }, i*1300));
   });
-  FD.timers.push(setTimeout(fdStop, FD.chain.length*1300));
+  FD.timers.push(setTimeout(function(){ fdStop(); ptOffer('finder', true); }, FD.chain.length*1300));
 };
 /* practice exactly these: the lesson marks each one where the finder showed it, then the test from memory */
 $('fdInvPractice').onclick = function(){
@@ -4272,9 +4326,313 @@ $('fdPractice').onclick = function(){
   if (v) runShapes({ quals:[v.qual], set:v.set, inv:String(v.bass), drop:v.drop, help:'most', from:'finder' });
 };
 
+/* ── pro tips ─────────────────────────────────────────────────────────────
+   His 18 Oct note: "music is all about inversions and tension resolution ... look not just at the chords but
+   the common tones among them ... keeping those common tones and moving the one or two notes as small of a
+   distance as possible is how a lot of professionals create strong lines and connections." Tips live in TIPS,
+   so his next one is a few lines: id, title, body, an offer line, and examples (chords, how many strings,
+   which spread). Every example is worked out by the engine on the player's own neck, never typed frets:
+   Jumping plays each chord in root position, Walking picks each next voicing with the least movement
+   (voiceLead), starting from whichever first voicing gives the smoothest whole line. */
+var TIPS = [
+  { id:'common', title:'Keep the common tones',
+    body:[ 'Music is all about inversions, and tension and resolution.',
+           'When you put a chord progression together and want it to flow, to feel like it is walking and holds together, look past the chords to the common tones they share. Often only one or two notes are different.',
+           'Keep the common tones where they are, and move those one or two notes the smallest distance you can. That is how a lot of professionals create strong lines and connections.' ],
+    offer:'When chords share notes, keep those notes where they are and move the rest the smallest distance you can.',
+    examples:[
+      { name:'C Am F G C', n:3, drop:0, chords:[['C','maj'],['A','min'],['F','maj'],['G','maj'],['C','maj']] },
+      { name:'Dm7 G7 Cmaj7, the ii V I in C', n:4, drop:2, chords:[['D','m7'],['G','dom7'],['C','maj7']] }
+    ] }
+];
+var PT = { from:'home', mode:{}, sel:{}, timers:[], boards:{}, focus:null };
+/* the top n strings, the banjo's short string left out; null when the neck has fewer */
+function ptSet(n){
+  var out = [];
+  for (var s=NS()-1; s>=0 && out.length<n; s--) if (!shortAt(s)) out.unshift(s);
+  return out.length===n ? out : null;
+}
+function ptName(o){
+  var nm = nn(o.root)+(SUFFIX[o.qual]||'');
+  return o.bass ? nm+'/'+o.sh.spell[0] : nm;
+}
+function ptFull(set, fr){ var f = emptyChord(); set.forEach(function(s,k){ f[s] = fr[k]; }); return f; }
+/* every playable voicing of one chord on these strings with this spread: each chord tone in the bass, each
+   place it fits within a four fret reach up to the 12th fret */
+function ptOptions(root, qual, set, drop){
+  var n = QUAL[qual].ivs.length, T = T0(), out = [];
+  for (var b=0;b<n;b++){
+    var v = fdVoicing(root, qual, b, drop===2 ? 'd2' : drop===3 ? 'd3' : 'cl', set, drop);
+    if (!v) continue;
+    v.pos.forEach(function(fr){
+      if (Math.max.apply(null, fr)>12) return;
+      out.push({ root:root, qual:qual, bass:b, sh:v.sh, set:set, fr:fr, midis:set.map(function(s,k){ return T[s]+fr[k]; }) });
+    });
+  }
+  return out;
+}
+/* how far each voice travels, string by string, in half steps */
+function ptCost(prev, o){
+  var tot = 0, mx = 0;
+  for (var k=0;k<o.midis.length;k++){ var d = Math.abs(o.midis[k]-prev[k]); tot += d; if (d>mx) mx = d; }
+  return { tot:tot, mx:mx };
+}
+/* the voice leading step: from the notes just played (one midi a string), the voicing of the next chord on
+   the same strings with the least total movement; ties go to the smaller biggest leap, then lower on the neck */
+function voiceLead(prev, root, qual, set, drop){
+  var best = null, bc = null;
+  ptOptions(root, qual, set, drop).forEach(function(o){
+    var c = ptCost(prev, o);
+    if (!best || c.tot<bc.tot || (c.tot===bc.tot && (c.mx<bc.mx || (c.mx===bc.mx && fdLow(o.fr)<fdLow(best.fr))))){ best = o; bc = c; }
+  });
+  return best;
+}
+function ptRoot(c){ return N(c[0]); }
+/* Walking: try every voicing of the first chord as the start, lead each next chord with voiceLead, keep the line
+   whose biggest leap is smallest, then the least travel, then the lowest on the neck */
+function walkLine(chords, set, drop){
+  var best = null, bk = null;
+  ptOptions(ptRoot(chords[0]), chords[0][1], set, drop).forEach(function(s0){
+    var line = [s0];
+    for (var i=1;i<chords.length;i++){
+      var o = voiceLead(line[i-1].midis, ptRoot(chords[i]), chords[i][1], set, drop);
+      if (!o) return;
+      line.push(o);
+    }
+    var k = ptLineCost(line);
+    if (!best || k.mx<bk.mx || (k.mx===bk.mx && (k.tot<bk.tot || (k.tot===bk.tot && k.low<bk.low)))){ best = line; bk = k; }
+  });
+  return best;
+}
+/* Jumping: every chord in root position, the lowest place it fits */
+function jumpLine(chords, set, drop){
+  var line = [];
+  for (var i=0;i<chords.length;i++){
+    var os = ptOptions(ptRoot(chords[i]), chords[i][1], set, drop).filter(function(o){ return o.bass===0; });
+    if (!os.length) return null;
+    os.sort(function(a,b){ return fdLow(a.fr)-fdLow(b.fr); });
+    line.push(os[0]);
+  }
+  return line;
+}
+function ptLineCost(line){
+  var tot = 0, mx = 0, low = 0;
+  line.forEach(function(o, i){
+    low += fdLow(o.fr);
+    if (!i) return;
+    var c = ptCost(line[i-1].midis, o); tot += c.tot; if (c.mx>mx) mx = c.mx;
+  });
+  return { tot:tot, mx:mx, low:low };
+}
+function ptStepWords(d){
+  var a = Math.abs(d);
+  var w = a===1 ? 'a half step' : a===2 ? 'a whole step' : a===3 ? 'a step and a half' : a===4 ? 'two whole steps' : a===12 ? 'an octave' : a+' half steps';
+  return (d>0 ? 'up ' : 'down ')+w;
+}
+/* string by string, what the chord at i did to the one before it */
+function ptMoves(line, i){
+  var o = line[i], prev = i ? line[i-1] : null;
+  return o.set.map(function(s, k){
+    var name = o.sh.spell[k];
+    if (!prev) return { s:s, kind:'first', name:name, d:0 };
+    var d = o.midis[k]-prev.midis[k];
+    return { s:s, kind: d===0 ? 'stays' : 'moves', name:name, from:prev.sh.spell[k], d:d };
+  });
+}
+function ptLines(ex){
+  var set = ptSet(ex.n);
+  if (!set) return null;
+  var walk = walkLine(ex.chords, set, ex.drop), jump = jumpLine(ex.chords, set, ex.drop);
+  return walk && jump ? { set:set, walk:walk, jump:jump } : null;
+}
+function ptStop(){
+  if (!PT) return;   /* show() runs at boot, before this part of the script has set PT */
+  PT.timers.forEach(clearTimeout);
+  PT.timers = [];
+  var on = document.querySelectorAll('#view-protips .ptile.playingnow');
+  for (var i=0;i<on.length;i++) on[i].classList.remove('playingnow');
+}
+function openTips(from, tipId){
+  PT.from = from || 'home';
+  PT.focus = tipId || null;
+  show('protips');
+  if (tipId){
+    var el2 = document.getElementById('pt-'+tipId);
+    if (el2) try { el2.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(e){}
+  } else window.scrollTo(0, 0);
+}
+var PT_BACK = { home:'Home', drills:'All drills', finder:'Back to the finder', charts:'Back to your chart' };
+$('btnTipsBack').onclick = function(){ var f = PT.from || 'home'; show(VIEWS[f] ? f : 'home'); };
+$('startTips').onclick = function(){ openTips('drills'); };
+function renderTips(){
+  ptStop();
+  $('btnTipsBack').textContent = PT_BACK[PT.from] || 'Home';
+  var host = $('ptList');
+  host.innerHTML = '';
+  TIPS.forEach(function(tip){
+    var card = document.createElement('div');
+    card.className = 'card'; card.id = 'pt-'+tip.id;
+    var h = document.createElement('h3'); h.className = 'pttitle'; h.textContent = tip.title;
+    var body = document.createElement('div'); body.className = 'ptbody';
+    tip.body.forEach(function(par){ var p = document.createElement('p'); p.textContent = par; body.appendChild(p); });
+    card.appendChild(h); card.appendChild(body);
+    (tip.examples||[]).forEach(function(ex, xi){ card.appendChild(ptExample(tip, ex, tip.id+'-'+xi)); });
+    host.appendChild(card);
+  });
+}
+/* one example: the line both ways as chord boxes, the picked chord on a real neck, what stayed and what moved */
+function ptExample(tip, ex, key){
+  var box = document.createElement('div');
+  box.className = 'ptex'; box.id = 'ptx-'+key;
+  var lines = ptLines(ex), set = lines ? lines.set : ptSet(ex.n);
+  var head = document.createElement('p'); head.className = 'famhead';
+  head.textContent = ex.name;
+  box.appendChild(head);
+  if (set){
+    var where = document.createElement('p'); where.className = 'famnote';
+    where.textContent = 'On the top '+(ex.n===3 ? 'three' : 'four')+' strings, '+tunLetters(tun()).filter(function(l, s){ return set.indexOf(s)>=0; }).join(' ')+'.';
+    box.appendChild(where);
+  }
+  if (!lines){
+    var why = document.createElement('p'); why.className = 'famnote';
+    why.textContent = 'These chords do not all fit as '+(ex.n===3 ? 'three note' : 'four note')+' shapes on the top '+(ex.n===3 ? 'three' : 'four')+
+      ' strings of this '+INST().label.toLowerCase()+' in this tuning, so this example cannot be shown here.';
+    box.appendChild(why);
+    if (S.inst!=='guitar'){
+      var g = document.createElement('button'); g.type = 'button'; g.className = 'btn'; g.textContent = 'Show it on guitar';
+      g.onclick = function(){ var si = $('setInst'); si.value = 'guitar'; si.onchange(); renderTips(); };
+      box.appendChild(g);
+    }
+    return box;
+  }
+  var mode = PT.mode[key] || 'walk';
+  var line = lines[mode];
+  if (PT.sel[key]===undefined || PT.sel[key]>=line.length) PT.sel[key] = 0;
+  var modes = document.createElement('div'); modes.className = 'ptmodes';
+  [['jump','Jumping'],['walk','Walking']].forEach(function(m){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+    b.textContent = m[1]; b.setAttribute('aria-pressed', String(mode===m[0]));
+    b.setAttribute('data-ptmode', m[0]);
+    b.onclick = function(){ ptStop(); PT.mode[key] = m[0]; PT.sel[key] = 0; ptRepaint(tip, ex, key); hearChord(ptFull(lines[m[0]][0].set, lines[m[0]][0].fr)); };
+    modes.appendChild(b);
+  });
+  box.appendChild(modes);
+  var cost = ptLineCost(line);
+  var say = document.createElement('p'); say.className = 'famnote';
+  var first = line[0], firstPlain = nn(first.root)+(SUFFIX[first.qual]||'');
+  say.textContent = mode==='walk'
+    ? 'Each chord keeps the notes it shares with the one before, and the rest move the least they can. '+
+      (first.bass ? 'It starts on '+ptName(first)+', the '+firstPlain+' that leads most smoothly into the rest. ' : '')+
+      'The notes travel '+cost.tot+' half steps in all.'
+    : 'Every chord in root position, so the hand leaps around the neck. The notes travel '+cost.tot+' half steps in all.';
+  box.appendChild(say);
+  var row = document.createElement('div'); row.className = 'ptline'+(line.length===3 ? ' n3' : '');
+  line.forEach(function(o, i){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'ptile';
+    b.setAttribute('data-pti', String(i));
+    b.setAttribute('data-frets', ptFull(o.set, o.fr).join(','));
+    b.setAttribute('aria-pressed', String(i===PT.sel[key]));
+    b.setAttribute('aria-label', ptName(o)+', '+fdPosLabel(o.fr)+': '+o.sh.spell.join(' '));
+    b.innerHTML = '<b>'+ptName(o)+'</b><span class="vbox" aria-hidden="true">'+chordBoxSVG(ptFull(o.set, o.fr))+'</span>';
+    b.onclick = function(){ ptStop(); PT.sel[key] = i; ptPaintSel(tip, ex, key, lines); hearChord(ptFull(o.set, o.fr)); };
+    row.appendChild(b);
+  });
+  box.appendChild(row);
+  var neck = document.createElement('div'); neck.className = 'boardwrap'; neck.setAttribute('data-ptneck', key);
+  box.appendChild(neck);
+  var legend = document.createElement('p'); legend.className = 'ptlegend';
+  legend.innerHTML = '<span><i style="background:'+PT_STAYS+'"></i>stays</span><span><i style="background:'+PT_MOVES+'"></i>moves</span>';
+  box.appendChild(legend);
+  var ul = document.createElement('ul'); ul.className = 'ptmoves'; ul.setAttribute('aria-live', 'polite');
+  box.appendChild(ul);
+  var btns = document.createElement('div'); btns.className = 'minirow';
+  var hear = document.createElement('button'); hear.type = 'button'; hear.className = 'btn'; hear.innerHTML = '&#9654; Hear it';
+  hear.onclick = function(){ var o = lines[PT.mode[key]||'walk'][PT.sel[key]]; hearChord(ptFull(o.set, o.fr)); };
+  var play = document.createElement('button'); play.type = 'button'; play.className = 'btn primary'; play.textContent = 'Play them in order';
+  play.setAttribute('data-ptplay', key);
+  play.onclick = function(){ ptPlay(tip, ex, key, lines); };
+  btns.appendChild(hear); btns.appendChild(play);
+  box.appendChild(btns);
+  /* paint after it is in the page: the neck sizes itself from its host's width */
+  setTimeout(function(){ ptPaintSel(tip, ex, key, lines); }, 0);
+  return box;
+}
+var PT_STAYS = '#8cc3ea', PT_MOVES = '#dca753';
+function ptRepaint(tip, ex, key){
+  var old = document.getElementById('ptx-'+key);
+  if (old) old.parentNode.replaceChild(ptExample(tip, ex, key), old);
+}
+/* the picked chord on the neck: kept notes one colour, moved notes another, and the words for each string */
+function ptPaintSel(tip, ex, key, lines){
+  var box = document.getElementById('ptx-'+key);
+  if (!box) return;
+  var line = lines[PT.mode[key]||'walk'], i = PT.sel[key] || 0, o = line[i];
+  var tiles = box.querySelectorAll('.ptile');
+  for (var t=0;t<tiles.length;t++) tiles[t].setAttribute('aria-pressed', String(t===i));
+  var lo0 = fdLow(o.fr), hi0 = Math.max.apply(null, o.fr);
+  var lo = lo0<=2 ? 0 : lo0-1, hi = Math.min(MAXF, Math.max(hi0+1, lo+4));
+  var b = renderBoard(box.querySelector('[data-ptneck]'), { lo:lo, hi:hi, strings:o.set,
+    onTap:function(s,f){ var m = midiAt(s,f); if (!isNaN(m)) pluck(m); } });
+  var mv = ptMoves(line, i), ul = box.querySelector('.ptmoves');
+  ul.innerHTML = '';
+  mv.forEach(function(m, k){
+    var label = S.numbers ? o.sh.nums[k] : o.sh.spell[k];
+    if (m.kind==='first') b.setDot(m.s, o.fr[k], 'pearl', label);
+    else b.setDot(m.s, o.fr[k], 'pos', label, { fill: m.kind==='stays' ? PT_STAYS : PT_MOVES });
+  });
+  if (!i){
+    var li0 = document.createElement('li');
+    li0.textContent = 'The first chord, '+ptName(o)+'. Tap the next one, or play them in order, and watch which notes stay.';
+    ul.appendChild(li0);
+    return;
+  }
+  var li = document.createElement('li');
+  li.innerHTML = '<b>'+ptName(line[i-1])+' to '+ptName(o)+'</b>';
+  ul.appendChild(li);
+  /* high string first, the way the chord sits under the hand when you read it top down */
+  mv.slice().reverse().forEach(function(m){
+    var li2 = document.createElement('li');
+    li2.textContent = m.kind==='stays' ? m.name+' stays on the '+strName(m.s)+' string.'
+      : m.from+(Math.abs(m.d)>4 ? ' jumps ' : ' moves ')+ptStepWords(m.d)+' to '+m.name+' on the '+strName(m.s)+' string.';
+    ul.appendChild(li2);
+  });
+}
+/* play the line at a steady pace, the neck and the words following along */
+function ptPlay(tip, ex, key, lines){
+  ptStop();
+  var line = lines[PT.mode[key]||'walk'];
+  line.forEach(function(o, i){
+    PT.timers.push(setTimeout(function(){
+      PT.sel[key] = i;
+      ptPaintSel(tip, ex, key, lines);
+      var box = document.getElementById('ptx-'+key), tiles = box ? box.querySelectorAll('.ptile') : [];
+      for (var t=0;t<tiles.length;t++) tiles[t].classList.toggle('playingnow', t===i);
+      hearChord(ptFull(o.set, o.fr));
+    }, i*1300));
+  });
+  PT.timers.push(setTimeout(ptStop, line.length*1300));
+}
+/* a tip that applies shows once on this device, inline where it applies, never inside a running drill */
+function ptOffer(where, applies){
+  var host = $(where==='finder' ? 'ptOfferFinder' : 'ptOfferChart');
+  if (!host || !TIPS) return;
+  var tip = TIPS[0];
+  if (!applies || S.tipsSeen[tip.id]){ host.hidden = true; host.innerHTML = ''; return; }
+  host.innerHTML = '<p><b>Pro tip: '+tip.title.toLowerCase()+'</b><br>'+tip.offer+'</p>'+
+    '<div class="minirow"><button class="btn primary" type="button" data-pt="show">Show me</button>'+
+    '<button class="btn" type="button" data-pt="got">Got it</button></div>';
+  host.hidden = false;
+  host.querySelector('[data-pt="show"]').onclick = function(){
+    S.tipsSeen[tip.id] = 1; save(); host.hidden = true;
+    openTips(where==='finder' ? 'finder' : 'charts', tip.id);
+  };
+  host.querySelector('[data-pt="got"]').onclick = function(){ S.tipsSeen[tip.id] = 1; save(); host.hidden = true; };
+}
+
 /* test hooks: the smoke suite drives the real UI and reads the live target */
 window.__fw = {
   finder: { get state(){ return FD; }, all:fdAll, voicing:fdVoicing, full:fdFull, chain:fdInversions, strLabel:fdStrLabel },
+  tips: { list:TIPS, get state(){ return PT; }, options:ptOptions, lead:voiceLead, walk:walkLine, jump:jumpLine, lines:ptLines, set:ptSet, cost:ptCost },
   get drill(){ return D; },
   get state(){ return S; },
   get playVoices(){ return Object.keys(playPtr).length; },
