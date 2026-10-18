@@ -32,6 +32,8 @@ for (const [W, H] of [[360, 740], [412, 915]]) {
     await page.click('#tabPlay'); await page.waitForTimeout(200); out.push(await audit('play', '#playBoard'));
     await page.click('#tabCharts'); await page.click('#btnNewChart'); await page.click('.chordbox.addbox'); await page.waitForTimeout(200); out.push(await audit('picker', null));
     await page.click('#btnBuildNew'); await page.waitForTimeout(200); out.push(await audit('builder', '#chordBoard'));
+    await page.click('#tabDrills'); await page.click('#startFinder'); await page.waitForTimeout(200);
+    await page.click('#fdInvBtn'); await page.waitForTimeout(200); out.push(await audit('finder', '#fdBoard'));
     for (const o of out) {
       const miss = o.smallN > 0 || (o.cellW !== '-' && (+o.cellW < 48 || +o.cellH < 48)) || o.docW > W;
       if (miss) { bad++; console.log('TARGETS_FAIL', W, JSON.stringify(o)); }
@@ -39,4 +41,4 @@ for (const [W, H] of [[360, 740], [412, 915]]) {
   }, { width: W, height: H });
 }
 if (bad) process.exit(1);
-console.log('TARGETS_PASS every fret cell and control at least 48 px on 9 screens at 360 and 412');
+console.log('TARGETS_PASS every fret cell and control at least 48 px on 10 screens at 360 and 412');

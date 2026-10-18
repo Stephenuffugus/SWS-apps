@@ -19,7 +19,7 @@ await withApp('fretwork', async ({ page, errors }) => {
 
   // build tag signs the copy
   const tag = (await page.textContent('.buildtag')).trim();
-  if (tag !== 'fretwork-v19') throw new Error('build tag missing or wrong: ' + tag);
+  if (tag !== 'fretwork-v20') throw new Error('build tag missing or wrong: ' + tag);
 
   // ── theory oracles ──
   const oracle = await page.evaluate(() => {
@@ -536,6 +536,71 @@ await withApp('fretwork', async ({ page, errors }) => {
   const gtrCharts = (await page.textContent('#chartList')).trim();
   if (!gtrCharts.includes('Smoke Test Jam')) throw new Error('the guitar chart should be back: ' + gtrCharts);
 
+  // ── the chord finder (his 18 Oct note): ask for a chord, see every voicing, keep yours, learn its inversions ──
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.click('#startFinder'); await page.waitForTimeout(300);
+  await page.selectOption('#fdRoot', '0'); await page.selectOption('#fdQual', 'maj7'); await page.selectOption('#fdBass', '0');
+  await page.waitForTimeout(200);
+  // his example: root on the low E, skip the A, 7th on D, 3rd on G, 5th on B = 8 x 9 9 8 x
+  const his = page.locator('#fdList .vtile[data-key="d3|0,2,3,4|0"][data-frets="8,-1,9,9,8,-1"]');
+  if (await his.count() < 1) throw new Error('C maj7 drop 3 root position at 8x998x missing from the finder: ' +
+    JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('#fdList .vtile')].map(t => t.dataset.key + ' ' + t.dataset.frets))));
+  const famHeads = await page.evaluate(() => [...document.querySelectorAll('#fdList .famhead')].map(h => h.textContent));
+  if (!famHeads.some(h => /^Drop 3/.test(h)) || !famHeads.some(h => /^Drop 2/.test(h)) || !famHeads.some(h => /^Close/.test(h)))
+    throw new Error('the finder should list drop 3, drop 2 and close maj7 shapes: ' + famHeads.join(' | '));
+  await his.first().click(); await page.waitForTimeout(200);
+  const pick = await page.evaluate(() => {
+    const fw = window.__fw, F = fw.finder, st = F.state, v = F.voicing(fw.up({ letter:'C', acc:0 }, 'P1'), 'maj7', 0, 'd3', [0,2,3,4], 3);
+    return { name: document.getElementById('fdPickName').textContent, nums: v.sh.nums.join(' '), dots: document.querySelectorAll('#fdBoard svg.board text').length,
+             sel: st.sel && st.sel.fam + '|' + st.sel.set.join(',') + '|' + st.sel.bass };
+  });
+  if (!/^Cmaj7/.test(pick.name) || pick.nums !== 'R 7 3 5' || pick.sel !== 'd3|0,2,3,4|0')
+    throw new Error('picking his shape should put Cmaj7 R 7 3 5 on the neck: ' + JSON.stringify(pick));
+  await page.click('#fdKeep'); await page.waitForTimeout(200);
+  const keptMaj7 = await page.evaluate(() => window.__fw.state.myVoicing['guitar:maj7']);
+  if (!keptMaj7 || keptMaj7.fam !== 'd3' || keptMaj7.set.join(',') !== '0,2,3,4' || keptMaj7.bass !== 0) throw new Error('This is my maj7 should keep the drop 3: ' + JSON.stringify(keptMaj7));
+  // the keep survives a reload, and the kept one leads the list, marked
+  await page.waitForTimeout(400);
+  await page.reload({ waitUntil: 'load' }); await page.waitForTimeout(400);
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.click('#startFinder'); await page.waitForTimeout(300);
+  const afterReload = await page.evaluate(() => {
+    const first = document.querySelector('#fdList .vtile');
+    return { firstKey: first && first.dataset.key, mine: !!(first && first.querySelector('.vmine')), keepOn: document.getElementById('fdKeep').getAttribute('aria-pressed'),
+             head: document.querySelector('#fdList .famhead').textContent, qual: document.getElementById('fdQual').value };
+  });
+  if (afterReload.firstKey !== 'd3|0,2,3,4|0' || !afterReload.mine || afterReload.keepOn !== 'true' || afterReload.head !== 'Your maj7' || afterReload.qual !== 'maj7')
+    throw new Error('after a reload the kept maj7 should lead, marked Yours: ' + JSON.stringify(afterReload));
+  // its inversions: four, each chord tone in the bass once, on the same strings, climbing the neck
+  await page.click('#fdInvBtn'); await page.waitForTimeout(250);
+  const inv = await page.evaluate(() => window.__fw.finder.state.chain.map(c => ({ jobs: c.v.sh.nums.join(' '), set: c.v.set.join(','), bassFret: c.fr[0], bass: c.v.bass })));
+  const jobs = inv.map(c => c.jobs).sort().join(' / ');
+  if (inv.length !== 4 || jobs !== ['3 R 5 7', '5 3 7 R', '7 5 R 3', 'R 7 3 5'].sort().join(' / ') || inv.some(c => c.set !== '0,2,3,4'))
+    throw new Error('the maj7 drop 3 should have four inversions on E _ D G B: ' + JSON.stringify(inv));
+  for (let i = 1; i < inv.length; i++) if (inv[i].bassFret <= inv[i - 1].bassFret) throw new Error('the inversions should climb the neck: ' + JSON.stringify(inv));
+  for (let i = 1; i < inv.length; i++) if (inv[i].bass !== (inv[i - 1].bass + 1) % 4) throw new Error('each next inversion should move every voice up one chord tone: ' + JSON.stringify(inv));
+  if (await page.locator('#fdInvGrid .vtile').count() !== 4) throw new Error('four inversion tiles expected');
+  const other = await page.evaluate(() => [...document.querySelectorAll('#fdOther .chip')].map(c => c.textContent));
+  if (!other.includes('A _ G B E')) throw new Error('the same spread on A _ G B E should be offered: ' + other.join('|'));
+  // Practice these 4 opens the shape drill on exactly those, and End drill comes back to the finder
+  await page.click('#fdInvPractice'); await page.waitForTimeout(300);
+  const drill = await page.evaluate(() => { const d = window.__fw.drill; return d && { mode: d.mode, n: d.list.length, from: d.cfg.from, set: d.cfg.set.join(','), drop: d.cfg.drop,
+    basses: d.list.map(x => x.shape.bassIdx).sort().join(''), first: d.cur && d.cur.inst.join(',') }; });
+  if (!drill || drill.mode !== 'shape' || drill.n !== 4 || drill.from !== 'finder' || drill.set !== '0,2,3,4' || drill.drop !== 3 || drill.basses !== '0123')
+    throw new Error('Practice these 4 should run the shape lesson on the four inversions: ' + JSON.stringify(drill));
+  await page.click('#btnQuit'); await page.waitForTimeout(200);
+  if (await page.evaluate(() => document.getElementById('view-finder').hidden)) throw new Error('End drill should come back to the finder');
+  // a four string neck says why there is no drop 3, in words
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.selectOption('#setInst', 'bass'); await page.waitForTimeout(200);
+  await page.selectOption('#setTuning', 'standard'); await page.waitForTimeout(200);   /* the five string step above left it on low B */
+  await page.click('#startFinder'); await page.waitForTimeout(300);
+  const bassNote = await page.evaluate(() => ({ note: document.getElementById('fdNote').hidden ? '' : document.getElementById('fdNote').textContent,
+    tiles: document.querySelectorAll('#fdList .vtile').length }));
+  if (!/five strings/.test(bassNote.note) || bassNote.tiles < 1) throw new Error('on bass the finder should explain drop 3 and still show shapes: ' + JSON.stringify(bassNote));
+  await page.click('#tabDrills'); await page.waitForTimeout(150);
+  await page.selectOption('#setInst', 'guitar'); await page.waitForTimeout(200);
+
   if (errors.length) throw new Error('page errors: ' + errors.join(' | '));
-  console.log('smoke pass: try-before-you-add picker, key and circle chord sets with no repeats, the learned-chords test with green and red notes, no note twice running, oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, ' + tag);
+  console.log('smoke pass: try-before-you-add picker, key and circle chord sets with no repeats, the learned-chords test with green and red notes, no note twice running, oracles incl the 5x555x big shape, door, hunt with harder offer, naming, numbered triad, big-shape climb, ladder with common tones, Dorian major 6th in positions, stacked colors, hide the map, whole tone with an aug vamp, 24 frets, held slide voice, looper, new voices, the strings mirror, full screen, the bank, the chord brain naming Am7, keep to My chords, a 5 beat block, the jam board, chart round trip, rhythm room 3:2 and 4:3, reload, the chord finder (8x998x, keep across a reload, four climbing inversions, practice and back, the bass note), ' + tag);
 });

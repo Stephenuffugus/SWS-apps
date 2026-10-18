@@ -196,6 +196,31 @@
   /* the test's held chord: Hear it and Next chord, thumb sized */
   .nextrow{display:flex; gap:8px; margin-top:10px}
   .nextrow .btn{flex:1; min-height:48px}
+  /* the chord finder (his 18 Oct note): every voicing of one chord as a tile, the picked one on a real neck */
+  .vgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr)); gap:8px; margin:0 0 6px}
+  .vtile{display:flex; flex-direction:column; align-items:center; gap:1px; min-height:48px; background:var(--field);
+    border:1px solid var(--line); border-radius:12px; padding:8px 6px 10px; color:var(--ink); font:inherit; cursor:pointer;
+    position:relative; -webkit-tap-highlight-color:transparent}
+  .vtile .vbox{line-height:0; margin-bottom:4px}
+  .vtile .vjob{font-size:16px; font-weight:800; letter-spacing:.04em}
+  .vtile .vsub{font-size:12.5px; color:var(--muted)}
+  .vtile[aria-pressed="true"]{border-color:var(--gold); box-shadow:0 0 0 1.5px var(--gold)}
+  .vtile.playingnow{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+  .vtile.playingnow .vsub{color:var(--accent-ink)}
+  .vtile .vmine{font-size:12px; font-weight:800; line-height:1.2; margin:0 0 4px;
+    color:var(--accent-ink); background:var(--accent); border-radius:99px; padding:2px 8px}
+  /* the three pickers stay on one line at 360 wide, so the neck and its buttons are on the first screen */
+  #fdAskCard .row > div{min-width:84px}
+  /* a chord symbol is never uppercased: Cm7 must not read CM7 */
+  .fdlisthead{font-size:16px; font-weight:800; margin:0 2px 4px}
+  .famhead{font-size:15px; font-weight:800; margin:16px 2px 2px}
+  .famhead:first-child{margin-top:4px}
+  .famnote{font-size:12.5px; color:var(--muted); margin:0 2px 8px}
+  .fdname{font-size:22px; font-weight:800; line-height:1.15; margin:0}
+  .fdname small{font-size:14px; font-weight:600; color:var(--muted)}
+  .fdspell{font-size:13.5px; color:var(--muted); margin:4px 0 8px}
+  .fdspell b{color:var(--ink); font-size:16px; letter-spacing:.04em}
+  .minirow .btn[aria-pressed="true"]{border-color:var(--gold); color:var(--gold)}
   /* the support row on Home: quiet, never red (red means wrong in this app) */
   .btn.tip{background:var(--field); border-color:var(--line); color:var(--ink)}
   .summary .big{font-size:34px; font-weight:800; margin:2px 0}
@@ -365,7 +390,7 @@
     <a class="btn tip" id="tipBtn" target="_blank" rel="noopener" hidden>Support Fretwork</a>
     <p id="tipNote" style="font-size:13px;color:var(--muted);margin:6px 0 0;text-align:center" hidden>Optional. Every practice tool stays free.</p>
     <p class="foot"><span id="footLead">A free tool by </span><a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a id="feedbackLink" href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Fretwork">Feedback</a></p>
-    <p class="buildtag">fretwork-v19</p>
+    <p class="buildtag">fretwork-v20</p>
   </div>
 </section>
 
@@ -413,6 +438,12 @@
   </div>
 
   <p class="sect grouphead">Chord shapes</p>
+  <div class="card dcard" id="cardFinder">
+    <h3>Chord finder</h3>
+    <p class="why">Ask for any chord and see every way it sits on the neck. Keep the one you like as yours, then learn it with each note taking a turn in the bass.</p>
+    <button class="btn start" id="startFinder">Find a chord</button>
+  </div>
+
   <div class="card dcard" id="cardTri">
     <h3>Triads</h3>
     <p class="why">Build the shape on a string set: root position, 1st or 2nd inversion, spelled honestly. Five shapes that belong together, then you build them from memory.</p>
@@ -545,6 +576,51 @@
 </section>
 
 <!-- ============ RUN ============ -->
+<!-- ============ CHORD FINDER ============ -->
+<section id="view-finder" hidden>
+  <div class="card" id="fdAskCard">
+    <div class="row" style="align-items:center; margin-bottom:4px">
+      <div style="flex:2"><p class="sect" style="margin:0">Chord finder</p></div>
+      <div style="flex:0"><button class="btn ghost" id="btnFinderBack" style="white-space:nowrap">All drills</button></div>
+    </div>
+    <div class="row">
+      <div><label for="fdRoot">Root</label><select id="fdRoot"></select></div>
+      <div><label for="fdQual">Chord</label><select id="fdQual"></select></div>
+      <div><label for="fdBass">In the bass</label><select id="fdBass"></select></div>
+    </div>
+  </div>
+  <div class="card" id="fdPickCard">
+    <p class="fdname" id="fdPickName"></p>
+    <p class="fdspell" id="fdPickSpell"></p>
+    <div class="boardwrap" id="fdBoard"></div>
+    <div class="chips" id="fdPos" style="margin-top:8px" hidden></div>
+    <div class="minirow">
+      <button class="btn" id="fdHear" type="button">&#9654; Hear it</button>
+      <button class="btn" id="fdKeep" type="button" aria-pressed="false">This is my maj7</button>
+    </div>
+    <div class="minirow">
+      <button class="btn primary" id="fdInvBtn" type="button" aria-expanded="false">Its inversions</button>
+      <button class="btn" id="fdPractice" type="button">Practice in other keys</button>
+    </div>
+    <div id="fdInv" hidden>
+      <p class="famhead" id="fdInvHead"></p>
+      <p class="famnote">Same strings, same spread. Each note takes a turn in the bass, climbing the neck.</p>
+      <div class="vgrid" id="fdInvGrid"></div>
+      <div class="minirow">
+        <button class="btn" id="fdInvPlay" type="button">Play them in order</button>
+        <button class="btn primary" id="fdInvPractice" type="button">Practice these</button>
+      </div>
+      <p class="famnote" id="fdOtherLbl" style="margin-top:12px">The same spread on other strings</p>
+      <div class="chips" id="fdOther"></div>
+    </div>
+  </div>
+  <div class="card" id="fdListCard">
+    <p class="fdlisthead" id="fdListHead"></p>
+    <p class="famnote" id="fdNote" hidden></p>
+    <div id="fdList"></div>
+  </div>
+</section>
+
 <section id="view-run" hidden>
   <div class="card">
     <div class="prompt">
@@ -1036,7 +1112,7 @@ function strName(s){
 /* ── state ─────────────────────────────────────────────────────────────── */
 var KEY = 'fretwork1';
 var S = { v:1, sound:true, lefty:false, inst:'guitar', tuning:'standard', custom:null, tuneBy:{}, customBy:{}, frets:15, numbers:true,
-          charts:[], chordLib:[],
+          charts:[], chordLib:[], myVoicing:{}, finder:null,
           stats:{ grid:{}, taps:0, hits:0, hunts:0, shapes:0 } };
 try {
   var raw = localStorage.getItem(KEY);
@@ -1047,6 +1123,7 @@ try {
   if (!S.mirrorReset1){ S.lefty = false; S.mirrorReset1 = true; S.mirrorResetSave = true; }
   if (!S.tuneBy || typeof S.tuneBy!=='object') S.tuneBy = {};
   if (!S.customBy || typeof S.customBy!=='object') S.customBy = {};
+  if (!S.myVoicing || typeof S.myVoicing!=='object') S.myVoicing = {};
   if (S.custom && S.custom.length===6 && !S.customBy.guitar) S.customBy.guitar = S.custom;   /* v7 saves kept one custom tuning, the guitar's */
   if (!INSTRUMENTS[S.inst]) S.inst = 'guitar';
   if (S.tuning!=='custom' && !INSTRUMENTS[S.inst].tunings[S.tuning]) S.tuning = INSTRUMENTS[S.inst].def;
@@ -1522,14 +1599,15 @@ function shapeFor(root, qual, inv, stringSet, drop){
 /* ── views ─────────────────────────────────────────────────────────────── */
 var $ = function(id){ return document.getElementById(id); };
 var VIEWS = { home:$('view-home'), drills:$('view-drills'), run:$('view-run'), modes:$('view-modes'),
-              play:$('view-play'), charts:$('view-charts'), rhythm:$('view-rhythm') };
+              play:$('view-play'), charts:$('view-charts'), rhythm:$('view-rhythm'), finder:$('view-finder') };
 var TABS = { home:$('tabHome'), drills:$('tabDrills'), modes:$('tabModes'), play:$('tabPlay'), charts:$('tabCharts') };
-var TAB_OF = { run:'drills', rhythm:'drills' };
+var TAB_OF = { run:'drills', rhythm:'drills', finder:'drills' };
 function show(view){
   stopVamp();
   if (view!=='play'){ stopPlayVoices(); stopLoop(); exitPlayFS(); }
   if (view!=='charts'){ stopChartPlay(); stopJamVoices(); }
   if (view!=='rhythm') stopPoly();
+  if (view!=='finder') fdStop();
   for (var k in VIEWS) VIEWS[k].hidden = k!==view;
   document.body.classList.toggle('inrun', view==='run');
   var lit = TAB_OF[view] || view;
@@ -1540,6 +1618,7 @@ function show(view){
   if (view==='modes') renderModes();
   if (view==='charts') renderCharts();
   if (view==='rhythm') renderPoly();
+  if (view==='finder') renderFinder();
 }
 TABS.home.onclick = function(){ endDrill(); show('home'); };
 TABS.drills.onclick = function(){ endDrill(); show('drills'); };
@@ -1683,6 +1762,7 @@ function rerenderVisible(){
   if (!VIEWS.play.hidden) renderPlay();
   if (!VIEWS.modes.hidden) renderModes();
   if (!VIEWS.charts.hidden) renderCharts();
+  if (!VIEWS.finder.hidden) renderFinder();
 }
 function flipMirror(){
   S.lefty=!S.lefty; save(); paintMirror(); rerenderVisible();
@@ -1738,7 +1818,7 @@ $('fbSend').onclick = function(){
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify({ content:'**Fretwork feedback**\n'+txt.slice(0,1500)+
-      '\n`fretwork-v6 · '+navigator.userAgent.slice(0,110)+'`' }),
+      '\n`fretwork-v20 · '+navigator.userAgent.slice(0,110)+'`' }),
   }).then(function(r){
     btn.disabled = false;
     if (!(r.ok || r.status===204)) throw new Error('bad status');
@@ -1961,7 +2041,11 @@ function ding(){
   } catch(e){}
 }
 
+/* where End drill and the summary's back button lead: the drills, or the chord finder for a drill it started */
+var runFrom = 'drills';
+function setRunFrom(v){ runFrom = v || 'drills'; $('btnBack').textContent = runFrom==='finder' ? 'Back to the finder' : 'Back to drills'; }
 function openRun(){
+  setRunFrom('drills');
   runSummary.hidden = true;
   vLine.textContent = '';
   vLine.className = 'verdictline';
@@ -2015,8 +2099,8 @@ function finish(big, sub, extras){
   /* at phone height the card lands under the neck: bring it up so its buttons are seen */
   setTimeout(function(){ try { runSummary.scrollIntoView({ behavior:'smooth', block:'nearest' }); } catch(e){} }, 60);
 }
-$('btnQuit').onclick = function(){ endDrill(); show('drills'); };
-$('btnBack').onclick = function(){ endDrill(); show('drills'); };
+$('btnQuit').onclick = function(){ endDrill(); show(runFrom); };
+$('btnBack').onclick = function(){ endDrill(); show(runFrom); };
 $('btnAgain').onclick = function(){ if (D && D.again) D.again(); };
 $('btnSkip').onclick = function(){ if (D && D.skip) D.skip(); };
 $('btnShow').onclick = function(){ if (D && D.reveal) D.reveal(); };
@@ -2277,9 +2361,11 @@ function dropFor(set){
   for (var i=1;i<set.length;i++) if (set[i]-set[i-1]>1) return 3;
   return 2;
 }
-/* which rotation of the stack puts the wanted tone in the bass */
-function bassToInv(bass, drop){
-  return drop===3 ? (bass+3)%4 : drop===2 ? (bass+2)%4 : bass;
+/* which rotation of the stack puts the wanted tone in the bass (n voices, four unless told; a spread
+   triad is a three voice drop 2) */
+function bassToInv(bass, drop, n){
+  n = n || 4;
+  return drop===3 ? (bass+3)%n : drop===2 ? (bass+2)%n : bass;
 }
 $('startTri').onclick = function(){
   runShapes({
@@ -2326,7 +2412,7 @@ function buildShapeSet(cfg){
   var out = [];
   function tryAdd(root, qual){
     for (var k=0;k<out.length;k++) if (pc(out[k].root)===pc(root) && out[k].qual===qual) return;
-    var inv = cfg.inv==='mix' ? Math.floor(Math.random()*QUAL[qual].ivs.length) : bassToInv(+cfg.inv, cfg.drop);
+    var inv = cfg.inv==='mix' ? Math.floor(Math.random()*QUAL[qual].ivs.length) : bassToInv(+cfg.inv, cfg.drop, QUAL[qual].ivs.length);
     var shape = shapeFor(root, qual, inv, cfg.set, cfg.drop);
     var playable = shape.inst.filter(function(fr){ return Math.max.apply(null,fr)<=12; });
     if (!playable.length) return;
@@ -2352,7 +2438,9 @@ function buildShapeSet(cfg){
 }
 function runShapes(cfg){
   openRun();
-  var built = buildShapeSet(cfg);
+  setRunFrom(cfg.from);
+  /* the chord finder hands over a fixed list: one chord, each of its notes in the bass on the same strings */
+  var built = cfg.fixed ? { list:cfg.fixed(), label:cfg.label } : buildShapeSet(cfg);
   D = { mode:'shape', cfg:cfg, round:0, right:0, miss:0, cur:null, taps:{},
         list:built.list, label:built.label, learnN:Math.min(5, built.list.length),
         again:function(){ runShapes(cfg); },
@@ -2414,6 +2502,7 @@ function shapesLearned(){
 }
 function runShapeTest(learned, cfg, label){
   openRun();
+  setRunFrom(cfg.from);
   var list = shuffle(learned.slice());
   /* do not open the test on the chord the lesson just ended with */
   if (list.length>1 && list[0]===learned[learned.length-1]) list.push(list.shift());
@@ -2450,7 +2539,10 @@ function testNext(){
     invWord+', strings '+cfg.set.map(gauge).join(' ')+' &middot; from memory</small>';
   pProg.innerHTML = 'test <b>'+D.i+'</b> of '+D.list.length;
 }
-function testName(cur){ return nn(cur.root)+(cur.qual==='dim' ? 'dim' : SUFFIX[cur.qual]||''); }
+function testName(cur){
+  var n = nn(cur.root)+(cur.qual==='dim' ? 'dim' : SUFFIX[cur.qual]||'');
+  return D && D.cfg && D.cfg.fixed && cur.shape.bassIdx ? n+'/'+cur.shape.spell[0] : n;
+}
 /* the taught shape, at whichever of its neck positions agrees with the notes already placed */
 function testCands(cur){
   return cur.shape.inst.filter(function(inst){
@@ -2525,8 +2617,9 @@ function testDone(){
   if (by.corrected.length) parts.push('Corrected: '+by.corrected.join(', ')+'.');
   if (by.help.length) parts.push('With help: '+by.help.join(', ')+'.');
   if (by.skipped.length) parts.push('Skipped: '+by.skipped.join(', ')+'.');
-  finish(D.first+' of '+n+' first try', parts.join(' ')+(D.first===n ? '' : ' Test again, or practice a new set.'),
-    [{ label:'New set of chords', fn:function(){ runShapes(cfg); } }]);
+  finish(D.first+' of '+n+' first try', parts.join(' ')+(D.first===n ? '' : cfg.fixed ? ' Test again, or go through them once more.' : ' Test again, or practice a new set.'),
+    [cfg.fixed ? { label:'Go through them again', fn:function(){ runShapes(cfg); } }
+               : { label:'New set of chords', fn:function(){ runShapes(cfg); } }]);
 }
 /* one tap handler for every build-a-voicing drill: shapes, the climb, the ladder */
 function voiceTap(s,f){
@@ -3812,8 +3905,376 @@ $('btnPolyPlay').onclick = function(){
 $('padR').addEventListener('pointerdown', function(){ pluckV(76, 0, 'mute'); });
 $('padL').addEventListener('pointerdown', function(){ pluckV(52, 0, 'mute'); });
 
+/* ── the chord finder ─────────────────────────────────────────────────────
+   His 18 Oct note: "ask for a maj 7 in root position and see the different ways it could be played on the
+   neck and then ask for permutations of that ... the root on the low e skip the a string then put the seventh
+   on the d string 3rd on the g and 5th on the b". Every voicing here comes out of shapeFor, the engine the
+   drills use: close stacks on neighbouring strings, drop 2 on four neighbours, drop 3 with one string skipped
+   (his example, C maj7 at 8 x 9 9 8 x), spread triads. A shape is listed where it fits within a four fret
+   reach. The one he keeps is his per instrument and per chord, and its inversions are the same strings and
+   spread with each chord tone taking a turn in the bass, climbing the neck. */
+var FD = { root:0, qual:'maj7', bass:0, sel:null, anchor:null, inv:false, chain:[], timers:[], board:null, filled:false };
+var FD_QUALS = ['maj','min','dim','aug','maj7','dom7','m7','m7b5','dim7'];
+var FD_QLABEL = { maj:'major', min:'minor', dim:'dim', aug:'aug', maj7:'maj7', dom7:'7', m7:'m7', m7b5:'m7♭5', dim7:'dim7' };
+/* how the keep button says it: "This is my maj7", "This is my dominant 7" */
+var FD_QWORD = { maj:'major', min:'minor', dim:'diminished', aug:'augmented', maj7:'maj7', dom7:'dominant 7', m7:'m7', m7b5:'m7♭5', dim7:'dim7' };
+var FD_DROP = { d3:3, d2:2, cl:0, sp:2 };
+var FD_FAM = {
+  d3: { name:'Drop 3', head:'Drop 3, one string skipped',
+        note:'Take the close stack and drop its third note from the top an octave. The bass sits alone, a string below the rest. The big shape.' },
+  d2: { name:'Drop 2', head:'Drop 2, four strings side by side',
+        note:'Drop the second note from the top an octave. The everyday jazz shapes.' },
+  cl: { name:'Close', head:'Close, every note as tight as it stacks',
+        note:'Each note the next chord tone up. Often a stretch low on the neck, easier on the top strings.' },
+  sp: { name:'Spread', head:'Spread, the triad opened up',
+        note:'The middle note drops an octave, so the triad opens up and rings. On guitar it skips a string; on a mandolin it sits on three courses side by side.' },
+};
+function fdFamHead(fam, n){ return fam==='cl' && n===3 ? 'Close, three strings side by side' : FD_FAM[fam].head; }
+function fdFamNote(fam, n){ return fam==='cl' && n===3 ? 'The plain stack, each note the next chord tone up.' : FD_FAM[fam].note; }
+/* the string sets each spread can use on this instrument; the banjo's short fifth string sits out */
+function fdFams(n){
+  var ns = NS();
+  function ok(set){ return set.every(function(s){ return !shortAt(s); }); }
+  function adj(k){
+    var r = [];
+    for (var i=0;i+k<=ns;i++){ var s = []; for (var j=0;j<k;j++) s.push(i+j); if (ok(s)) r.push(s); }
+    return r;
+  }
+  function skip(k){
+    var r = [];
+    for (var i=0;i+k<ns;i++){ var s = [i]; for (var j=2;j<=k;j++) s.push(i+j); if (ok(s)) r.push(s); }
+    return r;
+  }
+  if (n===4) return [ { fam:'d3', sets:skip(4) }, { fam:'d2', sets:adj(4) }, { fam:'cl', sets:adj(4) } ];
+  /* a spread triad skips a string on guitar but fits three neighbours on a neck tuned in fifths */
+  return [ { fam:'cl', sets:adj(3) }, { fam:'sp', sets:adj(3).concat(skip(3)) } ];
+}
+function fdLow(fr){ return Math.min.apply(null, fr); }
+function fdReach(fr){
+  var f = fr.filter(function(x){ return x>0; });
+  return f.length ? Math.max.apply(null, f)-Math.min.apply(null, f) : 0;
+}
+/* one voicing: the shape and every place on the neck it fits within a four fret reach, lowest first */
+function fdVoicing(root, qual, bass, fam, set, drop){
+  if (!QUAL[qual] || set[set.length-1]>=NS()) return null;
+  var n = QUAL[qual].ivs.length;
+  if (bass>=n || set.length!==n) return null;
+  var sh = shapeFor(root, qual, bassToInv(bass, drop, n), set, drop);
+  if (sh.bassIdx!==bass) return null;
+  var pos = sh.inst.filter(function(fr){ return fdReach(fr)<=4; })
+                   .sort(function(a,b){ return fdLow(a)-fdLow(b); });
+  return pos.length ? { root:root, qual:qual, bass:bass, fam:fam, set:set, drop:drop, sh:sh, pos:pos } : null;
+}
+function fdKey(v){ return v.fam+'|'+v.set.join(',')+'|'+v.bass; }
+function fdFull(v, fr){ var f = emptyChord(); v.set.forEach(function(s,k){ f[s] = fr[k]; }); return f; }
+/* the strings a shape spans, low to high, a skipped one as _ : "E _ D G B" */
+function fdStrLabel(set){
+  var L = tunLetters(tun()), out = [];
+  for (var s=set[0]; s<=set[set.length-1]; s++) out.push(set.indexOf(s)>=0 ? L[s] : '_');
+  return out.join(' ');
+}
+function fdPosLabel(fr){ var lo = fdLow(fr); return lo===0 ? 'open strings' : 'fret '+lo; }
+function fdTitle(root, qual){
+  return QUAL[qual].ivs.length===3 ? nn(root)+' '+QUAL[qual].name : nn(root)+(SUFFIX[qual]||'');
+}
+/* the jobs and the names, whichever the numbers setting puts first */
+function fdMain(v){ return S.numbers ? v.sh.nums.join(' ') : v.sh.spell.join(' '); }
+function fdSub(v){ return S.numbers ? v.sh.spell.join(' ') : v.sh.nums.join(' '); }
+function fdKeptKey(qual){ return S.inst+':'+qual; }
+function fdKept(qual){ var k = S.myVoicing[fdKeptKey(qual)]; return k && k.set && FD_DROP[k.fam]!==undefined ? k : null; }
+function fdIsKept(v){
+  var k = fdKept(v.qual);
+  return !!k && k.fam===v.fam && k.set.join(',')===v.set.join(',') && k.bass===v.bass;
+}
+function fdRootN(){ return SPELLINGS[FD.root]; }
+/* every voicing of the asked chord, family by family */
+function fdAll(){
+  var n = QUAL[FD.qual].ivs.length;
+  return fdFams(n).map(function(F){
+    var vs = [];
+    F.sets.forEach(function(set){ var v = fdVoicing(fdRootN(), FD.qual, FD.bass, F.fam, set, FD_DROP[F.fam]); if (v) vs.push(v); });
+    return { fam:F.fam, sets:F.sets, vs:vs };
+  });
+}
+function fdSelV(){ var s = FD.sel; return s ? fdVoicing(fdRootN(), FD.qual, s.bass, s.fam, s.set, FD_DROP[s.fam]) : null; }
+function fdSelFr(v){ return v.pos[Math.min(FD.sel.pi||0, v.pos.length-1)]; }
+function fdSelect(v, pi, keepAnchor){
+  FD.sel = { fam:v.fam, set:v.set.slice(), bass:v.bass, pi:pi||0 };
+  if (!keepAnchor) FD.anchor = { fam:v.fam, set:v.set.slice(), bass:v.bass, pi:pi||0 };
+}
+function fdTile(v, fr, mine){
+  var full = fdFull(v, fr), b = document.createElement('button');
+  b.type = 'button'; b.className = 'vtile';
+  b.setAttribute('data-key', fdKey(v));
+  b.setAttribute('data-frets', full.join(','));
+  b.setAttribute('aria-label', FD_FAM[v.fam].name+' on '+fdStrLabel(v.set).replace(/ _/g, '')+', '+fdPosLabel(fr)+': '+v.sh.spell.join(' '));
+  b.innerHTML = (mine ? '<span class="vmine">Yours</span>' : '')+
+    '<span class="vbox" aria-hidden="true">'+chordBoxSVG(full)+'</span>'+
+    '<span class="vjob">'+fdMain(v)+'</span>'+
+    '<span class="vsub">'+fdSub(v)+'</span>'+
+    '<span class="vsub">'+fdStrLabel(v.set)+' &middot; '+fdPosLabel(fr)+'</span>';
+  return b;
+}
+function fdHead(cls, text){ var p = document.createElement('p'); p.className = cls; p.textContent = text; return p; }
+function fdFill(){
+  var r = $('fdRoot'), q = $('fdQual'), b = $('fdBass');
+  if (!FD.filled){
+    FD.filled = true;
+    SPELLINGS.forEach(function(n,i){ var o = document.createElement('option'); o.value = String(i); o.textContent = nn(n); r.appendChild(o); });
+    FD_QUALS.forEach(function(k){ var o = document.createElement('option'); o.value = k; o.textContent = FD_QLABEL[k]; q.appendChild(o); });
+    var f = S.finder;
+    if (f && SPELLINGS[f.root] && QUAL[f.qual]){ FD.root = f.root; FD.qual = f.qual; FD.bass = +f.bass||0; }
+    else { var k0 = fdKept(FD.qual); if (k0) FD.bass = k0.bass; }
+  }
+  var n = QUAL[FD.qual].ivs.length;
+  if (FD.bass>=n) FD.bass = 0;
+  r.value = String(FD.root); q.value = FD.qual;
+  b.innerHTML = '';
+  for (var i=0;i<n;i++){ var o = document.createElement('option'); o.value = String(i); o.textContent = i ? TONE_WORD[i] : 'Root'; b.appendChild(o); }
+  b.value = String(FD.bass);
+}
+function renderFinder(){
+  fdStop();
+  fdFill();
+  var n = QUAL[FD.qual].ivs.length, all = fdAll(), list = $('fdList');
+  list.innerHTML = '';
+  $('fdListHead').textContent = 'Every way to play '+fdTitle(fdRootN(), FD.qual)+', '+TONE_WORD[FD.bass]+' in the bass';
+  var keptV = null, first = null;
+  all.forEach(function(G){ G.vs.forEach(function(v){ if (!first) first = v; if (fdIsKept(v)) keptV = v; }); });
+  /* what this neck cannot do, said in words instead of an empty screen */
+  var notes = [], d3 = all.filter(function(G){ return G.fam==='d3'; })[0];
+  if (d3 && !d3.sets.length)
+    notes.push(INST().short ? 'Drop 3 needs a string to skip and five strings in all; with the short fifth string left out the banjo has four, so it has no drop 3.'
+                            : 'Drop 3 skips a string, so it needs five strings or more. This '+INST().label.toLowerCase()+' has '+NS()+'.');
+  if (INST().short) notes.push('The banjo’s short fifth string sits these shapes out.');
+  var T = T0(), high = -1;
+  for (var i=0;i+1<T.length;i++) if (!shortAt(i) && T[i]>T[i+1]){ high = i; break; }
+  if (high>=0) notes.push('Your '+strName(high)+' string is tuned high, so shapes that use it sit higher than you might expect.');
+  var kept = fdKept(FD.qual);
+  if (kept && !keptV && kept.bass!==FD.bass) notes.push('Your '+FD_QWORD[FD.qual]+' has the '+TONE_WORD[kept.bass]+' in the bass. Pick '+TONE_WORD[kept.bass]+' above to see it.');
+  /* nothing fits: one plain reason, not a wall of side notes and empty family headings */
+  if (!first) notes = ['This chord does not fit this neck as a stacked shape within a four fret reach. '+
+    (INST().courses ? 'Mandolin chords often double a note across all four courses, and the finder builds one note a course, so try a triad, or another note in the bass.'
+     : high>=0 ? 'With the '+strName(high)+' string tuned high a stack has to start up there. The Low G tuning in Setup opens up more shapes.'
+     : 'Try another note in the bass, or another tuning.')];
+  $('fdNote').hidden = !notes.length;
+  $('fdNote').textContent = notes.join(' ');
+  if (keptV){
+    list.appendChild(fdHead('famhead', 'Your '+FD_QWORD[FD.qual]));
+    var g0 = document.createElement('div'); g0.className = 'vgrid';
+    g0.appendChild(fdTile(keptV, keptV.pos[0], true));
+    list.appendChild(g0);
+  }
+  all.forEach(function(G){
+    if (!G.sets.length || !first) return;
+    list.appendChild(fdHead('famhead', fdFamHead(G.fam, n)));
+    list.appendChild(fdHead('famnote', G.vs.length ? fdFamNote(G.fam, n) : 'None of these fit within a four fret reach in this tuning.'));
+    if (!G.vs.length) return;
+    var g = document.createElement('div'); g.className = 'vgrid';
+    G.vs.forEach(function(v){ g.appendChild(fdTile(v, v.pos[0], fdIsKept(v))); });
+    list.appendChild(g);
+  });
+  if (FD.sel && !fdSelV()) FD.sel = null;
+  if (!FD.sel && (keptV || first)) fdSelect(keptV || first, 0);
+  fdPaintPick();
+}
+/* the picked voicing on a real neck, with its jobs, its other places, keep, inversions and practice */
+function fdPaintPick(){
+  var v = fdSelV();
+  $('fdPickCard').hidden = !v;
+  if (!v){ FD.board = null; return; }
+  var fr = fdSelFr(v);
+  $('fdPickName').innerHTML = fdTitle(v.root, v.qual)+' <small>'+TONE_WORD[v.bass]+' in the bass</small>';
+  $('fdPickSpell').innerHTML = FD_FAM[v.fam].name+' on '+fdStrLabel(v.set)+' &middot; '+fdPosLabel(fr)+
+    '<br><b>'+fdMain(v)+'</b> &nbsp;'+fdSub(v);
+  var lo0 = fdLow(fr), hi0 = Math.max.apply(null, fr);
+  var lo = lo0<=2 ? 0 : lo0-1, hi = Math.min(MAXF, Math.max(hi0+1, lo+4));
+  FD.board = renderBoard($('fdBoard'), { lo:lo, hi:hi, strings:v.set,
+    onTap:function(s,f){ var m = midiAt(s,f); if (!isNaN(m)) pluck(m); } });
+  v.set.forEach(function(s,k){ FD.board.setDot(s, fr[k], v.sh.nums[k]==='R' ? 'root' : 'pearl', shapeLabel(v.sh, k)); });
+  var pos = $('fdPos');
+  pos.innerHTML = '';
+  pos.hidden = v.pos.length<2;
+  v.pos.forEach(function(p, i){
+    var c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip';
+    c.textContent = fdLow(p)===0 ? 'Open position' : 'At fret '+fdLow(p);
+    c.setAttribute('aria-pressed', String(p===fr));
+    c.onclick = function(){ FD.sel.pi = i; FD.anchor = { fam:v.fam, set:v.set.slice(), bass:v.bass, pi:i }; hearChord(fdFull(v, p)); fdPaintPick(); };
+    pos.appendChild(c);
+  });
+  var kept = fdIsKept(v), kb = $('fdKeep');
+  kb.setAttribute('aria-pressed', String(kept));
+  kb.textContent = kept ? '★ My '+FD_QWORD[v.qual] : 'This is my '+FD_QWORD[v.qual];
+  fdMarkTiles();
+  fdPaintInv();
+}
+/* gold ring on whichever tile is the voicing on the neck */
+function fdMarkTiles(){
+  var v = fdSelV(), on = v ? fdFull(v, fdSelFr(v)).join(',') : '';
+  var tiles = document.querySelectorAll('#view-finder .vtile');
+  for (var i=0;i<tiles.length;i++) tiles[i].setAttribute('aria-pressed', String(tiles[i].getAttribute('data-frets')===on));
+}
+/* the same strings and spread, each chord tone in the bass in turn, each one placed above the last */
+function fdInversions(v, fr){
+  var n = QUAL[v.qual].ivs.length, out = [{ v:v, fr:fr }], last = fr;
+  for (var k=1;k<n;k++){
+    var w = fdVoicing(v.root, v.qual, (v.bass+k)%n, v.fam, v.set, v.drop);
+    if (!w) continue;
+    var up = null;
+    for (var i=0;i<w.pos.length;i++)
+      if (w.pos[i][0]>last[0] && Math.max.apply(null, w.pos[i])<=12){ up = w.pos[i]; break; }
+    last = up || w.pos[0];
+    out.push({ v:w, fr:last });
+  }
+  /* past the 12th fret the cycle drops an octave; start the row there so it climbs the neck bottom to top,
+     still in the same turn order (his 8 x 9 9 8 x Cmaj7 reads 3, 7, 8, 12) */
+  for (var j=1;j<out.length;j++) if (out[j].fr[0]<out[j-1].fr[0]) return out.slice(j).concat(out.slice(0, j));
+  return out;
+}
+function fdAnchorV(){
+  var a = FD.anchor;
+  return a ? fdVoicing(fdRootN(), FD.qual, a.bass, a.fam, a.set, FD_DROP[a.fam]) : null;
+}
+function fdPaintInv(){
+  $('fdInv').hidden = !FD.inv;
+  $('fdInvBtn').setAttribute('aria-expanded', String(FD.inv));
+  if (!FD.inv) return;
+  var a = fdAnchorV();
+  if (!a){ a = fdSelV(); if (!a) return; fdSelect(a, FD.sel.pi); }
+  var fr = a.pos[Math.min(FD.anchor.pi||0, a.pos.length-1)];
+  FD.chain = fdInversions(a, fr);
+  $('fdInvHead').textContent = fdTitle(a.root, a.qual)+', '+FD_FAM[a.fam].name.toLowerCase()+' on '+fdStrLabel(a.set);
+  var grid = $('fdInvGrid');
+  grid.innerHTML = '';
+  FD.chain.forEach(function(c, i){
+    var t = fdTile(c.v, c.fr, false);
+    t.setAttribute('data-inv', String(i));
+    grid.appendChild(t);
+  });
+  $('fdInvPractice').textContent = 'Practice these '+FD.chain.length;
+  var other = $('fdOther');
+  other.innerHTML = '';
+  fdFams(QUAL[a.qual].ivs.length).forEach(function(F){
+    if (F.fam!==a.fam) return;
+    F.sets.forEach(function(set){
+      if (set.join(',')===a.set.join(',')) return;
+      var w = fdVoicing(a.root, a.qual, a.bass, a.fam, set, FD_DROP[a.fam]);
+      if (!w) return;
+      var c = document.createElement('button');
+      c.type = 'button'; c.className = 'chip';
+      c.textContent = fdStrLabel(set);
+      c.onclick = function(){ fdSelect(w, 0); hearChord(fdFull(w, w.pos[0])); fdPaintPick(); };
+      other.appendChild(c);
+    });
+  });
+  $('fdOtherLbl').hidden = !other.children.length;
+  fdMarkTiles();
+}
+function fdStop(){
+  FD.timers.forEach(clearTimeout);
+  FD.timers = [];
+  var on = document.querySelectorAll('#view-finder .vtile.playingnow');
+  for (var i=0;i<on.length;i++) on[i].classList.remove('playingnow');
+}
+function fdAskChanged(){
+  FD.sel = null;
+  S.finder = { root:FD.root, qual:FD.qual, bass:FD.bass };
+  save();
+  renderFinder();
+  var v = fdSelV();
+  if (v) hearChord(fdFull(v, fdSelFr(v)));
+}
+$('startFinder').onclick = function(){ show('finder'); window.scrollTo(0, 0); };
+$('btnFinderBack').onclick = function(){ show('drills'); };
+$('fdRoot').onchange = function(){ FD.root = +this.value; fdAskChanged(); };
+$('fdQual').onchange = function(){
+  FD.qual = this.value;
+  var k = fdKept(FD.qual);
+  if (k) FD.bass = k.bass;
+  else if (FD.bass>=QUAL[FD.qual].ivs.length) FD.bass = 0;
+  fdAskChanged();
+};
+$('fdBass').onchange = function(){ FD.bass = +this.value; fdAskChanged(); };
+/* a tile in the list: hear it, and put it on the neck at the top */
+$('fdList').addEventListener('click', function(e){
+  var t = e.target.closest('.vtile');
+  if (!t) return;
+  var p = t.getAttribute('data-key').split('|'), set = p[1].split(',').map(Number);
+  var v = fdVoicing(fdRootN(), FD.qual, +p[2], p[0], set, FD_DROP[p[0]]);
+  if (!v) return;
+  fdStop();
+  fdSelect(v, 0);
+  hearChord(fdFull(v, v.pos[0]));
+  fdPaintPick();
+  try { $('fdPickCard').scrollIntoView({ behavior:'smooth', block:'start' }); } catch(e2){}
+});
+/* a tile in the inversions: hear it and show it on the neck, the row keeps its order */
+$('fdInvGrid').addEventListener('click', function(e){
+  var t = e.target.closest('.vtile');
+  if (!t) return;
+  var c = FD.chain[+t.getAttribute('data-inv')];
+  if (!c) return;
+  fdStop();
+  fdSelect(c.v, c.v.pos.indexOf(c.fr), true);
+  hearChord(fdFull(c.v, c.fr));
+  fdPaintPick();
+});
+$('fdHear').onclick = function(){ var v = fdSelV(); if (v) hearChord(fdFull(v, fdSelFr(v))); };
+$('fdKeep').onclick = function(){
+  var v = fdSelV();
+  if (!v) return;
+  if (fdIsKept(v)) delete S.myVoicing[fdKeptKey(v.qual)];
+  else {
+    S.myVoicing[fdKeptKey(v.qual)] = { fam:v.fam, set:v.set.slice(), bass:v.bass };
+    /* the list follows the kept one's bass note, so it shows first under Yours */
+    FD.bass = v.bass;
+    S.finder = { root:FD.root, qual:FD.qual, bass:FD.bass };
+  }
+  save();
+  renderFinder();
+};
+$('fdInvBtn').onclick = function(){
+  FD.inv = !FD.inv;
+  var v = fdSelV();
+  if (FD.inv && v) FD.anchor = { fam:v.fam, set:v.set.slice(), bass:v.bass, pi:FD.sel.pi||0 };
+  fdPaintInv();
+};
+$('fdInvPlay').onclick = function(){
+  fdStop();
+  FD.chain.forEach(function(c, i){
+    FD.timers.push(setTimeout(function(){
+      var on = document.querySelectorAll('#fdInvGrid .vtile');
+      for (var j=0;j<on.length;j++) on[j].classList.toggle('playingnow', on[j].getAttribute('data-inv')===String(i));
+      hearChord(fdFull(c.v, c.fr));
+    }, i*1300));
+  });
+  FD.timers.push(setTimeout(fdStop, FD.chain.length*1300));
+};
+/* practice exactly these: the lesson marks each one where the finder showed it, then the test from memory */
+$('fdInvPractice').onclick = function(){
+  var chain = FD.chain.slice(), a = chain[0] && chain[0].v;
+  if (!a) return;
+  runShapes({ quals:[a.qual], set:a.set, drop:a.drop, inv:'fixed', help:'most', from:'finder',
+    label:'the inversions on '+fdStrLabel(a.set),
+    fixed:function(){
+      return chain.map(function(c){
+        var n = QUAL[c.v.qual].ivs.length, inv = bassToInv(c.v.bass, c.v.drop, n);
+        var sh = shapeFor(c.v.root, c.v.qual, inv, c.v.set, c.v.drop);
+        var fits = c.v.pos.filter(function(p){ return Math.max.apply(null, p)<=12; });
+        sh.inst = fits.indexOf(c.fr)>=0 ? [c.fr].concat(fits.filter(function(p){ return p!==c.fr; })) : fits;
+        return sh.inst.length ? { root:c.v.root, qual:c.v.qual, inv:inv, shape:sh } : null;
+      }).filter(Boolean);
+    } });
+};
+$('fdPractice').onclick = function(){
+  var v = fdSelV();
+  if (v) runShapes({ quals:[v.qual], set:v.set, inv:String(v.bass), drop:v.drop, help:'most', from:'finder' });
+};
+
 /* test hooks: the smoke suite drives the real UI and reads the live target */
 window.__fw = {
+  finder: { get state(){ return FD; }, all:fdAll, voicing:fdVoicing, full:fdFull, chain:fdInversions, strLabel:fdStrLabel },
   get drill(){ return D; },
   get state(){ return S; },
   get playVoices(){ return Object.keys(playPtr).length; },
