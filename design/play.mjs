@@ -477,7 +477,7 @@ function assetlinks() {
       target: {
         namespace: 'android_app',
         package_name: pkg,
-        sha256_cert_fingerprints: prints[slug] ? [prints[slug]] : ['REPLACE_WITH_PLAY_APP_SIGNING_SHA256'],
+        sha256_cert_fingerprints: prints[slug] ? [].concat(prints[slug]) : ['REPLACE_WITH_PLAY_APP_SIGNING_SHA256'],
       },
     };
   });
