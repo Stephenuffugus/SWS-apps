@@ -470,14 +470,17 @@ function assetlinks() {
     ? JSON.parse(readFileSync(FINGERPRINT_FILE, 'utf8'))
     : {};
 
-  const statements = ALL_SLUGS.map((slug) => {
+  /* Only apps with a real fingerprint are published: Google's verifier calls a
+     file with placeholder entries malformed (seen 20 Oct 2026). The apps still
+     waiting are counted in `missing` below, so --check still names them. */
+  const statements = ALL_SLUGS.filter((slug) => prints[slug]).map((slug) => {
     const pkg = `${PKG_PREFIX}.${slug.replace(/-/g, '')}`;
     return {
       relation: ['delegate_permission/common.handle_all_urls'],
       target: {
         namespace: 'android_app',
         package_name: pkg,
-        sha256_cert_fingerprints: prints[slug] ? [].concat(prints[slug]) : ['REPLACE_WITH_PLAY_APP_SIGNING_SHA256'],
+        sha256_cert_fingerprints: [].concat(prints[slug]),
       },
     };
   });
@@ -564,10 +567,9 @@ if (check) {
   const al = join(APPS, '.well-known', 'assetlinks.json');
   if (!existsSync(al)) fail('origin', 'no .well-known/assetlinks.json');
   else {
-    const txt = readFileSync(al, 'utf8');
-    if (txt.includes('REPLACE_WITH_PLAY_APP_SIGNING_SHA256')) {
-      const n = (txt.match(/REPLACE_WITH_PLAY_APP_SIGNING_SHA256/g) || []).length;
-      fail('origin', `${n} assetlinks statement(s) still hold a placeholder fingerprint`);
+    const linked = new Set(JSON.parse(readFileSync(al, 'utf8')).map((st) => st.target.package_name));
+    for (const slug of slugs) {
+      if (!linked.has(`${PKG_PREFIX}.${slug.replace(/-/g, '')}`)) fail(slug, 'no assetlinks statement yet (needs the Play app signing SHA-256)');
     }
   }
 
