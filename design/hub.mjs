@@ -101,6 +101,9 @@ const SELF_STYLED = {
      chalk. Both integrated by hand into apps/index.html first; kept here so
      a hub regeneration can never drop them. */
   'fretwork': { darkAccent: '#c9974c', accent: '#8a5f22' },
+  /* Saccade (23 Oct 2026, Astra's RSVP reader design, built into the studio by
+     Claude Code): its own sepia stage and pivot red, not a studio skin. */
+  'saccade': { darkAccent: '#ff8a7a', accent: '#b4321f' },
   'diamond-rules': { darkAccent: '#3FA35C', accent: '#1C3529' },
   /* Hush came home from the arcade on 2026-08-20 and is a local app now.
      Its colours are its own (--glow and --deep), not a studio skin. */
@@ -212,6 +215,7 @@ const CATALOGUE = [
       sub: 'A to-do list that feels as good as paper to cross off, and a strength app that writes your next workout for you. Small wins, stacked up.' }, [
     ['cross-off', 'Cross Off', 'A paper list you cross off with real highlighters', 'todo to-do checklist tasks chores adhd highlighter timer focus race goblin satisfying'],
     ['overload', 'OVERLOAD', 'It writes your next workout. You just lift', 'gym workout lifting weights strength progressive overload plate math reps sets bodyweight fitness exercise'],
+    ['saccade', 'Saccade', 'A speed reader: the words come to your eyes, one flash at a time', 'speed reader speed reading rsvp rapid serial visual presentation read faster words per minute wpm flash words focus spritz ebook project gutenberg free classics paste article study'],
   ]],
   ['Music',
     { id: 'music', kick: 'The woodshed', q: 'Learning the neck?',

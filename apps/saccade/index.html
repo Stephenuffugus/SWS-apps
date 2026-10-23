@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#edf0f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1015" media="(prefers-color-scheme: dark)">
+<meta name="description" content="A speed reader that flashes the words to your eyes one at a time. Paste anything or pick a free classic, set a pace, and read faster without losing the thread. No account, no ads, nothing leaves your device.">
+<link rel="canonical" href="https://skywolfstudio.com/saccade/">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="Saccade">
+<meta property="og:description" content="A speed reader. Paste anything or pick a free classic, set a pace, and let the words come to your eyes.">
+<meta property="og:url" content="https://skywolfstudio.com/saccade/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://skywolfstudio.com/saccade/marketing/thumb-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Saccade">
+<meta name="twitter:description" content="A speed reader. Paste anything or pick a free classic, set a pace, and let the words come to your eyes.">
+<meta name="twitter:image" content="https://skywolfstudio.com/saccade/marketing/thumb-512.png">
+<title>Saccade</title>
+<style>
+/* Fonts live in this folder so the app works offline (the studio rule: no CDN, no Google Fonts). Latin subsets. */
+@font-face{font-family:"Literata";font-style:normal;font-weight:400 700;font-display:swap;src:url(fonts/literata-latin.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/atkinson-400-latin.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/atkinson-700-latin.woff2) format("woff2")}
+/* Layout: one-screen reader. Portrait: stage up top, scrolling control deck below, full-screen sheets for Text and Library,
+   half-height sheet for Style so the stage stays visible as a live preview. Landscape phones: stage left, deck right, Style as a side panel. */
+:root{
+  --bg:#edf0f5; --surface:#ffffff; --surface-2:#e3e7ee; --fg:#151a25; --muted:#5b6475; --line:#cdd3de;
+  --accent:#2457c9; --accent-fg:#ffffff; --pivot:#d4213b;
+  --stage-bg:#fbfaf7; --stage-fg:#15171c;
+  --font-ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-read:"Literata",Georgia,"Times New Roman",serif;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0e1015; --surface:#171a21; --surface-2:#232734; --fg:#e6e9f0; --muted:#98a1b3; --line:#2e3443; --accent:#7ea4ff; --accent-fg:#0a1020; --pivot:#ff5c70; --stage-bg:#0a0b0f; --stage-fg:#ebe7de; color-scheme:dark }
+}
+:root[data-theme="dark"]{ --bg:#0e1015; --surface:#171a21; --surface-2:#232734; --fg:#e6e9f0; --muted:#98a1b3; --line:#2e3443; --accent:#7ea4ff; --accent-fg:#0a1020; --pivot:#ff5c70; --stage-bg:#0a0b0f; --stage-fg:#ebe7de; color-scheme:dark }
+
+html,body{height:100%}
+*{box-sizing:border-box}
+/* the sheets and the pause icon set display themselves, so the hidden attribute needs teeth (the demo had this in its preview wrapper) */
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%;
+  padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+#app{height:100%;display:flex;flex-direction:column;gap:10px;max-width:720px;margin:0 auto;min-height:0}
+.bar{display:flex;align-items:center;justify-content:space-between;padding-block:12px 2px;gap:10px;min-width:0}
+.brand{font-weight:700;font-size:18px;display:flex;align-items:baseline;gap:8px;min-width:0}
+.eyebrow{font-size:11px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.bar-actions{display:flex;gap:6px;flex:none}
+.chip{padding:8px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px;min-height:44px}
+.chip.primary{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.chip:active{filter:brightness(.95)}
+
+/* Stage */
+.stage-col{display:contents}
+.stage{position:relative;flex:none;height:clamp(180px,34vh,320px);border-radius:var(--radius);background:var(--stage-bg);color:var(--stage-fg);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;border:1px solid var(--line);cursor:pointer}
+.guide{position:absolute;left:50%;width:2px;height:14px;background:currentColor;opacity:.35;transform:translateX(-50%)}
+.guide-top{top:14%}.guide-bot{bottom:14%}
+.stage.noguides .guide,.stage.multi .guide{display:none}
+.word{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);white-space:nowrap;font-family:var(--font-read);font-size:48px;line-height:1.1;font-variant-numeric:tabular-nums}
+.word.bold{font-weight:700}
+.word .pre{text-align:right}
+.word .post{text-align:left}
+.word .pivot{color:var(--pivot)}
+.word.multi{display:block;text-align:center;white-space:nowrap;padding-inline:14px}   /* multi-word flashes stay on one row; the font scales to fit */
+.word.multi .post{display:inline-block}
+#meas{position:absolute;left:-99999px;top:0;white-space:nowrap;visibility:hidden;pointer-events:none;font-family:var(--font-read);line-height:1.1}
+.stage-hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:11px;letter-spacing:.07em;text-transform:uppercase;opacity:.6;font-family:var(--font-ui);padding-inline:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage.live .stage-hint{display:none}
+
+/* Progress */
+.progress{display:flex;flex-direction:column;gap:2px;flex:none}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0;min-height:44px}
+.meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Control deck */
+.deck{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:16px;overscroll-behavior:contain}
+.transport{display:flex;justify-content:center;align-items:center;gap:14px;padding-block:4px}
+.tbtn{width:48px;height:48px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font-size:22px;line-height:1}
+.tbtn.play{width:68px;height:68px;background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.tbtn:active{filter:brightness(.92)}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+output{font-variant-numeric:tabular-nums;font-weight:700}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper input{flex:1;min-width:0}
+.sbtn{width:44px;height:44px;flex:none;border-radius:10px;background:var(--surface-2);font-size:22px;font-weight:700;line-height:1}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface-2);padding:4px;border-radius:10px}
+.seg button{height:44px;border-radius:7px;font-weight:700}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:none}
+.stats{font-size:13px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.tips{font-size:13px;color:var(--muted);text-align:center}
+.foot{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 0}.foot a{color:var(--accent);display:inline-block;padding:14px 6px}
+.buildtag{font-size:11px;color:var(--muted);text-align:center;margin:0;opacity:.7}
+
+/* Sheets */
+.sheet{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;gap:10px;
+  padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet.half{top:auto;height:min(62%,560px);max-width:720px;width:100%;margin-inline:auto;border-radius:16px 16px 0 0;background:var(--surface);border-top:1px solid var(--line);
+  box-shadow:0 -12px 40px rgba(0,0,0,.22);padding-top:12px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex:none;min-width:0}
+.sheet h2{margin:0;font-size:17px;display:flex;align-items:baseline;gap:8px;min-width:0}
+.sheet .body{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;overscroll-behavior:contain}
+.sheet.half .group{background:var(--bg)}
+textarea{flex:1;min-height:140px;width:100%;resize:none;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);padding:12px;line-height:1.5;font-size:16px}
+.counter{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;flex:none}
+#note,#libMsg{color:var(--accent)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;flex:none}
+.btn{padding:10px 16px;border-radius:10px;background:var(--surface-2);font-weight:700;min-height:44px}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.swatch{min-height:44px;border-radius:10px;border:1px solid var(--line);font-weight:700;font-size:13px}
+.swatch.on{outline:2px solid var(--accent);outline-offset:2px}
+.colors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.color{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-height:44px}
+input[type=color]{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;padding:2px;background:var(--surface)}
+select{width:100%;height:44px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px}
+
+/* Library */
+.search{display:flex;gap:8px;flex:none}
+.search input{flex:1;min-width:0;height:44px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 12px}
+.list{display:flex;flex-direction:column;gap:6px}
+.book{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.book:active{filter:brightness(.95)}
+.book .bt{font-weight:700}
+.book .ba{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Landscape phones: stage left, deck right. */
+@media (orientation:landscape) and (max-height:540px){
+  #app{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "stage deck";column-gap:14px;row-gap:6px;max-width:none}
+  .bar{grid-area:bar;padding-block:6px 0}
+  .stage-col{grid-area:stage;display:flex;flex-direction:column;gap:6px;min-height:0}
+  .stage{height:auto;flex:1;min-height:120px}
+  .deck{grid-area:deck;padding-bottom:8px;gap:8px}
+  .transport{gap:10px;padding-block:0}
+  .tbtn{width:42px;height:42px}
+  .tbtn.play{width:56px;height:56px}
+  .tips{display:none}
+  .sheet.half{top:0;left:auto;right:0;width:min(58%,440px);height:auto;max-width:none;margin:0;border-radius:16px 0 0 16px;border-top:0;border-left:1px solid var(--line);
+    padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">Saccade <span class="eyebrow" id="source">rsvp reader</span></div>
+    <div class="bar-actions">
+      <button class="chip" id="btnText">Text</button>
+      <button class="chip" id="btnLib">Library</button>
+      <button class="chip" id="btnStyle">Style</button>
+    </div>
+  </header>
+
+  <div class="stage-col">
+    <div class="stage" id="stage" tabindex="0" role="button" aria-label="Reading stage. Tap to play or pause.">
+      <div class="guide guide-top"></div>
+      <div class="word" id="word" aria-hidden="true"><span class="pre"></span><span class="pivot"></span><span class="post"></span></div>
+      <div class="guide guide-bot"></div>
+      <div class="stage-hint" id="hint">Tap to start</div>
+      <span id="meas" aria-hidden="true"></span>
+    </div>
+    <div class="progress">
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Reading position">
+      <div class="meta"><span id="pct">0%</span><span id="left"></span></div>
+    </div>
+  </div>
+
+  <div class="deck">
+    <div class="transport">
+      <button class="tbtn" id="btnRestart" title="Restart" aria-label="Restart">&#8634;</button>
+      <button class="tbtn" id="btnPrev" title="Back one sentence" aria-label="Back one sentence">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M11 6 4 12l7 6zM20 6l-7 6 7 6z" fill="currentColor"/></svg>
+      </button>
+      <button class="tbtn play" id="btnPlay" aria-label="Play">
+        <svg id="icoPlay" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8 4.5v15l13-7.5z" fill="currentColor"/></svg>
+        <svg id="icoPause" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" hidden><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z" fill="currentColor"/></svg>
+      </button>
+      <button class="tbtn" id="btnNext" title="Forward one sentence" aria-label="Forward one sentence">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M13 6l7 6-7 6zM4 6l7 6-7 6z" fill="currentColor"/></svg>
+      </button>
+    </div>
+
+    <div class="group">
+      <div class="row"><span class="label">Speed</span><output id="wpmOut" for="wpm">300 wpm</output></div>
+      <div class="stepper">
+        <button class="sbtn" id="wpmDown" aria-label="Slower">&minus;</button>
+        <input type="range" id="wpm" min="100" max="1500" step="10" value="300" aria-label="Words per minute">
+        <button class="sbtn" id="wpmUp" aria-label="Faster">+</button>
+      </div>
+      <div class="row"><span class="label">Words per flash</span></div>
+      <div class="seg" id="wpf" role="group" aria-label="Words per flash">
+        <button data-v="1" class="on">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="row"><span class="label">Pause at sentence end</span><output id="sentOut" for="sentPause"></output></div>
+      <input type="range" id="sentPause" min="0" max="3" step="0.25" aria-label="Extra pause at the end of a sentence, in beats">
+      <div class="row"><span class="label">Pause at paragraph break</span><output id="paraOut" for="paraPause"></output></div>
+      <input type="range" id="paraPause" min="0" max="4" step="0.5" aria-label="Extra pause at a paragraph break, in beats">
+      <label class="check"><input type="checkbox" id="clausePause"> Short pause at commas and semicolons</label>
+      <label class="check"><input type="checkbox" id="longWords"> Linger on long words</label>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div class="tips">Space plays and pauses. Arrows step a sentence or change speed. Library has free classics from Project Gutenberg.</div>
+    <div class="btnrow" style="justify-content:center"><button class="btn" id="btnReset">Reset settings</button></div>
+    <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Saccade">Feedback</a></p>
+    <p class="buildtag">saccade-v1</p>
+  </div>
+
+  <div id="sheetText" class="sheet" hidden role="dialog" aria-label="Text">
+    <div class="sheet-head">
+      <h2>Text</h2>
+      <div class="btnrow"><button class="chip" id="closeText">Done</button><button class="chip primary" id="readNow">Read now</button></div>
+    </div>
+    <textarea id="src" maxlength="100000" spellcheck="false" placeholder="Paste anything up to 100,000 characters: an article, a chapter, your notes."></textarea>
+    <div class="counter"><span id="counter"></span><span id="note"></span></div>
+    <div class="btnrow"><button class="btn" id="btnPaste">Paste</button><button class="btn" id="btnSample">Sample text</button><button class="btn" id="btnClear">Clear</button></div>
+  </div>
+
+  <div id="sheetLib" class="sheet" hidden role="dialog" aria-label="Library">
+    <div class="sheet-head"><h2>Library <span class="eyebrow">project gutenberg</span></h2><button class="chip" id="closeLib">Done</button></div>
+    <form class="search" id="libSearch">
+      <input type="search" id="libQ" placeholder="Search 75,000 free books by title or author" aria-label="Search Project Gutenberg" autocomplete="off">
+      <button class="chip primary" type="submit">Search</button>
+    </form>
+    <div class="counter"><span id="libMsg"></span></div>
+    <div class="body">
+      <div id="libResults" class="list" hidden></div>
+      <div class="label">Try one (short openings, built in, work offline)</div>
+      <div class="list" id="libDemo"></div>
+      <div class="label">Shelf (full books, free from Project Gutenberg)</div>
+      <div class="list" id="libShelf"></div>
+    </div>
+  </div>
+
+  <div id="sheetStyle" class="sheet half" hidden role="dialog" aria-label="Style">
+    <div class="sheet-head"><h2>Style</h2><button class="chip" id="closeStyle">Done</button></div>
+    <div class="body">
+      <div class="group">
+        <div class="row"><span class="label">Reading font</span></div>
+        <select id="font" aria-label="Reading font">
+          <option value="literata">Literata (serif, made for screens)</option>
+          <option value="atkinson">Atkinson Hyperlegible (sans)</option>
+          <option value="system">System sans</option>
+          <option value="georgia">Georgia</option>
+          <option value="mono">Monospace</option>
+        </select>
+        <div class="row"><span class="label">Size</span><output id="sizeOut" for="size">48 px</output></div>
+        <input type="range" id="size" min="24" max="96" step="2" aria-label="Font size">
+        <label class="check"><input type="checkbox" id="bold"> Bold</label>
+      </div>
+      <div class="group">
+        <div class="row"><span class="label">Colors</span></div>
+        <div class="swatches" id="presets">
+          <button class="swatch" data-p="sepia" style="background:#f3e9d2;color:#3a2e1c">Sepia</button>
+          <button class="swatch" data-p="paper" style="background:#fbfaf7;color:#15171c">Paper</button>
+          <button class="swatch" data-p="night" style="background:#0a0b0f;color:#ebe7de">Night</button>
+          <button class="swatch" data-p="slate" style="background:#1c2230;color:#dde5f2">Slate</button>
+          <button class="swatch" data-p="contrast" style="background:#000;color:#ffe95c">Contrast</button>
+          <button class="swatch" data-p="auto" style="background:var(--stage-bg);color:var(--stage-fg)">Auto</button>
+        </div>
+        <div class="colors">
+          <label class="color">Background<input type="color" id="cBg"></label>
+          <label class="color">Text<input type="color" id="cFg"></label>
+          <label class="color">Pivot letter<input type="color" id="cPivot"></label>
+        </div>
+      </div>
+      <div class="group">
+        <label class="check"><input type="checkbox" id="orp"> Highlight the pivot letter (single-word flashes)</label>
+        <label class="check"><input type="checkbox" id="guides"> Show guide marks</label>
+        <label class="check"><input type="checkbox" id="wake"> Keep the screen awake while reading</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ENGINE — pure functions, no DOM. Everything timing-related lives here.
+   ============================================================ */
+const Saccade = (function(){
+  const PASTE_MAX = 100000;   // cap for the paste box only; the engine itself handles whole books
+  const ABBR = new Set(('mr. mrs. ms. dr. prof. sr. jr. st. mt. ft. vs. etc. e.g. i.e. cf. no. inc. ltd. co. corp. dept. est. approx. ' +
+    'jan. feb. mar. apr. jun. jul. aug. sep. sept. oct. nov. dec. mon. tue. wed. thu. fri. sat. sun. a.m. p.m. u.s. u.k.').split(/\s+/));
+
+  /* Does this word close a sentence? Punctuation-aware, with an abbreviation list so "Dr." and "e.g." do not stop the flow. */
+  function isSentenceEnd(w){
+    if(!/[.!?…]["'”’)\]]*$/.test(w)) return false;
+    const core = w.replace(/^["'“”‘’(\[]+/, '').replace(/["'“”‘’()\[\]]+$/, '').toLowerCase();
+    if(ABBR.has(core)) return false;
+    if(/^[a-z]\.$/.test(core)) return false;          // initials: "J."
+    if(/^(?:[a-z]\.){2,}$/.test(core)) return false;  // acronyms: "u.s.a."
+    if(/^\d+\.$/.test(core)) return false;            // list numbers: "1."
+    return true;
+  }
+
+  /* Split text into word tokens. Paragraphs are blank-line separated.
+     token: { w, sent (sentence end), para (last word before a paragraph break), end (sent || para || last), clause (comma-ish) } */
+  function tokenize(src){
+    const out = [];
+    const paras = String(src || '').replace(/\r\n?/g, '\n').split(/\n[ \t]*\n+/);
+    for(let p = 0; p < paras.length; p++){
+      const ws = paras[p].split(/\s+/).filter(Boolean);
+      for(let i = 0; i < ws.length; i++){
+        const w = ws[i], last = i === ws.length - 1, sent = isSentenceEnd(w);
+        out.push({ w, sent, para: last && p < paras.length - 1, end: sent || last,
+                   clause: !sent && /[,;:—–]["'”’)\]]*$/.test(w) });
+      }
+    }
+    return out;
+  }
+
+  /* Optimal recognition point: the letter the eye should rest on, by word length. */
+  function orp(len){ return len <= 1 ? 0 : len <= 5 ? 1 : len <= 9 ? 2 : len <= 13 ? 3 : 4; }
+
+  /* How many "beats" (one beat = 60000 / wpm ms) a token stays on screen, given settings S. */
+  function beats(t, S){
+    let b = 1;
+    if(S.longWords && t.w.length > 8) b += Math.min(.6, (t.w.length - 8) * .1);
+    if(t.para) b += S.paraPause + (t.sent ? S.sentPause : 0);
+    else if(t.sent) b += S.sentPause;
+    else if(t.clause && S.clausePause) b += .35;
+    return b;
+  }
+
+  /* Prefix sums of beats, so remaining time and frame duration are O(1). */
+  function buildCum(tokens, S){
+    const cum = new Float64Array(tokens.length + 1);
+    for(let i = 0; i < tokens.length; i++) cum[i + 1] = cum[i] + beats(tokens[i], S);
+    return cum;
+  }
+
+  /* A frame is up to `wpf` tokens starting at i, never crossing a sentence or paragraph end. */
+  function frameAt(tokens, i, wpf){
+    const n = Math.min(wpf, tokens.length - i); let e = i;
+    for(let k = 0; k < n; k++){ e++; if(tokens[e - 1].end) break; }
+    return { start: i, end: e };
+  }
+
+  /* The start index of the frame with the most characters (used to size multi-word flashes once, so they never wrap). */
+  function widestFrame(tokens, wpf){
+    let best = -1, bi = 0, i = 0;
+    while(i < tokens.length){
+      const f = frameAt(tokens, i, wpf); let c = 0;
+      for(let k = f.start; k < f.end; k++) c += tokens[k].w.length + 1;
+      if(c > best){ best = c; bi = i; }
+      i = f.end;
+    }
+    return bi;
+  }
+
+  function sentenceStart(tokens, i){ let j = Math.min(i, tokens.length); while(j > 0 && !tokens[j - 1].end) j--; return j; }
+  function sentenceEnd(tokens, i){ let j = i; while(j < tokens.length && !tokens[j].end) j++; return Math.min(tokens.length, j + 1); }
+
+  /* Trim the Project Gutenberg license header and footer from a plain-text ebook. */
+  function stripGutenberg(t){
+    t = String(t || '');
+    const startRe = /\*\*\*\s*START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[^\n]*/i;
+    const endRe = /\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i;
+    const s = t.search(startRe); if(s >= 0){ const nl = t.indexOf('\n', s); t = nl >= 0 ? t.slice(nl + 1) : ''; }
+    const e = t.search(endRe); if(e >= 0) t = t.slice(0, e);
+    return t.replace(/\r\n?/g, '\n').trim();
+  }
+
+  return { PASTE_MAX, ABBR, isSentenceEnd, tokenize, orp, beats, buildCum, frameAt, widestFrame, sentenceStart, sentenceEnd, stripGutenberg };
+})();
+
+/* ============================================================
+   APP — DOM wiring, playback loop, persistence, library.
+   ============================================================ */
+(function(){
+'use strict';
+const E = Saccade;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const KEY = 'saccade.v2';
+const DEF = { wpm:300, wpf:1, sentPause:1, paraPause:1.5, clausePause:true, longWords:true,
+              font:'literata', size:48, bold:false, preset:'sepia', stageBg:'', stageFg:'', pivot:'', orp:true, guides:true, wake:true };
+const FONTS = {
+  literata:'"Literata",Georgia,"Times New Roman",serif',
+  atkinson:'"Atkinson Hyperlegible",system-ui,sans-serif',
+  system:'system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
+  georgia:'Georgia,"Times New Roman",serif',
+  mono:'ui-monospace,Menlo,Consolas,"Courier New",monospace'
+};
+const PRESETS = { auto:null, sepia:['#f3e9d2','#3a2e1c','#b4321f'], paper:['#fbfaf7','#15171c','#d4213b'], night:['#0a0b0f','#ebe7de','#ff5c70'],
+                  slate:['#1c2230','#dde5f2','#ff7a8a'], contrast:['#000000','#ffe95c','#ff8a1f'] };
+
+/* Project Gutenberg. Search goes through Gutendex (CORS-enabled). Book text comes from gutenberg.org, which does not send CORS
+   headers, so the installed app routes it through a tiny proxy (see HANDOFF.md). Leave PROXY empty to try direct only. */
+const GUTENDEX = 'https://gutendex.com/books';
+const PROXY = 'https://us-central1-focus-grove-fffa8.cloudfunctions.net/gutenbergText?url=';   // the studio's relay: forwards only Gutenberg text files, keeps nothing
+const bookUrl = id => 'https://www.gutenberg.org/cache/epub/' + id + '/pg' + id + '.txt';
+const SHELF = [
+  [1342,'Pride and Prejudice','Jane Austen',1813],[98,'A Tale of Two Cities','Charles Dickens',1859],[2701,'Moby-Dick','Herman Melville',1851],
+  [84,'Frankenstein','Mary Shelley',1818],[11,"Alice's Adventures in Wonderland",'Lewis Carroll',1865],[1661,'The Adventures of Sherlock Holmes','Arthur Conan Doyle',1892],
+  [345,'Dracula','Bram Stoker',1897],[64317,'The Great Gatsby','F. Scott Fitzgerald',1925],[174,'The Picture of Dorian Gray','Oscar Wilde',1890],
+  [1260,'Jane Eyre','Charlotte Brontë',1847],[768,'Wuthering Heights','Emily Brontë',1847],[215,'The Call of the Wild','Jack London',1903],
+  [120,'Treasure Island','Robert Louis Stevenson',1883],[43,'The Strange Case of Dr. Jekyll and Mr. Hyde','Robert Louis Stevenson',1886],[74,'The Adventures of Tom Sawyer','Mark Twain',1876],
+  [76,'Adventures of Huckleberry Finn','Mark Twain',1884],[35,'The Time Machine','H. G. Wells',1895],[36,'The War of the Worlds','H. G. Wells',1898],
+  [514,'Little Women','Louisa May Alcott',1868],[46,'A Christmas Carol','Charles Dickens',1843],[844,'The Importance of Being Earnest','Oscar Wilde',1895],
+  [2591,"Grimms' Fairy Tales",'Jacob and Wilhelm Grimm',1812],[16,'Peter Pan','J. M. Barrie',1911],[55,'The Wonderful Wizard of Oz','L. Frank Baum',1900],
+  [236,'The Jungle Book','Rudyard Kipling',1894],[113,'The Secret Garden','Frances Hodgson Burnett',1911],[45,'Anne of Green Gables','L. M. Montgomery',1908],
+  [103,'Around the World in Eighty Days','Jules Verne',1872],[164,'Twenty Thousand Leagues Under the Sea','Jules Verne',1870],[1257,'The Three Musketeers','Alexandre Dumas',1844],
+  [1184,'The Count of Monte Cristo','Alexandre Dumas',1844],[135,'Les Misérables','Victor Hugo',1862],[996,'Don Quixote','Miguel de Cervantes',1605],
+  [2554,'Crime and Punishment','Fyodor Dostoevsky',1866],[1399,'Anna Karenina','Leo Tolstoy',1878],[5200,'The Metamorphosis','Franz Kafka',1915],
+  [219,'Heart of Darkness','Joseph Conrad',1899],[158,'Emma','Jane Austen',1815],[105,'Persuasion','Jane Austen',1817],
+  [1727,'The Odyssey','Homer (Butler translation)',-700],[2680,'Meditations','Marcus Aurelius',180],[132,'The Art of War','Sun Tzu',-500],
+  [205,'Walden','Henry David Thoreau',1854],[1232,'The Prince','Niccolò Machiavelli',1532],[1497,'The Republic','Plato',-375]
+];
+/* Short public-domain openings so the library can be tried where the network is blocked (like this preview). */
+const DEMO = [
+  { id:1342, t:'Pride and Prejudice', a:'Jane Austen', y:1813, text:
+`It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.
+
+However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families, that he is considered the rightful property of some one or other of their daughters.
+
+“My dear Mr. Bennet,” said his lady to him one day, “have you heard that Netherfield Park is let at last?”
+
+Mr. Bennet replied that he had not.
+
+“But it is,” returned she; “for Mrs. Long has just been here, and she told me all about it.”
+
+Mr. Bennet made no answer.
+
+“Do you not want to know who has taken it?” cried his wife impatiently.
+
+“You want to tell me, and I have no objection to hearing it.”
+
+This was invitation enough.` },
+  { id:98, t:'A Tale of Two Cities', a:'Charles Dickens', y:1859, text:
+`It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness, it was the epoch of belief, it was the epoch of incredulity, it was the season of Light, it was the season of Darkness, it was the spring of hope, it was the winter of despair, we had everything before us, we had nothing before us, we were all going direct to Heaven, we were all going direct the other way—in short, the period was so far like the present period, that some of its noisiest authorities insisted on its being received, for good or for evil, in the superlative degree of comparison only.` },
+  { id:2701, t:'Moby-Dick', a:'Herman Melville', y:1851, text:
+`Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking people's hats off—then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me.` }
+];
+const SAMPLE = `Your eyes do not glide across a page. They jump. Each jump is called a saccade, and between jumps the eye stops for a fraction of a second to take in a few letters. Ordinary reading is mostly stopping and jumping, and a surprising share of the time goes to the jumps themselves, to overshooting, and to drifting back over something you already saw.
+
+This reader removes the jumps. Instead of moving your eyes to the words, it moves the words to your eyes, one flash at a time, with the colored letter held at the same spot on the screen. That letter marks the optimal recognition point, slightly left of a word's center, where it is identified fastest. Keep your gaze on it and let the text come to you.
+
+Start around 300 words per minute. That is close to a comfortable pace for most adults, so nothing should feel rushed yet. When it feels easy, press the plus button. Most people are surprised to find 450 still comfortable, and 600 within reach for familiar material. Dense writing, e.g. a contract from Dr. Harper's office, deserves a slower setting and a longer pause at the end of each sentence.
+
+A few tips. Pauses at sentence ends matter more than raw speed; they give your mind a beat to assemble meaning. Flashing two or three words at once suits fast readers and short words. If you lose the thread, tap the stage to pause, then step back a sentence. Nothing is lost. The text is waiting for you.`;
+
+/* ---------- state ---------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let S = Object.assign({}, DEF);
+try{ const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if(s && typeof s === 'object') S = Object.assign({}, DEF, s); }catch(e){}
+S.wpm = clamp(+S.wpm || 300, 100, 1500); S.wpf = clamp(Math.round(+S.wpf) || 1, 1, 5); S.size = clamp(+S.size || 48, 24, 96);
+if(!FONTS[S.font]) S.font = 'literata';
+if(!(S.preset in PRESETS) && S.preset !== 'custom') S.preset = 'sepia';
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+let text = '', source = '', savedPos = 0, bookRef = null;
+try{
+  text = localStorage.getItem(KEY + '.text') || ''; source = localStorage.getItem(KEY + '.src') || '';
+  savedPos = parseInt(localStorage.getItem(KEY + '.pos') || '0', 10) || 0;
+  bookRef = JSON.parse(localStorage.getItem(KEY + '.book') || 'null');
+}catch(e){}
+if(!text){ text = SAMPLE; source = 'Sample text'; savedPos = 0; }
+
+let tokens = [], cum = new Float64Array(1), multiScale = 1;
+let pos = 0, shown = 0, playing = false, timer = 0, frames = 0, saveT = 0;
+let startPos = 0, runStart = 0, elapsed = 0, sessionWords = 0, wakeLock = null;
+
+/* ---------- elements ---------- */
+const stage = $('#stage'), wordEl = $('#word'), preEl = $('.pre', wordEl), pivEl = $('.pivot', wordEl), postEl = $('.post', wordEl), meas = $('#meas');
+const hint = $('#hint'), scrub = $('#scrub'), pct = $('#pct'), left = $('#left'), stats = $('#stats'), sourceEl = $('#source');
+const btnPlay = $('#btnPlay'), icoPlay = $('#icoPlay'), icoPause = $('#icoPause');
+const sheetText = $('#sheetText'), sheetStyle = $('#sheetStyle'), sheetLib = $('#sheetLib');
+const ta = $('#src'), counter = $('#counter'), note = $('#note');
+const libQ = $('#libQ'), libMsg = $('#libMsg'), libResults = $('#libResults'), libDemo = $('#libDemo'), libShelf = $('#libShelf');
+const ui = { wpm:$('#wpm'), wpmOut:$('#wpmOut'), sent:$('#sentPause'), sentOut:$('#sentOut'), para:$('#paraPause'), paraOut:$('#paraOut'),
+             clause:$('#clausePause'), long:$('#longWords'), font:$('#font'), size:$('#size'), sizeOut:$('#sizeOut'), bold:$('#bold'),
+             orp:$('#orp'), guides:$('#guides'), wake:$('#wake'), cBg:$('#cBg'), cFg:$('#cFg'), cPivot:$('#cPivot') };
+
+/* ---------- timing helpers ---------- */
+const base = () => 60000 / S.wpm;                       // ms per beat
+const msBetween = (a, b) => (cum[b] - cum[a]) * base();  // ms to read tokens a..b-1 at current settings
+function fmt(ms){ const s = Math.max(0, Math.round(ms / 1000)); const m = Math.floor(s / 60); return (m >= 60 ? Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0') : m) + ':' + String(s % 60).padStart(2, '0'); }
+function rebuildCum(){ cum = E.buildCum(tokens, S); }
+
+/* ---------- rendering ---------- */
+const SEG = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+function graphemes(w){ return SEG ? Array.from(SEG.segment(w), x => x.segment) : Array.from(w); }
+function render(f){
+  const ws = []; for(let i = f.start; i < f.end; i++) ws.push(tokens[i].w);
+  const single = ws.length === 1 && S.orp;
+  wordEl.classList.toggle('multi', !single); stage.classList.toggle('multi', !single);
+  if(single){
+    const g = graphemes(ws[0]), p = E.orp(g.length);
+    preEl.textContent = g.slice(0, p).join(''); pivEl.textContent = g[p] || ''; postEl.textContent = g.slice(p + 1).join('');
+  } else { preEl.textContent = ''; pivEl.textContent = ''; postEl.textContent = ws.join(' '); }
+  fit(single);
+}
+/* Multi-word flashes use one constant size per text, chosen so the widest frame fits on a single row. Measured once per
+   text / words-per-flash / font / size change. Per-frame fit() below is only a safety net for odd glyph widths. */
+function computeMultiScale(){
+  multiScale = 1;
+  if(S.wpf < 2 || !tokens.length) return;
+  const f = E.frameAt(tokens, E.widestFrame(tokens, S.wpf), S.wpf);
+  const ws = []; for(let k = f.start; k < f.end; k++) ws.push(tokens[k].w);
+  meas.style.fontFamily = FONTS[S.font]; meas.style.fontWeight = S.bold ? '700' : '400'; meas.style.fontSize = S.size + 'px';
+  meas.textContent = ws.join(' ');
+  const max = stage.clientWidth - 28, w = meas.offsetWidth;
+  if(max > 0 && w > max) multiScale = Math.max(.2, max / w);
+}
+/* Shrink the frame when it still would not fit the stage (URLs, very long words, big sizes). */
+function fit(single){
+  const sz = S.size * (single ? 1 : multiScale);
+  wordEl.style.fontSize = sz + 'px';
+  const max = stage.clientWidth - 28;
+  if(max <= 0) return;
+  const need = single ? 2 * Math.max(preEl.scrollWidth, postEl.scrollWidth) + pivEl.scrollWidth : postEl.scrollWidth;
+  if(need > max) wordEl.style.fontSize = (sz * max / need) + 'px';
+}
+function showCurrent(){ if(shown < tokens.length) render(E.frameAt(tokens, shown, S.wpf)); }
+function relayout(){ computeMultiScale(); showCurrent(); }
+
+function updateProgress(){
+  const n = tokens.length, p = n ? shown / n : 0;
+  scrub.value = Math.round(p * 1000);
+  pct.textContent = Math.round(p * 100) + '%';
+  left.textContent = !n ? 'no text' : shown >= n ? 'finished' : fmt(msBetween(shown, n)) + ' left';
+}
+function effective(ms, words){ return ms > 2000 ? Math.round(words / (ms / 60000)) : 0; }
+function updateStats(){
+  const ms = elapsed + (playing ? performance.now() - runStart : 0);
+  const words = sessionWords + (playing ? pos - startPos : 0);
+  if(!words){ stats.textContent = tokens.length ? tokens.length.toLocaleString() + ' words loaded · ~' + fmt(msBetween(0, tokens.length)) + ' at ' + S.wpm + ' wpm' : 'No text loaded'; return; }
+  const eff = effective(ms, words);
+  stats.textContent = words.toLocaleString() + ' words read · ' + fmt(ms) + (eff ? ' · ' + eff + ' wpm effective' : '');
+}
+
+/* ---------- playback ---------- */
+/* SVG elements have no `hidden` property in Chromium (it was a plain expando in the demo, so the button never changed): the attribute itself */
+function setPlayIcon(){ icoPlay.toggleAttribute('hidden', playing); icoPause.toggleAttribute('hidden', !playing); btnPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play'); }
+function play(){
+  if(!tokens.length){ openSheet('text'); return; }
+  if(pos >= tokens.length){ pos = 0; shown = 0; }
+  playing = true; startPos = pos; runStart = performance.now();
+  stage.classList.add('live'); setPlayIcon(); wake(true); tick();
+}
+function tick(){
+  if(!playing) return;
+  if(pos >= tokens.length){ finish(); return; }
+  const f = E.frameAt(tokens, pos, S.wpf);
+  shown = f.start; render(f);
+  const d = msBetween(f.start, f.end); pos = f.end;
+  updateProgress(); updateStats();
+  if(++frames % 16 === 0) savePos();
+  timer = setTimeout(tick, d);
+}
+function pause(){
+  if(!playing) return;
+  playing = false; clearTimeout(timer);
+  elapsed += performance.now() - runStart; sessionWords += pos - startPos;
+  stage.classList.remove('live'); setPlayIcon();
+  hint.textContent = pos >= tokens.length ? 'Finished · tap to read again' : 'Paused · tap to resume';
+  wake(false); savePos(); updateStats();
+}
+function finish(){
+  pause(); shown = tokens.length; updateProgress();
+  const eff = effective(elapsed, sessionWords);
+  hint.textContent = 'Finished · ' + sessionWords.toLocaleString() + ' words · ' + fmt(elapsed) + (eff ? ' · ' + eff + ' wpm' : '') + ' · tap to read again';
+}
+function toggle(){ playing ? pause() : play(); }
+function jump(i){
+  i = clamp(i, 0, tokens.length);
+  if(playing){ clearTimeout(timer); sessionWords += pos - startPos; startPos = i; }
+  pos = i; shown = i;
+  showCurrent(); updateProgress(); savePos();
+  if(playing) tick();
+  else hint.textContent = i >= tokens.length ? 'Finished · tap to read again' : i === 0 ? 'Tap to start' : 'Paused · tap to resume';
+}
+function restart(){ jump(0); elapsed = 0; sessionWords = 0; runStart = performance.now(); updateStats(); }
+function prevSentence(){ let j = E.sentenceStart(tokens, shown); if(j >= shown && j > 0) j = E.sentenceStart(tokens, j - 1); jump(j); }
+function nextSentence(){ jump(E.sentenceEnd(tokens, shown)); }
+function savePos(){ clearTimeout(saveT); saveT = setTimeout(() => { try{ localStorage.setItem(KEY + '.pos', String(shown)); }catch(e){} }, 400); }
+
+/* Screen wake lock: keep the phone awake while flashing. Tolerate refusal everywhere. */
+async function wake(on){
+  try{
+    if(on && S.wake && 'wakeLock' in navigator && !wakeLock){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if(!on && wakeLock){ const l = wakeLock; wakeLock = null; await l.release(); }
+  }catch(e){ wakeLock = null; }
+}
+
+/* ---------- text ---------- */
+function setText(t, label, book){
+  if(playing) pause();
+  text = t; source = label || ''; bookRef = book || null;
+  try{
+    localStorage.setItem(KEY + '.src', source);
+    localStorage.setItem(KEY + '.book', JSON.stringify(bookRef));
+    localStorage.setItem(KEY + '.text', text);
+  }catch(e){ try{ localStorage.removeItem(KEY + '.text'); }catch(e2){} }   // too big for storage: keep the book ref so it can be re-fetched
+  loadText(0);
+}
+function loadText(startAt){
+  tokens = E.tokenize(text); rebuildCum();
+  elapsed = 0; sessionWords = 0; frames = 0;
+  pos = shown = clamp(startAt || 0, 0, tokens.length);
+  sourceEl.textContent = source || 'rsvp reader';
+  computeMultiScale();
+  if(tokens.length && shown < tokens.length) showCurrent();
+  else { preEl.textContent = ''; pivEl.textContent = ''; postEl.textContent = ''; }
+  hint.textContent = !tokens.length ? 'Add text to begin' : shown >= tokens.length ? 'Finished · tap to read again' : shown ? 'Paused · tap to resume' : 'Tap to start';
+  updateProgress(); updateStats();
+}
+function updateCounter(){
+  const v = ta.value, t = v.trim(), words = t ? t.split(/\s+/).length : 0;
+  counter.textContent = v.length.toLocaleString() + ' / 100,000 characters · ' + words.toLocaleString() + ' words · ~' + fmt(words * base()) + ' at ' + S.wpm + ' wpm';
+}
+let counterT = 0;
+function commitText(){
+  const v = ta.value.slice(0, E.PASTE_MAX);
+  if(v === text) return;
+  setText(v, v === SAMPLE ? 'Sample text' : 'Pasted text');
+}
+function flash(msg){ note.textContent = msg; clearTimeout(flash.t); flash.t = setTimeout(() => { note.textContent = ''; }, 4000); }
+
+/* ---------- library (Project Gutenberg) ---------- */
+function bookRow(b, extra){
+  const el = document.createElement('button'); el.className = 'book'; el.type = 'button';
+  el.innerHTML = '<span class="bt"></span><span class="ba"></span>';
+  el.firstChild.textContent = b.t;
+  el.lastChild.textContent = [b.a, b.y ? (b.y < 0 ? 'c. ' + (-b.y) + ' BC' : b.y) : '', extra || ('#' + b.id)].filter(Boolean).join(' · ');
+  return el;
+}
+function setLibMsg(m){ libMsg.textContent = m || ''; }
+async function fetchText(url){
+  if(PROXY){ try{ const r = await fetch(PROXY + encodeURIComponent(url)); if(r.ok) return await r.text(); }catch(e){} }
+  try{ const r = await fetch(url); if(r.ok) return await r.text(); }catch(e){}
+  throw new Error('unreachable');
+}
+async function loadBook(b){
+  setLibMsg('Loading ' + b.t + '…');
+  try{
+    const t = E.stripGutenberg(await fetchText(bookUrl(b.id)));
+    if(t.length < 500) throw new Error('empty');
+    setText(t, b.t + ' · ' + b.a, { id: b.id, t: b.t, a: b.a });
+    setLibMsg(''); closeSheets();
+  }catch(e){
+    setLibMsg('Project Gutenberg is not reachable right now. Check the connection and try again; the openings above work offline.');
+  }
+}
+async function searchBooks(q){
+  q = q.trim(); if(!q) return;
+  setLibMsg('Searching…'); libResults.hidden = true; libResults.innerHTML = '';
+  try{
+    const r = await fetch(GUTENDEX + '?search=' + encodeURIComponent(q) + '&languages=en&mime_type=text%2Fplain');
+    if(!r.ok) throw new Error(r.status);
+    const data = await r.json(), list = (data.results || []).slice(0, 20);
+    if(!list.length){ setLibMsg('No matches for “' + q + '”.'); return; }
+    list.forEach(x => {
+      const b = { id: x.id, t: x.title, a: (x.authors && x.authors[0] && x.authors[0].name) || 'Unknown', y: 0 };
+      const row = bookRow(b, (x.download_count || 0).toLocaleString() + ' downloads');
+      row.addEventListener('click', () => loadBook(b)); libResults.appendChild(row);
+    });
+    libResults.hidden = false; setLibMsg((data.count || list.length).toLocaleString() + ' results');
+  }catch(e){ setLibMsg('Search is not reachable right now. Check the connection and try again.'); }
+}
+DEMO.forEach(b => { const row = bookRow(b, 'opening excerpt'); row.addEventListener('click', () => { setText(b.text, b.t + ' · excerpt'); closeSheets(); }); libDemo.appendChild(row); });
+SHELF.forEach(([id, t, a, y]) => { const b = { id, t, a, y }; const row = bookRow(b); row.addEventListener('click', () => loadBook(b)); libShelf.appendChild(row); });
+
+/* ---------- sheets ---------- */
+function openSheet(which){
+  sheetText.hidden = which !== 'text'; sheetStyle.hidden = which !== 'style'; sheetLib.hidden = which !== 'lib';
+  if(which === 'text'){ if(playing) pause(); ta.value = text.length <= E.PASTE_MAX ? text : ''; updateCounter(); }
+  if(which === 'lib' && playing) pause();
+}
+function closeSheets(){ const wasText = !sheetText.hidden; sheetText.hidden = true; sheetStyle.hidden = true; sheetLib.hidden = true; if(wasText) commitText(); }
+
+/* ---------- settings → UI ---------- */
+function pauseLabel(v){ v = +v; return v === 0 ? 'none' : '+' + (Math.round(v * 100) / 100) + (v === 1 ? ' beat' : ' beats'); }
+function hex(v){ v = (v || '').trim(); return /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : /^#[0-9a-f]{3}$/i.test(v) ? '#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3] : '#888888'; }
+function applyStageColors(){
+  const p = PRESETS[S.preset] || null;
+  const bg = S.stageBg || (p ? p[0] : ''), fg = S.stageFg || (p ? p[1] : ''), pv = S.pivot || (p ? p[2] : '');
+  stage.style.setProperty('--stage-bg', bg); stage.style.setProperty('--stage-fg', fg); stage.style.setProperty('--pivot', pv);
+  $$('#presets button').forEach(b => b.classList.toggle('on', b.dataset.p === S.preset));
+  const cs = getComputedStyle(stage);
+  ui.cBg.value = hex(bg || cs.getPropertyValue('--stage-bg'));
+  ui.cFg.value = hex(fg || cs.getPropertyValue('--stage-fg'));
+  ui.cPivot.value = hex(pv || cs.getPropertyValue('--pivot'));
+}
+function applySettings(){
+  ui.wpm.value = S.wpm; ui.wpmOut.textContent = S.wpm + ' wpm';
+  $$('#wpf button').forEach(b => b.classList.toggle('on', +b.dataset.v === S.wpf));
+  ui.sent.value = S.sentPause; ui.sentOut.textContent = pauseLabel(S.sentPause);
+  ui.para.value = S.paraPause; ui.paraOut.textContent = pauseLabel(S.paraPause);
+  ui.clause.checked = S.clausePause; ui.long.checked = S.longWords;
+  ui.font.value = S.font; ui.size.value = S.size; ui.sizeOut.textContent = S.size + ' px'; ui.bold.checked = S.bold;
+  ui.orp.checked = S.orp; ui.guides.checked = S.guides; ui.wake.checked = S.wake;
+  wordEl.style.fontFamily = FONTS[S.font];
+  wordEl.classList.toggle('bold', S.bold);
+  stage.classList.toggle('noguides', !S.guides);
+  applyStageColors();
+  rebuildCum(); updateProgress(); updateStats(); relayout();
+}
+function set(k, v, opts){ S[k] = v; save(); if(opts && opts.cum) rebuildCum(); applySettings(); }
+
+/* ---------- events ---------- */
+stage.addEventListener('click', toggle);
+btnPlay.addEventListener('click', toggle);
+$('#btnRestart').addEventListener('click', restart);
+$('#btnPrev').addEventListener('click', prevSentence);
+$('#btnNext').addEventListener('click', nextSentence);
+scrub.addEventListener('input', () => jump(Math.round(scrub.value / 1000 * tokens.length)));
+
+ui.wpm.addEventListener('input', () => { S.wpm = +ui.wpm.value; ui.wpmOut.textContent = S.wpm + ' wpm'; updateProgress(); updateStats(); save(); });
+$('#wpmDown').addEventListener('click', () => set('wpm', clamp(S.wpm - 10, 100, 1500)));
+$('#wpmUp').addEventListener('click', () => set('wpm', clamp(S.wpm + 10, 100, 1500)));
+$$('#wpf button').forEach(b => b.addEventListener('click', () => set('wpf', +b.dataset.v)));
+ui.sent.addEventListener('input', () => set('sentPause', +ui.sent.value, {cum:true}));
+ui.para.addEventListener('input', () => set('paraPause', +ui.para.value, {cum:true}));
+ui.clause.addEventListener('change', () => set('clausePause', ui.clause.checked, {cum:true}));
+ui.long.addEventListener('change', () => set('longWords', ui.long.checked, {cum:true}));
+
+ui.font.addEventListener('change', () => set('font', ui.font.value));
+ui.size.addEventListener('input', () => set('size', +ui.size.value));
+ui.bold.addEventListener('change', () => set('bold', ui.bold.checked));
+ui.orp.addEventListener('change', () => set('orp', ui.orp.checked));
+ui.guides.addEventListener('change', () => set('guides', ui.guides.checked));
+ui.wake.addEventListener('change', () => { set('wake', ui.wake.checked); if(playing) wake(S.wake); });
+$$('#presets button').forEach(b => b.addEventListener('click', () => { S.preset = b.dataset.p; S.stageBg = S.stageFg = S.pivot = ''; save(); applySettings(); }));
+ui.cBg.addEventListener('input', () => { S.preset = 'custom'; S.stageBg = ui.cBg.value; save(); applyStageColors(); });
+ui.cFg.addEventListener('input', () => { S.preset = 'custom'; S.stageFg = ui.cFg.value; save(); applyStageColors(); });
+ui.cPivot.addEventListener('input', () => { S.preset = 'custom'; S.pivot = ui.cPivot.value; save(); applyStageColors(); });
+
+$('#btnReset').addEventListener('click', () => { if(playing) pause(); S = Object.assign({}, DEF); save(); applySettings(); hint.textContent = 'Settings reset'; });
+$('#btnText').addEventListener('click', () => openSheet('text'));
+$('#btnLib').addEventListener('click', () => openSheet('lib'));
+$('#btnStyle').addEventListener('click', () => openSheet(sheetStyle.hidden ? 'style' : null));
+$('#closeText').addEventListener('click', closeSheets);
+$('#closeLib').addEventListener('click', closeSheets);
+$('#closeStyle').addEventListener('click', closeSheets);
+$('#readNow').addEventListener('click', () => { closeSheets(); if(tokens.length) play(); });
+$('#btnSample').addEventListener('click', () => { ta.value = SAMPLE; updateCounter(); });
+$('#btnClear').addEventListener('click', () => { ta.value = ''; updateCounter(); ta.focus(); });
+$('#btnPaste').addEventListener('click', async () => {
+  try{
+    const t = await navigator.clipboard.readText();
+    if(t){ ta.value = ((ta.value ? ta.value.replace(/\s+$/, '') + '\n\n' : '') + t).slice(0, E.PASTE_MAX); updateCounter(); return; }
+  }catch(e){}
+  ta.focus(); flash('Clipboard is blocked here. Long-press the box and choose Paste.');
+});
+ta.addEventListener('input', () => { clearTimeout(counterT); counterT = setTimeout(updateCounter, 120); });
+$('#libSearch').addEventListener('submit', e => { e.preventDefault(); searchBooks(libQ.value); });
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName) || '';
+  if(/^(TEXTAREA|INPUT|SELECT|BUTTON)$/.test(tag)){ if(e.key === 'Escape'){ closeSheets(); } return; }
+  if(e.key === 'Escape'){ closeSheets(); return; }
+  if(!sheetText.hidden || !sheetLib.hidden) return;
+  if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); }
+  else if(e.key === 'ArrowLeft'){ e.preventDefault(); prevSentence(); }
+  else if(e.key === 'ArrowRight'){ e.preventDefault(); nextSentence(); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); set('wpm', clamp(S.wpm + 10, 100, 1500)); }
+  else if(e.key === 'ArrowDown'){ e.preventDefault(); set('wpm', clamp(S.wpm - 10, 100, 1500)); }
+});
+document.addEventListener('visibilitychange', () => { if(document.hidden && playing) pause(); });
+let resizeT = 0;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(relayout, 120); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+
+/* ---------- boot ---------- */
+applySettings();
+loadText(savedPos);
+/* share target (manifest.webmanifest): a shared page or selection lands in the Text sheet, ready to read */
+try{
+  const q = new URLSearchParams(location.search), shared = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n\n').trim();
+  if(shared){ openSheet('text'); ta.value = shared.slice(0, E.PASTE_MAX); updateCounter(); history.replaceState(null, '', location.pathname); }
+}catch(e){}
+if('serviceWorker' in navigator){ window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); }); }
+if(bookRef && text === SAMPLE) loadBook(bookRef);   // text was too large to store last time: fetch the book again
+})();
+</script>
+</body>
+</html>

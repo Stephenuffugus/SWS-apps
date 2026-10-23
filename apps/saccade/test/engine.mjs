@@ -1,0 +1,37 @@
+/* Saccade engine, headless: the pure `Saccade` object sliced out of index.html and run in Node.
+   Cases from the handoff §4 (tokenizer), the Gutenberg stripper, frames and widestFrame.   node apps/saccade/test/engine.mjs */
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
+const HERE = dirname(fileURLToPath(import.meta.url));
+const html = readFileSync(join(HERE, '..', 'index.html'), 'utf8');
+const src = html.match(/const Saccade = \(function\(\)\{[\s\S]*?\n\}\)\(\);/)[0];
+const ctx = {}; vm.createContext(ctx); vm.runInContext(src + '\nthis.Saccade = Saccade;', ctx);
+const E = ctx.Saccade;
+let fails = 0; const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) fails++; };
+const t1 = E.tokenize('Dr. Harper saw Mrs. Long. She left at 5 p.m. today! Really? Yes.\n\nNew paragraph here.');
+const ends = t1.filter(x => x.sent).map(x => x.w);
+ok(JSON.stringify(ends) === JSON.stringify(['Long.', 'today!', 'Really?', 'Yes.', 'here.']), 'sentence ends skip Dr., Mrs. and p.m.: ' + ends.join(' '));
+ok(t1.find(x => x.w === 'Yes.').para === true && t1.find(x => x.w === 'here.').para === false, 'paragraph flag on the last word before a blank line, not on the last word of the text');
+ok(E.tokenize('a, b; c: d').filter(x => x.clause).length === 3, 'clause marks on comma, semicolon, colon');
+ok(E.tokenize('1. First item. 2. Second.').filter(x => x.sent).map(x => x.w).join(' ') === 'item. Second.', 'list numbers are not sentence ends');
+ok(E.tokenize('J. R. R. Tolkien wrote it.').filter(x => x.sent).length === 1, 'initials are not sentence ends');
+ok(E.tokenize('(He said "stop.") Then left.').filter(x => x.sent).length === 2, 'closing quotes and brackets after the period still end the sentence');
+ok([E.orp(1), E.orp(3), E.orp(7), E.orp(11), E.orp(20)].join() === '0,1,2,3,4', 'optimal recognition point by length');
+const S = { longWords: true, sentPause: 1, paraPause: 1.5, clausePause: true };
+const t2 = E.tokenize('Extraordinarily long. Short, one.\n\nEnd.');
+const b = t2.map(x => E.beats(x, S));
+ok(b[0] > 1 && b[0] <= 1.6, 'a long word lingers (' + b[0].toFixed(2) + ' beats)');
+ok(b[1] === 2, 'sentence end adds the sentence pause');
+ok(b[2] === 1.35, 'comma adds the short clause pause');
+ok(b[3] === 1 + 1.5 + 1, 'paragraph break adds paragraph and sentence pauses');
+const cum = E.buildCum(t2, S); ok(Math.abs(cum[cum.length - 1] - b.reduce((a, c) => a + c, 0)) < 1e-9, 'prefix sums total the beats');
+const t3 = E.tokenize('one two three. four five six seven eight.');
+const f = E.frameAt(t3, 0, 5); ok(f.end === 3, 'a frame never crosses a sentence end (' + f.end + ')');
+ok(E.frameAt(t3, 3, 3).end === 6, 'a frame takes up to wpf words');
+ok(E.widestFrame(t3, 3) === 0, 'widest frame found by character count ("one two three." = 15 chars, found at ' + E.widestFrame(t3, 3) + ')');
+ok(E.sentenceStart(t3, 5) === 3 && E.sentenceEnd(t3, 0) === 3, 'sentence start and end');
+const g = E.stripGutenberg('junk\n*** START OF THE PROJECT GUTENBERG EBOOK PRIDE ***\nBody text here.\n*** END OF THE PROJECT GUTENBERG EBOOK PRIDE ***\nlicense');
+ok(g === 'Body text here.', 'Gutenberg header and footer stripped: ' + JSON.stringify(g));
+console.log(fails ? 'ENGINE_FAIL' : 'ENGINE_PASS'); process.exit(fails ? 1 : 0);
