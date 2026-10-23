@@ -1,3 +1,25 @@
+# SACCADE in the Sky Wolf Studio, build notes (Claude Code, 23 Oct 2026)
+
+Live at https://skywolfstudio.com/saccade/ (studio hub: Body and Mind). Built from Astra's v0.2 demo below.
+
+**What changed from the demo**
+- Fonts self hosted in `fonts/` (Literata variable, Atkinson 400 and 700, latin subsets), no Google Fonts: the studio's offline rule.
+- Studio head (canonical, theme colours, description, Open Graph, manifest, icons), footer (studio link, Privacy, Feedback), build tag `saccade-v1`.
+- `manifest.webmanifest` with a share target (`?title=`, `?text=`, `?url=` open the Text sheet pre filled; the query is cleared after).
+- `sw.js`: offline once installed, the page network first with a 3.5 s fallback, this app's caches only, nothing cross origin cached.
+- `privacy.html`: the one network feature (Library) spelled out, the relay described as keeping nothing.
+- The Gutenberg relay is a Firebase function on the Lucid Winds project, `gutenbergText` (lucid-winds `functions/gutenberg.js`), not a Cloudflare Worker: same allowlist, CORS, 30 day cache. `PROXY` points at it and the relay is tried first (gutenberg.org never has CORS).
+- `[hidden]{display:none!important}` added: the sheets and the pause icon set their own display, and the demo only looked right inside its preview wrapper.
+- The play and pause icon toggle uses the `hidden` attribute, not the property: SVG elements have no `hidden` property in Chromium, so the button never changed in the demo.
+- Grapheme safe pivot (Intl.Segmenter), Reset settings button, body and inputs at 16 px, every control 44 px, library copy no longer says "preview" or "installed app".
+- Icons and the hub thumbnail are drawn placeholders in the app's own look (sepia tile, the word "read", red pivot): Astra art to come.
+
+**Tests** `node apps/saccade/test/engine.mjs` (17 engine cases) and `node apps/saccade/test/smoke.browser.mjs` (real browser: sample, play, paste, offline openings, Night preset, 44 px audit, share intake, landscape). Live: a shelf book loads through the relay.
+
+**Still open (section 14 is Stephen's):** the name, chapters and an IndexedDB shelf (v1.1), trainer mode, multi word pivot, the speed ceiling. Play listing when he calls it.
+
+---
+
 # SACCADE — Speed Reader
 
 **Design spec and Claude Code handoff · v0.2 · 2026-10-22**

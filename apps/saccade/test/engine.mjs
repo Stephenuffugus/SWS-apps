@@ -34,4 +34,6 @@ ok(E.widestFrame(t3, 3) === 0, 'widest frame found by character count ("one two 
 ok(E.sentenceStart(t3, 5) === 3 && E.sentenceEnd(t3, 0) === 3, 'sentence start and end');
 const g = E.stripGutenberg('junk\n*** START OF THE PROJECT GUTENBERG EBOOK PRIDE ***\nBody text here.\n*** END OF THE PROJECT GUTENBERG EBOOK PRIDE ***\nlicense');
 ok(g === 'Body text here.', 'Gutenberg header and footer stripped: ' + JSON.stringify(g));
+const il = E.stripGutenberg('*** START OF THE PROJECT GUTENBERG EBOOK X ***\n[Illustration: the Bennets at home]\n\nIt is a truth. [Illustration]\n*** END OF THE PROJECT GUTENBERG EBOOK X ***');
+ok(il === 'It is a truth.', 'illustration captions stripped: ' + JSON.stringify(il));
 console.log(fails ? 'ENGINE_FAIL' : 'ENGINE_PASS'); process.exit(fails ? 1 : 0);

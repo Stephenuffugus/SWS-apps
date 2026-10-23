@@ -222,7 +222,7 @@ select{width:100%;height:44px;font-size:16px;border:1px solid var(--line);border
     <div class="tips">Space plays and pauses. Arrows step a sentence or change speed. Library has free classics from Project Gutenberg.</div>
     <div class="btnrow" style="justify-content:center"><button class="btn" id="btnReset">Reset settings</button></div>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Saccade">Feedback</a></p>
-    <p class="buildtag">saccade-v1</p>
+    <p class="buildtag">saccade-v2</p>
   </div>
 
   <div id="sheetText" class="sheet" hidden role="dialog" aria-label="Text">
@@ -377,6 +377,7 @@ const Saccade = (function(){
     const endRe = /\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i;
     const s = t.search(startRe); if(s >= 0){ const nl = t.indexOf('\n', s); t = nl >= 0 ? t.slice(nl + 1) : ''; }
     const e = t.search(endRe); if(e >= 0) t = t.slice(0, e);
+    t = t.replace(/\[Illustration:?[^\]]*\]/g, '');   /* picture captions in the plain text editions read as nonsense one word at a time */
     return t.replace(/\r\n?/g, '\n').trim();
   }
 
