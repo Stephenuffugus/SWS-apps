@@ -135,6 +135,10 @@ select{width:100%;height:44px;font-size:16px;border:1px solid var(--line);border
 .search{display:flex;gap:8px;flex:none}
 .search input{flex:1;min-width:0;height:44px;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 12px}
 .list{display:flex;flex-direction:column;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:none}
+.chips button{min-height:44px;padding:0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:14px}
+.chips button.on{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.book .ba b{color:var(--accent);font-weight:700}
 .book{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;width:100%;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
 .book:active{filter:brightness(.95)}
 .book .bt{font-weight:700}
@@ -222,7 +226,7 @@ select{width:100%;height:44px;font-size:16px;border:1px solid var(--line);border
     <div class="tips">Space plays and pauses. Arrows step a sentence or change speed. Library has free classics from Project Gutenberg.</div>
     <div class="btnrow" style="justify-content:center"><button class="btn" id="btnReset">Reset settings</button></div>
     <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20Saccade">Feedback</a></p>
-    <p class="buildtag">saccade-v2</p>
+    <p class="buildtag">saccade-v3</p>
   </div>
 
   <div id="sheetText" class="sheet" hidden role="dialog" aria-label="Text">
@@ -238,12 +242,18 @@ select{width:100%;height:44px;font-size:16px;border:1px solid var(--line);border
   <div id="sheetLib" class="sheet" hidden role="dialog" aria-label="Library">
     <div class="sheet-head"><h2>Library <span class="eyebrow">project gutenberg</span></h2><button class="chip" id="closeLib">Done</button></div>
     <form class="search" id="libSearch">
-      <input type="search" id="libQ" placeholder="Search 75,000 free books by title or author" aria-label="Search Project Gutenberg" autocomplete="off">
+      <input type="search" id="libQ" placeholder="Search 61,000 free books by title or author" aria-label="Search Project Gutenberg" autocomplete="off">
       <button class="chip primary" type="submit">Search</button>
     </form>
+    <div class="chips" id="libChips" role="group" aria-label="Browse">
+      <button data-top="30" class="on">Most read</button><button data-top="7">This week</button><button data-top="1">Yesterday</button>
+      <button data-topic="fiction">Fiction</button><button data-topic="adventure">Adventure</button><button data-topic="mystery">Mystery</button><button data-topic="science fiction">Science fiction</button><button data-topic="fantasy">Fantasy</button><button data-topic="romance">Romance</button><button data-topic="horror">Horror</button><button data-topic="humor">Humor</button><button data-topic="short stories">Short stories</button><button data-topic="poetry">Poetry</button><button data-topic="drama">Plays</button><button data-topic="philosophy">Philosophy</button><button data-topic="history">History</button><button data-topic="biography">Biography</button><button data-topic="science">Science</button><button data-topic="children">Children</button>
+    </div>
     <div class="counter"><span id="libMsg"></span></div>
     <div class="body">
       <div id="libResults" class="list" hidden></div>
+      <div class="label" id="libRecentLab" hidden>Continue reading</div>
+      <div class="list" id="libRecent"></div>
       <div class="label">Try one (short openings, built in, work offline)</div>
       <div class="list" id="libDemo"></div>
       <div class="label">Shelf (full books, free from Project Gutenberg)</div>
@@ -405,10 +415,11 @@ const FONTS = {
 const PRESETS = { auto:null, sepia:['#f3e9d2','#3a2e1c','#b4321f'], paper:['#fbfaf7','#15171c','#d4213b'], night:['#0a0b0f','#ebe7de','#ff5c70'],
                   slate:['#1c2230','#dde5f2','#ff7a8a'], contrast:['#000000','#ffe95c','#ff8a1f'] };
 
-/* Project Gutenberg. Search goes through Gutendex (CORS-enabled). Book text comes from gutenberg.org, which does not send CORS
-   headers, so the installed app routes it through a tiny proxy (see HANDOFF.md). Leave PROXY empty to try direct only. */
-const GUTENDEX = 'https://gutendex.com/books';
-const PROXY = 'https://us-central1-focus-grove-fffa8.cloudfunctions.net/gutenbergText?url=';   // the studio's relay: forwards only Gutenberg text files, keeps nothing
+/* Project Gutenberg, through the studio's relay (lucid-winds functions/gutenberg.js). gutenberg.org sends no CORS headers
+   and Gutendex sits behind a challenge page that refuses a fetch, so the relay does everything: the book text, the Top 100
+   (yesterday, 7 days, 30 days), a search of the official catalogue (61,000 English books) and browsing by subject. It keeps nothing. */
+const LIB = 'https://us-central1-focus-grove-fffa8.cloudfunctions.net/gutenbergText';
+const PROXY = LIB + '?url=';
 const bookUrl = id => 'https://www.gutenberg.org/cache/epub/' + id + '/pg' + id + '.txt';
 const SHELF = [
   [1342,'Pride and Prejudice','Jane Austen',1813],[98,'A Tale of Two Cities','Charles Dickens',1859],[2701,'Moby-Dick','Herman Melville',1851],
@@ -487,7 +498,7 @@ const hint = $('#hint'), scrub = $('#scrub'), pct = $('#pct'), left = $('#left')
 const btnPlay = $('#btnPlay'), icoPlay = $('#icoPlay'), icoPause = $('#icoPause');
 const sheetText = $('#sheetText'), sheetStyle = $('#sheetStyle'), sheetLib = $('#sheetLib');
 const ta = $('#src'), counter = $('#counter'), note = $('#note');
-const libQ = $('#libQ'), libMsg = $('#libMsg'), libResults = $('#libResults'), libDemo = $('#libDemo'), libShelf = $('#libShelf');
+const libQ = $('#libQ'), libMsg = $('#libMsg'), libResults = $('#libResults'), libDemo = $('#libDemo'), libShelf = $('#libShelf'), libRecent = $('#libRecent'), libRecentLab = $('#libRecentLab');
 const ui = { wpm:$('#wpm'), wpmOut:$('#wpmOut'), sent:$('#sentPause'), sentOut:$('#sentOut'), para:$('#paraPause'), paraOut:$('#paraOut'),
              clause:$('#clausePause'), long:$('#longWords'), font:$('#font'), size:$('#size'), sizeOut:$('#sizeOut'), bold:$('#bold'),
              orp:$('#orp'), guides:$('#guides'), wake:$('#wake'), cBg:$('#cBg'), cFg:$('#cFg'), cPivot:$('#cPivot') };
@@ -594,7 +605,7 @@ function jump(i){
 function restart(){ jump(0); elapsed = 0; sessionWords = 0; runStart = performance.now(); updateStats(); }
 function prevSentence(){ let j = E.sentenceStart(tokens, shown); if(j >= shown && j > 0) j = E.sentenceStart(tokens, j - 1); jump(j); }
 function nextSentence(){ jump(E.sentenceEnd(tokens, shown)); }
-function savePos(){ clearTimeout(saveT); saveT = setTimeout(() => { try{ localStorage.setItem(KEY + '.pos', String(shown)); }catch(e){} }, 400); }
+function savePos(){ clearTimeout(saveT); saveT = setTimeout(() => { try{ localStorage.setItem(KEY + '.pos', String(shown)); }catch(e){} recentPos(); }, 400); }
 
 /* Screen wake lock: keep the phone awake while flashing. Tolerate refusal everywhere. */
 async function wake(on){
@@ -607,7 +618,7 @@ async function wake(on){
 }
 
 /* ---------- text ---------- */
-function setText(t, label, book){
+function setText(t, label, book, startAt){
   if(playing) pause();
   text = t; source = label || ''; bookRef = book || null;
   try{
@@ -615,7 +626,7 @@ function setText(t, label, book){
     localStorage.setItem(KEY + '.book', JSON.stringify(bookRef));
     localStorage.setItem(KEY + '.text', text);
   }catch(e){ try{ localStorage.removeItem(KEY + '.text'); }catch(e2){} }   // too big for storage: keep the book ref so it can be re-fetched
-  loadText(0);
+  loadText(startAt || 0);
 }
 function loadText(startAt){
   tokens = E.tokenize(text); rebuildCum();
@@ -649,17 +660,65 @@ function bookRow(b, extra){
   return el;
 }
 function setLibMsg(m){ libMsg.textContent = m || ''; }
+/* ---- continue reading: the last twelve books opened, with where you were ---- */
+const RECENT_KEY = KEY + '.recent';
+function recentList(){ try{ const r = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(r) ? r : []; }catch(e){ return []; } }
+function recentSave(list){ try{ localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 12))); }catch(e){} }
+function recentAdd(b){ const list = recentList().filter(x => x.id !== b.id); list.unshift({ id: b.id, t: b.t, a: b.a, pos: 0, total: 0 }); recentSave(list); renderRecent(); }
+function recentPos(){
+  if(!bookRef || !bookRef.id) return;
+  const list = recentList(), i = list.findIndex(x => x.id === bookRef.id); if(i < 0) return;
+  list[i].pos = shown; list[i].total = tokens.length; recentSave(list);
+}
+function renderRecent(){
+  const list = recentList(); libRecent.innerHTML = ''; libRecentLab.hidden = !list.length;
+  list.forEach(b => {
+    const pc = b.total ? Math.round(100 * b.pos / b.total) : 0;
+    const row = bookRow(b, pc >= 100 ? 'finished' : pc ? pc + '% read' : 'not started');
+    row.addEventListener('click', () => loadBook(b, pc >= 100 ? 0 : b.pos)); libRecent.appendChild(row);
+  });
+}
+/* ---- the relay: top lists, search, subjects ---- */
+async function libFetch(params){
+  const r = await fetch(LIB + '?' + params); if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function chipsOn(sel){ $$('#libChips button').forEach(b => b.classList.toggle('on', sel === (b.dataset.top ? 'top:' + b.dataset.top : 'topic:' + b.dataset.topic))); }
+function renderResults(books, extraOf){
+  libResults.innerHTML = '';
+  books.forEach(b => { const row = bookRow(b, extraOf(b)); row.addEventListener('click', () => loadBook(b)); libResults.appendChild(row); });
+  libResults.hidden = !books.length;
+  const body = $('.body', sheetLib); if(body) body.scrollTop = 0;
+}
+let libLoaded = false;
+async function showTop(days){
+  chipsOn('top:' + days); setLibMsg('Loading the most read…'); libQ.value = '';
+  try{
+    const d = await libFetch('top=' + days);
+    renderResults(d.books || [], b => (b.n || 0).toLocaleString() + ' downloads');
+    setLibMsg('The 100 most downloaded ' + (days === 1 ? 'yesterday' : 'in the last ' + days + ' days') + ', from Project Gutenberg.'); libLoaded = true;
+  }catch(e){ setLibMsg('Project Gutenberg is not reachable right now. Check the connection and try again; the openings below work offline.'); }
+}
+async function showTopic(t){
+  chipsOn('topic:' + t); setLibMsg('Finding ' + t + '…'); libQ.value = '';
+  try{
+    const d = await libFetch('topic=' + encodeURIComponent(t));
+    renderResults(d.books || [], b => '#' + b.id);
+    setLibMsg((d.books || []).length ? (d.books.length + ' books on ' + t + ', the most read first.') : 'Nothing filed under ' + t + '.');
+  }catch(e){ setLibMsg('Project Gutenberg is not reachable right now. Check the connection and try again.'); }
+}
 async function fetchText(url){
   if(PROXY){ try{ const r = await fetch(PROXY + encodeURIComponent(url)); if(r.ok) return await r.text(); }catch(e){} }
   try{ const r = await fetch(url); if(r.ok) return await r.text(); }catch(e){}
   throw new Error('unreachable');
 }
-async function loadBook(b){
+async function loadBook(b, startAt){
   setLibMsg('Loading ' + b.t + '…');
   try{
     const t = E.stripGutenberg(await fetchText(bookUrl(b.id)));
     if(t.length < 500) throw new Error('empty');
-    setText(t, b.t + ' · ' + b.a, { id: b.id, t: b.t, a: b.a });
+    setText(t, b.t + (b.a ? ' · ' + b.a : ''), { id: b.id, t: b.t, a: b.a }, startAt || 0);
+    recentAdd(b); recentPos();
     setLibMsg(''); closeSheets();
   }catch(e){
     setLibMsg('Project Gutenberg is not reachable right now. Check the connection and try again; the openings above work offline.');
@@ -667,20 +726,17 @@ async function loadBook(b){
 }
 async function searchBooks(q){
   q = q.trim(); if(!q) return;
-  setLibMsg('Searching…'); libResults.hidden = true; libResults.innerHTML = '';
+  chipsOn(''); setLibMsg('Searching…'); libResults.hidden = true; libResults.innerHTML = '';
   try{
-    const r = await fetch(GUTENDEX + '?search=' + encodeURIComponent(q) + '&languages=en&mime_type=text%2Fplain');
-    if(!r.ok) throw new Error(r.status);
-    const data = await r.json(), list = (data.results || []).slice(0, 20);
+    const d = await libFetch('q=' + encodeURIComponent(q));
+    const list = d.books || [];
     if(!list.length){ setLibMsg('No matches for “' + q + '”.'); return; }
-    list.forEach(x => {
-      const b = { id: x.id, t: x.title, a: (x.authors && x.authors[0] && x.authors[0].name) || 'Unknown', y: 0 };
-      const row = bookRow(b, (x.download_count || 0).toLocaleString() + ' downloads');
-      row.addEventListener('click', () => loadBook(b)); libResults.appendChild(row);
-    });
-    libResults.hidden = false; setLibMsg((data.count || list.length).toLocaleString() + ' results');
+    renderResults(list, b => '#' + b.id);
+    setLibMsg(list.length + (list.length >= 40 ? '+' : '') + ' matches for “' + q + '” in ' + (d.of || 0).toLocaleString() + ' books.');
   }catch(e){ setLibMsg('Search is not reachable right now. Check the connection and try again.'); }
 }
+$$('#libChips button').forEach(b => b.addEventListener('click', () => { if(b.dataset.top) showTop(+b.dataset.top); else showTopic(b.dataset.topic); }));
+renderRecent();
 DEMO.forEach(b => { const row = bookRow(b, 'opening excerpt'); row.addEventListener('click', () => { setText(b.text, b.t + ' · excerpt'); closeSheets(); }); libDemo.appendChild(row); });
 SHELF.forEach(([id, t, a, y]) => { const b = { id, t, a, y }; const row = bookRow(b); row.addEventListener('click', () => loadBook(b)); libShelf.appendChild(row); });
 
@@ -688,7 +744,7 @@ SHELF.forEach(([id, t, a, y]) => { const b = { id, t, a, y }; const row = bookRo
 function openSheet(which){
   sheetText.hidden = which !== 'text'; sheetStyle.hidden = which !== 'style'; sheetLib.hidden = which !== 'lib';
   if(which === 'text'){ if(playing) pause(); ta.value = text.length <= E.PASTE_MAX ? text : ''; updateCounter(); }
-  if(which === 'lib' && playing) pause();
+  if(which === 'lib'){ if(playing) pause(); if(!libLoaded && navigator.onLine !== false) showTop(30); }
 }
 function closeSheets(){ const wasText = !sheetText.hidden; sheetText.hidden = true; sheetStyle.hidden = true; sheetLib.hidden = true; if(wasText) commitText(); }
 
