@@ -14,6 +14,8 @@ Live at https://skywolfstudio.com/saccade/ (studio hub: Body and Mind). Built fr
 - Grapheme safe pivot (Intl.Segmenter), Reset settings button, body and inputs at 16 px, every control 44 px, library copy no longer says "preview" or "installed app".
 - Icons and the hub thumbnail are drawn placeholders in the app's own look (sepia tile, the word "read", red pivot): Astra art to come.
 
+**The Library (v3, 23 Oct):** Gutendex is behind a Cloudflare challenge and refuses a page's fetch ("Failed to fetch" from the live site), so the relay is the whole library: `?top=1|7|30` (Gutenberg's own Top 100 pages), `?q=` and `?topic=` (the official pg_catalog.csv feed, 61,865 English text books, streamed into memory per instance, 1 GiB), `?url=` the text. The sheet opens on the most read list, has subject chips, search, a Continue reading shelf (last 12 books with position, localStorage) and the offline openings. Live test `node apps/saccade/test/library.live.mjs`.
+
 **Tests** `node apps/saccade/test/engine.mjs` (17 engine cases) and `node apps/saccade/test/smoke.browser.mjs` (real browser: sample, play, paste, offline openings, Night preset, 44 px audit, share intake, landscape). Live: a shelf book loads through the relay.
 
 **Still open (section 14 is Stephen's):** the name, chapters and an IndexedDB shelf (v1.1), trainer mode, multi word pivot, the speed ceiling. Play listing when he calls it.

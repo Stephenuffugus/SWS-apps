@@ -1,0 +1,32 @@
+/* The Library against the LIVE site and the LIVE relay (network): the most read list on open, search, a subject, opening a
+   book, continue reading with a position. node apps/saccade/test/library.live.mjs */
+import { chromium } from 'playwright-core';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let fails = 0; const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) fails++; };
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 412, height: 915 } }); const p = await ctx.newPage();
+const errs = []; p.on('pageerror', (e) => errs.push(String(e).slice(0, 120))); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 160)); });
+await p.goto('https://skywolfstudio.com/saccade/?probe=' + Date.now(), { waitUntil: 'load', timeout: 60000 }); await sleep(600);
+await p.click('#btnLib');
+await p.waitForFunction(() => document.querySelectorAll('#libResults .book').length >= 50, { timeout: 30000 }).catch(() => {});
+const top = await p.evaluate(() => ({ n: document.querySelectorAll('#libResults .book').length, msg: document.getElementById('libMsg').textContent, first: document.querySelector('#libResults .book') && document.querySelector('#libResults .book').textContent }));
+ok(top.n >= 50 && /most downloaded/.test(top.msg), 'opening the Library shows the most read list: ' + top.n + ' rows, "' + top.msg + '", first: ' + top.first);
+await p.fill('#libQ', 'sherlock holmes'); await p.click('#libSearch button[type=submit]');
+await p.waitForFunction(() => /matches/.test(document.getElementById('libMsg').textContent), { timeout: 30000 }).catch(() => {});
+const sr = await p.evaluate(() => ({ n: document.querySelectorAll('#libResults .book').length, msg: document.getElementById('libMsg').textContent, first: document.querySelector('#libResults .book .bt').textContent }));
+ok(sr.n > 0 && /Sherlock/i.test(sr.first), 'search works: ' + sr.msg + ' (first: ' + sr.first + ')');
+await p.click('#libChips [data-topic="poetry"]');
+await p.waitForFunction(() => /books on poetry/.test(document.getElementById('libMsg').textContent), { timeout: 30000 }).catch(() => {});
+const tp = await p.evaluate(() => ({ n: document.querySelectorAll('#libResults .book').length, msg: document.getElementById('libMsg').textContent }));
+ok(tp.n >= 20, 'a subject lists books: ' + tp.msg);
+await p.click('#libChips [data-top="7"]'); await p.waitForFunction(() => /last 7 days/.test(document.getElementById('libMsg').textContent), { timeout: 30000 }).catch(() => {});
+await p.click('#libResults .book:nth-child(2)');
+await p.waitForFunction(() => document.getElementById('sheetLib').hidden && /words loaded/.test(document.getElementById('stats').textContent), { timeout: 40000 }).catch(() => {});
+const bk = await p.evaluate(() => ({ src: document.getElementById('source').textContent, stats: document.getElementById('stats').textContent }));
+ok(/words loaded/.test(bk.stats) && bk.src.length > 3, 'a Top 100 book opens through the relay: ' + bk.src + ' / ' + bk.stats);
+await p.click('#btnNext'); await p.click('#btnNext'); await p.click('#btnNext'); await sleep(900);
+await p.click('#btnLib'); await sleep(300);
+const rc = await p.evaluate(() => ({ lab: document.getElementById('libRecentLab').hidden, rows: Array.from(document.querySelectorAll('#libRecent .book')).map((r) => r.textContent.replace(/\s+/g, ' ')) }));
+ok(!rc.lab && rc.rows.length >= 1, 'continue reading lists the book with its position: ' + JSON.stringify(rc.rows).slice(0, 160));
+await p.screenshot({ path: '/tmp/fo-lead/saccade-library.png' });
+ok(errs.length === 0, 'no page errors ' + JSON.stringify(errs));
+await b.close(); console.log(fails ? 'LIBRARY_FAIL' : 'LIBRARY_PASS'); process.exit(fails ? 1 : 0);
