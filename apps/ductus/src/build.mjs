@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
-const BUILD = 'ductus-v1';
+const BUILD = 'ductus-v2';
 const eng = readFileSync(join(HERE, 'engine.js'), 'utf8');
 const tpl = readFileSync(join(HERE, 'template.html'), 'utf8');
 if (!tpl.includes('/*__ENGINE__*/')) throw new Error('template.html has no /*__ENGINE__*/ mark');

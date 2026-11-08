@@ -1,7 +1,7 @@
 /* DUCTUS service worker (the Saccade pattern): offline once installed, and the page itself is network first so a fix
    never strands on a stale phone. Bump CACHE with every shipped change (and BUILD in src/build.mjs) or nobody who
    already installed ever receives it. */
-var CACHE = 'ductus-v1';
+var CACHE = 'ductus-v2';
 var ASSETS = [
   './',
   'index.html',

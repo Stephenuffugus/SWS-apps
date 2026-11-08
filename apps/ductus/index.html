@@ -161,10 +161,11 @@
       </div>
       <div class="row" style="margin-top:0">
         <button id="codeBtn" class="ghost">Hand code</button>
+        <button id="linkBtn" class="ghost">Share link</button>
         <button id="renameBtn" class="ghost">Rename</button>
         <button id="reforgeBtn" class="ghost">Reforge all</button>
       </div>
-      <p class="hint">The font installs anywhere a .ttf does: Procreate, Word, a game engine. The hand code is a short string a friend can paste to get your exact alphabet.</p>
+      <p class="hint">The font installs anywhere a .ttf does: Procreate, Word, a game engine. The share link opens DUCTUS with your exact alphabet loaded; the hand code is the same thing as text, for pasting.</p>
     </div>
   </section>
 
@@ -247,7 +248,7 @@
     </div>
   </section>
   <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20DUCTUS">Feedback</a></p>
-  <p class="buildtag">ductus-v1</p>
+  <p class="buildtag">ductus-v2</p>
 </main>
 
 <nav class="tabs">
@@ -1152,14 +1153,21 @@ async function deliverFile(blob,name){
   }
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
 }
-function showCode(code){
+function showCode(code,asLink){
   $('#exportImg').style.display='none';const t=$('#codeOut');t.style.display='';t.value=code;
-  $('#sheetMsg').textContent='Send this to a friend. Pasted into DUCTUS, it becomes your exact alphabet.';
+  $('#sheetMsg').textContent=asLink?'Send this link. It opens DUCTUS with your exact alphabet loaded.':'Send this to a friend. Pasted into DUCTUS, it becomes your exact alphabet.';
   $('#dl').style.display='none';$('#dlCap').style.display='none';
-  const sh=$('#nativeShare');sh.style.display='';sh.textContent='Copy';
-  sh.onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Hand code copied')}catch(e){t.focus();t.select();toast('Select the text and copy it')}};
+  const sh=$('#nativeShare');sh.style.display='';
+  let canShare=false;try{canShare=!!(asLink&&!hosted()&&navigator.share&&(!navigator.canShare||navigator.canShare({url:code})))}catch(e){}
+  sh.textContent=canShare?'Share':'Copy';
+  sh.onclick=async()=>{
+    if(canShare){try{await navigator.share({title:'DUCTUS: the '+state.script.name,url:code})}catch(e){if(e&&e.name!=='AbortError'){canShare=false;sh.textContent='Copy';sh.onclick()}}return}
+    try{await navigator.clipboard.writeText(code);toast(asLink?'Link copied':'Hand code copied')}catch(e){t.focus();t.select();toast('Select the text and copy it')}};
   $('#sheet').classList.add('on');
 }
+// the hand as a link: the code rides in the fragment, so nothing is sent anywhere and the page loads it itself
+function handLink(){return location.origin+location.pathname+'#hand='+encodeURIComponent(D.encodeScript(state.script))}
+function loadHand(s,how){state.script=s;state.seed=s.seed;renderName();renderAll();save();toast('Loaded the '+s.name+(how?' '+how:''));showTab('alpha')}
 function showExport(canvas,name){
   $('#exportImg').style.display='';$('#codeOut').style.display='none';$('#sheetMsg').textContent='Long-press the image to save or share it.';$('#nativeShare').textContent='Share';
   const url=canvas.toDataURL('image/png');$('#exportImg').src=url;
@@ -1185,13 +1193,13 @@ $('#closeSheet').addEventListener('click',()=>$('#sheet').classList.remove('on')
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('#sheet').classList.remove('on')});
 
 // ---------- hand codes & font ----------
-$('#codeBtn').addEventListener('click',()=>{if(state.script)showCode(D.encodeScript(state.script))});
+$('#codeBtn').addEventListener('click',()=>{if(state.script)showCode(D.encodeScript(state.script),false)});
+$('#linkBtn').addEventListener('click',()=>{if(state.script)showCode(handLink(),true)});
 $('#importToggle').addEventListener('click',()=>{const b=$('#importBox');b.style.display=b.style.display==='none'?'':'none';if(b.style.display==='')$('#importText').focus()});
 $('#importBtn').addEventListener('click',()=>{
   const s=D.decodeScript($('#importText').value);
   if(!s){toast('That doesn\'t look like a hand code');return}
-  state.script=s;state.seed=s.seed;$('#importText').value='';$('#importBox').style.display='none';
-  renderName();renderAll();save();toast('Loaded the '+s.name);showTab('alpha');
+  $('#importText').value='';$('#importBox').style.display='none';loadHand(s,'');
 });
 $('#fontBtn').addEventListener('click',()=>{
   if(!state.script)return;
@@ -1390,8 +1398,15 @@ if(state.script&&!state.script.glyphs)state.script=null;
 // the studio's share target (manifest.webmanifest): text shared into the installed app lands in Write, on the device, never uploaded
 try{const sp=new URLSearchParams(location.search);const shared=[sp.get('title'),sp.get('text'),sp.get('url')].filter(Boolean).join(' ').trim();
   if(shared){state.text=shared.slice(0,400);if(state.script)state.tab='write';history.replaceState(null,'',location.pathname)}}catch(e){}
+// a share link (#hand=DUCTUS1|...) loads a friend's hand; the fragment never leaves the browser and is cleaned once read.
+// null: no hand in the URL; false: a #hand= that did not decode; else the script
+function hashHand(){const m=/^#hand=(.+)$/.exec(location.hash||'');if(!m)return null;let s=null;try{s=D.decodeScript(decodeURIComponent(m[1]))}catch(e){}
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}return s||false}
+const linked=hashHand();
 syncControls();renderName();renderTraits();
-showTab(state.script?state.tab||'alpha':'forge');
+if(linked){loadHand(linked,'from a link')}else{if(linked===false)toast('That link did not hold a hand');showTab(state.script?state.tab||'alpha':'forge')}
+// a link tapped while the app is already open changes only the fragment: load it the same way
+window.addEventListener('hashchange',()=>{const h=hashHand();if(h)loadHand(h,'from a link');else if(h===false)toast('That link did not hold a hand')});
 try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
 window.addEventListener('resize',()=>{sizeBoxes();if(state.tab==='alpha')renderAlpha();if(state.tab==='write')renderNote();if(state.tab==='play'&&P)renderBoard()});
 window.DUCTUS_STATE=()=>state; // for testing

@@ -64,6 +64,26 @@ const sw = await page.evaluate(() => navigator.serviceWorker.getRegistration().t
 ok(sw, 'the service worker registered');
 const tiny = await page.evaluate(() => { let n = 0; document.querySelectorAll('p, button, textarea, label, span.v').forEach((el) => { const s = getComputedStyle(el); if (el.offsetParent !== null && parseFloat(s.fontSize) < 12) n++; }); return n; });
 ok(tiny === 0, 'no visible copy under 12 px (' + tiny + ')');
+/* the share link: a fresh page (its own storage cleared) opens with the hand in the fragment and loads it */
+const link = await page.evaluate(() => { const s = window.DUCTUS_STATE(); return { name: s.script.name, url: location.origin + location.pathname + '#hand=' + encodeURIComponent(window.Ductus.encodeScript(s.script)) }; });
+await page.click('nav.tabs button[data-tab="alpha"]'); await sleep(200);
+await page.click('#linkBtn'); await sleep(200);
+const sheet = await page.evaluate(() => ({ on: document.getElementById('sheet').classList.contains('on'), code: document.getElementById('codeOut').value, btn: document.getElementById('nativeShare').textContent }));
+ok(sheet.on && sheet.code === link.url && /^(Share|Copy)$/.test(sheet.btn), 'Share link shows the hand link (' + link.url.length + ' chars) with a ' + sheet.btn + ' button');
+await page.click('#closeSheet'); await sleep(100);
+/* a second hand's link tapped while the app is open: only the fragment changes, the app still loads it */
+const other = await page.evaluate(() => { const s = window.Ductus.makeScript([], 99); return { name: s.name, hash: '#hand=' + encodeURIComponent(window.Ductus.encodeScript(s)) }; });
+await page.evaluate((h) => { location.hash = h; }, other.hash); await sleep(400);
+const swapped = await page.evaluate(() => { const s = window.DUCTUS_STATE(); return { name: s.script && s.script.name, tab: s.tab, hash: location.hash }; });
+ok(swapped.name === other.name && swapped.tab === 'alpha' && swapped.hash === '', `a link tapped in the open app swaps to the ${swapped.name} (fragment cleaned)`);
+/* a fresh page (storage cleared, away and back) opens the first link cold */
+await page.evaluate(() => localStorage.clear());
+await page.goto('about:blank'); await page.goto(link.url, { waitUntil: 'load', timeout: 30000 }); await sleep(500);
+const got = await page.evaluate(() => { const s = window.DUCTUS_STATE(); return { name: s.script && s.script.name, tab: s.tab, hash: location.hash }; });
+ok(got.name === link.name && got.tab === 'alpha' && got.hash === '', `a friend's link loads the ${got.name} cold and lands on Alphabet, the fragment cleaned`);
+await page.goto('about:blank'); await page.goto(site.url('ductus') + '#hand=nonsense', { waitUntil: 'load', timeout: 30000 }); await sleep(400);
+const bad = await page.evaluate(() => ({ toast: document.getElementById('toast').textContent, hash: location.hash, tab: window.DUCTUS_STATE().tab }));
+ok(/did not hold a hand/.test(bad.toast) && bad.hash === '' && bad.tab === 'forge', 'a broken link says so and opens Forge (' + bad.toast + ')');
 ok(errors.length === 0, 'zero page errors' + (errors.length ? ': ' + errors.join(' ; ') : ''));
 await browser.close(); site.close();
 console.log(fails ? `\nDUCTUS SMOKE: ${fails} FAILED` : '\nDUCTUS SMOKE OK');
