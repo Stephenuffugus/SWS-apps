@@ -81,6 +81,7 @@ await page.evaluate(() => localStorage.clear());
 await page.goto('about:blank'); await page.goto(link.url, { waitUntil: 'load', timeout: 30000 }); await sleep(500);
 const got = await page.evaluate(() => { const s = window.DUCTUS_STATE(); return { name: s.script && s.script.name, tab: s.tab, hash: location.hash }; });
 ok(got.name === link.name && got.tab === 'alpha' && got.hash === '', `a friend's link loads the ${got.name} cold and lands on Alphabet, the fragment cleaned`);
+await page.evaluate(() => localStorage.clear());   /* no saved hand, so a broken link has nowhere to go but Forge */
 await page.goto('about:blank'); await page.goto(site.url('ductus') + '#hand=nonsense', { waitUntil: 'load', timeout: 30000 }); await sleep(400);
 const bad = await page.evaluate(() => ({ toast: document.getElementById('toast').textContent, hash: location.hash, tab: window.DUCTUS_STATE().tab }));
 ok(/did not hold a hand/.test(bad.toast) && bad.hash === '' && bad.tab === 'forge', 'a broken link says so and opens Forge (' + bad.toast + ')');
