@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15131a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Draw three letters of an alphabet that does not exist. DUCTUS grows the rest in your hand, writes secret notes in it, ages it through centuries of cursive drift, exports a real font and turns it into puzzles. No account, no ads, nothing leaves your device.">
+<link rel="canonical" href="https://skywolfstudio.com/ductus/">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="DUCTUS">
+<meta property="og:description" content="Draw three letters of an alphabet that does not exist. DUCTUS grows the rest in your hand: write in it, age it, export a real font, hand the phone over and let them crack it.">
+<meta property="og:url" content="https://skywolfstudio.com/ductus/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sky Wolf Studio">
+<meta property="og:image" content="https://skywolfstudio.com/ductus/marketing/og-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DUCTUS">
+<meta name="twitter:description" content="Draw three letters of an alphabet that does not exist. DUCTUS grows the rest in your hand: write in it, age it, export a real font, hand the phone over and let them crack it.">
+<meta name="twitter:image" content="https://skywolfstudio.com/ductus/marketing/og-1200x630.jpg">
+<title>DUCTUS</title>
+<style>
+  :root{
+    --bg:#15131a; --bg2:#1d1a23; --line:#2b2733; --txt:#e9e2d2; --mute:#8d8698;
+    --paper:#f1e9d6; --paper2:#e6dcc3; --ink:#1c1a22; --rub:#b8432b; --rub2:#d9674f;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--serif);height:100%}
+  body{display:flex;flex-direction:column;min-height:100dvh;padding-top:var(--sat)}
+  header{padding:14px 18px 6px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  h1{margin:0;font-weight:400;font-size:15px;letter-spacing:.42em;text-indent:.42em;color:var(--mute)}
+  #scriptName{font-style:italic;font-size:17px;color:var(--txt);text-align:right;min-height:1.3em;opacity:.95}
+  #scriptName b{font-style:normal;font-weight:400;color:var(--mute);font-size:12px;letter-spacing:.1em;margin-right:6px}
+  main{flex:1;overflow:auto;padding:4px 16px calc(84px + var(--sab));-webkit-overflow-scrolling:touch}
+  .panel{display:none;animation:fade .25s ease}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .lede{font-size:21px;line-height:1.3;margin:10px 0 14px;font-style:italic}
+  .hint{color:var(--mute);font-size:15px;line-height:1.45;margin:10px 2px}
+  .boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .box{position:relative;aspect-ratio:3/4;background:var(--paper);border-radius:10px;overflow:hidden;
+       box-shadow:inset 0 0 0 1px rgba(0,0,0,.08), 0 10px 30px -18px rgba(0,0,0,.9)}
+  .box canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+  .box .n{position:absolute;left:8px;top:6px;font-size:11px;color:#9a9282;letter-spacing:.15em}
+  .box .clr{position:absolute;right:2px;top:2px;background:none;border:0;color:#9a9282;font-size:20px;line-height:1;padding:4px 9px;font-family:var(--serif);display:none;min-width:0;flex:none;width:auto;border-radius:0}
+  .box.has .clr{display:block}
+  .box .guide{position:absolute;inset:0;pointer-events:none;opacity:.55}
+  .row{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
+  button,.btn{font-family:var(--serif);font-size:15px;border-radius:999px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);padding:12px 18px;cursor:pointer;flex:1;min-width:120px;min-height:44px}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--rub);border-color:var(--rub);color:#fff4ea}
+  button.primary:disabled{opacity:.45}
+  button.ghost{background:none}
+  button.small{flex:0;min-width:0;padding:8px 14px;font-size:15px}
+  .traits{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+  .traits span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+  #alphaCanvas,#noteCanvas{width:100%;display:block;background:var(--paper);border-radius:12px;box-shadow:0 14px 40px -20px rgba(0,0,0,.95)}
+  #alphaCanvas{touch-action:manipulation}
+  .ctl{display:grid;grid-template-columns:72px 1fr auto;align-items:center;gap:10px;margin:12px 0;font-size:14px}
+  .ctl .v{color:var(--mute);font-style:italic;font-size:13px;min-width:120px;text-align:right}
+  input[type=range]{width:100%;accent-color:var(--rub2);height:28px}
+  .seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:6px 0}
+  .seg button{border:0;border-radius:0;background:none;padding:10px 6px;font-size:15px;color:var(--mute);min-width:0}
+  .seg button.on{background:var(--bg2);color:var(--txt)}
+  textarea{width:100%;min-height:84px;resize:vertical;font-family:var(--serif);font-size:17px;line-height:1.4;background:var(--bg2);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none}
+  textarea:focus{border-color:#4a4356}
+  .swatches{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .sw{width:36px;height:36px;min-height:36px;border-radius:50%;border:2px solid transparent;padding:0;min-width:0;flex:0 0 auto}
+  .sw.on{border-color:var(--txt)}
+  .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-right:4px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--txt)}
+  .chk input{accent-color:var(--rub2);width:18px;height:18px}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;padding:10px 16px calc(10px + var(--sab));
+    background:linear-gradient(to top,rgba(21,19,26,1) 60%,rgba(21,19,26,0))}
+  nav.tabs button{flex:1;max-width:160px;background:var(--bg2);border-color:var(--line);color:var(--mute);padding:12px 8px;font-size:14px;letter-spacing:.08em}
+  nav.tabs button.on{color:var(--txt);border-color:#4a4356}
+  nav.tabs button:disabled{opacity:.35}
+  .overlay{position:fixed;inset:0;background:rgba(10,9,13,.86);display:none;align-items:center;justify-content:center;padding:18px;z-index:20;backdrop-filter:blur(6px)}
+  .overlay.on{display:flex}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;max-width:520px;width:100%;max-height:92dvh;overflow:auto}
+  .card img{width:100%;border-radius:8px;display:block;box-shadow:0 10px 30px -14px #000}
+  .card p{margin:12px 2px 4px;color:var(--mute);font-size:15px;text-align:center}
+  .empty{padding:40px 10px;text-align:center;color:var(--mute);font-style:italic;font-size:17px;line-height:1.5}
+  .toast{position:fixed;left:50%;bottom:calc(92px + var(--sab));transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:30}
+  .toast.on{opacity:1}
+  footer.credit{color:#5e576a;font-size:13px;text-align:center;margin:26px 0 0;letter-spacing:.06em}
+  nav.tabs button{padding:12px 4px;font-size:14.5px;letter-spacing:.05em;min-width:0}
+  .link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:6px 0;font-size:15px;flex:0;min-width:0;text-align:left}
+  .codebox{width:100%;min-height:70px;font:15px/1.4 ui-monospace,Menlo,monospace;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all}
+  #puzzleCanvas{width:100%;display:block;background:var(--paper);border-radius:12px;box-shadow:0 14px 40px -20px rgba(0,0,0,.95);touch-action:manipulation}
+  .pstat{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:4px 2px 10px;font-size:15px;color:var(--mute)}
+  .pstat b{font-weight:400;color:var(--txt);font-style:italic}
+  .pstat .t{font-variant-numeric:tabular-nums;font-size:18px;color:var(--txt)}
+  .picker{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px;justify-content:center}
+  .picker button{flex:0 0 auto;min-width:0;width:38px;height:44px;padding:0;font-size:17px;border-radius:9px}
+  .picker button.used{opacity:.35}
+  .picker button.clear{width:auto;padding:0 12px;font-size:14px}
+  .score{text-align:center;padding:26px 10px 10px}
+  .score .big{font-size:64px;line-height:1;font-style:italic}
+  .score .sub{color:var(--mute);margin-top:10px;font-size:15px;line-height:1.5}
+  .cover{padding:60px 10px 30px;text-align:center;font-size:22px;font-style:italic;line-height:1.4}
+  .scribe{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .scribe .box .n{font-size:12px;letter-spacing:.18em}
+  .scribe .box.target .n{font-size:22px;letter-spacing:0;color:#b8432b;left:auto;right:10px;top:6px}
+  .scribe .res{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:30px;font-style:italic;color:#b8432b;pointer-events:none}
+  .foot{font-size:14px;color:var(--mute);text-align:center;margin:22px 0 0}.foot a{color:var(--rub2);display:inline-block;padding:14px 6px}
+  .buildtag{font-size:12px;color:var(--mute);text-align:center;margin:0;opacity:.7}
+</style>
+</head>
+<body>
+<header>
+  <h1>DUCTUS</h1>
+  <div id="scriptName"></div>
+</header>
+<main>
+  <section id="forge" class="panel on">
+    <p class="lede">Draw three letters from an alphabet that doesn't exist yet.</p>
+    <div class="boxes">
+      <div class="box" data-i="0"><canvas></canvas><span class="n">I</span><button class="clr" aria-label="clear">×</button></div>
+      <div class="box" data-i="1"><canvas></canvas><span class="n">II</span><button class="clr" aria-label="clear">×</button></div>
+      <div class="box" data-i="2"><canvas></canvas><span class="n">III</span><button class="clr" aria-label="clear">×</button></div>
+    </div>
+    <p class="hint">Any marks work: hooks, loops, slashes, dots. The other twenty-three letters and the numerals grow from how your hand moves: its curves, its slant, how often it lifts the pen.</p>
+    <div class="row">
+      <button id="forgeBtn" class="primary">Forge the alphabet</button>
+      <button id="randomBtn" class="ghost">Surprise me</button>
+    </div>
+    <button id="importToggle" class="link">Have a hand code from a friend? Paste it here</button>
+    <div id="importBox" style="display:none">
+      <textarea id="importText" class="codebox" placeholder="DUCTUS1|…"></textarea>
+      <div class="row" style="margin-top:8px"><button id="importBtn">Load this hand</button></div>
+    </div>
+    <footer class="credit">ductus, the way a hand moves to make a letter</footer>
+  </section>
+
+  <section id="alpha" class="panel">
+    <div id="alphaEmpty" class="empty">Nothing forged yet.<br>Go draw three letters.</div>
+    <div id="alphaBody" style="display:none">
+      <div class="traits" id="traits"></div>
+      <canvas id="alphaCanvas"></canvas>
+      <p class="hint">Tap any letter to recast it in the same hand.</p>
+      <div class="ctl"><span>Age</span><input type="range" id="age" min="0" max="100" value="0"><span class="v" id="ageLabel">Carved in stone</span></div>
+      <div class="ctl"><span>Slant</span><input type="range" id="slant" min="-30" max="45" value="0"><span class="v" id="slantLabel">Upright</span></div>
+      <div class="ctl"><span>Weight</span><input type="range" id="weight" min="3" max="14" value="8"><span class="v" id="weightLabel">Medium</span></div>
+      <div class="seg" id="pen">
+        <button data-pen="round">Round pen</button>
+        <button data-pen="broad" class="on">Broad nib</button>
+        <button data-pen="brush">Brush</button>
+      </div>
+      <div class="row">
+        <button id="keyBtn">Decoder key</button>
+        <button id="fontBtn">Export font (.ttf)</button>
+      </div>
+      <div class="row" style="margin-top:0">
+        <button id="codeBtn" class="ghost">Hand code</button>
+        <button id="renameBtn" class="ghost">Rename</button>
+        <button id="reforgeBtn" class="ghost">Reforge all</button>
+      </div>
+      <p class="hint">The font installs anywhere a .ttf does: Procreate, Word, a game engine. The hand code is a short string a friend can paste to get your exact alphabet.</p>
+    </div>
+  </section>
+
+  <section id="play" class="panel">
+    <div class="seg" id="playMode">
+      <button data-m="solo" class="on">Decipher</button>
+      <button data-m="duel">Pass &amp; play</button>
+      <button data-m="scribe">Scribe</button>
+    </div>
+    <div id="scribeView" style="display:none">
+      <p class="lede" style="font-size:19px">Learn to write your own hand.</p>
+      <div class="scribe">
+        <div class="box target"><canvas id="targetCanvas"></canvas><span class="n" id="targetLetter"></span></div>
+        <div class="box" id="scribeBox"><canvas id="scribeCanvas"></canvas><span class="n">YOU</span><div class="res" id="scribeRes"></div></div>
+      </div>
+      <div class="pstat" style="margin-top:12px"><span id="scribeMsg">Copy the glyph, then check.</span><span id="scribeStats"></span></div>
+      <div class="row">
+        <button id="checkBtn" class="primary">Check</button>
+        <button id="scribeClear" class="ghost small">Clear</button>
+        <button id="scribeNext" class="ghost small">Next</button>
+      </div>
+      <p class="hint">Scored on shape, not speed: a red ghost of the real glyph is laid over your attempt after each check. 70 masters a letter; unmastered letters come up more often.</p>
+    </div>
+    <div id="soloSetup">
+      <p class="lede">A stranger's hand. A sentence underneath. Crack it.</p>
+      <p class="hint">Every letter of the sentence is written in an alphabet nobody has seen before. Tap a glyph, guess its letter. Short words, repeated shapes and the commonest glyph are your way in.</p>
+      <div class="row">
+        <button id="todayBtn" class="primary">Today's puzzle</button>
+        <button id="randomPuzzleBtn">Random puzzle</button>
+      </div>
+      <p class="hint" id="statsLine"></p>
+    </div>
+    <div id="duelSetup" style="display:none">
+      <p class="lede">Write a secret. Hand the phone over.</p>
+      <textarea id="secret" placeholder="Type the secret they have to crack…" rows="2"></textarea>
+      <div class="seg" id="duelHand" style="margin-top:10px">
+        <button data-h="stranger" class="on">A stranger's hand</button>
+        <button data-h="mine" id="duelMine">Your hand</button>
+      </div>
+      <div class="ctl"><span>Hints</span><input type="range" id="duelHints" min="0" max="5" value="2"><span class="v" id="duelHintsLabel">2 allowed</span></div>
+      <div class="row"><button id="handOver" class="primary">Hand it over</button></div>
+      <p class="hint">Using your own hand turns it into a reading test. Have they learned the family alphabet yet?</p>
+    </div>
+    <div id="cover" style="display:none">
+      <div class="cover">Pass the phone.<br>Don't peek at the secret.</div>
+      <div class="row"><button id="readyBtn" class="primary">I'm ready</button></div>
+    </div>
+    <div id="board" style="display:none">
+      <div class="pstat"><span>the <b id="pHand"></b></span><span class="t" id="pTime">0:00</span><span id="pHints"></span></div>
+      <canvas id="puzzleCanvas"></canvas>
+      <div id="picker" class="picker"></div>
+      <div class="row">
+        <button id="hintBtn">Reveal a letter</button>
+        <button id="freqBtn" class="ghost">Show counts</button>
+        <button id="quitBtn" class="ghost small">Quit</button>
+      </div>
+    </div>
+    <div id="solved" style="display:none">
+      <div class="score"><div class="big" id="scoreBig">0</div><div class="sub" id="scoreSub"></div></div>
+      <div class="row"><button id="againBtn" class="primary">Another</button><button id="bragBtn" class="ghost">Make a card</button></div>
+    </div>
+  </section>
+
+  <section id="write" class="panel">
+    <div id="writeEmpty" class="empty">Forge an alphabet first,<br>then write in it here.</div>
+    <div id="writeBody" style="display:none">
+      <textarea id="text" placeholder="Write a note only your family can read…" rows="3"></textarea>
+      <div class="row" style="margin:10px 0">
+        <div class="swatches" id="inks"><span class="lbl">Ink</span></div>
+        <div class="swatches" id="papers"><span class="lbl">Paper</span></div>
+      </div>
+      <canvas id="noteCanvas"></canvas>
+      <div class="row" style="align-items:center">
+        <label class="chk"><input type="checkbox" id="showKey"> Show the key under each letter</label>
+      </div>
+      <div class="row">
+        <button id="shareBtn" class="primary">Make a card</button>
+        <button id="shareKeyBtn" class="ghost">Card with key</button>
+      </div>
+    </div>
+  </section>
+  <p class="foot">A free tool by <a href="../" id="studioLink">Sky Wolf Studio</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="mailto:stephen@skywolfstudio.com?subject=Feedback%3A%20DUCTUS">Feedback</a></p>
+  <p class="buildtag">__BUILD__</p>
+</main>
+
+<nav class="tabs">
+  <button data-tab="forge" class="on">Forge</button>
+  <button data-tab="alpha">Alphabet</button>
+  <button data-tab="write">Write</button>
+  <button data-tab="play">Play</button>
+</nav>
+
+<div id="sheet" class="overlay">
+  <div class="card">
+    <img id="exportImg" alt="Your export">
+    <textarea id="codeOut" class="codebox" readonly style="display:none"></textarea>
+    <p id="sheetMsg">Long-press the image to save or share it.</p>
+    <div class="row" style="margin-bottom:0">
+      <button id="nativeShare" class="primary" style="display:none">Share</button>
+      <a id="dl" class="btn" style="text-align:center;text-decoration:none;display:none" download="ductus.png">Download</a>
+      <button id="dlCap" style="display:none">Download</button>
+      <button id="closeSheet" class="ghost">Done</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const D=window.Ductus;
+const DPR=Math.min(3,window.devicePixelRatio||1);
+const AGES=['Carved in stone','Brushed on bark','Quilled on vellum','Dipped in ink','Scrawled in a hurry'];
+const INKS=['#1c1a22','#2b3a67','#7a1f1f','#2f4f3a','#5a3a1f','#f1e9d6'];
+const PAPERS=['#f1e9d6','#fbf7ee','#e4d3b0','#d9e2dc','#f3d9d2','#1c1a22'];
+
+// ---------- state ----------
+let state={doodles:[[],[],[]],seed:0,script:null,style:{age:0,slant:0,weight:0.08,pen:'broad',ink:INKS[0],paper:PAPERS[0]},text:'',showKey:false,tab:'forge'};
+function save(){try{localStorage.setItem('ductus.v1',JSON.stringify(state))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem('ductus.v1')||'null');if(s&&s.style){state=Object.assign(state,s);if(!state.doodles||state.doodles.length!==3)state.doodles=[[],[],[]]}}catch(e){}}
+let saveT; const saveSoon=()=>{clearTimeout(saveT);saveT=setTimeout(save,250)};
+const pen=()=>({type:state.style.pen,weight:state.style.weight});
+const styleFor=(ink)=>({age:state.style.age,slant:state.style.slant,pen:pen(),ink:ink||state.style.ink});
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1800)}
+
+// ---------- drawing boxes ----------
+const boxes=$$('.boxes .box').map(el=>{
+  const c=el.querySelector('canvas'),ctx=c.getContext('2d');
+  const b={el,c,ctx,i:+el.dataset.i,active:null};
+  const size=()=>{const r=el.getBoundingClientRect();c.width=Math.round(r.width*DPR);c.height=Math.round(r.height*DPR);b.w=r.width;b.h=r.height;redraw()};
+  const redraw=()=>{
+    ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,b.w,b.h);
+    // faint baseline/guide
+    ctx.strokeStyle='rgba(0,0,0,.07)';ctx.lineWidth=1;ctx.setLineDash([3,5]);
+    [0.06,0.353,0.647,0.94].forEach(y=>{ctx.beginPath();ctx.moveTo(8,b.h*y);ctx.lineTo(b.w-8,b.h*y);ctx.stroke()});
+    ctx.setLineDash([]);
+    ctx.strokeStyle='#1c1a22';ctx.lineWidth=Math.max(4,b.w*0.05);ctx.lineCap='round';ctx.lineJoin='round';
+    for(const s of state.doodles[b.i]){ctx.beginPath();if(s.length===1){ctx.arc(s[0][0],s[0][1],ctx.lineWidth/2,0,7);ctx.fillStyle='#1c1a22';ctx.fill();continue}
+      ctx.moveTo(s[0][0],s[0][1]);for(let k=1;k<s.length;k++)ctx.lineTo(s[k][0],s[k][1]);ctx.stroke()}
+    el.classList.toggle('has',state.doodles[b.i].length>0);
+  };
+  b.redraw=redraw;b.size=size;
+  const pos=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);b.active=[pos(e)];state.doodles[b.i].push(b.active);redraw()});
+  c.addEventListener('pointermove',e=>{if(!b.active)return;const p=pos(e);const l=b.active[b.active.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])<1.5)return;b.active.push(p);redraw()});
+  const up=e=>{if(!b.active)return;b.active=null;redraw();saveSoon()};
+  c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+  el.querySelector('.clr').addEventListener('click',()=>{state.doodles[b.i]=[];redraw();saveSoon()});
+  return b;
+});
+function sizeBoxes(){boxes.forEach(b=>b.size())}
+
+// ---------- forge ----------
+function forge(fromDoodles){
+  const dood=fromDoodles?state.doodles.filter(d=>d.length):[];
+  state.seed=(Math.random()*4294967295)>>>0;
+  state.script=D.makeScript(dood,state.seed);
+  if(fromDoodles&&!dood.length) toast('No marks drawn, invented a hand for you');
+  renderName();renderAll();save();
+  showTab('alpha');
+}
+$('#forgeBtn').addEventListener('click',()=>forge(true));
+$('#randomBtn').addEventListener('click',()=>{forge(false)});
+$('#reforgeBtn').addEventListener('click',()=>{forge(state.doodles.some(d=>d.length))});
+$('#renameBtn').addEventListener('click',()=>{if(!state.script)return;const R=D.rng((Math.random()*4294967295)>>>0);const tmp=D.makeScript([],R()*4294967295>>>0);state.script.name=tmp.name;renderName();save()});
+
+function renderName(){const el=$('#scriptName');if(!state.script){el.innerHTML='';return}el.innerHTML='<b>THE</b>'+esc(state.script.name)}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+// ---------- alphabet grid ----------
+const CHARS=D.LETTERS+D.DIGITS;
+const ac=$('#alphaCanvas'),actx=ac.getContext('2d');
+let cell=0,cols=6;
+function renderAlpha(){
+  if(!state.script)return;
+  const r=ac.getBoundingClientRect();const cw=r.width||320;
+  cell=cw/cols;const rows=Math.ceil(CHARS.length/cols);const ch=rows*cell*1.3+8;
+  ac.width=Math.round(cw*DPR);ac.height=Math.round(ch*DPR);ac.style.height=ch+'px';
+  actx.setTransform(DPR,0,0,DPR,0,0);actx.fillStyle=state.style.paper;actx.fillRect(0,0,cw,ch);
+  const st=styleFor(inkOn(state.style.paper));
+  const H=cell*0.72;
+  actx.textAlign='center';
+  for(let i=0;i<CHARS.length;i++){
+    const cx=(i%cols)*cell+cell/2, cy=Math.floor(i/cols)*cell*1.3+6;
+    D.drawGlyph(actx,state.script,CHARS[i],cx,cy+cell*0.08,H,st);
+    actx.fillStyle=keyColor(state.style.paper);actx.font=`${Math.round(cell*0.2)}px ${getComputedStyle(document.body).fontFamily}`;
+    actx.fillText(CHARS[i],cx,cy+cell*1.13);
+  }
+}
+function inkOn(paper){return isDark(paper)?'#f1e9d6':state.style.ink}
+function isDark(hex){const n=parseInt(hex.slice(1),16);const r=n>>16,g=n>>8&255,b=n&255;return (r*299+g*587+b*114)/1000<110}
+function keyColor(paper){return isDark(paper)?'rgba(241,233,214,.5)':'rgba(28,26,34,.45)'}
+ac.addEventListener('click',e=>{
+  if(!state.script)return;const r=ac.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  const i=Math.floor(x/cell)+Math.floor(y/(cell*1.3))*cols;if(i<0||i>=CHARS.length)return;
+  D.recastGlyph(state.script,CHARS[i]);renderAll();save();
+  if(navigator.vibrate)try{navigator.vibrate(8)}catch(_){}
+});
+function renderTraits(){const t=$('#traits');t.innerHTML='';if(!state.script)return;for(const s of state.script.traits){const e=document.createElement('span');e.textContent=s;t.appendChild(e)}}
+
+// controls
+const ageEl=$('#age'),slantEl=$('#slant'),weightEl=$('#weight');
+function syncControls(){
+  ageEl.value=Math.round(state.style.age*100);slantEl.value=Math.round(state.style.slant*100);weightEl.value=Math.round(state.style.weight*100);
+  $('#ageLabel').textContent=AGES[Math.min(4,Math.floor(state.style.age*5))];
+  const s=state.style.slant;$('#slantLabel').textContent=s>0.12?'Italic':s<-0.08?'Backhand':'Upright';
+  const w=state.style.weight;$('#weightLabel').textContent=w<0.05?'Hairline':w<0.09?'Medium':w<0.12?'Heavy':'Black';
+  $$('#pen button').forEach(b=>b.classList.toggle('on',b.dataset.pen===state.style.pen));
+  $('#showKey').checked=!!state.showKey;$('#text').value=state.text||'';
+  $$('#inks .sw').forEach(b=>b.classList.toggle('on',b.dataset.c===state.style.ink));
+  $$('#papers .sw').forEach(b=>b.classList.toggle('on',b.dataset.c===state.style.paper));
+}
+ageEl.addEventListener('input',()=>{state.style.age=ageEl.value/100;syncControls();renderAll();saveSoon()});
+slantEl.addEventListener('input',()=>{state.style.slant=slantEl.value/100;syncControls();renderAll();saveSoon()});
+weightEl.addEventListener('input',()=>{state.style.weight=weightEl.value/100;syncControls();renderAll();saveSoon()});
+$$('#pen button').forEach(b=>b.addEventListener('click',()=>{state.style.pen=b.dataset.pen;syncControls();renderAll();saveSoon()}));
+
+// swatches
+function swatches(id,list,key){const w=$(id);list.forEach(c=>{const b=document.createElement('button');b.className='sw';b.dataset.c=c;b.style.background=c;b.style.boxShadow='inset 0 0 0 1px rgba(255,255,255,.15)';b.addEventListener('click',()=>{state.style[key]=c;syncControls();renderAll();saveSoon()});w.appendChild(b)})}
+swatches('#inks',INKS,'ink');swatches('#papers',PAPERS,'paper');
+
+// ---------- write ----------
+const nc=$('#noteCanvas'),nctx=nc.getContext('2d');
+const SAMPLE='The quick brown fox jumps over the lazy dog';
+function renderNote(){
+  if(!state.script)return;
+  const r=nc.getBoundingClientRect();const cw=r.width||320;
+  const text=(state.text&&state.text.trim())?state.text:SAMPLE;
+  const H=Math.max(26,Math.min(44,cw/9));const pad=18;
+  const st=styleFor(inkOn(state.style.paper));
+  const lay=D.layout(state.script,text,st,{H,maxW:cw-pad*2,lineH:state.showKey?1.85:1.55});
+  const ch=Math.max(120,lay.height+pad*2+(state.showKey?H*0.35:0));
+  nc.width=Math.round(cw*DPR);nc.height=Math.round(ch*DPR);nc.style.height=ch+'px';
+  nctx.setTransform(DPR,0,0,DPR,0,0);nctx.fillStyle=state.style.paper;nctx.fillRect(0,0,cw,ch);
+  if(!(state.text&&state.text.trim()))nctx.globalAlpha=0.38;
+  D.renderText(nctx,state.script,text,st,{H,maxW:cw-pad*2,lineH:state.showKey?1.85:1.55,x:pad,y:pad,showKey:state.showKey,keyColor:keyColor(state.style.paper)});
+  nctx.globalAlpha=1;
+}
+let rafT=0;function renderNoteSoon(){cancelAnimationFrame(rafT);rafT=requestAnimationFrame(renderNote)}
+$('#text').addEventListener('input',e=>{state.text=e.target.value;renderNoteSoon();saveSoon()});
+$('#showKey').addEventListener('change',e=>{state.showKey=e.target.checked;renderNote();saveSoon()});
+
+// ---------- exports ----------
+function exportCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+function paperFill(ctx,w,h,paper){ctx.fillStyle=paper;ctx.fillRect(0,0,w,h);
+  // soft vignette + fibre speckle for a printed feel
+  const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*0.3,w/2,h/2,Math.max(w,h)*0.75);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,isDark(paper)?'rgba(255,255,255,.05)':'rgba(60,40,10,.10)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const R=D.rng(state.seed||7);ctx.fillStyle=isDark(paper)?'rgba(255,255,255,.035)':'rgba(60,40,10,.045)';
+  for(let i=0;i<w*h/900;i++){ctx.fillRect(R()*w,R()*h,1.5,1.5)}}
+function drawKeyBlock(ctx,x,y,w,ink,paper,big){
+  const cols=big?9:12;const cellW=w/cols;const H=cellW*0.62;const rowH=cellW*1.05;
+  const st=styleFor(ink);ctx.textAlign='center';
+  for(let i=0;i<CHARS.length;i++){
+    const cx=x+(i%cols)*cellW+cellW/2,cy=y+Math.floor(i/cols)*rowH;
+    D.drawGlyph(ctx,state.script,CHARS[i],cx,cy,H,st);
+    ctx.fillStyle=keyColor(paper);ctx.font=`${Math.round(cellW*0.22)}px Georgia,serif`;ctx.fillText(CHARS[i],cx,cy+H+cellW*0.3);
+  }
+  return Math.ceil(CHARS.length/cols)*rowH;
+}
+function makeKeyImage(){
+  const w=1080,pad=70;const c=exportCanvas(w,10);const ctx=c.getContext('2d');
+  // measure
+  const cols=6,cellW=(w-pad*2)/cols,H=cellW*0.62,rowH=cellW*1.08;const rows=Math.ceil(CHARS.length/cols);
+  const h=pad*2+120+rows*rowH;c.height=h;
+  paperFill(ctx,w,h,state.style.paper);const ink=inkOn(state.style.paper);
+  ctx.fillStyle=keyColor(state.style.paper);ctx.font='28px Georgia,serif';ctx.textAlign='center';ctx.fillText('A KEY TO THE',w/2,pad+10);
+  ctx.fillStyle=ink;ctx.font='italic 54px Georgia,serif';ctx.fillText(state.script.name,w/2,pad+68);
+  const st=styleFor(ink);
+  for(let i=0;i<CHARS.length;i++){const cx=pad+(i%cols)*cellW+cellW/2,cy=pad+120+Math.floor(i/cols)*rowH;
+    D.drawGlyph(ctx,state.script,CHARS[i],cx,cy,H,st);
+    ctx.fillStyle=keyColor(state.style.paper);ctx.font='26px Georgia,serif';ctx.fillText(CHARS[i],cx,cy+H+36)}
+  ctx.fillStyle=keyColor(state.style.paper);ctx.font='22px Georgia,serif';ctx.fillText(state.script.traits.join(' · ').toUpperCase(),w/2,h-30);
+  return c;
+}
+function makeCardImage(withKey){
+  const w=1080,pad=80;const text=(state.text&&state.text.trim())?state.text:SAMPLE;
+  const ink=inkOn(state.style.paper);const st=styleFor(ink);const H=86;
+  const tmp=exportCanvas(10,10).getContext('2d');
+  const lay=D.layout(state.script,text,st,{H,maxW:w-pad*2,lineH:1.6});
+  const sigY=pad+lay.height+52;
+  const keyRows=Math.ceil(CHARS.length/12),keyRowH=((w-pad*2)/12)*1.05;
+  const h=withKey? sigY+56+keyRows*keyRowH+pad*0.5 : sigY+pad*0.7;
+  const c=exportCanvas(w,h);const ctx=c.getContext('2d');paperFill(ctx,w,h,state.style.paper);
+  D.renderText(ctx,state.script,text,st,{H,maxW:w-pad*2,lineH:1.6,x:pad,y:pad});
+  ctx.fillStyle=keyColor(state.style.paper);ctx.font='italic 24px Georgia,serif';ctx.textAlign='right';
+  ctx.fillText('written in the '+state.script.name,w-pad,sigY);
+  if(withKey){const y=sigY+56;ctx.strokeStyle=keyColor(state.style.paper);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,y-26);ctx.lineTo(w-pad,y-26);ctx.stroke();
+    drawKeyBlock(ctx,pad,y,w-pad*2,ink,state.style.paper,false)}
+  return c;
+}
+let lastBlob=null;
+const hosted=()=>!!(window.claude&&typeof window.claude.use==='function'); // inside the claude.ai artifact viewer
+// Hand a generated file to the viewer: artifact download capability, or a plain download on your own hosting
+async function deliverFile(blob,name){
+  if(hosted()){
+    let cap=null;try{cap=await window.claude.use('downloads')}catch(e){}
+    if(!cap){toast('Downloads are off in this viewer, use the standalone app for files');return}
+    try{await cap.save({filename:name,data:blob})}catch(e){
+      try{await cap.save({filename:name,data:await blob.arrayBuffer()})}catch(e2){if(!/abort|cancel|declin/i.test((e2&&e2.message)||''))toast('Could not save the file')}}
+    return;
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+}
+function showCode(code){
+  $('#exportImg').style.display='none';const t=$('#codeOut');t.style.display='';t.value=code;
+  $('#sheetMsg').textContent='Send this to a friend. Pasted into DUCTUS, it becomes your exact alphabet.';
+  $('#dl').style.display='none';$('#dlCap').style.display='none';
+  const sh=$('#nativeShare');sh.style.display='';sh.textContent='Copy';
+  sh.onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('Hand code copied')}catch(e){t.focus();t.select();toast('Select the text and copy it')}};
+  $('#sheet').classList.add('on');
+}
+function showExport(canvas,name){
+  $('#exportImg').style.display='';$('#codeOut').style.display='none';$('#sheetMsg').textContent='Long-press the image to save or share it.';$('#nativeShare').textContent='Share';
+  const url=canvas.toDataURL('image/png');$('#exportImg').src=url;
+  const dl=$('#dl');dl.href=url;dl.download=name;
+  const inArt=hosted();
+  $('#dlCap').style.display='none';
+  canvas.toBlob(b=>{lastBlob=b;const f=b?new File([b],name,{type:'image/png'}):null;
+    let can=false;try{can=!!(f&&navigator.canShare&&navigator.share&&navigator.canShare({files:[f]}))}catch(e){}
+    if(inArt)can=false;
+    $('#nativeShare').style.display=can?'':'none';
+    dl.style.display=(can||inArt)?'none':'';
+    if(inArt){window.claude.use('downloads').then(cap=>{if(!cap||!lastBlob)return;const btn=$('#dlCap');btn.style.display='';
+      btn.onclick=async()=>{try{await cap.save({filename:name,data:lastBlob})}catch(e){if(!/abort|cancel|declin/i.test((e&&e.message)||''))toast('Could not save, long-press the image instead')}}}).catch(()=>{})}
+    $('#nativeShare').onclick=async()=>{try{await navigator.share({files:[f],title:'DUCTUS'})}catch(e){if(e&&e.name!=='AbortError')toast('Sharing is blocked here, long-press the image instead')}};
+  });
+  dl.onclick=()=>{setTimeout(()=>toast('If nothing downloaded, long-press the image to save it'),600)};
+  $('#sheet').classList.add('on');
+}
+$('#keyBtn').addEventListener('click',()=>showExport(makeKeyImage(),'ductus-key.png'));
+$('#shareBtn').addEventListener('click',()=>showExport(makeCardImage(false),'ductus-note.png'));
+$('#shareKeyBtn').addEventListener('click',()=>showExport(makeCardImage(true),'ductus-note-key.png'));
+$('#closeSheet').addEventListener('click',()=>$('#sheet').classList.remove('on'));
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('#sheet').classList.remove('on')});
+
+// ---------- hand codes & font ----------
+$('#codeBtn').addEventListener('click',()=>{if(state.script)showCode(D.encodeScript(state.script))});
+$('#importToggle').addEventListener('click',()=>{const b=$('#importBox');b.style.display=b.style.display==='none'?'':'none';if(b.style.display==='')$('#importText').focus()});
+$('#importBtn').addEventListener('click',()=>{
+  const s=D.decodeScript($('#importText').value);
+  if(!s){toast('That doesn\'t look like a hand code');return}
+  state.script=s;state.seed=s.seed;$('#importText').value='';$('#importBox').style.display='none';
+  renderName();renderAll();save();toast('Loaded the '+s.name);showTab('alpha');
+});
+$('#fontBtn').addEventListener('click',()=>{
+  if(!state.script)return;
+  const ttf=D.buildFont(state.script,styleFor('#000'),state.script.name);
+  const slug=state.script.name.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'ductus';
+  deliverFile(new Blob([ttf],{type:'font/ttf'}),slug+'.ttf');
+  toast('Font built: '+slug+'.ttf');
+});
+
+// ---------- play ----------
+const PUZZLES=['A watched pot never boils','The early bird catches the worm','Many hands make light work','Still waters run deep','Actions speak louder than words','Every cloud has a silver lining','Birds of a feather flock together','Fortune favors the bold','Look before you leap','Practice makes perfect','Too many cooks spoil the broth','A rolling stone gathers no moss','The pen is mightier than the sword','All that glitters is not gold','Better late than never','Where there is smoke there is fire','Slow and steady wins the race','Make hay while the sun shines','Honesty is the best policy','You reap what you sow','Rome was not built in a day','Curiosity killed the cat','Let sleeping dogs lie','Two heads are better than one','Strike while the iron is hot','The lighthouse keeper taught the gulls to read','Nobody told the river it was lost','My grandmother kept thunder in a jar','Every map is a rumor about the ground','The moon owes the tide an apology','We buried the clock so the day would stay','A fox in a library is still a fox','The baker hides a bell in every seventh loaf','Old roads remember the feet that forgot them','The cat has opinions about the piano','Somewhere a kettle is lying about the time','The mountain is just a slow kind of weather','Dust is the house dreaming of the desert','Teach a crow one trick and it owns the garden','The last ferry waits for nobody but the fog','A door is a wall that changed its mind','Snow is the sky forgetting its homework','Her shadow left early to beat the traffic','Keep one secret the shape of a key','The library closes when the owl says so'];
+const pc=$('#puzzleCanvas'),pctx=pc.getContext('2d');
+let P=null,timerT=0,playMode='solo',duelHand='stranger';
+state.play=state.play||{solved:0,best:0,daily:''};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function statsLine(){const p=state.play;$('#statsLine').textContent=(p.solved?`Solved ${p.solved} · best score ${p.best}`:'No solves yet.')+(p.daily===today()?' · today\'s is done':'')}
+const setupView=()=>playMode==='solo'?'soloSetup':playMode==='duel'?'duelSetup':'scribeView';
+function showPlayView(v){['soloSetup','duelSetup','cover','board','solved','scribeView'].forEach(id=>$('#'+id).style.display=id===v?'':'none');if(v==='soloSetup'||v==='duelSetup'||v==='scribeView')$$('#playMode button').forEach(b=>b.classList.toggle('on',b.dataset.m===playMode));if(v==='scribeView')requestAnimationFrame(scribeStart)}
+$$('#playMode button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m==='scribe'&&!state.script){toast('Forge an alphabet first');return}playMode=b.dataset.m;showPlayView(setupView());statsLine()}));
+
+// ---------- scribe: copy the glyph, get scored on shape ----------
+state.scribe=state.scribe||{best:{},streak:0};
+let S={ch:null,strokes:[],active:null,checked:false,score:0};
+const tc=$('#targetCanvas'),sc=$('#scribeCanvas');
+function scribeStart(){if(!state.script)return;if(!S.ch)scribePick();else scribeRender()}
+function scribePick(){
+  const chars=CHARS.split(''),un=chars.filter(c=>(state.scribe.best[c]||0)<70);
+  const pool=un.length&&Math.random()<0.8?un:chars;let ch=pool[Math.floor(Math.random()*pool.length)];
+  if(ch===S.ch&&pool.length>1)ch=pool[(pool.indexOf(ch)+1)%pool.length];
+  S={ch,strokes:[],active:null,checked:false,score:0};$('#scribeMsg').textContent='Copy the glyph, then check.';$('#scribeRes').textContent='';scribeRender();
+}
+function scribeRender(){
+  if(!state.script||!S.ch)return;
+  for(const c of [tc,sc]){const r=c.getBoundingClientRect();c.width=Math.round(r.width*DPR);c.height=Math.round(r.height*DPR)}
+  const tr=tc.getBoundingClientRect(),t=tc.getContext('2d');t.setTransform(DPR,0,0,DPR,0,0);t.fillStyle='#f1e9d6';t.fillRect(0,0,tr.width,tr.height);
+  D.drawGlyph(t,state.script,S.ch,tr.width/2,tr.height*0.12,tr.height*0.76,{age:0,slant:state.style.slant,pen:pen(),ink:'#1c1a22'});
+  $('#targetLetter').textContent=S.ch;
+  const r=sc.getBoundingClientRect(),c=sc.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);c.fillStyle='#f1e9d6';c.fillRect(0,0,r.width,r.height);
+  c.strokeStyle='#1c1a22';c.fillStyle='#1c1a22';c.lineWidth=Math.max(4,r.width*0.05);c.lineCap='round';c.lineJoin='round';
+  for(const s of S.strokes){c.beginPath();if(s.length===1){c.arc(s[0][0],s[0][1],c.lineWidth/2,0,7);c.fill();continue}c.moveTo(s[0][0],s[0][1]);for(let k=1;k<s.length;k++)c.lineTo(s[k][0],s[k][1]);c.stroke()}
+  if(S.checked){ // ghost of the real glyph fitted to the attempt's box
+    const bb=bboxOf(S.strokes);if(bb){const g=state.script.glyphs[S.ch];const paths=D.glyphPaths(g,{age:0,slant:state.style.slant});const gb=bboxOf(paths.map(p=>p.pts));
+      const sx=(bb.w||1)/(gb.w||1),sy=(bb.h||1)/(gb.h||1),s=Math.min(sx,sy);
+      const fitted=paths.map(p=>({dot:p.dot,pts:p.pts.map(([x,y])=>[bb.x+bb.w/2+(x-gb.x-gb.w/2)*s,bb.y+bb.h/2+(y-gb.y-gb.h/2)*s])}));
+      c.globalAlpha=0.55;D.drawPaths(c,fitted,{type:'round',weight:0.05},r.height,'#b8432b');c.globalAlpha=1}
+  }
+  const mastered=CHARS.split('').filter(ch=>(state.scribe.best[ch]||0)>=70).length;
+  $('#scribeStats').textContent=`${mastered}/${CHARS.length} mastered · streak ${state.scribe.streak}`;
+}
+function bboxOf(polys){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const pl of polys)for(const p of pl){x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])}return x0>x1?null:{x:x0,y:y0,w:x1-x0,h:y1-y0}}
+function normPolys(polys){const b=bboxOf(polys);const Sz=Math.max(b.w,b.h,1e-3),ox=(Sz-b.w)/2,oy=(Sz-b.h)/2;return polys.map(pl=>pl.map(p=>[(p[0]-b.x+ox)/Sz,(p[1]-b.y+oy)/Sz]))}
+function densify(polys,step){const out=[];for(const pl of polys){if(pl.length===1){out.push(pl[0]);continue}out.push(pl[0]);let carry=0;for(let i=1;i<pl.length;i++){const a=pl[i-1],b=pl[i],L=Math.hypot(b[0]-a[0],b[1]-a[1]);let d=step-carry;while(d<=L){const t=d/L;out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);d+=step}carry=L-(d-step)}}return out}
+function chamfer(A,B){let s=0;for(const a of A){let m=1e9;for(const b of B){const d=(a[0]-b[0])**2+(a[1]-b[1])**2;if(d<m)m=d}s+=Math.sqrt(m)}return s/A.length}
+function shapeScore(tgt,usr){const a=densify(normPolys(tgt),0.02),b=densify(normPolys(usr),0.02);const d=(chamfer(a,b)+chamfer(b,a))/2;let s=100-(d-0.03)*550-Math.abs(tgt.length-usr.length)*8;return Math.max(0,Math.min(100,Math.round(s)))}
+function scribeCheck(){
+  if(!S.strokes.length){toast('Draw it first');return}if(S.checked)return;
+  const g=state.script.glyphs[S.ch];const tgt=D.glyphPaths(g,{age:0,slant:state.style.slant}).map(p=>p.pts);
+  const score=shapeScore(tgt,S.strokes);S.checked=true;S.score=score;
+  const sb=state.scribe;sb.best[S.ch]=Math.max(sb.best[S.ch]||0,score);sb.streak=score>=70?sb.streak+1:0;save();
+  $('#scribeRes').textContent=score;
+  $('#scribeMsg').textContent=score>=85?'A scribe\'s hand.':score>=70?'Mastered, that reads.':score>=50?'Close. Compare the red ghost.':'Follow the ghost\'s shape and try again.';
+  if(navigator.vibrate)try{navigator.vibrate(score>=70?[10,40,10]:20)}catch(_){}
+  scribeRender();
+}
+(function(){const pos=e=>{const r=sc.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  sc.addEventListener('pointerdown',e=>{e.preventDefault();if(S.checked){S.strokes=[];S.checked=false;$('#scribeRes').textContent=''}sc.setPointerCapture(e.pointerId);S.active=[pos(e)];S.strokes.push(S.active);scribeRender()});
+  sc.addEventListener('pointermove',e=>{if(!S.active)return;const p=pos(e),l=S.active[S.active.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])<1.5)return;S.active.push(p);scribeRender()});
+  const up=()=>{if(!S.active)return;S.active=null;scribeRender()};sc.addEventListener('pointerup',up);sc.addEventListener('pointercancel',up);
+  sc.style.touchAction='none';
+})();
+$('#checkBtn').addEventListener('click',scribeCheck);
+$('#scribeClear').addEventListener('click',()=>{S.strokes=[];S.checked=false;$('#scribeRes').textContent='';scribeRender()});
+$('#scribeNext').addEventListener('click',scribePick);
+$$('#duelHand button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.h==='mine'&&!state.script){toast('Forge an alphabet first');return}duelHand=b.dataset.h;$$('#duelHand button').forEach(x=>x.classList.toggle('on',x===b))}));
+$('#duelHints').addEventListener('input',e=>{$('#duelHintsLabel').textContent=e.target.value+' allowed'});
+
+function newPuzzle(o){
+  const useMine=o.useMine&&state.script;
+  const hand=useMine?state.script:D.makeScript([],o.seed);
+  const R=D.rng((o.seed^0x9e3779b9)>>>0);
+  const pen=useMine?state.style.pen:['broad','round','brush'][Math.floor(R()*3)];
+  const style={age:useMine?Math.min(state.style.age,0.6):R()*0.55,slant:useMine?state.style.slant:(R()-0.4)*0.3,pen:{type:pen,weight:0.08},ink:'#1c1a22'};
+  const text=o.text.toUpperCase().replace(/[^A-Z0-9 .,!?'\-:\n]/g,'').replace(/[ ]+/g,' ').trim();
+  const letters=[...new Set(text.replace(/[^A-Z]/g,''))];
+  const freq={};for(const c of text)if(/[A-Z]/.test(c))freq[c]=(freq[c]||0)+1;
+  const first=(text.match(/[A-Z]/)||[null])[0];
+  P={mode:o.mode,daily:!!o.daily,text,hand,style,letters,freq,map:{},locked:new Set(),hintsLeft:o.hints,hintsUsed:0,wrong:0,start:Date.now(),sel:first,showFreq:false,solved:false};
+  $('#pHand').textContent=hand.name;$('#freqBtn').textContent='Show counts';
+  showPlayView('board');updateHud();buildPicker();
+  requestAnimationFrame(renderBoard);
+  clearInterval(timerT);timerT=setInterval(updateHud,1000);
+}
+function elapsed(){return Math.floor((Date.now()-P.start)/1000)}
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function updateHud(){if(!P||P.solved)return;$('#pTime').textContent=fmt(elapsed());$('#pHints').textContent=P.hintsLeft>0?`${P.hintsLeft} hint${P.hintsLeft===1?'':'s'} left`:'no hints left';$('#hintBtn').disabled=P.hintsLeft<=0}
+function buildPicker(){
+  const w=$('#picker');w.innerHTML='';
+  for(const L of D.LETTERS){const b=document.createElement('button');b.textContent=L;b.dataset.l=L;b.addEventListener('click',()=>assign(L));w.appendChild(b)}
+  const c=document.createElement('button');c.textContent='clear';c.className='clear';c.addEventListener('click',()=>assign(null));w.appendChild(c);
+  refreshPicker();
+}
+function refreshPicker(){const used=new Set(Object.values(P.map));$$('#picker button[data-l]').forEach(b=>b.classList.toggle('used',used.has(b.dataset.l)));$('#picker').style.opacity=P.sel?1:.45}
+function assign(L){
+  if(!P||P.solved)return;if(!P.sel){toast('Tap a glyph first');return}
+  if(P.locked.has(P.sel)){toast('That one was revealed, it\'s locked');return}
+  if(L===null){delete P.map[P.sel]}else{for(const k of Object.keys(P.map))if(P.map[k]===L&&!P.locked.has(k))delete P.map[k];P.map[P.sel]=L}
+  // move the cursor to the next unassigned glyph in reading order
+  if(L!==null){const order=[...P.text].filter(c=>/[A-Z]/.test(c));const i=order.indexOf(P.sel);const next=order.slice(i+1).concat(order.slice(0,i)).find(c=>!P.map[c]);P.sel=next||P.sel}
+  refreshPicker();renderBoard();checkSolved();
+}
+function checkSolved(){
+  if(!P.letters.every(l=>P.map[l]))return;
+  const wrong=P.letters.filter(l=>P.map[l]!==l).length;
+  if(wrong){P.wrong++;toast(`Not yet, ${wrong} letter${wrong===1?' is':'s are'} wrong`);return}
+  P.solved=true;clearInterval(timerT);
+  const sec=elapsed(),score=Math.max(0,1000-sec*3-P.hintsUsed*120-P.wrong*80);
+  const p=state.play;p.solved++;p.best=Math.max(p.best,score);if(P.daily)p.daily=today();save();
+  $('#scoreBig').textContent=score;
+  $('#scoreSub').innerHTML=`<i>${esc(P.text.replace(/\n/g,' / '))}</i><br>${fmt(sec)} · ${P.hintsUsed} hint${P.hintsUsed===1?'':'s'} · ${P.wrong} wrong guess${P.wrong===1?'':'es'}<br>read from the ${esc(P.hand.name)}`;
+  setTimeout(()=>showPlayView('solved'),500);
+}
+$('#hintBtn').addEventListener('click',()=>{
+  if(!P||P.solved||P.hintsLeft<=0)return;
+  const cands=P.letters.filter(l=>!P.locked.has(l)&&P.map[l]!==l).sort((a,b)=>P.freq[b]-P.freq[a]);
+  if(!cands.length)return;const l=cands[0];
+  for(const k of Object.keys(P.map))if(P.map[k]===l)delete P.map[k];
+  P.map[l]=l;P.locked.add(l);P.hintsLeft--;P.hintsUsed++;updateHud();refreshPicker();renderBoard();checkSolved();
+});
+$('#freqBtn').addEventListener('click',()=>{if(!P)return;P.showFreq=!P.showFreq;$('#freqBtn').textContent=P.showFreq?'Hide counts':'Show counts';renderBoard()});
+$('#quitBtn').addEventListener('click',()=>{clearInterval(timerT);P=null;showPlayView(setupView());statsLine()});
+$('#againBtn').addEventListener('click',()=>{showPlayView(setupView());statsLine()});
+$('#todayBtn').addEventListener('click',()=>{const h=D.hashStr('ductus-'+today());newPuzzle({mode:'solo',daily:true,seed:h,text:PUZZLES[h%PUZZLES.length],hints:3})});
+$('#randomPuzzleBtn').addEventListener('click',()=>{const h=(Math.random()*4294967295)>>>0;newPuzzle({mode:'solo',seed:h,text:PUZZLES[h%PUZZLES.length],hints:3})});
+let duelPending=null;
+$('#handOver').addEventListener('click',()=>{
+  const t=$('#secret').value.trim();if(t.replace(/[^A-Za-z]/g,'').length<4){toast('Give them at least a few letters');return}
+  duelPending={mode:'duel',seed:(Math.random()*4294967295)>>>0,text:t,hints:+$('#duelHints').value,useMine:duelHand==='mine'};
+  $('#secret').value='';showPlayView('cover');
+});
+$('#readyBtn').addEventListener('click',()=>{if(duelPending){newPuzzle(duelPending);duelPending=null}});
+$('#bragBtn').addEventListener('click',()=>{
+  if(!P)return;const w=1080,pad=80,H=80;
+  const st={age:P.style.age,slant:P.style.slant,pen:P.style.pen,ink:'#1c1a22'};
+  const lay=D.layout(P.hand,P.text,st,{H,maxW:w-pad*2,lineH:1.7});
+  const h=pad*2+lay.height+150;const c=exportCanvas(w,h);const ctx=c.getContext('2d');paperFill(ctx,w,h,'#f1e9d6');
+  D.renderText(ctx,P.hand,P.text,st,{H,maxW:w-pad*2,lineH:1.7,x:pad,y:pad});
+  ctx.fillStyle='rgba(28,26,34,.55)';ctx.font='italic 30px Georgia,serif';ctx.textAlign='center';
+  ctx.fillText(`Can you read the ${P.hand.name}?`,w/2,h-pad-30);
+  ctx.font='22px Georgia,serif';ctx.fillText(`I did, in ${fmt(elapsed())}. DUCTUS`,w/2,h-pad+8);
+  showExport(c,'ductus-puzzle.png');
+});
+function renderBoard(){
+  if(!P)return;const r=pc.getBoundingClientRect();const cw=r.width||340;
+  const H=Math.max(26,Math.min(34,cw/10)),pad=12,lineH=2.15;
+  const st={age:P.style.age,slant:P.style.slant,pen:P.style.pen,ink:'#1c1a22'};
+  const lay=D.layout(P.hand,P.text,st,{H,maxW:cw-pad*2,lineH,gap:0.34,space:1.15});
+  const ch=lay.height+pad*2+H*0.95;
+  pc.width=Math.round(cw*DPR);pc.height=Math.round(ch*DPR);pc.style.height=ch+'px';
+  pctx.setTransform(DPR,0,0,DPR,0,0);pctx.fillStyle='#f1e9d6';pctx.fillRect(0,0,cw,ch);
+  P.cells=[];pctx.textAlign='center';
+  for(const L of lay.lines)for(const g of L.glyphs){
+    const x=pad+g.x,y=pad+L.y,w=g.w,isL=/[A-Z]/.test(g.ch);
+    const cell={x:x-6,y:y-6,w:w+12,h:H*1.85,ch:g.ch,isL};P.cells.push(cell);
+    if(isL&&P.sel===g.ch){pctx.fillStyle='rgba(184,67,43,.16)';pctx.beginPath();pctx.roundRect(cell.x,cell.y,cell.w,cell.h,8);pctx.fill()}
+    const paths=g.paths.map(p=>({dot:p.dot,pts:p.pts.map(([px,py])=>[px+pad,py+pad])}));
+    D.drawPaths(pctx,paths,P.style.pen,H,'#1c1a22');
+    const slotY=y+H*1.58;const guess=isL?P.map[g.ch]:g.ch;
+    if(guess){pctx.fillStyle=isL?(P.locked.has(g.ch)?'#b8432b':'#1c1a22'):'rgba(28,26,34,.45)';pctx.font=`${Math.round(H*0.52)}px Georgia,serif`;pctx.fillText(guess,x+w/2,slotY)}
+    else{pctx.strokeStyle='rgba(28,26,34,.3)';pctx.lineWidth=1.5;pctx.beginPath();pctx.moveTo(x+1,slotY+2);pctx.lineTo(x+w-1,slotY+2);pctx.stroke()}
+    if(P.showFreq&&isL){pctx.fillStyle='rgba(184,67,43,.8)';pctx.font=`${Math.round(H*0.28)}px Georgia,serif`;pctx.fillText(P.freq[g.ch],x+w/2,y-H*0.12)}
+  }
+}
+pc.addEventListener('click',e=>{
+  if(!P||P.solved)return;const r=pc.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  const c=(P.cells||[]).find(c=>x>=c.x&&x<=c.x+c.w&&y>=c.y&&y<=c.y+c.h);
+  if(!c||!c.isL)return;P.sel=c.ch;refreshPicker();renderBoard();
+});
+
+// ---------- tabs ----------
+function showTab(t){
+  state.tab=t;$$('.panel').forEach(p=>p.classList.toggle('on',p.id===t));$$('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  const has=!!state.script;
+  $('#alphaEmpty').style.display=has?'none':'';$('#alphaBody').style.display=has?'':'none';
+  $('#writeEmpty').style.display=has?'none':'';$('#writeBody').style.display=has?'':'none';
+  $('#duelMine').textContent=has?'The '+state.script.name:'Your hand';
+  if(t==='play'){if(!P)showPlayView(setupView());statsLine()}
+  requestAnimationFrame(()=>{if(t==='forge')sizeBoxes();if(t==='alpha')renderAlpha();if(t==='write')renderNote();if(t==='play'&&P)renderBoard()});
+  saveSoon();
+}
+$$('nav.tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function renderAll(){renderTraits();syncControls();if(state.tab==='alpha')renderAlpha();if(state.tab==='write')renderNote()}
+
+// ---------- boot ----------
+load();
+if(state.script&&!state.script.glyphs)state.script=null;
+// the studio's share target (manifest.webmanifest): text shared into the installed app lands in Write, on the device, never uploaded
+try{const sp=new URLSearchParams(location.search);const shared=[sp.get('title'),sp.get('text'),sp.get('url')].filter(Boolean).join(' ').trim();
+  if(shared){state.text=shared.slice(0,400);if(state.script)state.tab='write';history.replaceState(null,'',location.pathname)}}catch(e){}
+syncControls();renderName();renderTraits();
+showTab(state.script?state.tab||'alpha':'forge');
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+window.addEventListener('resize',()=>{sizeBoxes();if(state.tab==='alpha')renderAlpha();if(state.tab==='write')renderNote();if(state.tab==='play'&&P)renderBoard()});
+window.DUCTUS_STATE=()=>state; // for testing
+window.DUCTUS_TEST={getP:()=>P,assign,select:ch=>{P.sel=ch;refreshPicker();renderBoard()}};
+})();
+</script>
+</body>
+</html>

@@ -123,6 +123,9 @@ const SELF_STYLED = {
   /* Off the Ball arrived with its own chalk-on-a-dark-pitch identity and
      keeps it: the attacking gold over the deep pitch green. */
   'off-the-ball': { darkAccent: '#F4B740', accent: '#0B1B1A' },
+  /* DUCTUS (8 Nov 2026, Stephen's sprint, built into the studio by Claude
+     Code): ink on paper with a rubric red, its own look, not a studio skin. */
+  'ductus': { darkAccent: '#d9674f', accent: '#b8432b' },
 };
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -196,6 +199,11 @@ const CATALOGUE = [
     ['image-compressor', 'Image Compressor', 'Shrink photos without uploading them', 'resize optimise jpeg png file size email'],
     ['signature-maker', 'Signature Maker', 'Draw it once, use it everywhere', 'sign document esign transparent png contract'],
     ['qr-maker', 'QR Maker', 'Codes that never expire', 'qr code wifi menu flyer link generator'],
+  ]],
+  ['Pen &amp; Paper',
+    { id: 'pen-paper', kick: 'The desk', q: 'Want to make something by hand?',
+      sub: 'Three marks of yours become a whole alphabet: write in it, age it through centuries of cursive, install it as a real font, then hand the phone over and see who can crack it.' }, [
+    ['ductus', 'DUCTUS', 'Draw three letters. Get a whole alphabet, a font and a cipher game', 'font maker alphabet handwriting invented script cipher secret code conlang neography calligraphy puzzle cryptogram ttf family language kids', 'beta'],
   ]],
   ['Moving &amp; Travel',
     { id: 'moving-travel', kick: 'The move', q: 'On the move?',
